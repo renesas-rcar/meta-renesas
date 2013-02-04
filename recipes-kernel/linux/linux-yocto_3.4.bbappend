@@ -1,11 +1,13 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 COMPATIBLE_MACHINE_armadillo800eva = "armadillo800eva"
-KBRANCH_DEFAULT_armadillo800eva = "standard/armadillo800eva"
+KBRANCH_DEFAULT_armadillo800eva = "ltsi"
 KBRANCH_armadillo800eva = "${KBRANCH_DEFAULT}"
 KMACHINE_armadillo800eva = "armadillo800eva"
 
-SRCREV_machine_armadillo800eva ?= "7146d001a5f95068a3e2da23a8b3d15aeb20087a"
+LINUX_VERSION = "3.4.24"
+
+SRCREV_machine_armadillo800eva ?= "4938ff7a961bcf44ef53c4a928f6cf9c4e6ddb4d"
 
 SRC_URI_append_armadillo800eva = " \
 	file://defconfig \
