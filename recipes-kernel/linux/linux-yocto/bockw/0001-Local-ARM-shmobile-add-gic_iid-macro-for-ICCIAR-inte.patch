@@ -1,0 +1,51 @@
+From b65c0eaa47cf02765f9e5683f74d2d521c644b51 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 22 Feb 2013 09:35:20 +0900
+Subject: [PATCH 1/7] Local: ARM: shmobile: add gic_iid macro for ICCIAR /
+ interrupt ID
+
+This patch was sent to upstream, but it still not applied.
+
+R-Car H1 datasheet GIC number is indicating
+GIC ICCIAR / interrupt ID number, not SPI number,
+but current marzen board code is using gic_spi() with
+un-understandable calculation.
+
+This patch adds new gic_iid() macro which means
+ICCIAR / interrupt ID, and used the number
+currently written on datasheet.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/mach-shmobile/board-marzen.c      |    2 +-
+ arch/arm/mach-shmobile/include/mach/irqs.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index fcf5a47..1f69b54 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -53,7 +53,7 @@ static struct resource smsc911x_resources[] = {
+ 		.flags		= IORESOURCE_MEM,
+ 	},
+ 	[1] = {
+-		.start		= gic_spi(28), /* IRQ 1 */
++		.start		= gic_iid(0x3c), /* IRQ 1 */
+ 		.flags		= IORESOURCE_IRQ,
+ 	},
+ };
+diff --git a/arch/arm/mach-shmobile/include/mach/irqs.h b/arch/arm/mach-shmobile/include/mach/irqs.h
+index 06a5da3..83f1c84 100644
+--- a/arch/arm/mach-shmobile/include/mach/irqs.h
++++ b/arch/arm/mach-shmobile/include/mach/irqs.h
+@@ -5,6 +5,7 @@
+ 
+ /* GIC */
+ #define gic_spi(nr)		((nr) + 32)
++#define gic_iid(nr)		(nr)
+ 
+ /* INTCS */
+ #define INTCS_VECT_BASE		0x3400
+-- 
+1.7.9.5
+

@@ -1,0 +1,188 @@
+From 4b86f82bee47eb0b7b500178b1d47326a319cd4b Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 22 Feb 2013 09:48:24 +0900
+Subject: [PATCH 5/7] Local: ARM: shmobile: add R-Car M1A Bock-W platform
+ support
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/configs/bockw_defconfig     |   67 ++++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/Kconfig       |    6 +++
+ arch/arm/mach-shmobile/Makefile      |    1 +
+ arch/arm/mach-shmobile/board-bockw.c |   48 ++++++++++++++++++++++++
+ arch/arm/tools/mach-types            |    1 +
+ 5 files changed, 123 insertions(+)
+ create mode 100644 arch/arm/configs/bockw_defconfig
+ create mode 100644 arch/arm/mach-shmobile/board-bockw.c
+
+diff --git a/arch/arm/configs/bockw_defconfig b/arch/arm/configs/bockw_defconfig
+new file mode 100644
+index 0000000..c358481
+--- /dev/null
++++ b/arch/arm/configs/bockw_defconfig
+@@ -0,0 +1,67 @@
++# CONFIG_ARM_PATCH_PHYS_VIRT is not set
++CONFIG_EXPERIMENTAL=y
++CONFIG_KERNEL_LZMA=y
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_LOG_BUF_SHIFT=16
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_INITRAMFS_SOURCE="/tftpboot/initramfs-arm/"
++CONFIG_SYSCTL_SYSCALL=y
++CONFIG_EMBEDDED=y
++CONFIG_SLAB=y
++# CONFIG_IOSCHED_CFQ is not set
++CONFIG_ARCH_SHMOBILE=y
++CONFIG_ARCH_R8A7778=y
++CONFIG_MACH_BOCKW=y
++CONFIG_MEMORY_START=0x60000000
++CONFIG_MEMORY_SIZE=0x10000000
++CONFIG_SHMOBILE_TIMER_HZ=1024
++# CONFIG_SH_TIMER_CMT is not set
++# CONFIG_EM_TIMER_STI is not set
++CONFIG_ARM_ERRATA_430973=y
++CONFIG_ARM_ERRATA_458693=y
++CONFIG_ARM_ERRATA_460075=y
++CONFIG_ARM_ERRATA_743622=y
++CONFIG_ARM_ERRATA_754322=y
++CONFIG_NO_HZ=y
++CONFIG_AEABI=y
++# CONFIG_OABI_COMPAT is not set
++CONFIG_HIGHMEM=y
++CONFIG_ZBOOT_ROM_TEXT=0x0
++CONFIG_ZBOOT_ROM_BSS=0x0
++CONFIG_CMDLINE="console=ttySC0,115200 earlyprintk=sh-sci.0,115200 ignore_loglevel root=/dev/nfs ip=on"
++CONFIG_CMDLINE_FORCE=y
++# CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
++# CONFIG_SUSPEND is not set
++CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++# CONFIG_STANDALONE is not set
++# CONFIG_PREVENT_FIRMWARE_BUILD is not set
++# CONFIG_FW_LOADER is not set
++# CONFIG_INPUT is not set
++# CONFIG_SERIO is not set
++# CONFIG_VT is not set
++# CONFIG_LEGACY_PTYS is not set
++# CONFIG_DEVKMEM is not set
++CONFIG_SERIAL_SH_SCI=y
++CONFIG_SERIAL_SH_SCI_NR_UARTS=6
++CONFIG_SERIAL_SH_SCI_CONSOLE=y
++# CONFIG_HW_RANDOM is not set
++CONFIG_GPIO_SYSFS=y
++# CONFIG_HWMON is not set
++# CONFIG_USB_SUPPORT is not set
++CONFIG_UIO=y
++CONFIG_UIO_PDRV_GENIRQ=y
++# CONFIG_IOMMU_SUPPORT is not set
++# CONFIG_DNOTIFY is not set
++# CONFIG_INOTIFY_USER is not set
++CONFIG_TMPFS=y
++# CONFIG_MISC_FILESYSTEMS is not set
++# CONFIG_ENABLE_WARN_DEPRECATED is not set
++# CONFIG_ENABLE_MUST_CHECK is not set
++# CONFIG_SCHED_DEBUG is not set
++# CONFIG_DEBUG_BUGVERBOSE is not set
++# CONFIG_FTRACE is not set
++# CONFIG_ARM_UNWIND is not set
++CONFIG_AVERAGE=y
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index bc991ca..1f165bf 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -114,6 +114,12 @@ config MACH_ARMADILLO800EVA
+ 	select USE_OF
+ 	select SND_SOC_WM8978 if SND_SIMPLE_CARD
+ 
++config MACH_BOCKW
++	bool "BOCK-W platform"
++	depends on ARCH_R8A7778
++	select ARCH_REQUIRE_GPIOLIB
++	help
++
+ config MACH_MARZEN
+ 	bool "MARZEN board"
+ 	depends on ARCH_R8A7779
+diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
+index 6b0d6ed..a6e3a41 100644
+--- a/arch/arm/mach-shmobile/Makefile
++++ b/arch/arm/mach-shmobile/Makefile
+@@ -53,6 +53,7 @@ obj-$(CONFIG_MACH_AG5EVM)	+= board-ag5evm.o
+ obj-$(CONFIG_MACH_MACKEREL)	+= board-mackerel.o
+ obj-$(CONFIG_MACH_KOTA2)	+= board-kota2.o
+ obj-$(CONFIG_MACH_BONITO)	+= board-bonito.o
++obj-$(CONFIG_MACH_BOCKW)	+= board-bockw.o
+ obj-$(CONFIG_MACH_MARZEN)	+= board-marzen.o
+ obj-$(CONFIG_MACH_ARMADILLO800EVA)	+= board-armadillo800eva.o
+ obj-$(CONFIG_MACH_KZM9D)	+= board-kzm9d.o
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+new file mode 100644
+index 0000000..d067622
+--- /dev/null
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -0,0 +1,48 @@
++/*
++ * Bock-W board support
++ *
++ * Copyright (C) 2013  Renesas Solutions Corp.
++ * Copyright (C) 2013  Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/irq.h>
++#include <linux/platform_device.h>
++#include <mach/common.h>
++#include <asm/mach-types.h>
++#include <asm/mach/arch.h>
++#include <asm/hardware/gic.h>
++
++static struct platform_device *bockw_devices[] __initdata = {
++};
++
++static void __init bockw_init(void)
++{
++	r8a7778_add_standard_devices();
++	platform_add_devices(bockw_devices, ARRAY_SIZE(bockw_devices));
++}
++
++MACHINE_START(BOCKW, "bockw")
++	.map_io		= r8a7778_map_io,
++	.init_early	= r8a7778_add_early_devices,
++	.nr_irqs	= NR_IRQS_LEGACY,
++	.init_irq	= r8a7778_init_irq,
++	.handle_irq	= gic_handle_irq,
++	.init_machine	= bockw_init,
++	.init_late	= shmobile_init_late,
++	.timer		= &shmobile_timer,
++MACHINE_END
+diff --git a/arch/arm/tools/mach-types b/arch/arm/tools/mach-types
+index 2997e56..14dd290 100644
+--- a/arch/arm/tools/mach-types
++++ b/arch/arm/tools/mach-types
+@@ -540,6 +540,7 @@ armlex4210		MACH_ARMLEX4210		ARMLEX4210		3361
+ snowball		MACH_SNOWBALL		SNOWBALL		3363
+ xilinx_ep107		MACH_XILINX_EP107	XILINX_EP107		3378
+ nuri			MACH_NURI		NURI			3379
++bockw			MACH_BOCKW		BOCKW			3386
+ wtplug			MACH_WTPLUG		WTPLUG			3412
+ veridis_a300		MACH_VERIDIS_A300	VERIDIS_A300		3448
+ origen			MACH_ORIGEN		ORIGEN			3455
+-- 
+1.7.9.5
+
