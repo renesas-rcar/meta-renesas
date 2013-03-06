@@ -5,9 +5,9 @@ KBRANCH_DEFAULT_armadillo800eva = "ltsi"
 KBRANCH_armadillo800eva = "${KBRANCH_DEFAULT}"
 KMACHINE_armadillo800eva = "armadillo800eva"
 
-LINUX_VERSION = "3.4.24"
+LINUX_VERSION = "3.4.25"
 
-SRCREV_machine_armadillo800eva ?= "4938ff7a961bcf44ef53c4a928f6cf9c4e6ddb4d"
+SRCREV_machine_armadillo800eva ?= "36273d8aa7bdf7744007ca8388ffccc8e74d933f"
 
 SRC_URI_append_armadillo800eva = " \
 	file://defconfig \
