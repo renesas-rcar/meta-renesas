@@ -1,13 +1,13 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-LINUX_VERSION = "3.4.24"
+LINUX_VERSION = "3.4.25"
 
 COMPATIBLE_MACHINE_bockw = "bockw"
 KBRANCH_DEFAULT_bockw = "bockw"
 KBRANCH_bockw = "${KBRANCH_DEFAULT}"
 KMACHINE_bockw = "bockw"
 
-SRCREV_machine_bockw ?= "7146d001a5f95068a3e2da23a8b3d15aeb20087a"
+SRCREV_machine_bockw ?= "36273d8aa7bdf7744007ca8388ffccc8e74d933f"
 
 SRC_URI_append_bockw = " \
 	file://defconfig \

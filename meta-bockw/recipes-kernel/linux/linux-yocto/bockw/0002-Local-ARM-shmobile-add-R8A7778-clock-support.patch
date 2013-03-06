@@ -1,7 +1,7 @@
-From 137110afcf5139f038b657a8d7524112c48615bd Mon Sep 17 00:00:00 2001
+From 62bca8c9de7c0f1cc562e1b7051fafc9f470957e Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 22 Feb 2013 09:22:42 +0900
-Subject: [PATCH 2/7] Local: ARM: shmobile: add R8A7778 clock support
+Subject: [PATCH 2/6] Local: ARM: shmobile: add R8A7778 clock support
 
 based on v0.4 datasheet
 
@@ -17,7 +17,7 @@ Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
  create mode 100644 arch/arm/mach-shmobile/include/mach/r8a7778.h
 
 diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
-index f8aaab7..bc991ca 100644
+index 34560ca..26faff0 100644
 --- a/arch/arm/mach-shmobile/Kconfig
 +++ b/arch/arm/mach-shmobile/Kconfig
 @@ -34,6 +34,12 @@ config ARCH_R8A7740
@@ -34,7 +34,7 @@ index f8aaab7..bc991ca 100644
  	bool "R-Car H1 (R8A77790)"
  	select CPU_V7
 diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
-index 48b3745..1577c8c 100644
+index e7c2590..78ea02a 100644
 --- a/arch/arm/mach-shmobile/Makefile
 +++ b/arch/arm/mach-shmobile/Makefile
 @@ -11,6 +11,7 @@ obj-$(CONFIG_ARCH_SH7377)	+= setup-sh7377.o clock-sh7377.o intc-sh7377.o
@@ -43,11 +43,11 @@ index 48b3745..1577c8c 100644
  obj-$(CONFIG_ARCH_R8A7740)	+= setup-r8a7740.o clock-r8a7740.o intc-r8a7740.o
 +obj-$(CONFIG_ARCH_R8A7778)	+= clock-r8a7778.o
  obj-$(CONFIG_ARCH_R8A7779)	+= setup-r8a7779.o clock-r8a7779.o intc-r8a7779.o
- obj-$(CONFIG_ARCH_EMEV2)	+= setup-emev2.o clock-emev2.o
  
+ # SMP objects
 diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
 new file mode 100644
-index 0000000..4e779444b
+index 0000000..4e77944
 --- /dev/null
 +++ b/arch/arm/mach-shmobile/clock-r8a7778.c
 @@ -0,0 +1,109 @@
@@ -161,11 +161,11 @@ index 0000000..4e779444b
 +		panic("failed to setup r8a7778 clocks\n");
 +}
 diff --git a/arch/arm/mach-shmobile/include/mach/common.h b/arch/arm/mach-shmobile/include/mach/common.h
-index 54a37a5..c2816d0 100644
+index c85e6ec..2d2d692 100644
 --- a/arch/arm/mach-shmobile/include/mach/common.h
 +++ b/arch/arm/mach-shmobile/include/mach/common.h
-@@ -71,6 +71,8 @@ extern void r8a7740_clock_init(u8 md_ck);
- extern void r8a7740_reserve_memory(void);
+@@ -68,6 +68,8 @@ extern void r8a7740_add_standard_devices(void);
+ extern void r8a7740_clock_init(u8 md_ck);
  extern void r8a7740_pinmux_init(void);
  
 +extern void r8a7778_clock_init(void);
