@@ -1,0 +1,4 @@
+kconf hardware marzen.cfg
+
+kconf hardware user-config.cfg
+include user-patches.scc
