@@ -1,15 +1,13 @@
-#inherit renesas-boot
-require recipes-bsp/u-boot/u-boot.inc
+require u-boot.inc
 
-PR = "r1"
-PV = "v2012.10"
+PR = "r2"
+PV = "v2013.01.01"
 
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=1707d6db1d42237583f50183a5651ecb"
 
-# Virtex-5 src location
 KBRANCH = "master"
 SRC_URI = "git://git.denx.de/u-boot.git;branch=${KBRANCH};protocol=git"
-SRCREV = "6528ff0109d81c1f21d20f9f1370782bccf87bcb"
+SRCREV = "e8ae0fa5edd152b2b29c470b88429be4cdcd2c46"
 
 S = "${WORKDIR}/git"
