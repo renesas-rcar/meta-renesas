@@ -1,8 +1,6 @@
-meta-renesas
+OpenEmbedded/Yocto BSP layer for Renesas Electronics's
 ==========
+This layer provides support for Renesas Electronics's platforms for use with
+OpenEmbedded and/or Yocto.
 
-This is the location for Renesas Electronics maintained BSPs.
-
-Please see the README files contained in the individual BSP layers for
-BSP-specific information.
-
+Layer maintainers: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
