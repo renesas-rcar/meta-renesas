@@ -1,7 +1,7 @@
-From 5b58a64b4293cbc1f41c76ce09fe1740cb6801d3 Mon Sep 17 00:00:00 2001
+From 24aeb3f5e8e41ce16efca21b12f6e48a266919af Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 22 Feb 2013 09:41:18 +0900
-Subject: [PATCH 6/6] Local: ARM: shmobile: bockw: add SMSC Eth support
+Subject: [PATCH 6/7] Local: ARM: shmobile: bockw: add SMSC Eth support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 ---

@@ -1,16 +1,17 @@
-From ac61572a10a3edb9e888fda57c390321e081521e Mon Sep 17 00:00:00 2001
+From 4b86f82bee47eb0b7b500178b1d47326a319cd4b Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 22 Feb 2013 09:48:24 +0900
-Subject: [PATCH 5/6] Local: ARM: shmobile: add R-Car M1A Bock-W platform
+Subject: [PATCH 5/7] Local: ARM: shmobile: add R-Car M1A Bock-W platform
  support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 ---
  arch/arm/configs/bockw_defconfig     |   67 ++++++++++++++++++++++++++++++++++
- arch/arm/mach-shmobile/Kconfig       |   13 +++++++
+ arch/arm/mach-shmobile/Kconfig       |    6 +++
  arch/arm/mach-shmobile/Makefile      |    1 +
  arch/arm/mach-shmobile/board-bockw.c |   48 ++++++++++++++++++++++++
- 4 files changed, 129 insertions(+)
+ arch/arm/tools/mach-types            |    1 +
+ 5 files changed, 123 insertions(+)
  create mode 100644 arch/arm/configs/bockw_defconfig
  create mode 100644 arch/arm/mach-shmobile/board-bockw.c
 
@@ -88,20 +89,13 @@ index 0000000..c358481
 +# CONFIG_ARM_UNWIND is not set
 +CONFIG_AVERAGE=y
 diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
-index 26faff0..e4daf5b 100644
+index bc991ca..1f165bf 100644
 --- a/arch/arm/mach-shmobile/Kconfig
 +++ b/arch/arm/mach-shmobile/Kconfig
-@@ -99,6 +99,19 @@ config MACH_BONITO
- 	select ARCH_REQUIRE_GPIOLIB
- 	depends on ARCH_R8A7740
+@@ -114,6 +114,12 @@ config MACH_ARMADILLO800EVA
+ 	select USE_OF
+ 	select SND_SOC_WM8978 if SND_SIMPLE_CARD
  
-+config MACH_ARMADILLO800EVA
-+	bool "Armadillo-800 EVA board"
-+	depends on ARCH_R8A7740
-+	select ARCH_REQUIRE_GPIOLIB
-+	select USE_OF
-+	select SND_SOC_WM8978 if SND_SIMPLE_CARD
-+
 +config MACH_BOCKW
 +	bool "BOCK-W platform"
 +	depends on ARCH_R8A7778
@@ -112,17 +106,17 @@ index 26faff0..e4daf5b 100644
  	bool "MARZEN board"
  	depends on ARCH_R8A7779
 diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
-index 7007b8d..02c54d1 100644
+index 6b0d6ed..a6e3a41 100644
 --- a/arch/arm/mach-shmobile/Makefile
 +++ b/arch/arm/mach-shmobile/Makefile
-@@ -49,6 +49,7 @@ obj-$(CONFIG_MACH_AG5EVM)	+= board-ag5evm.o
+@@ -53,6 +53,7 @@ obj-$(CONFIG_MACH_AG5EVM)	+= board-ag5evm.o
  obj-$(CONFIG_MACH_MACKEREL)	+= board-mackerel.o
  obj-$(CONFIG_MACH_KOTA2)	+= board-kota2.o
  obj-$(CONFIG_MACH_BONITO)	+= board-bonito.o
 +obj-$(CONFIG_MACH_BOCKW)	+= board-bockw.o
  obj-$(CONFIG_MACH_MARZEN)	+= board-marzen.o
- 
- # Framework support
+ obj-$(CONFIG_MACH_ARMADILLO800EVA)	+= board-armadillo800eva.o
+ obj-$(CONFIG_MACH_KZM9D)	+= board-kzm9d.o
 diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
 new file mode 100644
 index 0000000..d067622
@@ -177,6 +171,18 @@ index 0000000..d067622
 +	.init_late	= shmobile_init_late,
 +	.timer		= &shmobile_timer,
 +MACHINE_END
+diff --git a/arch/arm/tools/mach-types b/arch/arm/tools/mach-types
+index 2997e56..14dd290 100644
+--- a/arch/arm/tools/mach-types
++++ b/arch/arm/tools/mach-types
+@@ -540,6 +540,7 @@ armlex4210		MACH_ARMLEX4210		ARMLEX4210		3361
+ snowball		MACH_SNOWBALL		SNOWBALL		3363
+ xilinx_ep107		MACH_XILINX_EP107	XILINX_EP107		3378
+ nuri			MACH_NURI		NURI			3379
++bockw			MACH_BOCKW		BOCKW			3386
+ wtplug			MACH_WTPLUG		WTPLUG			3412
+ veridis_a300		MACH_VERIDIS_A300	VERIDIS_A300		3448
+ origen			MACH_ORIGEN		ORIGEN			3455
 -- 
 1.7.9.5
 

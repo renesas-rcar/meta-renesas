@@ -7,7 +7,7 @@ KBRANCH_DEFAULT_bockw = "bockw"
 KBRANCH_bockw = "${KBRANCH_DEFAULT}"
 KMACHINE_bockw = "bockw"
 
-SRCREV_machine_bockw ?= "36273d8aa7bdf7744007ca8388ffccc8e74d933f"
+SRCREV_machine_bockw ?= "48d7d215d960da249104e337104f6941250149a5"
 
 SRC_URI_append_bockw = " \
 	file://defconfig \

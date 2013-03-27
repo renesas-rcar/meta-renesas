@@ -1,7 +1,7 @@
-From eee4394b03e59c4659a77ec2a01c466aff020dc1 Mon Sep 17 00:00:00 2001
+From 22fdbdb755e88918b605cd6eea23da93f7f290e3 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 18 Jan 2013 17:54:54 +0900
-Subject: [PATCH 4/6] Local: ARM: shmobile: add R8A7778 setup support
+Subject: [PATCH 4/7] Local: ARM: shmobile: add R8A7778 setup support
 
 based on v0.4 datasheet
 
@@ -14,7 +14,7 @@ Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
  create mode 100644 arch/arm/mach-shmobile/setup-r8a7778.c
 
 diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
-index 0e66424..7007b8d 100644
+index 43186c7..6b0d6ed 100644
 --- a/arch/arm/mach-shmobile/Makefile
 +++ b/arch/arm/mach-shmobile/Makefile
 @@ -11,7 +11,7 @@ obj-$(CONFIG_ARCH_SH7377)	+= setup-sh7377.o clock-sh7377.o intc-sh7377.o
@@ -24,13 +24,13 @@ index 0e66424..7007b8d 100644
 -obj-$(CONFIG_ARCH_R8A7778)	+= clock-r8a7778.o intc-r8a7778.o
 +obj-$(CONFIG_ARCH_R8A7778)	+= setup-r8a7778.o clock-r8a7778.o intc-r8a7778.o
  obj-$(CONFIG_ARCH_R8A7779)	+= setup-r8a7779.o clock-r8a7779.o intc-r8a7779.o
+ obj-$(CONFIG_ARCH_EMEV2)	+= setup-emev2.o clock-emev2.o
  
- # SMP objects
 diff --git a/arch/arm/mach-shmobile/include/mach/common.h b/arch/arm/mach-shmobile/include/mach/common.h
-index c5b8572..37083b6 100644
+index 77b3005..a9a5392 100644
 --- a/arch/arm/mach-shmobile/include/mach/common.h
 +++ b/arch/arm/mach-shmobile/include/mach/common.h
-@@ -70,6 +70,9 @@ extern void r8a7740_pinmux_init(void);
+@@ -73,6 +73,9 @@ extern void r8a7740_pinmux_init(void);
  
  extern void r8a7778_clock_init(void);
  extern void r8a7778_init_irq(void);

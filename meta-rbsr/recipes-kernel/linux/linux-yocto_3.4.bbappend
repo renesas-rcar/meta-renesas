@@ -2,6 +2,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 LINUX_VERSION = "3.4.24"
 
+PR=1
+
 COMPATIBLE_MACHINE_rbsr = "rbsr"
 KBRANCH_DEFAULT_rbsr = "rbsr"
 KBRANCH_rbsr = "${KBRANCH_DEFAULT}"
