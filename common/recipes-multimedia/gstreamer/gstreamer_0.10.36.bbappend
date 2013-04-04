@@ -9,11 +9,13 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=55ca817ccb7d5b5b66355690e9abc605 \
                     file://gst/gst.h;beginline=1;endline=21;md5=8e5fe5e87d33a04479fde862e238eaa4"
 DEPENDS = "glib-2.0 libxml2 bison-native flex-native"
 
-PR = "r2"
+PR = "r3"
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/gstreamer:"
 SRC_URI = "http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-${PV}.tar.bz2 \
            file://check_fix.patch \
-           file://gst-inspect-check-error.patch"
+           file://gst-inspect-check-error.patch \
+           file://printf.patch"
 
 SRC_URI[md5sum] = "a0cf7d6877f694a1a2ad2b4d1ecb890b"
 SRC_URI[sha256sum] = "e556a529e0a8cf1cd0afd0cab2af5488c9524e7c3f409de29b5d82bb41ae7a30"
