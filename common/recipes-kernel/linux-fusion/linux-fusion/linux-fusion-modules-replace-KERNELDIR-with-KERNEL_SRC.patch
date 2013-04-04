@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 0115a44..cb2856b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -25,7 +25,7 @@ ONE_CPPFLAGS += \
+ 	-I`pwd`/one/$(ONECORE) \
+ 	-I`pwd`/include \
+ 
+-KERNEL_BUILD  = $(KERNELDIR)
++KERNEL_BUILD  = $(KERNEL_SRC)
+ # works for 2.6.23
+ KERNEL_SOURCE = $(shell grep ^KERNELSRC $(KERNEL_BUILD)/Makefile | cut -d ' ' -f 6)
+ ifeq ($(KERNEL_SOURCE), )
