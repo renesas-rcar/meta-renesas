@@ -1,0 +1,5 @@
+system=drmkms
+drmkms-use-prime-fd
+drmkms-device=/dev/dri/card1
+no-vt
+mode=1024x768
