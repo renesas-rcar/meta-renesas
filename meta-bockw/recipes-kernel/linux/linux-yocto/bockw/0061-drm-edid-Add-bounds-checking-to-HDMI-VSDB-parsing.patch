@@ -1,0 +1,78 @@
+From d2f9859a8c0c6a070db844d22c350fddc48a883c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
+Date: Thu, 16 Aug 2012 14:55:05 +0000
+Subject: [PATCH 061/138] drm: edid: Add bounds checking to HDMI VSDB parsing
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The length of HDMI VSDB must be at least 5 bytes. Other than the minimum,
+nothing else about the length is specified. Check the length before
+accessing any additional field beyond the minimum length.
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Reviewed-by: Adam Jackson <ajax@redhat.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 8504072a2a47c80344c1cf81537d1d433a979fc6)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid.c |   33 +++++++++++++++++++++------------
+ 1 files changed, 21 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index 7385485..bd5a112 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -1579,19 +1579,28 @@ add_cea_modes(struct drm_connector *connector, struct edid *edid)
+ }
+ 
+ static void
+-parse_hdmi_vsdb(struct drm_connector *connector, uint8_t *db)
++parse_hdmi_vsdb(struct drm_connector *connector, const u8 *db)
+ {
+-	connector->eld[5] |= (db[6] >> 7) << 1;  /* Supports_AI */
++	u8 len = cea_db_payload_len(db);
+ 
+-	connector->dvi_dual = db[6] & 1;
+-	connector->max_tmds_clock = db[7] * 5;
+-
+-	connector->latency_present[0] = db[8] >> 7;
+-	connector->latency_present[1] = (db[8] >> 6) & 1;
+-	connector->video_latency[0] = db[9];
+-	connector->audio_latency[0] = db[10];
+-	connector->video_latency[1] = db[11];
+-	connector->audio_latency[1] = db[12];
++	if (len >= 6) {
++		connector->eld[5] |= (db[6] >> 7) << 1;  /* Supports_AI */
++		connector->dvi_dual = db[6] & 1;
++	}
++	if (len >= 7)
++		connector->max_tmds_clock = db[7] * 5;
++	if (len >= 8) {
++		connector->latency_present[0] = db[8] >> 7;
++		connector->latency_present[1] = (db[8] >> 6) & 1;
++	}
++	if (len >= 9)
++		connector->video_latency[0] = db[9];
++	if (len >= 10)
++		connector->audio_latency[0] = db[10];
++	if (len >= 11)
++		connector->video_latency[1] = db[11];
++	if (len >= 12)
++		connector->audio_latency[1] = db[12];
+ 
+ 	DRM_LOG_KMS("HDMI: DVI dual %d, "
+ 		    "max TMDS clock %d, "
+@@ -1687,7 +1696,7 @@ void drm_edid_to_eld(struct drm_connector *connector, struct edid *edid)
+ 				break;
+ 			case VENDOR_BLOCK:
+ 				/* HDMI Vendor-Specific Data Block */
+-				if (db[1] == 0x03 && db[2] == 0x0c && db[3] == 0)
++				if (dbl >= 5 && db[1] == 0x03 && db[2] == 0x0c && db[3] == 0)
+ 					parse_hdmi_vsdb(connector, db);
+ 				break;
+ 			default:
+-- 
+1.7.5.4
+

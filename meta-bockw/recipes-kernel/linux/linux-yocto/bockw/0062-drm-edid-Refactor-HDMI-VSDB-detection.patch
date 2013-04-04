@@ -1,0 +1,107 @@
+From ce30be5de73bfc834ef31305f85a22b706bd5944 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
+Date: Thu, 16 Aug 2012 14:55:06 +0000
+Subject: [PATCH 062/138] drm: edid: Refactor HDMI VSDB detection
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+There are two slightly different pieces of code for HDMI VSDB
+detection. Unify the code into a single helper function.
+
+Also fix a bug where drm_detect_hdmi_monitor() would stop looking
+for the HDMI VSDB after the first vendor specific block is found,
+whether or not that block happened to be the HDMI VSDB. The
+standard allows for any number of vendor specific blocks to be
+present.
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Reviewed-by: Adam Jackson <ajax@redhat.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 14f77fdd58773245a0eae4243c039a420a52c820)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid.c |   38 ++++++++++++++++++++++----------------
+ 1 files changed, 22 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index bd5a112..47dcd9e 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -1624,6 +1624,21 @@ monitor_name(struct detailed_timing *t, void *data)
+ 		*(u8 **)data = t->data.other_data.data.str.str;
+ }
+ 
++static bool cea_db_is_hdmi_vsdb(const u8 *db)
++{
++	int hdmi_id;
++
++	if (cea_db_tag(db) != VENDOR_BLOCK)
++		return false;
++
++	if (cea_db_payload_len(db) < 5)
++		return false;
++
++	hdmi_id = db[1] | (db[2] << 8) | (db[3] << 16);
++
++	return hdmi_id == HDMI_IDENTIFIER;
++}
++
+ /**
+  * drm_edid_to_eld - build ELD from EDID
+  * @connector: connector corresponding to the HDMI/DP sink
+@@ -1696,7 +1711,7 @@ void drm_edid_to_eld(struct drm_connector *connector, struct edid *edid)
+ 				break;
+ 			case VENDOR_BLOCK:
+ 				/* HDMI Vendor-Specific Data Block */
+-				if (dbl >= 5 && db[1] == 0x03 && db[2] == 0x0c && db[3] == 0)
++				if (cea_db_is_hdmi_vsdb(db))
+ 					parse_hdmi_vsdb(connector, db);
+ 				break;
+ 			default:
+@@ -1781,35 +1796,26 @@ EXPORT_SYMBOL(drm_select_eld);
+ bool drm_detect_hdmi_monitor(struct edid *edid)
+ {
+ 	u8 *edid_ext;
+-	int i, hdmi_id;
++	int i;
+ 	int start_offset, end_offset;
+-	bool is_hdmi = false;
+ 
+ 	edid_ext = drm_find_cea_extension(edid);
+ 	if (!edid_ext)
+-		goto end;
++		return false;
+ 
+ 	if (cea_db_offsets(edid_ext, &start_offset, &end_offset))
+-		goto end;
++		return false;
+ 
+ 	/*
+ 	 * Because HDMI identifier is in Vendor Specific Block,
+ 	 * search it from all data blocks of CEA extension.
+ 	 */
+ 	for_each_cea_db(edid_ext, i, start_offset, end_offset) {
+-		/* Find vendor specific block */
+-		if (cea_db_tag(&edid_ext[i]) == VENDOR_BLOCK) {
+-			hdmi_id = edid_ext[i + 1] | (edid_ext[i + 2] << 8) |
+-				  edid_ext[i + 3] << 16;
+-			/* Find HDMI identifier */
+-			if (hdmi_id == HDMI_IDENTIFIER)
+-				is_hdmi = true;
+-			break;
+-		}
++		if (cea_db_is_hdmi_vsdb(&edid_ext[i]))
++			return true;
+ 	}
+ 
+-end:
+-	return is_hdmi;
++	return false;
+ }
+ EXPORT_SYMBOL(drm_detect_hdmi_monitor);
+ 
+-- 
+1.7.5.4
+

@@ -1,0 +1,137 @@
+From a6a3f9a1103778c2b3516f1ae6dfe9d03a6e429c Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 18 Mar 2013 10:30:17 +0100
+Subject: [PATCH 08/15] drm/rcar-du: Centralize DU device core resource
+ management
+
+Create reference-counted get/put handlers for the DU device. The get()
+operation enables the device clock and initializes core registers.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 72737f07538e138532050311873e1891f1976ef3)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c |   11 +-----
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c  |   53 ++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h  |    4 ++
+ 3 files changed, 59 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index aa7da6e..0e5eab1 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -232,14 +232,7 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 	if (WARN_ON(rcrtc->plane->format == NULL))
+ 		return;
+ 
+-	/* Enable clocks before accessing the hardware. */
+-	clk_prepare_enable(rcdu->clock);
+-
+-	/* Enable extended features */
+-	rcar_du_write(rcdu, DEFR, DEFR_CODE | DEFR_DEFE);
+-	rcar_du_write(rcdu, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
+-	rcar_du_write(rcdu, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
+-	rcar_du_write(rcdu, DEFR4, DEFR4_CODE);
++	rcar_du_get(rcdu);
+ 
+ 	/* Set display off and background to black */
+ 	rcar_du_crtc_write(rcrtc, DOOR, DOOR_RGB(0, 0, 0));
+@@ -297,7 +290,7 @@ static void rcar_du_crtc_stop(struct rcar_du_crtc *rcrtc)
+ 
+ 	rcar_du_start_stop(rcdu, false);
+ 
+-	clk_disable_unprepare(rcdu->clock);
++	rcar_du_put(rcdu);
+ 
+ 	rcrtc->started = false;
+ }
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 2236fa6..1facacc 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -26,6 +26,59 @@
+ #include "rcar_du_crtc.h"
+ #include "rcar_du_drv.h"
+ #include "rcar_du_kms.h"
++#include "rcar_du_regs.h"
++
++/* -----------------------------------------------------------------------------
++ * Core device operations
++ */
++
++/*
++ * rcar_du_get - Acquire a reference to the DU
++ *
++ * Acquiring a reference enables the device clock and setup core registers. A
++ * reference must be held before accessing any hardware registers.
++ *
++ * This function must be called with the DRM mode_config lock held.
++ *
++ * Return 0 in case of success or a negative error code otherwise.
++ */
++int rcar_du_get(struct rcar_du_device *rcdu)
++{
++	int ret;
++
++	if (rcdu->use_count)
++		goto done;
++
++	/* Enable clocks before accessing the hardware. */
++	ret = clk_prepare_enable(rcdu->clock);
++	if (ret < 0)
++		return ret;
++
++	/* Enable extended features */
++	rcar_du_write(rcdu, DEFR, DEFR_CODE | DEFR_DEFE);
++	rcar_du_write(rcdu, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
++	rcar_du_write(rcdu, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
++	rcar_du_write(rcdu, DEFR4, DEFR4_CODE);
++
++done:
++	rcdu->use_count++;
++	return 0;
++}
++
++/*
++ * rcar_du_put - Release a reference to the DU
++ *
++ * Releasing the last reference disables the device clock.
++ *
++ * This function must be called with the DRM mode_config lock held.
++ */
++void rcar_du_put(struct rcar_du_device *rcdu)
++{
++	if (--rcdu->use_count)
++		return;
++
++	clk_disable_unprepare(rcdu->clock);
++}
+ 
+ /* -----------------------------------------------------------------------------
+  * DRM operations
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index a0bc870..73faf77 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -31,6 +31,7 @@ struct rcar_du_device {
+ 
+ 	void __iomem *mmio;
+ 	struct clk *clock;
++	unsigned int use_count;
+ 
+ 	struct drm_device *ddev;
+ 
+@@ -48,6 +49,9 @@ struct rcar_du_device {
+ 	} planes;
+ };
+ 
++int rcar_du_get(struct rcar_du_device *rcdu);
++void rcar_du_put(struct rcar_du_device *rcdu);
++
+ static inline u32 rcar_du_read(struct rcar_du_device *rcdu, u32 reg)
+ {
+ 	return ioread32(rcdu->mmio + reg);
+-- 
+1.7.5.4
+

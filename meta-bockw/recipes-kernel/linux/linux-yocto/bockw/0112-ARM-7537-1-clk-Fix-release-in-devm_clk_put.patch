@@ -1,0 +1,34 @@
+From 4802dfad72054c1e9066035a9ec2aaed6621fff8 Mon Sep 17 00:00:00 2001
+From: Mark Brown <broonie@sirena.org.uk>
+Date: Wed, 19 Sep 2012 12:43:21 +0100
+Subject: [PATCH 112/138] ARM: 7537/1: clk: Fix release in devm_clk_put()
+
+Surprisingly devres_destroy() doesn't call the destructor for the
+resource it is destroying, use the newly added devres_release() instead
+to fix this.
+
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit 20332ff376995daa08dcee2a193555800f17514b)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/clk/clk-devres.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/clk/clk-devres.c b/drivers/clk/clk-devres.c
+index 0e86266..1db1d61 100644
+--- a/drivers/clk/clk-devres.c
++++ b/drivers/clk/clk-devres.c
+@@ -49,7 +49,7 @@ void devm_clk_put(struct device *dev, struct clk *clk)
+ {
+ 	int ret;
+ 
+-	ret = devres_destroy(dev, devm_clk_release, devm_clk_match, clk);
++	ret = devres_release(dev, devm_clk_release, devm_clk_match, clk);
+ 
+ 	WARN_ON(ret);
+ }
+-- 
+1.7.5.4
+

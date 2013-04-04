@@ -1,0 +1,113 @@
+From 2cd644dec49d541106576271a529fc4a02efb188 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 5 Mar 2013 19:35:50 +0900
+Subject: [PATCH 113/138] ARM: shmobile: bockw: Add Display Unit support
+
+Only the DU0 VGA output is currently supported. Support for the DU0 LVDS
+and DU1 LVDS outputs will require information about the panels that will
+be connected to those outputs.
+
+Only VGA and LVDS encoders and connectors are currently supported.
+---
+ arch/arm/mach-shmobile/board-bockw.c |   67 ++++++++++++++++++++++++++++++++++
+ 1 files changed, 67 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 9bd4850..757a6a1 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -23,8 +23,11 @@
+ #include <linux/irq.h>
+ #include <linux/platform_device.h>
+ #include <linux/smsc911x.h>
++#include <linux/platform_data/rcar-du.h>
++#include <linux/gpio.h>
+ #include <mach/irqs.h>
+ #include <mach/common.h>
++#include <mach/r8a7778.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+@@ -79,8 +82,41 @@ static struct platform_device smsc911x_device = {
+ 	.resource	= bockw_smsc911x_resources,
+ };
+ 
++/* DU */
++static struct resource rcar_du_resources[] = {
++	[0] = {
++		.name   = "Display Unit",
++		.start  = 0xfff80000,
++		.end    = 0xfffb1007,
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start  = gic_spi(31),
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_du_platform_data rcar_du_pdata = {
++	.encoders = {
++		[0] = {
++			.encoder = RCAR_DU_ENCODER_VGA,
++		},
++	},
++};
++
++static struct platform_device rcar_du_device = {
++	.name           = "rcar-du",
++	.num_resources  = ARRAY_SIZE(rcar_du_resources),
++	.resource       = rcar_du_resources,
++	.dev    = {
++		.platform_data = &rcar_du_pdata,
++		.coherent_dma_mask = ~0,
++	},
++};
++
+ static struct platform_device *bockw_devices[] __initdata = {
+ 	&smsc911x_device,
++	&rcar_du_device,
+ };
+ 
+ #define IRQ0MR		FPGA(0x18200030)
+@@ -101,6 +137,37 @@ static void __init bockw_init(void)
+ 	val &= ~(1 << 4); /* enable SMSC911x */
+ 	iowrite16(val, IRQ0MR);
+ 
++	/* Display Unit 0 (CN10: ARGB0) */
++	gpio_request(GPIO_FN_DU0_DR7, NULL);
++	gpio_request(GPIO_FN_DU0_DR6, NULL);
++	gpio_request(GPIO_FN_DU0_DR5, NULL);
++	gpio_request(GPIO_FN_DU0_DR4, NULL);
++	gpio_request(GPIO_FN_DU0_DR3, NULL);
++	gpio_request(GPIO_FN_DU0_DR2, NULL);
++	gpio_request(GPIO_FN_DU0_DR1, NULL);
++	gpio_request(GPIO_FN_DU0_DR0, NULL);
++	gpio_request(GPIO_FN_DU0_DG7, NULL);
++	gpio_request(GPIO_FN_DU0_DG6, NULL);
++	gpio_request(GPIO_FN_DU0_DG5, NULL);
++	gpio_request(GPIO_FN_DU0_DG4, NULL);
++	gpio_request(GPIO_FN_DU0_DG3, NULL);
++	gpio_request(GPIO_FN_DU0_DG2, NULL);
++	gpio_request(GPIO_FN_DU0_DG1, NULL);
++	gpio_request(GPIO_FN_DU0_DG0, NULL);
++	gpio_request(GPIO_FN_DU0_DB7, NULL);
++	gpio_request(GPIO_FN_DU0_DB6, NULL);
++	gpio_request(GPIO_FN_DU0_DB5, NULL);
++	gpio_request(GPIO_FN_DU0_DB4, NULL);
++	gpio_request(GPIO_FN_DU0_DB3, NULL);
++	gpio_request(GPIO_FN_DU0_DB2, NULL);
++	gpio_request(GPIO_FN_DU0_DB1, NULL);
++	gpio_request(GPIO_FN_DU0_DB0, NULL);
++	gpio_request(GPIO_FN_DU0_EXVSYNC_DU0_VSYNC, NULL);
++	gpio_request(GPIO_FN_DU0_EXHSYNC_DU0_HSYNC, NULL);
++	gpio_request(GPIO_FN_DU0_DOTCLKO_UT0, NULL);
++	gpio_request(GPIO_FN_DU0_DOTCLKO_UT1, NULL);
++	gpio_request(GPIO_FN_DU0_DISP, NULL);
++
+ 	r8a7778_add_standard_devices();
+ 	platform_add_devices(bockw_devices, ARRAY_SIZE(bockw_devices));
+ }
+-- 
+1.7.5.4
+

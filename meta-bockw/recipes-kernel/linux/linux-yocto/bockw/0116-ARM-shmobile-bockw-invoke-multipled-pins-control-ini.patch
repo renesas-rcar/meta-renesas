@@ -1,0 +1,26 @@
+From 5f4ab12621c944586ac7be49dbe9b224e7c784a7 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 7 Mar 2013 15:30:13 +0900
+Subject: [PATCH 116/138] ARM: shmobile: bockw: invoke multipled pins control
+ initialization
+
+---
+ arch/arm/mach-shmobile/board-bockw.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 757a6a1..ab42b07 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -132,6 +132,8 @@ static void __init bockw_init(void)
+ 	 * Now, it is assuming IRQ0 was used only from SMSC.
+ 	 */
+ 
++	r8a7778_pinmux_init();
++
+ 	/* interrupt mask on IRQ0 */
+ 	val = ioread16(IRQ0MR);
+ 	val &= ~(1 << 4); /* enable SMSC911x */
+-- 
+1.7.5.4
+

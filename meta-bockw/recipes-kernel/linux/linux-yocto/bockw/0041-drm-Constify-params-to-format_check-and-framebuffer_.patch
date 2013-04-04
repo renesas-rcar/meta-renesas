@@ -1,0 +1,44 @@
+From e327acb743082cc697fd081f6f51bb1e99a0c11c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
+Date: Thu, 24 May 2012 20:54:00 +0300
+Subject: [PATCH 041/138] drm: Constify params to format_check() and
+ framebuffer_checks()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit cff91b625f2cd607ddb7a82b453f7c67906b70db)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_crtc.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 9c89332..cca03f6 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -2116,7 +2116,7 @@ out:
+ 	return ret;
+ }
+ 
+-static int format_check(struct drm_mode_fb_cmd2 *r)
++static int format_check(const struct drm_mode_fb_cmd2 *r)
+ {
+ 	uint32_t format = r->pixel_format & ~DRM_FORMAT_BIG_ENDIAN;
+ 
+@@ -2185,7 +2185,7 @@ static int format_check(struct drm_mode_fb_cmd2 *r)
+ 	}
+ }
+ 
+-static int framebuffer_check(struct drm_mode_fb_cmd2 *r)
++static int framebuffer_check(const struct drm_mode_fb_cmd2 *r)
+ {
+ 	int ret, hsub, vsub, num_planes, i;
+ 
+-- 
+1.7.5.4
+

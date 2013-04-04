@@ -1,0 +1,47 @@
+From efbf4a790eb53d280d476151ab11ce99713f8a26 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 22 Mar 2013 17:15:13 +0900
+Subject: [PATCH 12/15] ARM: shmobile: bockw: Update to the new DU platform
+ data
+
+This change is ported from the Marzen board.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 1b081f1e6f4434ac6b63160fb46f8a77e78807f8)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/board-bockw.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 6039b9b..c5311db 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -96,14 +96,18 @@ static struct resource rcar_du_resources[] = {
+ 	},
+ };
+ 
+-static struct rcar_du_platform_data rcar_du_pdata = {
+-	.encoders = {
+-		[0] = {
+-			.encoder = RCAR_DU_ENCODER_VGA,
+-		},
++static struct rcar_du_encoder_data rcar_du_encoders[] = {
++	{
++		.encoder = RCAR_DU_ENCODER_VGA,
++		.output = 0,
+ 	},
+ };
+ 
++static struct rcar_du_platform_data rcar_du_pdata = {
++	.encoders = rcar_du_encoders,
++	.num_encoders = ARRAY_SIZE(rcar_du_encoders),
++};
++
+ static struct platform_device rcar_du_device = {
+ 	.name           = "rcar-du",
+ 	.num_resources  = ARRAY_SIZE(rcar_du_resources),
+-- 
+1.7.5.4
+

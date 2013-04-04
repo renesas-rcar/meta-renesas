@@ -1,0 +1,26 @@
+From 2702444f11f93ef0d53c1ddaef4d4825eabb9177 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 25 Mar 2013 14:46:05 +0900
+Subject: [PATCH 15/15] drm: gp2d: suppress debug logs output
+
+This change disables debug logs by default.
+---
+ drivers/gpu/drm/gp2d/gp2d_drm_drv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/gpu/drm/gp2d/gp2d_drm_drv.c b/drivers/gpu/drm/gp2d/gp2d_drm_drv.c
+index 3f6707d..04e4c08 100644
+--- a/drivers/gpu/drm/gp2d/gp2d_drm_drv.c
++++ b/drivers/gpu/drm/gp2d/gp2d_drm_drv.c
+@@ -423,7 +423,7 @@ module_init(gp2d_drm_init);
+ module_exit(gp2d_drm_exit);
+ 
+ 
+-unsigned int gp2d_drm_debug = 1 | 4;
++unsigned int gp2d_drm_debug = 0;
+ 
+ module_param(gp2d_drm_debug, uint, 0);
+ MODULE_PARM_DESC(gp2d_drm_debug, "Select debug flags (1=MAIN 2=GEM 4=EXEC 8=IRQ 16=VERBOSE 32=BUFFER)");
+-- 
+1.7.5.4
+

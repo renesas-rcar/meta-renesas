@@ -1,0 +1,110 @@
+From ecd1675e007164137318a19a2823713f63d6e441 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Fri, 29 Mar 2013 16:30:29 +0900
+Subject: [PATCH 03/11] Local: ARM: shmobile: r8a7778: add I2C platform support
+
+This patch enable R-Car I2C driver
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7778.c | 77 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 77 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index eaa1722..a3dce67 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -235,6 +235,79 @@ static struct platform_device tmu01_device = {
+ 	.num_resources	= ARRAY_SIZE(tmu01_resources),
+ };
+ 
++/* I2C */
++static struct resource rcar_i2c0_res[] = {
++	{
++		.start	= 0xffc70000,
++		.end	= 0xffc70fff,
++		.flags	= IORESOURCE_MEM,
++	}, {
++		.start	= gic_spi(67),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device i2c0_device = {
++	.name	= "i2c-rcar",
++	.id		= 0,
++	.resource	= rcar_i2c0_res,
++	.num_resources	= ARRAY_SIZE(rcar_i2c0_res),
++};
++
++static struct resource rcar_i2c1_res[] = {
++	{
++		.start	= 0xffc71000,
++		.end	= 0xffc71fff,
++		.flags	= IORESOURCE_MEM,
++	}, {
++		.start	= gic_spi(76),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device i2c1_device = {
++	.name		= "i2c-rcar",
++	.id		= 1,
++	.resource	= rcar_i2c1_res,
++	.num_resources	= ARRAY_SIZE(rcar_i2c1_res),
++};
++
++static struct resource rcar_i2c2_res[] = {
++	{
++		.start	= 0xffc72000,
++		.end	= 0xffc72fff,
++		.flags	= IORESOURCE_MEM,
++	}, {
++		.start	= gic_spi(77),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device i2c2_device = {
++	.name		= "i2c-rcar",
++	.id		= 2,
++	.resource	= rcar_i2c2_res,
++	.num_resources	= ARRAY_SIZE(rcar_i2c2_res),
++};
++
++static struct resource rcar_i2c3_res[] = {
++	{
++		.start	= 0xffc73000,
++		.end	= 0xffc73fff,
++		.flags	= IORESOURCE_MEM,
++	}, {
++		.start	= gic_spi(78),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device i2c3_device = {
++	.name		= "i2c-rcar",
++	.id		= 3,
++	.resource	= rcar_i2c3_res,
++	.num_resources	= ARRAY_SIZE(rcar_i2c3_res),
++};
++
+ static struct platform_device *r8a7778_early_devices[] __initdata = {
+ 	&scif0_device,
+ 	&scif1_device,
+@@ -244,6 +317,10 @@ static struct platform_device *r8a7778_early_devices[] __initdata = {
+ 	&scif5_device,
+ 	&tmu00_device,
+ 	&tmu01_device,
++	&i2c0_device,
++	&i2c1_device,
++	&i2c2_device,
++	&i2c3_device,
+ };
+ 
+ static struct platform_device *r8a7778_late_devices[] __initdata = {
+-- 
+1.8.2
+

@@ -1,0 +1,47 @@
+From 086cca6ff262460c2b6f5edbaa22b44bfcbe9069 Mon Sep 17 00:00:00 2001
+From: Damien Lespiau <damien.lespiau@intel.com>
+Date: Fri, 17 Aug 2012 14:20:02 +0000
+Subject: [PATCH 052/138] drm: Remove two unused fields from struct
+ drm_display_mode
+
+Signed-off-by: Damien Lespiau <damien.lespiau@intel.com>
+Reviewed-by: Jani Nikula <jani.nikula@intel.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 04ccfe77f132b973659f11954443214659014072)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_modes.c |    3 ---
+ include/drm/drm_crtc.h      |    2 --
+ 2 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_modes.c b/drivers/gpu/drm/drm_modes.c
+index b7adb4a..28637c1 100644
+--- a/drivers/gpu/drm/drm_modes.c
++++ b/drivers/gpu/drm/drm_modes.c
+@@ -706,9 +706,6 @@ void drm_mode_set_crtcinfo(struct drm_display_mode *p, int adjust_flags)
+ 	p->crtc_vblank_end = max(p->crtc_vsync_end, p->crtc_vtotal);
+ 	p->crtc_hblank_start = min(p->crtc_hsync_start, p->crtc_hdisplay);
+ 	p->crtc_hblank_end = max(p->crtc_hsync_end, p->crtc_htotal);
+-
+-	p->crtc_hadjusted = false;
+-	p->crtc_vadjusted = false;
+ }
+ EXPORT_SYMBOL(drm_mode_set_crtcinfo);
+ 
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index a1a0386..ced3625 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -166,8 +166,6 @@ struct drm_display_mode {
+ 	int crtc_vsync_start;
+ 	int crtc_vsync_end;
+ 	int crtc_vtotal;
+-	int crtc_hadjusted;
+-	int crtc_vadjusted;
+ 
+ 	/* Driver private mode info */
+ 	int private_size;
+-- 
+1.7.5.4
+

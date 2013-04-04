@@ -1,0 +1,42 @@
+From 3a5686efc10efe6c71c5a330e1129c5610a740ec Mon Sep 17 00:00:00 2001
+From: Adam Jackson <ajax@redhat.com>
+Date: Fri, 13 Apr 2012 16:33:38 -0400
+Subject: [PATCH 017/138] drm/edid: Give the est3 mode struct a real name
+
+We want the same type for extra modes inferred from ranges.
+
+Signed-off-by: Adam Jackson <ajax@redhat.com>
+Tested-by: Takashi Iwai <tiwai@suse.de>
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit cffd75480ceb1cefffb5595b03ce8383d0ba40ad)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid_modes.h |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
+index 8bf8235..c212133 100644
+--- a/drivers/gpu/drm/drm_edid_modes.h
++++ b/drivers/gpu/drm/drm_edid_modes.h
+@@ -412,12 +412,14 @@ static const struct drm_display_mode edid_est_modes[] = {
+ 		   DRM_MODE_FLAG_PHSYNC | DRM_MODE_FLAG_PVSYNC) }, /* 1152x864@75Hz */
+ };
+ 
+-static const struct {
++struct minimode {
+ 	short w;
+ 	short h;
+ 	short r;
+ 	short rb;
+-} est3_modes[] = {
++};
++
++static const struct minimode est3_modes[] = {
+ 	/* byte 6 */
+ 	{ 640, 350, 85, 0 },
+ 	{ 640, 400, 85, 0 },
+-- 
+1.7.5.4
+

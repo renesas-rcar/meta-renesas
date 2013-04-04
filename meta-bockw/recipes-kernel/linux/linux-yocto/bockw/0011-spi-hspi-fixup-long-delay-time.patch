@@ -1,0 +1,32 @@
+From fbb44555d4c0905095b1f522bc5ec628888927ed Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 5 Apr 2013 14:11:08 +0900
+Subject: [PATCH 11/11] spi: hspi: fixup long delay time
+
+Current HSPI driver is using msleep(20) on hspi_status_check_timeout(),
+but it was too long delay for SPI device.
+Bock-W board SPI access was too slow without this patch.
+This patch uses udelay(10) for it.
+
+Tested-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ drivers/spi/spi-sh-hspi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-sh-hspi.c b/drivers/spi/spi-sh-hspi.c
+index 8470ea7..40b9cc8 100644
+--- a/drivers/spi/spi-sh-hspi.c
++++ b/drivers/spi/spi-sh-hspi.c
+@@ -89,7 +89,7 @@ static int hspi_status_check_timeout(struct hspi_priv *hspi, u32 mask, u32 val)
+ 		if ((mask & hspi_read(hspi, SPSR)) == val)
+ 			return 0;
+ 
+-		msleep(20);
++		udelay(10);
+ 	}
+ 
+ 	dev_err(hspi->dev, "timeout\n");
+-- 
+1.8.2
+
