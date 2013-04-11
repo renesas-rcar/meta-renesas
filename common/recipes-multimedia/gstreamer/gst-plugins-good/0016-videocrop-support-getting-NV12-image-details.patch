@@ -1,0 +1,84 @@
+From 47cf0121df5c54d665ccbf9a721cddf547fbbce3 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 4 Oct 2012 11:29:44 +0900
+Subject: [PATCH 16/31] videocrop: support getting NV12 image details
+
+This patch adds a new pixel format definition that is NV12 format.
+The color format type of NV12 is classified into VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR.
+When rowstride or chroma_byte_offset is contained in caps, image
+details reflects these value.
+
+This is preliminary for NV12 zero-copy cropping.
+---
+ gst/videocrop/gstvideocrop.c |   21 +++++++++++++++++++++
+ gst/videocrop/gstvideocrop.h |    8 ++++++--
+ 2 files changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 0743719..b6336da 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -328,6 +328,27 @@ gst_video_crop_get_image_details_from_structure (GstVideoCrop * vcrop,
+             details->v_stride * (GST_ROUND_UP_2 (height) / 2);
+         break;
+       }
++      case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
++      {
++        gint stride, chroma_byte_offset;
++
++        details->packing = VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR;
++
++        if (gst_structure_get_int (structure, "rowstride", &stride))
++          details->stride = stride;
++        else
++          details->stride = GST_ROUND_UP_2 (width);
++
++        details->y_off = 0;
++        if (gst_structure_get_int (structure, "chroma_byte_offset",
++                &chroma_byte_offset))
++          details->uv_off = chroma_byte_offset;
++        else
++          details->uv_off = details->stride * GST_ROUND_UP_2 (height);
++
++        details->size = details->uv_off * 3 / 2;
++      }
++        break;
+       default:
+         goto unknown_format;
+     }
+diff --git a/gst/videocrop/gstvideocrop.h b/gst/videocrop/gstvideocrop.h
+index 5cfe03e..2e5d5e6 100644
+--- a/gst/videocrop/gstvideocrop.h
++++ b/gst/videocrop/gstvideocrop.h
+@@ -37,7 +37,8 @@ G_BEGIN_DECLS
+ {
+   VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE = 0,    /* RGBx, AYUV */
+   VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX,       /* UYVY, YVYU */
+-  VIDEO_CROP_PIXEL_FORMAT_PLANAR        /* I420, YV12 */
++  VIDEO_CROP_PIXEL_FORMAT_PLANAR,       /* I420, YV12 */
++  VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR   /* NV12 */
+ } VideoCropPixelFormat;
+ 
+ typedef struct _GstVideoCropImageDetails GstVideoCropImageDetails;
+@@ -51,7 +52,7 @@ struct _GstVideoCropImageDetails
+   guint size;
+ 
+   /* for packed RGB and YUV */
+-  guint stride;
++  guint stride;                 /* common use in semi-planar */
+   guint bytes_per_pixel;
+   guint8 macro_y_off;           /* for YUY2, YVYU, UYVY, Y offset within macropixel in bytes */
+ 
+@@ -59,6 +60,9 @@ struct _GstVideoCropImageDetails
+   guint y_stride, y_off;
+   guint u_stride, u_off;
+   guint v_stride, v_off;
++
++  /* for semi-planar YUV */
++  guint uv_off;
+ };
+ 
+ typedef struct _GstVideoCrop GstVideoCrop;
+-- 
+1.7.9.5
+

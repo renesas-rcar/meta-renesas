@@ -1,0 +1,104 @@
+From 1cce809f580828df792e35ae76a7a38685eec377 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 8 May 2012 17:04:13 +0900
+Subject: [PATCH 05/31] videocrop: correct coding style with gst-indent
+
+---
+ gst/videocrop/gstvideocrop.c |    7 +++----
+ gst/videocrop/gstvideocrop.h |   25 +++++++++++--------------
+ 2 files changed, 14 insertions(+), 18 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 04b6e61..1f09f8d 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -147,8 +147,7 @@ gst_video_crop_base_init (gpointer g_class)
+       "Crops video into a user-defined region",
+       "Tim-Philipp Müller <tim centricular net>");
+ 
+-  gst_element_class_add_static_pad_template (element_class,
+-      &sink_template);
++  gst_element_class_add_static_pad_template (element_class, &sink_template);
+   gst_element_class_add_static_pad_template (element_class, &src_template);
+ }
+ 
+@@ -639,8 +638,8 @@ gst_video_crop_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+   GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
+       GST_PTR_FORMAT, incaps, outcaps);
+ 
+-  if ((crop->crop_left | crop->crop_right | crop->crop_top | crop->
+-          crop_bottom) == 0) {
++  if ((crop->crop_left | crop->crop_right | crop->
++          crop_top | crop->crop_bottom) == 0) {
+     GST_LOG_OBJECT (crop, "we are using passthrough");
+     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), TRUE);
+   } else {
+diff --git a/gst/videocrop/gstvideocrop.h b/gst/videocrop/gstvideocrop.h
+index 477f21b..f05649d 100644
+--- a/gst/videocrop/gstvideocrop.h
++++ b/gst/videocrop/gstvideocrop.h
+@@ -23,7 +23,6 @@
+ #include <gst/base/gstbasetransform.h>
+ 
+ G_BEGIN_DECLS
+-
+ #define GST_TYPE_VIDEO_CROP \
+   (gst_video_crop_get_type())
+ #define GST_VIDEO_CROP(obj) \
+@@ -34,27 +33,27 @@ G_BEGIN_DECLS
+   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_CROP))
+ #define GST_IS_VIDEO_CROP_CLASS(klass) \
+   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_CROP))
+-
+-typedef enum {
+-  VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE = 0,  /* RGBx, AYUV */
+-  VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX,     /* UYVY, YVYU */
+-  VIDEO_CROP_PIXEL_FORMAT_PLANAR              /* I420, YV12 */
++    typedef enum
++{
++  VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE = 0,    /* RGBx, AYUV */
++  VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX,       /* UYVY, YVYU */
++  VIDEO_CROP_PIXEL_FORMAT_PLANAR        /* I420, YV12 */
+ } VideoCropPixelFormat;
+ 
+ typedef struct _GstVideoCropImageDetails GstVideoCropImageDetails;
+ struct _GstVideoCropImageDetails
+ {
+-  /*< private >*/
+-  VideoCropPixelFormat  packing;
++  /*< private > */
++  VideoCropPixelFormat packing;
+ 
+   guint width;
+   guint height;
+   guint size;
+ 
+   /* for packed RGB and YUV */
+-  guint   stride;
+-  guint   bytes_per_pixel;
+-  guint8  macro_y_off;            /* for YUY2, YVYU, UYVY, Y offset within macropixel in bytes */
++  guint stride;
++  guint bytes_per_pixel;
++  guint8 macro_y_off;           /* for YUY2, YVYU, UYVY, Y offset within macropixel in bytes */
+ 
+   /* for planar YUV */
+   guint y_stride, y_off;
+@@ -69,7 +68,7 @@ struct _GstVideoCrop
+ {
+   GstBaseTransform basetransform;
+ 
+-  /*< private >*/
++  /*< private > */
+   gint crop_left;
+   gint crop_right;
+   gint crop_top;
+@@ -87,6 +86,4 @@ struct _GstVideoCropClass
+ GType gst_video_crop_get_type (void);
+ 
+ G_END_DECLS
+-
+ #endif /* __GST_VIDEO_CROP_H__ */
+-
+-- 
+1.7.9.5
+

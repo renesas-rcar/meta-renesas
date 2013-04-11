@@ -1,0 +1,39 @@
+From 93c3d86c39fceb5a9dd6b390627da5090ee171dd Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 4 Oct 2012 10:33:03 +0900
+Subject: [PATCH 12/31] videocrop: add tests to determine if width and height
+ caps hold range value before getting image details
+
+This check is necessary because gst_video_crop_get_image_details_from_structure()
+can't be performed when caps contain range value.
+---
+ gst/videocrop/gstvideocrop.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 6af348a..059b11a 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -637,11 +637,14 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+       GstVideoCropImageDetails img_details = { 0, };
+       GValue stride = { 0, };
+ 
+-      gst_video_crop_get_image_details_from_structure (vcrop, &img_details,
+-          structure);
+-      g_value_init (&stride, G_TYPE_INT);
+-      g_value_set_int (&stride, (gint) img_details.stride);
+-      gst_structure_set_value (new_structure, "rowstride", &stride);
++      if (!GST_VALUE_HOLDS_INT_RANGE (&w_val) &&
++          !GST_VALUE_HOLDS_INT_RANGE (&h_val) &&
++          gst_video_crop_get_image_details_from_structure (vcrop, &img_details,
++              structure)) {
++        g_value_init (&stride, G_TYPE_INT);
++        g_value_set_int (&stride, (gint) img_details.stride);
++        gst_structure_set_value (new_structure, "rowstride", &stride);
++      }
+     }
+     g_value_unset (&w_val);
+     g_value_unset (&h_val);
+-- 
+1.7.9.5
+

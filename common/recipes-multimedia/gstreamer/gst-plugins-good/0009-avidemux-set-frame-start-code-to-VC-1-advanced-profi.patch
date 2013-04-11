@@ -1,0 +1,90 @@
+From a3dc6aa0c57e1fa00efdf0e68d3a4b8645519b9d Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 18 Jul 2012 19:30:34 +0900
+Subject: [PATCH 09/31] avidemux: set frame start code to VC-1 advanced
+ profile stream
+
+VC-1 advanced profile constrains the bitstream format to pair
+the frame data with the frame start code.
+This patch pulls frame data from previous plugin with extra field
+for containing a start code and inserts the start code before the
+frame data if the stream doesn't has the start code.
+---
+ gst/avi/gstavidemux.c |   51 ++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 48 insertions(+), 3 deletions(-)
+
+diff --git a/gst/avi/gstavidemux.c b/gst/avi/gstavidemux.c
+index b6c065f..385aa30 100644
+--- a/gst/avi/gstavidemux.c
++++ b/gst/avi/gstavidemux.c
+@@ -4689,6 +4689,10 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
+   guint64 out_offset, out_offset_end;
+   gboolean keyframe;
+   GstAviIndexEntry *entry;
++  guint8 *data;
++  GstStructure *structure;
++  guint32 fourcc;
++  gboolean need_st_code;
+ 
+   do {
+     stream_num = gst_avi_demux_find_next (avi, avi->segment.rate);
+@@ -4740,12 +4744,53 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
+         G_GUINT64_FORMAT " (0x%" G_GINT64_MODIFIER "x), kf %d", size,
+         stream_num, offset, offset, keyframe);
+ 
++    structure = gst_caps_get_structure (GST_PAD_CAPS (stream->pad), 0);
++    if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
++      /* set start code for VC-1 advanced profile if fourcc is 'WVC1' */
++      if (fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1'))
++        need_st_code = TRUE;
++      else
++        need_st_code = FALSE;
++    } else
++      need_st_code = FALSE;
++
+     /* FIXME, check large chunks and cut them up */
+ 
+     /* pull in the data */
+-    ret = gst_pad_pull_range (avi->sinkpad, offset, size, &buf);
+-    if (ret != GST_FLOW_OK)
+-      goto pull_failed;
++    if (need_st_code) {
++      if (offset < 4)
++        /* This branch isn't passed through because offset is definitely
++           more than 4 owing to container's header presented before
++           frame data. */
++        goto pull_failed;
++
++      ret = gst_pad_pull_range (avi->sinkpad, offset - 4, size + 4, &buf);
++      if (ret != GST_FLOW_OK)
++        goto pull_failed;
++
++      data = GST_BUFFER_DATA (buf);
++      /* check if this stream has a start code */
++      if (data[4] == 0x00 && data[5] == 0x00 && data[6] == 0x01 &&
++          data[7] == 0x0d) {
++        GstBuffer *sub_buf;
++
++        sub_buf = gst_buffer_create_sub (buf, 4, size);
++        if (sub_buf == NULL)
++          goto pull_failed;
++
++        gst_buffer_unref (buf);
++        buf = sub_buf;
++      } else {
++        data[0] = 0x00;
++        data[1] = 0x00;
++        data[2] = 0x01;
++        data[3] = 0x0d;
++      }
++    } else {
++      ret = gst_pad_pull_range (avi->sinkpad, offset, size, &buf);
++      if (ret != GST_FLOW_OK)
++        goto pull_failed;
++    }
+ 
+     /* check for short buffers, this is EOS as well */
+     if (GST_BUFFER_SIZE (buf) < size)
+-- 
+1.7.9.5
+
