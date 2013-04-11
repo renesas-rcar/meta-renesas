@@ -1,0 +1,79 @@
+From 081a7a667959f3dd549231f35f793d0961b1d581 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Fri, 21 Sep 2012 14:38:24 +0900
+Subject: [PATCH 57/97] ext/dfbvideosink: use tile width for accessing tiled
+ image efficiently
+
+This patch gets tile width from caps and optimize the MERAM
+configuration for accessing tiled image efficiently.
+---
+ ext/directfb/dfbvideosink.c |   29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 53b058b..6a27365 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1524,8 +1524,10 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+ #if defined(HAVE_SHVIO) && defined(HAVE_SHMERAM)
+   gint stride;
+   gint sliceheight;
++  gint tilewidth;
+   gulong addr;
+   gulong val;
++  gulong sbsize;
+ #endif
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (bsink);
+@@ -1563,6 +1565,10 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+   sliceheight =
+       (dfbvideosink->chroma_byte_offset >
+       0) ? dfbvideosink->chroma_byte_offset / stride : video_height;
++  if (!gst_structure_get_int (structure, "tile-width", &tilewidth)) {
++    GST_LOG_OBJECT (dfbvideosink, "can't get tile width from caps");
++    tilewidth = 0;
++  }
+ 
+   /* set up a readahead icb for Y plane
+      4 lines / block-line, 8 lines held, 16 lines allocated */
+@@ -1580,8 +1586,27 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxSSARB, 0);
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxBSIZE,
+       (((sliceheight - 1) & 0x1fff) << 16) | ((stride - 1) & 0x7fff));
++  sbsize = stride & 0xfff0;
++  switch (tilewidth) {
++    case 16:
++      sbsize |= 0x80000000;
++      break;
++    case 32:
++      sbsize |= 0x80000000 | 0x10000000;
++      break;
++    case 64:
++      sbsize |= 0x80000000 | 0x20000000;
++      break;
++    case 128:
++      sbsize |= 0x80000000 | 0x30000000;
++      break;
++    default:
++      GST_LOG_OBJECT (dfbvideosink, "tile width %d unsupported", tilewidth);
++    case 0:
++      break;
++  }
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxSBSIZE,
+-      stride & 0xfff0);
++      sbsize);
+   addr =
+       meram_get_icb_address (dfbvideosink->meram, dfbvideosink->icby[SRC], 0);
+   uiomux_register ((void *) addr, addr, 4096 * sliceheight);
+@@ -1604,7 +1629,7 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxBSIZE,
+         (((sliceheight / 2 - 1) & 0x1fff) << 16) | ((stride - 1) & 0x7fff));
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxSBSIZE,
+-        stride & 0xfff0);
++        sbsize);
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxSSARB,
+         0);
+     addr =
+-- 
+1.7.10.4
+

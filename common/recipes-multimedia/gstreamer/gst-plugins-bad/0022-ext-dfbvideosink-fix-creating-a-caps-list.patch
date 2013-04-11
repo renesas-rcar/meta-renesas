@@ -1,0 +1,127 @@
+From 5fdef30bf085f953babe461c2c7b514ba1bcd3d6 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 16 Apr 2012 16:25:39 +0900
+Subject: [PATCH 22/97] ext/dfbvideosink: fix creating a caps list
+
+This patch gives priority to blit over libshvio to judge which
+colors formats would be available.
+Only if an external surface is specified, libshvio would be always
+used. Because blit isn't used in this case in gst_dfbvideosink_show_frame().
+---
+ ext/directfb/dfbvideosink.c |   85 +++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 70 insertions(+), 15 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 709ce14..2c1d808 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1215,14 +1215,82 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
+     GST_DEBUG_OBJECT (dfbvideosink, "getcaps called, checking our internal "
+         "format");
+     if (dfbvideosink->ext_surface) {
++#if defined(HAVE_SHVIO)
++      /* append color formats which can be converted by libshvio */
++      if (dfbvideosink->vio) {
++        caps = gst_caps_new_empty ();
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_RGB16));
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_RGB24));
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_RGB32));
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_UYVY));
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_ARGB));
++      }
++#else
+       /* We are not rendering to our own surface, returning this surface's
+        *  pixel format */
+       caps = gst_dfbvideosink_get_caps_from_format (dfbvideosink->pixel_format);
++#endif
+     } else {
+       /* Try some formats */
+       gboolean accelerated = TRUE;
+       caps = gst_caps_new_empty ();
+-
++#if defined(HAVE_SHVIO)
++      /* The following color formats are can be converted by libshvio.
++       * These should be added to a caps list without blit supported.
++       * DSPF_RGB16
++       * DSPF_RGB24
++       * DSPF_RGB32
++       * DSPF_ARGB
++       * DSPF_UYVY
++       * DSPF_YV12
++       */
++      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB16,
++              accelerated) || dfbvideosink->vio) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_RGB16));
++      }
++      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB24,
++              accelerated) || dfbvideosink->vio) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_RGB24));
++      }
++      if (dfbvideosink->vio) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_RGB32));
++      }
++      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_ARGB,
++              accelerated) || dfbvideosink->vio) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_ARGB));
++      }
++      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_YUY2,
++              accelerated)) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_YUY2));
++      }
++      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_UYVY,
++              accelerated) || dfbvideosink->vio) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_UYVY));
++      }
++      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_I420,
++              accelerated)) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_I420));
++      }
++      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_YV12,
++              accelerated) || dfbvideosink->vio) {
++        gst_caps_append (caps,
++            gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
++      }
++#else
+       do {
+         if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB16,
+                 accelerated)) {
+@@ -1266,21 +1334,8 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
+         }
+         accelerated = !accelerated;
+       } while (accelerated == FALSE);
+-    }
+-#if defined(HAVE_SHVIO)
+-    /* append color formats which can be converted by libshvio */
+-    if (dfbvideosink->vio) {
+-      gst_caps_append (caps,
+-          gst_dfbvideosink_get_caps_from_format (DSPF_RGB16));
+-      gst_caps_append (caps,
+-          gst_dfbvideosink_get_caps_from_format (DSPF_RGB24));
+-      gst_caps_append (caps,
+-          gst_dfbvideosink_get_caps_from_format (DSPF_RGB32));
+-      gst_caps_append (caps, gst_dfbvideosink_get_caps_from_format (DSPF_UYVY));
+-      gst_caps_append (caps, gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
+-      gst_caps_append (caps, gst_dfbvideosink_get_caps_from_format (DSPF_ARGB));
+-    }
+ #endif /* defined(HAVE_SHVIO) */
++    }
+   }
+ 
+   for (i = 0; i < gst_caps_get_size (caps); i++) {
+-- 
+1.7.10.4
+

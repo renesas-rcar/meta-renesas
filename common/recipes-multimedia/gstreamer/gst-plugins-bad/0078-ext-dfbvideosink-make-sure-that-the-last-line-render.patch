@@ -1,0 +1,47 @@
+From 62abb413d74e6a3b186e5c4ad3eb67bbb082feb9 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 5 Nov 2012 11:23:41 +0900
+Subject: [PATCH 78/97] ext/dfbvideosink: make sure that the last line
+ rendered is from the top field when an output image
+ has odd height
+
+When an output image had odd height, there was a one-line gap at the
+bottom of the image. It was due to an extra line of the bottom field
+instead of the top field being rendered by mistake. This incorrect behavior
+created a gap above the last line after the progressive conversion.
+This patch fixes it to render the last line of the top field when
+the height is odd.
+---
+ ext/directfb/dfbvideosink.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 3befc2c..6274ae2 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -2334,9 +2334,9 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+       src_datay = GST_BUFFER_DATA (buf);
+       src_datac = src_datay + dfbvideosink->chroma_byte_offset;
+       is_src_odd = src.h % 2;
+-      src.h /= 2;
++      src.h = src.h / 2 + is_src_odd;
+       is_dst_odd = result.h % 2;
+-      result.h /= 2;
++      result.h = result.h / 2 + is_dst_odd;
+       ret =
+           gst_dfbvideosink_shvio_stretchblit (dfbvideosink, src_datay,
+           src_datac, &src, src_format, src_pitch, data, &result, dst_format,
+@@ -2346,8 +2346,8 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+             "failed bliting an interlaced image with VIO");
+ 
+       /* Then, prepare for rendering the bottom field */
+-      src.h += is_src_odd;
+-      result.h += is_dst_odd;
++      src.h -= is_src_odd;
++      result.h -= is_dst_odd;
+       src_datay += dfbvideosink->next_field_offset;
+       src_datac += dfbvideosink->next_field_offset / 2;
+       data += dest_pitch;       /* step into the next line */
+-- 
+1.7.10.4
+

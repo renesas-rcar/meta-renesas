@@ -1,0 +1,27 @@
+From 4ff79fda9c3ff51497ea0eda3ce1bfdb74dc3a3d Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 8 Mar 2012 11:46:54 +0900
+Subject: [PATCH 01/97] directfb: trick hardware acceleration check
+
+This is needed to run dfbvideosink until the hardware
+acceleration check supported.
+---
+ ext/directfb/dfbvideosink.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index c3417a5..690cd66 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -618,7 +618,7 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+         dfbvideosink->hw_scaling = TRUE;
+       } else {
+         GST_DEBUG_OBJECT (dfbvideosink, "StretchBlit is not accelerated");
+-        dfbvideosink->hw_scaling = FALSE;
++        dfbvideosink->hw_scaling = TRUE;        /* temporary support */
+       }
+ 
+       dfbvideosink->layer_id = -1;
+-- 
+1.7.10.4
+

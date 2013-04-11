@@ -1,0 +1,707 @@
+From 4fd1ddfc150a1a575dbe30397788373ba9130439 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Tue, 4 Sep 2012 18:24:52 +0900
+Subject: [PATCH 56/97] ext/dfbvideosink: assign ICB MERAM as readahead cache
+ for SDRAM-to-VIO I/O
+
+This consists of changes for configure.ac and Makefile.am
+because this change requires libshmeram.
+Unfortunately ICB MERAM setting in this change must be hard-code
+for R-CarE1 platforms because of no framework for supporting
+dynamic configuration of ICB MERAM.
+---
+ configure.ac                |    6 +
+ ext/directfb/Makefile.am    |    4 +-
+ ext/directfb/dfbvideosink.c |  516 ++++++++++++++++++++++++++++++-------------
+ ext/directfb/dfbvideosink.h |   20 +-
+ 4 files changed, 386 insertions(+), 160 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index db98e2f..e3f169f 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -819,6 +819,12 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
+   ])
+   if test $HAVE_SHVIO = "yes"; then
+     AC_DEFINE(HAVE_SHVIO, 1, [Define if we have libshvio])
++    PKG_CHECK_MODULES(SHMERAM, meram >= 0.9.2, HAVE_SHMERAM="yes", [
++      HAVE_SHMERAM="no"
++    ])
++    if test $HAVE_SHMERAM = "yes"; then
++      AC_DEFINE(HAVE_SHMERAM, 1, [Define if we have libshmeram])
++    fi
+   fi
+ ])
+ 
+diff --git a/ext/directfb/Makefile.am b/ext/directfb/Makefile.am
+index bc91440..a039653 100644
+--- a/ext/directfb/Makefile.am
++++ b/ext/directfb/Makefile.am
+@@ -4,12 +4,12 @@ plugin_LTLIBRARIES = libgstdfbvideosink.la
+ libgstdfbvideosink_la_SOURCES =  dfbvideosink.c
+ libgstdfbvideosink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+ 			       $(DIRECTFB_CFLAGS) $(SHVIO_CFLAGS) \
+-			       $(UIOMUX_CFLAGS)
++			       $(SHMERAM_CFLAGS) $(UIOMUX_CFLAGS)
+ libgstdfbvideosink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
+ 			       -lgstvideo-$(GST_MAJORMINOR) \
+ 			       -lgstinterfaces-$(GST_MAJORMINOR) \
+ 			       $(DIRECTFB_LIBS) $(LIBOIL_LIBS) \
+-			       $(SHVIO_LIBS) $(UIOMUX_LIBS)
++			       $(SHVIO_LIBS) $(SHMERAM_LIBS) $(UIOMUX_LIBS)
+ libgstdfbvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+ libgstdfbvideosink_la_LIBTOOLFLAGS = --tag=disable-static
+ 
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 54856e9..53b058b 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -555,6 +555,88 @@ beach:
+   return DFENUM_OK;
+ }
+ 
++#if defined(HAVE_SHVIO)
++static inline gint
++byte2pixel (gint bytes, DFBSurfacePixelFormat dfbfmt)
++{
++  switch (dfbfmt) {
++    case DSPF_NV12:
++      return bytes * 2 / 3;
++    case DSPF_NV16:
++    case DSPF_YV12:
++      return bytes;
++    case DSPF_UYVY:
++    case DSPF_RGB16:
++      return bytes / 2;
++    case DSPF_RGB24:
++      return bytes / 3;
++    case DSPF_RGB32:
++    case DSPF_ARGB:
++      return bytes / 4;
++    default:
++      break;
++  }
++
++  return -1;
++}
++
++#if defined(HAVE_SHMERAM)
++static inline gint
++pixel2byte (gint pixels, DFBSurfacePixelFormat dfbfmt)
++{
++  switch (dfbfmt) {
++    case DSPF_NV12:
++      return pixels * 3 / 2;
++    case DSPF_NV16:
++    case DSPF_YV12:
++      return pixels;
++    case DSPF_UYVY:
++    case DSPF_RGB16:
++      return pixels * 2;
++    case DSPF_RGB24:
++      return pixels * 3;
++    case DSPF_RGB32:
++    case DSPF_ARGB:
++      return pixels * 4;
++    default:
++      break;
++  }
++
++  return -1;
++}
++#endif /* defined(HAVE_SHMERAM) */
++
++static inline ren_vid_format_t
++dfb2shvio_format (DFBSurfacePixelFormat dfbfmt)
++{
++  switch (dfbfmt) {
++    case DSPF_NV12:
++      return REN_NV12;
++    case DSPF_NV16:
++      return REN_NV16;
++    case DSPF_YV12:
++      return REN_YV12;
++    case DSPF_UYVY:
++      return REN_UYVY;
++    case DSPF_RGB16:
++      return REN_RGB565;
++    case DSPF_RGB24:
++      return REN_RGB24;
++    case DSPF_RGB32:
++      /* compensate for an interpretation difference of colorspace definitions
++         between directfb and libshvio */
++      return REN_XRGB32;
++    case DSPF_ARGB:
++      return REN_ARGB32;
++    default:
++      break;
++  }
++
++  return REN_UNKNOWN;
++}
++
++#endif /* defined(HAVE_SHVIO) */
++
+ static gboolean
+ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+ {
+@@ -822,6 +904,35 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+   if (dfbvideosink->vio == NULL)
+     GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE,
+         (NULL), ("Failed initializing libshvio"));
++#if defined(HAVE_SHMERAM)
++  else {
++    MERAM_REG *regs;
++    gulong val;
++    gint stride;
++    guint8 *data;
++    DFBResult res;
++
++    dfbvideosink->meram = meram_open ();
++    if (dfbvideosink->meram == NULL)
++      GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE, (NULL),
++          ("Failed initializing libshmeram"));
++    regs = meram_lock_reg (dfbvideosink->meram);
++    meram_read_reg (dfbvideosink->meram, regs, MEVCR1, &val);
++    val |= 1 << 29;             /* use 0xc0000000-0xdfffffff */
++    meram_write_reg (dfbvideosink->meram, regs, MEVCR1, val);
++    meram_unlock_reg (dfbvideosink->meram, regs);
++    dfbvideosink->icby[SRC] = dfbvideosink->icbc[SRC] = NULL;
++
++    /* get byte-stride of the target surface */
++    res = surface->Lock (surface, DSLF_WRITE, (void *) &data, &stride);
++    if (res != DFB_OK) {
++      GST_WARNING_OBJECT (dfbvideosink, "failed locking the external "
++          "subsurface for writing");
++    } else {
++      surface->Unlock (surface);
++    }
++  }
++#endif /* defined(HAVE_SHMERAM) */
+ #endif /* defined(HAVE_SHVIO) */
+ 
+   dfbvideosink->setup = TRUE;
+@@ -896,6 +1007,20 @@ gst_dfbvideosink_cleanup (GstDfbVideoSink * dfbvideosink)
+   if (dfbvideosink->vio) {
+     shvio_close (dfbvideosink->vio);
+     dfbvideosink->vio = NULL;
++#if defined(HAVE_SHMERAM)
++    if (dfbvideosink->meram) {
++      if (dfbvideosink->icby[SRC]) {
++        meram_unlock_icb (dfbvideosink->meram, dfbvideosink->icby[SRC]);
++        dfbvideosink->icby[SRC] = NULL;
++      }
++      if (dfbvideosink->icbc[SRC]) {
++        meram_unlock_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC]);
++        dfbvideosink->icbc[SRC] = NULL;
++      }
++      meram_close (dfbvideosink->meram);
++      dfbvideosink->meram = NULL;
++    }
++#endif /* defined(HAVE_SHMERAM) */
+   }
+ #endif /* defined(HAVE_SHVIO) */
+ 
+@@ -1396,6 +1521,12 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+   gint video_width, video_height;
+   const GValue *framerate;
+   DFBSurfacePixelFormat pixel_format = DSPF_UNKNOWN;
++#if defined(HAVE_SHVIO) && defined(HAVE_SHMERAM)
++  gint stride;
++  gint sliceheight;
++  gulong addr;
++  gulong val;
++#endif
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (bsink);
+ 
+@@ -1407,14 +1538,6 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+   if (!res) {
+     goto beach;
+   }
+-#if defined(HAVE_SHVIO)
+-  if (!gst_structure_get_int (structure, "rowstride", &dfbvideosink->rowstride))
+-    GST_LOG_OBJECT (dfbvideosink, "can't get rowstride from caps");
+-  if (!gst_structure_get_int (structure, "chroma_byte_offset",
+-          &dfbvideosink->chroma_byte_offset))
+-    GST_LOG_OBJECT (dfbvideosink, "can't get chroma_byte_offset from caps");
+-#endif
+-
+   dfbvideosink->fps_n = gst_value_get_fraction_numerator (framerate);
+   dfbvideosink->fps_d = gst_value_get_fraction_denominator (framerate);
+ 
+@@ -1426,6 +1549,73 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+       gst_dfbvideosink_get_format_name (pixel_format), dfbvideosink->fps_n,
+       dfbvideosink->fps_d);
+ 
++#if defined(HAVE_SHVIO)
++  if (!gst_structure_get_int (structure, "rowstride", &dfbvideosink->rowstride))
++    GST_LOG_OBJECT (dfbvideosink, "can't get rowstride from caps");
++  if (!gst_structure_get_int (structure, "chroma_byte_offset",
++          &dfbvideosink->chroma_byte_offset))
++    GST_LOG_OBJECT (dfbvideosink, "can't get chroma_byte_offset from caps");
++
++#if defined(HAVE_SHMERAM)
++  stride =
++      (dfbvideosink->rowstride >
++      0) ? dfbvideosink->rowstride : pixel2byte (video_width, pixel_format);
++  sliceheight =
++      (dfbvideosink->chroma_byte_offset >
++      0) ? dfbvideosink->chroma_byte_offset / stride : video_height;
++
++  /* set up a readahead icb for Y plane
++     4 lines / block-line, 8 lines held, 16 lines allocated */
++  if (dfbvideosink->icby[SRC])
++    meram_unlock_icb (dfbvideosink->meram, dfbvideosink->icby[SRC]);
++  dfbvideosink->icby[SRC] = meram_lock_icb (dfbvideosink->meram, ICB_SRC_Y);
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxMCNF,
++      0x010f0000);
++  meram_read_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL, &val);
++  if (val & (7 << 4))
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL,
++        val | 7 << 4);
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL,
++      0xa0000701);
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxSSARB, 0);
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxBSIZE,
++      (((sliceheight - 1) & 0x1fff) << 16) | ((stride - 1) & 0x7fff));
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxSBSIZE,
++      stride & 0xfff0);
++  addr =
++      meram_get_icb_address (dfbvideosink->meram, dfbvideosink->icby[SRC], 0);
++  uiomux_register ((void *) addr, addr, 4096 * sliceheight);
++
++  /* set up a readahead icb for CbCr plane
++     4 lines / block-line, 8 lines held, 16 lines allocated */
++  if (dfbvideosink->icbc[SRC])
++    meram_unlock_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC]);
++  if (is_ycbcr (dfb2shvio_format (pixel_format)) && pixel_format != DSPF_UYVY) {
++    dfbvideosink->icbc[SRC] = meram_lock_icb (dfbvideosink->meram, ICB_SRC_C);
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxMCNF,
++        0x010f0000);
++    meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
++        &val);
++    if (val & (7 << 4))
++      meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
++          val | 7 << 4);
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
++        0xa0200701);
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxBSIZE,
++        (((sliceheight / 2 - 1) & 0x1fff) << 16) | ((stride - 1) & 0x7fff));
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxSBSIZE,
++        stride & 0xfff0);
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxSSARB,
++        0);
++    addr =
++        meram_get_icb_address (dfbvideosink->meram, dfbvideosink->icbc[SRC], 0);
++    uiomux_register ((void *) addr, addr, 4096 * sliceheight);
++  } else {
++    dfbvideosink->icbc[SRC] = NULL;
++  }
++#endif /* defined(HAVE_SHMERAM) */
++#endif /* defined(HAVE_SHVIO) */
++
+   if (dfbvideosink->hw_scaling && dfbvideosink->par) {
+     gint video_par_n, video_par_d;      /* video's PAR */
+     gint display_par_n, display_par_d;  /* display's PAR */
+@@ -1668,62 +1858,6 @@ gst_dfbvideosink_get_times (GstBaseSink * bsink, GstBuffer * buf,
+   }
+ }
+ 
+-#if defined(HAVE_SHVIO)
+-static inline gint
+-byte2pixel (gint bytes, DFBSurfacePixelFormat dfbfmt)
+-{
+-  switch (dfbfmt) {
+-    case DSPF_NV12:
+-      return bytes * 2 / 3;
+-    case DSPF_NV16:
+-    case DSPF_YV12:
+-      return bytes;
+-    case DSPF_UYVY:
+-    case DSPF_RGB16:
+-      return bytes / 2;
+-    case DSPF_RGB24:
+-      return bytes / 3;
+-    case DSPF_RGB32:
+-    case DSPF_ARGB:
+-      return bytes / 4;
+-    default:
+-      break;
+-  }
+-
+-  return -1;
+-}
+-
+-static inline ren_vid_format_t
+-dfb2shvio_format (DFBSurfacePixelFormat dfbfmt)
+-{
+-  switch (dfbfmt) {
+-    case DSPF_NV12:
+-      return REN_NV12;
+-    case DSPF_NV16:
+-      return REN_NV16;
+-    case DSPF_YV12:
+-      return REN_YV12;
+-    case DSPF_UYVY:
+-      return REN_UYVY;
+-    case DSPF_RGB16:
+-      return REN_RGB565;
+-    case DSPF_RGB24:
+-      return REN_RGB24;
+-    case DSPF_RGB32:
+-      /* compensate for an interpretation difference of colorspace definitions
+-         between directfb and libshvio */
+-      return REN_XRGB32;
+-    case DSPF_ARGB:
+-      return REN_ARGB32;
+-    default:
+-      break;
+-  }
+-
+-  return REN_UNKNOWN;
+-}
+-
+-#endif /* defined(HAVE_SHVIO) */
+-
+ /* wrap gst_video_sink_center_rect() and control image aspect ratio in scaling */
+ static void
+ gst_dfbvideosink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
+@@ -1741,6 +1875,142 @@ gst_dfbvideosink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
+   }
+ }
+ 
++#if defined(HAVE_SHVIO)
++static GstFlowReturn
++gst_dfbvideosink_shvio_stretchblit (GstDfbVideoSink * dfbvideosink,
++    GstBuffer * buf, GstVideoRectangle * src, DFBSurfacePixelFormat src_format,
++    gint src_pitch, guint8 * data, GstVideoRectangle * dst,
++    DFBSurfacePixelFormat dst_format, gint dest_pitch)
++{
++  struct ren_vid_surface viosurface[2];
++  int ret;
++#if defined(HAVE_SHMERAM)
++  gulong phys[2];
++  MERAM_REG *regs;
++#endif /* defined(HAVE_SHMERAM) */
++
++  if (dfbvideosink->vio == NULL)
++    return GST_FLOW_NOT_SUPPORTED;
++
++  /* Set up source viosurface */
++  viosurface[SRC].w = src->w;
++  viosurface[SRC].h = src->h;
++  viosurface[SRC].format = dfb2shvio_format (src_format);
++  if (viosurface[SRC].format == REN_UNKNOWN) {
++    GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
++        gst_dfbvideosink_get_format_name (src_format));
++    return GST_FLOW_NOT_SUPPORTED;
++  }
++#if defined(HAVE_SHMERAM)
++  phys[SRC] = uiomux_all_virt_to_phys (GST_BUFFER_DATA (buf));
++  if (phys[SRC]) {
++    viosurface[SRC].pitch = 0;
++    viosurface[SRC].bpitchy = 4096;
++    viosurface[SRC].bpitchc = 4096;
++    viosurface[SRC].bpitcha = 4096;
++
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxSSARA,
++        phys[SRC]);
++    viosurface[SRC].py =
++        (void *) meram_get_icb_address (dfbvideosink->meram,
++        dfbvideosink->icby[SRC], 0);
++
++    if (dfbvideosink->icbc[SRC]) {
++      meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC],
++          MExxSSARA, phys[SRC] + dfbvideosink->chroma_byte_offset);
++      viosurface[SRC].pc = (void *)
++          meram_get_icb_address (dfbvideosink->meram, dfbvideosink->icbc[SRC],
++          0);
++    } else {
++      viosurface[SRC].pc = 0;
++    }
++  } else {
++#endif /* defined(HAVE_SHMERAM) */
++    if (dfbvideosink->rowstride >= 0)
++      viosurface[SRC].pitch = dfbvideosink->rowstride;
++    else {
++      viosurface[SRC].pitch = byte2pixel (src_pitch, src_format);
++    }
++    if (viosurface[SRC].pitch < 0) {
++      GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
++          gst_dfbvideosink_get_format_name (src_format));
++      return GST_FLOW_NOT_SUPPORTED;
++    }
++    viosurface[SRC].bpitchy = 0;
++    viosurface[SRC].bpitchc = 0;
++    viosurface[SRC].bpitcha = 0;
++
++    viosurface[SRC].py = GST_BUFFER_DATA (buf);
++
++    if (is_ycbcr (viosurface[SRC].format)
++        && viosurface[SRC].format != REN_UYVY)
++      viosurface[SRC].pc = (void *) (
++          (dfbvideosink->chroma_byte_offset >=
++              0) ? (gulong) viosurface[SRC].py +
++          dfbvideosink->chroma_byte_offset : (gulong) viosurface[SRC].py +
++          viosurface[SRC].pitch * src->h);
++    else
++      viosurface[SRC].pc = 0;
++#if defined(HAVE_SHMERAM)
++  }
++#endif /* defined(HAVE_SHMERAM) */
++  viosurface[SRC].pa = 0;
++
++  /* Set up destination viosurface */
++  viosurface[DST].w = dst->w;
++  viosurface[DST].h = dst->h;
++  viosurface[DST].format = dfb2shvio_format (dst_format);
++  if (viosurface[DST].format == REN_UNKNOWN) {
++    GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
++        gst_dfbvideosink_get_format_name (dst_format));
++    return GST_FLOW_NOT_SUPPORTED;
++  }
++  viosurface[DST].pitch = byte2pixel (dest_pitch, dst_format);
++  if (viosurface[DST].pitch < 0) {
++    GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
++        gst_dfbvideosink_get_format_name (dst_format));
++    return GST_FLOW_NOT_SUPPORTED;
++  }
++  viosurface[DST].bpitchy = 0;
++  viosurface[DST].bpitchc = 0;
++  viosurface[DST].bpitcha = 0;
++  viosurface[DST].py = data;
++  if (is_ycbcr (viosurface[DST].format)
++      && viosurface[SRC].format != REN_UYVY)
++    viosurface[DST].pc = (void *) (
++        (gulong) viosurface[DST].py + viosurface[DST].pitch * dst->h);
++  else
++    viosurface[DST].pc = 0;
++
++  viosurface[DST].pa = 0;
++
++  /* Do stretch-blit/blit with color conversion */
++  ret = shvio_resize (dfbvideosink->vio, &viosurface[SRC], &viosurface[DST]);
++  if (ret < 0)
++    GST_WARNING_OBJECT (dfbvideosink, "failed bliting with shvio_resize()");
++
++#if defined(HAVE_SHMERAM)
++  if (phys[SRC]) {
++    gulong val;
++    meram_read_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL,
++        &val);
++    val |= 1 << 4;              /* RF: flush data */
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL,
++        val);
++    if (dfbvideosink->icbc[SRC]) {
++      meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
++          &val);
++      val |= 1 << 4;            /* RF: flush data */
++      meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
++          val);
++    }
++  }
++#endif /* defined(HAVE_SHMERAM) */
++
++  return GST_FLOW_OK;
++}
++#endif /* defined(HAVE_SHVIO) */
++
+ static GstFlowReturn
+ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+ {
+@@ -1782,12 +2052,9 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     guint8 *data;
+     gint dest_pitch, src_pitch;
+     GstStructure *structure;
++    gint line;
+ #if defined(HAVE_SHVIO)
+     DFBSurfacePixelFormat src_format, dst_format;
+-    struct ren_vid_surface viosurface[2];
+-    int ret;
+-#else
+-    gint line;
+ #endif
+ 
+     /* As we are not blitting no acceleration is possible. If the surface is
+@@ -1814,22 +2081,6 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+       src.w = dfbvideosink->video_width;
+       src.h = dfbvideosink->video_height;
+     }
+-#if defined(HAVE_SHVIO)
+-    res = surface->GetPixelFormat (surface, &dst_format);
+-    if (res != DFB_OK) {
+-      GST_WARNING_OBJECT (dfbvideosink,
+-          "failed getting pixel format from surface");
+-      ret = GST_FLOW_UNEXPECTED;
+-      goto beach;
+-    }
+-    src_format = gst_dfbvideosink_get_format_from_caps (GST_BUFFER_CAPS (buf));
+-    if (src_format == DSPF_UNKNOWN) {
+-      GST_WARNING_OBJECT (dfbvideosink,
+-          "failed getting pixel format from caps");
+-      ret = GST_FLOW_UNEXPECTED;
+-      goto beach;
+-    }
+-#endif
+ 
+     /* Center / Clip */
+ #if defined(HAVE_SHVIO)
+@@ -1867,79 +2118,34 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     src_pitch = GST_BUFFER_SIZE (buf) / src.h;
+ 
+ #if defined(HAVE_SHVIO)
+-    if (dfbvideosink->vio == NULL)
+-      goto swrender;
+-
+-    /* Set up source viosurface */
+-    viosurface[0].w = src.w;
+-    viosurface[0].h = src.h;
+-    if (dfbvideosink->rowstride >= 0)
+-      viosurface[0].pitch = dfbvideosink->rowstride;
+-    else
+-      viosurface[0].pitch = byte2pixel (src_pitch, src_format);
+-    if (viosurface[0].pitch < 0) {
+-      GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
+-          gst_dfbvideosink_get_format_name (src_format));
+-      goto swrender;
+-    }
+-    viosurface[0].bpitchy = 0;
+-    viosurface[0].bpitchc = 0;
+-    viosurface[0].bpitcha = 0;
+-    viosurface[0].format = dfb2shvio_format (src_format);
+-    if (viosurface[0].format == REN_UNKNOWN) {
+-      GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
+-          gst_dfbvideosink_get_format_name (src_format));
+-      goto swrender;
+-    }
+-    viosurface[0].py = GST_BUFFER_DATA (buf);
+-    if (is_ycbcr (viosurface[0].format) && viosurface[0].format != REN_UYVY)
+-      viosurface[0].pc =
+-          (dfbvideosink->chroma_byte_offset >= 0) ?
+-          viosurface[0].py + dfbvideosink->chroma_byte_offset :
+-          viosurface[0].py + viosurface[0].pitch * src.h;
+-    else
+-      viosurface[0].pc = 0;
+-    viosurface[0].pa = 0;
+-
+-    /* Set up destination viosurface */
+-    viosurface[1].w = result.w;
+-    viosurface[1].h = result.h;
+-    viosurface[1].pitch = byte2pixel (dest_pitch, dst_format);
+-    if (viosurface[1].pitch < 0) {
+-      GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
+-          gst_dfbvideosink_get_format_name (dst_format));
+-      goto swrender;
+-    }
+-    viosurface[1].bpitchy = 0;
+-    viosurface[1].bpitchc = 0;
+-    viosurface[1].bpitcha = 0;
+-    viosurface[1].format = dfb2shvio_format (dst_format);
+-    if (viosurface[1].format == REN_UNKNOWN) {
+-      GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
+-          gst_dfbvideosink_get_format_name (dst_format));
+-      goto swrender;
++    src_format = gst_dfbvideosink_get_format_from_caps (GST_BUFFER_CAPS (buf));
++    if (src_format == DSPF_UNKNOWN) {
++      GST_WARNING_OBJECT (dfbvideosink,
++          "failed getting pixel format from caps");
++      return GST_FLOW_UNEXPECTED;
+     }
+-    viosurface[1].py = data;
+-    if (is_ycbcr (viosurface[1].format) && viosurface[0].format != REN_UYVY)
+-      viosurface[1].pc = viosurface[1].py + viosurface[1].pitch * result.h;
+-    else
+-      viosurface[1].pc = 0;
+-    viosurface[1].pa = 0;
+ 
+-    /* Do stretch-blit/blit with color conversion */
+-    ret = shvio_resize (dfbvideosink->vio, &viosurface[0], &viosurface[1]);
+-    if (ret < 0)
+-      GST_WARNING_OBJECT (dfbvideosink, "failed bliting with shvio_resize()");
+-    else
+-      result.h = 0;             /* nullify the following memcpy render */
+-  swrender:
+-#else
+-    /* Write each line respecting subsurface pitch */
+-    for (line = 0; line < result.h; line++) {
+-      /* We do clipping */
+-      memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch),
+-          MIN (src_pitch, dest_pitch));
+-      data += dest_pitch;
++    res = surface->GetPixelFormat (surface, &dst_format);
++    if (res != DFB_OK) {
++      GST_WARNING_OBJECT (dfbvideosink,
++          "failed getting pixel format from surface");
++      ret = GST_FLOW_UNEXPECTED;
++      goto beach;
++    } else {
++      ret =
++          gst_dfbvideosink_shvio_stretchblit (dfbvideosink, buf, &src,
++          src_format, src_pitch, data, &result, dst_format, dest_pitch);
++      if ((ret != GST_FLOW_OK) && (dst_format == src_format)) {
++#endif /* defined(HAVE_SHVIO) */
++        /* Write each line respecting subsurface pitch */
++        for (line = 0; line < result.h; line++) {
++          /* We do clipping */
++          memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch),
++              MIN (src_pitch, dest_pitch));
++          data += dest_pitch;
++        }
++#if defined(HAVE_SHVIO)
++      }
+     }
+ #endif /* defined(HAVE_SHVIO) */
+ 
+diff --git a/ext/directfb/dfbvideosink.h b/ext/directfb/dfbvideosink.h
+index 5a1ce39..2b4fdd9 100644
+--- a/ext/directfb/dfbvideosink.h
++++ b/ext/directfb/dfbvideosink.h
+@@ -27,16 +27,17 @@
+ #if defined(HAVE_SHVIO)
+ #include <uiomux/uiomux.h>
+ #include <shvio/shvio.h>
++#if defined(HAVE_SHMERAM)
++#include <meram/meram.h>
++#endif
+ #endif
+ 
+ G_BEGIN_DECLS
+-
+ #define GST_TYPE_DFBVIDEOSINK              (gst_dfbvideosink_get_type())
+ #define GST_DFBVIDEOSINK(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DFBVIDEOSINK, GstDfbVideoSink))
+ #define GST_DFBVIDEOSINK_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DFBVIDEOSINK, GstDfbVideoSinkClass))
+ #define GST_IS_DFBVIDEOSINK(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DFBVIDEOSINK))
+ #define GST_IS_DFBVIDEOSINK_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DFBVIDEOSINK))
+-
+ typedef struct _GstDfbVideoSink GstDfbVideoSink;
+ typedef struct _GstDfbVideoSinkClass GstDfbVideoSinkClass;
+ 
+@@ -126,10 +127,23 @@ struct _GstDfbVideoSink {
+   GValue *par;
+ 
+ #if defined(HAVE_SHVIO)
++  enum {
++    SRC = 0,
++    DST = 1,
++  };
++
+   SHVIO *vio;
+   gint rowstride;
+   gint chroma_byte_offset;
+-#endif
++#if defined(HAVE_SHMERAM)
++  MERAM *meram;
++  ICB *icby[1];		/* TODO: add an entry for writeback cache */
++  ICB *icbc[1];		/* TODO: add an entry for writeback cache */
++/* NOTE: ICB #0 to #4 may be used by REL OMXIL */
++#define ICB_SRC_Y	5
++#define ICB_SRC_C	6
++#endif /* defined(HAVE_SHMERAM) */
++#endif /* defined(HAVE_SHVIO) */
+ };
+ 
+ struct _GstDfbVideoSinkClass {
+-- 
+1.7.10.4
+

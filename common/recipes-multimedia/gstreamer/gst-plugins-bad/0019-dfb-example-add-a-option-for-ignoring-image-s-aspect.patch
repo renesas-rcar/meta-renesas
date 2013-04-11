@@ -1,0 +1,66 @@
+From ed2613a0dd9f10037325e0d83329e15f983727e8 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 17 May 2012 11:07:06 +0900
+Subject: [PATCH 19/97] dfb-example: add a option for ignoring image's aspect
+ ratio
+
+---
+ ext/directfb/dfb-example.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/ext/directfb/dfb-example.c b/ext/directfb/dfb-example.c
+index 68d81b1..7fea97c 100644
+--- a/ext/directfb/dfb-example.c
++++ b/ext/directfb/dfb-example.c
+@@ -36,6 +36,7 @@ usage (char *cmd)
+   printf ("  -L		left of cropped image\n");
+   printf ("  -R		right of cropped image\n");
+   printf ("  -o		DirectFB or GStreamer option\n");
++  printf ("  -i		ignore image's aspect ratio\n");
+ }
+ 
+ int
+@@ -53,7 +54,7 @@ main (int argc, char *argv[])
+   char **tmp_argv;
+   int i;
+   GstCaps *caps;
+-  gboolean is_uyvy = FALSE;
++  gboolean is_uyvy = FALSE, is_keep_aspect = TRUE;
+   guint32 queue_size;
+   int top, bottom, left, right;
+ 
+@@ -73,7 +74,7 @@ main (int argc, char *argv[])
+   top = bottom = left = right = 0;
+ 
+   opterr = 0;
+-  while ((opt = getopt (argc, argv, "x:y:w:h:ul:q:o:T:B:L:R:")) != -1) {
++  while ((opt = getopt (argc, argv, "x:y:w:h:ul:q:o:T:B:L:R:i")) != -1) {
+     switch (opt) {
+       case 'x':
+         rect.x = atoi (optarg);
+@@ -111,6 +112,9 @@ main (int argc, char *argv[])
+       case 'o':
+         tmp_argv[tmp_argc++] = strdup (optarg);
+         break;
++      case 'i':
++        is_keep_aspect = FALSE;
++        break;
+       default:
+         usage (argv[0]);
+         exit (1);
+@@ -164,8 +168,10 @@ main (int argc, char *argv[])
+   /* setting zero copy for v4l2src */
+   g_object_set (src, "always-copy", FALSE, "queue-size", queue_size, NULL);
+ 
+-  /* That's the interesting part, giving the primary surface to dfbvideosink */
+-  g_object_set (sink, "surface", sub_surface, NULL);
++  /* That's the interesting part, giving the primary surface to dfbvideosink.
++     And keep-aspect-ratio is set. */
++  g_object_set (sink, "surface", sub_surface, "keep-aspect-ratio",
++      is_keep_aspect, NULL);
+ 
+   /* Adding elements to the pipeline */
+   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+-- 
+1.7.10.4
+

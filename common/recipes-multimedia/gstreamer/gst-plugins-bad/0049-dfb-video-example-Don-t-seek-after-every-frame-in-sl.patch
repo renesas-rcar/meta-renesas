@@ -1,0 +1,29 @@
+From 5b5c867d8b3943aee920b44f59c37b01f874089c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 14 Aug 2012 19:05:19 +0900
+Subject: [PATCH 49/97] dfb-video-example: Don't seek after every frame in
+ slow playback mode
+
+In fast playback mode, playback is speed up by reseeking after every frame is
+rendered. However, this isn't necessary in slow playback mode, where
+we can rely on GStreamer's built-in functionality.
+---
+ ext/directfb/dfb-video-example.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfb-video-example.c b/ext/directfb/dfb-video-example.c
+index 66fd03a..42bd342 100644
+--- a/ext/directfb/dfb-video-example.c
++++ b/ext/directfb/dfb-video-example.c
+@@ -292,7 +292,7 @@ event_loop (GstElement * pipeline)
+           GstFormat fmt = GST_FORMAT_TIME;
+           gint64 total_duration;
+ 
+-          if (playback_rate == 1.0)
++          if (playback_rate > 0.0 && playback_rate <= 1.0)
+             break;
+ 
+           gettimeofday (&cur_tv, NULL);
+-- 
+1.7.10.4
+

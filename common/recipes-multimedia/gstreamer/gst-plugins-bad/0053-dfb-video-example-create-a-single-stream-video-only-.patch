@@ -1,0 +1,40 @@
+From ee51a0c0962032895734b847f0152026879e9921 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 3 Sep 2012 18:30:42 +0900
+Subject: [PATCH 53/97] dfb-video-example: create a single stream, video-only
+ pipeline
+
+Only the first video stream in a source is accepted. Multiple streams and
+audio streams are not currently supported.
+---
+ ext/directfb/dfb-video-example.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/ext/directfb/dfb-video-example.c b/ext/directfb/dfb-video-example.c
+index 6391dd0..b5ff1c8 100644
+--- a/ext/directfb/dfb-video-example.c
++++ b/ext/directfb/dfb-video-example.c
+@@ -90,7 +90,7 @@ create_video_pipeline (GstPad * pad, gpointer data)
+     decoder = gst_element_factory_make ("omx_wmvdec", NULL);
+     g_assert (decoder);
+   } else {
+-    printf ("Audio isn't supported yet.\n");
++    printf ("%s isn't supported.\n", mime);
+     return;
+   }
+ 
+@@ -121,7 +121,10 @@ on_pad_added (GstElement * element, GstPad * pad, gpointer data)
+   /* We can now link this pad with the gst-omx decoder or h264parse sink pad */
+   printf ("Dynamic pad created, linking\n");
+ 
+-  create_video_pipeline (pad, data);
++  if (strcmp (gst_pad_get_name (pad), "video_00") == 0)
++    create_video_pipeline (pad, data);
++  else
++    printf ("%s isn't acceptable.\n", gst_pad_get_name (pad));
+ }
+ 
+ static void
+-- 
+1.7.10.4
+

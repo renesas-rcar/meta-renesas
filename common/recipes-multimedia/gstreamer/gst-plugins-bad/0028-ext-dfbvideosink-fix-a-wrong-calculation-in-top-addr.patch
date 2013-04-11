@@ -1,0 +1,37 @@
+From 1da9a1ed95ae9c66edf2427c0bed4fee7a571f0d Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 31 May 2012 12:11:42 +0900
+Subject: [PATCH 28/97] ext/dfbvideosink: fix a wrong calculation in top
+ address of CbCr/Cb plane
+
+The size of only the Y plane, instead of the size of the entire YUV buffer,
+should be used to calculate the start address of the CbCr/Cb plane.
+---
+ ext/directfb/dfbvideosink.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index f5d07d7..75f3edc 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1875,7 +1875,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     }
+     viosurface[0].py = GST_BUFFER_DATA (buf);
+     if (is_ycbcr (viosurface[0].format) && viosurface[0].format != REN_UYVY)
+-      viosurface[0].pc = viosurface[0].py + src_pitch * src.h;
++      viosurface[0].pc = viosurface[0].py + viosurface[0].pitch * src.h;
+     else
+       viosurface[0].pc = 0;
+     viosurface[0].pa = 0;
+@@ -1900,7 +1900,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     }
+     viosurface[1].py = data;
+     if (is_ycbcr (viosurface[1].format) && viosurface[0].format != REN_UYVY)
+-      viosurface[1].pc = viosurface[1].py + dest_pitch * result.h;
++      viosurface[1].pc = viosurface[1].py + viosurface[1].pitch * result.h;
+     else
+       viosurface[1].pc = 0;
+     viosurface[1].pa = 0;
+-- 
+1.7.10.4
+

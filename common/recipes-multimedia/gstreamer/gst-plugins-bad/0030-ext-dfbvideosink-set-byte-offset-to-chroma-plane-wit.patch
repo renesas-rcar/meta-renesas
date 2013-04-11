@@ -1,0 +1,61 @@
+From fb7e9e764a01052ef48289cfd7496923c0b39790 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 25 Jun 2012 18:05:46 +0900
+Subject: [PATCH 30/97] ext/dfbvideosink: set byte offset to chroma plane with
+ chroma_byte_offset caps
+
+This patch retrieves chroma_byte_offset caps and sets up libshvio accordingly.
+---
+ ext/directfb/dfbvideosink.c |    9 ++++++++-
+ ext/directfb/dfbvideosink.h |    1 +
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 04ff54e..f297743 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1401,6 +1401,9 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+ #if defined(HAVE_SHVIO)
+   if (!gst_structure_get_int (structure, "rowstride", &dfbvideosink->rowstride))
+     GST_LOG_OBJECT (dfbvideosink, "can't get rowstride from caps");
++  if (!gst_structure_get_int (structure, "chroma_byte_offset",
++          &dfbvideosink->chroma_byte_offset))
++    GST_LOG_OBJECT (dfbvideosink, "can't get chroma_byte_offset from caps");
+ #endif
+ 
+   dfbvideosink->fps_n = gst_value_get_fraction_numerator (framerate);
+@@ -1877,7 +1880,10 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     }
+     viosurface[0].py = GST_BUFFER_DATA (buf);
+     if (is_ycbcr (viosurface[0].format) && viosurface[0].format != REN_UYVY)
+-      viosurface[0].pc = viosurface[0].py + viosurface[0].pitch * src.h;
++      viosurface[0].pc =
++          (dfbvideosink->chroma_byte_offset >= 0) ?
++          viosurface[0].py + dfbvideosink->chroma_byte_offset :
++          viosurface[0].py + viosurface[0].pitch * src.h;
+     else
+       viosurface[0].pc = 0;
+     viosurface[0].pa = 0;
+@@ -2603,6 +2609,7 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
+   dfbvideosink->fps_n = 0;
+ #if defined(HAVE_SHVIO)
+   dfbvideosink->rowstride = -1;
++  dfbvideosink->chroma_byte_offset = -1;
+ #endif
+ 
+   dfbvideosink->dfb = NULL;
+diff --git a/ext/directfb/dfbvideosink.h b/ext/directfb/dfbvideosink.h
+index c6b5518..1bc5406 100644
+--- a/ext/directfb/dfbvideosink.h
++++ b/ext/directfb/dfbvideosink.h
+@@ -126,6 +126,7 @@ struct _GstDfbVideoSink {
+ #if defined(HAVE_SHVIO)
+   SHVIO *vio;
+   gint rowstride;
++  gint chroma_byte_offset;
+ #endif
+ };
+ 
+-- 
+1.7.10.4
+

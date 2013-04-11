@@ -1,0 +1,228 @@
+From 552ba6630ed9899bf669a244d3c3fbc623d10eb5 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 8 Jun 2012 16:13:20 +0900
+Subject: [PATCH 31/97] h264parse: add start-code-prefix property
+
+This property is to select whether the start code is put before nal.
+If FALSE is specified, the memory copying to insert the start code
+can be skipped.
+It is valid only if output-format is specified as bytestream.
+---
+ gst/h264parse/gsth264parse.c |   44 +++++++++++++++++++++++++++++++++++-------
+ gst/h264parse/gsth264parse.h |   35 ++++++++++++++++-----------------
+ 2 files changed, 54 insertions(+), 25 deletions(-)
+
+diff --git a/gst/h264parse/gsth264parse.c b/gst/h264parse/gsth264parse.c
+index 8ae6075..d39eb35 100644
+--- a/gst/h264parse/gsth264parse.c
++++ b/gst/h264parse/gsth264parse.c
+@@ -52,6 +52,7 @@ GST_DEBUG_CATEGORY_STATIC (h264_parse_debug);
+ #define DEFAULT_ACCESS_UNIT          FALSE
+ #define DEFAULT_OUTPUT_FORMAT        GST_H264_PARSE_FORMAT_INPUT
+ #define DEFAULT_CONFIG_INTERVAL      (0)
++#define DEFAULT_ST_CODE_PREFIX       FALSE
+ 
+ enum
+ {
+@@ -60,6 +61,7 @@ enum
+   PROP_ACCESS_UNIT,
+   PROP_CONFIG_INTERVAL,
+   PROP_OUTPUT_FORMAT,
++  PROP_ST_CODE_PREFIX,
+   PROP_LAST
+ };
+ 
+@@ -895,10 +897,8 @@ gst_h264_parse_base_init (gpointer g_class)
+ {
+   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+ 
+-  gst_element_class_add_static_pad_template (gstelement_class,
+-      &srctemplate);
+-  gst_element_class_add_static_pad_template (gstelement_class,
+-      &sinktemplate);
++  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
++  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
+   gst_element_class_set_details_simple (gstelement_class, "H264Parse",
+       "Codec/Parser/Video",
+       "Parses raw h264 stream",
+@@ -942,6 +942,10 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
+           "will be multiplexed in the data stream when detected.) (0 = disabled)",
+           0, 3600, DEFAULT_CONFIG_INTERVAL,
+           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_ST_CODE_PREFIX,
++      g_param_spec_boolean ("start-code-prefix", "Put start code before nal",
++          "Put start code before nal (valid only if bytestream is specified)",
++          DEFAULT_ST_CODE_PREFIX, G_PARAM_READWRITE));
+ 
+   gstelement_class->change_state = gst_h264_parse_change_state;
+ }
+@@ -971,6 +975,7 @@ gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
+   h264parse->last_report = GST_CLOCK_TIME_NONE;
+ 
+   h264parse->format = GST_H264_PARSE_FORMAT_INPUT;
++  h264parse->st_code_prefix = DEFAULT_ST_CODE_PREFIX;
+ 
+   gst_h264_parse_reset (h264parse);
+ }
+@@ -1069,6 +1074,9 @@ gst_h264_parse_set_property (GObject * object, guint prop_id,
+     case PROP_CONFIG_INTERVAL:
+       parse->interval = g_value_get_uint (value);
+       break;
++    case PROP_ST_CODE_PREFIX:
++      parse->st_code_prefix = g_value_get_boolean (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -1096,6 +1104,9 @@ gst_h264_parse_get_property (GObject * object, guint prop_id, GValue * value,
+     case PROP_CONFIG_INTERVAL:
+       g_value_set_uint (value, parse->interval);
+       break;
++    case PROP_ST_CODE_PREFIX:
++      g_value_set_boolean (value, parse->st_code_prefix);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -1110,9 +1121,14 @@ gst_h264_parse_make_nal (GstH264Parse * h264parse, const guint8 * data,
+ {
+   GstBuffer *buf;
+ 
+-  buf = gst_buffer_new_and_alloc (4 + len);
+-  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), 1);
+-  memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
++  if (h264parse->st_code_prefix) {
++    buf = gst_buffer_new_and_alloc (4 + len);
++    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), 1);
++    memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
++  } else {
++    buf = gst_buffer_new_and_alloc (len);
++    memcpy (GST_BUFFER_DATA (buf), data, len);
++  }
+ 
+   return buf;
+ }
+@@ -1509,9 +1525,23 @@ gst_h264_parse_write_nal_prefix (GstH264Parse * h264parse, GstBuffer * nal)
+ {
+   guint nal_length = h264parse->nal_length_size;
+   gint i;
++  GstBuffer *sub_buffer;
+ 
+   g_assert (nal_length <= 4);
+ 
++  if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE &&
++      !h264parse->st_code_prefix) {
++    sub_buffer = gst_buffer_create_sub (nal, nal_length,
++        GST_BUFFER_SIZE (nal) - nal_length);
++    if (sub_buffer == NULL) {
++      GST_ERROR_OBJECT (h264parse, "failed to create subbuffer");
++      return NULL;
++    }
++    gst_buffer_unref (nal);
++
++    return sub_buffer;
++  }
++
+   /* ensure proper transformation on prefix if needed */
+   if (h264parse->format == GST_H264_PARSE_FORMAT_SAMPLE) {
+     nal = gst_buffer_make_writable (nal);
+diff --git a/gst/h264parse/gsth264parse.h b/gst/h264parse/gsth264parse.h
+index e2fae84..85d8312 100644
+--- a/gst/h264parse/gsth264parse.h
++++ b/gst/h264parse/gsth264parse.h
+@@ -27,7 +27,6 @@
+ #include <gst/base/gstadapter.h>
+ 
+ G_BEGIN_DECLS
+-
+ #define GST_TYPE_H264PARSE \
+   (gst_h264_parse_get_type())
+ #define GST_H264PARSE(obj) \
+@@ -38,7 +37,6 @@ G_BEGIN_DECLS
+   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_H264PARSE))
+ #define GST_IS_H264PARSE_CLASS(klass) \
+   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_H264PARSE))
+-
+ typedef struct _GstH264Parse GstH264Parse;
+ typedef struct _GstH264ParseClass GstH264ParseClass;
+ 
+@@ -70,6 +68,8 @@ struct _GstH264Parse
+   guint nal_length_size;
+   guint format;
+ 
++  gboolean st_code_prefix;
++
+   guint interval;
+   GstClockTime last_report;
+ 
+@@ -91,14 +91,14 @@ struct _GstH264Parse
+ 
+   GstAdapter *adapter;
+ 
+-  /* SPS: sequential parameter set */ 
++  /* SPS: sequential parameter set */
+   GstH264Sps *sps_buffers[MAX_SPS_COUNT];
+-  GstH264Sps *sps; /* Current SPS */ 
+-  /* PPS: sequential parameter set */ 
++  GstH264Sps *sps;              /* Current SPS */
++  /* PPS: sequential parameter set */
+   GstH264Pps *pps_buffers[MAX_PPS_COUNT];
+-  GstH264Pps *pps; /* Current PPS */ 
++  GstH264Pps *pps;              /* Current PPS */
+ 
+-  /* slice header */ 
++  /* slice header */
+   guint8 first_mb_in_slice;
+   guint8 slice_type;
+   guint8 pps_id;
+@@ -106,23 +106,23 @@ struct _GstH264Parse
+   gboolean field_pic_flag;
+   gboolean bottom_field_flag;
+ 
+-  /* SEI: supplemental enhancement messages */ 
+-  /* buffering period */ 
++  /* SEI: supplemental enhancement messages */
++  /* buffering period */
+   guint32 initial_cpb_removal_delay[32];
+-  /* picture timing */ 
++  /* picture timing */
+   guint32 sei_cpb_removal_delay;
+   guint32 sei_dpb_output_delay;
+   guint8 sei_pic_struct;
+-  guint8 sei_ct_type; 
+-  /* And more... */ 
++  guint8 sei_ct_type;
++  /* And more... */
+ 
+-  /* cached timestamps */ 
++  /* cached timestamps */
+   GstClockTime dts;
+   GstClockTime last_outbuf_dts;
+-  GstClockTime ts_trn_nb; /* dts of last buffering period */ 
+-  GstClockTime cur_duration; /* duration of the current access unit */ 
++  GstClockTime ts_trn_nb;       /* dts of last buffering period */
++  GstClockTime cur_duration;    /* duration of the current access unit */
+ 
+-  /* for debug purpose */ 
++  /* for debug purpose */
+   guint32 frame_cnt;
+ 
+   /* NALU AU */
+@@ -131,7 +131,7 @@ struct _GstH264Parse
+   gint idr_offset;
+ 
+   /* codec data NALUs to be inserted into stream */
+-  GSList  *codec_nals;
++  GSList *codec_nals;
+   /* SPS and PPS NALUs collected from stream to form codec_data in caps */
+   GstBuffer *sps_nals[MAX_SPS_COUNT];
+   GstBuffer *pps_nals[MAX_PPS_COUNT];
+@@ -150,5 +150,4 @@ struct _GstH264ParseClass
+ GType gst_h264_parse_get_type (void);
+ 
+ G_END_DECLS
+-
+ #endif /* __GST_H264_PARSE_H__ */
+-- 
+1.7.10.4
+

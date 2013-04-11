@@ -1,0 +1,30 @@
+From 40bbe01f5239809f5edb4cff13bfde3e4d707ff5 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 27 Jun 2012 21:12:40 +0900
+Subject: [PATCH 36/97] h264parse: parse codec_data only if stream-format is
+ avc
+
+h264parse parses codec_data as AVCConfiguration data. Therefore,
+it should only attempt to parse that data if the format is set to be AVC.
+Some plugins, which do not set stream-format, set
+codec_data, but h264parse should not attempt to parse these.
+---
+ gst/h264parse/gsth264parse.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gst/h264parse/gsth264parse.c b/gst/h264parse/gsth264parse.c
+index 5039e9b..eeacb71 100644
+--- a/gst/h264parse/gsth264parse.c
++++ b/gst/h264parse/gsth264parse.c
+@@ -1446,7 +1446,7 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
+   gst_h264_parse_format_from_caps (caps, &format);
+ 
+   /* packetized video has a codec_data */
+-  if (format != GST_H264_PARSE_FORMAT_BYTE &&
++  if (format == GST_H264_PARSE_FORMAT_AVC &&
+       (value = gst_structure_get_value (str, "codec_data"))) {
+     GstBuffer *buffer;
+     gint profile;
+-- 
+1.7.10.4
+

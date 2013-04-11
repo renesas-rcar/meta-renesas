@@ -1,0 +1,28 @@
+From 63af1b57a51e8111b15c541cd2a6b969d35fc0a7 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 30 Nov 2012 14:22:42 +0900
+Subject: [PATCH 81/97] ext/dfbvideosink: fix the incorrect conversion from
+ byte to pixel in NV12
+
+byte2pixel() is used to figure out a stride of image data.
+When the color format is NV12, the stride in byte is the same as in pixel.
+No need to convert the value.
+---
+ ext/directfb/dfbvideosink.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 6b1529c..3f5db8d 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -575,7 +575,6 @@ byte2pixel (gint bytes, DFBSurfacePixelFormat dfbfmt)
+ {
+   switch (dfbfmt) {
+     case DSPF_NV12:
+-      return bytes * 2 / 3;
+     case DSPF_NV16:
+     case DSPF_YV12:
+       return bytes;
+-- 
+1.7.10.4
+
