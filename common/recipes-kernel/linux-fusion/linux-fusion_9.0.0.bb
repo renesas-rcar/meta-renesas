@@ -18,7 +18,7 @@ SRC_URI[sha256sum] = "54b5da51a80d29a3b618d1ee504afd581b8fa1885a717ea925607d3547
 
 # inherit autotools pkgconfig
 
-export INSTALL_MOD_DIR="kernel/inux-fusion-modules"
+export INSTALL_MOD_DIR="kernel/linux-fusion-modules"
 export KERNEL_SRC="${STAGING_KERNEL_DIR}"
 
 do_install_append() {
