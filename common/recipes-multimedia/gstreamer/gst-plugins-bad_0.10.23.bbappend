@@ -3,7 +3,7 @@ DEPENDS += "gstreamer directfb faad2 libxml2"
 EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
 EXTRA_OECONF += "--with-plugins=h264parse"
 
-PRINC := "${@int(PRINC) + 2}"
+PRINC := "${@int(PRINC) + 3}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += " \
@@ -106,4 +106,6 @@ SRC_URI += " \
     file://0097-dfb-video-example-fix-a-memory-leaks-caused-by-illeg.patch \
     file://0001-ext-dfbvideosink-Fix-build-faild-when-not-using-shvi.patch \
     file://0002-ext-dfbvideosink-Fix-build-faild-when-not-using-shme.patch \
+    file://0001-ext-dfbvideosink-fix-a-destination-address-of-CbCr-p.patch \
+    file://0002-ext-dfbvideosink-recreate-surface-after-changing-the.patch \
     "
