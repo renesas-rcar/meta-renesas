@@ -1,7 +1,7 @@
 require directfb_git.inc
 
 RV = "1.7-0"
-PR = "r0"
+PR = "r1"
 S = "${WORKDIR}/git"
 
 DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion"
@@ -10,7 +10,7 @@ SRC_URI += "file://fix-compilation-with-zlib.patch \
             file://fixsepbuild.patch \
             file://directfbrc"
 
-SRCREV = "abd81b2c29a11f7ddcb06f7277ee965ab09b470c"
+SRCREV = "3414c47494309f9efcf1ab7ffe1ea53dc5580852"
 
 EXTRA_OECONF = "\
   --enable-freetype \
