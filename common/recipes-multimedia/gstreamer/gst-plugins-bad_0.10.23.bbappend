@@ -1,9 +1,11 @@
-DEPENDS += "gstreamer directfb faad2 libxml2"
+DEPENDS += "gstreamer directfb faad2 libxml2 libuiomux libshvio"
 
 EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
+EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-experimental', '--enable-experimental')}"
+
 EXTRA_OECONF += "--with-plugins=h264parse"
 
-PRINC := "${@int(PRINC) + 3}"
+PRINC := "${@int(PRINC) + 4}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += " \
