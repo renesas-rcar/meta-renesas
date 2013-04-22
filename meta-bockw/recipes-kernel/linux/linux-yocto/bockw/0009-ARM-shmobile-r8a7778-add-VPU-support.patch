@@ -1,0 +1,105 @@
+From 54e39dd7ccd1bd422d548920c1b0383313de68aa Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 15 Apr 2013 16:00:07 +0900
+Subject: [PATCH 09/17] ARM: shmobile: r8a7778: add VPU support
+
+The contiguous memory that the VPU device uses is managed with CMA.
+---
+ arch/arm/mach-shmobile/clock-r8a7778.c |    4 +++-
+ arch/arm/mach-shmobile/setup-r8a7778.c |   37 ++++++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index 3eee353..3e65e11 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -104,7 +104,7 @@ static struct clk div4_clks[DIV4_NR] = {
+ 				      0x0300, CLK_ENABLE_ON_INIT),
+ };
+ 
+-enum { MSTP517, MSTP513, MSTP410, MSTP408,
++enum { MSTP517, MSTP513, MSTP501, MSTP410, MSTP408,
+ 	MSTP323, MSTP107, MSTP103, MSTP100,
+ 	MSTP030,
+ 	MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023, MSTP022, MSTP021,
+@@ -115,6 +115,7 @@ enum { MSTP517, MSTP513, MSTP410, MSTP408,
+ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP517] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR5, 17, 0), /* VIO6C */
+ 	[MSTP513] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR5, 13, 0), /* MERAM */
++	[MSTP501] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR5,  1, 0), /* VPU5HD2 */
+ 	[MSTP410] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR4, 10, 0), /* ICB */
+ 	[MSTP408] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR4,  8, 0), /* VPC */
+ 	[MSTP323] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR3, 23, 0), /* SDHI0 */
+@@ -153,6 +154,7 @@ static struct clk_lookup lookups[] = {
+ 	/* MSTP32 clocks */
+ 	CLKDEV_DEV_ID("uio_dmem_genirq.0",	&mstp_clks[MSTP517]), /* VIO6C */
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.2",	&mstp_clks[MSTP513]), /* MERAM */
++	CLKDEV_DEV_ID("uio_dmem_genirq.1",	&mstp_clks[MSTP501]), /* VPU5HD2*/
+ 	CLKDEV_CON_ID("icb",		&mstp_clks[MSTP410]), /* ICB */
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.1",	&mstp_clks[MSTP408]), /* VPC */
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.0",	&mstp_clks[MSTP323]), /* SDHI0 */
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index fd6e0dc..db2ba94 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -430,6 +430,41 @@ static struct platform_device vio_device = {
+ 	.num_resources  = ARRAY_SIZE(vio_resources),
+ };
+ 
++/* VPU5HD2 */
++static unsigned int vpu_regions[] = {
++	(105 << 20),
++};
++
++static struct uio_dmem_genirq_pdata vpu_platform_data = {
++	.uioinfo = {
++		.name           = "VPU5HD2",
++		.version        = "0",
++		.irq            = gic_iid(0x99),
++	},
++	.dynamic_region_sizes   = vpu_regions,
++	.num_dynamic_regions    = ARRAY_SIZE(vpu_regions),
++};
++
++static struct resource vpu_resources[] = {
++	[0] = {
++		.name       = "VPU_REG",
++		.start      = 0xFD000000,
++		.end        = 0xFD000157,
++		.flags      = IORESOURCE_MEM,
++	},
++};
++
++static struct platform_device vpu_device = {
++	.name           = "uio_dmem_genirq",
++	.id             = 1,
++	.dev            = {
++		.platform_data  = &vpu_platform_data,
++		.coherent_dma_mask = ~0,
++	},
++	.resource       = vpu_resources,
++	.num_resources  = ARRAY_SIZE(vpu_resources),
++};
++
+ static struct platform_device *r8a7778_early_devices[] __initdata = {
+ 	&scif0_device,
+ 	&scif1_device,
+@@ -447,6 +482,7 @@ static struct platform_device *r8a7778_early_devices[] __initdata = {
+ 	&vpc_device,
+ 	&meram_device,
+ 	&vio_device,
++	&vpu_device,
+ };
+ 
+ static struct platform_device *r8a7778_late_devices[] __initdata = {
+@@ -474,6 +510,7 @@ static void __init r8a7778_earlytimer_init(void)
+ void __init r8a7778_reserve_memory(void)
+ {
+ 	dma_declare_contiguous(&vio_device.dev, 8 << 20, 0, 0);
++	dma_declare_contiguous(&vpu_device.dev, 105 << 20, 0, 0);
+ }
+ 
+ void __init r8a7778_add_early_devices(void)
+-- 
+1.7.9.5
+

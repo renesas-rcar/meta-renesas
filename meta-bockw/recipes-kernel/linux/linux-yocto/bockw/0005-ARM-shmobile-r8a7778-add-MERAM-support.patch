@@ -1,0 +1,93 @@
+From 3775889d4212007c027820eddc059ec2de1a6071 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 15 Apr 2013 15:08:10 +0900
+Subject: [PATCH 05/17] ARM: shmobile: r8a7778: add MERAM support
+
+---
+ arch/arm/mach-shmobile/clock-r8a7778.c |    4 +++-
+ arch/arm/mach-shmobile/setup-r8a7778.c |   33 ++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index 5d2c212..250fc1d 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -104,7 +104,7 @@ static struct clk div4_clks[DIV4_NR] = {
+ 				      0x0300, CLK_ENABLE_ON_INIT),
+ };
+ 
+-enum { MSTP410, MSTP408,
++enum { MSTP513, MSTP410, MSTP408,
+ 	MSTP323, MSTP107, MSTP103, MSTP100,
+ 	MSTP030,
+ 	MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023, MSTP022, MSTP021,
+@@ -113,6 +113,7 @@ enum { MSTP410, MSTP408,
+ 	MSTP_NR };
+ 
+ static struct clk mstp_clks[MSTP_NR] = {
++	[MSTP513] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR5, 13, 0), /* MERAM */
+ 	[MSTP410] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR4, 10, 0), /* ICB */
+ 	[MSTP408] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR4,  8, 0), /* VPC */
+ 	[MSTP323] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR3, 23, 0), /* SDHI0 */
+@@ -149,6 +150,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("peripheral_clk",	&div4_clks[DIV4_P]),
+ 
+ 	/* MSTP32 clocks */
++	CLKDEV_DEV_ID("uio_pdrv_genirq.2",	&mstp_clks[MSTP513]), /* MERAM */
+ 	CLKDEV_CON_ID("icb",		&mstp_clks[MSTP410]), /* ICB */
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.1",	&mstp_clks[MSTP408]), /* VPC */
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.0",	&mstp_clks[MSTP323]), /* SDHI0 */
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index c8c4f4b..cbf67d9 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -361,6 +361,38 @@ static struct platform_device vpc_device = {
+ 	.num_resources  = ARRAY_SIZE(vpc_resources),
+ };
+ 
++/* MERAM */
++static struct uio_info meram_platform_data = {
++	.name = "MERAM",
++	.version = "0",
++	.irq = -1,
++};
++
++static struct resource meram_resources[] = {
++	[0] = {
++		.name   = "MERAM",
++		.start  = 0xfd200000,
++		.end    = 0xfd200418 + 0x020 * 32 - 1,
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.name   = "MERAM_MEM",
++		.start  = 0xfd480000,
++		.end    = 0xfd480000 + ((512 - 32) << 10) - 1,  /* 32KiB reserved for cache */
++		.flags  = IORESOURCE_MEM,
++	}
++};
++
++static struct platform_device meram_device = {
++	.name           = "uio_pdrv_genirq",
++	.id             = 2,
++	.dev = {
++		.platform_data  = &meram_platform_data,
++	},
++	.resource       = meram_resources,
++	.num_resources  = ARRAY_SIZE(meram_resources),
++};
++
+ static struct platform_device *r8a7778_early_devices[] __initdata = {
+ 	&scif0_device,
+ 	&scif1_device,
+@@ -376,6 +408,7 @@ static struct platform_device *r8a7778_early_devices[] __initdata = {
+ 	&i2c3_device,
+ 	&ipmmu_device,
+ 	&vpc_device,
++	&meram_device,
+ };
+ 
+ static struct platform_device *r8a7778_late_devices[] __initdata = {
+-- 
+1.7.9.5
+

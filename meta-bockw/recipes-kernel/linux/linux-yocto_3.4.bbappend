@@ -193,4 +193,16 @@ SRC_URI_append_bockw = " \
         file://0011-spi-hspi-fixup-long-delay-time.patch \
 	\
 	file://add_gp2d_drm_kbuild.patch \
+        \
+        file://0001-ARM-shmobile-r8a7778-add-ICB-clock-support.patch \
+        file://0002-ARM-shmobile-bockw-enable-ICB-clock.patch \
+        file://0003-ARM-shmobile-r8a7778-add-IPMMU-support.patch \
+        file://0004-ARM-shmobile-r8a7778-add-VPC-support.patch \
+        file://0005-ARM-shmobile-r8a7778-add-MERAM-support.patch \
+        file://0006-ARM-shmobile-r8a7778-add-ICB-MERAM-work-around.patch \
+        file://0007-ARM-shmobile-bockw-invoke-ICB-MERAM-workaround.patch \
+        file://0008-ARM-shmobile-r8a7778-add-VIO-support.patch \
+        file://0009-ARM-shmobile-r8a7778-add-VPU-support.patch \
+        file://0010-ARM-shmobile-r8a7778-add-SSB-workaround.patch \
+        file://0011-ARM-shmobile-bockw-invoke-SSB-workaround.patch \
 	"

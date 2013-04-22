@@ -1,0 +1,24 @@
+From 11e8a296f2f68dc076043b143d5027ebf16139f7 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 16 Apr 2013 14:51:34 +0900
+Subject: [PATCH 11/17] ARM: shmobile: bockw: invoke SSB workaround
+
+---
+ arch/arm/mach-shmobile/board-bockw.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index ec5261d..f0abdc8 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -427,6 +427,7 @@ static void __init bockw_init(void)
+ 
+ 	r8a7778_pinmux_init();
+ 	r8a7778_meram_workaround();
++	r8a7778_ssb_workaround();
+ 
+ 	/* interrupt mask on IRQ0 */
+ 	val = ioread16(IRQ0MR);
+-- 
+1.7.9.5
+

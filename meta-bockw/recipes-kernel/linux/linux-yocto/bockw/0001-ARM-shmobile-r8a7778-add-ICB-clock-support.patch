@@ -1,0 +1,44 @@
+From 7c8415acf572334dabcab9c61d39e80d1e24db33 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 16 Apr 2013 12:34:42 +0900
+Subject: [PATCH 01/17] ARM: shmobile: r8a7778: add ICB clock support
+
+The clock is registered with CLKDEV_CON_ID() since there is no driver
+for the ICB.
+---
+ arch/arm/mach-shmobile/clock-r8a7778.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index 3b9f8cc..b05960f 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -104,7 +104,8 @@ static struct clk div4_clks[DIV4_NR] = {
+ 				      0x0300, CLK_ENABLE_ON_INIT),
+ };
+ 
+-enum { MSTP323, MSTP107, MSTP103, MSTP100,
++enum { MSTP410,
++	MSTP323, MSTP107, MSTP103, MSTP100,
+ 	MSTP030,
+ 	MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023, MSTP022, MSTP021,
+ 	MSTP016, MSTP015, MSTP014,
+@@ -112,6 +113,7 @@ enum { MSTP323, MSTP107, MSTP103, MSTP100,
+ 	MSTP_NR };
+ 
+ static struct clk mstp_clks[MSTP_NR] = {
++	[MSTP410] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR4, 10, 0), /* ICB */
+ 	[MSTP323] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR3, 23, 0), /* SDHI0 */
+ 	[MSTP107] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR1,  7, 0), /* GP2D */
+ 	[MSTP103] = SH_CLK_MSTP32(&div4_clks[DIV4_S], MSTPCR1,  3, 0), /* DU */
+@@ -146,6 +148,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("peripheral_clk",	&div4_clks[DIV4_P]),
+ 
+ 	/* MSTP32 clocks */
++	CLKDEV_CON_ID("icb",		&mstp_clks[MSTP410]), /* ICB */
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.0",	&mstp_clks[MSTP323]), /* SDHI0 */
+ 	CLKDEV_DEV_ID("gp2d",		&mstp_clks[MSTP107]), /* GP2D */
+ 	CLKDEV_DEV_ID("rcar-du.0",	&mstp_clks[MSTP103]), /* DU */
+-- 
+1.7.9.5
+
