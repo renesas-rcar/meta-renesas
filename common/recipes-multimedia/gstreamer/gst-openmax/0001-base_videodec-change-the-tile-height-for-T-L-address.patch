@@ -1,0 +1,27 @@
+From 5ae3622b9711655479744ed8a95c20d095dcbf1e Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 10 Apr 2013 11:05:30 +0900
+Subject: [PATCH] base_videodec: change the tile height for T/L addressing
+
+This change is added to follow the change of the tile height to be
+tuned for the R-CarM1A in the REL OMX.
+---
+ omx/gstomx_base_videodec.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index 247f596..da5585d 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -203,7 +203,7 @@ settings_changed_cb (GOmxCore * core)
+         ALIGN2UP (stride, stride);
+       chroma_byte_offset = stride * ALIGN32 (sliceheight);
+ #define OMXR_TILE_WIDTH	  32
+-#define OMXR_TILE_HEIGHT  8
++#define OMXR_TILE_HEIGHT  16
+       gst_structure_set (struc, "tile-width", G_TYPE_INT, OMXR_TILE_WIDTH,
+           NULL);
+       gst_structure_set (struc, "tile-height", G_TYPE_INT, OMXR_TILE_HEIGHT,
+-- 
+1.7.5.4
+

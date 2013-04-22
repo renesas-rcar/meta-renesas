@@ -1,0 +1,15 @@
+diff --git a/autogen.sh b/autogen.sh
+index e69af6d..081ac8c 100755
+--- a/autogen.sh
++++ b/autogen.sh
+@@ -112,10 +112,3 @@ test ! -z "$CONFIGURE_DEF_OPT" && echo "  ./configure default flags: $CONFIGURE_
+ test ! -z "$CONFIGURE_EXT_OPT" && echo "  ./configure external flags: $CONFIGURE_EXT_OPT"
+ test ! -z "$CONFIGURE_FILE_OPT" && echo "  ./configure enable/disable flags: $CONFIGURE_FILE_OPT"
+ echo
+-
+-./configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT $CONFIGURE_FILE_OPT || {
+-        echo "  configure failed"
+-        exit 1
+-}
+-
+-echo "Now type 'make' to compile $package."
