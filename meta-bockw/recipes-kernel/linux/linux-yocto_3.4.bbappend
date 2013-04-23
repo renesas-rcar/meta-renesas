@@ -210,4 +210,5 @@ SRC_URI_append_bockw = " \
         file://0014-mmc-sh-mmcif-support-single-irq-variant.patch \
         file://0015-Local-ARM-shmobile-bockw-Change-MMC-Card-detect.patch \
         file://0016-Local-ARM-shmobile-r8a7778-Fix-INT-num-for-I2C1-2-3.patch \
-	"
+	file://0017-r8a7778-Add-Clocks-for-SGX.patch \
+        "
