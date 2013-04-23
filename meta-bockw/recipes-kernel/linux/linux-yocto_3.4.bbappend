@@ -205,4 +205,9 @@ SRC_URI_append_bockw = " \
         file://0009-ARM-shmobile-r8a7778-add-VPU-support.patch \
         file://0010-ARM-shmobile-r8a7778-add-SSB-workaround.patch \
         file://0011-ARM-shmobile-bockw-invoke-SSB-workaround.patch \
+        file://0012-Local-ARM-shmobile-r8a7778-add-MMC-clock-support.patch \
+        file://0013-Local-ARM-shmobile-r8a7778-add-mmcif-platform-suppor.patch \
+        file://0014-mmc-sh-mmcif-support-single-irq-variant.patch \
+        file://0015-Local-ARM-shmobile-bockw-Change-MMC-Card-detect.patch \
+        file://0016-Local-ARM-shmobile-r8a7778-Fix-INT-num-for-I2C1-2-3.patch \
 	"

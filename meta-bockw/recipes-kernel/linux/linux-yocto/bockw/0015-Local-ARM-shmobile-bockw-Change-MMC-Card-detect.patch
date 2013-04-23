@@ -1,0 +1,28 @@
+From 1c0b168de8ceddd04f70beb82b9ee2d5ebc0e62d Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Thu, 18 Apr 2013 20:27:38 +0900
+Subject: [PATCH 15/17] Local: ARM: shmobile: bockw: Change MMC Card detect
+
+bware board is mounted eMMC device(NONREMOVABLE).
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index f24f825..658a28d 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -323,7 +323,7 @@ static struct sh_mmcif_plat_data sh_mmcif_plat = {
+ 	.ocr		= MMC_VDD_165_195 | MMC_VDD_32_33 | MMC_VDD_33_34,
+ 	.caps		= MMC_CAP_4_BIT_DATA |
+ 			  MMC_CAP_8_BIT_DATA |
+-			  MMC_CAP_NEEDS_POLL,
++			  MMC_CAP_NONREMOVABLE,
+ };
+ 
+ static struct resource sh_mmcif_resources[] = {
+-- 
+1.7.9.5
+

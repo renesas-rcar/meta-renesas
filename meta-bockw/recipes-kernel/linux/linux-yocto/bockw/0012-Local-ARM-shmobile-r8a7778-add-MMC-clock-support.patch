@@ -1,0 +1,46 @@
+From fa0b097b2a85a69e50f5292367303129a2cd3748 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Tue, 9 Apr 2013 18:47:27 +0900
+Subject: [PATCH 12/17] Local: ARM: shmobile: r8a7778: add MMC clock support
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7778.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index 3e65e11..4654565 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -104,8 +104,10 @@ static struct clk div4_clks[DIV4_NR] = {
+ 				      0x0300, CLK_ENABLE_ON_INIT),
+ };
+ 
+-enum { MSTP517, MSTP513, MSTP501, MSTP410, MSTP408,
+-	MSTP323, MSTP107, MSTP103, MSTP100,
++enum { MSTP517, MSTP513, MSTP501,
++	MSTP410, MSTP408,
++	MSTP331, MSTP323,
++	MSTP107, MSTP103, MSTP100,
+ 	MSTP030,
+ 	MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023, MSTP022, MSTP021,
+ 	MSTP016, MSTP015, MSTP014,
+@@ -118,6 +120,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP501] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR5,  1, 0), /* VPU5HD2 */
+ 	[MSTP410] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR4, 10, 0), /* ICB */
+ 	[MSTP408] = SH_CLK_MSTP32(&div4_clks[DIV4_S3], MSTPCR4,  8, 0), /* VPC */
++	[MSTP331] = SH_CLK_MSTP32(&div4_clks[DIV4_S4], MSTPCR3, 31, 0), /* MMC */
+ 	[MSTP323] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR3, 23, 0), /* SDHI0 */
+ 	[MSTP107] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR1,  7, 0), /* GP2D */
+ 	[MSTP103] = SH_CLK_MSTP32(&div4_clks[DIV4_S], MSTPCR1,  3, 0), /* DU */
+@@ -157,6 +160,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("uio_dmem_genirq.1",	&mstp_clks[MSTP501]), /* VPU5HD2*/
+ 	CLKDEV_CON_ID("icb",		&mstp_clks[MSTP410]), /* ICB */
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.1",	&mstp_clks[MSTP408]), /* VPC */
++	CLKDEV_DEV_ID("sh_mmcif",	&mstp_clks[MSTP331]), /* MMC */
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.0",	&mstp_clks[MSTP323]), /* SDHI0 */
+ 	CLKDEV_DEV_ID("gp2d",		&mstp_clks[MSTP107]), /* GP2D */
+ 	CLKDEV_DEV_ID("rcar-du.0",	&mstp_clks[MSTP103]), /* DU */
+-- 
+1.7.9.5
+
