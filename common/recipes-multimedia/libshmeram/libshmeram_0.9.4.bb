@@ -12,7 +12,7 @@ inherit autotools pkgconfig
 LICENSE = "LGPLv2.0+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=3214f080875748938ba060314b4f727d"
 
-SRCREV = "d276e8ff80386c2cc8b02619dd2511db97d88910"
+SRCREV = "2d9b1c32e17ddb260d592826a13fd5c8e0bdb763"
 SRC_URI = "git://github.com/renesas-devel/libshmeram.git \
 	file://configfile-path.patch \
 	"
