@@ -211,4 +211,6 @@ SRC_URI_append_bockw = " \
         file://0015-Local-ARM-shmobile-bockw-Change-MMC-Card-detect.patch \
         file://0016-Local-ARM-shmobile-r8a7778-Fix-INT-num-for-I2C1-2-3.patch \
 	file://0017-r8a7778-Add-Clocks-for-SGX.patch \
+        file://0001-Local-ARM-mach-shmobile-r8a7778-fix-FN_IRQ1_A.patch \
+        file://0002-Local-ARM-mach-shmobile-r8a7778-Don-t-use-SCSCR_CKE1.patch \
         "
