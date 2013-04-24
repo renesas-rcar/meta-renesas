@@ -6,14 +6,14 @@ BUGTRACKER = ""
 SECTION = "libs"
 PRIORITY = "optional"
 
-PR = "r1"
+PR = "r0"
 
 inherit autotools pkgconfig
 
 LICENSE = "LGPLv2.0+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=3214f080875748938ba060314b4f727d"
 
-SRCREV = "2f40baf6c351ab49c852a43b331b080c5f4549ae"
+SRCREV = "25df714bca0532184c0ed0ac041462743240d752"
 SRC_URI = "git://github.com/renesas-devel/libuiomux.git;protocol=git"
 S = "${WORKDIR}/git/"
 
