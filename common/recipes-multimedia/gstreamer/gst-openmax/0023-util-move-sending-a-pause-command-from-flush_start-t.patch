@@ -1,0 +1,38 @@
+From c42b0e3d890609a74fe7c94321a7078ba5e40432 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 20 Nov 2012 11:20:55 +0900
+Subject: [PATCH 23/39] util: move sending a pause command from flush_start to
+ flush_stop
+
+REL OMXIL component requires a pause command to be sent before
+a flush command according to the spec. The sequence of commands to
+flush the component should be grouped into g_omx_core_flush_stop()
+rather than sending separately.
+When g_omx_core_flush_start() is invoked, g_omx_port_pause() is
+sufficient to suspend decoding when an error occurs.
+---
+ omx/gstomx_util.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/omx/gstomx_util.c b/omx/gstomx_util.c
+index d76f282..6a3098f 100644
+--- a/omx/gstomx_util.c
++++ b/omx/gstomx_util.c
+@@ -463,13 +463,13 @@ g_omx_core_wait_for_done (GOmxCore * core)
+ void
+ g_omx_core_flush_start (GOmxCore * core)
+ {
+-  g_omx_core_pause (core);
+   core_for_each_port (core, g_omx_port_pause);
+ }
+ 
+ void
+ g_omx_core_flush_stop (GOmxCore * core)
+ {
++  g_omx_core_pause (core);
+   core_for_each_port (core, g_omx_port_flush);
+   core_for_each_port (core, g_omx_port_resume);
+ 
+-- 
+1.7.9.5
+

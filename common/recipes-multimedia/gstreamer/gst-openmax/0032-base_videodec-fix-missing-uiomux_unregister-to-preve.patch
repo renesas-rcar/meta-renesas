@@ -1,0 +1,79 @@
+From 9d7af5be081e8c5be7a437d5cd488c88191dec7e Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Mon, 17 Dec 2012 16:29:25 +0900
+Subject: [PATCH 32/39] base_videodec: fix missing uiomux_unregister() to
+ prevent a memory leak
+
+uiomux_register() allocates a small region for recording an address
+mapping and it remains in memory while a process is alive.
+This moves the registration into the timing when the state is
+changed from NULL to READY. And then unregisters the entry when
+the state is changed from PAUSE to READY.
+---
+ omx/gstomx_base_videodec.c |   40 ++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 38 insertions(+), 2 deletions(-)
+
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index 1ff5e95..d327d6c 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -34,10 +34,47 @@ type_base_init (gpointer g_class)
+ static GstStateChangeReturn
+ change_state (GstElement * element, GstStateChange transition)
+ {
+-  GstStateChangeReturn ret;
++  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
++  GstOmxBaseFilter *self;
++  GOmxCore *core;
++
++  self = GST_OMX_BASE_FILTER (element);
++  core = self->gomx;
++
++  GST_LOG_OBJECT (self, "begin");
++
++  GST_INFO_OBJECT (self, "changing state %s - %s",
++      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
++      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
++
++  switch (transition) {
++    case GST_STATE_CHANGE_PAUSED_TO_READY:
++      if (!core->postproc)
++        uiomux_unregister ((void *) 0x80000000);
++      break;
++
++    default:
++      break;
++  }
+ 
+   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+ 
++  if (ret == GST_STATE_CHANGE_FAILURE)
++    goto leave;
++
++  switch (transition) {
++    case GST_STATE_CHANGE_NULL_TO_READY:
++      if (!core->postproc)
++        uiomux_register ((void *) 0x80000000, 0x80000000, 0x20000000);
++      break;
++
++    default:
++      break;
++  }
++
++leave:
++  GST_LOG_OBJECT (self, "end");
++
+   return ret;
+ }
+ 
+@@ -165,7 +202,6 @@ settings_changed_cb (GOmxCore * core)
+       else
+         ALIGN2UP (stride, stride);
+       chroma_byte_offset = stride * ALIGN32 (sliceheight);
+-      uiomux_register ((void *) 0x80000000, 0x80000000, 0x20000000);
+ #define OMXR_TILE_WIDTH	  32
+ #define OMXR_TILE_HEIGHT  8
+       gst_structure_set (struc, "tile-width", G_TYPE_INT, OMXR_TILE_WIDTH,
+-- 
+1.7.9.5
+

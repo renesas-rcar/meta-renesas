@@ -1,0 +1,79 @@
+From 7f30e15f41e2f0338b9191398a2c6feb9ee701b1 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 28 Nov 2012 18:48:40 +0900
+Subject: [PATCH 30/39] wmvdec: decrease the refcount of the parent object of
+ pad
+
+gst_pad_get_parent() increases the refcount of the parent object,
+so it should be decreased with gst_object_unref().
+This change invokes gst_object_unref() before each 'return' statement.
+---
+ omx/gstomx_wmvdec.c |   16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/omx/gstomx_wmvdec.c b/omx/gstomx_wmvdec.c
+index fa75665..424fbce 100644
+--- a/omx/gstomx_wmvdec.c
++++ b/omx/gstomx_wmvdec.c
+@@ -55,6 +55,7 @@ gst_omx_wmvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+   const GValue *value;
+   GstCaps *sink_caps;
+   guint32 fourcc;
++  gboolean result;
+ 
+   omx_base = GST_OMX_BASE_FILTER (GST_PAD_PARENT (pad));
+   omx_wmvdec = GST_OMX_WMVDEC (gst_pad_get_parent (pad));
+@@ -99,9 +100,13 @@ gst_omx_wmvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+     }
+   }
+ 
++  result = omx_wmvdec->base_setcapsfunc (pad, sink_caps);
++
+   GST_INFO_OBJECT (omx_wmvdec, "setcaps (sink): %" GST_PTR_FORMAT, sink_caps);
+ 
+-  return omx_wmvdec->base_setcapsfunc (pad, sink_caps);
++  g_object_unref (omx_wmvdec);
++
++  return result;
+ }
+ 
+ static GstFlowReturn
+@@ -111,6 +116,7 @@ gst_omx_wmvdec_pad_chain (GstPad * pad, GstBuffer * buf)
+   GstOmxWmvDec *omx_wmvdec;
+   guint size;
+   guint8 *data;
++  GstFlowReturn result;
+ 
+   omx_base = GST_OMX_BASE_FILTER (GST_PAD_PARENT (pad));
+   omx_wmvdec = GST_OMX_WMVDEC (gst_pad_get_parent (pad));
+@@ -133,7 +139,6 @@ gst_omx_wmvdec_pad_chain (GstPad * pad, GstBuffer * buf)
+     GstBuffer *SeqParabuf = NULL;
+     guint32 *u32ptr;
+     guint8 *u8ptr;
+-    GstFlowReturn result;
+ 
+     /* split sequence parameter set and picture parameter set and other NALU */
+     /* and parse AVCDecoderConfigurationRecord */
+@@ -165,13 +170,18 @@ gst_omx_wmvdec_pad_chain (GstPad * pad, GstBuffer * buf)
+     result = omx_wmvdec->base_chain_func (pad, SeqParabuf);
+     if (result != GST_FLOW_OK) {
+       GST_ERROR_OBJECT (omx_wmvdec, "failed to push sequence header");
++      g_object_unref (omx_wmvdec);
+       return result;
+     }
+   }
+ 
+ no_codec_data:
+ 
+-  return omx_wmvdec->base_chain_func (pad, buf);
++  result = omx_wmvdec->base_chain_func (pad, buf);
++
++  g_object_unref (omx_wmvdec);
++
++  return result;
+ }
+ 
+ static void
+-- 
+1.7.9.5
+

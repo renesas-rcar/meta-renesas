@@ -1,0 +1,32 @@
+From ab6476bddc621c4f8a181c2659a800d361a40672 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 7 Jun 2012 19:21:53 +0900
+Subject: [PATCH 02/39] base_filter: set OMX buffer flags if
+ GST_BUFFER_FLAG_PREROLL is detected
+
+OMX for R-CarE1 requires that the OMX_BUFFERFLAG_CODECCONFIG flag
+be input if the Nal unit type is SPS or PPS. Otherwise,
+OMX_BUFFERFLAG_ENDOFFRAME should be set.
+---
+ omx/gstomx_base_filter.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index 54f7036..8b9ffd5 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -644,6 +644,11 @@ pad_chain (GstPad * pad, GstBuffer * buf)
+ 
+         buffer_offset += omx_buffer->nFilledLen;
+ 
++        if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_PREROLL))
++          omx_buffer->nFlags = OMX_BUFFERFLAG_CODECCONFIG;
++        else
++          omx_buffer->nFlags = OMX_BUFFERFLAG_ENDOFFRAME;
++
+         GST_LOG_OBJECT (self, "release_buffer");
+                 /** @todo untaint buffer */
+         g_omx_port_release_buffer (in_port, omx_buffer);
+-- 
+1.7.9.5
+

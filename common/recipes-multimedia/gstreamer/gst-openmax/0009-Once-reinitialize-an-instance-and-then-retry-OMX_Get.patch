@@ -1,0 +1,45 @@
+From ecfa803dd1a8e5ecf30fd57046417b44ef356690 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 16 Aug 2012 16:48:18 +0900
+Subject: [PATCH 09/39] Once reinitialize an instance and then retry
+ OMX_GetHandle() if it fails
+
+Reinitializing an instance in case that OMX_GetHandle() fails may
+be effective especially for some stateful OMXIL libraries since it
+resets the state.
+---
+ omx/gstomx_util.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/omx/gstomx_util.c b/omx/gstomx_util.c
+index 423e441..0a4b1e7 100644
+--- a/omx/gstomx_util.c
++++ b/omx/gstomx_util.c
+@@ -280,10 +280,13 @@ g_omx_core_free (GOmxCore * core)
+ void
+ g_omx_core_init (GOmxCore * core)
+ {
++  int retry = 1;
++
+   GST_DEBUG_OBJECT (core->object, "loading: %s %s (%s)",
+       core->component_name,
+       core->component_role ? core->component_role : "", core->library_name);
+ 
++reinit:
+   core->imp = request_imp (core->library_name);
+ 
+   if (!core->imp)
+@@ -312,6 +315,10 @@ g_omx_core_init (GOmxCore * core)
+       OMX_SetParameter (core->omx_handle, OMX_IndexParamStandardComponentRole,
+           &param);
+     }
++  } else if (retry-- > 0) {
++    release_imp (core->imp);
++    GST_INFO_OBJECT (core->object, "reinitializing the OMXIL instance");
++    goto reinit;
+   }
+ }
+ 
+-- 
+1.7.9.5
+

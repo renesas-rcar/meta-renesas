@@ -1,0 +1,74 @@
+From d493512a35bb35f1e9c0e89972ef7753d2775f73 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 26 Nov 2012 18:45:47 +0900
+Subject: [PATCH 28/39] util/base_filter: send an error event to application
+ immediately after catching an error from the
+ component
+
+An error event might not be sent to application after catching an error
+from the OMXIL component because the error event isn't sent when
+EventHandler() is invoked but is sent after pad_chain() detects it.
+This patch notifies the application of the error from the component
+in the event handler in order to ensure that the the error is sent.
+---
+ omx/gstomx_base_filter.c |   27 ++++++++++-----------------
+ omx/gstomx_util.c        |    3 +++
+ 2 files changed, 13 insertions(+), 17 deletions(-)
+
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index 88d2b9d..7505e03 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -723,25 +723,18 @@ leave:
+ 
+   /* special conditions */
+ out_flushing:
+-  {
+-    const gchar *error_msg = NULL;
+-
+-    if (gomx->omx_error) {
+-      error_msg = "Error from OpenMAX component";
+-    } else if (gomx->omx_state != OMX_StateExecuting &&
+-        gomx->omx_state != OMX_StatePause) {
+-      error_msg = "OpenMAX component in wrong state";
+-    }
+-
+-    if (error_msg) {
+-      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL), ("%s", error_msg));
+-      ret = GST_FLOW_ERROR;
+-    }
++  if (gomx->omx_error)
++    ret = GST_FLOW_ERROR;
++  else if (gomx->omx_state != OMX_StateExecuting &&
++      gomx->omx_state != OMX_StatePause) {
++    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
++        ("OpenMAX component in wrong state"));
++    ret = GST_FLOW_ERROR;
++  }
+ 
+-    gst_buffer_unref (buf);
++  gst_buffer_unref (buf);
+ 
+-    goto leave;
+-  }
++  goto leave;
+ }
+ 
+ static gboolean
+diff --git a/omx/gstomx_util.c b/omx/gstomx_util.c
+index a59e5c5..aed5d4f 100644
+--- a/omx/gstomx_util.c
++++ b/omx/gstomx_util.c
+@@ -930,6 +930,9 @@ EventHandler (OMX_HANDLETYPE omx_handle,
+         g_cond_signal (core->omx_state_condition);
+         g_mutex_unlock (core->omx_state_mutex);
+       }
++
++      GST_ELEMENT_ERROR (core->object, STREAM, FAILED, (NULL),
++          ("Error from OpenMAX component"));
+       break;
+     }
+     default:
+-- 
+1.7.9.5
+

@@ -1,0 +1,44 @@
+From 56499cc73da969ca0a4bb8c9a692b0a3a638d380 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 18 Oct 2012 17:15:46 +0900
+Subject: [PATCH 20/39] base_videodec: tweak value of row stride for T/L
+ addressing data
+
+Tiled data output by decoder must be arranged with following a stride
+value derived from the T/L addressing rule.
+This tweaks the 'rowstride' value in capability if the post-processing
+is disabled.
+---
+ omx/gstomx_base_videodec.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index aa4463d..6742927 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -112,7 +112,9 @@ settings_changed_cb (GOmxCore * core)
+         break;
+     }
+ 
+-    stride = param.format.video.nStride;
++    stride =
++        (core->postproc) ? param.format.video.nStride : param.format.video.
++        nFrameWidth;
+     chroma_byte_offset = stride * param.format.video.nSliceHeight;
+   }
+ 
+@@ -144,7 +146,10 @@ settings_changed_cb (GOmxCore * core)
+ 	    (_p) += 1;                      \
+     }
+     if (!core->postproc) {
+-      ALIGN2UP (stride, stride);
++      if (stride <= 256)
++        stride = 256;
++      else
++        ALIGN2UP (stride, stride);
+       chroma_byte_offset = stride * ALIGN32 (sliceheight);
+       uiomux_register ((void *) 0x80000000, 0x80000000, 0x20000000);
+ #define OMXR_TILE_WIDTH	  32
+-- 
+1.7.9.5
+

@@ -1,0 +1,28 @@
+From dca8f43505a03eff3eb77efc7c72d3569a20cf46 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 17 Dec 2012 10:26:07 +0900
+Subject: [PATCH 33/39] base_filter: fix missing gst_caps_unref() to prevent a
+ memory leak
+
+The caps that is returned from gst_pad_get_negotiated_caps() must be
+passed to gst_caps_unref() to decrease the reference count, otherwise
+it will cause a memory leak.
+---
+ omx/gstomx_base_filter.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index 7505e03..674dcaa 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -449,6 +449,7 @@ output_loop (gpointer data)
+         }
+         buf = gst_buffer_new ();
+         gst_buffer_set_caps (buf, caps);
++        gst_caps_unref (caps);
+ 
+         if (G_LIKELY (buf)) {
+           gint chroma_byte_offset;
+-- 
+1.7.9.5
+

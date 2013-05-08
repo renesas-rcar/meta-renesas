@@ -1,0 +1,431 @@
+From 586915fa83dc57016133da8e8ff1158ade91b119 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 13 Sep 2012 19:44:41 +0900
+Subject: [PATCH 13/39] base_videodec: send a query whether the T/L addressing
+ is supported
+
+This patch sends a query which asks downstream plugins whether
+can handle the T/L addressing for buffer data address.
+settings_changed_cb() can be invoked after the pad has been enabled.
+The query is issued by settings_changed_cb() once in the preroll stage,
+and then no reply or 'unsupported' reply can make terminating the process.
+---
+ omx/gstomx_adpcmenc.c      |    4 +++-
+ omx/gstomx_amrnbenc.c      |    4 +++-
+ omx/gstomx_amrwbenc.c      |    4 +++-
+ omx/gstomx_base_audiodec.c |    4 +++-
+ omx/gstomx_base_filter.c   |   10 +++++++--
+ omx/gstomx_base_filter.h   |    3 +++
+ omx/gstomx_base_videodec.c |   49 +++++++++++++++++++++++++++++++++++++++++++-
+ omx/gstomx_base_videodec.h |    2 ++
+ omx/gstomx_filereadersrc.c |    4 +++-
+ omx/gstomx_g729dec.c       |    4 +++-
+ omx/gstomx_h263enc.c       |    4 +++-
+ omx/gstomx_h264enc.c       |    4 +++-
+ omx/gstomx_jpegenc.c       |    4 +++-
+ omx/gstomx_mpeg4enc.c      |    4 +++-
+ omx/gstomx_util.h          |    2 +-
+ omx/gstomx_volume.c        |    4 +++-
+ 16 files changed, 95 insertions(+), 15 deletions(-)
+
+diff --git a/omx/gstomx_adpcmenc.c b/omx/gstomx_adpcmenc.c
+index 3085f7a..cd689a6 100644
+--- a/omx/gstomx_adpcmenc.c
++++ b/omx/gstomx_adpcmenc.c
+@@ -52,7 +52,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+ {
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -84,6 +84,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static gboolean
+diff --git a/omx/gstomx_amrnbenc.c b/omx/gstomx_amrnbenc.c
+index 80c8cd0..50e07de 100644
+--- a/omx/gstomx_amrnbenc.c
++++ b/omx/gstomx_amrnbenc.c
+@@ -111,7 +111,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+   }
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -142,6 +142,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static gboolean
+diff --git a/omx/gstomx_amrwbenc.c b/omx/gstomx_amrwbenc.c
+index fd5ca61..a886f36 100644
+--- a/omx/gstomx_amrwbenc.c
++++ b/omx/gstomx_amrwbenc.c
+@@ -111,7 +111,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+   }
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -142,6 +142,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static gboolean
+diff --git a/omx/gstomx_base_audiodec.c b/omx/gstomx_base_audiodec.c
+index 6f94b33..ce1a91d 100644
+--- a/omx/gstomx_base_audiodec.c
++++ b/omx/gstomx_base_audiodec.c
+@@ -35,7 +35,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+ {
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -78,6 +78,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static void
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index 3a1a575..3a43455 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -368,8 +368,14 @@ output_loop (gpointer data)
+         if (!caps) {
+                     /** @todo We shouldn't be doing this. */
+           GST_WARNING_OBJECT (self, "faking settings changed notification");
+-          if (gomx->settings_changed_cb)
+-            gomx->settings_changed_cb (gomx);
++          if (gomx->settings_changed_cb) {
++            if (!gomx->settings_changed_cb (gomx)) {
++              GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
++                  ("T/L addressing unsupported by sink"));
++              ret = GST_FLOW_ERROR;
++              goto leave;
++            }
++          }
+         } else {
+           GST_LOG_OBJECT (self, "caps already fixed: %" GST_PTR_FORMAT, caps);
+           gst_caps_unref (caps);
+diff --git a/omx/gstomx_base_filter.h b/omx/gstomx_base_filter.h
+index 76040aa..3175b8a 100644
+--- a/omx/gstomx_base_filter.h
++++ b/omx/gstomx_base_filter.h
+@@ -31,6 +31,7 @@ G_BEGIN_DECLS
+ typedef struct GstOmxBaseFilter GstOmxBaseFilter;
+ typedef struct GstOmxBaseFilterClass GstOmxBaseFilterClass;
+ typedef void (*GstOmxBaseFilterCb) (GstOmxBaseFilter * self);
++typedef gboolean (*GstOmxBaseFilterReadyCb) (GstOmxBaseFilter * self);
+ 
+ #include "gstomx_util.h"
+ #include <async_queue.h>
+@@ -54,6 +55,8 @@ struct GstOmxBaseFilter
+   GstFlowReturn last_pad_push_return;
+   GstBuffer *codec_data;
+ 
++  GstOmxBaseFilterReadyCb ready_cb;
++
+     /** @todo these are hacks, OpenMAX IL spec should be revised. */
+   gboolean share_input_buffer;
+   gboolean share_output_buffer;
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index 822301a..0f81dc8 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -36,7 +36,36 @@ type_class_init (gpointer g_class, gpointer class_data)
+ {
+ }
+ 
+-static void
++static gboolean
++query_tladdressing_supported (GstOmxBaseFilter * omx_base)
++{
++  GstOmxBaseVideoDec *self;
++  gboolean result = FALSE;
++  GstPad *peer;
++  GstStructure *structure;
++  GstQuery *query;
++
++  self = GST_OMX_BASE_VIDEODEC (omx_base);
++  peer = gst_pad_get_peer (omx_base->srcpad);
++  structure = gst_structure_empty_new ("GstQueryTLAddressingSupported");
++  gst_structure_set (structure, "tladdressing-supported", G_TYPE_BOOLEAN, FALSE,
++      NULL);
++  self->query_type_tladdr = gst_query_type_register ("tladdressing-supported",
++      "whether dealing with T/L addressing as a capability or not");
++  query = gst_query_new_application (self->query_type_tladdr, structure);
++  if (gst_pad_query (peer, query)) {
++    gst_structure_get_boolean (structure, "tladdressing-supported", &result);
++  }
++
++  gst_query_unref (query);
++  gst_object_unref (peer);
++
++  GST_INFO_OBJECT (self, "A downstream sink %s T/L addressing.",
++      result ? "supports" : "does not support");
++  return result;
++}
++
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -118,6 +147,8 @@ settings_changed_cb (GOmxCore * core)
+       ALIGN2UP (stride, stride);
+       chroma_byte_offset = stride * ALIGN32 (sliceheight);
+       uiomux_register ((void *) 0x80000000, 0x80000000, 0x20000000);
++      if (omx_base->ready_cb && !omx_base->ready_cb (omx_base))
++        return FALSE;
+     }
+     gst_structure_set (struc, "rowstride", G_TYPE_INT, stride, NULL);
+     gst_structure_set (struc, "chroma_byte_offset", G_TYPE_INT,
+@@ -128,6 +159,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static gboolean
+@@ -192,6 +225,19 @@ sink_setcaps (GstPad * pad, GstCaps * caps)
+   return gst_pad_set_caps (pad, caps);
+ }
+ 
++static gboolean
++ready_cb (GstOmxBaseFilter * omx_base)
++{
++  gboolean ret = TRUE;
++  GOmxCore *gomx;
++  gomx = (GOmxCore *) omx_base->gomx;
++
++  if (!gomx->postproc)
++    ret = query_tladdressing_supported (omx_base);
++
++  return ret;
++}
++
+ static void
+ omx_setup (GstOmxBaseFilter * omx_base)
+ {
+@@ -245,6 +291,7 @@ type_instance_init (GTypeInstance * instance, gpointer g_class)
+   omx_base = GST_OMX_BASE_FILTER (instance);
+ 
+   omx_base->omx_setup = omx_setup;
++  omx_base->ready_cb = ready_cb;
+ 
+   omx_base->gomx->settings_changed_cb = settings_changed_cb;
+ 
+diff --git a/omx/gstomx_base_videodec.h b/omx/gstomx_base_videodec.h
+index e45df75..8442c22 100644
+--- a/omx/gstomx_base_videodec.h
++++ b/omx/gstomx_base_videodec.h
+@@ -40,6 +40,8 @@ struct GstOmxBaseVideoDec
+   OMX_VIDEO_CODINGTYPE compression_format;
+   gint framerate_num;
+   gint framerate_denom;
++
++  GstQueryType query_type_tladdr;
+ };
+ 
+ struct GstOmxBaseVideoDecClass
+diff --git a/omx/gstomx_filereadersrc.c b/omx/gstomx_filereadersrc.c
+index 478f189..4e764ef 100644
+--- a/omx/gstomx_filereadersrc.c
++++ b/omx/gstomx_filereadersrc.c
+@@ -62,7 +62,7 @@ setcaps (GstBaseSrc * gst_src, GstCaps * caps)
+   return TRUE;
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseSrc *omx_base;
+@@ -72,6 +72,8 @@ settings_changed_cb (GOmxCore * core)
+   GST_DEBUG_OBJECT (omx_base, "settings changed");
+ 
+     /** @todo properly set the capabilities */
++
++  return TRUE;
+ }
+ 
+ static void
+diff --git a/omx/gstomx_g729dec.c b/omx/gstomx_g729dec.c
+index e3999fa..6485f99 100644
+--- a/omx/gstomx_g729dec.c
++++ b/omx/gstomx_g729dec.c
+@@ -52,7 +52,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+ }
+ 
+ /* should we be overriding the settings_changed_cb from parent class like this?? */
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -74,6 +74,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static void
+diff --git a/omx/gstomx_h263enc.c b/omx/gstomx_h263enc.c
+index a8a7a71..8ea6990 100644
+--- a/omx/gstomx_h263enc.c
++++ b/omx/gstomx_h263enc.c
+@@ -51,7 +51,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+ {
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseVideoEnc *omx_base;
+@@ -89,6 +89,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base_filter->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static void
+diff --git a/omx/gstomx_h264enc.c b/omx/gstomx_h264enc.c
+index 4b2d59c..a21ed98 100644
+--- a/omx/gstomx_h264enc.c
++++ b/omx/gstomx_h264enc.c
+@@ -51,7 +51,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+ {
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseVideoEnc *omx_base;
+@@ -88,6 +88,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base_filter->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static void
+diff --git a/omx/gstomx_jpegenc.c b/omx/gstomx_jpegenc.c
+index 3cbb8ba..a571ba4 100644
+--- a/omx/gstomx_jpegenc.c
++++ b/omx/gstomx_jpegenc.c
+@@ -114,7 +114,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+   }
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -152,6 +152,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static gboolean
+diff --git a/omx/gstomx_mpeg4enc.c b/omx/gstomx_mpeg4enc.c
+index 394cc7b..88d21e8 100644
+--- a/omx/gstomx_mpeg4enc.c
++++ b/omx/gstomx_mpeg4enc.c
+@@ -51,7 +51,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+ {
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseVideoEnc *omx_base;
+@@ -90,6 +90,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base_filter->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static void
+diff --git a/omx/gstomx_util.h b/omx/gstomx_util.h
+index 90fe0d0..b2a0de5 100644
+--- a/omx/gstomx_util.h
++++ b/omx/gstomx_util.h
+@@ -38,7 +38,7 @@ typedef struct GOmxImp GOmxImp;
+ typedef struct GOmxSymbolTable GOmxSymbolTable;
+ typedef enum GOmxPortType GOmxPortType;
+ 
+-typedef void (*GOmxCb) (GOmxCore * core);
++typedef gboolean (*GOmxCb) (GOmxCore * core);
+ typedef void (*GOmxPortCb) (GOmxPort * port);
+ 
+ /* Enums. */
+diff --git a/omx/gstomx_volume.c b/omx/gstomx_volume.c
+index 28a9b14..1004840 100644
+--- a/omx/gstomx_volume.c
++++ b/omx/gstomx_volume.c
+@@ -53,7 +53,7 @@ type_class_init (gpointer g_class, gpointer class_data)
+ {
+ }
+ 
+-static void
++static gboolean
+ settings_changed_cb (GOmxCore * core)
+ {
+   GstOmxBaseFilter *omx_base;
+@@ -96,6 +96,8 @@ settings_changed_cb (GOmxCore * core)
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
+   }
++
++  return TRUE;
+ }
+ 
+ static void
+-- 
+1.7.9.5
+

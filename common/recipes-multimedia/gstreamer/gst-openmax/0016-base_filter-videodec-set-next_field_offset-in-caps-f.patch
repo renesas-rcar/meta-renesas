@@ -1,0 +1,62 @@
+From 1ead4f48db5e595757031d344ea05e4ab2446b41 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 2 Oct 2012 13:56:27 +0900
+Subject: [PATCH 16/39] base_filter/videodec: set next_field_offset in caps
+ for field structure
+
+next_field_offset indicates the offset to the second field of Y plane
+in the field structure. When a decoded image is stored as the frame
+structure, this parameter is removed from caps.
+---
+ omx/gstomx_base_filter.c   |   10 +++++++---
+ omx/gstomx_base_videodec.c |    3 +++
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index 674ad84..09b71dc 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -428,19 +428,23 @@ output_loop (gpointer data)
+         caps = gst_pad_get_negotiated_caps (self->srcpad);
+         if (!gomx->postproc) {
+           OMXR_MC_VIDEO_DECODERESULTTYPE *result;
++          GstStructure *structure;
++
++          caps = gst_caps_make_writable (caps);
++          structure = gst_caps_get_structure (caps, 0);
+ 
+           result =
+               (OMXR_MC_VIDEO_DECODERESULTTYPE *) omx_buffer->pOutputPortPrivate;
+           if ((result->ePictureStruct == OMXR_MC_VIDEO_PicStructFieldTopBottom)
+               || (result->ePictureStruct ==
+                   OMXR_MC_VIDEO_PicStructFieldBottomTop)) {
+-            GstStructure *structure;
+-            caps = gst_caps_make_writable (caps);
+-            structure = gst_caps_get_structure (caps, 0);
+             gst_structure_set (structure, "interlaced", G_TYPE_BOOLEAN, TRUE,
+                 NULL);
+             gst_structure_set (structure, "field-layout", G_TYPE_STRING,
+                 "sequential", NULL);
++          } else {
++            if (gst_structure_has_field (structure, "next_field_offset"))
++              gst_structure_remove_field (structure, "next_field_offset");
+           }
+         }
+         buf = gst_buffer_new ();
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index 0019a46..01bfdfe 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -152,6 +152,9 @@ settings_changed_cb (GOmxCore * core)
+           NULL);
+       if (omx_base->ready_cb && !omx_base->ready_cb (omx_base))
+         return FALSE;
++
++      gst_structure_set (struc, "next_field_offset", G_TYPE_INT,
++          chroma_byte_offset / 2, NULL);
+     }
+     gst_structure_set (struc, "rowstride", G_TYPE_INT, stride, NULL);
+     gst_structure_set (struc, "chroma_byte_offset", G_TYPE_INT,
+-- 
+1.7.9.5
+

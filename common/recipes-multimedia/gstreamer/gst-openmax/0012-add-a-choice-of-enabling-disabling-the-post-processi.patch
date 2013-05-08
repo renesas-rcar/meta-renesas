@@ -1,0 +1,264 @@
+From be6a3eba82730e30388fb2f0077e0b9bd23f0b7d Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 13 Sep 2012 19:27:36 +0900
+Subject: [PATCH 12/39] add a choice of enabling/disabling the post processing
+ in the REL OMXIL module
+
+This adds a new property 'post-processing' to enable/disable the
+REL OMXIL post processing that realizes tiled-linear reordering,
+interlace-progressive conversion, and trimming.
+This may be useful to eliminate redundant VIO blitting
+if a downstream sink plugin can use VIO.
+---
+ configure.ac               |    3 +++
+ omx/Makefile.am            |    4 ++--
+ omx/gstomx.c               |   10 ++++++++++
+ omx/gstomx.h               |    1 +
+ omx/gstomx_base_filter.c   |   36 ++++++++++++++++++++++++++++++++++--
+ omx/gstomx_base_videodec.c |   19 +++++++++++++++++++
+ omx/gstomx_util.c          |   16 ++++++++++++++--
+ omx/gstomx_util.h          |    2 ++
+ 8 files changed, 85 insertions(+), 6 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index f3b520e..280f602 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -71,6 +71,9 @@ AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQUIRED], yes)
+ AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQUIRED], yes)
+ AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQUIRED], [no])
+ 
++dnl Check for uiomux
++PKG_CHECK_MODULES([UIOMUX], [uiomux])
++
+ dnl ** finalize ***
+ 
+ dnl set license and copyright notice
+diff --git a/omx/Makefile.am b/omx/Makefile.am
+index a105601..7148060 100644
+--- a/omx/Makefile.am
++++ b/omx/Makefile.am
+@@ -44,8 +44,8 @@ libgstomx_la_SOURCES += gstomx_amrnbdec.c gstomx_amrnbdec.h \
+ 			gstomx_filereadersrc.c gstomx_filereadersrc.h
+ endif
+ 
+-libgstomx_la_CFLAGS = -I$(srcdir)/headers $(GST_CFLAGS) $(GST_BASE_CFLAGS) -I$(top_srcdir)/util
+-libgstomx_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(top_builddir)/util/libutil.la
++libgstomx_la_CFLAGS = -I$(srcdir)/headers $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(UIOMUX_CFLAGS) -I$(top_srcdir)/util
++libgstomx_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(UIOMUX_LIBS) $(top_builddir)/util/libutil.la
+ libgstomx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+ 
+ EXTRA_DIST = headers gstomx.conf gstomx_conf.c
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index ee5c081..a0061d8 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -314,6 +314,8 @@ gstomx_get_component_info (void *core, GType type)
+   str = gst_structure_get_string (element, "component-role");
+   rcore->component_role = g_strdup (str);
+ 
++  gst_structure_get_boolean (element, "post-processing", &rcore->postproc);
++
+   return TRUE;
+ }
+ 
+@@ -374,6 +376,11 @@ gstomx_install_property_helper (GObjectClass * gobject_class)
+       g_param_spec_string ("library-name", "Library name",
+           "Name of the OpenMAX IL implementation library to use",
+           NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
++
++  g_object_class_install_property (gobject_class, ARG_POSTPROC,
++      g_param_spec_boolean ("post-processing", "post-processing",
++          "Enable the post processing for I/P transform, T/L addressing, and trimming",
++          TRUE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+ }
+ 
+ gboolean
+@@ -390,6 +397,9 @@ gstomx_get_property_helper (void *core, guint prop_id, GValue * value)
+     case ARG_LIBRARY_NAME:
+       g_value_set_string (value, gomx->library_name);
+       return TRUE;
++    case ARG_POSTPROC:
++      g_value_set_boolean (value, gomx->postproc);
++      return TRUE;
+     default:
+       return FALSE;
+   }
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index 7076870..862f220 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -37,6 +37,7 @@ enum
+   ARG_COMPONENT_NAME,
+   ARG_COMPONENT_ROLE,
+   ARG_LIBRARY_NAME,
++  ARG_POSTPROC,
+   GSTOMX_NUM_COMMON_PROP
+ };
+ 
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index f894bf7..3a1a575 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -22,6 +22,7 @@
+ #include "gstomx_base_filter.h"
+ #include "gstomx.h"
+ #include "gstomx_interface.h"
++#include "OMXR_Extension.h"
+ 
+ #include <string.h>             /* for memcpy */
+ 
+@@ -417,11 +418,42 @@ output_loop (gpointer data)
+ 
+         gst_buffer_unref (buf);
+       } else {
++        GstCaps *caps = NULL;
++        caps = gst_pad_get_negotiated_caps (self->srcpad);
++        if (!gomx->postproc) {
++          OMXR_MC_VIDEO_DECODERESULTTYPE *result;
++
++          result =
++              (OMXR_MC_VIDEO_DECODERESULTTYPE *) omx_buffer->pOutputPortPrivate;
++          if ((result->ePictureStruct == OMXR_MC_VIDEO_PicStructFieldTopBottom)
++              || (result->ePictureStruct ==
++                  OMXR_MC_VIDEO_PicStructFieldBottomTop)) {
++            GstStructure *structure;
++            caps = gst_caps_make_writable (caps);
++            structure = gst_caps_get_structure (caps, 0);
++            gst_structure_set (structure, "interlaced", G_TYPE_BOOLEAN, TRUE,
++                NULL);
++            gst_structure_set (structure, "field-layout", G_TYPE_STRING,
++                "sequential", NULL);
++          }
++        }
+         buf = gst_buffer_new ();
+-        gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
++        gst_buffer_set_caps (buf, caps);
+ 
+         if (G_LIKELY (buf)) {
+-          GST_BUFFER_DATA (buf) = omx_buffer->pBuffer + omx_buffer->nOffset;
++#define ALIGN32(_x)	(((_x) + 31) / 32 * 32)
++          if (!gomx->postproc) {
++            OMXR_MC_VIDEO_DECODERESULTTYPE *result;
++
++            result = (OMXR_MC_VIDEO_DECODERESULTTYPE *)
++                omx_buffer->pOutputPortPrivate;
++            GST_BUFFER_DATA (buf) =
++                (guint8 *) result->pvPhysImageAddressY + omx_buffer->nOffset;
++
++          } else {
++            GST_BUFFER_DATA (buf) = omx_buffer->pBuffer + omx_buffer->nOffset;
++          }
++
+           GST_BUFFER_SIZE (buf) = omx_buffer->nFilledLen;
+           if (self->use_timestamps) {
+             GST_BUFFER_TIMESTAMP (buf) =
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index b41f17f..822301a 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -21,6 +21,7 @@
+ 
+ #include "gstomx_base_videodec.h"
+ #include "gstomx.h"
++#include "uiomux/uiomux.h"
+ 
+ GSTOMX_BOILERPLATE (GstOmxBaseVideoDec, gst_omx_base_videodec, GstOmxBaseFilter,
+     GST_OMX_BASE_FILTER_TYPE);
+@@ -42,6 +43,7 @@ settings_changed_cb (GOmxCore * core)
+   GstOmxBaseVideoDec *self;
+   guint width;
+   guint height;
++  guint sliceheight;
+   guint32 format = 0;
+   gint32 stride, chroma_byte_offset;
+ 
+@@ -61,6 +63,7 @@ settings_changed_cb (GOmxCore * core)
+ 
+     width = param.format.video.nFrameWidth;
+     height = param.format.video.nFrameHeight;
++    sliceheight = param.format.video.nSliceHeight;
+     switch (param.format.video.eColorFormat) {
+       case OMX_COLOR_FormatYUV420Planar:
+       case OMX_COLOR_FormatYUV420PackedPlanar:
+@@ -100,6 +103,22 @@ settings_changed_cb (GOmxCore * core)
+       /* FIXME this is a workaround for xvimagesink */
+       gst_structure_set (struc, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+ 
++#define ALIGN32(_x)     (((_x) + 31) / 32 * 32)
++#define ALIGN2UP(_p, _w)                    \
++    {                                       \
++	    (_p) = ((_w) - 1);       \
++	    (_p) = (_p) | ((_p) >> 1);      \
++	    (_p) = (_p) | ((_p) >> 2);      \
++	    (_p) = (_p) | ((_p) >> 4);      \
++	    (_p) = (_p) | ((_p) >> 8);      \
++	    (_p) = (_p) | ((_p) >> 16);     \
++	    (_p) += 1;                      \
++    }
++    if (!core->postproc) {
++      ALIGN2UP (stride, stride);
++      chroma_byte_offset = stride * ALIGN32 (sliceheight);
++      uiomux_register ((void *) 0x80000000, 0x80000000, 0x20000000);
++    }
+     gst_structure_set (struc, "rowstride", G_TYPE_INT, stride, NULL);
+     gst_structure_set (struc, "chroma_byte_offset", G_TYPE_INT,
+         chroma_byte_offset, NULL);
+diff --git a/omx/gstomx_util.c b/omx/gstomx_util.c
+index b17a335..85de5f4 100644
+--- a/omx/gstomx_util.c
++++ b/omx/gstomx_util.c
+@@ -170,7 +170,7 @@ imp_free (GOmxImp * imp)
+ }
+ 
+ static inline GOmxImp *
+-request_imp (const gchar * name)
++request_imp (const gchar * name, gboolean disable_postproc)
+ {
+   GOmxImp *imp = NULL;
+ 
+@@ -188,7 +188,19 @@ request_imp (const gchar * name)
+ 
+   g_mutex_lock (imp->mutex);
+   if (imp->client_count == 0) {
++    OMX_ERRORTYPE (*r_config) (OMX_STRING path);
+     OMX_ERRORTYPE omx_error;
++#define FILE_OMXR_CFG_NO_IPC	"/usr/lib/omxr/omxr_av_codec_no_ipc.cfg"
++    if (disable_postproc) {
++      r_config = dlsym (imp->dl_handle, "OMXR_SetConfiguration");
++      if (r_config)
++        omx_error = r_config (FILE_OMXR_CFG_NO_IPC);
++      if ((r_config == NULL) || (omx_error != OMX_ErrorNone)) {
++        g_mutex_unlock (imp->mutex);
++        return NULL;
++      }
++    }
++
+     omx_error = imp->sym_table.init ();
+     if (omx_error) {
+       g_mutex_unlock (imp->mutex);
+@@ -287,7 +299,7 @@ g_omx_core_init (GOmxCore * core)
+       core->component_role ? core->component_role : "", core->library_name);
+ 
+ reinit:
+-  core->imp = request_imp (core->library_name);
++  core->imp = request_imp (core->library_name, !core->postproc);
+ 
+   if (!core->imp)
+     return;
+diff --git a/omx/gstomx_util.h b/omx/gstomx_util.h
+index decc411..90fe0d0 100644
+--- a/omx/gstomx_util.h
++++ b/omx/gstomx_util.h
+@@ -88,6 +88,8 @@ struct GOmxCore
+   GOmxCb settings_changed_cb;
+   GOmxImp *imp;
+ 
++  gboolean postproc;
++
+   gboolean done;
+ 
+   gchar *library_name;
+-- 
+1.7.9.5
+

@@ -1,0 +1,31 @@
+From 4323d81a1636440bf66190a703004d585e959944 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Fri, 21 Sep 2012 14:13:36 +0900
+Subject: [PATCH 15/39] base_videodec: set tile width in caps for T/L
+ addressing
+
+Image data decoded by REL OMXIL with the 'NO_IPC' configration
+must be stored as tiles in memory, that is known as 'T/L addressing'.
+A downstream plugin may be notified of the tile width in order to
+read the image through MERAM efficiently.
+---
+ omx/gstomx_base_videodec.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index 0f81dc8..0019a46 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -147,6 +147,9 @@ settings_changed_cb (GOmxCore * core)
+       ALIGN2UP (stride, stride);
+       chroma_byte_offset = stride * ALIGN32 (sliceheight);
+       uiomux_register ((void *) 0x80000000, 0x80000000, 0x20000000);
++#define OMXR_TILE_WIDTH	  32
++      gst_structure_set (struc, "tile-width", G_TYPE_INT, OMXR_TILE_WIDTH,
++          NULL);
+       if (omx_base->ready_cb && !omx_base->ready_cb (omx_base))
+         return FALSE;
+     }
+-- 
+1.7.9.5
+

@@ -1,0 +1,98 @@
+From 1fcc1d97d4595699979db8677baf2d0d6bb2dbde Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 21 Nov 2012 12:40:50 +0900
+Subject: [PATCH 25/39] util: don't send an omx_state_condition signal when
+ catching an error unrelated to changing state
+
+This signal is used in order to wakeup g_cond_timed_wait() that waits
+for state change completion. When changing state fails, the signal
+should be sent to force the blocking thread to wakeup. However,
+the signal is sent when any error occurs, regardless of whether it
+was related to changing state or not.
+
+This patch adds a test to determine if an error is caused by changing
+state so that the signal is only send when appropriate.
+This test only looks at the error code, and so may cause a false
+positive if an error that could be caused by a state change occurs
+for some other reason.
+
+The errors that correspond to state changes were determined by
+using the REL OMXIL user manual ver.1.1 as a reference.
+---
+ omx/gstomx_util.c |   46 ++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 42 insertions(+), 4 deletions(-)
+
+diff --git a/omx/gstomx_util.c b/omx/gstomx_util.c
+index 277249d..a59e5c5 100644
+--- a/omx/gstomx_util.c
++++ b/omx/gstomx_util.c
+@@ -25,6 +25,8 @@
+ 
+ #include "gstomx.h"
+ 
++#include "OMXR_Extension.h"
++
+ GST_DEBUG_CATEGORY (gstomx_util_debug);
+ 
+ /*
+@@ -827,6 +829,36 @@ got_buffer (GOmxCore * core, GOmxPort * port, OMX_BUFFERHEADERTYPE * omx_buffer)
+   }
+ }
+ 
++static gboolean
++is_err_type_state_change (OMX_ERRORTYPE err)
++{
++  gboolean ret;
++
++  switch (err) {
++    case OMX_ErrorInsufficientResources:
++    case OMX_ErrorUndefined:
++    case OMX_ErrorInvalidComponent:
++    case OMX_ErrorBadParameter:
++    case OMX_ErrorInvalidState:
++    case OMX_ErrorVersionMismatch:
++    case OMX_ErrorTimeout:
++    case OMX_ErrorBadPortIndex:
++    case OMX_ErrorIncorrectStateTransition:
++    case OMX_ErrorSameState:
++    case OMXR_MGR_ErrorInvalidHandle:
++    case OMXR_MGR_ErrorNoSignal:
++    case OMXR_MGR_ErrorOsWrapper:
++    case OMXR_MGR_ErrorSectionNotFound:
++      ret = TRUE;
++      break;
++    default:
++      ret = FALSE;
++      break;
++  }
++
++  return ret;
++}
++
+ /*
+  * OpenMAX IL callbacks.
+  */
+@@ -888,10 +920,16 @@ EventHandler (OMX_HANDLETYPE omx_handle,
+           omx_error_to_str (data_1), data_1);
+       /* component might leave us waiting for buffers, unblock */
+       g_omx_core_flush_start (core);
+-      /* unlock wait_for_state */
+-      g_mutex_lock (core->omx_state_mutex);
+-      g_cond_signal (core->omx_state_condition);
+-      g_mutex_unlock (core->omx_state_mutex);
++      /*
++       * This signal should be sent when an error is related to changing state
++       * by calling OMX_SendCommand().
++       */
++      if (is_err_type_state_change (core->omx_error)) {
++        /* unlock wait_for_state */
++        g_mutex_lock (core->omx_state_mutex);
++        g_cond_signal (core->omx_state_condition);
++        g_mutex_unlock (core->omx_state_mutex);
++      }
+       break;
+     }
+     default:
+-- 
+1.7.9.5
+

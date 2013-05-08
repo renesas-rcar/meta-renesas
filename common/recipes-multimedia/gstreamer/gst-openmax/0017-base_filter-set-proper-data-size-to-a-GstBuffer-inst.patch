@@ -1,0 +1,55 @@
+From ff469326f546af5d1e4eb6b81f55fabdbdc77df2 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 28 Sep 2012 17:56:30 +0900
+Subject: [PATCH 17/39] base_filter: set proper data size to a GstBuffer
+ instance when the post processing is disabled
+
+In the post processing disabled, nFilledLen doesn't contain actual
+data size but the image size assumed to be transformed with the post
+processing. To figure out the actual size, we should calculate it
+from nStride and nSliceHeight that are obtained from
+OMX_VIDEO_PORTDEFINITIONTYPE. chroma_byte_offset has a value that is
+nStride * nSliceHeight. The total data size equals chroma_byte_offset * 3 / 2.
+---
+ omx/gstomx_base_filter.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index 09b71dc..065985f 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -451,6 +451,16 @@ output_loop (gpointer data)
+         gst_buffer_set_caps (buf, caps);
+ 
+         if (G_LIKELY (buf)) {
++          gint chroma_byte_offset;
++          GstStructure *structure;
++
++          structure = gst_caps_get_structure (caps, 0);
++          if (!gst_structure_get_int (structure, "chroma_byte_offset",
++                  &chroma_byte_offset)) {
++            GST_ERROR_OBJECT (self, "couldn't get chroma_byte_offset");
++            ret = GST_FLOW_ERROR;
++            goto leave;
++          }
+ #define ALIGN32(_x)	(((_x) + 31) / 32 * 32)
+           if (!gomx->postproc) {
+             OMXR_MC_VIDEO_DECODERESULTTYPE *result;
+@@ -459,12 +469,12 @@ output_loop (gpointer data)
+                 omx_buffer->pOutputPortPrivate;
+             GST_BUFFER_DATA (buf) =
+                 (guint8 *) result->pvPhysImageAddressY + omx_buffer->nOffset;
+-
++            GST_BUFFER_SIZE (buf) = chroma_byte_offset * 3 / 2;
+           } else {
+             GST_BUFFER_DATA (buf) = omx_buffer->pBuffer + omx_buffer->nOffset;
++            GST_BUFFER_SIZE (buf) = omx_buffer->nFilledLen;
+           }
+ 
+-          GST_BUFFER_SIZE (buf) = omx_buffer->nFilledLen;
+           if (self->use_timestamps) {
+             GST_BUFFER_TIMESTAMP (buf) =
+                 gst_util_uint64_scale_int (omx_buffer->nTimeStamp, GST_SECOND,
+-- 
+1.7.9.5
+

@@ -1,0 +1,38 @@
+From 295a89bae1f448a5fbaf54cea914c8e423382586 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 7 Jun 2012 15:00:23 +0900
+Subject: [PATCH 01/39] base_videodec: set NV12 color format as output port
+ definition
+
+It is need in order to match the color format supported by libshvio
+---
+ omx/gstomx_base_videodec.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index a24a317..5914995 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -190,6 +190,19 @@ omx_setup (GstOmxBaseFilter * omx_base)
+ 
+       OMX_SetParameter (gomx->omx_handle, OMX_IndexParamPortDefinition, &param);
+     }
++
++    /* Output port configuration */
++    {
++      memset (&param, 0, sizeof (param));
++      param.nSize = sizeof (OMX_PARAM_PORTDEFINITIONTYPE);
++
++      param.nPortIndex = 1;
++      OMX_GetParameter (gomx->omx_handle, OMX_IndexParamPortDefinition, &param);
++
++      param.format.video.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
++
++      OMX_SetParameter (gomx->omx_handle, OMX_IndexParamPortDefinition, &param);
++    }
+   }
+ 
+   GST_INFO_OBJECT (omx_base, "end");
+-- 
+1.7.9.5
+

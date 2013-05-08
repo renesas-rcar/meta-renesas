@@ -1,0 +1,31 @@
+From 46a60b56eb1616e9c77cc1299087e87625050ce3 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 18 Jan 2013 11:15:31 +0900
+Subject: [PATCH 35/39] base_videodec: free caps in setting_changed_cb()
+
+This patch fixes caps reference counting issue in setting_changed_cb().
+Without this patch, the caps reference count will be increased each time
+a video is played.
+
+To fix the issue, call gst_caps_unref() to reduce the reference count of
+the caps.
+---
+ omx/gstomx_base_videodec.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index d327d6c..247f596 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -222,6 +222,8 @@ settings_changed_cb (GOmxCore * core)
+ 
+     GST_INFO_OBJECT (omx_base, "caps are: %" GST_PTR_FORMAT, new_caps);
+     gst_pad_set_caps (omx_base->srcpad, new_caps);
++
++    gst_caps_unref (new_caps);
+   }
+ 
+   return TRUE;
+-- 
+1.7.9.5
+

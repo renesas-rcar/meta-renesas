@@ -1,0 +1,28 @@
+From e8d3ddc5114657cefaa9bd9ec777209cdb465f6d Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 26 Nov 2012 18:12:01 +0900
+Subject: [PATCH 27/39] base_filter: overwrite nFlags to OMX_BUFFERFLAG_EOS
+ when catching an EOS event
+
+omx_buffer instances are reused after returned from the OMXIL component.
+The previous nFlags should be overwritten on EOS.
+---
+ omx/gstomx_base_filter.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/omx/gstomx_base_filter.c b/omx/gstomx_base_filter.c
+index c6457df..88d2b9d 100644
+--- a/omx/gstomx_base_filter.c
++++ b/omx/gstomx_base_filter.c
+@@ -775,7 +775,7 @@ pad_event (GstPad * pad, GstEvent * event)
+           omx_buffer = g_omx_port_request_buffer (in_port);
+ 
+           if (G_LIKELY (omx_buffer)) {
+-            omx_buffer->nFlags |= OMX_BUFFERFLAG_EOS;
++            omx_buffer->nFlags = OMX_BUFFERFLAG_EOS;
+ 
+             GST_LOG_OBJECT (self, "release_buffer");
+             /* foo_buffer_untaint (omx_buffer); */
+-- 
+1.7.9.5
+

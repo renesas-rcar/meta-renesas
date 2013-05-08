@@ -1,0 +1,31 @@
+From 367b42ad451deb557cdbb37da4a8b491e5f33d6b Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 12 Oct 2012 14:27:20 +0900
+Subject: [PATCH 19/39] base_videodec: set tile height in caps for T/L
+ addressing
+
+Downstream plugins may be notified of the tile height when image data
+is stored as tiles in memory.
+---
+ omx/gstomx_base_videodec.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/omx/gstomx_base_videodec.c b/omx/gstomx_base_videodec.c
+index 01bfdfe..aa4463d 100644
+--- a/omx/gstomx_base_videodec.c
++++ b/omx/gstomx_base_videodec.c
+@@ -148,8 +148,11 @@ settings_changed_cb (GOmxCore * core)
+       chroma_byte_offset = stride * ALIGN32 (sliceheight);
+       uiomux_register ((void *) 0x80000000, 0x80000000, 0x20000000);
+ #define OMXR_TILE_WIDTH	  32
++#define OMXR_TILE_HEIGHT  8
+       gst_structure_set (struc, "tile-width", G_TYPE_INT, OMXR_TILE_WIDTH,
+           NULL);
++      gst_structure_set (struc, "tile-height", G_TYPE_INT, OMXR_TILE_HEIGHT,
++          NULL);
+       if (omx_base->ready_cb && !omx_base->ready_cb (omx_base))
+         return FALSE;
+ 
+-- 
+1.7.9.5
+
