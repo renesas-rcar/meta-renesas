@@ -4,7 +4,7 @@ RV = "1.7-0"
 PR = "r1"
 S = "${WORKDIR}/git"
 
-DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion"
+DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion khronos-headers"
 
 SRC_URI += "file://fix-compilation-with-zlib.patch \
             file://fixsepbuild.patch \
