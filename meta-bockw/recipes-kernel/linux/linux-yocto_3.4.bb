@@ -1,21 +1,22 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-
-LINUX_VERSION = "3.4.25"
+require linux.inc
+# require linux-dtb.inc
 
 DESCRIPTION = "Linux kernel for the bockw board"
-COMPATIBLE_MACHINE_bockw = "bockw"
-KBRANCH_DEFAULT_bockw = "standard/bockw"
-KBRANCH_bockw = "${KBRANCH_DEFAULT}"
-KMACHINE_bockw = "bockw"
+COMPATIBLE_MACHINE = "bockw"
 
+
+FILESEXTRAPATHS_prepend_bockw := "${THISDIR}/${PN}:"
+
+LINUX_VERSION = "3.4.25"
 PR = "r0"
 PV_append = "+git${SRCREV}"
+S = "${WORKDIR}/git"
 
-SRCREV_machine_bockw ?= "4938ff7a961bcf44ef53c4a928f6cf9c4e6ddb4d"
+# KERNEL_DEFCONFIG = "bockw_defconfig"
 
-SRC_URI_append_bockw = " \
+SRCREV = "4938ff7a961bcf44ef53c4a928f6cf9c4e6ddb4d"
+SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.4.git;protocol=git;branch=ltsi \
 	file://defconfig \
-	\
 	file://0001-Local-ARM-shmobile-add-gic_iid-macro-for-ICCIAR-inte.patch \
 	file://0002-Local-ARM-shmobile-add-R8A7778-clock-support.patch \
 	file://0003-Local-ARM-shmobile-add-R8A7778-intc-support.patch \
@@ -196,3 +197,7 @@ SRC_URI_append_bockw = " \
 	\
 	file://0001-DRM-allow-access-to-DRM-from-other-processes.patch \ 
 	"
+
+#do_configure_prepend() {
+#	install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
+#}
