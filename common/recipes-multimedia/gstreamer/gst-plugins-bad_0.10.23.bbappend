@@ -5,6 +5,8 @@ EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-experimental', '--enabl
 
 EXTRA_OECONF += "--with-plugins=h264parse"
 
+TARGET_CFLAGS += "-D_GNU_SOURCE"
+
 PRINC := "${@int(PRINC) + 4}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
