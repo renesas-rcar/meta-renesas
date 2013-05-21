@@ -215,7 +215,8 @@ SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.4.git;protocol=git;branch=lt
         file://0001-Local-ARM-mach-shmobile-r8a7778-fix-FN_IRQ1_A.patch \
         file://0002-Local-ARM-mach-shmobile-r8a7778-Don-t-use-SCSCR_CKE1.patch \
 	\
-	file://0001-DRM-allow-access-to-DRM-from-other-processes.patch \ 
+	file://0001-DRM-allow-access-to-DRM-from-other-processes.patch \
+	file://0001-ARM-shmobile-r8a7778-add-a-register-region-for-an-IC.patch \
 	"
 
 #do_configure_prepend() {
