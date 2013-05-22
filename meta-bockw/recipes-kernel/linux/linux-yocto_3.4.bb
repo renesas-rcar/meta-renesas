@@ -195,6 +195,26 @@ SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.4.git;protocol=git;branch=lt
 	\
 	file://add_gp2d_drm_kbuild.patch \
 	\
+        file://0001-ARM-shmobile-r8a7778-add-ICB-clock-support.patch \
+        file://0002-ARM-shmobile-bockw-enable-ICB-clock.patch \
+        file://0003-ARM-shmobile-r8a7778-add-IPMMU-support.patch \
+        file://0004-ARM-shmobile-r8a7778-add-VPC-support.patch \
+        file://0005-ARM-shmobile-r8a7778-add-MERAM-support.patch \
+        file://0006-ARM-shmobile-r8a7778-add-ICB-MERAM-work-around.patch \
+        file://0007-ARM-shmobile-bockw-invoke-ICB-MERAM-workaround.patch \
+        file://0008-ARM-shmobile-r8a7778-add-VIO-support.patch \
+        file://0009-ARM-shmobile-r8a7778-add-VPU-support.patch \
+        file://0010-ARM-shmobile-r8a7778-add-SSB-workaround.patch \
+        file://0011-ARM-shmobile-bockw-invoke-SSB-workaround.patch \
+        file://0012-Local-ARM-shmobile-r8a7778-add-MMC-clock-support.patch \
+        file://0013-Local-ARM-shmobile-r8a7778-add-mmcif-platform-suppor.patch \
+        file://0014-mmc-sh-mmcif-support-single-irq-variant.patch \
+        file://0015-Local-ARM-shmobile-bockw-Change-MMC-Card-detect.patch \
+        file://0016-Local-ARM-shmobile-r8a7778-Fix-INT-num-for-I2C1-2-3.patch \
+        file://0017-r8a7778-Add-Clocks-for-SGX.patch \
+        file://0001-Local-ARM-mach-shmobile-r8a7778-fix-FN_IRQ1_A.patch \
+        file://0002-Local-ARM-mach-shmobile-r8a7778-Don-t-use-SCSCR_CKE1.patch \
+	\
 	file://0001-DRM-allow-access-to-DRM-from-other-processes.patch \ 
 	"
 
