@@ -67,4 +67,5 @@ FILES_${PN} += "\
   ${libdir}/directfb-${RV}/gfxdrivers/*.so \
   ${libdir}/directfb-${RV}/snddrivers/*.so \
   ${datadir}/directfb-${PV} \
+  /usr/share \
 "
