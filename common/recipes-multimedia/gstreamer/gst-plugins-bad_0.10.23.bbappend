@@ -112,4 +112,12 @@ SRC_URI += " \
     file://0002-ext-dfbvideosink-Fix-build-faild-when-not-using-shme.patch \
     file://0001-ext-dfbvideosink-fix-a-destination-address-of-CbCr-p.patch \
     file://0002-ext-dfbvideosink-recreate-surface-after-changing-the.patch \
+    file://0001-ext-dfbvideosink-keep-ICB-indexes-corresponding-to-t.patch \
+    file://0002-ext-dfbvideosink-ICB-errata-ICB-transaction-completi.patch \
+    file://0003-ext-dfbvideosink-setup-writeback-ICBs-when-set-caps-.patch \
+    file://0004-ext-dfbvideosink-clear-MERAM-with-VIO-for-errata-wor.patch \
+    file://0005-ext-dfbvideosink-fix-the-incorrect-conversion-from-p.patch \
+    file://0006-ext-dfbvideosink-fix-setting-CbCr-plane-physical-add.patch \
+    file://0007-ext-dfbvideosink-register-framebuffer-memory-to-UIOM.patch \
+    file://0008-ext-dfbvideosink-allocate-a-meram-region-at-the-init.patch \
     "

@@ -1,0 +1,85 @@
+From 114f0c98974aa8dd23c0d9f8cdce0650dee36185 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 22 May 2013 17:02:18 +0900
+Subject: [PATCH 8/9] ext/dfbvideosink: allocate a meram region at the
+ initializaion instead of lock with meram_lock_memory_block()
+
+meram_lock_memory_block() holds a lock of meram memory region
+with a hard corded offset. It causes a hang if the region specified
+with this method is held by another thread/process.
+To avoid this, meram_alloc_memory_block() should be used because it
+keeps track of which memory has been allocated. This change
+allocates a region once in gst_dfbvideosink_setup().
+---
+ ext/directfb/dfbvideosink.c | 20 ++++++++++----------
+ ext/directfb/dfbvideosink.h |  2 ++
+ 2 files changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index aa83663..e7cd7e4 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1002,6 +1002,13 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+     meram_write_reg (dfbvideosink->meram, regs, MEVCR1, val);
+     meram_unlock_reg (dfbvideosink->meram, regs);
+     dfbvideosink->icby[SRC].handle = dfbvideosink->icbc[SRC].handle = NULL;
++
++    dfbvideosink->meram_region_offset =
++        meram_alloc_memory_block (dfbvideosink->meram, 96);
++    if (dfbvideosink->meram_region_offset < 0) {
++      GST_ERROR_OBJECT (dfbvideosink, "failed meram memory block allocation");
++      goto beach;
++    }
+   }
+ 
+ #endif /* defined(HAVE_SHMERAM) */
+@@ -1087,6 +1094,9 @@ gst_dfbvideosink_cleanup (GstDfbVideoSink * dfbvideosink)
+       int i;
+       gulong addr;
+ 
++      meram_free_memory_block (dfbvideosink->meram,
++          dfbvideosink->meram_region_offset, 96);
++
+       for (i = 0; i < 2; i++) {
+         if (dfbvideosink->icby[i].handle) {
+           addr =
+@@ -2669,13 +2679,6 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+ #endif
+ 
+ #if defined(HAVE_SHMERAM)
+-    /*
+-       NOTE: The following lock could be workaround to prevent race
+-       condition in case that MERAM regions must be shared with other
+-       modules. For R-CarE1 platform, this must be required.
+-     */
+-    ret = meram_lock_memory_block (dfbvideosink->meram, 0, 96);
+-
+     if (dfbvideosink->require_clear_meram) {
+ #if defined(HAVE_SHVIO)
+       GstVideoRectangle dst;
+@@ -2819,9 +2822,6 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+         gst_dfbvideosink_shvio_stretchblit (dfbvideosink, src_datay,
+         src_datac, &src, src_format, src_pitch, data, &result, dst_format,
+         dest_pitch);
+-#if defined(HAVE_SHMERAM)
+-    meram_unlock_memory_block (dfbvideosink->meram, 0, 96);
+-#endif /* defined(HAVE_SHMERAM) */
+ 
+     if (ret != GST_FLOW_OK)
+       GST_WARNING_OBJECT (dfbvideosink, "failed bliting an image with VIO");
+diff --git a/ext/directfb/dfbvideosink.h b/ext/directfb/dfbvideosink.h
+index 165e308..87dbf0d 100644
+--- a/ext/directfb/dfbvideosink.h
++++ b/ext/directfb/dfbvideosink.h
+@@ -179,6 +179,8 @@ struct _GstDfbVideoSink {
+   gint tile_boundary_c_offset;
+ 
+   gboolean require_clear_meram;
++
++  gint meram_region_offset;
+ #endif /* defined(HAVE_SHMERAM) */
+ #endif /* defined(HAVE_SHVIO) */
+ 
+-- 
+1.8.1.2
+

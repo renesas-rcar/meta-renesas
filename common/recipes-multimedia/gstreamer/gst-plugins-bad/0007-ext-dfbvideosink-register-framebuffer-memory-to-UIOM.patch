@@ -1,0 +1,218 @@
+From acf09bcbe3830707af3784d76e859fabf47b8512 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 15 May 2013 14:05:09 +0900
+Subject: [PATCH 7/9] ext/dfbvideosink: register framebuffer memory to UIOMUX
+
+This change registers a framebuffer physical address to
+UIOMUX in order to achieve zero-copy blitting with libshvio.
+
+The physical address that is registered to UIOMUX is obtained
+from /proc/[PID]/pagemap, which shows which physical
+frame each virtual page is mapped to. This change extracts
+the record for the virtual page corresponding to the framebuffer
+from the pagemap and parses it to figure out the physical address
+of the framebuffer.
+---
+ ext/directfb/dfbvideosink.c | 106 +++++++++++++++++++++++++++++++++++++++++++-
+ ext/directfb/dfbvideosink.h |   3 ++
+ 2 files changed, 108 insertions(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index e7329d4..aa83663 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -686,6 +686,10 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+   DFBResult ret;
+   IDirectFBSurface *surface;
+   gint width, height;
++#if defined(HAVE_SHVIO)
++  gchar *pagemap_name;
++  gint result;
++#endif /* defined(HAVE_SHVIO) */
+ 
+   g_return_val_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink), FALSE);
+ 
+@@ -959,9 +963,28 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+ #if defined(HAVE_SHVIO)
+   GST_DEBUG_OBJECT (dfbvideosink, "initializing libshvio");
+   dfbvideosink->vio = shvio_open_named ("VIO");
+-  if (dfbvideosink->vio == NULL)
++  if (dfbvideosink->vio == NULL) {
+     GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE,
+         (NULL), ("Failed initializing libshvio"));
++    goto beach;
++  }
++
++  /* Open pagemap to see which physical frame each virtual page is mapped to */
++  result = asprintf (&pagemap_name, "/proc/%d/pagemap", getpid ());
++  if (result < 0) {
++    GST_WARNING_OBJECT (dfbvideosink, "asprintf failed");
++    dfbvideosink->setup = TRUE;
++    goto beach;
++  }
++  GST_LOG_OBJECT (dfbvideosink, "pagemap -> %s\n", pagemap_name);
++
++  dfbvideosink->pagemap_fd = open (pagemap_name, O_RDONLY);
++  free (pagemap_name);
++  if (dfbvideosink->pagemap_fd < 0) {
++    GST_WARNING_OBJECT (dfbvideosink, "pagemap open failed");
++    dfbvideosink->setup = TRUE;
++    goto beach;
++  }
+ #if defined(HAVE_SHMERAM)
+   else {
+     MERAM_REG *regs;
+@@ -1087,6 +1110,11 @@ gst_dfbvideosink_cleanup (GstDfbVideoSink * dfbvideosink)
+     }
+ #endif /* defined(HAVE_SHMERAM) */
+   }
++
++  if (dfbvideosink->pagemap_fd >= 0) {
++    close (dfbvideosink->pagemap_fd);
++    dfbvideosink->pagemap_fd = -1;
++  }
+ #endif /* defined(HAVE_SHVIO) */
+ 
+   dfbvideosink->setup = FALSE;
+@@ -2493,6 +2521,60 @@ gst_dfbvideosink_shvio_fill (GstDfbVideoSink * dfbvideosink, guint8 * virt_addr,
+ }
+ #endif /* defined(HAVE_SHVIO) && defined(HAVE_SHMERAM) */
+ 
++#if defined(HAVE_SHVIO)
++static inline gint
++get_buffer_size (gint width, gint height, DFBSurfacePixelFormat dfbfmt)
++{
++  switch (dfbfmt) {
++    case DSPF_NV12:
++    case DSPF_YV12:
++      return width * height * 3 / 2;
++    case DSPF_NV16:
++      return width * height * 2;
++    case DSPF_UYVY:
++    case DSPF_RGB16:
++      return width * height * 2;
++    case DSPF_RGB24:
++      return width * height * 3;
++    case DSPF_RGB32:
++    case DSPF_ARGB:
++      return width * height * 4;
++    default:
++      break;
++  }
++
++  return -1;
++}
++
++static guint
++gst_dfbvideosink_convert_virt_to_phys (GstDfbVideoSink * dfbvideosink,
++    guint8 * virt)
++{
++  off64_t index;
++  guint64 page_info;
++  guint phys_addr;
++  ssize_t r_size;
++
++  if (dfbvideosink->pagemap_fd < 0) {
++    GST_WARNING_OBJECT (dfbvideosink, "couldn't get pagemap file descriptor");
++    return 0;
++  }
++
++  index = ((guint) virt / dfbvideosink->pagesize) * sizeof (guint64);
++  r_size = pread (dfbvideosink->pagemap_fd, &page_info, sizeof (guint64),
++      index);
++  if (r_size < 0) {
++    GST_WARNING_OBJECT (dfbvideosink, "page info read failed");
++    return 0;
++  }
++
++  phys_addr = (page_info & 0x003fffffffffffffULL) * dfbvideosink->pagesize;
++  phys_addr += (guint) virt % dfbvideosink->pagesize;   /* add a fraction of pagesize */
++
++  return phys_addr;
++}
++#endif /* defined(HAVE_SHVIO) */
++
+ static GstFlowReturn
+ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+ {
+@@ -2540,6 +2622,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     DFBSurfacePixelFormat dst_format;
+     guint8 *src_datay, *src_datac;
+     gboolean already_filled = FALSE;
++    guint phys;
+ #endif
+ 
+     /* As we are not blitting no acceleration is possible. If the surface is
+@@ -2606,6 +2689,11 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+         goto beach;
+       }
+ 
++      phys = gst_dfbvideosink_convert_virt_to_phys (dfbvideosink, data);
++      if (phys)
++        uiomux_register (data, phys, get_buffer_size (dfbvideosink->out_width,
++                dfbvideosink->out_height, dst_format));
++
+       dst.x = dst.y = 0;
+       dst.w = dfbvideosink->out_width;
+       dst.h = dfbvideosink->out_height;
+@@ -2621,6 +2709,9 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+         dfbvideosink->require_clear_surface--;
+       }
+ 
++      if (phys)
++        uiomux_unregister (data);
++
+       surface->Unlock (surface);
+       dfbvideosink->require_clear_meram = false;
+ #else
+@@ -2663,6 +2754,12 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+       ret = GST_FLOW_ERROR;
+       goto beach;
+     }
++#if defined(HAVE_SHVIO)
++    phys = gst_dfbvideosink_convert_virt_to_phys (dfbvideosink, data);
++    if (phys)
++      uiomux_register (data, phys, get_buffer_size (dfbvideosink->out_width,
++              dfbvideosink->out_height, dst_format));
++#endif /* defined(HAVE_SHVIO) */
+ 
+     /* Source video rowbytes */
+     src_pitch = GST_BUFFER_SIZE (buf) / src.h;
+@@ -2741,6 +2838,11 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     }
+ #endif /* defined(HAVE_SHVIO) */
+ 
++#if defined(HAVE_SHVIO)
++    if (phys)
++      uiomux_unregister (data);
++#endif /* defined(HAVE_SHVIO) */
++
+     res = dest->Unlock (dest);
+ 
+     res = dest->Release (dest);
+@@ -3539,6 +3641,8 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
+   dfbvideosink->chroma_byte_offset = -1;
+   dfbvideosink->interlaced = FALSE;
+   dfbvideosink->next_field_offset = -1;
++  dfbvideosink->pagemap_fd = -1;
++  dfbvideosink->pagesize = getpagesize ();
+ #endif
+ 
+   dfbvideosink->dfb = NULL;
+diff --git a/ext/directfb/dfbvideosink.h b/ext/directfb/dfbvideosink.h
+index e15be8d..165e308 100644
+--- a/ext/directfb/dfbvideosink.h
++++ b/ext/directfb/dfbvideosink.h
+@@ -168,6 +168,9 @@ struct _GstDfbVideoSink {
+   gint chroma_byte_offset;
+   gboolean interlaced;
+   gint next_field_offset;
++
++  gint pagemap_fd;
++  gint pagesize;
+ #if defined(HAVE_SHMERAM)
+   MERAM *meram;
+   GstDfbIcb icby[2];
+-- 
+1.8.1.2
+
