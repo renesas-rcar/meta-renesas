@@ -1,0 +1,445 @@
+From ac39149c13308b4fafec19bf9261f38d89ae133f Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 26 Feb 2013 20:20:36 +0100
+Subject: drm/rcar-du: Add support for the second CRTC
+
+Pin controllers 1 and 2 (encoders) inputs are currently restricted to
+the superposition processors (CRTCs) 1 and 2 respectively. Feeding the
+output of one superposition processor to the two pin controllers is not
+supported yet.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 000ad087e5b307b015b2c3a5f74f73091702fa04)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |  121 +++++++++++++++++++++----------
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c   |   14 ++--
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   |    6 +-
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   |   26 ++++++-
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c |   14 ++--
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |   10 +++
+ 6 files changed, 135 insertions(+), 56 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index f23830a..31ca55e 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -60,6 +60,15 @@ static void rcar_du_crtc_set(struct rcar_du_crtc *rcrtc, u32 reg, u32 set)
+ 		      rcar_du_read(rcdu, rcrtc->mmio_offset + reg) | set);
+ }
+ 
++static void rcar_du_crtc_clr_set(struct rcar_du_crtc *rcrtc, u32 reg,
++				 u32 clr, u32 set)
++{
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++	u32 value = rcar_du_read(rcdu, rcrtc->mmio_offset + reg);
++
++	rcar_du_write(rcdu, rcrtc->mmio_offset + reg, (value & ~clr) | set);
++}
++
+ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ {
+ 	struct drm_crtc *crtc = &rcrtc->crtc;
+@@ -103,27 +112,45 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	rcar_du_crtc_write(rcrtc, DEWR,  mode->hdisplay);
+ }
+ 
+-static void rcar_du_crtc_start_stop(struct rcar_du_crtc *rcrtc, bool start)
++static void __rcar_du_start_stop(struct rcar_du_device *rcdu, bool start)
+ {
+-	u32 value;
+-
+-	value = rcar_du_crtc_read(rcrtc, DSYSR)
+-	      & ~(DSYSR_DRES | DSYSR_DEN | DSYSR_TVM_MASK);
++	rcar_du_write(rcdu, DSYSR,
++		      (rcar_du_read(rcdu, DSYSR) & ~(DSYSR_DRES | DSYSR_DEN)) |
++		      (start ? DSYSR_DEN : DSYSR_DRES));
++}
+ 
+-	if (start)
+-		rcar_du_crtc_write(rcrtc, DSYSR, value | DSYSR_DEN);
+-	else
+-		rcar_du_crtc_write(rcrtc, DSYSR, value | DSYSR_DRES);
++static void rcar_du_start_stop(struct rcar_du_device *rcdu, bool start)
++{
++	/* Many of the configuration bits are only updated when the display
++	 * reset (DRES) bit in DSYSR is set to 1, disabling *both* CRTCs. Some
++	 * of those bits could be pre-configured, but others (especially the
++	 * bits related to plane assignment to display timing controllers) need
++	 * to be modified at runtime.
++	 *
++	 * Restart the display controller if a start is requested. Sorry for the
++	 * flicker. It should be possible to move most of the "DRES-update" bits
++	 * setup to driver initialization time and minimize the number of cases
++	 * when the display controller will have to be restarted.
++	 */
++	if (start) {
++		if (rcdu->used_crtcs++ != 0)
++			__rcar_du_start_stop(rcdu, false);
++		__rcar_du_start_stop(rcdu, true);
++	} else {
++		if (--rcdu->used_crtcs == 0)
++			__rcar_du_start_stop(rcdu, false);
++	}
+ }
+ 
+ void rcar_du_crtc_update_planes(struct drm_crtc *crtc)
+ {
+ 	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+-	struct rcar_du_plane *planes[ARRAY_SIZE(rcdu->planes.planes)];
++	struct rcar_du_plane *planes[RCAR_DU_NUM_HW_PLANES];
+ 	unsigned int num_planes = 0;
+ 	unsigned int prio = 0;
+ 	unsigned int i;
++	u32 dptsr = 0;
+ 	u32 dspr = 0;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(rcdu->planes.planes); ++i) {
+@@ -150,16 +177,40 @@ void rcar_du_crtc_update_planes(struct drm_crtc *crtc)
+ 
+ 		prio -= 4;
+ 		dspr |= (index + 1) << prio;
++		dptsr |= DPTSR_PnDK(index) |  DPTSR_PnTS(index);
+ 
+ 		if (plane->format->planes == 2) {
+ 			index = (index + 1) % 8;
+ 
+ 			prio -= 4;
+ 			dspr |= (index + 1) << prio;
++			dptsr |= DPTSR_PnDK(index) |  DPTSR_PnTS(index);
+ 		}
+ 	}
+ 
+-	rcar_du_crtc_write(rcrtc, DS1PR, dspr);
++	/* Select display timing and dot clock generator 2 for planes associated
++	 * with superposition controller 2.
++	 */
++	if (rcrtc->index) {
++		u32 value = rcar_du_read(rcdu, DPTSR);
++
++		/* The DPTSR register is updated when the display controller is
++		 * stopped. We thus need to restart the DU. Once again, sorry
++		 * for the flicker. One way to mitigate the issue would be to
++		 * pre-associate planes with CRTCs (either with a fixed 4/4
++		 * split, or through a module parameter). Flicker would then
++		 * occur only if we need to break the pre-association.
++		 */
++		if (value != dptsr) {
++			rcar_du_write(rcdu, DPTSR, dptsr);
++			if (rcdu->used_crtcs) {
++				__rcar_du_start_stop(rcdu, false);
++				__rcar_du_start_stop(rcdu, true);
++			}
++		}
++	}
++
++	rcar_du_write(rcdu, rcrtc->index ? DS2PR : DS1PR, dspr);
+ }
+ 
+ /*
+@@ -195,7 +246,8 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 	rcar_du_crtc_write(rcrtc, BPOR, BPOR_RGB(0, 0, 0));
+ 
+ 	/* Configure output routing: enable both superposition processors */
+-	rcar_du_write(rcdu, DORCR, DORCR_DPRS);
++	rcar_du_write(rcdu, DORCR, DORCR_PG2T | DORCR_DK2S | DORCR_PG2D_DS2 |
++		      DORCR_PG1D_DS1 | DORCR_DPRS);
+ 
+ 	rcar_du_crtc_set_display_timing(rcrtc);
+ 
+@@ -214,7 +266,13 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 		rcar_du_plane_setup(plane);
+ 	}
+ 
+-	rcar_du_crtc_start_stop(rcrtc, true);
++	/* Select master sync mode. This enables display operation in master
++	 * sync mode (with the HSYNC and VSYNC signals configured as outputs and
++	 * actively driven).
++	 */
++	rcar_du_crtc_clr_set(rcrtc, DSYSR, DSYSR_TVM_MASK, DSYSR_TVM_MASTER);
++
++	rcar_du_start_stop(rcdu, true);
+ 
+ 	rcrtc->started = true;
+ }
+@@ -232,7 +290,12 @@ static void rcar_du_crtc_stop(struct rcar_du_crtc *rcrtc)
+ 	rcar_du_crtc_update_planes(crtc);
+ 	mutex_unlock(&rcdu->planes.lock);
+ 
+-	rcar_du_crtc_start_stop(rcrtc, false);
++	/* Select switch sync mode. This stops display operation and configures
++	 * the HSYNC and VSYNC signals as inputs.
++	 */
++	rcar_du_crtc_clr_set(rcrtc, DSYSR, DSYSR_TVM_MASK, DSYSR_TVM_SWITCH);
++
++	rcar_du_start_stop(rcdu, false);
+ 
+ 	clk_disable(rcdu->clock);
+ 
+@@ -372,7 +435,7 @@ void rcar_du_crtc_cancel_page_flip(struct rcar_du_crtc *rcrtc,
+ 	if (event && event->base.file_priv == file) {
+ 		rcrtc->event = NULL;
+ 		event->base.destroy(&event->base);
+-		drm_vblank_put(dev, 0);
++		drm_vblank_put(dev, rcrtc->index);
+ 	}
+ 	spin_unlock_irqrestore(&dev->event_lock, flags);
+ }
+@@ -392,7 +455,8 @@ static void rcar_du_crtc_finish_page_flip(struct rcar_du_crtc *rcrtc)
+ 	if (event == NULL)
+ 		return;
+ 
+-	event->event.sequence = drm_vblank_count_and_time(dev, 0, &vblanktime);
++	event->event.sequence =
++		drm_vblank_count_and_time(dev, rcrtc->index, &vblanktime);
+ 	event->event.tv_sec = vblanktime.tv_sec;
+ 	event->event.tv_usec = vblanktime.tv_usec;
+ 
+@@ -401,7 +465,7 @@ static void rcar_du_crtc_finish_page_flip(struct rcar_du_crtc *rcrtc)
+ 	wake_up_interruptible(&event->base.file_priv->event_wait);
+ 	spin_unlock_irqrestore(&dev->event_lock, flags);
+ 
+-	drm_vblank_put(dev, 0);
++	drm_vblank_put(dev, rcrtc->index);
+ }
+ 
+ static int rcar_du_crtc_page_flip(struct drm_crtc *crtc,
+@@ -423,8 +487,8 @@ static int rcar_du_crtc_page_flip(struct drm_crtc *crtc,
+ 	rcar_du_crtc_update_base(rcrtc);
+ 
+ 	if (event) {
+-		event->pipe = 0;
+-		drm_vblank_get(dev, 0);
++		event->pipe = rcrtc->index;
++		drm_vblank_get(dev, rcrtc->index);
+ 		spin_lock_irqsave(&dev->event_lock, flags);
+ 		rcrtc->event = event;
+ 		spin_unlock_irqrestore(&dev->event_lock, flags);
+@@ -441,14 +505,10 @@ static const struct drm_crtc_funcs crtc_funcs = {
+ 
+ int rcar_du_crtc_create(struct rcar_du_device *rcdu, unsigned int index)
+ {
+-	const struct rcar_du_encoder_data *pdata = &rcdu->pdata->encoders[index];
+-	struct rcar_du_crtc *rcrtc = &rcdu->crtc[index];
++	struct rcar_du_crtc *rcrtc = &rcdu->crtcs[index];
+ 	struct drm_crtc *crtc = &rcrtc->crtc;
+ 	int ret;
+ 
+-	if (pdata->encoder == RCAR_DU_ENCODER_UNUSED)
+-		return 0;
+-
+ 	rcrtc->mmio_offset = index ? DISP2_REG_OFFSET : 0;
+ 	rcrtc->index = index;
+ 	rcrtc->dpms = DRM_MODE_DPMS_OFF;
+@@ -462,19 +522,6 @@ int rcar_du_crtc_create(struct rcar_du_device *rcdu, unsigned int index)
+ 
+ 	drm_crtc_helper_add(crtc, &crtc_helper_funcs);
+ 
+-	switch (pdata->encoder) {
+-	case RCAR_DU_ENCODER_VGA:
+-		rcar_du_vga_init(rcdu, &pdata->vga, index);
+-		break;
+-
+-	case RCAR_DU_ENCODER_LVDS:
+-		rcar_du_lvds_init(rcdu, &pdata->lvds, index);
+-		break;
+-
+-	default:
+-		break;
+-	}
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index dbc1a62..2236fa6 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -107,7 +107,7 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 	}
+ 
+ 	/* IRQ and vblank handling */
+-	ret = drm_vblank_init(dev, 1);
++	ret = drm_vblank_init(dev, (1 << rcdu->num_crtcs) - 1);
+ 	if (ret < 0) {
+ 		dev_err(&pdev->dev, "failed to initialize vblank\n");
+ 		goto done;
+@@ -133,8 +133,8 @@ static void rcar_du_preclose(struct drm_device *dev, struct drm_file *file)
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+ 	unsigned int i;
+ 
+-	for (i = 0; i < ARRAY_SIZE(rcdu->crtc); ++i)
+-		rcar_du_crtc_cancel_page_flip(&rcdu->crtc[i], file);
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i)
++		rcar_du_crtc_cancel_page_flip(&rcdu->crtcs[i], file);
+ }
+ 
+ static irqreturn_t rcar_du_irq(int irq, void *arg)
+@@ -143,8 +143,8 @@ static irqreturn_t rcar_du_irq(int irq, void *arg)
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+ 	unsigned int i;
+ 
+-	for (i = 0; i < ARRAY_SIZE(rcdu->crtc); ++i)
+-		rcar_du_crtc_irq(&rcdu->crtc[i]);
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i)
++		rcar_du_crtc_irq(&rcdu->crtcs[i]);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -153,7 +153,7 @@ static int rcar_du_enable_vblank(struct drm_device *dev, int crtc)
+ {
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+ 
+-	rcar_du_crtc_enable_vblank(&rcdu->crtc[crtc], true);
++	rcar_du_crtc_enable_vblank(&rcdu->crtcs[crtc], true);
+ 
+ 	return 0;
+ }
+@@ -162,7 +162,7 @@ static void rcar_du_disable_vblank(struct drm_device *dev, int crtc)
+ {
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+ 
+-	rcar_du_crtc_enable_vblank(&rcdu->crtc[crtc], false);
++	rcar_du_crtc_enable_vblank(&rcdu->crtcs[crtc], false);
+ }
+ 
+ static const struct file_operations rcar_du_fops = {
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index 39d04ad..a0bc870 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -34,10 +34,12 @@ struct rcar_du_device {
+ 
+ 	struct drm_device *ddev;
+ 
+-	struct rcar_du_crtc crtc[1];
++	struct rcar_du_crtc crtcs[2];
++	unsigned int used_crtcs;
++	unsigned int num_crtcs;
+ 
+ 	struct {
+-		struct rcar_du_plane planes[8];
++		struct rcar_du_plane planes[RCAR_DU_NUM_SW_PLANES];
+ 		unsigned int free;
+ 		struct mutex lock;
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 5c665f4..d609e9d 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -20,7 +20,9 @@
+ #include "rcar_du_crtc.h"
+ #include "rcar_du_drv.h"
+ #include "rcar_du_kms.h"
++#include "rcar_du_lvds.h"
+ #include "rcar_du_regs.h"
++#include "rcar_du_vga.h"
+ 
+ /* -----------------------------------------------------------------------------
+  * Format helpers
+@@ -137,6 +139,7 @@ static const struct drm_mode_config_funcs rcar_du_mode_config_funcs = {
+ 
+ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ {
++	const struct rcar_du_encoder_data *pdata;
+ 	unsigned int i;
+ 	int ret;
+ 
+@@ -152,9 +155,30 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	for (i = 0; i < ARRAY_SIZE(rcdu->crtc); ++i)
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i) {
+ 		rcar_du_crtc_create(rcdu, i);
+ 
++		pdata = &rcdu->pdata->encoders[i];
++		if (pdata->encoder == RCAR_DU_ENCODER_UNUSED)
++			continue;
++
++		switch (pdata->encoder) {
++		case RCAR_DU_ENCODER_VGA:
++			rcar_du_vga_init(rcdu, &pdata->vga, i);
++			break;
++
++		case RCAR_DU_ENCODER_LVDS:
++			rcar_du_lvds_init(rcdu, &pdata->lvds, i);
++			break;
++
++		default:
++			break;
++		}
++	}
++
++	rcdu->used_crtcs = 0;
++	rcdu->num_crtcs = i;
++
+ 	ret = rcar_du_plane_register(rcdu);
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 7a4d9f0..5055c9c 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -414,9 +414,7 @@ int rcar_du_plane_init(struct rcar_du_device *rcdu)
+ 		return -ENOMEM;
+ 
+ 	rcdu->planes.zpos =
+-		drm_property_create_range(rcdu->ddev, 0, "zpos",
+-					  ARRAY_SIZE(rcdu->crtc),
+-					  ARRAY_SIZE(rcdu->planes.planes) - 1);
++		drm_property_create_range(rcdu->ddev, 0, "zpos", 1, 7);
+ 	if (rcdu->planes.zpos == NULL)
+ 		return -ENOMEM;
+ 
+@@ -437,20 +435,18 @@ int rcar_du_plane_register(struct rcar_du_device *rcdu)
+ 	unsigned int i;
+ 	int ret;
+ 
+-	/* As at least one hardware plane will always be used by one of the
+-	 * CRTCs only register N-1 KMS planes.
+-	 */
+-	for (i = 0; i < ARRAY_SIZE(rcdu->planes.planes) - 1; ++i) {
++	for (i = 0; i < RCAR_DU_NUM_KMS_PLANES; ++i) {
+ 		struct rcar_du_kms_plane *plane;
+ 
+ 		plane = devm_kzalloc(rcdu->dev, sizeof(*plane), GFP_KERNEL);
+ 		if (plane == NULL)
+ 			return -ENOMEM;
+ 
+-		plane->hwplane = &rcdu->planes.planes[i + 1];
++		plane->hwplane = &rcdu->planes.planes[i + 2];
+ 		plane->hwplane->zpos = 1;
+ 
+-		ret = drm_plane_init(rcdu->ddev, &plane->plane, 1,
++		ret = drm_plane_init(rcdu->ddev, &plane->plane,
++				     (1 << rcdu->num_crtcs) - 1,
+ 				     &rcar_du_plane_funcs, formats,
+ 				     ARRAY_SIZE(formats), false);
+ 		if (ret < 0)
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.h b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+index 2044d60..4f3ae12 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+@@ -19,6 +19,16 @@ struct drm_framebuffer;
+ struct rcar_du_device;
+ struct rcar_du_format_info;
+ 
++/* The RCAR DU has 8 hardware planes, shared between KMS planes and CRTCs. As
++ * using KMS planes requires at least one of the CRTCs being enabled, no more
++ * than 7 KMS planes can be available. We thus create 7 KMS planes and
++ * 9 software planes (one for each KMS planes and one for each CRTC).
++ */
++
++#define RCAR_DU_NUM_KMS_PLANES		7
++#define RCAR_DU_NUM_HW_PLANES		8
++#define RCAR_DU_NUM_SW_PLANES		9
++
+ struct rcar_du_plane {
+ 	struct rcar_du_device *dev;
+ 	struct drm_crtc *crtc;
+-- 
+1.7.10.4
+

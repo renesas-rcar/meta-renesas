@@ -1,0 +1,48 @@
+From 10db2327c5f3d82ad38d0ce472df0b8a64cd8202 Mon Sep 17 00:00:00 2001
+From: Jim Cromie <jim.cromie@gmail.com>
+Date: Fri, 20 Apr 2012 13:12:16 +0100
+Subject: drm: replace open-coded ARRAY_SIZE with macro
+
+[airlied: fixed one more new one added since]
+
+Signed-off-by: Jim Cromie <jim.cromie@gmail.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 02809179bb10f73be38cb2d221f3cc9b871daaa5)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid_modes.h |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
+index b027fd5..ff98a7e 100644
+--- a/drivers/gpu/drm/drm_edid_modes.h
++++ b/drivers/gpu/drm/drm_edid_modes.h
+@@ -471,7 +471,7 @@ static const struct minimode est3_modes[] = {
+ 	{ 1920, 1440, 60, 0 },
+ 	{ 1920, 1440, 75, 0 },
+ };
+-static const int num_est3_modes = sizeof(est3_modes) / sizeof(est3_modes[0]);
++static const int num_est3_modes = ARRAY_SIZE(est3_modes);
+ 
+ static const struct minimode extra_modes[] = {
+ 	{ 1024, 576,  60, 0 },
+@@ -482,7 +482,7 @@ static const struct minimode extra_modes[] = {
+ 	{ 2048, 1152, 60, 0 },
+ 	{ 2048, 1536, 60, 0 },
+ };
+-static const int num_extra_modes = sizeof(extra_modes) / sizeof(extra_modes[0]);
++static const int num_extra_modes = ARRAY_SIZE(extra_modes);
+ 
+ /*
+  * Probably taken from CEA-861 spec.
+@@ -771,5 +771,4 @@ static const struct drm_display_mode edid_cea_modes[] = {
+ 		   2492, 2640, 0, 1080, 1084, 1094, 1125, 0,
+ 		   DRM_MODE_FLAG_PHSYNC | DRM_MODE_FLAG_PVSYNC) },
+ };
+-static const int drm_num_cea_modes =
+-	sizeof (edid_cea_modes) / sizeof (edid_cea_modes[0]);
++static const int drm_num_cea_modes = ARRAY_SIZE(edid_cea_modes);
+-- 
+1.7.10.4
+

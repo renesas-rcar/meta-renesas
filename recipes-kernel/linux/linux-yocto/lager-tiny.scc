@@ -1,0 +1,7 @@
+define KMACHINE lager
+define KTYPE tiny
+define KARCH arm
+
+include ktypes/tiny/tiny.scc
+
+include lager.scc

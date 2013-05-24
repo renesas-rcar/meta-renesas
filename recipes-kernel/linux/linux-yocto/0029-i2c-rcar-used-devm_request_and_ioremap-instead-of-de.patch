@@ -1,0 +1,30 @@
+From 23b3405346877b24f2ad908391ba36684fc7abe0 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 10 Oct 2012 23:32:36 -0700
+Subject: i2c: rcar: used devm_request_and_ioremap() instead of devm_ioremap()
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+(cherry picked from commit b53f4baf8b26303fc75ef3b00cf5e7398b58efd4)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/i2c/busses/i2c-rcar.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index f9399d1..2bce56d 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -642,7 +642,7 @@ static int __devinit rcar_i2c_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	priv->io = devm_ioremap(dev, res->start, resource_size(res));
++	priv->io = devm_request_and_ioremap(dev, res);
+ 	if (!priv->io) {
+ 		dev_err(dev, "cannot ioremap\n");
+ 		return -ENODEV;
+-- 
+1.7.10.4
+

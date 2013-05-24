@@ -1,0 +1,138 @@
+From 683c54a5ff0d3e9e5725d59e3885884cdc3d552d Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Thu, 11 Apr 2013 14:03:34 +0900
+Subject: ARM: shmobile: r8a7790: Add audma-pp driver support
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@renesas.com>
+---
+ arch/arm/configs/lager_defconfig              |    1 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |    1 +
+ arch/arm/mach-shmobile/setup-r8a7790.c        |   64 +++++++++++++++++++++++++
+ 3 files changed, 66 insertions(+)
+
+diff --git a/arch/arm/configs/lager_defconfig b/arch/arm/configs/lager_defconfig
+index 8da2e3d..e12d57a 100644
+--- a/arch/arm/configs/lager_defconfig
++++ b/arch/arm/configs/lager_defconfig
+@@ -95,6 +95,7 @@ CONFIG_USB_STORAGE=y
+ CONFIG_DMADEVICES=y
+ CONFIG_SH_DMAE=y
+ CONFIG_SH_DMAE_DESC=y
++CONFIG_SH_DMAE_AUPP=y
+ CONFIG_UIO=y
+ CONFIG_UIO_PDRV_GENIRQ=y
+ # CONFIG_IOMMU_SUPPORT is not set
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+index fabb2b5..426f547 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7790.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+@@ -562,6 +562,7 @@ enum {
+ /* DMA device IDs */
+ enum {
+ 	SHDMA_DEVID_AUDIO,
++	SHDMA_DEVID_AUDIOPP,
+ };
+ 
+ #endif /* __ASM_R8A7790_H__ */
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 582fce4..70d5a23 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -179,6 +179,38 @@ static const struct sh_dmae_channel r8a7790_dma0_channels[] = {
+ 	DMA_CHANNEL(0x00028600, 0, 0),
+ };
+ 
++static const struct sh_dmae_channel r8a7790_dma1_channels[] = {
++	DMA_CHANNEL(0x0000, 0, 0),
++	DMA_CHANNEL(0x0010, 0, 0),
++	DMA_CHANNEL(0x0020, 0, 0),
++	DMA_CHANNEL(0x0030, 0, 0),
++	DMA_CHANNEL(0x0040, 0, 0),
++	DMA_CHANNEL(0x0050, 0, 0),
++	DMA_CHANNEL(0x0060, 0, 0),
++	DMA_CHANNEL(0x0070, 0, 0),
++	DMA_CHANNEL(0x0080, 0, 0),
++	DMA_CHANNEL(0x0090, 0, 0),
++	DMA_CHANNEL(0x00a0, 0, 0),
++	DMA_CHANNEL(0x00b0, 0, 0),
++	DMA_CHANNEL(0x00c0, 0, 0),
++	DMA_CHANNEL(0x00d0, 0, 0),
++	DMA_CHANNEL(0x00e0, 0, 0),
++	DMA_CHANNEL(0x00f0, 0, 0),
++	DMA_CHANNEL(0x0100, 0, 0),
++	DMA_CHANNEL(0x0110, 0, 0),
++	DMA_CHANNEL(0x0120, 0, 0),
++	DMA_CHANNEL(0x0130, 0, 0),
++	DMA_CHANNEL(0x0140, 0, 0),
++	DMA_CHANNEL(0x0150, 0, 0),
++	DMA_CHANNEL(0x0160, 0, 0),
++	DMA_CHANNEL(0x0170, 0, 0),
++	DMA_CHANNEL(0x0180, 0, 0),
++	DMA_CHANNEL(0x0190, 0, 0),
++	DMA_CHANNEL(0x01a0, 0, 0),
++	DMA_CHANNEL(0x01b0, 0, 0),
++	DMA_CHANNEL(0x01c0, 0, 0),
++};
++
+ static struct sh_dmae_pdata dma0_platform_data = {
+ 	.channel	= r8a7790_dma0_channels,
+ 	.channel_num	= ARRAY_SIZE(r8a7790_dma0_channels),
+@@ -192,6 +224,19 @@ static struct sh_dmae_pdata dma0_platform_data = {
+ 	.chclr_present	= 1,
+ };
+ 
++static struct sh_dmae_pdata dma1_platform_data = {
++	.channel	= r8a7790_dma1_channels,
++	.channel_num	= ARRAY_SIZE(r8a7790_dma1_channels),
++	.ts_low_shift	= TS_LOW_SHIFT,
++	.ts_low_mask	= TS_LOW_BIT << TS_LOW_SHIFT,
++	.ts_high_shift	= TS_HI_SHIFT,
++	.ts_high_mask	= TS_HI_BIT << TS_HI_SHIFT,
++	.ts_shift	= dma_ts_shift,
++	.ts_shift_num	= ARRAY_SIZE(dma_ts_shift),
++	.dmaor_init	= DMAOR_DME,
++	.chclr_present	= 1,
++};
++
+ static struct resource r8a7790_dma0_resources[] = {
+ 	{
+ 		.start	= 0xec700000,
+@@ -212,6 +257,15 @@ static struct resource r8a7790_dma0_resources[] = {
+ 	},
+ };
+ 
++static struct resource r8a7790_dma1_resources[] = {
++	{
++		/* channel registers (0-28) */
++		.start	= 0xec740020,
++		.end	= 0xec7401ef,
++		.flags	= IORESOURCE_MEM,
++	},
++};
++
+ static struct platform_device dma0_device = {
+ 	.name		= "sh-audma-engine",
+ 	.id		= SHDMA_DEVID_AUDIO,
+@@ -222,9 +276,19 @@ static struct platform_device dma0_device = {
+ 	},
+ };
+ 
++static struct platform_device dma1_device = {
++	.name		= "sh-audmapp-engine",
++	.id		= SHDMA_DEVID_AUDIOPP,
++	.resource	= r8a7790_dma1_resources,
++	.num_resources	= ARRAY_SIZE(r8a7790_dma1_resources),
++	.dev		= {
++		.platform_data	= &dma1_platform_data,
++	},
++};
+ 
+ static struct platform_device *r8a7790_late_devices[] __initdata = {
+ 	&dma0_device,
++	&dma1_device,
+ };
+ 
+ static const struct of_dev_auxdata r8a7790_auxdata_lookup[] __initconst = {
+-- 
+1.7.10.4
+

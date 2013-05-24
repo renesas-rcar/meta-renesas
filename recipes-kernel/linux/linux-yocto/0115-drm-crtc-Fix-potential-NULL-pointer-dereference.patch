@@ -1,0 +1,39 @@
+From 28cfb85248941384f26527f8e47bac8ba548842c Mon Sep 17 00:00:00 2001
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Date: Mon, 19 Nov 2012 09:44:57 +0000
+Subject: drm/crtc: Fix potential NULL pointer dereference
+
+drm_property_create_blob() could return NULL in which case NULL pointer
+dereference error (on connector->edid_blob_ptr) is possible. Return if
+connector->edid_blob_ptr is NULL.
+
+Fixes the following smatch error:
+drivers/gpu/drm/drm_crtc.c:3186 drm_mode_connector_update_edid_property()
+error: potential null dereference 'connector->edid_blob_ptr'.
+(drm_property_create_blob returns null)
+
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit e655d122a71332d0d26b5c0909eb395da31af0c0)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_crtc.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 462365b..02cc454 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -3192,6 +3192,8 @@ int drm_mode_connector_update_edid_property(struct drm_connector *connector,
+ 	size = EDID_LENGTH * (1 + edid->extensions);
+ 	connector->edid_blob_ptr = drm_property_create_blob(connector->dev,
+ 							    size, edid);
++	if (!connector->edid_blob_ptr)
++		return -EINVAL;
+ 
+ 	ret = drm_connector_property_set_value(connector,
+ 					       dev->mode_config.edid_property,
+-- 
+1.7.10.4
+

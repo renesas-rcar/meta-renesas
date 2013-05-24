@@ -1,0 +1,148 @@
+From 592d4ccbe21be58999d5c6698e1f874a3c91f867 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Thu, 11 Apr 2013 14:02:57 +0900
+Subject: ARM: shmobile: r8a7790: Add shdma-desc driver support
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@renesas.com>
+---
+ arch/arm/configs/lager_defconfig              |    3 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |    5 ++
+ arch/arm/mach-shmobile/setup-r8a7790.c        |   86 +++++++++++++++++++++++++
+ 3 files changed, 94 insertions(+)
+
+diff --git a/arch/arm/configs/lager_defconfig b/arch/arm/configs/lager_defconfig
+index c627d83..8da2e3d 100644
+--- a/arch/arm/configs/lager_defconfig
++++ b/arch/arm/configs/lager_defconfig
+@@ -92,6 +92,9 @@ CONFIG_USB_OHCI_HCD=y
+ CONFIG_USB_OHCI_HCD_PLATFORM=y
+ CONFIG_USB_EHCI_HCD_PLATFORM=y
+ CONFIG_USB_STORAGE=y
++CONFIG_DMADEVICES=y
++CONFIG_SH_DMAE=y
++CONFIG_SH_DMAE_DESC=y
+ CONFIG_UIO=y
+ CONFIG_UIO_PDRV_GENIRQ=y
+ # CONFIG_IOMMU_SUPPORT is not set
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+index c409e4f..fabb2b5 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7790.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+@@ -559,4 +559,9 @@ enum {
+ #define PCIREQ1			BIT01
+ #define PCIREQ0			BIT00
+ 
++/* DMA device IDs */
++enum {
++	SHDMA_DEVID_AUDIO,
++};
++
+ #endif /* __ASM_R8A7790_H__ */
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 68993ea..582fce4 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -28,6 +28,7 @@
+ #include <linux/i2c/i2c-rcar.h>
+ #include <mach/r8a7790.h>
+ #include <mach/irqs.h>
++#include <mach/dma-register.h>
+ #include <linux/platform_data/rcar-du.h>
+ 
+ static struct plat_sci_port scif0_platform_data = {
+@@ -138,7 +139,92 @@ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&rcar_du_device,
+ };
+ 
++/* DMA */
++/*  dma0:Audio-DMAC    */
++
++#define DMA_CHANNEL(a, b, c)			\
++{						\
++	.offset		= a,			\
++	.dmars		= b,			\
++	.dmars_bit	= c,			\
++	.chclr_offset	= (0x220 - 0x20) + a	\
++}
++
++static const struct sh_dmae_channel r8a7790_dma0_channels[] = {
++	DMA_CHANNEL(0x00008000, 0, 0),
++	DMA_CHANNEL(0x00008080, 0, 0),
++	DMA_CHANNEL(0x00008100, 0, 0),
++	DMA_CHANNEL(0x00008180, 0, 0),
++	DMA_CHANNEL(0x00008200, 0, 0),
++	DMA_CHANNEL(0x00008280, 0, 0),
++	DMA_CHANNEL(0x00008300, 0, 0),
++	DMA_CHANNEL(0x00008380, 0, 0),
++	DMA_CHANNEL(0x00008400, 0, 0),
++	DMA_CHANNEL(0x00008480, 0, 0),
++	DMA_CHANNEL(0x00008500, 0, 0),
++	DMA_CHANNEL(0x00008580, 0, 0),
++	DMA_CHANNEL(0x00008600, 0, 0),
++	DMA_CHANNEL(0x00028000, 0, 0),
++	DMA_CHANNEL(0x00028080, 0, 0),
++	DMA_CHANNEL(0x00028100, 0, 0),
++	DMA_CHANNEL(0x00028180, 0, 0),
++	DMA_CHANNEL(0x00028200, 0, 0),
++	DMA_CHANNEL(0x00028280, 0, 0),
++	DMA_CHANNEL(0x00028300, 0, 0),
++	DMA_CHANNEL(0x00028380, 0, 0),
++	DMA_CHANNEL(0x00028400, 0, 0),
++	DMA_CHANNEL(0x00028480, 0, 0),
++	DMA_CHANNEL(0x00028500, 0, 0),
++	DMA_CHANNEL(0x00028580, 0, 0),
++	DMA_CHANNEL(0x00028600, 0, 0),
++};
++
++static struct sh_dmae_pdata dma0_platform_data = {
++	.channel	= r8a7790_dma0_channels,
++	.channel_num	= ARRAY_SIZE(r8a7790_dma0_channels),
++	.ts_low_shift	= TS_LOW_SHIFT,
++	.ts_low_mask	= TS_LOW_BIT << TS_LOW_SHIFT,
++	.ts_high_shift	= TS_HI_SHIFT,
++	.ts_high_mask	= TS_HI_BIT << TS_HI_SHIFT,
++	.ts_shift	= dma_ts_shift,
++	.ts_shift_num	= ARRAY_SIZE(dma_ts_shift),
++	.dmaor_init	= DMAOR_DME,
++	.chclr_present	= 1,
++};
++
++static struct resource r8a7790_dma0_resources[] = {
++	{
++		.start	= 0xec700000,
++		.end	= 0xec72a7ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	{
++		.name	= "error_irq",
++		.start	= gic_spi(346),
++		.end	= gic_spi(346),
++		.flags	= IORESOURCE_IRQ,
++	},
++	{
++		/* IRQ for channels */
++		.start	= gic_spi(320),
++		.end	= gic_spi(345),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device dma0_device = {
++	.name		= "sh-audma-engine",
++	.id		= SHDMA_DEVID_AUDIO,
++	.resource	= r8a7790_dma0_resources,
++	.num_resources	= ARRAY_SIZE(r8a7790_dma0_resources),
++	.dev		= {
++		.platform_data	= &dma0_platform_data,
++	},
++};
++
++
+ static struct platform_device *r8a7790_late_devices[] __initdata = {
++	&dma0_device,
+ };
+ 
+ static const struct of_dev_auxdata r8a7790_auxdata_lookup[] __initconst = {
+-- 
+1.7.10.4
+

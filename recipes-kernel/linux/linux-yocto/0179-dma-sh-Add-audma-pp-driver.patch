@@ -1,0 +1,863 @@
+From c232ae1ee0730e2902b71ecb5d43f0c53b30e5b2 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Thu, 11 Apr 2013 14:03:12 +0900
+Subject: dma: sh: Add audma-pp driver
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@renesas.com>
+---
+ drivers/dma/Kconfig         |   11 +
+ drivers/dma/sh/Makefile     |    1 +
+ drivers/dma/sh/audma-pp.c   |  614 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sh/audma-pp.h   |   69 +++++
+ include/linux/sh_audma-pp.h |  111 ++++++++
+ 5 files changed, 806 insertions(+)
+ create mode 100644 drivers/dma/sh/audma-pp.c
+ create mode 100644 drivers/dma/sh/audma-pp.h
+ create mode 100644 include/linux/sh_audma-pp.h
+
+diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+index 6262b68..9be9c0a 100644
+--- a/drivers/dma/Kconfig
++++ b/drivers/dma/Kconfig
+@@ -167,6 +167,17 @@ config SH_DMAE_DESC
+ 	  Say Y here if you have enabled, otherwise say N.
+ 	  To compile this driver as a module, say M.
+ 
++config SH_DMAE_AUPP
++	tristate "Renesas SuperH Audio-DMAC-pp support"
++	depends on (SUPERH && SH_DMA) || (ARM && ARCH_SHMOBILE)
++	depends on !SH_DMA_API
++	depends on SH_DMAE
++	help
++	  Enable support for the Renesas DMA controllers.
++	  This is supported to Audio-DMAC-Peripheral-Peripheral.
++	  Say Y here if you have enabled, otherwise say N.
++	  To compile this driver as a module, say M.
++
+ config COH901318
+ 	bool "ST-Ericsson COH901318 DMA support"
+ 	select DMA_ENGINE
+diff --git a/drivers/dma/sh/Makefile b/drivers/dma/sh/Makefile
+index 1b75b04..494e1f7 100644
+--- a/drivers/dma/sh/Makefile
++++ b/drivers/dma/sh/Makefile
+@@ -1,3 +1,4 @@
+ obj-$(CONFIG_SH_DMAE) += shdma-base.o
+ obj-$(CONFIG_SH_DMAE) += shdma.o
+ obj-$(CONFIG_SH_DMAE_DESC) += shdma-desc.o
++obj-$(CONFIG_SH_DMAE_AUPP) += audma-pp.o
+diff --git a/drivers/dma/sh/audma-pp.c b/drivers/dma/sh/audma-pp.c
+new file mode 100644
+index 0000000..41956c2
+--- /dev/null
++++ b/drivers/dma/sh/audma-pp.c
+@@ -0,0 +1,614 @@
++/*
++ * drivers/dma/sh/audma-pp.c
++ *     This file is DMA Engine driver for Audio-DMAC-pp peripheral.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the drivers/dma/sh/shdma.c
++ *
++ * Renesas SuperH DMA Engine support
++ *
++ * base is drivers/dma/flsdma.c
++ *
++ * Copyright (C) 2011-2012 Guennadi Liakhovetski <g.liakhovetski@gmx.de>
++ * Copyright (C) 2009 Nobuhiro Iwamatsu <iwamatsu.nobuhiro@renesas.com>
++ * Copyright (C) 2009 Renesas Solutions, Inc. All rights reserved.
++ * Copyright (C) 2007 Freescale Semiconductor, Inc. All rights reserved.
++ *
++ * This is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * - DMA of SuperH does not have Hardware DMA chain mode.
++ * - MAX DMA size is 16MB.
++ *
++ */
++
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/interrupt.h>
++#include <linux/dmaengine.h>
++#include <linux/delay.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/sh_audma-pp.h>
++#include <linux/notifier.h>
++#include <linux/kdebug.h>
++#include <linux/spinlock.h>
++#include <linux/rculist.h>
++
++#include "../dmaengine.h"
++#include "audma-pp.h"
++
++#define SH_DMAE_DRV_NAME "sh-audmapp-engine"
++
++/* Default MEMCPY transfer size = 2^2 = 4 bytes */
++#define LOG2_DEFAULT_XFER_SIZE	2
++#define SH_DMA_SLAVE_NUMBER 256
++#define SH_DMA_TCR_MAX (16 * 1024 * 1024 - 1)
++
++#undef DEBUG
++#ifdef DEBUG
++#define FNC_ENTRY	pr_info("entry:%s:%d\n", __func__, __LINE__);
++#define FNC_EXIT	pr_info("exit:%s:%d\n", __func__, __LINE__);
++#define DBG_POINT()	pr_info("check:%s:%d\n", __func__, __LINE__);
++#define DBG_MSG(args...)	pr_info(args)
++#else  /* DEBUG */
++#define FNC_ENTRY
++#define FNC_EXIT
++#define DBG_POINT()
++#define DBG_MSG(args...)
++#endif /* DEBUG */
++
++/*
++ * Used for write-side mutual exclusion for the global device list,
++ * read-side synchronization by way of RCU, and per-controller data.
++ */
++static DEFINE_SPINLOCK(sh_dmae_lock);
++static LIST_HEAD(sh_dmae_devices);
++
++static void sh_dmae_writel(struct sh_dmae_chan *sh_dc, u32 data, u32 reg)
++{
++	__raw_writel(data, sh_dc->base + reg / sizeof(u32));
++}
++
++static u32 sh_dmae_readl(struct sh_dmae_chan *sh_dc, u32 reg)
++{
++	return __raw_readl(sh_dc->base + reg / sizeof(u32));
++}
++
++static void chcr_write(struct sh_dmae_chan *sh_dc, u32 data)
++{
++	struct sh_dmae_device *shdev = to_sh_dev(sh_dc);
++
++	__raw_writel(data, sh_dc->base + shdev->chcr_offset / sizeof(u32));
++}
++
++static u32 chcr_read(struct sh_dmae_chan *sh_dc)
++{
++	struct sh_dmae_device *shdev = to_sh_dev(sh_dc);
++
++	return __raw_readl(sh_dc->base + shdev->chcr_offset / sizeof(u32));
++}
++
++static bool dmae_is_busy(struct sh_dmae_chan *sh_chan)
++{
++	u32 chcr = chcr_read(sh_chan);
++
++	if ((chcr & (CHCR_DE | CHCR_TE)) == CHCR_DE)
++		return true; /* working */
++
++	return false; /* waiting */
++}
++
++static unsigned int calc_xmit_shift(struct sh_dmae_chan *sh_chan, u32 chcr)
++{
++	struct sh_dmae_device *shdev = to_sh_dev(sh_chan);
++	struct sh_dmae_pdata *pdata = shdev->pdata;
++	int cnt = ((chcr & pdata->ts_low_mask) >> pdata->ts_low_shift) |
++		((chcr & pdata->ts_high_mask) >> pdata->ts_high_shift);
++
++	if (cnt >= pdata->ts_shift_num)
++		cnt = 0;
++
++	return pdata->ts_shift[cnt];
++}
++
++static u32 log2size_to_chcr(struct sh_dmae_chan *sh_chan, int l2size)
++{
++	struct sh_dmae_device *shdev = to_sh_dev(sh_chan);
++	struct sh_dmae_pdata *pdata = shdev->pdata;
++	int i;
++
++	for (i = 0; i < pdata->ts_shift_num; i++)
++		if (pdata->ts_shift[i] == l2size)
++			break;
++
++	if (i == pdata->ts_shift_num)
++		i = 0;
++
++	return ((i << pdata->ts_low_shift) & pdata->ts_low_mask) |
++		((i << pdata->ts_high_shift) & pdata->ts_high_mask);
++}
++
++static void dmae_set_reg(struct sh_dmae_chan *sh_chan, struct sh_dmae_regs *hw)
++{
++	sh_dmae_writel(sh_chan, hw->sar, SAR);
++	sh_dmae_writel(sh_chan, hw->dar, DAR);
++	sh_dmae_writel(sh_chan, hw->tcr >> sh_chan->xmit_shift, TCR);
++}
++
++static void dmae_start(struct sh_dmae_chan *sh_chan)
++{
++	struct sh_dmae_device *shdev = to_sh_dev(sh_chan);
++	u32 chcr = chcr_read(sh_chan);
++
++	if (shdev->pdata->needs_tend_set)
++		sh_dmae_writel(sh_chan, 0xFFFFFFFF, TEND);
++
++	chcr |= CHCR_DE | shdev->chcr_ie_bit;
++	chcr_write(sh_chan, chcr & ~CHCR_TE);
++}
++
++static void dmae_init(struct sh_dmae_chan *sh_chan)
++{
++	/*
++	 * Default configuration for dual address memory-memory transfer.
++	 * 0x400 represents auto-request.
++	 */
++	u32 chcr = DM_INC | SM_INC | 0x400 | log2size_to_chcr(sh_chan,
++						   LOG2_DEFAULT_XFER_SIZE);
++	sh_chan->xmit_shift = calc_xmit_shift(sh_chan, chcr);
++	chcr_write(sh_chan, chcr);
++}
++
++static int dmae_set_chcr(struct sh_dmae_chan *sh_chan, u32 val)
++{
++	/* If DMA is active, cannot set CHCR. */
++	/* TODO: remove this superfluous check */
++	if (dmae_is_busy(sh_chan))
++		return -EBUSY;
++
++	sh_chan->xmit_shift = calc_xmit_shift(sh_chan, val);
++	chcr_write(sh_chan, val);
++
++	return 0;
++}
++
++static void sh_dmae_start_xfer(struct shdma_chan *schan,
++			       struct shdma_desc *sdesc)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan, struct sh_dmae_chan,
++						    shdma_chan);
++	struct sh_dmae_desc *sh_desc = container_of(sdesc,
++					struct sh_dmae_desc, shdma_desc);
++	dev_dbg(sh_chan->shdma_chan.dev, "Queue #%d to %d: %u@%x -> %x\n",
++		sdesc->async_tx.cookie, sh_chan->shdma_chan.id,
++		sh_desc->hw.tcr, sh_desc->hw.sar, sh_desc->hw.dar);
++	/* Get the ld start address from ld_queue */
++	dmae_set_reg(sh_chan, &sh_desc->hw);
++	dmae_start(sh_chan);
++}
++
++static bool sh_dmae_channel_busy(struct shdma_chan *schan)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan, struct sh_dmae_chan,
++						    shdma_chan);
++	return dmae_is_busy(sh_chan);
++}
++
++static void sh_dmae_setup_xfer(struct shdma_chan *schan,
++			       int slave_id)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan, struct sh_dmae_chan,
++						    shdma_chan);
++
++	if (slave_id >= 0) {
++		const struct sh_dmae_slave_config *cfg =
++			sh_chan->config;
++
++		dmae_set_chcr(sh_chan, cfg->chcr);
++	} else {
++		dmae_init(sh_chan);
++	}
++}
++
++static const struct sh_dmae_slave_config *dmae_find_slave(
++	struct sh_dmae_chan *sh_chan, int slave_id)
++{
++	struct sh_dmae_device *shdev = to_sh_dev(sh_chan);
++	struct sh_dmae_pdata *pdata = shdev->pdata;
++	const struct sh_dmae_slave_config *cfg;
++	int i;
++
++	if (slave_id >= SH_DMA_SLAVE_NUMBER)
++		return NULL;
++
++	for (i = 0, cfg = pdata->slave; i < pdata->slave_num; i++, cfg++)
++		if (cfg->slave_id == slave_id)
++			return cfg;
++
++	return NULL;
++}
++
++static int sh_dmae_set_slave(struct shdma_chan *schan,
++			     int slave_id, bool try)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan, struct sh_dmae_chan,
++						    shdma_chan);
++	const struct sh_dmae_slave_config *cfg = dmae_find_slave(sh_chan,
++							slave_id);
++	if (!cfg)
++		return -ENODEV;
++
++	if (!try)
++		sh_chan->config = cfg;
++
++	return 0;
++}
++
++static void dmae_halt(struct sh_dmae_chan *sh_chan)
++{
++	struct sh_dmae_device *shdev = to_sh_dev(sh_chan);
++	u32 chcr = chcr_read(sh_chan);
++
++	chcr &= ~(CHCR_DE | CHCR_TE | shdev->chcr_ie_bit);
++	chcr_write(sh_chan, chcr);
++}
++
++static int sh_dmae_desc_setup(struct shdma_chan *schan,
++			      struct shdma_desc *sdesc,
++			      dma_addr_t src, dma_addr_t dst, size_t *len)
++{
++	struct sh_dmae_desc *sh_desc = container_of(sdesc,
++					struct sh_dmae_desc, shdma_desc);
++
++	if (*len > schan->max_xfer_len)
++		*len = schan->max_xfer_len;
++
++	sh_desc->hw.sar = src;
++	sh_desc->hw.dar = dst;
++	sh_desc->hw.tcr = *len;
++
++	return 0;
++}
++
++static void sh_dmae_halt(struct shdma_chan *schan)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan, struct sh_dmae_chan,
++						    shdma_chan);
++	dmae_halt(sh_chan);
++}
++
++static bool sh_dmae_chan_irq(struct shdma_chan *schan, int irq)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan, struct sh_dmae_chan,
++						    shdma_chan);
++
++	if (!(chcr_read(sh_chan) & CHCR_TE))
++		return false;
++
++	/* DMA stop */
++	dmae_halt(sh_chan);
++
++	return true;
++}
++
++static bool sh_dmae_desc_completed(struct shdma_chan *schan,
++				   struct shdma_desc *sdesc)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan,
++					struct sh_dmae_chan, shdma_chan);
++	struct sh_dmae_desc *sh_desc = container_of(sdesc,
++					struct sh_dmae_desc, shdma_desc);
++	u32 sar_buf = sh_dmae_readl(sh_chan, SAR);
++	u32 dar_buf = sh_dmae_readl(sh_chan, DAR);
++
++	return	(sdesc->direction == DMA_DEV_TO_MEM &&
++		 (sh_desc->hw.dar + sh_desc->hw.tcr) == dar_buf) ||
++		(sdesc->direction != DMA_DEV_TO_MEM &&
++		 (sh_desc->hw.sar + sh_desc->hw.tcr) == sar_buf);
++}
++
++static int __devinit sh_dmae_chan_probe(struct sh_dmae_device *shdev, int id,
++					int irq, unsigned long flags)
++{
++	const struct sh_dmae_channel *chan_pdata = &shdev->pdata->channel[id];
++	struct shdma_dev *sdev = &shdev->shdma_dev;
++	struct platform_device *pdev = to_platform_device(sdev->dma_dev.dev);
++	struct sh_dmae_chan *sh_chan;
++	struct shdma_chan *schan;
++
++	sh_chan = kzalloc(sizeof(struct sh_dmae_chan), GFP_KERNEL);
++	if (!sh_chan) {
++		dev_err(sdev->dma_dev.dev,
++			"No free memory for allocating dma channels!\n");
++		return -ENOMEM;
++	}
++
++	schan = &sh_chan->shdma_chan;
++	schan->max_xfer_len = SH_DMA_TCR_MAX + 1;
++
++	shdma_chan_probe(sdev, schan, id);
++
++	sh_chan->base = shdev->chan_reg + chan_pdata->offset / sizeof(u32);
++
++	/* set up channel irq */
++	if (pdev->id >= 0)
++		snprintf(sh_chan->dev_id, sizeof(sh_chan->dev_id),
++			 "sh-dmae%d.%d", pdev->id, id);
++	else
++		snprintf(sh_chan->dev_id, sizeof(sh_chan->dev_id),
++			 "sh-dma%d", id);
++
++	shdev->chan[id] = sh_chan;
++	return 0;
++}
++
++static void sh_dmae_chan_remove(struct sh_dmae_device *shdev)
++{
++	struct dma_device *dma_dev = &shdev->shdma_dev.dma_dev;
++	struct shdma_chan *schan;
++	int i;
++
++	shdma_for_each_chan(schan, &shdev->shdma_dev, i) {
++		struct sh_dmae_chan *sh_chan = container_of(schan,
++					struct sh_dmae_chan, shdma_chan);
++		BUG_ON(!schan);
++		shdma_chan_remove(schan);
++		kfree(sh_chan);
++	}
++	dma_dev->chancnt = 0;
++}
++
++static void sh_dmae_shutdown(struct platform_device *pdev)
++{
++	return;
++}
++
++static int sh_dmae_runtime_suspend(struct device *dev)
++{
++	return 0;
++}
++
++static int sh_dmae_runtime_resume(struct device *dev)
++{
++	return 0;
++}
++
++#ifdef CONFIG_PM
++static int sh_dmae_suspend(struct device *dev)
++{
++	return 0;
++}
++
++static int sh_dmae_resume(struct device *dev)
++{
++	return 0;
++}
++#else
++#define sh_dmae_suspend NULL
++#define sh_dmae_resume NULL
++#endif
++
++const struct dev_pm_ops sh_dmae_aupp_pm = {
++	.suspend		= sh_dmae_suspend,
++	.resume			= sh_dmae_resume,
++	.runtime_suspend	= sh_dmae_runtime_suspend,
++	.runtime_resume		= sh_dmae_runtime_resume,
++};
++
++static dma_addr_t sh_dmae_slave_addr(struct shdma_chan *schan)
++{
++	struct sh_dmae_chan *sh_chan = container_of(schan,
++					struct sh_dmae_chan, shdma_chan);
++
++	/*
++	 * Implicit BUG_ON(!sh_chan->config)
++	 * This is an exclusive slave DMA operation, may only be called after a
++	 * successful slave configuration.
++	 */
++	return sh_chan->config->addr;
++}
++
++static struct shdma_desc *sh_dmae_embedded_desc(void *buf, int i)
++{
++	return &((struct sh_dmae_desc *)buf)[i].shdma_desc;
++}
++
++static const struct shdma_ops sh_dmae_shdma_ops = {
++	.desc_completed = sh_dmae_desc_completed,
++	.halt_channel = sh_dmae_halt,
++	.channel_busy = sh_dmae_channel_busy,
++	.slave_addr = sh_dmae_slave_addr,
++	.desc_setup = sh_dmae_desc_setup,
++	.set_slave = sh_dmae_set_slave,
++	.setup_xfer = sh_dmae_setup_xfer,
++	.start_xfer = sh_dmae_start_xfer,
++	.embedded_desc = sh_dmae_embedded_desc,
++	.chan_irq = sh_dmae_chan_irq,
++};
++
++static int __devinit aupp_dmae_probe(struct platform_device *pdev)
++{
++	struct sh_dmae_pdata *pdata = pdev->dev.platform_data;
++	unsigned long chan_flag[AUPP_DMAE_MAX_CHANNELS] = {};
++	int chan_irq[AUPP_DMAE_MAX_CHANNELS];
++	int err, i;
++	struct sh_dmae_device *shdev;
++	struct dma_device *dma_dev;
++	struct resource *chan;
++
++	FNC_ENTRY
++	/* get platform data */
++	if (!pdata || !pdata->channel_num) {
++		FNC_EXIT
++		return -ENODEV;
++	}
++
++	chan = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!request_mem_region(chan->start, resource_size(chan), pdev->name)) {
++		dev_err(&pdev->dev, "DMAC register region already claimed\n");
++		FNC_EXIT
++		return -EBUSY;
++	}
++
++	err = -ENOMEM;
++	shdev = kzalloc(sizeof(struct sh_dmae_device), GFP_KERNEL);
++	if (!shdev) {
++		dev_err(&pdev->dev, "Not enough memory\n");
++		goto ealloc;
++	}
++
++	dma_dev = &shdev->shdma_dev.dma_dev;
++
++	shdev->chan_reg = ioremap(chan->start, resource_size(chan));
++	if (!shdev->chan_reg)
++		goto emapchan;
++
++	if (pdata->slave && pdata->slave_num)
++		dma_cap_set(DMA_SLAVE, dma_dev->cap_mask);
++
++	/* Default transfer size of 32 bytes requires 32-byte alignment */
++	dma_dev->copy_align = LOG2_DEFAULT_XFER_SIZE;
++
++	shdev->shdma_dev.ops = &sh_dmae_shdma_ops;
++	shdev->shdma_dev.desc_size = sizeof(struct sh_dmae_desc);
++	err = shdma_init(&pdev->dev, &shdev->shdma_dev,
++			      pdata->channel_num);
++	if (err < 0)
++		goto eshdma;
++
++	/* platform data */
++	shdev->pdata = pdev->dev.platform_data;
++
++	if (pdata->chcr_offset)
++		shdev->chcr_offset = pdata->chcr_offset;
++	else
++		shdev->chcr_offset = CHCR;
++
++	if (pdata->chcr_ie_bit)
++		shdev->chcr_ie_bit = pdata->chcr_ie_bit;
++	else
++		shdev->chcr_ie_bit = CHCR_IE;
++
++	platform_set_drvdata(pdev, shdev);
++
++	pm_runtime_enable(&pdev->dev);
++	err = pm_runtime_get_sync(&pdev->dev);
++	if (err < 0)
++		dev_err(&pdev->dev, "%s(): GET = %d\n", __func__, err);
++
++	spin_lock_irq(&sh_dmae_lock);
++	list_add_tail_rcu(&shdev->node, &sh_dmae_devices);
++	spin_unlock_irq(&sh_dmae_lock);
++
++	/* Create DMA Channel */
++	for (i = 0; i < AUPP_DMAE_MAX_CHANNELS; i++) {
++		err = sh_dmae_chan_probe(shdev, i, chan_irq[i], chan_flag[i]);
++		if (err)
++			goto chan_probe_err;
++	}
++
++	pm_runtime_put(&pdev->dev);
++
++	err = dma_async_device_register(&shdev->shdma_dev.dma_dev);
++	if (err < 0)
++		goto edmadevreg;
++
++	FNC_EXIT
++	return err;
++
++edmadevreg:
++	pm_runtime_get(&pdev->dev);
++
++chan_probe_err:
++	sh_dmae_chan_remove(shdev);
++
++	spin_lock_irq(&sh_dmae_lock);
++	list_del_rcu(&shdev->node);
++	spin_unlock_irq(&sh_dmae_lock);
++
++	pm_runtime_put(&pdev->dev);
++	pm_runtime_disable(&pdev->dev);
++
++	platform_set_drvdata(pdev, NULL);
++	shdma_cleanup(&shdev->shdma_dev);
++eshdma:
++	iounmap(shdev->chan_reg);
++	synchronize_rcu();
++emapchan:
++	kfree(shdev);
++ealloc:
++	release_mem_region(chan->start, resource_size(chan));
++
++	FNC_EXIT
++	return err;
++}
++
++static int __devexit aupp_dmae_remove(struct platform_device *pdev)
++{
++	struct sh_dmae_device *shdev = platform_get_drvdata(pdev);
++	struct dma_device *dma_dev = &shdev->shdma_dev.dma_dev;
++	struct resource *res;
++	int errirq = platform_get_irq(pdev, 0);
++
++	dma_async_device_unregister(dma_dev);
++
++	if (errirq > 0)
++		free_irq(errirq, shdev);
++
++	spin_lock_irq(&sh_dmae_lock);
++	list_del_rcu(&shdev->node);
++	spin_unlock_irq(&sh_dmae_lock);
++
++	pm_runtime_disable(&pdev->dev);
++
++	sh_dmae_chan_remove(shdev);
++	shdma_cleanup(&shdev->shdma_dev);
++
++	iounmap(shdev->chan_reg);
++
++	platform_set_drvdata(pdev, NULL);
++
++	synchronize_rcu();
++	kfree(shdev);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (res)
++		release_mem_region(res->start, resource_size(res));
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (res)
++		release_mem_region(res->start, resource_size(res));
++
++	return 0;
++}
++
++static struct platform_driver aupp_dmae_driver = {
++	.driver		= {
++		.owner	= THIS_MODULE,
++		.pm	= &sh_dmae_aupp_pm,
++		.name	= SH_DMAE_DRV_NAME,
++	},
++	.remove		= __devexit_p(aupp_dmae_remove),
++	.shutdown	= sh_dmae_shutdown,
++};
++
++static int __init sh_dmae_init(void)
++{
++	return platform_driver_probe(&aupp_dmae_driver, aupp_dmae_probe);
++}
++module_init(sh_dmae_init);
++
++static void __exit sh_dmae_exit(void)
++{
++	platform_driver_unregister(&aupp_dmae_driver);
++}
++module_exit(sh_dmae_exit);
++
++MODULE_AUTHOR("Nobuhiro Iwamatsu <iwamatsu.nobuhiro@renesas.com>");
++MODULE_DESCRIPTION("Renesas SH DMA Engine driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:" SH_DMAE_DRV_NAME);
+diff --git a/drivers/dma/sh/audma-pp.h b/drivers/dma/sh/audma-pp.h
+new file mode 100644
+index 0000000..9c25f4e
+--- /dev/null
++++ b/drivers/dma/sh/audma-pp.h
+@@ -0,0 +1,69 @@
++/*
++ * drivers/dma/sh/audma-pp.h
++ *     This file is header file for Audio-DMAC-pp peripheral.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the drivers/dma/sh/shdma.h
++ *
++ * Renesas SuperH DMA Engine support
++ *
++ * Copyright (C) 2009 Nobuhiro Iwamatsu <iwamatsu.nobuhiro@renesas.com>
++ * Copyright (C) 2009 Renesas Solutions, Inc. All rights reserved.
++ *
++ * This is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ */
++#ifndef __DMA_AUDMAPP_H
++#define __DMA_AUDMAPP_H
++
++#include <linux/sh_dma.h>
++#include <linux/shdma-base.h>
++#include <linux/dmaengine.h>
++#include <linux/interrupt.h>
++#include <linux/list.h>
++
++#define AUPP_DMAE_MAX_CHANNELS 29
++
++struct device;
++
++struct sh_dmae_chan {
++	struct shdma_chan shdma_chan;
++	const struct sh_dmae_slave_config *config; /* Slave DMA configuration */
++	int xmit_shift;			/* log_2(bytes_per_xfer) */
++	u32 __iomem *base;
++	char dev_id[16];		/* unique name per DMAC of channel */
++	int pm_error;
++};
++
++struct sh_dmae_device {
++	struct shdma_dev shdma_dev;
++	struct sh_dmae_chan *chan[AUPP_DMAE_MAX_CHANNELS];
++	struct sh_dmae_pdata *pdata;
++	struct list_head node;
++	u32 __iomem *chan_reg;
++	unsigned int chcr_offset;
++	u32 chcr_ie_bit;
++};
++
++struct sh_dmae_regs {
++	u32 sar; /* SAR / source address */
++	u32 dar; /* DAR / destination address */
++	u32 tcr; /* TCR / transfer count */
++};
++
++struct sh_dmae_desc {
++	struct sh_dmae_regs hw;
++	struct shdma_desc shdma_desc;
++};
++
++#define to_sh_chan(chan) container_of(chan, struct sh_dmae_chan, shdma_chan)
++#define to_sh_desc(lh) container_of(lh, struct sh_desc, node)
++#define tx_to_sh_desc(tx) container_of(tx, struct sh_desc, async_tx)
++#define to_sh_dev(chan) container_of(chan->shdma_chan.dma_chan.device,\
++				     struct sh_dmae_device, shdma_dev.dma_dev)
++
++#endif	/* __DMA_AUDMAPP_H */
+diff --git a/include/linux/sh_audma-pp.h b/include/linux/sh_audma-pp.h
+new file mode 100644
+index 0000000..6f7f39d
+--- /dev/null
++++ b/include/linux/sh_audma-pp.h
+@@ -0,0 +1,111 @@
++/*
++ * include/linux/sh_audma-pp.h
++ *     This file is header file for Audio-DMAC-pp peripheral.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the include/linux/sh_dma.h
++ *
++ * Header for the new SH dmaengine driver
++ *
++ * Copyright (C) 2010 Guennadi Liakhovetski <g.liakhovetski@gmx.de>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#ifndef SH_DMA_H
++#define SH_DMA_H
++
++#include <linux/dmaengine.h>
++#include <linux/list.h>
++#include <linux/shdma-base.h>
++#include <linux/types.h>
++
++struct device;
++
++/* Used by slave DMA clients to request DMA to/from a specific peripheral */
++struct sh_dmae_slave {
++	struct shdma_slave	shdma_slave;	/* Set by the platform */
++};
++
++/*
++ * Supplied by platforms to specify, how a DMA channel has to be configured for
++ * a certain peripheral
++ */
++struct sh_dmae_slave_config {
++	int		slave_id;
++	dma_addr_t	addr;
++	u32		chcr;
++	char		mid_rid;
++};
++
++struct sh_dmae_channel {
++	unsigned int	offset;
++	unsigned int	dmars;
++	unsigned int	dmars_bit;
++	unsigned int	chclr_offset;
++};
++
++struct sh_dmae_pdata {
++	const struct sh_dmae_slave_config *slave;
++	int slave_num;
++	const struct sh_dmae_channel *channel;
++	int channel_num;
++	unsigned int ts_low_shift;
++	unsigned int ts_low_mask;
++	unsigned int ts_high_shift;
++	unsigned int ts_high_mask;
++	const unsigned int *ts_shift;
++	int ts_shift_num;
++	u16 dmaor_init;
++	unsigned int chcr_offset;
++	u32 chcr_ie_bit;
++
++	unsigned int dmaor_is_32bit:1;
++	unsigned int needs_tend_set:1;
++	unsigned int no_dmars:1;
++	unsigned int chclr_present:1;
++	unsigned int slave_only:1;
++};
++
++/* DMA register */
++#define SAR	0x00
++#define DAR	0x04
++#define TCR	0x08
++#define CHCR	0x0C
++#define DMAOR	0x40
++
++#define TEND	0x18 /* USB-DMAC */
++
++/* DMAOR definitions */
++#define DMAOR_AE	0x00000004
++#define DMAOR_NMIF	0x00000002
++#define DMAOR_DME	0x00000001
++
++/* Definitions for the SuperH DMAC */
++#define REQ_L	0x00000000
++#define REQ_E	0x00080000
++#define RACK_H	0x00000000
++#define RACK_L	0x00040000
++#define ACK_R	0x00000000
++#define ACK_W	0x00020000
++#define ACK_H	0x00000000
++#define ACK_L	0x00010000
++#define DM_INC	0x00004000
++#define DM_DEC	0x00008000
++#define DM_FIX	0x0000c000
++#define SM_INC	0x00001000
++#define SM_DEC	0x00002000
++#define SM_FIX	0x00003000
++#define RS_IN	0x00000200
++#define RS_OUT	0x00000300
++#define TS_BLK	0x00000040
++#define TM_BUR	0x00000020
++#define CHCR_DE	0x00000001
++#define CHCR_TE	0x00000002
++#define CHCR_IE	0x00000004
++
++bool shdma_chan_filter(struct dma_chan *chan, void *arg);
++
++#endif
+-- 
+1.7.10.4
+

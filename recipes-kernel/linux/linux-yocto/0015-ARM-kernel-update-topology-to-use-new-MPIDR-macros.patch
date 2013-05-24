@@ -1,0 +1,50 @@
+From e41b61a010cbf2c325dbb699883391621085d1d5 Mon Sep 17 00:00:00 2001
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date: Fri, 16 Nov 2012 15:24:06 +0000
+Subject: ARM: kernel: update topology to use new MPIDR macros
+
+This patch updates the topology initialization code to use the newly
+defined accessors to retrieve the MPIDR affinity levels.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Acked-by: Nicolas Pitre <nico@linaro.org>
+(cherry picked from commit 71db5bfec1349afcbfbd71268c01c658c357b4f3)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/kernel/topology.c |   15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm/kernel/topology.c b/arch/arm/kernel/topology.c
+index 198b084..ec0aae0 100644
+--- a/arch/arm/kernel/topology.c
++++ b/arch/arm/kernel/topology.c
+@@ -282,19 +282,14 @@ void store_cpu_topology(unsigned int cpuid)
+ 
+ 		if (mpidr & MPIDR_MT_BITMASK) {
+ 			/* core performance interdependency */
+-			cpuid_topo->thread_id = (mpidr >> MPIDR_LEVEL0_SHIFT)
+-				& MPIDR_LEVEL0_MASK;
+-			cpuid_topo->core_id = (mpidr >> MPIDR_LEVEL1_SHIFT)
+-				& MPIDR_LEVEL1_MASK;
+-			cpuid_topo->socket_id = (mpidr >> MPIDR_LEVEL2_SHIFT)
+-				& MPIDR_LEVEL2_MASK;
++			cpuid_topo->thread_id = MPIDR_AFFINITY_LEVEL(mpidr, 0);
++			cpuid_topo->core_id = MPIDR_AFFINITY_LEVEL(mpidr, 1);
++			cpuid_topo->socket_id = MPIDR_AFFINITY_LEVEL(mpidr, 2);
+ 		} else {
+ 			/* largely independent cores */
+ 			cpuid_topo->thread_id = -1;
+-			cpuid_topo->core_id = (mpidr >> MPIDR_LEVEL0_SHIFT)
+-				& MPIDR_LEVEL0_MASK;
+-			cpuid_topo->socket_id = (mpidr >> MPIDR_LEVEL1_SHIFT)
+-				& MPIDR_LEVEL1_MASK;
++			cpuid_topo->core_id = MPIDR_AFFINITY_LEVEL(mpidr, 0);
++			cpuid_topo->socket_id = MPIDR_AFFINITY_LEVEL(mpidr, 1);
+ 		}
+ 	} else {
+ 		/*
+-- 
+1.7.10.4
+

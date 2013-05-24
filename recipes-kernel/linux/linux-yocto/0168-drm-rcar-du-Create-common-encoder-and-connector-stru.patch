@@ -1,0 +1,398 @@
+From 9a065d8882855ea6ec66b980a0cefb29c8956a4d Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 18 Mar 2013 13:43:20 +0100
+Subject: drm/rcar-du: Create common encoder and connector structures
+
+Create rcar_du_encoder and rcar_du_connector structures to store fields
+common to all DU encoders and connectors. Move common encoder and
+connector code to rcar_du_kms.c.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit e8312a8c693946961046534de847a59a06920f01)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c  |   26 ++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h  |   25 +++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c |   62 +++++++---------------------
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c  |   71 ++++++++------------------------
+ 4 files changed, 84 insertions(+), 100 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 533aa97..e0f41ef 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -100,6 +100,32 @@ const struct rcar_du_format_info *rcar_du_format_info(u32 fourcc)
+ }
+ 
+ /* -----------------------------------------------------------------------------
++ * Common connector and encoder functions
++ */
++
++struct drm_encoder *
++rcar_du_connector_best_encoder(struct drm_connector *connector)
++{
++	struct rcar_du_connector *rcon = to_rcar_connector(connector);
++
++	return &rcon->encoder->encoder;
++}
++
++void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder)
++{
++}
++
++void rcar_du_encoder_mode_set(struct drm_encoder *encoder,
++			      struct drm_display_mode *mode,
++			      struct drm_display_mode *adjusted_mode)
++{
++}
++
++void rcar_du_encoder_mode_commit(struct drm_encoder *encoder)
++{
++}
++
++/* -----------------------------------------------------------------------------
+  * Frame buffer
+  */
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.h b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+index fd74093..2a94280 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+@@ -16,6 +16,8 @@
+ 
+ #include <linux/types.h>
+ 
++#include <drm/drm_crtc.h>
++
+ struct rcar_du_device;
+ 
+ struct rcar_du_format_info {
+@@ -26,8 +28,31 @@ struct rcar_du_format_info {
+ 	unsigned int edf;
+ };
+ 
++struct rcar_du_encoder {
++	struct drm_encoder encoder;
++};
++
++#define to_rcar_encoder(e) \
++	container_of(e, struct rcar_du_encoder, encoder)
++
++struct rcar_du_connector {
++	struct drm_connector connector;
++	struct rcar_du_encoder *encoder;
++};
++
++#define to_rcar_connector(c) \
++	container_of(c, struct rcar_du_connector, connector)
++
+ const struct rcar_du_format_info *rcar_du_format_info(u32 fourcc);
+ 
++struct drm_encoder *
++rcar_du_connector_best_encoder(struct drm_connector *connector);
++void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder);
++void rcar_du_encoder_mode_set(struct drm_encoder *encoder,
++			      struct drm_display_mode *mode,
++			      struct drm_display_mode *adjusted_mode);
++void rcar_du_encoder_mode_commit(struct drm_encoder *encoder);
++
+ int rcar_du_modeset_init(struct rcar_du_device *rcdu);
+ 
+ #endif /* __RCAR_DU_KMS_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+index efd7e86..c0c7b11 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+@@ -19,22 +19,14 @@
+ #include "rcar_du_kms.h"
+ #include "rcar_du_lvds.h"
+ 
+-struct rcar_du_lvds_encoder {
+-	struct drm_encoder encoder;
+-};
+-
+-#define to_rcar_lvds_encoder(e) \
+-	container_of(e, struct rcar_du_lvds_encoder, encoder)
+-
+ struct rcar_du_lvds_connector {
+-	struct drm_connector connector;
+-	struct rcar_du_lvds_encoder *encoder;
++	struct rcar_du_connector connector;
+ 
+ 	const struct rcar_du_panel_data *panel;
+ };
+ 
+ #define to_rcar_lvds_connector(c) \
+-	container_of(c, struct rcar_du_lvds_connector, connector)
++	container_of(c, struct rcar_du_lvds_connector, connector.connector)
+ 
+ /* -----------------------------------------------------------------------------
+  * Connector
+@@ -73,18 +65,10 @@ static int rcar_du_lvds_connector_mode_valid(struct drm_connector *connector,
+ 	return MODE_OK;
+ }
+ 
+-static struct drm_encoder *
+-rcar_du_lvds_connector_best_encoder(struct drm_connector *connector)
+-{
+-	struct rcar_du_lvds_connector *lvdscon = to_rcar_lvds_connector(connector);
+-
+-	return &lvdscon->encoder->encoder;
+-}
+-
+ static const struct drm_connector_helper_funcs connector_helper_funcs = {
+ 	.get_modes = rcar_du_lvds_connector_get_modes,
+ 	.mode_valid = rcar_du_lvds_connector_mode_valid,
+-	.best_encoder = rcar_du_lvds_connector_best_encoder,
++	.best_encoder = rcar_du_connector_best_encoder,
+ };
+ 
+ static void rcar_du_lvds_connector_destroy(struct drm_connector *connector)
+@@ -107,7 +91,7 @@ static const struct drm_connector_funcs connector_funcs = {
+ };
+ 
+ static int rcar_du_lvds_connector_init(struct rcar_du_device *rcdu,
+-				       struct rcar_du_lvds_encoder *lvdsenc,
++				       struct rcar_du_encoder *renc,
+ 				       const struct rcar_du_panel_data *panel)
+ {
+ 	struct rcar_du_lvds_connector *lvdscon;
+@@ -120,7 +104,7 @@ static int rcar_du_lvds_connector_init(struct rcar_du_device *rcdu,
+ 
+ 	lvdscon->panel = panel;
+ 
+-	connector = &lvdscon->connector;
++	connector = &lvdscon->connector.connector;
+ 	connector->display_info.width_mm = panel->width_mm;
+ 	connector->display_info.height_mm = panel->height_mm;
+ 
+@@ -138,12 +122,12 @@ static int rcar_du_lvds_connector_init(struct rcar_du_device *rcdu,
+ 	drm_object_property_set_value(&connector->base,
+ 		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
+ 
+-	ret = drm_mode_connector_attach_encoder(connector, &lvdsenc->encoder);
++	ret = drm_mode_connector_attach_encoder(connector, &renc->encoder);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	connector->encoder = &lvdsenc->encoder;
+-	lvdscon->encoder = lvdsenc;
++	connector->encoder = &renc->encoder;
++	lvdscon->connector.encoder = renc;
+ 
+ 	return 0;
+ }
+@@ -190,26 +174,12 @@ static bool rcar_du_lvds_encoder_mode_fixup(struct drm_encoder *encoder,
+ 	return true;
+ }
+ 
+-static void rcar_du_lvds_encoder_mode_prepare(struct drm_encoder *encoder)
+-{
+-}
+-
+-static void rcar_du_lvds_encoder_mode_set(struct drm_encoder *encoder,
+-					 struct drm_display_mode *mode,
+-					 struct drm_display_mode *adjusted_mode)
+-{
+-}
+-
+-static void rcar_du_lvds_encoder_mode_commit(struct drm_encoder *encoder)
+-{
+-}
+-
+ static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
+ 	.dpms = rcar_du_lvds_encoder_dpms,
+ 	.mode_fixup = rcar_du_lvds_encoder_mode_fixup,
+-	.prepare = rcar_du_lvds_encoder_mode_prepare,
+-	.commit = rcar_du_lvds_encoder_mode_commit,
+-	.mode_set = rcar_du_lvds_encoder_mode_set,
++	.prepare = rcar_du_encoder_mode_prepare,
++	.commit = rcar_du_encoder_mode_commit,
++	.mode_set = rcar_du_encoder_mode_set,
+ };
+ 
+ static const struct drm_encoder_funcs encoder_funcs = {
+@@ -220,15 +190,15 @@ int rcar_du_lvds_init(struct rcar_du_device *rcdu,
+ 		      const struct rcar_du_encoder_lvds_data *data,
+ 		      unsigned int crtc)
+ {
+-	struct rcar_du_lvds_encoder *lvdsenc;
++	struct rcar_du_encoder *renc;
+ 	struct drm_encoder *encoder;
+ 	int ret;
+ 
+-	lvdsenc = devm_kzalloc(rcdu->dev, sizeof(*lvdsenc), GFP_KERNEL);
+-	if (lvdsenc == NULL)
++	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
++	if (renc == NULL)
+ 		return -ENOMEM;
+ 
+-	encoder = &lvdsenc->encoder;
++	encoder = &renc->encoder;
+ 	encoder->possible_crtcs = 1 << crtc;
+ 
+ 	ret = drm_encoder_init(rcdu->ddev, encoder, &encoder_funcs,
+@@ -238,5 +208,5 @@ int rcar_du_lvds_init(struct rcar_du_device *rcdu,
+ 
+ 	drm_encoder_helper_add(encoder, &encoder_helper_funcs);
+ 
+-	return rcar_du_lvds_connector_init(rcdu, lvdsenc, &data->panel);
++	return rcar_du_lvds_connector_init(rcdu, renc, &data->panel);
+ }
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.c b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+index ac90da8..6b286b2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vga.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+@@ -19,22 +19,10 @@
+ #include "rcar_du_kms.h"
+ #include "rcar_du_vga.h"
+ 
+-struct rcar_du_vga_encoder {
+-	struct drm_encoder encoder;
+-};
+-
+-struct rcar_du_vga_connector {
+-	struct drm_connector connector;
+-	struct drm_encoder *encoder;
+-};
+-
+ /* -----------------------------------------------------------------------------
+  * Connector
+  */
+ 
+-#define to_rcar_vga_connector(c) \
+-	container_of(c, struct rcar_du_vga_connector, connector)
+-
+ static int rcar_du_vga_connector_get_modes(struct drm_connector *connector)
+ {
+ 	return drm_add_modes_noedid(connector, 1280, 768);
+@@ -46,18 +34,10 @@ static int rcar_du_vga_connector_mode_valid(struct drm_connector *connector,
+ 	return MODE_OK;
+ }
+ 
+-static struct drm_encoder *
+-rcar_du_vga_connector_best_encoder(struct drm_connector *connector)
+-{
+-	struct rcar_du_vga_connector *vgacon = to_rcar_vga_connector(connector);
+-
+-	return vgacon->encoder;
+-}
+-
+ static const struct drm_connector_helper_funcs connector_helper_funcs = {
+ 	.get_modes = rcar_du_vga_connector_get_modes,
+ 	.mode_valid = rcar_du_vga_connector_mode_valid,
+-	.best_encoder = rcar_du_vga_connector_best_encoder,
++	.best_encoder = rcar_du_connector_best_encoder,
+ };
+ 
+ static void rcar_du_vga_connector_destroy(struct drm_connector *connector)
+@@ -80,17 +60,17 @@ static const struct drm_connector_funcs connector_funcs = {
+ };
+ 
+ static int rcar_du_vga_connector_init(struct rcar_du_device *rcdu,
+-				      struct drm_encoder *encoder)
++				      struct rcar_du_encoder *renc)
+ {
+-	struct rcar_du_vga_connector *vgacon;
++	struct rcar_du_connector *rcon;
+ 	struct drm_connector *connector;
+ 	int ret;
+ 
+-	vgacon = devm_kzalloc(rcdu->dev, sizeof(*vgacon), GFP_KERNEL);
+-	if (vgacon == NULL)
++	rcon = devm_kzalloc(rcdu->dev, sizeof(*rcon), GFP_KERNEL);
++	if (rcon == NULL)
+ 		return -ENOMEM;
+ 
+-	connector = &vgacon->connector;
++	connector = &rcon->connector;
+ 	connector->display_info.width_mm = 0;
+ 	connector->display_info.height_mm = 0;
+ 
+@@ -108,12 +88,12 @@ static int rcar_du_vga_connector_init(struct rcar_du_device *rcdu,
+ 	drm_object_property_set_value(&connector->base,
+ 		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
+ 
+-	ret = drm_mode_connector_attach_encoder(connector, encoder);
++	ret = drm_mode_connector_attach_encoder(connector, &renc->encoder);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	connector->encoder = encoder;
+-	vgacon->encoder = encoder;
++	connector->encoder = &renc->encoder;
++	rcon->encoder = renc;
+ 
+ 	return 0;
+ }
+@@ -122,9 +102,6 @@ static int rcar_du_vga_connector_init(struct rcar_du_device *rcdu,
+  * Encoder
+  */
+ 
+-#define to_rcar_vga_encoder(e) \
+-	container_of(e, struct rcar_du_vga_encoder, encoder)
+-
+ static void rcar_du_vga_encoder_dpms(struct drm_encoder *encoder, int mode)
+ {
+ }
+@@ -136,26 +113,12 @@ static bool rcar_du_vga_encoder_mode_fixup(struct drm_encoder *encoder,
+ 	return true;
+ }
+ 
+-static void rcar_du_vga_encoder_mode_prepare(struct drm_encoder *encoder)
+-{
+-}
+-
+-static void rcar_du_vga_encoder_mode_set(struct drm_encoder *encoder,
+-					 struct drm_display_mode *mode,
+-					 struct drm_display_mode *adjusted_mode)
+-{
+-}
+-
+-static void rcar_du_vga_encoder_mode_commit(struct drm_encoder *encoder)
+-{
+-}
+-
+ static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
+ 	.dpms = rcar_du_vga_encoder_dpms,
+ 	.mode_fixup = rcar_du_vga_encoder_mode_fixup,
+-	.prepare = rcar_du_vga_encoder_mode_prepare,
+-	.commit = rcar_du_vga_encoder_mode_commit,
+-	.mode_set = rcar_du_vga_encoder_mode_set,
++	.prepare = rcar_du_encoder_mode_prepare,
++	.commit = rcar_du_encoder_mode_commit,
++	.mode_set = rcar_du_encoder_mode_set,
+ };
+ 
+ static const struct drm_encoder_funcs encoder_funcs = {
+@@ -166,15 +129,15 @@ int rcar_du_vga_init(struct rcar_du_device *rcdu,
+ 		     const struct rcar_du_encoder_vga_data *data,
+ 		     unsigned int crtc)
+ {
+-	struct rcar_du_vga_encoder *vgaenc;
++	struct rcar_du_encoder *renc;
+ 	struct drm_encoder *encoder;
+ 	int ret;
+ 
+-	vgaenc = devm_kzalloc(rcdu->dev, sizeof(*vgaenc), GFP_KERNEL);
+-	if (vgaenc == NULL)
++	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
++	if (renc == NULL)
+ 		return -ENOMEM;
+ 
+-	encoder = &vgaenc->encoder;
++	encoder = &renc->encoder;
+ 	encoder->possible_crtcs = 1 << crtc;
+ 
+ 	ret = drm_encoder_init(rcdu->ddev, encoder, &encoder_funcs,
+@@ -184,5 +147,5 @@ int rcar_du_vga_init(struct rcar_du_device *rcdu,
+ 
+ 	drm_encoder_helper_add(encoder, &encoder_helper_funcs);
+ 
+-	return rcar_du_vga_connector_init(rcdu, encoder);
++	return rcar_du_vga_connector_init(rcdu, renc);
+ }
+-- 
+1.7.10.4
+

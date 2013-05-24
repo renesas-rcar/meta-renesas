@@ -1,0 +1,103 @@
+From 491d3de6fbd4b7dab37ce64a7a35a87f76641454 Mon Sep 17 00:00:00 2001
+From: Daniel Vetter <daniel.vetter@ffwll.ch>
+Date: Thu, 1 Nov 2012 14:45:18 +0100
+Subject: drm/doc: add new dp helpers into drm DocBook
+
+I didn't bother with documenting the really trivial new "extract
+something from dpcd" helpers, but the i2c over aux ch is now
+documented a bit.
+
+v2: Clarify the comment for i2c_dp_aux_add_bus a bit.
+
+v3: Fix more spelling fail spotted by Laurent Pinchart.
+
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 28164fdad85ec806f30c76fe98ed0e3abc91d2d7)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ Documentation/DocBook/drm.tmpl  |    6 ++++++
+ drivers/gpu/drm/drm_dp_helper.c |   21 +++++++++++++++++++++
+ include/drm/drm_dp_helper.h     |    8 ++++++++
+ 3 files changed, 35 insertions(+)
+
+diff --git a/Documentation/DocBook/drm.tmpl b/Documentation/DocBook/drm.tmpl
+index cb8024e..4ee2304 100644
+--- a/Documentation/DocBook/drm.tmpl
++++ b/Documentation/DocBook/drm.tmpl
+@@ -2105,6 +2105,12 @@ void intel_crt_init(struct drm_device *dev)
+ !Pdrivers/gpu/drm/drm_fb_helper.c fbdev helpers
+ !Edrivers/gpu/drm/drm_fb_helper.c
+     </sect2>
++    <sect2>
++      <title>Display Port Helper Functions Reference</title>
++!Pdrivers/gpu/drm/drm_dp_helper.c dp helpers
++!Iinclude/drm/drm_dp_helper.h
++!Edrivers/gpu/drm/drm_dp_helper.c
++    </sect2>
+   </sect1>
+ 
+   <!-- Internals: vertical blanking -->
+diff --git a/drivers/gpu/drm/drm_dp_helper.c b/drivers/gpu/drm/drm_dp_helper.c
+index 837f4f4..1c546cb 100644
+--- a/drivers/gpu/drm/drm_dp_helper.c
++++ b/drivers/gpu/drm/drm_dp_helper.c
+@@ -30,6 +30,15 @@
+ #include "drm_dp_helper.h"
+ #include "drmP.h"
+ 
++/**
++ * DOC: dp helpers
++ *
++ * These functions contain some common logic and helpers at various abstraction
++ * levels to deal with Display Port sink devices and related things like DP aux
++ * channel transfers, EDID reading over DP aux channels, decoding certain DPCD
++ * blocks, ...
++ */
++
+ /* Run a single AUX_CH I2C transaction, writing/reading data as necessary */
+ static int
+ i2c_algo_dp_aux_transaction(struct i2c_adapter *adapter, int mode,
+@@ -193,6 +202,18 @@ i2c_dp_aux_prepare_bus(struct i2c_adapter *adapter)
+ 	return 0;
+ }
+ 
++/**
++ * i2c_dp_aux_add_bus() - register an i2c adapter using the aux ch helper
++ * @adapter: i2c adapter to register
++ *
++ * This registers an i2c adapater that uses dp aux channel as it's underlaying
++ * transport. The driver needs to fill out the &i2c_algo_dp_aux_data structure
++ * and store it in the algo_data member of the @adapter argument. This will be
++ * used by the i2c over dp aux algorithm to drive the hardware.
++ *
++ * RETURNS:
++ * 0 on success, -ERRNO on failure.
++ */
+ int
+ i2c_dp_aux_add_bus(struct i2c_adapter *adapter)
+ {
+diff --git a/include/drm/drm_dp_helper.h b/include/drm/drm_dp_helper.h
+index c2a6b1c..d6d9141 100644
+--- a/include/drm/drm_dp_helper.h
++++ b/include/drm/drm_dp_helper.h
+@@ -238,6 +238,14 @@
+ #define MODE_I2C_READ	4
+ #define MODE_I2C_STOP	8
+ 
++/**
++ * struct i2c_algo_dp_aux_data - driver interface structure for i2c over dp
++ * 				 aux algorithm
++ * @running: set by the algo indicating whether an i2c is ongoing or whether
++ * 	     the i2c bus is quiescent
++ * @address: i2c target address for the currently ongoing transfer
++ * @aux_ch: driver callback to transfer a single byte of the i2c payload
++ */
+ struct i2c_algo_dp_aux_data {
+ 	bool running;
+ 	u16 address;
+-- 
+1.7.10.4
+

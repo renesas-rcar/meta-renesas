@@ -1,0 +1,129 @@
+From 1d0b847c48bcda6315da031dd5b106c77b9ee702 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Thu, 11 Apr 2013 14:01:13 +0900
+Subject: ARM: shmobile: r8a7790: Add rcar-du driver support
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@renesas.com>
+---
+ arch/arm/configs/lager_defconfig       |    4 ++++
+ arch/arm/mach-shmobile/board-lager.c   |   30 +++++++++++++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c |   38 ++++++++++++++++++++++++++++++++
+ 3 files changed, 72 insertions(+)
+
+diff --git a/arch/arm/configs/lager_defconfig b/arch/arm/configs/lager_defconfig
+index 18f8dbe..15e4fdc 100644
+--- a/arch/arm/configs/lager_defconfig
++++ b/arch/arm/configs/lager_defconfig
+@@ -74,6 +74,10 @@ CONFIG_SERIAL_SH_SCI_CONSOLE=y
+ CONFIG_GPIO_SYSFS=y
+ # CONFIG_HWMON is not set
+ CONFIG_SSB=y
++CONFIG_DRM=y
++CONFIG_DRM_RCAR_DU=y
++CONFIG_FRAMEBUFFER_CONSOLE=y
++CONFIG_LOGO=y
+ # CONFIG_HID_SUPPORT is not set
+ # CONFIG_USB_SUPPORT is not set
+ CONFIG_UIO=y
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index 7ab8ac0..ee649fc 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -61,6 +61,36 @@ static void __init lager_init(void)
+ {
+ 	r8a7790_pinmux_init();
+ 
++	/* DU */
++	gpio_request(GPIO_FN_DU_DOTCLKIN0, NULL);
++	gpio_request(GPIO_FN_DU0_DOTCLKOUT, NULL);
++	gpio_request(GPIO_FN_DU_DOTCLKIN2, NULL);
++	gpio_request(GPIO_FN_DU1_DOTCLKOUT, NULL);
++	gpio_request(GPIO_FN_DU1_DOTCLKIN, NULL);
++	gpio_request(GPIO_FN_DU2_DR2, NULL);
++	gpio_request(GPIO_FN_DU2_DR3, NULL);
++	gpio_request(GPIO_FN_DU2_DR4, NULL);
++	gpio_request(GPIO_FN_DU2_DR5, NULL);
++	gpio_request(GPIO_FN_DU2_DR6, NULL);
++	gpio_request(GPIO_FN_DU2_DR7, NULL);
++	gpio_request(GPIO_FN_DU2_DG2, NULL);
++	gpio_request(GPIO_FN_DU2_DG3, NULL);
++	gpio_request(GPIO_FN_DU2_DG4, NULL);
++	gpio_request(GPIO_FN_DU2_DG5, NULL);
++	gpio_request(GPIO_FN_DU2_DG6, NULL);
++	gpio_request(GPIO_FN_DU2_DG7, NULL);
++	gpio_request(GPIO_FN_DU2_DB2, NULL);
++	gpio_request(GPIO_FN_DU2_DB3, NULL);
++	gpio_request(GPIO_FN_DU2_DB4, NULL);
++	gpio_request(GPIO_FN_DU2_DB5, NULL);
++	gpio_request(GPIO_FN_DU2_DB6, NULL);
++	gpio_request(GPIO_FN_DU2_DB7, NULL);
++	gpio_request(GPIO_FN_DU2_EXHSYNC_DU2_HSYNC, NULL);
++	gpio_request(GPIO_FN_DU2_EXVSYNC_DU2_VSYNC, NULL);
++	gpio_request(GPIO_FN_DU2_DISP, NULL);
++	gpio_request(GPIO_FN_DU2_CDE, NULL);
++	gpio_request(GPIO_FN_DU2_EXODDF_DU2_ODDF_DISP_CDE, NULL);
++
+ 	r8a7790_add_standard_devices();
+ 	platform_add_devices(lager_devices, ARRAY_SIZE(lager_devices));
+ }
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 9465e6a..ccb1164 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -27,6 +27,7 @@
+ #include <linux/sh_eth.h>
+ #include <mach/r8a7790.h>
+ #include <mach/irqs.h>
++#include <linux/platform_data/rcar-du.h>
+ 
+ static struct plat_sci_port scif0_platform_data = {
+ 	.mapbase	= 0xe6e60000,
+@@ -67,8 +68,45 @@ static struct platform_device eth_device = {
+ 	.resource = eth_resources,
+ };
+ 
++/* DU */
++static struct resource rcar_du_resources[] = {
++	[0] = {
++		.name	= "Display Unit",
++		.start	= 0xfeb00000,
++		.end	= 0xfeb6002c,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(256),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_du_encoder_data rcar_du_encoders[] = {
++	{
++		.encoder = RCAR_DU_ENCODER_VGA,
++		.output = 0,
++	},
++};
++
++static struct rcar_du_platform_data rcar_du_pdata = {
++	.encoders = rcar_du_encoders,
++	.num_encoders = ARRAY_SIZE(rcar_du_encoders),
++};
++
++static struct platform_device rcar_du_device = {
++	.name		= "rcar-du",
++	.num_resources	= ARRAY_SIZE(rcar_du_resources),
++	.resource	= rcar_du_resources,
++	.dev	= {
++		.platform_data = &rcar_du_pdata,
++		.coherent_dma_mask = ~0,
++	},
++};
++
+ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&eth_device,
++	&rcar_du_device,
+ };
+ 
+ static struct platform_device *r8a7790_late_devices[] __initdata = {
+-- 
+1.7.10.4
+

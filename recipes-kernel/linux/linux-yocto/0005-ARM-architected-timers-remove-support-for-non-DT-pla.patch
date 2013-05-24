@@ -1,0 +1,94 @@
+From 49a4132e59f1cd59472ce416d7b454e4fe1394ca Mon Sep 17 00:00:00 2001
+From: Marc Zyngier <marc.zyngier@arm.com>
+Date: Fri, 27 Apr 2012 13:18:42 +0100
+Subject: ARM: architected timers: remove support for non DT platforms
+
+All mainline platforms using the ARM architected timers are DT
+only. As such, remove the ad-hoc support that is not longer needed
+anymore.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+(cherry picked from commit fb8a99f9f6bdc908cbbd2284cee80c709d9f7c03)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/include/asm/arch_timer.h |   14 +-------------
+ arch/arm/kernel/arch_timer.c      |   19 ++-----------------
+ 2 files changed, 3 insertions(+), 30 deletions(-)
+
+diff --git a/arch/arm/include/asm/arch_timer.h b/arch/arm/include/asm/arch_timer.h
+index 935897f..ed2e95d 100644
+--- a/arch/arm/include/asm/arch_timer.h
++++ b/arch/arm/include/asm/arch_timer.h
+@@ -1,22 +1,10 @@
+ #ifndef __ASMARM_ARCH_TIMER_H
+ #define __ASMARM_ARCH_TIMER_H
+ 
+-#include <linux/ioport.h>
+-
+-struct arch_timer {
+-	struct resource	res[2];
+-};
+-
+ #ifdef CONFIG_ARM_ARCH_TIMER
+-int arch_timer_register(struct arch_timer *);
+-int arch_timer_sched_clock_init(void);
+ int arch_timer_of_register(void);
++int arch_timer_sched_clock_init(void);
+ #else
+-static inline int arch_timer_register(struct arch_timer *at)
+-{
+-	return -ENXIO;
+-}
+-
+ static inline int arch_timer_of_register(void)
+ {
+ 	return -ENXIO;
+diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
+index 154f0a1..dd58035 100644
+--- a/arch/arm/kernel/arch_timer.c
++++ b/arch/arm/kernel/arch_timer.c
+@@ -248,7 +248,7 @@ static struct local_timer_ops arch_timer_ops __cpuinitdata = {
+ 
+ static struct clock_event_device arch_timer_global_evt;
+ 
+-static int __init arch_timer_common_register(void)
++static int __init arch_timer_register(void)
+ {
+ 	int err;
+ 
+@@ -309,20 +309,6 @@ out_free:
+ 	return err;
+ }
+ 
+-int __init arch_timer_register(struct arch_timer *at)
+-{
+-	if (at->res[0].start <= 0 || !(at->res[0].flags & IORESOURCE_IRQ))
+-		return -EINVAL;
+-
+-	arch_timer_ppi = at->res[0].start;
+-
+-	if (at->res[1].start > 0 || (at->res[1].flags & IORESOURCE_IRQ))
+-		arch_timer_ppi2 = at->res[1].start;
+-
+-	return arch_timer_common_register();
+-}
+-
+-#ifdef CONFIG_OF
+ static const struct of_device_id arch_timer_of_match[] __initconst = {
+ 	{ .compatible	= "arm,armv7-timer",	},
+ 	{},
+@@ -348,9 +334,8 @@ int __init arch_timer_of_register(void)
+ 	pr_info("arch_timer: found %s irqs %d %d\n",
+ 		np->name, arch_timer_ppi, arch_timer_ppi2);
+ 
+-	return arch_timer_common_register();
++	return arch_timer_register();
+ }
+-#endif
+ 
+ int __init arch_timer_sched_clock_init(void)
+ {
+-- 
+1.7.10.4
+

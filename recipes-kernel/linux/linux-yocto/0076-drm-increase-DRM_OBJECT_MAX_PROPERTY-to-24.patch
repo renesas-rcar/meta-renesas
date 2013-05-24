@@ -1,0 +1,49 @@
+From 302d980ea1caf2d4deeeb421f3bc81fd60711f01 Mon Sep 17 00:00:00 2001
+From: Paulo Zanoni <paulo.r.zanoni@intel.com>
+Date: Tue, 12 Jun 2012 11:27:01 -0300
+Subject: drm: increase DRM_OBJECT_MAX_PROPERTY to 24
+
+Before Kernel 3.5, no one was checking for the return value of
+drm_connector_attach_property, so we never noticed that we were unable
+to create some properties. Commit "drm: WARN() when
+drm_connector_attach_property fails" added a WARN when we fail to
+create a property, and the transition from "connector properties" to
+"object properties" changed the warning message a little bit.
+
+On i915 machines with many TV connectors we hit the maximum number of
+properties (since each TV connector uses a lot of properties), so we
+get a few backtraces in our logs. This commit increases the maximum
+number of properties to 24 hoping we'll have enough room for
+everybody.
+
+Chris suggested that we convert this code to "lists", but I believe
+this conversion can come after we make sure people's dmesgs are not
+spammed by our driver.
+
+Signed-off-by: Paulo Zanoni <paulo.r.zanoni@intel.com>
+Reported-by: Dave Jones <davej@redhat.com>
+Tested-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit fe4561680519019cc15d660862dce513ded2f3a7)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ include/drm/drm_crtc.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 73e4560..bac55c2 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -54,7 +54,7 @@ struct drm_mode_object {
+ 	struct drm_object_properties *properties;
+ };
+ 
+-#define DRM_OBJECT_MAX_PROPERTY 16
++#define DRM_OBJECT_MAX_PROPERTY 24
+ struct drm_object_properties {
+ 	int count;
+ 	uint32_t ids[DRM_OBJECT_MAX_PROPERTY];
+-- 
+1.7.10.4
+

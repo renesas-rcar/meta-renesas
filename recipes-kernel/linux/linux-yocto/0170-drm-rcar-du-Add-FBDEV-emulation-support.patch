@@ -1,0 +1,193 @@
+From 0a8b72db0090f662410d89db68a9c3680e7e7f92 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Thu, 14 Mar 2013 22:45:22 +0100
+Subject: drm/rcar-du: Add FBDEV emulation support
+
+Use the FB CMA helpers to implement FBDEV emulation support. The VGA
+connector status must be reported as connector_status_connected instead
+of connector_status_unknown to be usable by the emulation layer.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit c288d6d39e74c135e6368d6ffb3f339f3791ce45)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    5 +++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c  |   14 +++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h  |    2 ++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c  |   36 +++++++++++++++++++++++++-------
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c  |    2 +-
+ 5 files changed, 50 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index db53c25..1b49b54 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -458,6 +458,10 @@ static void rcar_du_crtc_disable(struct drm_crtc *crtc)
+ 	rcar_du_plane_release(rcrtc->plane);
+ }
+ 
++static void rcar_du_crtc_load_lut(struct drm_crtc *crtc)
++{
++}
++
+ static const struct drm_crtc_helper_funcs crtc_helper_funcs = {
+ 	.dpms = rcar_du_crtc_dpms,
+ 	.mode_fixup = rcar_du_crtc_mode_fixup,
+@@ -466,6 +470,7 @@ static const struct drm_crtc_helper_funcs crtc_helper_funcs = {
+ 	.mode_set = rcar_du_crtc_mode_set,
+ 	.mode_set_base = rcar_du_crtc_mode_set_base,
+ 	.disable = rcar_du_crtc_disable,
++	.load_lut = rcar_du_crtc_load_lut,
+ };
+ 
+ void rcar_du_crtc_cancel_page_flip(struct rcar_du_crtc *rcrtc,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 0fb82bf..813d48c 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -21,6 +21,7 @@
+ 
+ #include <drm/drmP.h>
+ #include <drm/drm_crtc_helper.h>
++#include <drm/drm_fb_cma_helper.h>
+ #include <drm/drm_gem_cma_helper.h>
+ 
+ #include "rcar_du_crtc.h"
+@@ -91,6 +92,11 @@ void rcar_du_put(struct rcar_du_device *rcdu)
+ 
+ static int rcar_du_unload(struct drm_device *dev)
+ {
++	struct rcar_du_device *rcdu = dev->dev_private;
++
++	if (rcdu->fbdev)
++		drm_fbdev_cma_fini(rcdu->fbdev);
++
+ 	drm_kms_helper_poll_fini(dev);
+ 	drm_mode_config_cleanup(dev);
+ 	drm_vblank_cleanup(dev);
+@@ -195,6 +201,13 @@ static void rcar_du_preclose(struct drm_device *dev, struct drm_file *file)
+ 		rcar_du_crtc_cancel_page_flip(&rcdu->crtcs[i], file);
+ }
+ 
++static void rcar_du_lastclose(struct drm_device *dev)
++{
++	struct rcar_du_device *rcdu = dev->dev_private;
++
++	drm_fbdev_cma_restore_mode(rcdu->fbdev);
++}
++
+ static irqreturn_t rcar_du_irq(int irq, void *arg)
+ {
+ 	struct drm_device *dev = arg;
+@@ -244,6 +257,7 @@ static struct drm_driver rcar_du_driver = {
+ 	.load			= rcar_du_load,
+ 	.unload			= rcar_du_unload,
+ 	.preclose		= rcar_du_preclose,
++	.lastclose		= rcar_du_lastclose,
+ 	.irq_handler		= rcar_du_irq,
+ 	.get_vblank_counter	= drm_vblank_count,
+ 	.enable_vblank		= rcar_du_enable_vblank,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index 73faf77..e761b27 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -24,6 +24,7 @@
+ struct clk;
+ struct device;
+ struct drm_device;
++struct drm_fbdev_cma;
+ 
+ struct rcar_du_device {
+ 	struct device *dev;
+@@ -34,6 +35,7 @@ struct rcar_du_device {
+ 	unsigned int use_count;
+ 
+ 	struct drm_device *ddev;
++	struct drm_fbdev_cma *fbdev;
+ 
+ 	struct rcar_du_crtc crtcs[2];
+ 	unsigned int used_crtcs;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index b6cd53f..1cc27bb 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -162,24 +162,33 @@ rcar_du_fb_create(struct drm_device *dev, struct drm_file *file_priv,
+ 	return drm_fb_cma_create(dev, file_priv, mode_cmd);
+ }
+ 
++static void rcar_du_output_poll_changed(struct drm_device *dev)
++{
++	struct rcar_du_device *rcdu = dev->dev_private;
++
++	drm_fbdev_cma_hotplug_event(rcdu->fbdev);
++}
++
+ static const struct drm_mode_config_funcs rcar_du_mode_config_funcs = {
+ 	.fb_create = rcar_du_fb_create,
++	.output_poll_changed = rcar_du_output_poll_changed,
+ };
+ 
+ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ {
+ 	struct drm_device *dev = rcdu->ddev;
+ 	struct drm_encoder *encoder;
++	struct drm_fbdev_cma *fbdev;
+ 	unsigned int i;
+ 	int ret;
+ 
+-	drm_mode_config_init(rcdu->ddev);
++	drm_mode_config_init(dev);
+ 
+-	rcdu->ddev->mode_config.min_width = 0;
+-	rcdu->ddev->mode_config.min_height = 0;
+-	rcdu->ddev->mode_config.max_width = 4095;
+-	rcdu->ddev->mode_config.max_height = 2047;
+-	rcdu->ddev->mode_config.funcs = &rcar_du_mode_config_funcs;
++	dev->mode_config.min_width = 0;
++	dev->mode_config.min_height = 0;
++	dev->mode_config.max_width = 4095;
++	dev->mode_config.max_height = 2047;
++	dev->mode_config.funcs = &rcar_du_mode_config_funcs;
+ 
+ 	ret = rcar_du_plane_init(rcdu);
+ 	if (ret < 0)
+@@ -231,9 +240,20 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	drm_kms_helper_poll_init(rcdu->ddev);
++	drm_kms_helper_poll_init(dev);
++
++	drm_helper_disable_unused_functions(dev);
++
++	fbdev = drm_fbdev_cma_init(dev, 32, dev->mode_config.num_crtc,
++				   dev->mode_config.num_connector);
++	if (IS_ERR(fbdev))
++		return PTR_ERR(fbdev);
++
++#ifndef CONFIG_FRAMEBUFFER_CONSOLE
++	drm_fbdev_cma_restore_mode(fbdev);
++#endif
+ 
+-	drm_helper_disable_unused_functions(rcdu->ddev);
++	rcdu->fbdev = fbdev;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.c b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+index 2e488dd..f1ef3d7 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vga.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+@@ -49,7 +49,7 @@ static void rcar_du_vga_connector_destroy(struct drm_connector *connector)
+ static enum drm_connector_status
+ rcar_du_vga_connector_detect(struct drm_connector *connector, bool force)
+ {
+-	return connector_status_unknown;
++	return connector_status_connected;
+ }
+ 
+ static const struct drm_connector_funcs connector_funcs = {
+-- 
+1.7.10.4
+

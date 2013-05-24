@@ -1,0 +1,35 @@
+From 3515843c885946805a29c27e9bdd74eab86d35f8 Mon Sep 17 00:00:00 2001
+From: Alex Deucher <alexander.deucher@amd.com>
+Date: Fri, 9 Nov 2012 17:26:32 +0000
+Subject: drm: fix documentation for drm_crtc_set_mode()
+
+x and y parameters are offsets, not width/height
+
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 4c9287c6009b37754c42e0ba73a4cc79de92d8f8)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_crtc_helper.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
+index 8236678..1f06972 100644
+--- a/drivers/gpu/drm/drm_crtc_helper.c
++++ b/drivers/gpu/drm/drm_crtc_helper.c
+@@ -346,8 +346,8 @@ drm_crtc_prepare_encoders(struct drm_device *dev)
+  * drm_crtc_set_mode - set a mode
+  * @crtc: CRTC to program
+  * @mode: mode to use
+- * @x: width of mode
+- * @y: height of mode
++ * @x: horizontal offset into the surface
++ * @y: vertical offset into the surface
+  *
+  * LOCKING:
+  * Caller must hold mode config lock.
+-- 
+1.7.10.4
+

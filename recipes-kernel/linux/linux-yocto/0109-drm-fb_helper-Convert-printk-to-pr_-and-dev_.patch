@@ -1,0 +1,79 @@
+From 949ac718b924c90d408139323608bb70a286f2ec Mon Sep 17 00:00:00 2001
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Date: Thu, 15 Nov 2012 03:43:29 +0000
+Subject: drm/fb_helper: Convert printk to pr_* and dev_*
+
+Converted printks to pr_* and dev_* to silence checkpatch warnings.
+
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit d56b1b9d48fe266685eb6025c979150e86bb2c6d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_fb_helper.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 5115bc1..418deb5 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -27,6 +27,8 @@
+  *      Dave Airlie <airlied@linux.ie>
+  *      Jesse Barnes <jesse.barnes@intel.com>
+  */
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/kernel.h>
+ #include <linux/sysrq.h>
+ #include <linux/slab.h>
+@@ -271,7 +273,7 @@ int drm_fb_helper_panic(struct notifier_block *n, unsigned long ununsed,
+ 	if (panic_timeout < 0)
+ 		return 0;
+ 
+-	printk(KERN_ERR "panic occurred, switching back to text console\n");
++	pr_err("panic occurred, switching back to text console\n");
+ 	return drm_fb_helper_force_kernel_mode();
+ }
+ EXPORT_SYMBOL(drm_fb_helper_panic);
+@@ -439,7 +441,7 @@ void drm_fb_helper_fini(struct drm_fb_helper *fb_helper)
+ 	if (!list_empty(&fb_helper->kernel_fb_list)) {
+ 		list_del(&fb_helper->kernel_fb_list);
+ 		if (list_empty(&kernel_fb_helper_list)) {
+-			printk(KERN_INFO "drm: unregistered panic notifier\n");
++			pr_info("drm: unregistered panic notifier\n");
+ 			atomic_notifier_chain_unregister(&panic_notifier_list,
+ 							 &paniced);
+ 			unregister_sysrq_key('v', &sysrq_drm_fb_helper_restore_op);
+@@ -810,8 +812,8 @@ int drm_fb_helper_single_fb_probe(struct drm_fb_helper *fb_helper,
+ 			return -EINVAL;
+ 		}
+ 
+-		printk(KERN_INFO "fb%d: %s frame buffer device\n", info->node,
+-		       info->fix.id);
++		dev_info(fb_helper->dev->dev, "fb%d: %s frame buffer device\n",
++				info->node, info->fix.id);
+ 
+ 	} else {
+ 		drm_fb_helper_set_par(info);
+@@ -820,7 +822,7 @@ int drm_fb_helper_single_fb_probe(struct drm_fb_helper *fb_helper,
+ 	/* Switch back to kernel console on panic */
+ 	/* multi card linked list maybe */
+ 	if (list_empty(&kernel_fb_helper_list)) {
+-		printk(KERN_INFO "drm: registered panic notifier\n");
++		dev_info(fb_helper->dev->dev, "registered panic notifier\n");
+ 		atomic_notifier_chain_register(&panic_notifier_list,
+ 					       &paniced);
+ 		register_sysrq_key('v', &sysrq_drm_fb_helper_restore_op);
+@@ -1326,7 +1328,7 @@ bool drm_fb_helper_initial_config(struct drm_fb_helper *fb_helper, int bpp_sel)
+ 	 * we shouldn't end up with no modes here.
+ 	 */
+ 	if (count == 0) {
+-		printk(KERN_INFO "No connectors reported connected with modes\n");
++		dev_info(fb_helper->dev->dev, "No connectors reported connected with modes\n");
+ 	}
+ 	drm_setup_crtcs(fb_helper);
+ 
+-- 
+1.7.10.4
+

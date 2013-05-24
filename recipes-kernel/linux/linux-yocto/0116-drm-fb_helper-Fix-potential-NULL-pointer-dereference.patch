@@ -1,0 +1,50 @@
+From 515cf95c06ddc98820b9535dd1f82e427e325176 Mon Sep 17 00:00:00 2001
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Date: Mon, 19 Nov 2012 09:44:58 +0000
+Subject: drm/fb_helper: Fix potential NULL pointer dereference
+
+kcalloc returns NULL on failure. Hence check for the return value
+and exit on error to avoid NULL pointer dereference.
+
+Fixes the following smatch errors:
+drivers/gpu/drm/drm_fb_helper.c:1271 drm_setup_crtcs() error:
+potential null dereference 'modes'.  (kcalloc returns null)
+drivers/gpu/drm/drm_fb_helper.c:1272 drm_setup_crtcs() error:
+potential null dereference 'crtcs'.  (kcalloc returns null)
+
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 8c5eaca012f963fa9724665f8a0eca19e3cb7d2a)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_fb_helper.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 3928e88..72aef36 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -1251,6 +1251,11 @@ static void drm_setup_crtcs(struct drm_fb_helper *fb_helper)
+ 			sizeof(struct drm_display_mode *), GFP_KERNEL);
+ 	enabled = kcalloc(dev->mode_config.num_connector,
+ 			  sizeof(bool), GFP_KERNEL);
++	if (!crtcs || !modes || !enabled) {
++		DRM_ERROR("Memory allocation failed\n");
++		goto out;
++	}
++
+ 
+ 	drm_enable_connectors(fb_helper, enabled);
+ 
+@@ -1289,6 +1294,7 @@ static void drm_setup_crtcs(struct drm_fb_helper *fb_helper)
+ 		}
+ 	}
+ 
++out:
+ 	kfree(crtcs);
+ 	kfree(modes);
+ 	kfree(enabled);
+-- 
+1.7.10.4
+
