@@ -1,0 +1,2563 @@
+From 6b1ab15c16fd08064f115ae4904558b3f4ee06a2 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 9 Jan 2013 23:19:07 +0100
+Subject: drm: Renesas R-Car Display Unit DRM driver
+
+The R-Car Display Unit (DU) DRM driver supports both superposition
+processors and all eight planes in RGB and YUV formats without alpha
+blending.
+
+Only VGA and LVDS encoders and connectors are currently supported.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 38dd3d9a5e2ee1be4dd5d90bde7bb4b02987b922)
+
+Conflicts:
+	drivers/gpu/drm/Kconfig
+	drivers/gpu/drm/Makefile
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/Kconfig                 |    2 +
+ drivers/gpu/drm/Makefile                |    1 +
+ drivers/gpu/drm/rcar-du/Kconfig         |    9 +
+ drivers/gpu/drm/rcar-du/Makefile        |    8 +
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |  471 +++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h  |   47 +++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c   |  265 +++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   |   56 ++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   |  163 +++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h   |   33 +++
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c  |  247 ++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.h  |   25 ++
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c |  299 ++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |   58 ++++
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  |  439 ++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c   |  193 +++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vga.h   |   24 ++
+ include/linux/platform_data/rcar-du.h   |   51 ++++
+ 18 files changed, 2391 insertions(+)
+ create mode 100644 drivers/gpu/drm/rcar-du/Kconfig
+ create mode 100644 drivers/gpu/drm/rcar-du/Makefile
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_drv.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_drv.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_kms.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_kms.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvds.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_plane.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_plane.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_regs.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_vga.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_vga.h
+ create mode 100644 include/linux/platform_data/rcar-du.h
+
+diff --git a/drivers/gpu/drm/Kconfig b/drivers/gpu/drm/Kconfig
+index ebdf7f3..767edb3 100644
+--- a/drivers/gpu/drm/Kconfig
++++ b/drivers/gpu/drm/Kconfig
+@@ -201,3 +201,5 @@ source "drivers/gpu/drm/vmwgfx/Kconfig"
+ source "drivers/gpu/drm/gma500/Kconfig"
+ 
+ source "drivers/gpu/drm/udl/Kconfig"
++
++source "drivers/gpu/drm/rcar-du/Kconfig"
+diff --git a/drivers/gpu/drm/Makefile b/drivers/gpu/drm/Makefile
+index fe27a05..c1ca0bf 100644
+--- a/drivers/gpu/drm/Makefile
++++ b/drivers/gpu/drm/Makefile
+@@ -45,3 +45,4 @@ obj-$(CONFIG_DRM_EXYNOS) +=exynos/
+ obj-$(CONFIG_DRM_GMA500) += gma500/
+ obj-$(CONFIG_DRM_UDL) += udl/
+ obj-y			+= i2c/
++obj-$(CONFIG_DRM_RCAR_DU) += rcar-du/
+diff --git a/drivers/gpu/drm/rcar-du/Kconfig b/drivers/gpu/drm/rcar-du/Kconfig
+new file mode 100644
+index 0000000..2eb7d23
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/Kconfig
+@@ -0,0 +1,9 @@
++config DRM_RCAR_DU
++	tristate "DRM Support for R-Car Display Unit"
++	depends on DRM && ARCH_SHMOBILE
++	select DRM_KMS_HELPER
++	select DRM_KMS_CMA_HELPER
++	select DRM_GEM_CMA_HELPER
++	help
++	  Choose this option if you have an R-Car chipset.
++	  If M is selected the module will be called rcar-du-drm.
+diff --git a/drivers/gpu/drm/rcar-du/Makefile b/drivers/gpu/drm/rcar-du/Makefile
+new file mode 100644
+index 0000000..7333c00
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/Makefile
+@@ -0,0 +1,8 @@
++rcar-du-drm-y := rcar_du_crtc.o \
++		 rcar_du_drv.o \
++		 rcar_du_kms.o \
++		 rcar_du_lvds.o \
++		 rcar_du_plane.o \
++		 rcar_du_vga.o
++
++obj-$(CONFIG_DRM_RCAR_DU)	+= rcar-du-drm.o
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+new file mode 100644
+index 0000000..99578a7
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -0,0 +1,471 @@
++/*
++ * rcar_du_crtc.c  --  R-Car Display Unit CRTCs
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <linux/clk.h>
++#include <linux/mutex.h>
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_fb_cma_helper.h>
++#include <drm/drm_gem_cma_helper.h>
++
++#include "rcar_du_crtc.h"
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_lvds.h"
++#include "rcar_du_plane.h"
++#include "rcar_du_regs.h"
++#include "rcar_du_vga.h"
++
++#define to_rcar_crtc(c)	container_of(c, struct rcar_du_crtc, crtc)
++
++static u32 rcar_du_crtc_read(struct rcar_du_crtc *rcrtc, u32 reg)
++{
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
++	return rcar_du_read(rcdu, rcrtc->mmio_offset + reg);
++}
++
++static void rcar_du_crtc_write(struct rcar_du_crtc *rcrtc, u32 reg, u32 data)
++{
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
++	rcar_du_write(rcdu, rcrtc->mmio_offset + reg, data);
++}
++
++static void rcar_du_crtc_clr(struct rcar_du_crtc *rcrtc, u32 reg, u32 clr)
++{
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
++	rcar_du_write(rcdu, rcrtc->mmio_offset + reg,
++		      rcar_du_read(rcdu, rcrtc->mmio_offset + reg) & ~clr);
++}
++
++static void rcar_du_crtc_set(struct rcar_du_crtc *rcrtc, u32 reg, u32 set)
++{
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
++	rcar_du_write(rcdu, rcrtc->mmio_offset + reg,
++		      rcar_du_read(rcdu, rcrtc->mmio_offset + reg) | set);
++}
++
++static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
++{
++	struct drm_crtc *crtc = &rcrtc->crtc;
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
++	const struct drm_display_mode *mode = &crtc->mode;
++	unsigned long clk;
++	u32 value;
++	u32 div;
++
++	/* Dot clock */
++	clk = clk_get_rate(rcdu->clock);
++	div = DIV_ROUND_CLOSEST(clk, mode->clock * 1000);
++	div = clamp(div, 1U, 64U) - 1;
++
++	rcar_du_crtc_write(rcrtc, ESCR, ESCR_DCLKSEL_CLKS | div);
++	rcar_du_crtc_write(rcrtc, OTAR, 0);
++
++	/* Signal polarities */
++	value = ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? 0 : DSMR_VSL)
++	      | ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? 0 : DSMR_HSL);
++	rcar_du_crtc_write(rcrtc, DSMR, value);
++
++	/* Display timings */
++	rcar_du_crtc_write(rcrtc, HDSR, mode->htotal - mode->hsync_start - 19);
++	rcar_du_crtc_write(rcrtc, HDER, mode->htotal - mode->hsync_start +
++					mode->hdisplay - 19);
++	rcar_du_crtc_write(rcrtc, HSWR, mode->hsync_end -
++					mode->hsync_start - 1);
++	rcar_du_crtc_write(rcrtc, HCR,  mode->htotal - 1);
++
++	rcar_du_crtc_write(rcrtc, VDSR, mode->vtotal - mode->vsync_end - 2);
++	rcar_du_crtc_write(rcrtc, VDER, mode->vtotal - mode->vsync_end +
++					mode->vdisplay - 2);
++	rcar_du_crtc_write(rcrtc, VSPR, mode->vtotal - mode->vsync_end +
++					mode->vsync_start - 1);
++	rcar_du_crtc_write(rcrtc, VCR,  mode->vtotal - 1);
++}
++
++static void rcar_du_crtc_start_stop(struct rcar_du_crtc *rcrtc, bool start)
++{
++	u32 value;
++
++	value = rcar_du_crtc_read(rcrtc, DSYSR)
++	      & ~(DSYSR_DRES | DSYSR_DEN | DSYSR_TVM_MASK);
++
++	if (start)
++		rcar_du_crtc_write(rcrtc, DSYSR, value | DSYSR_DEN);
++	else
++		rcar_du_crtc_write(rcrtc, DSYSR, value | DSYSR_DRES);
++}
++
++void rcar_du_crtc_enable_plane(struct rcar_du_plane *rplane, bool enable)
++{
++	struct rcar_du_crtc *rcrtc = to_rcar_crtc(rplane->crtc);
++	struct rcar_du_device *rcdu = rplane->crtc->dev->dev_private;
++	unsigned int prio;
++	unsigned int i;
++	u32 dspr = 0;
++
++	mutex_lock(&rcdu->planes.lock);
++
++	rplane->enabled = enable;
++
++	for (i = 0, prio = 28; i < ARRAY_SIZE(rcdu->planes.planes); ++i) {
++		struct rcar_du_plane *plane = &rcdu->planes.planes[i];
++
++		if (plane->crtc != &rcrtc->crtc || !plane->enabled)
++			continue;
++
++		dspr |= (plane->hwindex + 1) << prio;
++		prio -= 4;
++
++		if (plane->format->planes == 2) {
++			dspr |= (plane->hwindex + 2) << prio;
++			prio -= 4;
++		}
++	}
++
++	rcar_du_crtc_write(rcrtc, DS1PR, dspr);
++
++	mutex_unlock(&rcdu->planes.lock);
++}
++
++/*
++ * rcar_du_crtc_start - Configure and start the LCDC
++ * @rcrtc: the SH Mobile CRTC
++ *
++ * Configure and start the LCDC device. External devices (clocks, MERAM, panels,
++ * ...) are not touched by this function.
++ */
++static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
++{
++	struct drm_crtc *crtc = &rcrtc->crtc;
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
++	struct drm_plane *plane;
++
++	if (rcrtc->started)
++		return;
++
++	if (WARN_ON(rcrtc->plane->format == NULL))
++		return;
++
++	/* Enable clocks before accessing the hardware. */
++	clk_enable(rcdu->clock);
++
++	/* Enable extended features */
++	rcar_du_crtc_write(rcrtc, DEFR, DEFR_CODE | DEFR_DEFE);
++	rcar_du_crtc_write(rcrtc, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
++	rcar_du_crtc_write(rcrtc, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
++	rcar_du_crtc_write(rcrtc, DEFR4, DEFR4_CODE);
++
++	/* Set display off and background to black */
++	rcar_du_crtc_write(rcrtc, DOOR, DOOR_RGB(0, 0, 0));
++	rcar_du_crtc_write(rcrtc, BPOR, BPOR_RGB(0, 0, 0));
++
++	/* Configure output routing: enable both superposition processors */
++	rcar_du_write(rcdu, DORCR, DORCR_DPRS);
++
++	rcar_du_crtc_set_display_timing(rcrtc);
++	rcar_du_plane_setup(rcrtc->plane);
++	rcar_du_crtc_enable_plane(rcrtc->plane, true);
++
++	/* Setup planes. */
++	list_for_each_entry(plane, &rcdu->ddev->mode_config.plane_list, head) {
++		struct rcar_du_plane *rplane = to_rcar_plane(plane);
++
++		if (plane->crtc != crtc)
++			continue;
++
++		rcar_du_plane_setup(rplane);
++	}
++
++	rcar_du_crtc_start_stop(rcrtc, true);
++
++	rcrtc->started = true;
++}
++
++static void rcar_du_crtc_stop(struct rcar_du_crtc *rcrtc)
++{
++	struct drm_crtc *crtc = &rcrtc->crtc;
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
++
++	if (!rcrtc->started)
++		return;
++
++	rcar_du_crtc_enable_plane(rcrtc->plane, false);
++	rcar_du_crtc_start_stop(rcrtc, false);
++
++	clk_disable(rcdu->clock);
++
++	rcrtc->started = false;
++}
++
++void rcar_du_crtc_suspend(struct rcar_du_crtc *rcrtc)
++{
++	rcar_du_crtc_stop(rcrtc);
++}
++
++void rcar_du_crtc_resume(struct rcar_du_crtc *rcrtc)
++{
++	if (rcrtc->dpms != DRM_MODE_DPMS_ON)
++		return;
++
++	rcar_du_crtc_start(rcrtc);
++}
++
++static void rcar_du_crtc_update_base(struct rcar_du_crtc *rcrtc)
++{
++	struct drm_crtc *crtc = &rcrtc->crtc;
++
++	rcar_du_plane_compute_base(rcrtc->plane, crtc->fb);
++	rcar_du_plane_update_base(rcrtc->plane);
++}
++
++static void rcar_du_crtc_dpms(struct drm_crtc *crtc, int mode)
++{
++	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++
++	if (rcrtc->dpms == mode)
++		return;
++
++	if (mode == DRM_MODE_DPMS_ON)
++		rcar_du_crtc_start(rcrtc);
++	else
++		rcar_du_crtc_stop(rcrtc);
++
++	rcrtc->dpms = mode;
++}
++
++static bool rcar_du_crtc_mode_fixup(struct drm_crtc *crtc,
++				    const struct drm_display_mode *mode,
++				    struct drm_display_mode *adjusted_mode)
++{
++	/* TODO Fixup modes */
++	return true;
++}
++
++static void rcar_du_crtc_mode_prepare(struct drm_crtc *crtc)
++{
++	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++
++	rcar_du_crtc_dpms(crtc, DRM_MODE_DPMS_OFF);
++	rcar_du_plane_release(rcrtc->plane);
++}
++
++static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
++				 struct drm_display_mode *mode,
++				 struct drm_display_mode *adjusted_mode,
++				 int x, int y,
++				 struct drm_framebuffer *old_fb)
++{
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
++	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++	const struct rcar_du_format_info *format;
++
++	format = rcar_du_format_info(crtc->fb->pixel_format);
++	if (format == NULL) {
++		dev_dbg(rcdu->dev, "mode_set: unsupported format %08x\n",
++			crtc->fb->pixel_format);
++		return -EINVAL;
++	}
++
++	rcrtc->plane->format = format;
++	rcrtc->plane->pitch = crtc->fb->pitches[0];
++
++	rcrtc->plane->src_x = x;
++	rcrtc->plane->src_y = y;
++	rcrtc->plane->width = crtc->fb->width;
++	rcrtc->plane->height = crtc->fb->height;
++
++	rcar_du_plane_compute_base(rcrtc->plane, crtc->fb);
++
++	return rcar_du_plane_reserve(rcrtc->plane);
++}
++
++static void rcar_du_crtc_mode_commit(struct drm_crtc *crtc)
++{
++	rcar_du_crtc_dpms(crtc, DRM_MODE_DPMS_ON);
++}
++
++static int rcar_du_crtc_mode_set_base(struct drm_crtc *crtc, int x, int y,
++				      struct drm_framebuffer *old_fb)
++{
++	rcar_du_crtc_update_base(to_rcar_crtc(crtc));
++
++	return 0;
++}
++
++static void rcar_du_crtc_disable(struct drm_crtc *crtc)
++{
++	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++
++	rcar_du_crtc_dpms(crtc, DRM_MODE_DPMS_OFF);
++	rcar_du_plane_release(rcrtc->plane);
++}
++
++static const struct drm_crtc_helper_funcs crtc_helper_funcs = {
++	.dpms = rcar_du_crtc_dpms,
++	.mode_fixup = rcar_du_crtc_mode_fixup,
++	.prepare = rcar_du_crtc_mode_prepare,
++	.commit = rcar_du_crtc_mode_commit,
++	.mode_set = rcar_du_crtc_mode_set,
++	.mode_set_base = rcar_du_crtc_mode_set_base,
++	.disable = rcar_du_crtc_disable,
++};
++
++void rcar_du_crtc_cancel_page_flip(struct rcar_du_crtc *rcrtc,
++				   struct drm_file *file)
++{
++	struct drm_pending_vblank_event *event;
++	struct drm_device *dev = rcrtc->crtc.dev;
++	unsigned long flags;
++
++	/* Destroy the pending vertical blanking event associated with the
++	 * pending page flip, if any, and disable vertical blanking interrupts.
++	 */
++	spin_lock_irqsave(&dev->event_lock, flags);
++	event = rcrtc->event;
++	if (event && event->base.file_priv == file) {
++		rcrtc->event = NULL;
++		event->base.destroy(&event->base);
++		drm_vblank_put(dev, 0);
++	}
++	spin_unlock_irqrestore(&dev->event_lock, flags);
++}
++
++static void rcar_du_crtc_finish_page_flip(struct rcar_du_crtc *rcrtc)
++{
++	struct drm_pending_vblank_event *event;
++	struct drm_device *dev = rcrtc->crtc.dev;
++	struct timeval vblanktime;
++	unsigned long flags;
++
++	spin_lock_irqsave(&dev->event_lock, flags);
++	event = rcrtc->event;
++	rcrtc->event = NULL;
++	spin_unlock_irqrestore(&dev->event_lock, flags);
++
++	if (event == NULL)
++		return;
++
++	event->event.sequence = drm_vblank_count_and_time(dev, 0, &vblanktime);
++	event->event.tv_sec = vblanktime.tv_sec;
++	event->event.tv_usec = vblanktime.tv_usec;
++
++	spin_lock_irqsave(&dev->event_lock, flags);
++	list_add_tail(&event->base.link, &event->base.file_priv->event_list);
++	wake_up_interruptible(&event->base.file_priv->event_wait);
++	spin_unlock_irqrestore(&dev->event_lock, flags);
++
++	drm_vblank_put(dev, 0);
++}
++
++static int rcar_du_crtc_page_flip(struct drm_crtc *crtc,
++				  struct drm_framebuffer *fb,
++				  struct drm_pending_vblank_event *event)
++{
++	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++	struct drm_device *dev = rcrtc->crtc.dev;
++	unsigned long flags;
++
++	spin_lock_irqsave(&dev->event_lock, flags);
++	if (rcrtc->event != NULL) {
++		spin_unlock_irqrestore(&dev->event_lock, flags);
++		return -EBUSY;
++	}
++	spin_unlock_irqrestore(&dev->event_lock, flags);
++
++	crtc->fb = fb;
++	rcar_du_crtc_update_base(rcrtc);
++
++	if (event) {
++		event->pipe = 0;
++		spin_lock_irqsave(&dev->event_lock, flags);
++		rcrtc->event = event;
++		spin_unlock_irqrestore(&dev->event_lock, flags);
++		drm_vblank_get(dev, 0);
++	}
++
++	return 0;
++}
++
++static const struct drm_crtc_funcs crtc_funcs = {
++	.destroy = drm_crtc_cleanup,
++	.set_config = drm_crtc_helper_set_config,
++	.page_flip = rcar_du_crtc_page_flip,
++};
++
++int rcar_du_crtc_create(struct rcar_du_device *rcdu, unsigned int index)
++{
++	const struct rcar_du_encoder_data *pdata = &rcdu->pdata->encoders[index];
++	struct rcar_du_crtc *rcrtc = &rcdu->crtc[index];
++	struct drm_crtc *crtc = &rcrtc->crtc;
++	int ret;
++
++	if (pdata->encoder == RCAR_DU_ENCODER_UNUSED)
++		return 0;
++
++	rcrtc->mmio_offset = index ? DISP2_REG_OFFSET : 0;
++	rcrtc->index = index;
++	rcrtc->dpms = DRM_MODE_DPMS_OFF;
++	rcrtc->plane = &rcdu->planes.planes[index];
++
++	rcrtc->plane->crtc = crtc;
++
++	ret = drm_crtc_init(rcdu->ddev, crtc, &crtc_funcs);
++	if (ret < 0)
++		return ret;
++
++	drm_crtc_helper_add(crtc, &crtc_helper_funcs);
++
++	switch (pdata->encoder) {
++	case RCAR_DU_ENCODER_VGA:
++		rcar_du_vga_init(rcdu, &pdata->vga, index);
++		break;
++
++	case RCAR_DU_ENCODER_LVDS:
++		rcar_du_lvds_init(rcdu, &pdata->lvds, index);
++		break;
++
++	default:
++		break;
++	}
++
++	return 0;
++}
++
++void rcar_du_crtc_enable_vblank(struct rcar_du_crtc *rcrtc, bool enable)
++{
++	if (enable) {
++		rcar_du_crtc_write(rcrtc, DSRCR, DSRCR_VBCL);
++		rcar_du_crtc_set(rcrtc, DIER, DIER_VBE);
++	} else {
++		rcar_du_crtc_clr(rcrtc, DIER, DIER_VBE);
++	}
++}
++
++void rcar_du_crtc_irq(struct rcar_du_crtc *rcrtc)
++{
++	u32 status;
++
++	status = rcar_du_crtc_read(rcrtc, DSSR);
++	rcar_du_crtc_write(rcrtc, DSRCR, status & DSRCR_MASK);
++
++	if (status & DSSR_VBK) {
++		drm_handle_vblank(rcrtc->crtc.dev, rcrtc->index);
++		rcar_du_crtc_finish_page_flip(rcrtc);
++	}
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+new file mode 100644
+index 0000000..e0dde03
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+@@ -0,0 +1,47 @@
++/*
++ * rcar_du_crtc.h  --  R-Car Display Unit CRTCs
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_CRTC_H__
++#define __RCAR_DU_CRTC_H__
++
++#include <linux/mutex.h>
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++
++struct rcar_du_device;
++struct rcar_du_plane;
++
++struct rcar_du_crtc {
++	struct drm_crtc crtc;
++
++	unsigned int mmio_offset;
++	unsigned int index;
++	bool started;
++
++	struct drm_pending_vblank_event *event;
++	int dpms;
++
++	struct rcar_du_plane *plane;
++};
++
++int rcar_du_crtc_create(struct rcar_du_device *rcdu, unsigned int index);
++void rcar_du_crtc_enable_vblank(struct rcar_du_crtc *rcrtc, bool enable);
++void rcar_du_crtc_irq(struct rcar_du_crtc *rcrtc);
++void rcar_du_crtc_cancel_page_flip(struct rcar_du_crtc *rcrtc,
++				   struct drm_file *file);
++void rcar_du_crtc_suspend(struct rcar_du_crtc *rcrtc);
++void rcar_du_crtc_resume(struct rcar_du_crtc *rcrtc);
++void rcar_du_crtc_enable_plane(struct rcar_du_plane *plane, bool enable);
++
++#endif /* __RCAR_DU_CRTC_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+new file mode 100644
+index 0000000..cbad07e
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -0,0 +1,265 @@
++/*
++ * rcar_du_drv.c  --  R-Car Display Unit DRM driver
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <linux/clk.h>
++#include <linux/io.h>
++#include <linux/mm.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/pm.h>
++#include <linux/slab.h>
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_gem_cma_helper.h>
++
++#include "rcar_du_crtc.h"
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++
++/* -----------------------------------------------------------------------------
++ * DRM operations
++ */
++
++static int rcar_du_unload(struct drm_device *dev)
++{
++	drm_kms_helper_poll_fini(dev);
++	drm_mode_config_cleanup(dev);
++	drm_vblank_cleanup(dev);
++	drm_irq_uninstall(dev);
++
++	dev->dev_private = NULL;
++
++	return 0;
++}
++
++static int rcar_du_load(struct drm_device *dev, unsigned long flags)
++{
++	struct platform_device *pdev = dev->platformdev;
++	struct rcar_du_platform_data *pdata = pdev->dev.platform_data;
++	struct rcar_du_device *rcdu;
++	struct resource *ioarea;
++	struct resource *mem;
++	int ret;
++
++	if (pdata == NULL) {
++		dev_err(dev->dev, "no platform data\n");
++		return -ENODEV;
++	}
++
++	rcdu = devm_kzalloc(&pdev->dev, sizeof(*rcdu), GFP_KERNEL);
++	if (rcdu == NULL) {
++		dev_err(dev->dev, "failed to allocate private data\n");
++		return -ENOMEM;
++	}
++
++	rcdu->dev = &pdev->dev;
++	rcdu->pdata = pdata;
++	rcdu->ddev = dev;
++	dev->dev_private = rcdu;
++
++	/* I/O resources and clocks */
++	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (mem == NULL) {
++		dev_err(&pdev->dev, "failed to get memory resource\n");
++		ret = -EINVAL;
++		goto done;
++	}
++
++	ioarea = devm_request_mem_region(&pdev->dev, mem->start,
++					 resource_size(mem), pdev->name);
++	if (ioarea == NULL) {
++		dev_err(&pdev->dev, "failed to request memory region\n");
++		ret = -EBUSY;
++		goto done;
++	}
++
++	rcdu->mmio = devm_ioremap_nocache(&pdev->dev, ioarea->start,
++					  resource_size(ioarea));
++	if (rcdu->mmio == NULL) {
++		dev_err(&pdev->dev, "failed to remap memory resource\n");
++		ret = -ENOMEM;
++		goto done;
++	}
++
++	rcdu->clock = devm_clk_get(&pdev->dev, NULL);
++	if (IS_ERR(rcdu->clock)) {
++		dev_err(&pdev->dev, "failed to get clock\n");
++		ret = -ENOENT;
++		goto done;
++	}
++
++	/* DRM/KMS objects */
++	ret = rcar_du_modeset_init(rcdu);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "failed to initialize DRM/KMS\n");
++		goto done;
++	}
++
++	/* IRQ and vblank handling */
++	ret = drm_vblank_init(dev, 1);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "failed to initialize vblank\n");
++		goto done;
++	}
++
++	ret = drm_irq_install(dev);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "failed to install IRQ handler\n");
++		goto done;
++	}
++
++	platform_set_drvdata(pdev, rcdu);
++
++done:
++	if (ret)
++		rcar_du_unload(dev);
++
++	return ret;
++}
++
++static void rcar_du_preclose(struct drm_device *dev, struct drm_file *file)
++{
++	struct rcar_du_device *rcdu = dev->dev_private;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtc); ++i)
++		rcar_du_crtc_cancel_page_flip(&rcdu->crtc[i], file);
++}
++
++static irqreturn_t rcar_du_irq(int irq, void *arg)
++{
++	struct drm_device *dev = arg;
++	struct rcar_du_device *rcdu = dev->dev_private;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtc); ++i)
++		rcar_du_crtc_irq(&rcdu->crtc[i]);
++
++	return IRQ_HANDLED;
++}
++
++static int rcar_du_enable_vblank(struct drm_device *dev, int crtc)
++{
++	struct rcar_du_device *rcdu = dev->dev_private;
++
++	rcar_du_crtc_enable_vblank(&rcdu->crtc[crtc], true);
++
++	return 0;
++}
++
++static void rcar_du_disable_vblank(struct drm_device *dev, int crtc)
++{
++	struct rcar_du_device *rcdu = dev->dev_private;
++
++	rcar_du_crtc_enable_vblank(&rcdu->crtc[crtc], false);
++}
++
++static const struct file_operations rcar_du_fops = {
++	.owner		= THIS_MODULE,
++	.open		= drm_open,
++	.release	= drm_release,
++	.unlocked_ioctl	= drm_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl	= drm_compat_ioctl,
++#endif
++	.poll		= drm_poll,
++	.read		= drm_read,
++	.fasync		= drm_fasync,
++	.llseek		= no_llseek,
++	.mmap		= drm_gem_cma_mmap,
++};
++
++static struct drm_driver rcar_du_driver = {
++	.driver_features	= DRIVER_HAVE_IRQ | DRIVER_GEM | DRIVER_MODESET,
++	.load			= rcar_du_load,
++	.unload			= rcar_du_unload,
++	.preclose		= rcar_du_preclose,
++	.irq_handler		= rcar_du_irq,
++	.get_vblank_counter	= drm_vblank_count,
++	.enable_vblank		= rcar_du_enable_vblank,
++	.disable_vblank		= rcar_du_disable_vblank,
++	.gem_free_object	= drm_gem_cma_free_object,
++	.gem_vm_ops		= &drm_gem_cma_vm_ops,
++	.dumb_create		= drm_gem_cma_dumb_create,
++	.dumb_map_offset	= drm_gem_cma_dumb_map_offset,
++	.dumb_destroy		= drm_gem_cma_dumb_destroy,
++	.fops			= &rcar_du_fops,
++	.name			= "rcar-du",
++	.desc			= "Renesas R-Car Display Unit",
++	.date			= "20130110",
++	.major			= 1,
++	.minor			= 0,
++};
++
++/* -----------------------------------------------------------------------------
++ * Power management
++ */
++
++#if CONFIG_PM_SLEEP
++static int rcar_du_pm_suspend(struct device *dev)
++{
++	struct rcar_du_device *rcdu = dev_get_drvdata(dev);
++
++	drm_kms_helper_poll_disable(rcdu->ddev);
++	/* TODO Suspend the CRTC */
++
++	return 0;
++}
++
++static int rcar_du_pm_resume(struct device *dev)
++{
++	struct rcar_du_device *rcdu = dev_get_drvdata(dev);
++
++	/* TODO Resume the CRTC */
++
++	drm_kms_helper_poll_enable(rcdu->ddev);
++	return 0;
++}
++#endif
++
++static const struct dev_pm_ops rcar_du_pm_ops = {
++	SET_SYSTEM_SLEEP_PM_OPS(rcar_du_pm_suspend, rcar_du_pm_resume)
++};
++
++/* -----------------------------------------------------------------------------
++ * Platform driver
++ */
++
++static int rcar_du_probe(struct platform_device *pdev)
++{
++	return drm_platform_init(&rcar_du_driver, pdev);
++}
++
++static int rcar_du_remove(struct platform_device *pdev)
++{
++	drm_platform_exit(&rcar_du_driver, pdev);
++
++	return 0;
++}
++
++static struct platform_driver rcar_du_platform_driver = {
++	.probe		= rcar_du_probe,
++	.remove		= rcar_du_remove,
++	.driver		= {
++		.owner	= THIS_MODULE,
++		.name	= "rcar-du",
++		.pm	= &rcar_du_pm_ops,
++	},
++};
++
++module_platform_driver(rcar_du_platform_driver);
++
++MODULE_AUTHOR("Laurent Pinchart <laurent.pinchart@ideasonboard.com>");
++MODULE_DESCRIPTION("Renesas R-Car Display Unit DRM Driver");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+new file mode 100644
+index 0000000..bddb4f8
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -0,0 +1,56 @@
++/*
++ * rcar_du_drv.h  --  R-Car Display Unit DRM driver
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_DRV_H__
++#define __RCAR_DU_DRV_H__
++
++#include <linux/kernel.h>
++#include <linux/mutex.h>
++#include <linux/platform_data/rcar-du.h>
++
++#include "rcar_du_crtc.h"
++#include "rcar_du_plane.h"
++
++struct clk;
++struct device;
++struct drm_device;
++
++struct rcar_du_device {
++	struct device *dev;
++	const struct rcar_du_platform_data *pdata;
++
++	void __iomem *mmio;
++	struct clk *clock;
++
++	struct drm_device *ddev;
++
++	struct rcar_du_crtc crtc[1];
++
++	struct {
++		struct rcar_du_plane planes[8];
++		unsigned int free;
++		struct mutex lock;
++	} planes;
++};
++
++static inline u32 rcar_du_read(struct rcar_du_device *rcdu, u32 reg)
++{
++	return ioread32(rcdu->mmio + reg);
++}
++
++static inline void rcar_du_write(struct rcar_du_device *rcdu, u32 reg, u32 data)
++{
++	iowrite32(data, rcdu->mmio + reg);
++}
++
++#endif /* __RCAR_DU_DRV_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+new file mode 100644
+index 0000000..4f54f6a
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -0,0 +1,163 @@
++/*
++ * rcar_du_kms.c  --  R-Car Display Unit Mode Setting
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_fb_cma_helper.h>
++#include <drm/drm_gem_cma_helper.h>
++
++#include "rcar_du_crtc.h"
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_regs.h"
++
++/* -----------------------------------------------------------------------------
++ * Format helpers
++ */
++
++static const struct rcar_du_format_info rcar_du_format_infos[] = {
++	{
++		.fourcc = DRM_FORMAT_RGB565,
++		.bpp = 16,
++		.planes = 1,
++		.dddf = PnMR_DDDF_16BPP,
++		.edf = PnDDCR4_EDF_NONE,
++	}, {
++		.fourcc = DRM_FORMAT_ARGB1555,
++		.bpp = 16,
++		.planes = 1,
++		.dddf = PnMR_DDDF_ARGB,
++		.edf = PnDDCR4_EDF_NONE,
++	}, {
++		.fourcc = DRM_FORMAT_XRGB8888,
++		.bpp = 32,
++		.planes = 1,
++		.dddf = PnMR_DDDF_16BPP,
++		.edf = PnDDCR4_EDF_RGB888,
++	}, {
++		.fourcc = DRM_FORMAT_ARGB8888,
++		.bpp = 32,
++		.planes = 1,
++		.dddf = PnMR_DDDF_16BPP,
++		.edf = PnDDCR4_EDF_ARGB8888,
++	}, {
++		.fourcc = DRM_FORMAT_UYVY,
++		.bpp = 16,
++		.planes = 1,
++		.dddf = PnMR_DDDF_YC,
++		.edf = PnDDCR4_EDF_NONE,
++	}, {
++		.fourcc = DRM_FORMAT_YUYV,
++		.bpp = 16,
++		.planes = 1,
++		.dddf = PnMR_DDDF_YC,
++		.edf = PnDDCR4_EDF_NONE,
++	}, {
++		.fourcc = DRM_FORMAT_NV12,
++		.bpp = 12,
++		.planes = 2,
++		.dddf = PnMR_DDDF_YC,
++		.edf = PnDDCR4_EDF_NONE,
++	}, {
++		.fourcc = DRM_FORMAT_NV21,
++		.bpp = 12,
++		.planes = 2,
++		.dddf = PnMR_DDDF_YC,
++		.edf = PnDDCR4_EDF_NONE,
++	}, {
++		/* In YUV 4:2:2, only NV16 is supported (NV61 isn't) */
++		.fourcc = DRM_FORMAT_NV16,
++		.bpp = 16,
++		.planes = 2,
++		.dddf = PnMR_DDDF_YC,
++		.edf = PnDDCR4_EDF_NONE,
++	},
++};
++
++const struct rcar_du_format_info *rcar_du_format_info(u32 fourcc)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(rcar_du_format_infos); ++i) {
++		if (rcar_du_format_infos[i].fourcc == fourcc)
++			return &rcar_du_format_infos[i];
++	}
++
++	return NULL;
++}
++
++/* -----------------------------------------------------------------------------
++ * Frame buffer
++ */
++
++static struct drm_framebuffer *
++rcar_du_fb_create(struct drm_device *dev, struct drm_file *file_priv,
++		  struct drm_mode_fb_cmd2 *mode_cmd)
++{
++	const struct rcar_du_format_info *format;
++
++	format = rcar_du_format_info(mode_cmd->pixel_format);
++	if (format == NULL) {
++		dev_dbg(dev->dev, "unsupported pixel format %08x\n",
++			mode_cmd->pixel_format);
++		return ERR_PTR(-EINVAL);
++	}
++
++	if (mode_cmd->pitches[0] & 15 || mode_cmd->pitches[0] >= 8192) {
++		dev_dbg(dev->dev, "invalid pitch value %u\n",
++			mode_cmd->pitches[0]);
++		return ERR_PTR(-EINVAL);
++	}
++
++	if (format->planes == 2) {
++		if (mode_cmd->pitches[1] != mode_cmd->pitches[0]) {
++			dev_dbg(dev->dev,
++				"luma and chroma pitches do not match\n");
++			return ERR_PTR(-EINVAL);
++		}
++	}
++
++	return drm_fb_cma_create(dev, file_priv, mode_cmd);
++}
++
++static const struct drm_mode_config_funcs rcar_du_mode_config_funcs = {
++	.fb_create = rcar_du_fb_create,
++};
++
++int rcar_du_modeset_init(struct rcar_du_device *rcdu)
++{
++	unsigned int i;
++	int ret;
++
++	drm_mode_config_init(rcdu->ddev);
++
++	rcdu->ddev->mode_config.min_width = 0;
++	rcdu->ddev->mode_config.min_height = 0;
++	rcdu->ddev->mode_config.max_width = 4095;
++	rcdu->ddev->mode_config.max_height = 2047;
++	rcdu->ddev->mode_config.funcs = &rcar_du_mode_config_funcs;
++
++	ret = rcar_du_plane_init(rcdu);
++	if (ret < 0)
++		return ret;
++
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtc); ++i)
++		rcar_du_crtc_create(rcdu, i);
++
++	drm_kms_helper_poll_init(rcdu->ddev);
++
++	drm_helper_disable_unused_functions(rcdu->ddev);
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.h b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+new file mode 100644
+index 0000000..4ba34cc
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+@@ -0,0 +1,33 @@
++/*
++ * rcar_du_kms.h  --  R-Car Display Unit Mode Setting
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_KMS_H__
++#define __RCAR_DU_KMS_H__
++
++#include <linux/types.h>
++
++struct rcar_du_device;
++
++struct rcar_du_format_info {
++	u32 fourcc;
++	unsigned int bpp;
++	unsigned int planes;
++	unsigned int dddf;
++	unsigned int edf;
++};
++
++const struct rcar_du_format_info *rcar_du_format_info(u32 fourcc);
++
++int rcar_du_modeset_init(struct rcar_du_device *rcdu);
++
++#endif /* __RCAR_DU_KMS_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+new file mode 100644
+index 0000000..841db01
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+@@ -0,0 +1,247 @@
++/*
++ * rcar_du_lvds.c  --  R-Car Display Unit LVDS Encoder and Connector
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_lvds.h"
++
++struct rcar_du_lvds_encoder {
++	struct drm_encoder encoder;
++};
++
++#define to_rcar_lvds_encoder(e) \
++	container_of(e, struct rcar_du_lvds_encoder, encoder)
++
++struct rcar_du_lvds_connector {
++	struct drm_connector connector;
++	struct rcar_du_lvds_encoder *encoder;
++
++	const struct rcar_du_panel_data *panel;
++};
++
++#define to_rcar_lvds_connector(c) \
++	container_of(c, struct rcar_du_lvds_connector, connector)
++
++/* -----------------------------------------------------------------------------
++ * Connector
++ */
++
++static int rcar_du_lvds_connector_get_modes(struct drm_connector *connector)
++{
++	struct rcar_du_lvds_connector *lvdscon = to_rcar_lvds_connector(connector);
++	struct drm_display_mode *mode;
++
++	mode = drm_mode_create(connector->dev);
++	if (mode == NULL)
++		return 0;
++
++	mode->type = DRM_MODE_TYPE_PREFERRED | DRM_MODE_TYPE_DRIVER;
++	mode->clock = lvdscon->panel->mode.clock;
++	mode->hdisplay = lvdscon->panel->mode.hdisplay;
++	mode->hsync_start = lvdscon->panel->mode.hsync_start;
++	mode->hsync_end = lvdscon->panel->mode.hsync_end;
++	mode->htotal = lvdscon->panel->mode.htotal;
++	mode->vdisplay = lvdscon->panel->mode.vdisplay;
++	mode->vsync_start = lvdscon->panel->mode.vsync_start;
++	mode->vsync_end = lvdscon->panel->mode.vsync_end;
++	mode->vtotal = lvdscon->panel->mode.vtotal;
++	mode->flags = lvdscon->panel->mode.flags;
++
++	drm_mode_set_name(mode);
++	drm_mode_probed_add(connector, mode);
++
++	return 1;
++}
++
++static int rcar_du_lvds_connector_mode_valid(struct drm_connector *connector,
++					    struct drm_display_mode *mode)
++{
++	return MODE_OK;
++}
++
++static struct drm_encoder *
++rcar_du_lvds_connector_best_encoder(struct drm_connector *connector)
++{
++	struct rcar_du_lvds_connector *lvdscon = to_rcar_lvds_connector(connector);
++
++	return &lvdscon->encoder->encoder;
++}
++
++static const struct drm_connector_helper_funcs connector_helper_funcs = {
++	.get_modes = rcar_du_lvds_connector_get_modes,
++	.mode_valid = rcar_du_lvds_connector_mode_valid,
++	.best_encoder = rcar_du_lvds_connector_best_encoder,
++};
++
++static void rcar_du_lvds_connector_destroy(struct drm_connector *connector)
++{
++	drm_sysfs_connector_remove(connector);
++	drm_connector_cleanup(connector);
++}
++
++static enum drm_connector_status
++rcar_du_lvds_connector_detect(struct drm_connector *connector, bool force)
++{
++	return connector_status_connected;
++}
++
++static const struct drm_connector_funcs connector_funcs = {
++	.dpms = drm_helper_connector_dpms,
++	.detect = rcar_du_lvds_connector_detect,
++	.fill_modes = drm_helper_probe_single_connector_modes,
++	.destroy = rcar_du_lvds_connector_destroy,
++};
++
++static int rcar_du_lvds_connector_init(struct rcar_du_device *rcdu,
++				       struct rcar_du_lvds_encoder *lvdsenc,
++				       const struct rcar_du_panel_data *panel)
++{
++	struct rcar_du_lvds_connector *lvdscon;
++	struct drm_connector *connector;
++	int ret;
++
++	lvdscon = devm_kzalloc(rcdu->dev, sizeof(*lvdscon), GFP_KERNEL);
++	if (lvdscon == NULL)
++		return -ENOMEM;
++
++	lvdscon->panel = panel;
++
++	connector = &lvdscon->connector;
++	connector->display_info.width_mm = panel->width_mm;
++	connector->display_info.height_mm = panel->height_mm;
++
++	ret = drm_connector_init(rcdu->ddev, connector, &connector_funcs,
++				 DRM_MODE_CONNECTOR_LVDS);
++	if (ret < 0)
++		return ret;
++
++	drm_connector_helper_add(connector, &connector_helper_funcs);
++	ret = drm_sysfs_connector_add(connector);
++	if (ret < 0)
++		return ret;
++
++	drm_helper_connector_dpms(connector, DRM_MODE_DPMS_OFF);
++	drm_object_property_set_value(&connector->base,
++		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
++
++	ret = drm_mode_connector_attach_encoder(connector, &lvdsenc->encoder);
++	if (ret < 0)
++		return ret;
++
++	connector->encoder = &lvdsenc->encoder;
++	lvdscon->encoder = lvdsenc;
++
++	return 0;
++}
++
++/* -----------------------------------------------------------------------------
++ * Encoder
++ */
++
++static void rcar_du_lvds_encoder_dpms(struct drm_encoder *encoder, int mode)
++{
++}
++
++static bool rcar_du_lvds_encoder_mode_fixup(struct drm_encoder *encoder,
++					   const struct drm_display_mode *mode,
++					   struct drm_display_mode *adjusted_mode)
++{
++	const struct drm_display_mode *panel_mode;
++	struct drm_device *dev = encoder->dev;
++	struct drm_connector *connector;
++	bool found = false;
++
++	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
++		if (connector->encoder == encoder) {
++			found = true;
++			break;
++		}
++	}
++
++	if (!found) {
++		dev_dbg(dev->dev, "mode_fixup: no connector found\n");
++		return false;
++	}
++
++	if (list_empty(&connector->modes)) {
++		dev_dbg(dev->dev, "mode_fixup: empty modes list\n");
++		return false;
++	}
++
++	/* The flat panel mode is fixed, just copy it to the adjusted mode. */
++	panel_mode = list_first_entry(&connector->modes,
++				      struct drm_display_mode, head);
++	drm_mode_copy(adjusted_mode, panel_mode);
++
++	return true;
++}
++
++static void rcar_du_lvds_encoder_mode_prepare(struct drm_encoder *encoder)
++{
++}
++
++static void rcar_du_lvds_encoder_mode_set(struct drm_encoder *encoder,
++					 struct drm_display_mode *mode,
++					 struct drm_display_mode *adjusted_mode)
++{
++}
++
++static void rcar_du_lvds_encoder_mode_commit(struct drm_encoder *encoder)
++{
++}
++
++static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
++	.dpms = rcar_du_lvds_encoder_dpms,
++	.mode_fixup = rcar_du_lvds_encoder_mode_fixup,
++	.prepare = rcar_du_lvds_encoder_mode_prepare,
++	.commit = rcar_du_lvds_encoder_mode_commit,
++	.mode_set = rcar_du_lvds_encoder_mode_set,
++};
++
++static void rcar_du_lvds_encoder_destroy(struct drm_encoder *encoder)
++{
++	drm_encoder_cleanup(encoder);
++}
++
++static const struct drm_encoder_funcs encoder_funcs = {
++	.destroy = rcar_du_lvds_encoder_destroy,
++};
++
++int rcar_du_lvds_init(struct rcar_du_device *rcdu,
++		      const struct rcar_du_encoder_lvds_data *data,
++		      unsigned int crtc)
++{
++	struct rcar_du_lvds_encoder *lvdsenc;
++	struct drm_encoder *encoder;
++	int ret;
++
++	lvdsenc = devm_kzalloc(rcdu->dev, sizeof(*lvdsenc), GFP_KERNEL);
++	if (lvdsenc == NULL)
++		return -ENOMEM;
++
++	encoder = &lvdsenc->encoder;
++	encoder->possible_crtcs = 1 << crtc;
++
++	ret = drm_encoder_init(rcdu->ddev, encoder, &encoder_funcs,
++			       DRM_MODE_ENCODER_LVDS);
++	if (ret < 0)
++		return ret;
++
++	drm_encoder_helper_add(encoder, &encoder_helper_funcs);
++
++	return rcar_du_lvds_connector_init(rcdu, lvdsenc, &data->panel);
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.h b/drivers/gpu/drm/rcar-du/rcar_du_lvds.h
+new file mode 100644
+index 0000000..a6e8ab9
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvds.h
+@@ -0,0 +1,25 @@
++/*
++ * rcar_du_lvds.h  --  R-Car Display Unit LVDS Encoder and Connector
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_LVDS_H__
++#define __RCAR_DU_LVDS_H__
++
++struct rcar_du_crtc;
++struct rcar_du_device;
++struct rcar_du_encoder_lvds_data;
++
++int rcar_du_lvds_init(struct rcar_du_device *rcdu,
++		      const struct rcar_du_encoder_lvds_data *data,
++		      unsigned int crtc);
++
++#endif /* __RCAR_DU_LVDS_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+new file mode 100644
+index 0000000..f43b9af
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -0,0 +1,299 @@
++/*
++ * rcar_du_plane.c  --  R-Car Display Unit Planes
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_fb_cma_helper.h>
++#include <drm/drm_gem_cma_helper.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_plane.h"
++#include "rcar_du_regs.h"
++
++static u32 rcar_du_plane_read(struct rcar_du_device *rcdu,
++			      unsigned int index, u32 reg)
++{
++	return rcar_du_read(rcdu, index * PLANE_OFF + reg);
++}
++
++static void rcar_du_plane_write(struct rcar_du_device *rcdu,
++				unsigned int index, u32 reg, u32 data)
++{
++	rcar_du_write(rcdu, index * PLANE_OFF + reg, data);
++}
++
++int rcar_du_plane_reserve(struct rcar_du_plane *plane)
++{
++	struct rcar_du_device *rcdu = plane->dev;
++	unsigned int i;
++	int ret = -EBUSY;
++
++	mutex_lock(&rcdu->planes.lock);
++
++	for (i = 0; i < ARRAY_SIZE(rcdu->planes.planes); ++i) {
++		if (!(rcdu->planes.free & (1 << i)))
++			continue;
++
++		if (plane->format->planes == 1 ||
++		    rcdu->planes.free & (1 << ((i + 1) % 8)))
++			break;
++
++		break;
++	}
++
++	if (i == ARRAY_SIZE(rcdu->planes.planes))
++		goto done;
++
++	rcdu->planes.free &= ~(1 << i);
++	if (plane->format->planes == 2)
++		rcdu->planes.free &= ~(1 << ((i + 1) % 8));
++
++	plane->hwindex = i;
++
++	ret = 0;
++
++done:
++	mutex_unlock(&rcdu->planes.lock);
++	return ret;
++}
++
++void rcar_du_plane_release(struct rcar_du_plane *plane)
++{
++	struct rcar_du_device *rcdu = plane->dev;
++
++	if (plane->hwindex == -1)
++		return;
++
++	mutex_lock(&rcdu->planes.lock);
++	rcdu->planes.free |= 1 << plane->hwindex;
++	if (plane->format->planes == 2)
++		rcdu->planes.free |= 1 << ((plane->hwindex + 1) % 8);
++	mutex_unlock(&rcdu->planes.lock);
++
++	plane->hwindex = -1;
++}
++
++void rcar_du_plane_update_base(struct rcar_du_plane *plane)
++{
++	struct rcar_du_device *rcdu = plane->dev;
++	unsigned int index = plane->hwindex;
++
++	rcar_du_plane_write(rcdu, index, PnSPXR, plane->src_x);
++	rcar_du_plane_write(rcdu, index, PnSPYR, plane->src_y);
++	rcar_du_plane_write(rcdu, index, PnDSA0R, plane->dma[0]);
++
++	if (plane->format->planes == 2) {
++		index = (index + 1) % 8;
++
++		rcar_du_plane_write(rcdu, index, PnSPXR, plane->src_x);
++		rcar_du_plane_write(rcdu, index, PnSPYR, plane->src_y);
++		rcar_du_plane_write(rcdu, index, PnDSA0R, plane->dma[1]);
++	}
++}
++
++void rcar_du_plane_compute_base(struct rcar_du_plane *plane,
++				struct drm_framebuffer *fb)
++{
++	struct drm_gem_cma_object *gem;
++
++	gem = drm_fb_cma_get_gem_obj(fb, 0);
++	plane->dma[0] = gem->paddr + fb->offsets[0];
++
++	if (plane->format->planes == 2) {
++		gem = drm_fb_cma_get_gem_obj(fb, 1);
++		plane->dma[1] = gem->paddr + fb->offsets[1];
++	}
++}
++
++static void __rcar_du_plane_setup(struct rcar_du_plane *plane, unsigned int index)
++{
++	struct rcar_du_device *rcdu = plane->dev;
++	u32 ddcr2 = PnDDCR2_CODE;
++	u32 ddcr4;
++	u32 pnmr;
++	u32 mwr;
++
++	/* Data format
++	 *
++	 * The data format is selected by the DDDF field in PnMR and the EDF
++	 * field in DDCR4.
++	 */
++	ddcr4 = rcar_du_plane_read(rcdu, index, PnDDCR4);
++	ddcr4 &= ~PnDDCR4_EDF_MASK;
++	ddcr4 |= plane->format->edf | PnDDCR4_CODE;
++
++	pnmr = PnMR_SPIM_TP_OFF | PnMR_BM_MD | plane->format->dddf;
++
++	/* For packed YUV formats we need to select the U/V order. */
++	if (plane->format->fourcc == DRM_FORMAT_YUYV)
++		pnmr |= PnMR_YCDF_YUYV;
++
++	if (plane->format->planes == 2) {
++		if (plane->hwindex != index) {
++			if (plane->format->fourcc == DRM_FORMAT_NV12 ||
++			    plane->format->fourcc == DRM_FORMAT_NV21)
++				ddcr2 |= PnDDCR2_Y420;
++
++			if (plane->format->fourcc == DRM_FORMAT_NV21)
++				ddcr2 |= PnDDCR2_NV21;
++
++			ddcr2 |= PnDDCR2_DIVU;
++		} else {
++			ddcr2 |= PnDDCR2_DIVY;
++		}
++	}
++
++	rcar_du_plane_write(rcdu, index, PnMR, pnmr);
++	rcar_du_plane_write(rcdu, index, PnDDCR2, ddcr2);
++	rcar_du_plane_write(rcdu, index, PnDDCR4, ddcr4);
++
++	/* Global alpha value */
++	rcar_du_plane_write(rcdu, index, PnALPHAR, plane->alpha);
++
++	/* Memory pitch (expressed in pixels) */
++	if (plane->format->planes == 2)
++		mwr = plane->pitch;
++	else
++		mwr = plane->pitch * 8 / plane->format->bpp;
++
++	rcar_du_plane_write(rcdu, index, PnMWR, mwr);
++
++	/* Destination position and size */
++	rcar_du_plane_write(rcdu, index, PnDSXR, plane->width);
++	rcar_du_plane_write(rcdu, index, PnDSYR, plane->height);
++	rcar_du_plane_write(rcdu, index, PnDPXR, plane->dst_x);
++	rcar_du_plane_write(rcdu, index, PnDPYR, plane->dst_y);
++
++	/* Wrap-around and blinking, disabled */
++	rcar_du_plane_write(rcdu, index, PnWASPR, 0);
++	rcar_du_plane_write(rcdu, index, PnWAMWR, 4095);
++	rcar_du_plane_write(rcdu, index, PnBTR, 0);
++	rcar_du_plane_write(rcdu, index, PnMLR, 0);
++}
++
++void rcar_du_plane_setup(struct rcar_du_plane *plane)
++{
++	__rcar_du_plane_setup(plane, plane->hwindex);
++	if (plane->format->planes == 2)
++		__rcar_du_plane_setup(plane, (plane->hwindex + 1) % 8);
++
++	rcar_du_plane_update_base(plane);
++}
++
++static int
++rcar_du_plane_update(struct drm_plane *plane, struct drm_crtc *crtc,
++		       struct drm_framebuffer *fb, int crtc_x, int crtc_y,
++		       unsigned int crtc_w, unsigned int crtc_h,
++		       uint32_t src_x, uint32_t src_y,
++		       uint32_t src_w, uint32_t src_h)
++{
++	struct rcar_du_plane *rplane = to_rcar_plane(plane);
++	struct rcar_du_device *rcdu = plane->dev->dev_private;
++	const struct rcar_du_format_info *format;
++	int ret;
++
++	format = rcar_du_format_info(fb->pixel_format);
++	if (format == NULL) {
++		dev_dbg(rcdu->dev, "%s: unsupported format %08x\n", __func__,
++			fb->pixel_format);
++		return -EINVAL;
++	}
++
++	if (src_w >> 16 != crtc_w || src_h >> 16 != crtc_h) {
++		dev_dbg(rcdu->dev, "%s: scaling not supported\n", __func__);
++		return -EINVAL;
++	}
++
++	rplane->crtc = crtc;
++	rplane->format = format;
++	rplane->pitch = fb->pitches[0];
++
++	rplane->src_x = src_x >> 16;
++	rplane->src_y = src_y >> 16;
++	rplane->dst_x = crtc_x;
++	rplane->dst_y = crtc_y;
++	rplane->width = crtc_w;
++	rplane->height = crtc_h;
++
++	ret = rcar_du_plane_reserve(rplane);
++	if (ret < 0)
++		return ret;
++
++	rcar_du_plane_compute_base(rplane, fb);
++	rcar_du_plane_setup(rplane);
++
++	rcar_du_crtc_enable_plane(rplane, true);
++	return 0;
++}
++
++static int rcar_du_plane_disable(struct drm_plane *plane)
++{
++	struct rcar_du_plane *rplane = to_rcar_plane(plane);
++
++	rcar_du_crtc_enable_plane(rplane, false);
++	rcar_du_plane_release(rplane);
++
++	rplane->crtc = NULL;
++	rplane->format = NULL;
++
++	return 0;
++}
++
++static const struct drm_plane_funcs rcar_du_plane_funcs = {
++	.update_plane = rcar_du_plane_update,
++	.disable_plane = rcar_du_plane_disable,
++	.destroy = drm_plane_cleanup,
++};
++
++static const uint32_t formats[] = {
++	DRM_FORMAT_RGB565,
++	DRM_FORMAT_ARGB1555,
++	DRM_FORMAT_XRGB8888,
++	DRM_FORMAT_ARGB8888,
++	DRM_FORMAT_UYVY,
++	DRM_FORMAT_YUYV,
++	DRM_FORMAT_NV12,
++	DRM_FORMAT_NV21,
++	DRM_FORMAT_NV16,
++};
++
++int rcar_du_plane_init(struct rcar_du_device *rcdu)
++{
++	unsigned int i;
++	int ret;
++
++	mutex_init(&rcdu->planes.lock);
++	rcdu->planes.free = 0xff;
++
++	for (i = 0; i < ARRAY_SIZE(rcdu->planes.planes); ++i) {
++		struct rcar_du_plane *plane = &rcdu->planes.planes[i];
++
++		plane->dev = rcdu;
++		plane->hwindex = -1;
++		plane->alpha = 255;
++
++		/* Reserve one plane per CRTC */
++		if (i < ARRAY_SIZE(rcdu->crtc))
++			continue;
++
++		ret = drm_plane_init(rcdu->ddev, &plane->plane, 1,
++				     &rcar_du_plane_funcs, formats,
++				     ARRAY_SIZE(formats), false);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.h b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+new file mode 100644
+index 0000000..f02f971
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+@@ -0,0 +1,58 @@
++/*
++ * rcar_du_plane.h  --  R-Car Display Unit Planes
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_PLANE_H__
++#define __RCAR_DU_PLANE_H__
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++
++struct drm_framebuffer;
++struct rcar_du_device;
++
++struct rcar_du_plane {
++	struct drm_plane plane;
++
++	struct rcar_du_device *dev;
++	struct drm_crtc *crtc;
++
++	bool enabled;
++
++	int hwindex;		/* 0-based, -1 means unused */
++	unsigned int alpha;
++
++	const struct rcar_du_format_info *format;
++
++	unsigned long dma[2];
++	unsigned int pitch;
++
++	unsigned int width;
++	unsigned int height;
++
++	unsigned int src_x;
++	unsigned int src_y;
++	unsigned int dst_x;
++	unsigned int dst_y;
++};
++
++#define to_rcar_plane(p)	container_of(p, struct rcar_du_plane, plane)
++
++int rcar_du_plane_init(struct rcar_du_device *rcdu);
++void rcar_du_plane_setup(struct rcar_du_plane *plane);
++void rcar_du_plane_update_base(struct rcar_du_plane *plane);
++void rcar_du_plane_compute_base(struct rcar_du_plane *plane,
++				struct drm_framebuffer *fb);
++int rcar_du_plane_reserve(struct rcar_du_plane *plane);
++void rcar_du_plane_release(struct rcar_du_plane *plane);
++
++#endif /* __RCAR_DU_PLANE_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+new file mode 100644
+index 0000000..a2786d9
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -0,0 +1,439 @@
++/*
++ * rcar_du_regs.h  --  R-Car Display Unit Registers Definitions
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ */
++
++#ifndef __RCAR_DU_REGS_H__
++#define __RCAR_DU_REGS_H__
++
++#define DISP2_REG_OFFSET	 0x30000
++
++/* -----------------------------------------------------------------------------
++ * Display Control Registers
++ */
++
++#define DSYSR			0x00000	/* display 1 */
++#define D2SYSR			0x30000	/* display 2 */
++#define DSYSR_ILTS		(1 << 29)
++#define DSYSR_DSEC		(1 << 20)
++#define DSYSR_IUPD		(1 << 16)
++#define DSYSR_DRES		(1 << 9)
++#define DSYSR_DEN		(1 << 8)
++#define DSYSR_TVM_MASTER	(0 << 6)
++#define DSYSR_TVM_SWITCH	(1 << 6)
++#define DSYSR_TVM_TVSYNC	(2 << 6)
++#define DSYSR_TVM_MASK		(3 << 6)
++#define DSYSR_SCM_INT_NONE	(0 << 4)
++#define DSYSR_SCM_INT_SYNC	(2 << 4)
++#define DSYSR_SCM_INT_VIDEO	(3 << 4)
++
++#define DSMR			0x00004
++#define D2SMR			0x30004
++#define DSMR_VSPM		(1 << 28)
++#define DSMR_ODPM		(1 << 27)
++#define DSMR_DIPM_DISP		(0 << 25)
++#define DSMR_DIPM_CSYNC		(1 << 25)
++#define DSMR_DIPM_DE		(3 << 25)
++#define DSMR_DIPM_MASK		(3 << 25)
++#define DSMR_CSPM		(1 << 24)
++#define DSMR_DIL		(1 << 19)
++#define DSMR_VSL		(1 << 18)
++#define DSMR_HSL		(1 << 17)
++#define DSMR_DDIS		(1 << 16)
++#define DSMR_CDEL		(1 << 15)
++#define DSMR_CDEM_CDE		(0 << 13)
++#define DSMR_CDEM_LOW		(2 << 13)
++#define DSMR_CDEM_HIGH		(3 << 13)
++#define DSMR_CDEM_MASK		(3 << 13)
++#define DSMR_CDED		(1 << 12)
++#define DSMR_ODEV		(1 << 8)
++#define DSMR_CSY_VH_OR		(0 << 6)
++#define DSMR_CSY_333		(2 << 6)
++#define DSMR_CSY_222		(3 << 6)
++#define DSMR_CSY_MASK		(3 << 6)
++
++#define DSSR			0x00008
++#define D2SSR			0x30008
++#define DSSR_VC1FB_DSA0		(0 << 30)
++#define DSSR_VC1FB_DSA1		(1 << 30)
++#define DSSR_VC1FB_DSA2		(2 << 30)
++#define DSSR_VC1FB_INIT		(3 << 30)
++#define DSSR_VC1FB_MASK		(3 << 30)
++#define DSSR_VC0FB_DSA0		(0 << 28)
++#define DSSR_VC0FB_DSA1		(1 << 28)
++#define DSSR_VC0FB_DSA2		(2 << 28)
++#define DSSR_VC0FB_INIT		(3 << 28)
++#define DSSR_VC0FB_MASK		(3 << 28)
++#define DSSR_DFB(n)		(1 << ((n)+15))
++#define DSSR_TVR		(1 << 15)
++#define DSSR_FRM		(1 << 14)
++#define DSSR_VBK		(1 << 11)
++#define DSSR_RINT		(1 << 9)
++#define DSSR_HBK		(1 << 8)
++#define DSSR_ADC(n)		(1 << ((n)-1))
++
++#define DSRCR			0x0000c
++#define D2SRCR			0x3000c
++#define DSRCR_TVCL		(1 << 15)
++#define DSRCR_FRCL		(1 << 14)
++#define DSRCR_VBCL		(1 << 11)
++#define DSRCR_RICL		(1 << 9)
++#define DSRCR_HBCL		(1 << 8)
++#define DSRCR_ADCL(n)		(1 << ((n)-1))
++#define DSRCR_MASK		0x0000cbff
++
++#define DIER			0x00010
++#define D2IER			0x30010
++#define DIER_TVE		(1 << 15)
++#define DIER_FRE		(1 << 14)
++#define DIER_VBE		(1 << 11)
++#define DIER_RIE		(1 << 9)
++#define DIER_HBE		(1 << 8)
++#define DIER_ADCE(n)		(1 << ((n)-1))
++
++#define CPCR			0x00014
++#define CPCR_CP4CE		(1 << 19)
++#define CPCR_CP3CE		(1 << 18)
++#define CPCR_CP2CE		(1 << 17)
++#define CPCR_CP1CE		(1 << 16)
++
++#define DPPR			0x00018
++#define DPPR_DPE(n)		(1 << ((n)*4-1))
++#define DPPR_DPS(n, p)		(((p)-1) << DPPR_DPS_SHIFT(n))
++#define DPPR_DPS_SHIFT(n)	(((n)-1)*4)
++#define DPPR_BPP16		(DPPR_DPE(8) | DPPR_DPS(8, 1))	/* plane1 */
++#define DPPR_BPP32_P1		(DPPR_DPE(7) | DPPR_DPS(7, 1))
++#define DPPR_BPP32_P2		(DPPR_DPE(8) | DPPR_DPS(8, 2))
++#define DPPR_BPP32		(DPPR_BPP32_P1 | DPPR_BPP32_P2)	/* plane1 & 2 */
++
++#define DEFR			0x00020
++#define D2EFR			0x30020
++#define DEFR_CODE		(0x7773 << 16)
++#define DEFR_EXSL		(1 << 12)
++#define DEFR_EXVL		(1 << 11)
++#define DEFR_EXUP		(1 << 5)
++#define DEFR_VCUP		(1 << 4)
++#define DEFR_DEFE		(1 << 0)
++
++#define DAPCR			0x00024
++#define DAPCR_CODE		(0x7773 << 16)
++#define DAPCR_AP2E		(1 << 4)
++#define DAPCR_AP1E		(1 << 0)
++
++#define DCPCR			0x00028
++#define DCPCR_CODE		(0x7773 << 16)
++#define DCPCR_CA2B		(1 << 13)
++#define DCPCR_CD2F		(1 << 12)
++#define DCPCR_DC2E		(1 << 8)
++#define DCPCR_CAB		(1 << 5)
++#define DCPCR_CDF		(1 << 4)
++#define DCPCR_DCE		(1 << 0)
++
++#define DEFR2			0x00034
++#define D2EFR2			0x30034
++#define DEFR2_CODE		(0x7775 << 16)
++#define DEFR2_DEFE2G		(1 << 0)
++
++#define DEFR3			0x00038
++#define D2EFR3			0x30038
++#define DEFR3_CODE		(0x7776 << 16)
++#define DEFR3_EVDA		(1 << 14)
++#define DEFR3_EVDM_1		(1 << 12)
++#define DEFR3_EVDM_2		(2 << 12)
++#define DEFR3_EVDM_3		(3 << 12)
++#define DEFR3_VMSM2_EMA		(1 << 6)
++#define DEFR3_VMSM1_ENA		(1 << 4)
++#define DEFR3_DEFE3		(1 << 0)
++
++#define DEFR4			0x0003c
++#define D2EFR4			0x3003c
++#define DEFR4_CODE		(0x7777 << 16)
++#define DEFR4_LRUO		(1 << 5)
++#define DEFR4_SPCE		(1 << 4)
++
++#define DVCSR			0x000d0
++#define DVCSR_VCnFB2_DSA0(n)	(0 << ((n)*2+16))
++#define DVCSR_VCnFB2_DSA1(n)	(1 << ((n)*2+16))
++#define DVCSR_VCnFB2_DSA2(n)	(2 << ((n)*2+16))
++#define DVCSR_VCnFB2_INIT(n)	(3 << ((n)*2+16))
++#define DVCSR_VCnFB2_MASK(n)	(3 << ((n)*2+16))
++#define DVCSR_VCnFB_DSA0(n)	(0 << ((n)*2))
++#define DVCSR_VCnFB_DSA1(n)	(1 << ((n)*2))
++#define DVCSR_VCnFB_DSA2(n)	(2 << ((n)*2))
++#define DVCSR_VCnFB_INIT(n)	(3 << ((n)*2))
++#define DVCSR_VCnFB_MASK(n)	(3 << ((n)*2))
++
++#define DEFR5			0x000e0
++#define DEFR5_CODE		(0x66 << 24)
++#define DEFR5_YCRGB2_DIS	(0 << 14)
++#define DEFR5_YCRGB2_PRI1	(1 << 14)
++#define DEFR5_YCRGB2_PRI2	(2 << 14)
++#define DEFR5_YCRGB2_PRI3	(3 << 14)
++#define DEFR5_YCRGB2_MASK	(3 << 14)
++#define DEFR5_YCRGB1_DIS	(0 << 12)
++#define DEFR5_YCRGB1_PRI1	(1 << 12)
++#define DEFR5_YCRGB1_PRI2	(2 << 12)
++#define DEFR5_YCRGB1_PRI3	(3 << 12)
++#define DEFR5_YCRGB1_MASK	(3 << 12)
++#define DEFR5_DEFE5		(1 << 0)
++
++#define DDLTR			0x000e4
++#define DDLTR_CODE		(0x7766 << 16)
++#define DDLTR_DLAR2		(1 << 6)
++#define DDLTR_DLAY2		(1 << 5)
++#define DDLTR_DLAY1		(1 << 1)
++
++#define DEFR6			0x000e8
++#define DEFR6_CODE		(0x7778 << 16)
++#define DEFR6_ODPM22_D2SMR	(0 << 10)
++#define DEFR6_ODPM22_DISP	(2 << 10)
++#define DEFR6_ODPM22_CDE	(3 << 10)
++#define DEFR6_ODPM22_MASK	(3 << 10)
++#define DEFR6_ODPM12_DSMR	(0 << 8)
++#define DEFR6_ODPM12_DISP	(2 << 8)
++#define DEFR6_ODPM12_CDE	(3 << 8)
++#define DEFR6_ODPM12_MASK	(3 << 8)
++#define DEFR6_TCNE2		(1 << 6)
++#define DEFR6_MLOS1		(1 << 2)
++#define DEFR6_DEFAULT		(DEFR6_CODE | DEFR6_TCNE2)
++
++/* -----------------------------------------------------------------------------
++ * Display Timing Generation Registers
++ */
++
++#define HDSR			0x00040
++#define HDER			0x00044
++#define VDSR			0x00048
++#define VDER			0x0004c
++#define HCR			0x00050
++#define HSWR			0x00054
++#define VCR			0x00058
++#define VSPR			0x0005c
++#define EQWR			0x00060
++#define SPWR			0x00064
++#define CLAMPSR			0x00070
++#define CLAMPWR			0x00074
++#define DESR			0x00078
++#define DEWR			0x0007c
++
++/* -----------------------------------------------------------------------------
++ * Display Attribute Registers
++ */
++
++#define CP1TR			0x00080
++#define CP2TR			0x00084
++#define CP3TR			0x00088
++#define CP4TR			0x0008c
++
++#define DOOR			0x00090
++#define DOOR_RGB(r, g, b)	(((r) << 18) | ((g) << 10) | ((b) << 2))
++#define CDER			0x00094
++#define CDER_RGB(r, g, b)	(((r) << 18) | ((g) << 10) | ((b) << 2))
++#define BPOR			0x00098
++#define BPOR_RGB(r, g, b)	(((r) << 18) | ((g) << 10) | ((b) << 2))
++
++#define RINTOFSR		0x0009c
++
++#define DSHPR			0x000c8
++#define DSHPR_CODE		(0x7776 << 16)
++#define DSHPR_PRIH		(0xa << 4)
++#define DSHPR_PRIL_BPP16	(0x8 << 0)
++#define DSHPR_PRIL_BPP32	(0x9 << 0)
++
++/* -----------------------------------------------------------------------------
++ * Display Plane Registers
++ */
++
++#define PLANE_OFF		0x00100
++
++#define PnMR			0x00100 /* plane 1 */
++#define PnMR_VISL_VIN0		(0 << 26)	/* use Video Input 0 */
++#define PnMR_VISL_VIN1		(1 << 26)	/* use Video Input 1 */
++#define PnMR_VISL_VIN2		(2 << 26)	/* use Video Input 2 */
++#define PnMR_VISL_VIN3		(3 << 26)	/* use Video Input 3 */
++#define PnMR_YCDF_YUYV		(1 << 20)	/* YUYV format */
++#define PnMR_TC_R		(0 << 17)	/* Tranparent color is PnTC1R */
++#define PnMR_TC_CP		(1 << 17)	/* Tranparent color is color palette */
++#define PnMR_WAE		(1 << 16)	/* Wrap around Enable */
++#define PnMR_SPIM_TP_ON		(0 << 12)	/* Transparent Color */
++#define PnMR_SPIM_ALP_ON	(1 << 12)	/* Alpha Blending */
++#define PnMR_SPIM_EOR_ON	(2 << 12)	/* EOR */
++#define PnMR_SPIM_TP_OFF	(4 << 12)	/* No Transparent Color */
++#define PnMR_SPIM_ALP_OFF	(5 << 12)	/* Alpha Blending, No Transp. */
++#define PnMR_SPIM_EOR_OFF	(6 << 12)	/* EOR, No Transp. */
++#define PnMR_CPSL_CP1		(0 << 8)	/* Color Palette selected 1 */
++#define PnMR_CPSL_CP2		(1 << 8)	/* Color Palette selected 2 */
++#define PnMR_CPSL_CP3		(2 << 8)	/* Color Palette selected 3 */
++#define PnMR_CPSL_CP4		(3 << 8)	/* Color Palette selected 4 */
++#define PnMR_DC			(1 << 7)	/* Display Area Change */
++#define PnMR_BM_MD		(0 << 4)	/* Manual Display Change Mode */
++#define PnMR_BM_AR		(1 << 4)	/* Auto Rendering Mode */
++#define PnMR_BM_AD		(2 << 4)	/* Auto Display Change Mode */
++#define PnMR_BM_VC		(3 << 4)	/* Video Capture Mode */
++#define PnMR_DDDF_8BPP		(0 << 0)	/* 8bit */
++#define PnMR_DDDF_16BPP		(1 << 0)	/* 16bit or 32bit */
++#define PnMR_DDDF_ARGB		(2 << 0)	/* ARGB */
++#define PnMR_DDDF_YC		(3 << 0)	/* YC */
++#define PnMR_DDDF_MASK		(3 << 0)
++
++#define PnMWR			0x00104
++#define PnALPHAR		0x00108
++#define PnDSXR			0x00110
++#define PnDSYR			0x00114
++#define PnDPXR			0x00118
++#define PnDPYR			0x0011c
++
++#define PnDSA0R			0x00120
++#define PnDSA1R			0x00124
++#define PnDSA2R			0x00128
++#define PnDSA_MASK		0xfffffff0
++
++#define PnSPXR			0x00130
++#define PnSPYR			0x00134
++#define PnWASPR			0x00138
++#define PnWAMWR			0x0013c
++
++#define PnBTR			0x00140
++
++#define PnTC1R			0x00144
++#define PnTC2R			0x00148
++#define PnTC3R			0x0014c
++
++#define PnMLR			0x00150
++
++#define PnSWAPR			0x00180
++#define PnSWAPR_DIGN		(1 << 4)
++#define PnSWAPR_SPQW		(1 << 3)
++#define PnSWAPR_SPLW		(1 << 2)
++#define PnSWAPR_SPWD		(1 << 1)
++#define PnSWAPR_SPBY		(1 << 0)
++
++#define PnDDCR			0x00184
++#define PnDDCR_CODE		(0x7775 << 16)
++#define PnDDCR_LRGB1		(1 << 11)
++#define PnDDCR_LRGB0		(1 << 10)
++
++#define PnDDCR2			0x00188
++#define PnDDCR2_CODE		(0x7776 << 16)
++#define PnDDCR2_NV21		(1 << 5)
++#define PnDDCR2_Y420		(1 << 4)
++#define PnDDCR2_DIVU		(1 << 1)
++#define PnDDCR2_DIVY		(1 << 0)
++
++#define PnDDCR4			0x00190
++#define PnDDCR4_CODE		(0x7766 << 16)
++#define PnDDCR4_SDFS_RGB	(0 << 4)
++#define PnDDCR4_SDFS_YC		(5 << 4)
++#define PnDDCR4_SDFS_MASK	(7 << 4)
++#define PnDDCR4_EDF_NONE	(0 << 0)
++#define PnDDCR4_EDF_ARGB8888	(1 << 0)
++#define PnDDCR4_EDF_RGB888	(2 << 0)
++#define PnDDCR4_EDF_RGB666	(3 << 0)
++#define PnDDCR4_EDF_MASK	(7 << 0)
++
++#define APnMR			0x0a100
++#define APnMR_WAE		(1 << 16)	/* Wrap around Enable */
++#define APnMR_DC		(1 << 7)	/* Display Area Change */
++#define APnMR_BM_MD		(0 << 4)	/* Manual Display Change Mode */
++#define APnMR_BM_AD		(2 << 4)	/* Auto Display Change Mode */
++
++#define APnMWR			0x0a104
++#define APnDSA0R		0x0a120
++#define APnDSA1R		0x0a124
++#define APnDSA2R		0x0a128
++#define APnMLR			0x0a150
++
++/* -----------------------------------------------------------------------------
++ * Display Capture Registers
++ */
++
++#define DCMWR			0x0c104
++#define DC2MWR			0x0c204
++#define DCSAR			0x0c120
++#define DC2SAR			0x0c220
++#define DCMLR			0x0c150
++#define DC2MLR			0x0c250
++
++/* -----------------------------------------------------------------------------
++ * Color Palette Registers
++ */
++
++#define CP1_000R		0x01000
++#define CP1_255R		0x013fc
++#define CP2_000R		0x02000
++#define CP2_255R		0x023fc
++#define CP3_000R		0x03000
++#define CP3_255R		0x033fc
++#define CP4_000R		0x04000
++#define CP4_255R		0x043fc
++
++/* -----------------------------------------------------------------------------
++ * External Synchronization Control Registers
++ */
++
++#define ESCR			0x10000
++#define ESCR2			0x31000
++#define ESCR_DCLKOINV		(1 << 25)
++#define ESCR_DCLKSEL_DCLKIN	(0 << 20)
++#define ESCR_DCLKSEL_CLKS	(1 << 20)
++#define ESCR_DCLKSEL_MASK	(1 << 20)
++#define ESCR_DCLKDIS		(1 << 16)
++#define ESCR_SYNCSEL_OFF	(0 << 8)
++#define ESCR_SYNCSEL_EXVSYNC	(2 << 8)
++#define ESCR_SYNCSEL_EXHSYNC	(3 << 8)
++#define ESCR_FRQSEL_MASK	(0x3f << 0)
++
++#define OTAR			0x10004
++#define OTAR2			0x31004
++
++/* -----------------------------------------------------------------------------
++ * Dual Display Output Control Registers
++ */
++
++#define DORCR			0x11000
++#define DORCR_PG2T		(1 << 30)
++#define DORCR_DK2S		(1 << 28)
++#define DORCR_PG2D_DS1		(0 << 24)
++#define DORCR_PG2D_DS2		(1 << 24)
++#define DORCR_PG2D_FIX0		(2 << 24)
++#define DORCR_PG2D_DOOR		(3 << 24)
++#define DORCR_DR1D		(1 << 21)
++#define DORCR_PG1D_DS1		(0 << 16)
++#define DORCR_PG1D_DS2		(1 << 16)
++#define DORCR_PG1D_FIX0		(2 << 16)
++#define DORCR_PG1D_DOOR		(3 << 16)
++#define DORCR_RGPV		(1 << 4)
++#define DORCR_DPRS		(1 << 0)
++
++#define DPTSR			0x11004
++#define DPTSR_PnDK(n)		(1 << ((n) + 16))
++#define DPTSR_PnTS(n)		(1 << (n))
++
++#define DAPTSR			0x11008
++#define DAPTSR_APnDK(n)		(1 << ((n) + 16))
++#define DAPTSR_APnTS(n)		(1 << (n))
++
++#define DS1PR			0x11020
++#define DS2PR			0x11024
++
++/* -----------------------------------------------------------------------------
++ * YC-RGB Conversion Coefficient Registers
++ */
++
++#define YNCR			0x11080
++#define YNOR			0x11084
++#define CRNOR			0x11088
++#define CBNOR			0x1108c
++#define RCRCR			0x11090
++#define GCRCR			0x11094
++#define GCBCR			0x11098
++#define BCBCR			0x1109c
++
++#endif /* __RCAR_DU_REGS_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.c b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+new file mode 100644
+index 0000000..8b90c71
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+@@ -0,0 +1,193 @@
++/*
++ * rcar_du_vga.c  --  R-Car Display Unit VGA DAC and Connector
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_vga.h"
++
++struct rcar_du_vga_encoder {
++	struct drm_encoder encoder;
++};
++
++struct rcar_du_vga_connector {
++	struct drm_connector connector;
++	struct drm_encoder *encoder;
++};
++
++/* -----------------------------------------------------------------------------
++ * Connector
++ */
++
++#define to_rcar_vga_connector(c) \
++	container_of(c, struct rcar_du_vga_connector, connector)
++
++static int rcar_du_vga_connector_get_modes(struct drm_connector *connector)
++{
++	return drm_add_modes_noedid(connector, 1280, 768);
++}
++
++static int rcar_du_vga_connector_mode_valid(struct drm_connector *connector,
++					    struct drm_display_mode *mode)
++{
++	return MODE_OK;
++}
++
++static struct drm_encoder *
++rcar_du_vga_connector_best_encoder(struct drm_connector *connector)
++{
++	struct rcar_du_vga_connector *vgacon = to_rcar_vga_connector(connector);
++
++	return vgacon->encoder;
++}
++
++static const struct drm_connector_helper_funcs connector_helper_funcs = {
++	.get_modes = rcar_du_vga_connector_get_modes,
++	.mode_valid = rcar_du_vga_connector_mode_valid,
++	.best_encoder = rcar_du_vga_connector_best_encoder,
++};
++
++static void rcar_du_vga_connector_destroy(struct drm_connector *connector)
++{
++	drm_sysfs_connector_remove(connector);
++	drm_connector_cleanup(connector);
++}
++
++static enum drm_connector_status
++rcar_du_vga_connector_detect(struct drm_connector *connector, bool force)
++{
++	return connector_status_unknown;
++}
++
++static const struct drm_connector_funcs connector_funcs = {
++	.dpms = drm_helper_connector_dpms,
++	.detect = rcar_du_vga_connector_detect,
++	.fill_modes = drm_helper_probe_single_connector_modes,
++	.destroy = rcar_du_vga_connector_destroy,
++};
++
++static int rcar_du_vga_connector_init(struct rcar_du_device *rcdu,
++				      struct drm_encoder *encoder)
++{
++	struct rcar_du_vga_connector *vgacon;
++	struct drm_connector *connector;
++	int ret;
++
++	vgacon = devm_kzalloc(rcdu->dev, sizeof(*vgacon), GFP_KERNEL);
++	if (vgacon == NULL)
++		return -ENOMEM;
++
++	connector = &vgacon->connector;
++	connector->display_info.width_mm = 0;
++	connector->display_info.height_mm = 0;
++
++	ret = drm_connector_init(rcdu->ddev, connector, &connector_funcs,
++				 DRM_MODE_CONNECTOR_VGA);
++	if (ret < 0)
++		return ret;
++
++	drm_connector_helper_add(connector, &connector_helper_funcs);
++	ret = drm_sysfs_connector_add(connector);
++	if (ret < 0)
++		return ret;
++
++	drm_helper_connector_dpms(connector, DRM_MODE_DPMS_OFF);
++	drm_object_property_set_value(&connector->base,
++		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
++
++	ret = drm_mode_connector_attach_encoder(connector, encoder);
++	if (ret < 0)
++		return ret;
++
++	connector->encoder = encoder;
++	vgacon->encoder = encoder;
++
++	return 0;
++}
++
++/* -----------------------------------------------------------------------------
++ * Encoder
++ */
++
++#define to_rcar_vga_encoder(e) \
++	container_of(e, struct rcar_du_vga_encoder, encoder)
++
++static void rcar_du_vga_encoder_dpms(struct drm_encoder *encoder, int mode)
++{
++}
++
++static bool rcar_du_vga_encoder_mode_fixup(struct drm_encoder *encoder,
++					   const struct drm_display_mode *mode,
++					   struct drm_display_mode *adjusted_mode)
++{
++	return true;
++}
++
++static void rcar_du_vga_encoder_mode_prepare(struct drm_encoder *encoder)
++{
++}
++
++static void rcar_du_vga_encoder_mode_set(struct drm_encoder *encoder,
++					 struct drm_display_mode *mode,
++					 struct drm_display_mode *adjusted_mode)
++{
++}
++
++static void rcar_du_vga_encoder_mode_commit(struct drm_encoder *encoder)
++{
++}
++
++static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
++	.dpms = rcar_du_vga_encoder_dpms,
++	.mode_fixup = rcar_du_vga_encoder_mode_fixup,
++	.prepare = rcar_du_vga_encoder_mode_prepare,
++	.commit = rcar_du_vga_encoder_mode_commit,
++	.mode_set = rcar_du_vga_encoder_mode_set,
++};
++
++static void rcar_du_vga_encoder_destroy(struct drm_encoder *encoder)
++{
++	drm_encoder_cleanup(encoder);
++}
++
++static const struct drm_encoder_funcs encoder_funcs = {
++	.destroy = rcar_du_vga_encoder_destroy,
++};
++
++int rcar_du_vga_init(struct rcar_du_device *rcdu,
++		     const struct rcar_du_encoder_vga_data *data,
++		     unsigned int crtc)
++{
++	struct rcar_du_vga_encoder *vgaenc;
++	struct drm_encoder *encoder;
++	int ret;
++
++	vgaenc = devm_kzalloc(rcdu->dev, sizeof(*vgaenc), GFP_KERNEL);
++	if (vgaenc == NULL)
++		return -ENOMEM;
++
++	encoder = &vgaenc->encoder;
++	encoder->possible_crtcs = 1 << crtc;
++
++	ret = drm_encoder_init(rcdu->ddev, encoder, &encoder_funcs,
++			       DRM_MODE_ENCODER_DAC);
++	if (ret < 0)
++		return ret;
++
++	drm_encoder_helper_add(encoder, &encoder_helper_funcs);
++
++	return rcar_du_vga_connector_init(rcdu, encoder);
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.h b/drivers/gpu/drm/rcar-du/rcar_du_vga.h
+new file mode 100644
+index 0000000..d73f935
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.h
+@@ -0,0 +1,24 @@
++/*
++ * rcar_du_vga.h  --  R-Car Display Unit VGA DAC and Connector
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_VGA_H__
++#define __RCAR_DU_VGA_H__
++
++struct rcar_du_device;
++struct rcar_du_encoder_vga_data;
++
++int rcar_du_vga_init(struct rcar_du_device *rcdu,
++		     const struct rcar_du_encoder_vga_data *data,
++		     unsigned int crtc);
++
++#endif /* __RCAR_DU_VGA_H__ */
+diff --git a/include/linux/platform_data/rcar-du.h b/include/linux/platform_data/rcar-du.h
+new file mode 100644
+index 0000000..0f2c836
+--- /dev/null
++++ b/include/linux/platform_data/rcar-du.h
+@@ -0,0 +1,51 @@
++/*
++ * rcar_du.h  --  R-Car Display Unit DRM driver
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_H__
++#define __RCAR_DU_H__
++
++#include <drm/drm_mode.h>
++
++enum rcar_du_encoder_type {
++	RCAR_DU_ENCODER_UNUSED = 0,
++	RCAR_DU_ENCODER_VGA,
++	RCAR_DU_ENCODER_LVDS,
++};
++
++struct rcar_du_panel_data {
++	unsigned int width_mm;		/* Panel width in mm */
++	unsigned int height_mm;		/* Panel height in mm */
++	struct drm_mode_modeinfo mode;
++};
++
++struct rcar_du_encoder_lvds_data {
++	struct rcar_du_panel_data panel;
++};
++
++struct rcar_du_encoder_vga_data {
++	/* TODO: Add DDC information for EDID retrieval */
++};
++
++struct rcar_du_encoder_data {
++	enum rcar_du_encoder_type encoder;
++	union {
++		struct rcar_du_encoder_lvds_data lvds;
++		struct rcar_du_encoder_vga_data vga;
++	};
++};
++
++struct rcar_du_platform_data {
++	struct rcar_du_encoder_data encoders[2];
++};
++
++#endif /* __RCAR_DU_H__ */
+-- 
+1.7.10.4
+

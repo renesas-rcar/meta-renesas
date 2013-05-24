@@ -1,0 +1,34 @@
+From 32305db7a0ee394d99ec1f1d9baeb8ecb488d74b Mon Sep 17 00:00:00 2001
+From: Paul Mundt <lethal@linux-sh.org>
+Date: Tue, 17 Jul 2012 15:18:37 +0900
+Subject: sh: pfc: Error out on pinctrl init resolution failure.
+
+pinctrl support is required for correct operation, failure to locate
+the init routine is fatal.
+
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+(cherry picked from commit 159ac0737e66f20a913248668d67444afde53b53)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/sh/pfc/core.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
+index b81d335..6816937 100644
+--- a/drivers/sh/pfc/core.c
++++ b/drivers/sh/pfc/core.c
+@@ -536,6 +536,9 @@ int register_sh_pfc(struct sh_pfc *pfc)
+ 
+ 		if (unlikely(ret != 0))
+ 			goto err;
++	} else {
++		pr_err("failed to initialize pinctrl bindings\n");
++		goto err;
+ 	}
+ 
+ 	/*
+-- 
+1.7.10.4
+

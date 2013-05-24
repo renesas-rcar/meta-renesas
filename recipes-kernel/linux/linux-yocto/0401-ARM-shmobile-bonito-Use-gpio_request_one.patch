@@ -1,0 +1,47 @@
+From beef5ae9681f6966be57acc0efa3490b3bc7c439 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Thu, 24 Jan 2013 13:16:32 +0100
+Subject: ARM: shmobile: bonito: Use gpio_request_one()
+
+Replace occurences of gpio_request() and gpio_direction_*() by calls to
+gpio_request_one().
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 89aaf5c0caefdadb61da81d8c143c5c2fb4b974a)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bonito.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bonito.c b/arch/arm/mach-shmobile/board-bonito.c
+index e6b1fd3..5f2e56b 100644
+--- a/arch/arm/mach-shmobile/board-bonito.c
++++ b/arch/arm/mach-shmobile/board-bonito.c
+@@ -382,8 +382,7 @@ static void __init bonito_init(void)
+ 	/*
+ 	 * base board settings
+ 	 */
+-	gpio_request(GPIO_PORT176, NULL);
+-	gpio_direction_input(GPIO_PORT176);
++	gpio_request_one(GPIO_PORT176, GPIOF_IN, NULL);
+ 	if (!gpio_get_value(GPIO_PORT176)) {
+ 		u16 bsw2;
+ 		u16 bsw3;
+@@ -452,8 +451,8 @@ static void __init bonito_init(void)
+ 			gpio_request(GPIO_FN_LCD0_DISP,		NULL);
+ 			gpio_request(GPIO_FN_LCD0_LCLK_PORT165,	NULL);
+ 
+-			gpio_request(GPIO_PORT61, NULL); /* LCDDON */
+-			gpio_direction_output(GPIO_PORT61, 1);
++			gpio_request_one(GPIO_PORT61, GPIOF_OUT_INIT_HIGH,
++					 NULL); /* LCDDON */
+ 
+ 			/* backlight on */
+ 			bonito_fpga_write(LCDCR, 1);
+-- 
+1.7.10.4
+

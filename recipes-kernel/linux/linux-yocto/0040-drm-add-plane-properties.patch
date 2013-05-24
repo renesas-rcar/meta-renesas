@@ -1,0 +1,107 @@
+From 6a8ff72ee95213bdb4d11ff58ef34479946569cd Mon Sep 17 00:00:00 2001
+From: Rob Clark <rob@ti.com>
+Date: Thu, 17 May 2012 02:23:27 -0600
+Subject: drm: add plane properties
+
+The omapdrm driver uses this for setting per-overlay rotation.  It
+is likely also useful for setting YUV->RGB colorspace conversion
+matrix, etc.
+
+Signed-off-by: Rob Clark <rob@ti.com>
+Reviewed-by: Paulo Zanoni <paulo.r.zanoni@intel.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 4d93914ae3db4a897ead4b1e33eca7cdfff4c6f7)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_crtc.c |   19 +++++++++++++++++++
+ include/drm/drm_crtc.h     |    7 +++++++
+ 2 files changed, 26 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 290c4b4..9c89332 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -608,6 +608,7 @@ int drm_plane_init(struct drm_device *dev, struct drm_plane *plane,
+ 	if (ret)
+ 		goto out;
+ 
++	plane->base.properties = &plane->properties;
+ 	plane->dev = dev;
+ 	plane->funcs = funcs;
+ 	plane->format_types = kmalloc(sizeof(uint32_t) * format_count,
+@@ -3199,6 +3200,21 @@ static int drm_mode_crtc_set_obj_prop(struct drm_mode_object *obj,
+ 	return ret;
+ }
+ 
++static int drm_mode_plane_set_obj_prop(struct drm_mode_object *obj,
++				      struct drm_property *property,
++				      uint64_t value)
++{
++	int ret = -EINVAL;
++	struct drm_plane *plane = obj_to_plane(obj);
++
++	if (plane->funcs->set_property)
++		ret = plane->funcs->set_property(plane, property, value);
++	if (!ret)
++		drm_object_property_set_value(obj, property, value);
++
++	return ret;
++}
++
+ int drm_mode_obj_get_properties_ioctl(struct drm_device *dev, void *data,
+ 				      struct drm_file *file_priv)
+ {
+@@ -3300,6 +3316,9 @@ int drm_mode_obj_set_property_ioctl(struct drm_device *dev, void *data,
+ 	case DRM_MODE_OBJECT_CRTC:
+ 		ret = drm_mode_crtc_set_obj_prop(arg_obj, property, arg->value);
+ 		break;
++	case DRM_MODE_OBJECT_PLANE:
++		ret = drm_mode_plane_set_obj_prop(arg_obj, property, arg->value);
++		break;
+ 	}
+ 
+ out:
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 9b33629..73e4560 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -601,6 +601,7 @@ struct drm_connector {
+  * @update_plane: update the plane configuration
+  * @disable_plane: shut down the plane
+  * @destroy: clean up plane resources
++ * @set_property: called when a property is changed
+  */
+ struct drm_plane_funcs {
+ 	int (*update_plane)(struct drm_plane *plane,
+@@ -611,6 +612,9 @@ struct drm_plane_funcs {
+ 			    uint32_t src_w, uint32_t src_h);
+ 	int (*disable_plane)(struct drm_plane *plane);
+ 	void (*destroy)(struct drm_plane *plane);
++
++	int (*set_property)(struct drm_plane *plane,
++			    struct drm_property *property, uint64_t val);
+ };
+ 
+ /**
+@@ -628,6 +632,7 @@ struct drm_plane_funcs {
+  * @enabled: enabled flag
+  * @funcs: helper functions
+  * @helper_private: storage for drver layer
++ * @properties: property tracking for this plane
+  */
+ struct drm_plane {
+ 	struct drm_device *dev;
+@@ -650,6 +655,8 @@ struct drm_plane {
+ 
+ 	const struct drm_plane_funcs *funcs;
+ 	void *helper_private;
++
++	struct drm_object_properties properties;
+ };
+ 
+ /**
+-- 
+1.7.10.4
+

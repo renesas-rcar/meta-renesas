@@ -1,0 +1,46 @@
+From 6dd0568f1028444c2d5e8dbad5673d42eeba2489 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 26 Feb 2013 20:20:36 +0100
+Subject: drm/rcar-du: Fix race condition between page flip request and
+ handler
+
+The page flip handler stores the page flip event pointer and then calls
+drm_vblank_get() to enable the vblank interrupt. Due to the vblank off
+delay, the vblank interrupt can be enabled in the hardware at that
+point, even if the vblank reference count is equal to 0. If a vblank
+interrupt is triggered between storing the event pointer and calling
+drm_vblank_get(), the page flip completion handler will process the
+event and call drm_vblank_put() with a reference count equal to 0. This
+will result in a BUG_ON.
+
+Fix the race condition by calling drm_vblank_get() before storing the
+event pointer.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 667ca8e2f58236b166aff4c1575ea38c5e3be91c)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 99578a7..934e6a5 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -393,10 +393,10 @@ static int rcar_du_crtc_page_flip(struct drm_crtc *crtc,
+ 
+ 	if (event) {
+ 		event->pipe = 0;
++		drm_vblank_get(dev, 0);
+ 		spin_lock_irqsave(&dev->event_lock, flags);
+ 		rcrtc->event = event;
+ 		spin_unlock_irqrestore(&dev->event_lock, flags);
+-		drm_vblank_get(dev, 0);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.10.4
+

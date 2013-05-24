@@ -1,0 +1,32 @@
+From b677533888e324abcd1c408cc3800e73dbb7407c Mon Sep 17 00:00:00 2001
+From: Stephen Boyd <sboyd@codeaurora.org>
+Date: Wed, 22 Aug 2012 20:05:34 +0100
+Subject: ARM: 7498/1: mach-shmobile: Use SGI0 to wake secondary CPUs
+
+Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+Acked-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit e91d5d916f50ad2cf2394aba89d32833adce4303)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/smp-emev2.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/smp-emev2.c b/arch/arm/mach-shmobile/smp-emev2.c
+index f978c5d..f674562 100644
+--- a/arch/arm/mach-shmobile/smp-emev2.c
++++ b/arch/arm/mach-shmobile/smp-emev2.c
+@@ -100,7 +100,7 @@ static int __cpuinit emev2_boot_secondary(unsigned int cpu, struct task_struct *
+ 	/* Tell ROM loader about our vector (in headsmp.S) */
+ 	emev2_set_boot_vector(__pa(shmobile_secondary_vector));
+ 
+-	gic_raise_softirq(cpumask_of(cpu), 1);
++	gic_raise_softirq(cpumask_of(cpu), 0);
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
+

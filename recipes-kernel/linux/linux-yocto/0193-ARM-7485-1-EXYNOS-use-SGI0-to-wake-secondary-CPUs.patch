@@ -1,0 +1,32 @@
+From 4febb9e01037c0043dbe3a17f06e08abdc611139 Mon Sep 17 00:00:00 2001
+From: Stephen Boyd <sboyd@codeaurora.org>
+Date: Mon, 6 Aug 2012 18:55:28 +0100
+Subject: ARM: 7485/1: EXYNOS: use SGI0 to wake secondary CPUs
+
+Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+Acked-by: Kukjin Kim <kgene.kim@samsung.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit 5b7cc3df955cf510a0d4174553fe0410f9fbdd4a)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-exynos/platsmp.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-exynos/platsmp.c b/arch/arm/mach-exynos/platsmp.c
+index 36c3984..090e32b 100644
+--- a/arch/arm/mach-exynos/platsmp.c
++++ b/arch/arm/mach-exynos/platsmp.c
+@@ -139,7 +139,7 @@ int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
+ 
+ 		__raw_writel(virt_to_phys(exynos4_secondary_startup),
+ 			CPU1_BOOT_REG);
+-		gic_raise_softirq(cpumask_of(cpu), 1);
++		gic_raise_softirq(cpumask_of(cpu), 0);
+ 
+ 		if (pen_release == -1)
+ 			break;
+-- 
+1.7.10.4
+

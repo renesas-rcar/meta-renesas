@@ -1,0 +1,60 @@
+From 9fb57b40b125054876c377283a0d66174c11b39e Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 19 Feb 2013 18:01:39 +0100
+Subject: drm/rcar-du: Use drm_encoder_cleanup() directly as .destroy handlers
+
+There's no need for a local static encoder .destroy handler that only
+calls drm_encoder_cleanup(), as the function prototypes are identical.
+Use drm_encoder_cleanup() directly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit bed71e68fe43a1367d356f27a248090ff3b486a8)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c |    7 +------
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c  |    7 +------
+ 2 files changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+index 841db01..efd7e86 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+@@ -212,13 +212,8 @@ static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
+ 	.mode_set = rcar_du_lvds_encoder_mode_set,
+ };
+ 
+-static void rcar_du_lvds_encoder_destroy(struct drm_encoder *encoder)
+-{
+-	drm_encoder_cleanup(encoder);
+-}
+-
+ static const struct drm_encoder_funcs encoder_funcs = {
+-	.destroy = rcar_du_lvds_encoder_destroy,
++	.destroy = drm_encoder_cleanup,
+ };
+ 
+ int rcar_du_lvds_init(struct rcar_du_device *rcdu,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.c b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+index 8b90c71..ac90da8 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vga.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+@@ -158,13 +158,8 @@ static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
+ 	.mode_set = rcar_du_vga_encoder_mode_set,
+ };
+ 
+-static void rcar_du_vga_encoder_destroy(struct drm_encoder *encoder)
+-{
+-	drm_encoder_cleanup(encoder);
+-}
+-
+ static const struct drm_encoder_funcs encoder_funcs = {
+-	.destroy = rcar_du_vga_encoder_destroy,
++	.destroy = drm_encoder_cleanup,
+ };
+ 
+ int rcar_du_vga_init(struct rcar_du_device *rcdu,
+-- 
+1.7.10.4
+

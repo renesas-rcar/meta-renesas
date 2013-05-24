@@ -1,0 +1,49 @@
+From ec637d930fe20cb0bc22c59f53a005cff50f2038 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Dec 2012 23:50:37 +0100
+Subject: sh: sh7723: Rename GPIO_FN_SIUOSPD to GPIO_FN_SIUAOSPD
+
+The GPIO was incorrectly named. As it has no user in the whole kernel
+tree, just rename it.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 54cbac81881ded7fa487a9304e337d9acdbe4364)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/sh/include/cpu-sh4/cpu/sh7723.h    |    2 +-
+ arch/sh/kernel/cpu/sh4a/pinmux-sh7723.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/sh/include/cpu-sh4/cpu/sh7723.h b/arch/sh/include/cpu-sh4/cpu/sh7723.h
+index 6fae50c..668da89 100644
+--- a/arch/sh/include/cpu-sh4/cpu/sh7723.h
++++ b/arch/sh/include/cpu-sh4/cpu/sh7723.h
+@@ -184,7 +184,7 @@ enum {
+ 	/* SIUA */
+ 	GPIO_FN_SIUAFCK, GPIO_FN_SIUAILR, GPIO_FN_SIUAIBT, GPIO_FN_SIUAISLD,
+ 	GPIO_FN_SIUAOLR, GPIO_FN_SIUAOBT, GPIO_FN_SIUAOSLD, GPIO_FN_SIUAMCK,
+-	GPIO_FN_SIUAISPD, GPIO_FN_SIUOSPD,
++	GPIO_FN_SIUAISPD, GPIO_FN_SIUAOSPD,
+ 
+ 	/* SIUB */
+ 	GPIO_FN_SIUBFCK, GPIO_FN_SIUBILR, GPIO_FN_SIUBIBT, GPIO_FN_SIUBISLD,
+diff --git a/arch/sh/kernel/cpu/sh4a/pinmux-sh7723.c b/arch/sh/kernel/cpu/sh4a/pinmux-sh7723.c
+index 88bf5ec..2037915 100644
+--- a/arch/sh/kernel/cpu/sh4a/pinmux-sh7723.c
++++ b/arch/sh/kernel/cpu/sh4a/pinmux-sh7723.c
+@@ -1317,7 +1317,7 @@ static struct pinmux_gpio pinmux_gpios[] = {
+ 	PINMUX_GPIO(GPIO_FN_SIUAOSLD, SIUAOSLD_MARK),
+ 	PINMUX_GPIO(GPIO_FN_SIUAMCK, SIUAMCK_MARK),
+ 	PINMUX_GPIO(GPIO_FN_SIUAISPD, SIUAISPD_MARK),
+-	PINMUX_GPIO(GPIO_FN_SIUOSPD, SIUAOSPD_MARK),
++	PINMUX_GPIO(GPIO_FN_SIUAOSPD, SIUAOSPD_MARK),
+ 
+ 	/* SIUB */
+ 	PINMUX_GPIO(GPIO_FN_SIUBFCK, SIUBFCK_MARK),
+-- 
+1.7.10.4
+

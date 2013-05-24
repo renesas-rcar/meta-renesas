@@ -1,0 +1,58 @@
+From 33951757b3fafd9ddd3ad8db7f7f2307db467725 Mon Sep 17 00:00:00 2001
+From: Paul Mundt <lethal@linux-sh.org>
+Date: Wed, 20 Jun 2012 18:17:56 +0900
+Subject: sh: pfc: Make gpio chip support optional where possible.
+
+This implements some Kconfig knobs for ensuring that the PFC gpio chip
+can be disabled or built as a module in the cases where it's optional, or
+forcibly enabled in cases where it's not.
+
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+(cherry picked from commit b16b2a262c234d6abd8899d41769278337fff5b5)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/sh/Kconfig  |   15 +++++++++++++++
+ drivers/sh/Makefile |    3 ++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/sh/Kconfig b/drivers/sh/Kconfig
+index f168a61..d7dbfee 100644
+--- a/drivers/sh/Kconfig
++++ b/drivers/sh/Kconfig
+@@ -2,4 +2,19 @@ menu "SuperH / SH-Mobile Driver Options"
+ 
+ source "drivers/sh/intc/Kconfig"
+ 
++comment "Pin function controller options"
++
++config SH_PFC
++	# XXX move off the gpio dependency
++	depends on GENERIC_GPIO
++	select GPIO_SH_PFC if ARCH_REQUIRE_GPIOLIB
++	def_bool y
++
++config GPIO_SH_PFC
++	tristate "SuperH PFC GPIO support"
++	depends on SH_PFC && GPIOLIB
++	help
++	  This enables support for GPIOs within the SoC's pin function
++	  controller.
++
+ endmenu
+diff --git a/drivers/sh/Makefile b/drivers/sh/Makefile
+index be5b293..f5d93e8 100644
+--- a/drivers/sh/Makefile
++++ b/drivers/sh/Makefile
+@@ -6,5 +6,6 @@ obj-y	:= intc/
+ obj-$(CONFIG_HAVE_CLK)		+= clk/
+ obj-$(CONFIG_MAPLE)		+= maple/
+ obj-$(CONFIG_SUPERHYWAY)	+= superhyway/
+-obj-$(CONFIG_GENERIC_GPIO)	+= pfc.o pfc-gpio.o
++obj-$(CONFIG_SH_PFC)		+= pfc.o
++obj-$(CONFIG_GPIO_SH_PFC)	+= pfc-gpio.o
+ obj-y				+= pm_runtime.o
+-- 
+1.7.10.4
+

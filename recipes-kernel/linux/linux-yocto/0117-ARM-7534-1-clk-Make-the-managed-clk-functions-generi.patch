@@ -1,0 +1,168 @@
+From b21d88a7f15de03355d455cc2ef69c50371683a1 Mon Sep 17 00:00:00 2001
+From: Lars-Peter Clausen <lars@metafoo.de>
+Date: Tue, 11 Sep 2012 19:56:23 +0100
+Subject: ARM: 7534/1: clk: Make the managed clk functions generically
+ available
+
+The managed clk functions are currently only available when the generic clk
+lookup framework is build. But the managed clk functions are merely wrappers
+around clk_get and clk_put and do not depend on any specifics of the generic
+lookup functions and there are still quite a few custom implementations of the
+clk API. So make the managed functions available whenever the clk API is
+implemented.
+
+The patch also removes the custom implementation of devm_clk_get for the
+coldfire platform.
+
+Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
+Acked-by: Greg Ungerer <gerg@uclinux.org>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit 8ef997b67f0d779c82e7e533a792c5a6837594cd)
+
+Conflicts:
+	arch/m68k/platform/coldfire/clk.c
+	drivers/clk/Makefile
+	drivers/clk/clk-devres.c
+	drivers/clk/clkdev.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/clk/Makefile     |    3 ++-
+ drivers/clk/clk-devres.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/clk/clkdev.c     |   45 -------------------------------------
+ 3 files changed, 58 insertions(+), 46 deletions(-)
+ create mode 100644 drivers/clk/clk-devres.c
+
+diff --git a/drivers/clk/Makefile b/drivers/clk/Makefile
+index 1f736bc..6311fc5 100644
+--- a/drivers/clk/Makefile
++++ b/drivers/clk/Makefile
+@@ -1,4 +1,5 @@
+-
++# common clock types
++obj-$(CONFIG_HAVE_CLK)		+= clk-devres.o
+ obj-$(CONFIG_CLKDEV_LOOKUP)	+= clkdev.o
+ obj-$(CONFIG_COMMON_CLK)	+= clk.o clk-fixed-rate.o clk-gate.o \
+ 				   clk-mux.o clk-divider.o
+diff --git a/drivers/clk/clk-devres.c b/drivers/clk/clk-devres.c
+new file mode 100644
+index 0000000..0e86266
+--- /dev/null
++++ b/drivers/clk/clk-devres.c
+@@ -0,0 +1,56 @@
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/clk.h>
++#include <linux/device.h>
++#include <linux/err.h>
++#include <linux/export.h>
++#include <linux/gfp.h>
++
++static void devm_clk_release(struct device *dev, void *res)
++{
++	clk_put(*(struct clk **)res);
++}
++
++struct clk *devm_clk_get(struct device *dev, const char *id)
++{
++	struct clk **ptr, *clk;
++
++	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr)
++		return ERR_PTR(-ENOMEM);
++
++	clk = clk_get(dev, id);
++	if (!IS_ERR(clk)) {
++		*ptr = clk;
++		devres_add(dev, ptr);
++	} else {
++		devres_free(ptr);
++	}
++
++	return clk;
++}
++EXPORT_SYMBOL(devm_clk_get);
++
++static int devm_clk_match(struct device *dev, void *res, void *data)
++{
++	struct clk **c = res;
++	if (!c || !*c) {
++		WARN_ON(!c || !*c);
++		return 0;
++	}
++	return *c == data;
++}
++
++void devm_clk_put(struct device *dev, struct clk *clk)
++{
++	int ret;
++
++	ret = devres_destroy(dev, devm_clk_release, devm_clk_match, clk);
++
++	WARN_ON(ret);
++}
++EXPORT_SYMBOL(devm_clk_put);
+diff --git a/drivers/clk/clkdev.c b/drivers/clk/clkdev.c
+index a9a1137..6db161f 100644
+--- a/drivers/clk/clkdev.c
++++ b/drivers/clk/clkdev.c
+@@ -89,51 +89,6 @@ void clk_put(struct clk *clk)
+ }
+ EXPORT_SYMBOL(clk_put);
+ 
+-static void devm_clk_release(struct device *dev, void *res)
+-{
+-	clk_put(*(struct clk **)res);
+-}
+-
+-struct clk *devm_clk_get(struct device *dev, const char *id)
+-{
+-	struct clk **ptr, *clk;
+-
+-	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), GFP_KERNEL);
+-	if (!ptr)
+-		return ERR_PTR(-ENOMEM);
+-
+-	clk = clk_get(dev, id);
+-	if (!IS_ERR(clk)) {
+-		*ptr = clk;
+-		devres_add(dev, ptr);
+-	} else {
+-		devres_free(ptr);
+-	}
+-
+-	return clk;
+-}
+-EXPORT_SYMBOL(devm_clk_get);
+-
+-static int devm_clk_match(struct device *dev, void *res, void *data)
+-{
+-	struct clk **c = res;
+-	if (!c || !*c) {
+-		WARN_ON(!c || !*c);
+-		return 0;
+-	}
+-	return *c == data;
+-}
+-
+-void devm_clk_put(struct device *dev, struct clk *clk)
+-{
+-	int ret;
+-
+-	ret = devres_destroy(dev, devm_clk_release, devm_clk_match, clk);
+-
+-	WARN_ON(ret);
+-}
+-EXPORT_SYMBOL(devm_clk_put);
+-
+ void clkdev_add(struct clk_lookup *cl)
+ {
+ 	mutex_lock(&clocks_mutex);
+-- 
+1.7.10.4
+

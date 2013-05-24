@@ -1,0 +1,116 @@
+From 42f4b90264413b3d3f02228a4c273026eea247f7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
+Date: Thu, 15 Mar 2012 19:58:31 +0200
+Subject: drm: Unify and fix idr error handling
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The error handling code w.r.t. idr usage looks inconsistent.
+
+In the case of drm_mode_object_get() and drm_ctxbitmap_next() the error
+handling is also incomplete.
+
+Unify the code to follow the same pattern always.
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit f1ae126cdf1d1514da6e89a248232a7f7d315fe0)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_context.c |    9 +++++----
+ drivers/gpu/drm/drm_crtc.c    |    4 +++-
+ drivers/gpu/drm/drm_gem.c     |    6 ++----
+ drivers/gpu/drm/drm_stub.c    |    5 ++---
+ 4 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_context.c b/drivers/gpu/drm/drm_context.c
+index 325365f..affa629 100644
+--- a/drivers/gpu/drm/drm_context.c
++++ b/drivers/gpu/drm/drm_context.c
+@@ -85,11 +85,12 @@ again:
+ 	mutex_lock(&dev->struct_mutex);
+ 	ret = idr_get_new_above(&dev->ctx_idr, NULL,
+ 				DRM_RESERVED_CONTEXTS, &new_id);
+-	if (ret == -EAGAIN) {
+-		mutex_unlock(&dev->struct_mutex);
+-		goto again;
+-	}
+ 	mutex_unlock(&dev->struct_mutex);
++	if (ret == -EAGAIN)
++		goto again;
++	else if (ret)
++		return ret;
++
+ 	return new_id;
+ }
+ 
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index a4c6742..0eac61f 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -227,7 +227,7 @@ static int drm_mode_object_get(struct drm_device *dev,
+ again:
+ 	if (idr_pre_get(&dev->mode_config.crtc_idr, GFP_KERNEL) == 0) {
+ 		DRM_ERROR("Ran out memory getting a mode number\n");
+-		return -EINVAL;
++		return -ENOMEM;
+ 	}
+ 
+ 	mutex_lock(&dev->mode_config.idr_mutex);
+@@ -235,6 +235,8 @@ again:
+ 	mutex_unlock(&dev->mode_config.idr_mutex);
+ 	if (ret == -EAGAIN)
+ 		goto again;
++	else if (ret)
++		return ret;
+ 
+ 	obj->id = new_id;
+ 	obj->type = obj_type;
+diff --git a/drivers/gpu/drm/drm_gem.c b/drivers/gpu/drm/drm_gem.c
+index 83114b5..fc6ded8 100644
+--- a/drivers/gpu/drm/drm_gem.c
++++ b/drivers/gpu/drm/drm_gem.c
+@@ -272,8 +272,7 @@ again:
+ 	spin_unlock(&file_priv->table_lock);
+ 	if (ret == -EAGAIN)
+ 		goto again;
+-
+-	if (ret != 0)
++	else if (ret)
+ 		return ret;
+ 
+ 	drm_gem_object_handle_reference(obj);
+@@ -456,8 +455,7 @@ again:
+ 
+ 		if (ret == -EAGAIN)
+ 			goto again;
+-
+-		if (ret != 0)
++		else if (ret)
+ 			goto err;
+ 
+ 		/* Allocate a reference for the name table.  */
+diff --git a/drivers/gpu/drm/drm_stub.c b/drivers/gpu/drm/drm_stub.c
+index aa454f8..ae1ccf1 100644
+--- a/drivers/gpu/drm/drm_stub.c
++++ b/drivers/gpu/drm/drm_stub.c
+@@ -122,11 +122,10 @@ again:
+ 	ret = idr_get_new_above(&drm_minors_idr, NULL,
+ 				base, &new_id);
+ 	mutex_unlock(&dev->struct_mutex);
+-	if (ret == -EAGAIN) {
++	if (ret == -EAGAIN)
+ 		goto again;
+-	} else if (ret) {
++	else if (ret)
+ 		return ret;
+-	}
+ 
+ 	if (new_id >= limit) {
+ 		idr_remove(&drm_minors_idr, new_id);
+-- 
+1.7.10.4
+

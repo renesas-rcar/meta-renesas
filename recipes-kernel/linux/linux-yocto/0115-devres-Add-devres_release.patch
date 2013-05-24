@@ -1,0 +1,79 @@
+From 4a3b9429196208559bc4939b595517f33db96f22 Mon Sep 17 00:00:00 2001
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Date: Thu, 3 May 2012 18:15:13 +0100
+Subject: devres: Add devres_release()
+
+APIs using devres frequently want to implement a "remove and free the
+resource" operation so it seems sensible that they should be able to
+just have devres do the freeing for them since that's a big part of what
+devres is all about.
+
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit d926d0e4c74cfcb42a05e91d1cdf698b41e1e118)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/base/devres.c  |   31 +++++++++++++++++++++++++++++++
+ include/linux/device.h |    2 ++
+ 2 files changed, 33 insertions(+)
+
+diff --git a/drivers/base/devres.c b/drivers/base/devres.c
+index 524bf96..d948b96 100644
+--- a/drivers/base/devres.c
++++ b/drivers/base/devres.c
+@@ -326,6 +326,37 @@ int devres_destroy(struct device *dev, dr_release_t release,
+ }
+ EXPORT_SYMBOL_GPL(devres_destroy);
+ 
++
++/**
++ * devres_release - Find a device resource and destroy it, calling release
++ * @dev: Device to find resource from
++ * @release: Look for resources associated with this release function
++ * @match: Match function (optional)
++ * @match_data: Data for the match function
++ *
++ * Find the latest devres of @dev associated with @release and for
++ * which @match returns 1.  If @match is NULL, it's considered to
++ * match all.  If found, the resource is removed atomically, the
++ * release function called and the resource freed.
++ *
++ * RETURNS:
++ * 0 if devres is found and freed, -ENOENT if not found.
++ */
++int devres_release(struct device *dev, dr_release_t release,
++		   dr_match_t match, void *match_data)
++{
++	void *res;
++
++	res = devres_remove(dev, release, match, match_data);
++	if (unlikely(!res))
++		return -ENOENT;
++
++	(*release)(dev, res);
++	devres_free(res);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(devres_release);
++
+ static int remove_nodes(struct device *dev,
+ 			struct list_head *first, struct list_head *end,
+ 			struct list_head *todo)
+diff --git a/include/linux/device.h b/include/linux/device.h
+index e339929..5c7fdbd 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -541,6 +541,8 @@ extern void *devres_remove(struct device *dev, dr_release_t release,
+ 			   dr_match_t match, void *match_data);
+ extern int devres_destroy(struct device *dev, dr_release_t release,
+ 			  dr_match_t match, void *match_data);
++extern int devres_release(struct device *dev, dr_release_t release,
++			  dr_match_t match, void *match_data);
+ 
+ /* devres group */
+ extern void * __must_check devres_open_group(struct device *dev, void *id,
+-- 
+1.7.10.4
+

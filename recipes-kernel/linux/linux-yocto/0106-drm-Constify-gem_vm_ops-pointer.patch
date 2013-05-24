@@ -1,0 +1,124 @@
+From 62fc2d2f74c63eaa2f411a9c942208f3c6282195 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Date: Thu, 17 May 2012 13:27:22 +0200
+Subject: drm: Constify gem_vm_ops pointer
+
+The GEM vm operations structure is passed to the VM core that stores it
+in a const field. There vm operations structures can thus be const in
+DRM as well.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Inki Dae <inki.dae@samsung.com>
+Cc: Alan Cox <alan@linux.intel.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Rob Clark <rob.clark@linaro.org>
+Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 78b68556a964e74fb803b08c5b2d9c6ba3ec3787)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/exynos/exynos_drm_drv.c |    2 +-
+ drivers/gpu/drm/gma500/framebuffer.c    |    2 +-
+ drivers/gpu/drm/gma500/psb_drv.c        |    2 +-
+ drivers/gpu/drm/i915/i915_drv.c         |    2 +-
+ drivers/gpu/drm/udl/udl_drv.c           |    2 +-
+ drivers/staging/omapdrm/omap_drv.c      |    2 +-
+ include/drm/drmP.h                      |    2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/gpu/drm/exynos/exynos_drm_drv.c b/drivers/gpu/drm/exynos/exynos_drm_drv.c
+index a6819b5..67a67b0 100644
+--- a/drivers/gpu/drm/exynos/exynos_drm_drv.c
++++ b/drivers/gpu/drm/exynos/exynos_drm_drv.c
+@@ -193,7 +193,7 @@ static void exynos_drm_lastclose(struct drm_device *dev)
+ 	exynos_drm_fbdev_restore_mode(dev);
+ }
+ 
+-static struct vm_operations_struct exynos_drm_gem_vm_ops = {
++static const struct vm_operations_struct exynos_drm_gem_vm_ops = {
+ 	.fault = exynos_drm_gem_fault,
+ 	.open = drm_gem_vm_open,
+ 	.close = drm_gem_vm_close,
+diff --git a/drivers/gpu/drm/gma500/framebuffer.c b/drivers/gpu/drm/gma500/framebuffer.c
+index ba48e4d..e20da1f 100644
+--- a/drivers/gpu/drm/gma500/framebuffer.c
++++ b/drivers/gpu/drm/gma500/framebuffer.c
+@@ -153,7 +153,7 @@ static void psbfb_vm_close(struct vm_area_struct *vma)
+ {
+ }
+ 
+-static struct vm_operations_struct psbfb_vm_ops = {
++static const struct vm_operations_struct psbfb_vm_ops = {
+ 	.fault	= psbfb_vm_fault,
+ 	.open	= psbfb_vm_open,
+ 	.close	= psbfb_vm_close
+diff --git a/drivers/gpu/drm/gma500/psb_drv.c b/drivers/gpu/drm/gma500/psb_drv.c
+index 09af2ff..809e340 100644
+--- a/drivers/gpu/drm/gma500/psb_drv.c
++++ b/drivers/gpu/drm/gma500/psb_drv.c
+@@ -619,7 +619,7 @@ static const struct dev_pm_ops psb_pm_ops = {
+ 	.runtime_idle = psb_runtime_idle,
+ };
+ 
+-static struct vm_operations_struct psb_gem_vm_ops = {
++static const struct vm_operations_struct psb_gem_vm_ops = {
+ 	.fault = psb_gem_fault,
+ 	.open = drm_gem_vm_open,
+ 	.close = drm_gem_vm_close,
+diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+index ae8a64f..b81bc47 100644
+--- a/drivers/gpu/drm/i915/i915_drv.c
++++ b/drivers/gpu/drm/i915/i915_drv.c
+@@ -874,7 +874,7 @@ static const struct dev_pm_ops i915_pm_ops = {
+ 	.restore = i915_pm_resume,
+ };
+ 
+-static struct vm_operations_struct i915_gem_vm_ops = {
++static const struct vm_operations_struct i915_gem_vm_ops = {
+ 	.fault = i915_gem_fault,
+ 	.open = drm_gem_vm_open,
+ 	.close = drm_gem_vm_close,
+diff --git a/drivers/gpu/drm/udl/udl_drv.c b/drivers/gpu/drm/udl/udl_drv.c
+index 08eff0d..7790712 100644
+--- a/drivers/gpu/drm/udl/udl_drv.c
++++ b/drivers/gpu/drm/udl/udl_drv.c
+@@ -51,7 +51,7 @@ static void udl_usb_disconnect(struct usb_interface *interface)
+ 	drm_unplug_dev(dev);
+ }
+ 
+-static struct vm_operations_struct udl_gem_vm_ops = {
++static const struct vm_operations_struct udl_gem_vm_ops = {
+ 	.fault = udl_gem_fault,
+ 	.open = drm_gem_vm_open,
+ 	.close = drm_gem_vm_close,
+diff --git a/drivers/staging/omapdrm/omap_drv.c b/drivers/staging/omapdrm/omap_drv.c
+index bd7d210..1edbd77 100644
+--- a/drivers/staging/omapdrm/omap_drv.c
++++ b/drivers/staging/omapdrm/omap_drv.c
+@@ -726,7 +726,7 @@ static void dev_irq_uninstall(struct drm_device *dev)
+ 	DBG("irq_uninstall: dev=%p", dev);
+ }
+ 
+-static struct vm_operations_struct omap_gem_vm_ops = {
++static const struct vm_operations_struct omap_gem_vm_ops = {
+ 	.fault = omap_gem_fault,
+ 	.open = drm_gem_vm_open,
+ 	.close = drm_gem_vm_close,
+diff --git a/include/drm/drmP.h b/include/drm/drmP.h
+index 5ba7417..130e132 100644
+--- a/include/drm/drmP.h
++++ b/include/drm/drmP.h
+@@ -942,7 +942,7 @@ struct drm_driver {
+ 			    uint32_t handle);
+ 
+ 	/* Driver private ops for this object */
+-	struct vm_operations_struct *gem_vm_ops;
++	const struct vm_operations_struct *gem_vm_ops;
+ 
+ 	int major;
+ 	int minor;
+-- 
+1.7.10.4
+

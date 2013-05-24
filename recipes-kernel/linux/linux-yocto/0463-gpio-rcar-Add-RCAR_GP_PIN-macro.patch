@@ -1,0 +1,38 @@
+From 908d23d8328cd7ce7e4f77cbed32a143364c3a16 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 8 Apr 2013 11:36:13 +0200
+Subject: gpio-rcar: Add RCAR_GP_PIN macro
+
+Pins are numbered in the R-Car family documentation using a bank number
+and a pin number in the bank. As the Linux pin number space is linear,
+we need to flatten this by multiplying the bank number by 32 and adding
+the pin number. The resulting number bear no directly visible
+relationship  to the documentation, making it error-prone.
+
+Add a RCAR_GP_PIN macro to convert from the documentation pin number
+space to the linear Linux space.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 0bd898b16cdc0a4512d0b1af2fbe1174d217dd2d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/linux/platform_data/gpio-rcar.h |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/linux/platform_data/gpio-rcar.h b/include/linux/platform_data/gpio-rcar.h
+index b253f77..cc472f6 100644
+--- a/include/linux/platform_data/gpio-rcar.h
++++ b/include/linux/platform_data/gpio-rcar.h
+@@ -23,4 +23,6 @@ struct gpio_rcar_config {
+ 	const char *pctl_name;
+ };
+ 
++#define RCAR_GP_PIN(bank, pin)		(((bank) * 32) + (pin))
++
+ #endif /* __GPIO_RCAR_H__ */
+-- 
+1.7.10.4
+

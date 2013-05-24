@@ -1,0 +1,60 @@
+From 45c9807e047dbb779a5da6545f89761f316afef8 Mon Sep 17 00:00:00 2001
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 6 Nov 2012 15:03:47 +0100
+Subject: gpiolib: remove duplicate pin range code
+
+Commit 69e1601bca88809dc118abd1becb02c15a02ec71
+"gpiolib: provide provision to register pin ranges"
+
+Introduced both of_gpiochip_remove_pin_range() and
+gpiochip_remove_pin_ranges(). But the contents are exactly
+the same so remove the OF one and rely on the range deletion
+in the core.
+
+Reviewed-by: Stephen Warren <swarren@nvidia.com>
+Reviewed-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit e93fa3f24353e45b189bae656ba000d0533777a3)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpio/gpiolib-of.c |   13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
+
+diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
+index 220caa5..67403e4 100644
+--- a/drivers/gpio/gpiolib-of.c
++++ b/drivers/gpio/gpiolib-of.c
+@@ -254,19 +254,8 @@ static void of_gpiochip_add_pin_range(struct gpio_chip *chip)
+ 	} while (index++);
+ }
+ 
+-static void of_gpiochip_remove_pin_range(struct gpio_chip *chip)
+-{
+-	struct gpio_pin_range *pin_range, *tmp;
+-
+-	list_for_each_entry_safe(pin_range, tmp, &chip->pin_ranges, node) {
+-		list_del(&pin_range->node);
+-		pinctrl_remove_gpio_range(pin_range->pctldev,
+-				&pin_range->range);
+-	}
+-}
+ #else
+ static void of_gpiochip_add_pin_range(struct gpio_chip *chip) {}
+-static void of_gpiochip_remove_pin_range(struct gpio_chip *chip) {}
+ #endif
+ 
+ void of_gpiochip_add(struct gpio_chip *chip)
+@@ -288,7 +277,7 @@ void of_gpiochip_add(struct gpio_chip *chip)
+ 
+ void of_gpiochip_remove(struct gpio_chip *chip)
+ {
+-	of_gpiochip_remove_pin_range(chip);
++	gpiochip_remove_pin_ranges(chip);
+ 
+ 	if (chip->of_node)
+ 		of_node_put(chip->of_node);
+-- 
+1.7.10.4
+

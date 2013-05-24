@@ -1,0 +1,54 @@
+From 0e9b0920d8fb85aa49fe10b08e9e3c000da7e691 Mon Sep 17 00:00:00 2001
+From: David Howells <dhowells@redhat.com>
+Date: Tue, 2 Oct 2012 18:01:03 +0100
+Subject: UAPI: Refer to the DRM UAPI headers with <...> and from certain
+ headers only
+
+Only refer to the DRM UAPI headers (drm.h, drm_mode.h and drm_sarea.h) from
+within drmP.h and drm_crtc.h, and use #include <...> to refer to them so that
+when the UAPI split happens they can still be accessed.
+
+Signed-off-by: David Howells <dhowells@redhat.com>
+Acked-by: Dave Airlie <airlied@redhat.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Acked-by: Dave Jones <davej@redhat.com>
+(cherry picked from commit 19218e482d3f023166b26143c1a1c6d166a30415)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/drm/drmP.h     |    3 ++-
+ include/drm/drm_crtc.h |    1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/include/drm/drmP.h b/include/drm/drmP.h
+index 95ef926..3ed525b 100644
+--- a/include/drm/drmP.h
++++ b/include/drm/drmP.h
+@@ -72,7 +72,8 @@
+ #include <linux/workqueue.h>
+ #include <linux/poll.h>
+ #include <asm/pgalloc.h>
+-#include "drm.h"
++#include <drm/drm.h>
++#include <drm/drm_sarea.h>
+ 
+ #include <linux/idr.h>
+ 
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 4daedf4..3fa18b7 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -30,6 +30,7 @@
+ #include <linux/types.h>
+ #include <linux/idr.h>
+ #include <linux/fb.h>
++#include <drm/drm_mode.h>
+ 
+ #include <drm/drm_fourcc.h>
+ 
+-- 
+1.7.10.4
+

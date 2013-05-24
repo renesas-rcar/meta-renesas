@@ -1,0 +1,51 @@
+From 441bea3f7e1abd0000fc5523a565c851633e0427 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 5 Mar 2013 00:40:00 +0100
+Subject: drm/rcar-du: Name the encoder platform data union
+
+Unnamed unions can't be statically initialized with gcc < 4.6.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 97d740e2fa0ac11f8d6bc1ec13d0966d63f4d0ac)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c |    4 ++--
+ include/linux/platform_data/rcar-du.h |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index d609e9d..533aa97 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -164,11 +164,11 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 
+ 		switch (pdata->encoder) {
+ 		case RCAR_DU_ENCODER_VGA:
+-			rcar_du_vga_init(rcdu, &pdata->vga, i);
++			rcar_du_vga_init(rcdu, &pdata->u.vga, i);
+ 			break;
+ 
+ 		case RCAR_DU_ENCODER_LVDS:
+-			rcar_du_lvds_init(rcdu, &pdata->lvds, i);
++			rcar_du_lvds_init(rcdu, &pdata->u.lvds, i);
+ 			break;
+ 
+ 		default:
+diff --git a/include/linux/platform_data/rcar-du.h b/include/linux/platform_data/rcar-du.h
+index 0f2c836..c315d32 100644
+--- a/include/linux/platform_data/rcar-du.h
++++ b/include/linux/platform_data/rcar-du.h
+@@ -41,7 +41,7 @@ struct rcar_du_encoder_data {
+ 	union {
+ 		struct rcar_du_encoder_lvds_data lvds;
+ 		struct rcar_du_encoder_vga_data vga;
+-	};
++	} u;
+ };
+ 
+ struct rcar_du_platform_data {
+-- 
+1.7.10.4
+

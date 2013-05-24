@@ -1,0 +1,42 @@
+From 9650e164bb700ade8d810182ea25177dacfae648 Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm@opensource.se>
+Date: Tue, 5 Feb 2013 16:30:49 +0900
+Subject: ARM: shmobile: Register ARM architected timer
+
+Register ARM architected timer by default for all mach-shmobile
+systems using late timer.
+
+Signed-off-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit dbe1c3defb3844772634446492ea6c13882596ec)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/timer.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/timer.c b/arch/arm/mach-shmobile/timer.c
+index a689197..b66d65b 100644
+--- a/arch/arm/mach-shmobile/timer.c
++++ b/arch/arm/mach-shmobile/timer.c
+@@ -20,6 +20,7 @@
+  */
+ #include <linux/platform_device.h>
+ #include <linux/delay.h>
++#include <asm/arch_timer.h>
+ #include <asm/mach/time.h>
+ #include <asm/smp_twd.h>
+ 
+@@ -62,6 +63,8 @@ void __init shmobile_earlytimer_init(void)
+ 
+ static void __init shmobile_timer_init(void)
+ {
++	arch_timer_of_register();
++	arch_timer_sched_clock_init();
+ }
+ 
+ struct sys_timer shmobile_timer = {
+-- 
+1.7.10.4
+

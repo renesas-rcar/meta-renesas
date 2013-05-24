@@ -1,0 +1,44 @@
+From 5c4ff6ae9a285b174a114fc9b2d408eebd9214f0 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sun, 17 Feb 2013 01:57:45 +0100
+Subject: drm/rcar-du: Add DRM PRIME support
+
+Just use the GEM CMA DRM PRIME helpers.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 7f339db39e0ea4edda9f6d7e5eee7bbf4ae141c5)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index cbad07e..dbc1a62 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -181,7 +181,8 @@ static const struct file_operations rcar_du_fops = {
+ };
+ 
+ static struct drm_driver rcar_du_driver = {
+-	.driver_features	= DRIVER_HAVE_IRQ | DRIVER_GEM | DRIVER_MODESET,
++	.driver_features	= DRIVER_HAVE_IRQ | DRIVER_GEM | DRIVER_MODESET
++				| DRIVER_PRIME,
+ 	.load			= rcar_du_load,
+ 	.unload			= rcar_du_unload,
+ 	.preclose		= rcar_du_preclose,
+@@ -191,6 +192,10 @@ static struct drm_driver rcar_du_driver = {
+ 	.disable_vblank		= rcar_du_disable_vblank,
+ 	.gem_free_object	= drm_gem_cma_free_object,
+ 	.gem_vm_ops		= &drm_gem_cma_vm_ops,
++	.prime_handle_to_fd	= drm_gem_prime_handle_to_fd,
++	.prime_fd_to_handle	= drm_gem_prime_fd_to_handle,
++	.gem_prime_import	= drm_gem_cma_dmabuf_import,
++	.gem_prime_export	= drm_gem_cma_dmabuf_export,
+ 	.dumb_create		= drm_gem_cma_dumb_create,
+ 	.dumb_map_offset	= drm_gem_cma_dumb_map_offset,
+ 	.dumb_destroy		= drm_gem_cma_dumb_destroy,
+-- 
+1.7.10.4
+

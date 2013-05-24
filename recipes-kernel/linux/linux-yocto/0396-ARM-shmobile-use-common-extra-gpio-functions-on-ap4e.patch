@@ -1,0 +1,62 @@
+From efb891ce5d3f8df64807da5fb61e0b2891ae086f Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 25 Jun 2012 03:41:19 -0700
+Subject: ARM: shmobile: use common extra gpio functions on ap4evb
+
+This patch switch over to use common extra gpio method,
+and reduced a waste of code on SH-ARM.
+
+But these functions should be replaced by correct
+gpio function in the future.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Acked-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+(cherry picked from commit 6a6196af4688329679afc0c05c735b741de94600)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-ap4evb.c |   19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-ap4evb.c b/arch/arm/mach-shmobile/board-ap4evb.c
+index 7f54423..53c244d 100644
+--- a/arch/arm/mach-shmobile/board-ap4evb.c
++++ b/arch/arm/mach-shmobile/board-ap4evb.c
+@@ -1138,21 +1138,6 @@ static void __init fsi_init_pm_clock(void)
+ 	clk_put(fsia_ick);
+ }
+ 
+-/*
+- * FIXME !!
+- *
+- * gpio_no_direction
+- * are quick_hack.
+- *
+- * current gpio frame work doesn't have
+- * the method to control only pull up/down/free.
+- * this function should be replaced by correct gpio function
+- */
+-static void __init gpio_no_direction(u32 addr)
+-{
+-	__raw_writeb(0x00, addr);
+-}
+-
+ /* TouchScreen */
+ #ifdef CONFIG_AP4EVB_QHD
+ # define GPIO_TSC_IRQ	GPIO_FN_IRQ28_123
+@@ -1291,8 +1276,8 @@ static void __init ap4evb_init(void)
+ 
+ 	gpio_request(GPIO_PORT9, NULL);
+ 	gpio_request(GPIO_PORT10, NULL);
+-	gpio_no_direction(GPIO_PORT9CR);  /* FSIAOBT needs no direction */
+-	gpio_no_direction(GPIO_PORT10CR); /* FSIAOLR needs no direction */
++	gpio_direction_none(GPIO_PORT9CR);  /* FSIAOBT needs no direction */
++	gpio_direction_none(GPIO_PORT10CR); /* FSIAOLR needs no direction */
+ 
+ 	/* card detect pin for MMC slot (CN7) */
+ 	gpio_request_one(GPIO_PORT41, GPIOF_IN, NULL);
+-- 
+1.7.10.4
+

@@ -1,0 +1,66 @@
+From aeab8ae1314ad37c5a04bf000f8171188a34ce54 Mon Sep 17 00:00:00 2001
+From: Paul Mundt <lethal@linux-sh.org>
+Date: Fri, 20 Jul 2012 16:18:21 +0900
+Subject: sh: pfc: Prefer DRV_NAME over KBUILD_MODNAME.
+
+While this code is still being shuffled around the KBUILD_MODNAME value
+isn't particularly useful, switch to something a bit more useful.
+
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+(cherry picked from commit 5440711073157576eb4658c19019b66b25140860)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/sh/pfc/pinctrl.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
+index 45e80ee..900afa5 100644
+--- a/drivers/sh/pfc/pinctrl.c
++++ b/drivers/sh/pfc/pinctrl.c
+@@ -7,7 +7,9 @@
+  * License.  See the file "COPYING" in the main directory of this archive
+  * for more details.
+  */
+-#define pr_fmt(fmt) "sh_pfc " KBUILD_MODNAME ": " fmt
++#define DRV_NAME "pinctrl-sh_pfc"
++
++#define pr_fmt(fmt) DRV_NAME " " KBUILD_MODNAME ": " fmt
+ 
+ #include <linux/init.h>
+ #include <linux/module.h>
+@@ -265,12 +267,12 @@ static struct pinconf_ops sh_pfc_pinconf_ops = {
+ };
+ 
+ static struct pinctrl_gpio_range sh_pfc_gpio_range = {
+-	.name		= KBUILD_MODNAME,
++	.name		= DRV_NAME,
+ 	.id		= 0,
+ };
+ 
+ static struct pinctrl_desc sh_pfc_pinctrl_desc = {
+-	.name		= KBUILD_MODNAME,
++	.name		= DRV_NAME,
+ 	.owner		= THIS_MODULE,
+ 	.pctlops	= &sh_pfc_pinctrl_ops,
+ 	.pmxops		= &sh_pfc_pinmux_ops,
+@@ -448,13 +450,13 @@ static struct platform_driver sh_pfc_pinctrl_driver = {
+ 	.probe		= sh_pfc_pinctrl_probe,
+ 	.remove		= __devexit_p(sh_pfc_pinctrl_remove),
+ 	.driver		= {
+-		.name	= KBUILD_MODNAME,
++		.name	= DRV_NAME,
+ 		.owner	= THIS_MODULE,
+ 	},
+ };
+ 
+ static struct platform_device sh_pfc_pinctrl_device = {
+-	.name		= KBUILD_MODNAME,
++	.name		= DRV_NAME,
+ 	.id		= -1,
+ };
+ 
+-- 
+1.7.10.4
+

@@ -1,0 +1,33 @@
+From 802170d3df8d3526d117b5540fd694a5e29a2950 Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Thu, 4 Apr 2013 16:31:21 +0900
+Subject: ARM: shmobile: Add lager to consolidated defconfig
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 7e2f34d3e39001bc6ada6709c599b7de13db700d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 9b6219a..7dba53f 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -14,9 +14,11 @@ CONFIG_SLAB=y
+ CONFIG_ARCH_SHMOBILE=y
+ CONFIG_ARCH_SH7372=y
+ CONFIG_ARCH_R8A7740=y
++CONFIG_ARCH_R8A7790=y
+ CONFIG_ARCH_EMEV2=y
+ CONFIG_MACH_MACKEREL=y
+ CONFIG_MACH_ARMADILLO800EVA=y
++CONFIG_MACH_LAGER=y
+ CONFIG_MACH_KZM9D=y
+ # CONFIG_SH_TIMER_TMU is not set
+ # CONFIG_SWP_EMULATE is not set
+-- 
+1.7.10.4
+

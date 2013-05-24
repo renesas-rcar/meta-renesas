@@ -1,0 +1,71 @@
+From c5f5e373e18e52d81a8c37c6201035f10418618b Mon Sep 17 00:00:00 2001
+From: Paul Mundt <lethal@linux-sh.org>
+Date: Tue, 17 Jul 2012 15:48:18 +0900
+Subject: sh: pfc: pinctrl legacy group support.
+
+This follows the function support by simply doing 1 pin per group
+encapsulation in order to keep with legacy behaviour. This will be
+built on incrementally as SoCs define their own pin groups.
+
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+(cherry picked from commit e3f805e897320c3c25d7d5f67e0fb59c5a7199bc)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/sh/pfc/pinctrl.c |   26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
+index e79e379..45e80ee 100644
+--- a/drivers/sh/pfc/pinctrl.c
++++ b/drivers/sh/pfc/pinctrl.c
+@@ -37,29 +37,35 @@ struct sh_pfc_pinctrl {
+ 
+ static struct sh_pfc_pinctrl *sh_pfc_pmx;
+ 
+-/*
+- * No group support yet
+- */
+-static int sh_pfc_get_noop_count(struct pinctrl_dev *pctldev)
++static int sh_pfc_get_groups_count(struct pinctrl_dev *pctldev)
+ {
+-	return 0;
++	struct sh_pfc_pinctrl *pmx = pinctrl_dev_get_drvdata(pctldev);
++
++	return pmx->nr_pads;
+ }
+ 
+-static const char *sh_pfc_get_noop_name(struct pinctrl_dev *pctldev,
++static const char *sh_pfc_get_group_name(struct pinctrl_dev *pctldev,
+ 					 unsigned selector)
+ {
+-	return NULL;
++	struct sh_pfc_pinctrl *pmx = pinctrl_dev_get_drvdata(pctldev);
++
++	return pmx->pads[selector].name;
+ }
+ 
+ static int sh_pfc_get_group_pins(struct pinctrl_dev *pctldev, unsigned group,
+ 				 const unsigned **pins, unsigned *num_pins)
+ {
+-	return -ENOTSUPP;
++	struct sh_pfc_pinctrl *pmx = pinctrl_dev_get_drvdata(pctldev);
++
++	*pins = &pmx->pads[group].number;
++	*num_pins = 1;
++
++	return 0;
+ }
+ 
+ static struct pinctrl_ops sh_pfc_pinctrl_ops = {
+-	.get_groups_count	= sh_pfc_get_noop_count,
+-	.get_group_name		= sh_pfc_get_noop_name,
++	.get_groups_count	= sh_pfc_get_groups_count,
++	.get_group_name		= sh_pfc_get_group_name,
+ 	.get_group_pins		= sh_pfc_get_group_pins,
+ };
+ 
+-- 
+1.7.10.4
+

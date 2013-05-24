@@ -1,0 +1,56 @@
+From ada62dc7d59b1145a3daa86bff0e758227346876 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Dec 2012 23:51:05 +0100
+Subject: sh: sh7203: Register PFC platform device
+
+Add arch code to register the PFC platform device instead of calling the
+driver directly. Platform device registration in the sh-pfc driver will
+be removed.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit b768ecbc5129a11a83aff6f3240bc9c728600c98)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/sh/Kconfig                         |    1 +
+ arch/sh/kernel/cpu/sh2a/pinmux-sh7203.c |    3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index ff9e033..c8b7011 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -274,6 +274,7 @@ config CPU_SUBTYPE_SH7203
+ 	select SYS_SUPPORTS_CMT
+ 	select SYS_SUPPORTS_MTU2
+ 	select ARCH_WANT_OPTIONAL_GPIOLIB
++	select PINCTRL
+ 
+ config CPU_SUBTYPE_SH7206
+ 	bool "Support SH7206 processor"
+diff --git a/arch/sh/kernel/cpu/sh2a/pinmux-sh7203.c b/arch/sh/kernel/cpu/sh2a/pinmux-sh7203.c
+index c465af7..814926e 100644
+--- a/arch/sh/kernel/cpu/sh2a/pinmux-sh7203.c
++++ b/arch/sh/kernel/cpu/sh2a/pinmux-sh7203.c
+@@ -11,6 +11,7 @@
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/gpio.h>
++#include <cpu/pfc.h>
+ #include <cpu/sh7203.h>
+ 
+ enum {
+@@ -1592,6 +1593,6 @@ static struct pinmux_info sh7203_pinmux_info = {
+ 
+ static int __init plat_pinmux_setup(void)
+ {
+-	return register_pinmux(&sh7203_pinmux_info);
++	return sh_pfc_register_info(NULL, NULL, 0, &sh7203_pinmux_info);
+ }
+ arch_initcall(plat_pinmux_setup);
+-- 
+1.7.10.4
+
