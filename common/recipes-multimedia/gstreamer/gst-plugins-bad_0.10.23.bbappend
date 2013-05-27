@@ -7,7 +7,7 @@ EXTRA_OECONF += "--with-plugins=h264parse"
 
 TARGET_CFLAGS += "-D_GNU_SOURCE"
 
-PRINC := "${@int(PRINC) + 4}"
+PRINC := "${@int(PRINC) + 5}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += " \
