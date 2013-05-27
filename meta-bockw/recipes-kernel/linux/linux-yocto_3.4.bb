@@ -8,7 +8,7 @@ COMPATIBLE_MACHINE = "bockw"
 FILESEXTRAPATHS_prepend_bockw := "${THISDIR}/${PN}:"
 
 LINUX_VERSION = "3.4.25"
-PR = "r0"
+PR = "r1"
 PV_append = "+git${SRCREV}"
 S = "${WORKDIR}/git"
 
