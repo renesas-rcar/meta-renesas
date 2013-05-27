@@ -1,0 +1,60 @@
+From 047b6f9f6c4191a2183b0bcc2b7fceee20b29faf Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Tue, 14 May 2013 13:38:01 +0900
+Subject: [PATCH 2/2] arm: mach-shmobile: bockw: add platform_device for PWM6
+
+This patch also adds gpio setting for PWM6.
+If we want to use PWM6, we have to turn the SW85-4 on.
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 658a28d..1070c26 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -349,6 +349,21 @@ static struct platform_device sh_mmcif_device = {
+ 	.resource	= sh_mmcif_resources,
+ };
+ 
++static struct resource rcar_pwm_resources[] = {
++	{
++		.start  = 0xffe56000,
++		.end    = 0xffe560ff,
++		.flags  = IORESOURCE_MEM,
++	}
++};
++
++static struct platform_device rcar_pwm_device = {
++	.name		= "rcar-pwm",
++	.id		= 6,
++	.num_resources	= ARRAY_SIZE(rcar_pwm_resources),
++	.resource	= rcar_pwm_resources,
++};
++
+ static struct platform_device *bockw_devices[] __initdata = {
+ 	&smsc911x_device,
+ 	&rcar_du_device,
+@@ -359,6 +374,7 @@ static struct platform_device *bockw_devices[] __initdata = {
+ 	&ohci0_device,
+ 	&hspi_device,
+ 	&sh_mmcif_device,
++	&rcar_pwm_device,
+ };
+ 
+ /* USBH common register */
+@@ -528,6 +544,9 @@ static void __init bockw_init(void)
+ 	gpio_request(GPIO_FN_MMC_D6,  NULL);
+ 	gpio_request(GPIO_FN_MMC_D7,  NULL);
+ 
++	/* PWM */
++	gpio_request(GPIO_FN_PWM6,  NULL);
++
+ 	rcar_usb_phy_init();
+ 
+ 	i2c_register_board_info(0, i2c0_devices,
+-- 
+1.8.2
+

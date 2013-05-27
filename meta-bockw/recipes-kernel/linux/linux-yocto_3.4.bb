@@ -217,6 +217,9 @@ SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.4.git;protocol=git;branch=lt
 	\
 	file://0001-DRM-allow-access-to-DRM-from-other-processes.patch \
 	file://0001-ARM-shmobile-r8a7778-add-a-register-region-for-an-IC.patch \
+	\
+	file://0001-mach-shmobile-add-R-Car-PWM-driver.patch \
+	file://0002-arm-mach-shmobile-bockw-add-platform_device-for-PWM6.patch \
 	"
 
 #do_configure_prepend() {
