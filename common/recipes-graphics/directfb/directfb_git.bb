@@ -8,9 +8,12 @@ DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion khronos-headers
 
 SRC_URI += "file://fix-compilation-with-zlib.patch \
             file://fixsepbuild.patch \
-            file://directfbrc"
+            file://directfbrc \
+            file://0001-drmkms-in-drmkmsPlaneTestRegion-and-drmkmsPlayeSetRe.patch \
+            file://0002-drmkms-fix-framebuffer-allocation-size.patch \
+            file://0003-drmkms-replace-DLCONF_-with-CLRCF_-where-appropriate.patch"
 
-SRCREV = "3414c47494309f9efcf1ab7ffe1ea53dc5580852"
+SRCREV = "522349046b437a7d03665cbc8cb42c97dca6c69d"
 
 EXTRA_OECONF = "\
   --enable-freetype \
