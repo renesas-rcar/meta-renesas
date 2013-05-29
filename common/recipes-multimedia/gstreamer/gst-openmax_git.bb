@@ -23,7 +23,7 @@ S = "${WORKDIR}/git/"
 EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-experimental', '--enable-experimental')}"
 
 do_configure_prepend() {
-	./autogen.sh
+	( cd ${S}; sh autogen.sh )
 }
 
 # FILES_${PN} += "${sysconfdir}/*"
