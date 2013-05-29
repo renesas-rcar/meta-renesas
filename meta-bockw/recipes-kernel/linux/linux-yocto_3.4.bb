@@ -222,6 +222,13 @@ SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.4.git;protocol=git;branch=lt
 	\
 	file://0001-mach-shmobile-add-R-Car-PWM-driver.patch \
 	file://0002-arm-mach-shmobile-bockw-add-platform_device-for-PWM6.patch \
+	file://0003-soc-camera-Add-plane-layout-information-to-struct-so.patch \
+	file://0004-soc-camera-Add-soc_mbus_image_size.patch \
+	file://0005-V4L2-soc-camera-move-generic-functions-into-a-separa.patch \
+	file://0006-Add-OKI-Semiconductor-ML86V7667-video-decoder-driver.patch \
+	file://0007-Add-Renesas-R-Car-VIN-Video-In-V4L2-driver.patch \
+	file://0008-Add-VIN-clocks-and-platform-devices-on-R8A7778-SoC-a.patch \
+	file://0009-Add-ML86V7667-platform-devices-on-BOCK-W-board-confi.patch \
 	"
 
 #do_configure_prepend() {

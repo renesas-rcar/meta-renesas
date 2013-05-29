@@ -1,7 +1,7 @@
-From 3a5771bf0d3cb5195990329b269d8561d1990fc4 Mon Sep 17 00:00:00 2001
+From b680023ad5721cdaf2f37e860aff42c02a7ada24 Mon Sep 17 00:00:00 2001
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Date: Fri, 10 May 2013 14:01:44 +0900
-Subject: [PATCH 1/2] mach-shmobile: add R-Car PWM driver
+Subject: [PATCH 1/9] mach-shmobile: add R-Car PWM driver
 
 This is a R-Car M1A PWM driver.
 

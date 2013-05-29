@@ -1,7 +1,7 @@
-From 047b6f9f6c4191a2183b0bcc2b7fceee20b29faf Mon Sep 17 00:00:00 2001
+From 064a5d9a868b61729d82425b051f916770873e64 Mon Sep 17 00:00:00 2001
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Date: Tue, 14 May 2013 13:38:01 +0900
-Subject: [PATCH 2/2] arm: mach-shmobile: bockw: add platform_device for PWM6
+Subject: [PATCH 2/9] arm: mach-shmobile: bockw: add platform_device for PWM6
 
 This patch also adds gpio setting for PWM6.
 If we want to use PWM6, we have to turn the SW85-4 on.

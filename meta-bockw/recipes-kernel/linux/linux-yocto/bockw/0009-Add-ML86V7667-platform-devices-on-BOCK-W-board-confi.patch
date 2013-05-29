@@ -1,0 +1,107 @@
+From f3e6af63337414fa93bf5bc243a208f2d5e9e018 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Mon, 27 May 2013 10:07:25 +0900
+Subject: [PATCH 9/9] Add ML86V7667 platform devices on BOCK-W board, configure
+ VIN0/1 pins, and register VIN0/1 devices with the ML86V7667 specific platform
+ data.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+[Sergei: some macro/comment cleanup; updated the copyrights, removed duplicate
+#include, annotated all platform data as '__initdata'.]
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c | 50 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 1070c26..6c6f3ce 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -3,6 +3,7 @@
+  *
+  * Copyright (C) 2013  Renesas Solutions Corp.
+  * Copyright (C) 2013  Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
++ * Copyright (C) 2013  Cogent Embedded, Inc.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -38,6 +39,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/spi/sh_hspi.h>
+ #include <linux/spi/flash.h>
++#include <media/soc_camera.h>
+ #include <mach/irqs.h>
+ #include <mach/common.h>
+ #include <mach/r8a7778.h>
+@@ -460,6 +462,24 @@ static struct i2c_board_info i2c0_devices[] = {
+ 	},
+ };
+ 
++static struct rcar_vin_platform_data vin_platform_data = {
++	.flags	= RCAR_VIN_BT656,
++};
++
++/* In default configuration both decoders reside on i2c bus 0 */
++#define BOCKW_CAMERA(idx)						\
++static struct i2c_board_info camera##idx##_info = {			\
++	I2C_BOARD_INFO("ml86v7667", 0x41 + 2 * (idx)),			\
++};									\
++static struct soc_camera_link iclink##idx##_ml86v7667 __initdata = {	\
++	.bus_id		= idx,						\
++	.i2c_adapter_id	= 0,						\
++	.board_info	= &camera##idx##_info,				\
++};									\
++
++BOCKW_CAMERA(0);
++BOCKW_CAMERA(1);
++
+ #define IRQ0MR		FPGA(0x18200030)
+ #define PUPR4		IOMEM(0xfffc0110)
+ static void __init bockw_init(void)
+@@ -547,6 +567,28 @@ static void __init bockw_init(void)
+ 	/* PWM */
+ 	gpio_request(GPIO_FN_PWM6,  NULL);
+ 
++	/* VIN0 */
++	gpio_request(GPIO_FN_VI0_DATA0_VI0_B0, NULL);
++	gpio_request(GPIO_FN_VI0_DATA1_VI0_B1, NULL);
++	gpio_request(GPIO_FN_VI0_DATA2_VI0_B2, NULL);
++	gpio_request(GPIO_FN_VI0_DATA3_VI0_B3, NULL);
++	gpio_request(GPIO_FN_VI0_DATA4_VI0_B4, NULL);
++	gpio_request(GPIO_FN_VI0_DATA5_VI0_B5, NULL);
++	gpio_request(GPIO_FN_VI0_DATA6_VI0_G0, NULL);
++	gpio_request(GPIO_FN_VI0_DATA7_VI0_G1, NULL);
++	gpio_request(GPIO_FN_VI0_CLK, NULL);
++
++	/* VIN1 */
++	gpio_request(GPIO_FN_VI1_DATA0, NULL);
++	gpio_request(GPIO_FN_VI1_DATA1, NULL);
++	gpio_request(GPIO_FN_VI1_DATA2, NULL);
++	gpio_request(GPIO_FN_VI1_DATA3, NULL);
++	gpio_request(GPIO_FN_VI1_DATA4, NULL);
++	gpio_request(GPIO_FN_VI1_DATA5, NULL);
++	gpio_request(GPIO_FN_VI1_DATA6, NULL);
++	gpio_request(GPIO_FN_VI1_DATA7, NULL);
++	gpio_request(GPIO_FN_VI1_CLK, NULL);
++
+ 	rcar_usb_phy_init();
+ 
+ 	i2c_register_board_info(0, i2c0_devices,
+@@ -556,6 +598,14 @@ static void __init bockw_init(void)
+ 
+ 	r8a7778_add_standard_devices();
+ 	platform_add_devices(bockw_devices, ARRAY_SIZE(bockw_devices));
++	r8a7778_add_vin_device(0, &vin_platform_data);
++	r8a7778_add_vin_device(1, &vin_platform_data);
++	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 0,
++				      &iclink0_ml86v7667,
++				      sizeof(iclink0_ml86v7667));
++	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 1,
++				      &iclink1_ml86v7667,
++				      sizeof(iclink1_ml86v7667));
+ 
+ 	/* enable ICB clock */
+ 	icb = clk_get(NULL, "icb");
+-- 
+1.8.2
+
