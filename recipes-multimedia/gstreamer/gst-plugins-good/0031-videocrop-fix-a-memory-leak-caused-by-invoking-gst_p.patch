@@ -1,0 +1,39 @@
+From d152c33c21eba3b9df2918fb8187ff5f839f766f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 22 Jan 2013 18:40:28 +0900
+Subject: [PATCH 31/31] videocrop: fix a memory leak caused by invoking
+ gst_pad_get_peer()
+
+Once is_query_done is set to TRUE, the function exits without decreasing
+the reference count of a GstPad instance.
+To fix the issue, this patch moves the call to gst_pad_get_peer() (which
+increases the GstPad refence count) to after is_query_done is tested.
+---
+ gst/videocrop/gstvideocrop.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 2114dae..49edc6e 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -873,7 +873,7 @@ static gboolean
+ gst_video_crop_query_stride_supported (GstVideoCrop * vcrop)
+ {
+   static gboolean result = FALSE;
+-  GstPad *peer = gst_pad_get_peer (GST_BASE_TRANSFORM (vcrop)->srcpad);
++  GstPad *peer;
+   GstStructure *structure;
+   GstQuery *query;
+   static gboolean is_query_done = FALSE;
+@@ -881,6 +881,8 @@ gst_video_crop_query_stride_supported (GstVideoCrop * vcrop)
+   if (is_query_done)
+     return result;
+ 
++  peer = gst_pad_get_peer (GST_BASE_TRANSFORM (vcrop)->srcpad);
++
+   structure = gst_structure_empty_new ("GstQueryStrideSupported");
+   gst_structure_set (structure, "stride-supported", G_TYPE_BOOLEAN, FALSE,
+       NULL);
+-- 
+1.7.9.5
+

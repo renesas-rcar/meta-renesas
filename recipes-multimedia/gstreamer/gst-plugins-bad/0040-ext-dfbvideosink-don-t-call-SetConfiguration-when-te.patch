@@ -1,0 +1,73 @@
+From 1acca15fb3c4270a830dddb8cd99cd69000377ad Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 3 Jul 2012 16:03:27 +0900
+Subject: [PATCH 40/97] ext/dfbvideosink: don't call SetConfiguration when
+ testing pixel format support
+
+It is sufficient to call only TestConfiguration() when trying to determine
+if a pixel format is supported.
+---
+ ext/directfb/dfbvideosink.c |   26 +-------------------------
+ 1 file changed, 1 insertion(+), 25 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 05170cf..ac48277 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1079,7 +1079,7 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
+   IDirectFBSurface *surface = NULL;
+   DFBSurfaceDescription s_dsc;
+   DFBAccelerationMask mask;
+-  DFBDisplayLayerConfig dlc, prev_dlc;
++  DFBDisplayLayerConfig dlc;
+   DFBDisplayLayerConfigFlags failed;
+ 
+   g_return_val_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink), FALSE);
+@@ -1097,14 +1097,6 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
+     goto beach;
+   }
+ 
+-  /* Backup layer configuration */
+-  ret = dfbvideosink->layer->GetConfiguration (dfbvideosink->layer, &prev_dlc);
+-  if (ret != DFB_OK) {
+-    GST_WARNING_OBJECT (dfbvideosink, "failed when getting current layer "
+-        "configuration");
+-    goto beach;
+-  }
+-
+   /* Test configuration of the layer to this pixel format */
+   dlc.flags = DLCONF_PIXELFORMAT;
+   dlc.pixelformat = format;
+@@ -1117,14 +1109,6 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
+     goto beach;
+   }
+ 
+-  ret = dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &dlc);
+-  if (ret != DFB_OK) {
+-    GST_WARNING_OBJECT (dfbvideosink, "our layer refuses to operate in pixel "
+-        "format, though this format was successfully tested earlied %s",
+-        gst_dfbvideosink_get_format_name (format));
+-    goto beach;
+-  }
+-
+   ret = dfbvideosink->primary->GetAccelerationMask (dfbvideosink->primary,
+       surface, &mask);
+   if (ret != DFB_OK) {
+@@ -1143,14 +1127,6 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
+     res = TRUE;
+   }
+ 
+-  /* Restore original layer configuration */
+-  ret = dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &prev_dlc);
+-  if (ret != DFB_OK) {
+-    GST_WARNING_OBJECT (dfbvideosink, "failed when restoring layer "
+-        "configuration");
+-    goto beach;
+-  }
+-
+ beach:
+   if (surface) {
+     surface->Release (surface);
+-- 
+1.7.10.4
+

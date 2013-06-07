@@ -1,0 +1,136 @@
+From 6e7d864f34ab6a3ba9fc67718ce97e821564c8f8 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 31 Aug 2012 13:45:12 +0900
+Subject: [PATCH 51/97] dfb-video-example: support quick seeking option
+ without accurate positioning
+
+This change supports quick seeking option with specifiying as "-q".
+The option passes GST_SEEK_FLAG_KEY_UNIT instead of GST_SEEK_FLAG_ACCURATE
+as a GstSeekFlags argument of gst_element_seek(). When seeking, the playback
+position will then move to the nearest I frame instead of trying to find the
+exact frame.
+---
+ ext/directfb/dfb-video-example.c |   33 ++++++++++++++++++++++++++++-----
+ 1 file changed, 28 insertions(+), 5 deletions(-)
+
+diff --git a/ext/directfb/dfb-video-example.c b/ext/directfb/dfb-video-example.c
+index 42bd342..0a9675d 100644
+--- a/ext/directfb/dfb-video-example.c
++++ b/ext/directfb/dfb-video-example.c
+@@ -9,6 +9,7 @@ static GstElement *pipeline;
+ static struct timeval prev_tv;
+ static gdouble playback_rate = 1.0;
+ static gint64 position;
++static gboolean is_quick_seek = FALSE;
+ 
+ #define COMMAND_BUF_SIZE 32
+ #define PARAM_BUF_SIZE 32
+@@ -36,6 +37,7 @@ usage (char *cmd)
+   printf ("  -o		DirectFB or GStreamer option\n");
+   printf ("  -i		ignore image's aspect ratio\n");
+   printf ("  -f		specify input filename\n");
++  printf ("  -q		do quick seeking without accurate positioning\n");
+ }
+ 
+ static void
+@@ -175,6 +177,12 @@ channel_cb (GIOChannel * source, GIOCondition condition, gpointer data)
+ 
+   if (strcmp (command, "seek") == 0) {
+     GstFormat fmt = GST_FORMAT_TIME;
++    GstSeekFlags seek_flags;
++
++    if (is_quick_seek)
++      seek_flags = GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH;
++    else
++      seek_flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
+ 
+     printf ("perform seeking\n");
+     if (!gst_element_query_position (pipeline, &fmt, &cur_time)) {
+@@ -185,7 +193,7 @@ channel_cb (GIOChannel * source, GIOCondition condition, gpointer data)
+     cur_time += atoi (param) * GST_SECOND;
+ 
+     if (!gst_element_seek (pipeline, 1.0, GST_FORMAT_TIME,
+-            GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
++            seek_flags,
+             GST_SEEK_TYPE_SET, cur_time,
+             GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+       printf ("failed to seek");
+@@ -194,6 +202,12 @@ channel_cb (GIOChannel * source, GIOCondition condition, gpointer data)
+   } else if (strcmp (command, "rate") == 0) {
+     GstFormat fmt = GST_FORMAT_TIME;
+     gdouble rate;
++    GstSeekFlags seek_flags;
++
++    if (is_quick_seek)
++      seek_flags = GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH;
++    else
++      seek_flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
+ 
+     if (!gst_element_query_position (pipeline, &fmt, &position)) {
+       printf ("failed to get current time\n");
+@@ -207,7 +221,7 @@ channel_cb (GIOChannel * source, GIOCondition condition, gpointer data)
+       gettimeofday (&prev_tv, NULL);
+       playback_rate = rate;
+       if (!gst_element_seek (pipeline, 1.0, GST_FORMAT_TIME,
+-              GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
++              seek_flags,
+               GST_SEEK_TYPE_SET, position,
+               GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+         printf ("failed to seek\n");
+@@ -217,7 +231,7 @@ channel_cb (GIOChannel * source, GIOCondition condition, gpointer data)
+       printf ("change playback rate to %0.5lf\n", rate);
+       playback_rate = rate;
+       if (!gst_element_seek (pipeline, rate, GST_FORMAT_TIME,
+-              GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
++              seek_flags,
+               GST_SEEK_TYPE_SET, position,
+               GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+         printf ("failed to seek\n");
+@@ -291,10 +305,16 @@ event_loop (GstElement * pipeline)
+         if (gst_structure_has_name (s, "FrameRendered")) {
+           GstFormat fmt = GST_FORMAT_TIME;
+           gint64 total_duration;
++          GstSeekFlags seek_flags;
+ 
+           if (playback_rate > 0.0 && playback_rate <= 1.0)
+             break;
+ 
++          if (is_quick_seek)
++            seek_flags = GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_FLUSH;
++          else
++            seek_flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
++
+           gettimeofday (&cur_tv, NULL);
+           duration = (((gint64) cur_tv.tv_sec * 1000000 + cur_tv.tv_usec) - ((gint64) prev_tv.tv_sec * 1000000 + prev_tv.tv_usec)) * 1000;      /* calculation in nano second */
+           memcpy (&prev_tv, &cur_tv, sizeof (prev_tv));
+@@ -309,7 +329,7 @@ event_loop (GstElement * pipeline)
+           }
+ 
+           if (!gst_element_seek (pipeline, 1.0, GST_FORMAT_TIME,
+-                  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
++                  seek_flags,
+                   GST_SEEK_TYPE_SET, position,
+                   GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+             printf ("failed to seek\n");
+@@ -357,7 +377,7 @@ main (int argc, char *argv[])
+   layer_id = 0;
+ 
+   opterr = 0;
+-  while ((opt = getopt (argc, argv, "x:y:w:h:l:o:if:")) != -1) {
++  while ((opt = getopt (argc, argv, "x:y:w:h:l:o:if:q")) != -1) {
+     switch (opt) {
+       case 'x':
+         rect.x = atoi (optarg);
+@@ -383,6 +403,9 @@ main (int argc, char *argv[])
+       case 'f':
+         in_file = strdup (optarg);
+         break;
++      case 'q':
++        is_quick_seek = TRUE;
++        break;
+       default:
+         usage (argv[0]);
+         exit (1);
+-- 
+1.7.10.4
+

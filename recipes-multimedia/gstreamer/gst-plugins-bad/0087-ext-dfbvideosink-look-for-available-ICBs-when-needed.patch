@@ -1,0 +1,132 @@
+From 891208894d1ec384efab45d0a7e801ada992767c Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Tue, 25 Dec 2012 17:50:04 +0900
+Subject: [PATCH 87/97] ext/dfbvideosink: look for available ICBs when needed
+
+This change must be required to prevent to overwrite ICB settings
+if multi instances exist in a process simultaneously.
+
+This is the DRAFT version commit.
+---
+ ext/directfb/dfbvideosink.c |   53 ++++++++++++++++++++++++++++++++++++++-----
+ ext/directfb/dfbvideosink.h |    5 ----
+ 2 files changed, 47 insertions(+), 11 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 02013c9..a6ba70d 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -620,6 +620,22 @@ pixel2byte (gint pixels, DFBSurfacePixelFormat dfbfmt)
+ 
+   return -1;
+ }
++
++static inline ICB *
++gst_dfbvideosink_lock_available_icb (MERAM * meram)
++{
++  ICB *icb;
++  gint i;
++
++  /* NOTE: ICB #0 to #4 must be reserved for REL OMXIL. */
++  for (i = 5; i <= MAX_ICB_INDEX; i++) {
++    icb = meram_trylock_icb (meram, i);
++    if (icb)
++      return icb;
++  }
++
++  return NULL;
++}
+ #endif /* defined(HAVE_SHMERAM) */
+ 
+ static inline ren_vid_format_t
+@@ -945,7 +961,13 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+     dfbvideosink->icby[SRC] = dfbvideosink->icbc[SRC] = NULL;
+ 
+     /* initialize a writeback icb for Y plane */
+-    dfbvideosink->icby[DST] = meram_lock_icb (dfbvideosink->meram, ICB_DST_Y);
++    dfbvideosink->icby[DST] =
++        gst_dfbvideosink_lock_available_icb (dfbvideosink->meram);
++    if (dfbvideosink->icby[DST] == NULL) {
++      GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE, (NULL),
++          ("Failed acquiring an ICB for the destination Y plane"));
++      goto beach;
++    }
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST], MExxMCNF,
+         0x00030000);
+     meram_read_icb (dfbvideosink->meram, dfbvideosink->icby[DST], MExxCTRL,
+@@ -965,7 +987,13 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+     /* initialize a writeback icb for CbCr plane */
+     if (is_ycbcr (dfb2shvio_format (dfbvideosink->pixel_format))
+         && dfbvideosink->pixel_format != DSPF_UYVY) {
+-      dfbvideosink->icbc[DST] = meram_lock_icb (dfbvideosink->meram, ICB_DST_C);
++      dfbvideosink->icbc[DST] =
++          gst_dfbvideosink_lock_available_icb (dfbvideosink->meram);
++      if (dfbvideosink->icbc[DST] == NULL) {
++        GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE, (NULL),
++            ("Failed acquiring an ICB for the destination CbCr plane"));
++        goto beach;
++      }
+       meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[DST], MExxMCNF,
+           0x10030000);
+       meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[DST], MExxCTRL,
+@@ -1623,7 +1651,13 @@ gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
+     uiomux_unregister ((void *) addr);
+     meram_unlock_icb (dfbvideosink->meram, dfbvideosink->icby[SRC]);
+   }
+-  dfbvideosink->icby[SRC] = meram_lock_icb (dfbvideosink->meram, ICB_SRC_Y);
++  dfbvideosink->icby[SRC] =
++      gst_dfbvideosink_lock_available_icb (dfbvideosink->meram);
++  if (dfbvideosink->icby[SRC] == NULL) {
++    GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE, (NULL),
++        ("Failed acquiring an ICB for the source Y plane"));
++    return;
++  }
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxMCNF,
+       0x010f0000);
+   meram_read_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL, &val);
+@@ -1670,7 +1704,13 @@ gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
+     meram_unlock_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC]);
+   }
+   if (is_ycbcr (dfb2shvio_format (pixel_format)) && pixel_format != DSPF_UYVY) {
+-    dfbvideosink->icbc[SRC] = meram_lock_icb (dfbvideosink->meram, ICB_SRC_C);
++    dfbvideosink->icbc[SRC] =
++        gst_dfbvideosink_lock_available_icb (dfbvideosink->meram);
++    if (dfbvideosink->icbc[SRC] == NULL) {
++      GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE, (NULL),
++          ("Failed acquiring an ICB for the source CbCr plane"));
++      return;
++    }
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxMCNF,
+         0x010f0000);
+     meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
+@@ -1702,8 +1742,9 @@ gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
+   surface->Unlock (surface);
+   if (dfbvideosink->interlaced)
+     stride *= 2;
+-  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST], MExxSBSIZE,
+-      stride);
++  if (dfbvideosink->icby[DST])
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST], MExxSBSIZE,
++        stride);
+   if (dfbvideosink->icbc[DST])
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[DST], MExxSBSIZE,
+         stride);
+diff --git a/ext/directfb/dfbvideosink.h b/ext/directfb/dfbvideosink.h
+index 6721e75..76f5d86 100644
+--- a/ext/directfb/dfbvideosink.h
++++ b/ext/directfb/dfbvideosink.h
+@@ -145,11 +145,6 @@ struct _GstDfbVideoSink {
+   MERAM *meram;
+   ICB *icby[2];
+   ICB *icbc[2];
+-/* NOTE: ICB #0 to #4 may be used by REL OMXIL */
+-#define ICB_SRC_Y	5
+-#define ICB_SRC_C	6
+-#define ICB_DST_Y	7
+-#define ICB_DST_C	8
+   gint tile_boundary_y_offset;
+   gint tile_boundary_c_offset;
+ #endif /* defined(HAVE_SHMERAM) */
+-- 
+1.7.10.4
+

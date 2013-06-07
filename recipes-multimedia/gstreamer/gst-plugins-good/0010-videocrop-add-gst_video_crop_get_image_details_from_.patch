@@ -1,0 +1,55 @@
+From 9f24d6c70d56c454a06b6fe41116d046dcc3c9f6 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 25 Sep 2012 15:51:24 +0900
+Subject: [PATCH 10/31] videocrop: add
+ gst_video_crop_get_image_details_from_structure
+ function
+
+Add an function to allow retrieval of image details from structures instead of
+only from caps.
+---
+ gst/videocrop/gstvideocrop.c |   18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index cfd548e..80c6d3d 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -253,13 +253,11 @@ gst_video_crop_init (GstVideoCrop * vcrop, GstVideoCropClass * klass)
+ }
+ 
+ static gboolean
+-gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
+-    GstVideoCropImageDetails * details, GstCaps * caps)
++gst_video_crop_get_image_details_from_structure (GstVideoCrop * vcrop,
++    GstVideoCropImageDetails * details, GstStructure * structure)
+ {
+-  GstStructure *structure;
+   gint width, height;
+ 
+-  structure = gst_caps_get_structure (caps, 0);
+   if (!gst_structure_get_int (structure, "width", &width) ||
+       !gst_structure_get_int (structure, "height", &height)) {
+     goto incomplete_format;
+@@ -356,6 +354,18 @@ incomplete_format:
+ }
+ 
+ static gboolean
++gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
++    GstVideoCropImageDetails * details, GstCaps * caps)
++{
++  GstStructure *structure;
++
++  structure = gst_caps_get_structure (caps, 0);
++
++  return gst_video_crop_get_image_details_from_structure (vcrop, details,
++      structure);
++}
++
++static gboolean
+ gst_video_crop_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+     guint * size)
+ {
+-- 
+1.7.9.5
+

@@ -1,0 +1,67 @@
+From a4185ee69f456d244f3bc5d1dc56800d112a3067 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 29 Oct 2012 11:52:32 +0900
+Subject: [PATCH 27/31] videocrop: add a new function to determine if source
+ images are interlaced
+
+This patch groups the processing to determine if source images are
+interlaced to gst_video_crop_is_interlaced().
+---
+ gst/videocrop/gstvideocrop.c |   32 ++++++++++++++++++++++----------
+ 1 file changed, 22 insertions(+), 10 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index caeb0b1..d02948d 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -604,6 +604,26 @@ gst_video_crop_transform_dimension_value (const GValue * src_val,
+   return ret;
+ }
+ 
++static gboolean
++gst_video_crop_is_interlaced (GstCaps * caps)
++{
++  gboolean interlaced;
++  const gchar *layout;
++  GstStructure *structure;
++  gboolean result;
++
++  structure = gst_caps_get_structure (caps, 0);
++  if (gst_structure_get_boolean (structure, "interlaced", &interlaced) &&
++      (interlaced == TRUE) &&
++      ((layout = gst_structure_get_string (structure, "field-layout")) != NULL)
++      && (strcmp (layout, "sequential") == 0))
++    result = TRUE;
++  else
++    result = FALSE;
++
++  return result;
++}
++
+ static GstCaps *
+ gst_video_crop_transform_caps (GstBaseTransform * trans,
+     GstPadDirection direction, GstCaps * caps)
+@@ -687,18 +707,10 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+       guint ratio_y_c;
+       GstStructure *structure;
+       gint tile_height;
+-      gboolean interlaced;
+-      const gchar *layout;
+ 
+       structure = gst_caps_get_structure (caps, 0);
+-      if (gst_structure_get_boolean (structure, "interlaced", &interlaced) &&
+-          (interlaced == TRUE) &&
+-          ((layout =
+-                  gst_structure_get_string (structure, "field-layout")) != NULL)
+-          && (strcmp (layout, "sequential") == 0))
+-        vcrop->interlaced = TRUE;
+-      else
+-        vcrop->interlaced = FALSE;
++
++      vcrop->interlaced = gst_video_crop_is_interlaced (caps);
+ 
+       rowstride = img_details.stride;
+       /* Y plane / UV plane */
+-- 
+1.7.9.5
+

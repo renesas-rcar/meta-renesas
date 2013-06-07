@@ -1,0 +1,169 @@
+From ac375d2604e97fb69c88b2fb9bd3fc5a74ce6c0c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 26 Apr 2013 17:05:19 +0900
+Subject: [PATCH 4/9] ext/dfbvideosink: clear MERAM with VIO for errata
+ workaround
+
+CPU access to MERAM must be restricted to avoid a MERAM errata.
+This patch fills out MERAM with not CPU, but VIO, specifying
+a background color. To achieve this, use the VIO to write
+the background color to a destination surface through MERAM.
+---
+ ext/directfb/dfbvideosink.c | 120 ++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 116 insertions(+), 4 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index f17e710..a99f9b3 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -2412,6 +2412,87 @@ gst_dfbvideosink_shvio_stretchblit (GstDfbVideoSink * dfbvideosink,
+ }
+ #endif /* defined(HAVE_SHVIO) */
+ 
++#if defined(HAVE_SHVIO) && defined(HAVE_SHMERAM)
++static GstFlowReturn
++gst_dfbvideosink_shvio_fill (GstDfbVideoSink * dfbvideosink, guint8 * virt_addr,
++    GstVideoRectangle * rect, DFBSurfacePixelFormat format, gulong argb)
++{
++  struct ren_vid_surface viosurface;
++  int ret;
++  gulong phys;
++  gulong val;
++
++  if (dfbvideosink->vio == NULL)
++    return GST_FLOW_NOT_SUPPORTED;
++
++  /* Set up destination viosurface */
++  viosurface.w = rect->w;
++  viosurface.h = rect->h;
++  viosurface.format = dfb2shvio_format (format);
++  if (viosurface.format == REN_UNKNOWN) {
++    GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
++        gst_dfbvideosink_get_format_name (format));
++    return GST_FLOW_NOT_SUPPORTED;
++  }
++  phys = uiomux_all_virt_to_phys (virt_addr);
++  if (!phys)
++    return GST_FLOW_NOT_SUPPORTED;
++
++  viosurface.pitch = 0;
++  viosurface.bpitchy = 4096;
++  viosurface.bpitchc = 4096;
++  viosurface.bpitcha = 4096;
++
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST].handle,
++      MExxSSARA, phys);
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST].handle,
++      MExxBSIZE, (((rect->h - 1) & 0x1fff) << 16) | ((pixel2byte (rect->w,
++                  format) - 1) & 0x7fff));
++
++  viosurface.py =
++      (void *) meram_get_icb_address (dfbvideosink->meram,
++      dfbvideosink->icby[DST].handle, 0);
++
++  if (dfbvideosink->icbc[DST].handle) {
++    gulong chroma_byte_offset = 0;
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[DST].handle,
++        MExxBSIZE, (((rect->h / 2 - 1) & 0x1fff) << 16) | ((pixel2byte (rect->w,
++                    format) - 1) & 0x7fff));
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[DST].handle,
++        MExxSSARA, phys + chroma_byte_offset);
++    viosurface.pc = (void *)
++        meram_get_icb_address (dfbvideosink->meram,
++        dfbvideosink->icbc[DST].handle, 0);
++  } else {
++    viosurface.pc = 0;
++  }
++
++  viosurface.pa = 0;
++
++  /* Do stretch-blit/blit with color conversion */
++  ret = shvio_fill (dfbvideosink->vio, &viosurface, argb);
++  if (ret < 0)
++    GST_WARNING_OBJECT (dfbvideosink, "failed bliting with shvio_fill()");
++
++  meram_read_icb (dfbvideosink->meram, dfbvideosink->icby[DST].handle, MExxCTRL,
++      &val);
++  val |= 1 << 5;                /* WF: flush data */
++  meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST].handle,
++      MExxCTRL, val);
++  gst_dfbvideosink_clear_icb (dfbvideosink, &dfbvideosink->icby[DST]);
++  if (dfbvideosink->icbc[DST].handle) {
++    meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[DST].handle,
++        MExxCTRL, &val);
++    val |= 1 << 5;              /* WF: flush data */
++    meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[DST].handle,
++        MExxCTRL, val);
++    gst_dfbvideosink_clear_icb (dfbvideosink, &dfbvideosink->icbc[DST]);
++  }
++
++  return GST_FLOW_OK;
++}
++#endif /* defined(HAVE_SHVIO) && defined(HAVE_SHMERAM) */
++
+ static GstFlowReturn
+ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+ {
+@@ -2458,6 +2539,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+ #if defined(HAVE_SHVIO)
+     DFBSurfacePixelFormat dst_format;
+     guint8 *src_datay, *src_datac;
++    gboolean already_filled = FALSE;
+ #endif
+ 
+     /* As we are not blitting no acceleration is possible. If the surface is
+@@ -2511,17 +2593,47 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+      */
+     ret = meram_lock_memory_block (dfbvideosink->meram, 0, 96);
+ 
+-    /* FIXME: Any color formats should be supported. */
+-    if ((dfbvideosink->require_clear_meram)
+-        && (dfbvideosink->pixel_format == DSPF_ARGB)) {
+-      meram_fill_memory_block (dfbvideosink->meram, 0x40, 16 /* KiB */ ,
++    if (dfbvideosink->require_clear_meram) {
++#if defined(HAVE_SHVIO)
++      GstVideoRectangle dst;
++      gint stride;
++
++      res = surface->Lock (surface, DSLF_WRITE, (void *) &data, &stride);
++      if (res != DFB_OK) {
++        GST_WARNING_OBJECT (dfbvideosink,
++            "failed locking the surface for writing");
++        ret = GST_FLOW_ERROR;
++        goto beach;
++      }
++
++      dst.x = dst.y = 0;
++      dst.w = dfbvideosink->out_width;
++      dst.h = dfbvideosink->out_height;
++      /* To clear MERAM, the destination surface is filled out with
++         the background color through MERAM by this function. */
++      ret = gst_dfbvideosink_shvio_fill (dfbvideosink, data, &dst, dst_format,
+           (dfbvideosink->bgcolor.alpha << 24) |
+           (dfbvideosink->bgcolor.red << 16) |
+           (dfbvideosink->bgcolor.green << 8) | dfbvideosink->bgcolor.blue);
++      if (ret == GST_FLOW_OK) {
++        already_filled = TRUE;
++        dfbvideosink->require_clear_surface--;
++      }
++
++      surface->Unlock (surface);
+       dfbvideosink->require_clear_meram = false;
++#else
++      GST_WARNING_OBJECT (dfbvideosink,
++          "Clearing MERAM with VIO couldn't be performed\n");
++      dfbvideosink->require_clear_meram = false;
++#endif /* defined(HAVE_SHVIO) */
+     }
+ #endif /* defined(HAVE_SHMERAM) */
++#if defined(HAVE_SHVIO)
++    if (dfbvideosink->require_clear_surface > 0 && !already_filled) {
++#else
+     if (dfbvideosink->require_clear_surface > 0) {
++#endif /* defined(HAVE_SHVIO) */
+       surface->Clear (surface, dfbvideosink->bgcolor.red,
+           dfbvideosink->bgcolor.green, dfbvideosink->bgcolor.blue,
+           dfbvideosink->bgcolor.alpha);
+-- 
+1.8.1.2
+

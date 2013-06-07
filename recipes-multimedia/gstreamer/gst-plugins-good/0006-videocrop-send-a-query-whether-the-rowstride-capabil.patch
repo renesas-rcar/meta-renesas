@@ -1,0 +1,105 @@
+From 39bb299bd638b78fdf8c4054bcc90f9f915d7ff8 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 10 May 2012 10:46:20 +0900
+Subject: [PATCH 06/31] videocrop: send a query whether the rowstride
+ capability is supported
+
+This patch sends a query which asks downstream plugins whether
+can handle the rowstride capability.
+gst_video_crop_start() can be invoked when the pad is enabled.
+The query is issued by gst_video_crop_start() once at initialization.
+
+This patch is preliminary for the zero-copy cropping.
+---
+ gst/videocrop/gstvideocrop.c |   38 ++++++++++++++++++++++++++++++++++++++
+ gst/videocrop/gstvideocrop.h |    4 ++++
+ 2 files changed, 42 insertions(+)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 1f09f8d..b0c3a68 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -136,6 +136,7 @@ static gboolean gst_video_crop_set_caps (GstBaseTransform * trans,
+     GstCaps * in_caps, GstCaps * outcaps);
+ static gboolean gst_video_crop_src_event (GstBaseTransform * trans,
+     GstEvent * event);
++static gboolean gst_video_crop_start (GstBaseTransform * trans);
+ 
+ static void
+ gst_video_crop_base_init (gpointer g_class)
+@@ -228,6 +229,7 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
+   basetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_crop_set_caps);
+   basetransform_class->get_unit_size =
+       GST_DEBUG_FUNCPTR (gst_video_crop_get_unit_size);
++  basetransform_class->start = GST_DEBUG_FUNCPTR (gst_video_crop_start);
+ 
+   basetransform_class->passthrough_on_same_caps = FALSE;
+   basetransform_class->src_event = GST_DEBUG_FUNCPTR (gst_video_crop_src_event);
+@@ -240,6 +242,10 @@ gst_video_crop_init (GstVideoCrop * vcrop, GstVideoCropClass * klass)
+   vcrop->crop_left = 0;
+   vcrop->crop_top = 0;
+   vcrop->crop_bottom = 0;
++
++  /* register query type for rowstride */
++  vcrop->query_type_stride = gst_query_type_register ("stride-supported",
++      "whether dealing with rowstride as a capability or not");
+ }
+ 
+ static gboolean
+@@ -669,6 +675,38 @@ cropping_too_much:
+   }
+ }
+ 
++static gboolean
++gst_video_crop_query_stride_supported (GstVideoCrop * vcrop)
++{
++  gboolean result = FALSE;
++  GstPad *peer = gst_pad_get_peer (GST_BASE_TRANSFORM (vcrop)->srcpad);
++  GstStructure *structure;
++  GstQuery *query;
++
++  structure = gst_structure_empty_new ("GstQueryStrideSupported");
++  gst_structure_set (structure, "stride-supported", G_TYPE_BOOLEAN, FALSE,
++      NULL);
++
++  query = gst_query_new_application (vcrop->query_type_stride, structure);
++  if (gst_pad_query (peer, query))
++    gst_structure_get_boolean (structure, "stride-supported", &result);
++
++  gst_query_unref (query);
++  gst_object_unref (peer);
++
++  return result;
++}
++
++static gboolean
++gst_video_crop_start (GstBaseTransform * trans)
++{
++  GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
++
++  vcrop->stride_supported = gst_video_crop_query_stride_supported (vcrop);
++
++  return TRUE;
++}
++
+ static void
+ gst_video_crop_set_property (GObject * object, guint prop_id,
+     const GValue * value, GParamSpec * pspec)
+diff --git a/gst/videocrop/gstvideocrop.h b/gst/videocrop/gstvideocrop.h
+index f05649d..5cfe03e 100644
+--- a/gst/videocrop/gstvideocrop.h
++++ b/gst/videocrop/gstvideocrop.h
+@@ -76,6 +76,10 @@ struct _GstVideoCrop
+ 
+   GstVideoCropImageDetails in;  /* details of input image */
+   GstVideoCropImageDetails out; /* details of output image */
++
++  /* query for rowstride */
++  GstQueryType query_type_stride;
++  gboolean stride_supported;
+ };
+ 
+ struct _GstVideoCropClass
+-- 
+1.7.9.5
+

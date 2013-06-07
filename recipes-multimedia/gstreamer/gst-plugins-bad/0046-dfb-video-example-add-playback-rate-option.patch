@@ -1,0 +1,117 @@
+From e624c528b2b56f99be16dc44db6aacbdab4c5aaa Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 1 Aug 2012 14:04:57 +0900
+Subject: [PATCH 46/97] dfb-video-example: add playback rate option
+
+Fast playback is realized by a seek event which is sent every time
+"FrameRendered" message is caught. The seek position is calculated from
+frame duration and desired playback rate.
+On the other hand, slow playback uses the original function of
+GStreamer which adjusts rendering cycle.
+
+This patch doesn't support slow backward playback.
+---
+ ext/directfb/dfb-video-example.c |   66 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
+
+diff --git a/ext/directfb/dfb-video-example.c b/ext/directfb/dfb-video-example.c
+index 31afb5f..b7f8793 100644
+--- a/ext/directfb/dfb-video-example.c
++++ b/ext/directfb/dfb-video-example.c
+@@ -6,6 +6,9 @@
+ static IDirectFB *dfb = NULL;
+ static IDirectFBSurface *primary = NULL;
+ static GstElement *pipeline;
++static struct timeval prev_tv;
++static gdouble playback_rate = 1.0;
++static gint64 position;
+ 
+ #define COMMAND_BUF_SIZE 32
+ #define PARAM_BUF_SIZE 32
+@@ -150,6 +153,7 @@ display_help (void)
+   printf (" 2 --- Pause movie\n");
+   printf (" 3 --- Playing movie\n");
+   printf (" seek [number(sec)] --- seek to specified time later\n");
++  printf (" rate [playback rate] --- playback rate\n");
+   printf (" h --- Help\n");
+ }
+ 
+@@ -187,6 +191,40 @@ channel_cb (GIOChannel * source, GIOCondition condition, gpointer data)
+       printf ("failed to seek");
+       return TRUE;
+     }
++  } else if (strcmp (command, "rate") == 0) {
++    GstFormat fmt = GST_FORMAT_TIME;
++    gdouble rate;
++
++    if (!gst_element_query_position (pipeline, &fmt, &position)) {
++      printf ("failed to get current time\n");
++      return TRUE;
++    }
++
++    rate = atof (param);
++
++    if (rate > 1.0 || rate < -1.0) {
++      printf ("change playback rate to %0.5lf\n", rate);
++      gettimeofday (&prev_tv, NULL);
++      playback_rate = rate;
++      if (!gst_element_seek (pipeline, 1.0, GST_FORMAT_TIME,
++              GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
++              GST_SEEK_TYPE_SET, position,
++              GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
++        printf ("failed to seek\n");
++        return TRUE;
++      }
++    } else if (rate > 0.0 && rate <= 1.0) {
++      printf ("change playback rate to %0.5lf\n", rate);
++      if (!gst_element_seek (pipeline, rate, GST_FORMAT_TIME,
++              GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
++              GST_SEEK_TYPE_SET, position,
++              GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
++        printf ("failed to seek\n");
++        return TRUE;
++      }
++    } else {
++      printf ("unsupported playback rate\n");
++    }
+   } else if (strcmp (command, "0") == 0) {
+     /* Movie STOP */
+     gst_element_set_state (pipeline, GST_STATE_NULL);
+@@ -241,6 +279,34 @@ event_loop (GstElement * pipeline)
+           loop = FALSE;
+       }
+         break;
++      case GST_MESSAGE_ELEMENT:
++      {
++        const GstStructure *s;
++        gint64 duration;
++        struct timeval cur_tv;
++
++        s = gst_message_get_structure (message);
++
++        if (gst_structure_has_name (s, "FrameRendered")) {
++          if (playback_rate == 1.0)
++            break;
++
++          gettimeofday (&cur_tv, NULL);
++          duration = (((gint64) cur_tv.tv_sec * 1000000 + cur_tv.tv_usec) - ((gint64) prev_tv.tv_sec * 1000000 + prev_tv.tv_usec)) * 1000;      /* calculation in nano second */
++          memcpy (&prev_tv, &cur_tv, sizeof (prev_tv));
++
++          position += playback_rate * duration;
++
++          if (!gst_element_seek (pipeline, 1.0, GST_FORMAT_TIME,
++                  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
++                  GST_SEEK_TYPE_SET, position,
++                  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
++            printf ("failed to seek\n");
++            return;
++          }
++        }
++      }
++        break;
+       default:
+         break;
+     }
+-- 
+1.7.10.4
+

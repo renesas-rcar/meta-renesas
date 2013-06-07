@@ -1,0 +1,82 @@
+From cfc92db7dc42056b3eedb20fffb8664143d71fea Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 27 Nov 2012 15:22:11 +0900
+Subject: [PATCH 89/97] h264parse: flush the last nal in the GstAdapter when a
+ EOS event is caught
+
+When an H.264 bytestream is sent by a previous plugin, a last nal
+packet remains in the GstAdapter and is cleared after playback ends.
+h264parse looks at a next nal startcode in order to detect nal boundaries,
+and so it can't find the end of the last nal.
+This change pushes a nal start code to the adapter when an EOS event is caught.
+
+This patch is released by Pioneer.
+---
+ gst/h264parse/gsth264parse.c |   23 +++++++++++++++++++++++
+ gst/h264parse/gsth264parse.h |    2 ++
+ 2 files changed, 25 insertions(+)
+
+diff --git a/gst/h264parse/gsth264parse.c b/gst/h264parse/gsth264parse.c
+index fbafe4c..2ad8226 100644
+--- a/gst/h264parse/gsth264parse.c
++++ b/gst/h264parse/gsth264parse.c
+@@ -978,6 +978,8 @@ gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
+   h264parse->format = GST_H264_PARSE_FORMAT_INPUT;
+   h264parse->st_code_prefix = DEFAULT_ST_CODE_PREFIX;
+ 
++  h264parse->prev_ts = 0;
++
+   gst_h264_parse_reset (h264parse);
+ }
+ 
+@@ -2391,6 +2393,7 @@ gst_h264_parse_queue_buffer (GstH264Parse * parse, GstBuffer * buffer)
+   data = GST_BUFFER_DATA (buffer);
+   size = GST_BUFFER_SIZE (buffer);
+   timestamp = GST_BUFFER_TIMESTAMP (buffer);
++  parse->prev_ts = timestamp;
+ 
+   link->slice = FALSE;
+   link->i_frame = FALSE;
+@@ -2679,6 +2682,26 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
+       if (h264parse->segment.rate < 0.0) {
+         gst_h264_parse_chain_reverse (h264parse, TRUE, NULL);
+         gst_h264_parse_flush_decode (h264parse);
++      } else if (!h264parse->packetized) {
++        GstBuffer *buf;
++        guint8 *data;
++
++        /*
++         * Prepare for a buffer containing nal start code and push it
++         * to the parse function in order to flush a remaining nal
++         * in the adapter. 8 bytes should be allocated because the last
++         * 4byte will not be searched to look for the start code.
++         */
++        buf = gst_buffer_new_and_alloc (8);
++        data = GST_BUFFER_DATA (buf);
++        data[0] = 0x00;
++        data[1] = 0x00;
++        data[2] = 0x00;
++        data[3] = 0x01;
++        GST_BUFFER_TIMESTAMP (buf) = h264parse->prev_ts;
++
++        gst_h264_parse_chain_forward (h264parse, FALSE, buf);
++        gst_adapter_flush (h264parse->adapter, 8);
+       }
+       res = gst_pad_push_event (h264parse->srcpad, event);
+       break;
+diff --git a/gst/h264parse/gsth264parse.h b/gst/h264parse/gsth264parse.h
+index 85d8312..a0a2825 100644
+--- a/gst/h264parse/gsth264parse.h
++++ b/gst/h264parse/gsth264parse.h
+@@ -140,6 +140,8 @@ struct _GstH264Parse
+ 
+   GstEvent *pending_segment;
+   GList *pending_events;
++
++  GstClockTime prev_ts;
+ };
+ 
+ struct _GstH264ParseClass
+-- 
+1.7.10.4
+

@@ -1,0 +1,31 @@
+From 7c40b968e2b478327d024fa3d9c6130daafcc36f Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Tue, 25 Dec 2012 17:48:16 +0900
+Subject: [PATCH 86/97] ext/dfbvideosink: terminate the setup immediately if
+ meram_open() fails
+
+The setup cannot be continued if meram_open() fails.
+---
+ ext/directfb/dfbvideosink.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 663a978..02013c9 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -932,9 +932,11 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+     gulong addr;
+ 
+     dfbvideosink->meram = meram_open ();
+-    if (dfbvideosink->meram == NULL)
++    if (dfbvideosink->meram == NULL) {
+       GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE, (NULL),
+           ("Failed initializing libshmeram"));
++      goto beach;
++    }
+     regs = meram_lock_reg (dfbvideosink->meram);
+     meram_read_reg (dfbvideosink->meram, regs, MEVCR1, &val);
+     val |= 1 << 29;             /* use 0xc0000000-0xdfffffff */
+-- 
+1.7.10.4
+

@@ -1,0 +1,66 @@
+From 2cda1fcdf8147fdddbca0f2f2d584bda9cc9d283 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 23 May 2012 16:24:16 +0900
+Subject: [PATCH 26/31] sys/v4l2/gstv4l2: return an error from set_caps() if
+ trying to re-create in-use buffers
+
+Whether the caps can be changed depends on the always-copy option.
+
+If the caps of a buffer are changed, the buffer must be
+re-created because the buffer size may change. If always-copy is
+set to false, a buffer which is in use could be freed so that it
+can be re-created.
+
+For this reason, if always-copy is set to false, changing the caps is
+not supported and this patch returns an error.
+---
+ sys/v4l2/gstv4l2src.c |   24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index 3f9c6ba..3109429 100644
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -646,6 +646,8 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+ 
+   /* make sure we stop capturing and dealloc buffers */
+   if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
++    gboolean caps_changed = FALSE;
++
+     memset (&prev_format, 0x00, sizeof (struct v4l2_format));
+     prev_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+     if (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_G_FMT,
+@@ -655,14 +657,24 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+       return FALSE;
+     }
+ 
+-    if (prev_format.fmt.pix.width == w &&
+-        prev_format.fmt.pix.height == h &&
+-        prev_format.fmt.pix.pixelformat == format->pixelformat &&
+-        (v4l2src->fps_n == 0 || v4l2src->fps_n == fps_n) &&
+-        (v4l2src->fps_d == 0 || v4l2src->fps_d == fps_d) &&
+-        v4l2src->frame_byte_size == size) {
++    if (prev_format.fmt.pix.width != w ||
++        prev_format.fmt.pix.height != h ||
++        prev_format.fmt.pix.pixelformat != format->pixelformat ||
++        (v4l2src->fps_n != 0 && v4l2src->fps_n != fps_n) ||
++        (v4l2src->fps_d != 0 && v4l2src->fps_d != fps_d) ||
++        v4l2src->frame_byte_size != size) {
++      caps_changed = TRUE;
++    }
++
++    if (!caps_changed) {
+       GST_LOG_OBJECT (v4l2src, "skip set caps because of no need to change");
+       return TRUE;
++    } else if (!v4l2src->always_copy && caps_changed) {
++      GST_ERROR_OBJECT (v4l2src,
++          "can't change caps if v4l2src->always_copy is FALSE");
++      return FALSE;
++    } else {
++      GST_LOG_OBJECT (v4l2src, "run set caps");
+     }
+ 
+     /* both will throw an element-error on failure */
+-- 
+1.7.9.5
+

@@ -1,0 +1,193 @@
+From 077d4c596e51be368eb495b4aa3e8020acf11d56 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 29 Oct 2012 14:25:22 +0900
+Subject: [PATCH 29/31] videocrop: round down cropping parameters when the
+ color format is NV12
+
+When the color format is NV12, there are restrictions as the following.
+This change properly rounds down cropping parameters according to the
+restrictions.
+
+* Top: even number or multiple of 4 when a interlaced image is received.
+* Left: even number
+* Right: even number
+---
+ gst/videocrop/gstvideocrop.c |   86 +++++++++++++++++++++++++++++++++---------
+ gst/videocrop/gstvideocrop.h |    9 +++++
+ 2 files changed, 77 insertions(+), 18 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 93d6512..8fcc80e 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -624,6 +624,40 @@ gst_video_crop_is_interlaced (GstCaps * caps)
+   return result;
+ }
+ 
++static gboolean
++gst_video_crop_round_down_crop_properties (GstVideoCrop * vcrop, GstCaps * caps,
++    GstVideoCropRectangle * vcrop_rect)
++{
++  GstStructure *structure;
++  guint32 format = 0;
++  gboolean round_down_done;
++
++  g_return_val_if_fail (vcrop_rect != NULL, FALSE);
++
++  structure = gst_caps_get_structure (caps, 0);
++  if (!gst_structure_get_fourcc (structure, "format", &format)) {
++    GST_WARNING_OBJECT (vcrop, "failed to get fourcc");
++    return FALSE;
++  }
++
++  if (vcrop->interlaced && format == GST_MAKE_FOURCC ('N', 'V', '1', '2')) {
++    vcrop_rect->top = GST_ROUND_DOWN_4 (vcrop_rect->top);
++    vcrop_rect->left = GST_ROUND_DOWN_2 (vcrop_rect->left);
++    vcrop_rect->right = GST_ROUND_DOWN_2 (vcrop_rect->right);
++    round_down_done = TRUE;
++  } else if (!vcrop->interlaced &&
++      format == GST_MAKE_FOURCC ('N', 'V', '1', '2')) {
++    vcrop_rect->top = GST_ROUND_DOWN_2 (vcrop_rect->top);
++    vcrop_rect->left = GST_ROUND_DOWN_2 (vcrop_rect->left);
++    vcrop_rect->right = GST_ROUND_DOWN_2 (vcrop_rect->right);
++    round_down_done = TRUE;
++  } else {
++    round_down_done = FALSE;
++  }
++
++  return round_down_done;
++}
++
+ static GstCaps *
+ gst_video_crop_transform_caps (GstBaseTransform * trans,
+     GstPadDirection direction, GstCaps * caps)
+@@ -631,6 +665,7 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+   GstVideoCrop *vcrop;
+   GstCaps *other_caps;
+   gint dy, dx, i;
++  GstVideoCropRectangle rounded_rect;
+ 
+   vcrop = GST_VIDEO_CROP (trans);
+ 
+@@ -644,12 +679,21 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+ 
+   vcrop->interlaced = gst_video_crop_is_interlaced (caps);
+ 
++  rounded_rect.top = vcrop->crop_top;
++  rounded_rect.bottom = vcrop->crop_bottom;
++  rounded_rect.left = vcrop->crop_left;
++  rounded_rect.right = vcrop->crop_right;
++  if (gst_video_crop_round_down_crop_properties (vcrop, caps, &rounded_rect))
++    GST_LOG_OBJECT (vcrop, "round down l=%d,r=%d,b=%d,t=%d",
++        rounded_rect.left, rounded_rect.right, rounded_rect.bottom,
++        rounded_rect.top);
++
+   if (direction == GST_PAD_SRC) {
+-    dx = vcrop->crop_left + vcrop->crop_right;
+-    dy = vcrop->crop_top + vcrop->crop_bottom;
++    dx = rounded_rect.left + rounded_rect.right;
++    dy = rounded_rect.top + rounded_rect.bottom;
+   } else {
+-    dx = 0 - (vcrop->crop_left + vcrop->crop_right);
+-    dy = 0 - (vcrop->crop_top + vcrop->crop_bottom);
++    dx = 0 - (rounded_rect.left + rounded_rect.right);
++    dy = 0 - (rounded_rect.top + rounded_rect.bottom);
+   }
+   GST_OBJECT_UNLOCK (vcrop);
+ 
+@@ -716,20 +760,20 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+       /* Y plane / UV plane */
+       ratio_y_c = img_details.uv_off / (img_details.size - img_details.uv_off);
+       if (vcrop->interlaced)
+-        delta_chroma_offs = rowstride * vcrop->crop_top / ratio_y_c / 2;
++        delta_chroma_offs = rowstride * rounded_rect.top / ratio_y_c / 2;
+       else
+-        delta_chroma_offs = rowstride * vcrop->crop_top / ratio_y_c;
++        delta_chroma_offs = rowstride * rounded_rect.top / ratio_y_c;
+ 
+       /* set tile boudary for T/L addressing */
+       if (gst_structure_get_int (structure, "tile-height", &tile_height)) {
+         gint tile_y_offs, tile_c_offs;
+ 
+         if (vcrop->interlaced) {
+-          tile_y_offs = vcrop->crop_top / 2 % tile_height;
+-          tile_c_offs = vcrop->crop_top / ratio_y_c / 2 % tile_height;
++          tile_y_offs = rounded_rect.top / 2 % tile_height;
++          tile_c_offs = rounded_rect.top / ratio_y_c / 2 % tile_height;
+         } else {
+-          tile_y_offs = vcrop->crop_top % tile_height;
+-          tile_c_offs = vcrop->crop_top / ratio_y_c % tile_height;
++          tile_y_offs = rounded_rect.top % tile_height;
++          tile_c_offs = rounded_rect.top / ratio_y_c % tile_height;
+         }
+ 
+         gst_structure_set (new_structure, "tile_boundary_y_offset",
+@@ -910,25 +954,31 @@ gst_videocrop_transform_size (GstBaseTransform * trans,
+     *othersize = units * outunitsize;
+   } else {
+     guint sub_offset;
++    GstVideoCropRectangle rounded_rect;
++
++    rounded_rect.top = vcrop->crop_top;
++    rounded_rect.bottom = vcrop->crop_bottom;
++    rounded_rect.left = vcrop->crop_left;
++    rounded_rect.right = vcrop->crop_right;
++    gst_video_crop_round_down_crop_properties (vcrop, caps, &rounded_rect);
+ 
+     /* Calculate a subbufer size for zero-copy cropping. The subbuffer is
+        created in prepare_output_buffer (). */
+     if (vcrop->in.packing == VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE) {
+-      sub_offset = (vcrop->crop_top * vcrop->in.stride) +
+-          (vcrop->crop_left * vcrop->in.bytes_per_pixel);
++      sub_offset = (rounded_rect.top * vcrop->in.stride) +
++          (rounded_rect.left * vcrop->in.bytes_per_pixel);
+     } else if (vcrop->in.packing == VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX) {
+-      sub_offset = (vcrop->crop_top * vcrop->in.stride) +
+-          (ROUND_DOWN_2 (vcrop->crop_left) * vcrop->in.bytes_per_pixel);
++      sub_offset = (rounded_rect.top * vcrop->in.stride) +
++          (ROUND_DOWN_2 (rounded_rect.left) * vcrop->in.bytes_per_pixel);
+     } else if (vcrop->in.packing == VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR) {
+       GstStructure *structure;
+ 
+       structure = gst_caps_get_structure (caps, 0);
+       if (vcrop->interlaced)
+-        sub_offset = (vcrop->crop_top / 2 * vcrop->in.stride) +
+-            ROUND_DOWN_2 (vcrop->crop_left);
++        sub_offset = (rounded_rect.top / 2 * vcrop->in.stride) +
++            rounded_rect.left;
+       else
+-        sub_offset = (vcrop->crop_top * vcrop->in.stride) +
+-            ROUND_DOWN_2 (vcrop->crop_left);
++        sub_offset = (rounded_rect.top * vcrop->in.stride) + rounded_rect.left;
+     } else {
+       GST_LOG_OBJECT (vcrop,
+           "can't do zero-copy cropping except for packed format");
+diff --git a/gst/videocrop/gstvideocrop.h b/gst/videocrop/gstvideocrop.h
+index a72cacb..4885c37 100644
+--- a/gst/videocrop/gstvideocrop.h
++++ b/gst/videocrop/gstvideocrop.h
+@@ -67,6 +67,7 @@ struct _GstVideoCropImageDetails
+ 
+ typedef struct _GstVideoCrop GstVideoCrop;
+ typedef struct _GstVideoCropClass GstVideoCropClass;
++typedef struct _GstVideoCropRectangle GstVideoCropRectangle;
+ 
+ struct _GstVideoCrop
+ {
+@@ -94,5 +95,13 @@ struct _GstVideoCropClass
+ 
+ GType gst_video_crop_get_type (void);
+ 
++struct _GstVideoCropRectangle
++{
++  gint left;
++  gint right;
++  gint top;
++  gint bottom;
++};
++
+ G_END_DECLS
+ #endif /* __GST_VIDEO_CROP_H__ */
+-- 
+1.7.9.5
+

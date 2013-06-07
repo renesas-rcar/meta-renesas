@@ -1,0 +1,137 @@
+From 66b1c5c0983ac83893ed185c368eaa984381fdde Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 24 Apr 2012 12:14:07 +0900
+Subject: [PATCH 12/97] dfb-example: support video image cropping
+
+---
+ ext/directfb/dfb-example.c |   63 ++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 55 insertions(+), 8 deletions(-)
+
+diff --git a/ext/directfb/dfb-example.c b/ext/directfb/dfb-example.c
+index 422aef7..02c9fa1 100644
+--- a/ext/directfb/dfb-example.c
++++ b/ext/directfb/dfb-example.c
+@@ -31,13 +31,17 @@ usage (char *cmd)
+   printf ("  -l		specify the number of display layer\n");
+   printf
+       ("  -q		specify the number of buffers to be enqueud in the v4l2 driver\n");
++  printf ("  -T		top of cropped image\n");
++  printf ("  -B		bottom of cropped image\n");
++  printf ("  -L		left of cropped image\n");
++  printf ("  -R		right of cropped image\n");
+   printf ("  -o		DirectFB or GStreamer option\n");
+ }
+ 
+ int
+ main (int argc, char *argv[])
+ {
+-  GstElement *pipeline, *src, *sink;
++  GstElement *pipeline, *src, *sink, *videocrop;
+   int screen_width, screen_height;
+   IDirectFBDisplayLayer *layer;
+   DFBDisplayLayerID layer_id;
+@@ -51,6 +55,7 @@ main (int argc, char *argv[])
+   GstCaps *caps;
+   gboolean is_uyvy = FALSE;
+   guint32 queue_size;
++  int top, bottom, left, right;
+ 
+   if ((argc == 2) && (strcmp (argv[1], "--help") == 0)) {
+     usage (argv[0]);
+@@ -65,9 +70,10 @@ main (int argc, char *argv[])
+   memset (&rect, 0, sizeof (rect));
+   layer_id = 0;
+   queue_size = 4;
++  top = bottom = left = right = 0;
+ 
+   opterr = 0;
+-  while ((opt = getopt (argc, argv, "x:y:w:h:ul:q:o:")) != -1) {
++  while ((opt = getopt (argc, argv, "x:y:w:h:ul:q:o:T:B:L:R:")) != -1) {
+     switch (opt) {
+       case 'x':
+         rect.x = atoi (optarg);
+@@ -90,6 +96,18 @@ main (int argc, char *argv[])
+       case 'q':
+         queue_size = atoi (optarg);
+         break;
++      case 'T':
++        top = atoi (optarg);
++        break;
++      case 'B':
++        bottom = atoi (optarg);
++        break;
++      case 'L':
++        left = atoi (optarg);
++        break;
++      case 'R':
++        right = atoi (optarg);
++        break;
+       case 'o':
+         tmp_argv[tmp_argc++] = strdup (optarg);
+         break;
+@@ -129,11 +147,17 @@ main (int argc, char *argv[])
+      coordinate based on center */
+   primary->GetSubSurface (primary, &rect, &sub_surface);
+ 
+-  /* Creating our pipeline : v4l2src ! dfbvideosink */
++  /* Creating our pipeline : v4l2src ! dfbvideosink (optional: videocrop) */
+   pipeline = gst_pipeline_new (NULL);
+   g_assert (pipeline);
+   src = gst_element_factory_make ("v4l2src", NULL);
+   g_assert (src);
++  if (top || bottom || left || right) {
++    videocrop = gst_element_factory_make ("videocrop", NULL);
++    g_assert (videocrop);
++  } else {
++    videocrop = NULL;
++  }
+   sink = gst_element_factory_make ("dfbvideosink", NULL);
+   g_assert (sink);
+ 
+@@ -146,15 +170,38 @@ main (int argc, char *argv[])
+   /* Adding elements to the pipeline */
+   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+ 
+-  if (!is_uyvy && !gst_element_link (src, sink))
+-    g_error ("Couldn't link videotestsrc and dfbvideosink");
+-  else {
+-    /* set a capability for UYVY */
++  if (is_uyvy && videocrop) {
++    /* src ! caps (video/x-raw-yuv...) ! videocrop ! sink */
++    g_object_set (videocrop, "top", top, "bottom", bottom, "left", left,
++        "right", right, NULL);
++    gst_bin_add_many (GST_BIN (pipeline), src, videocrop, sink, NULL);
++    caps = gst_caps_new_simple ("video/x-raw-yuv",
++        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), NULL);
++    if (!gst_element_link_filtered (src, videocrop, caps))
++      g_error ("Couldn't link src, crop, and caps");
++    if (!gst_element_link (videocrop, sink))
++      g_error ("Couldn't link crop and sink");
++    gst_caps_unref (caps);
++  } else if (is_uyvy) {
++    /* src ! caps (video/x-raw-yuv...) ! sink */
++    gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+     caps = gst_caps_new_simple ("video/x-raw-yuv",
+         "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), NULL);
+     if (!gst_element_link_filtered (src, sink, caps))
+-      g_error ("Couldn't link videotestsrc and dfbvideosink");
++      g_error ("Couldn't link src, caps, and sink");
+     gst_caps_unref (caps);
++  } else if (videocrop) {
++    /* src ! videocrop ! sink */
++    g_object_set (videocrop, "top", top, "bottom", bottom, "left", left,
++        "right", right, NULL);
++    gst_bin_add_many (GST_BIN (pipeline), src, videocrop, sink, NULL);
++    if (!gst_element_link_many (src, videocrop, sink, NULL))
++      g_error ("Couldn't link src, crop, and sink");
++  } else {
++    /* src ! sink */
++    gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
++    if (!gst_element_link (src, sink))
++      g_error ("Couldn't link src and sink");
+   }
+ 
+   primary->Clear (primary, 0x00, 0x00, 0x00, 0xFF);
+-- 
+1.7.10.4
+

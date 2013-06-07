@@ -1,0 +1,123 @@
+From 554ffc759f9a87c4eac81fab91a2ac29e296c33c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 4 Oct 2012 17:22:01 +0900
+Subject: [PATCH 19/31] videocrop: send a query by the first invorker of
+ query_stride_supported
+
+The query_stride_supported() might be failed because start() method
+can be called before the pipeline is constructed. To resolve this issue,
+this patch has the first invoker of query_stride_supported() send
+the query to downstream plugins. The result of query is cached
+at the first invoking.
+---
+ gst/videocrop/gstvideocrop.c |   30 +++++++++++++-----------------
+ gst/videocrop/gstvideocrop.h |    1 -
+ 2 files changed, 13 insertions(+), 18 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 6b1da8a..da30c1b 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -137,9 +137,9 @@ static gboolean gst_video_crop_set_caps (GstBaseTransform * trans,
+     GstCaps * in_caps, GstCaps * outcaps);
+ static gboolean gst_video_crop_src_event (GstBaseTransform * trans,
+     GstEvent * event);
+-static gboolean gst_video_crop_start (GstBaseTransform * trans);
+ static GstFlowReturn gst_video_crop_prepare_output_buffer (GstBaseTransform *
+     trans, GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
++static gboolean gst_video_crop_query_stride_supported (GstVideoCrop * vcrop);
+ 
+ static void
+ gst_video_crop_base_init (gpointer g_class)
+@@ -232,7 +232,6 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
+   basetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_crop_set_caps);
+   basetransform_class->get_unit_size =
+       GST_DEBUG_FUNCPTR (gst_video_crop_get_unit_size);
+-  basetransform_class->start = GST_DEBUG_FUNCPTR (gst_video_crop_start);
+   basetransform_class->prepare_output_buffer =
+       GST_DEBUG_FUNCPTR (gst_video_crop_prepare_output_buffer);
+ 
+@@ -520,7 +519,7 @@ gst_video_crop_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+ {
+   GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
+ 
+-  if (vcrop->stride_supported &&
++  if (gst_video_crop_query_stride_supported (vcrop) &&
+       ((vcrop->in.packing == VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE) ||
+           (vcrop->in.packing == VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX) ||
+           (vcrop->in.packing == VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR))) {
+@@ -688,11 +687,12 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+       delta_chroma_offs = 0;
+     }
+ 
+-    if (vcrop->stride_supported && (direction == GST_PAD_SINK) && rowstride)
++    if (gst_video_crop_query_stride_supported (vcrop) &&
++        (direction == GST_PAD_SINK) && rowstride)
+       gst_structure_set (new_structure, "rowstride", G_TYPE_INT,
+           (gint) rowstride, NULL);
+ 
+-    if (vcrop->stride_supported &&
++    if (gst_video_crop_query_stride_supported (vcrop) &&
+         gst_structure_get_int (structure, "chroma_byte_offset",
+             &chroma_byte_offset) && delta_chroma_offs) {
+       /* Adjust chroma_byte_offset because it would exceed the proper value
+@@ -772,10 +772,14 @@ cropping_too_much:
+ static gboolean
+ gst_video_crop_query_stride_supported (GstVideoCrop * vcrop)
+ {
+-  gboolean result = FALSE;
++  static gboolean result = FALSE;
+   GstPad *peer = gst_pad_get_peer (GST_BASE_TRANSFORM (vcrop)->srcpad);
+   GstStructure *structure;
+   GstQuery *query;
++  static gboolean is_query_done = FALSE;
++
++  if (is_query_done)
++    return result;
+ 
+   structure = gst_structure_empty_new ("GstQueryStrideSupported");
+   gst_structure_set (structure, "stride-supported", G_TYPE_BOOLEAN, FALSE,
+@@ -788,17 +792,9 @@ gst_video_crop_query_stride_supported (GstVideoCrop * vcrop)
+   gst_query_unref (query);
+   gst_object_unref (peer);
+ 
+-  return result;
+-}
+-
+-static gboolean
+-gst_video_crop_start (GstBaseTransform * trans)
+-{
+-  GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
+-
+-  vcrop->stride_supported = gst_video_crop_query_stride_supported (vcrop);
++  is_query_done = TRUE;
+ 
+-  return TRUE;
++  return result;
+ }
+ 
+ static GstFlowReturn
+@@ -808,7 +804,7 @@ gst_video_crop_prepare_output_buffer (GstBaseTransform * trans,
+   GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
+   guint sub_offset, sub_size;
+ 
+-  if (!vcrop->stride_supported) {
++  if (!gst_video_crop_query_stride_supported (vcrop)) {
+     GST_LOG_OBJECT
+         (vcrop,
+         "creating subbuffer isn't needed because downstream plugins don't support rowstride");
+diff --git a/gst/videocrop/gstvideocrop.h b/gst/videocrop/gstvideocrop.h
+index 2e5d5e6..1534b3d 100644
+--- a/gst/videocrop/gstvideocrop.h
++++ b/gst/videocrop/gstvideocrop.h
+@@ -83,7 +83,6 @@ struct _GstVideoCrop
+ 
+   /* query for rowstride */
+   GstQueryType query_type_stride;
+-  gboolean stride_supported;
+ };
+ 
+ struct _GstVideoCropClass
+-- 
+1.7.9.5
+

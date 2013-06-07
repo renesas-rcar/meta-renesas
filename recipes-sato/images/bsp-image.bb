@@ -1,16 +1,16 @@
 require recipes-sato/images/core-image-sato.bb
 
 IMAGE_INSTALL += " \
-	gst-plugins-good \
-	gst-plugins-good-isomp4 \
-	gst-plugins-good-video4linux2 \
-	gst-plugins-bad \
+        gst-plugins-good \
+        gst-plugins-good-isomp4 \
+        gst-plugins-good-video4linux2 \
+        gst-plugins-bad \
 	gst-plugins-bad-asfmux \
 	gst-plugins-bad-fbdevsink \
-	gst-plugins-bad-h264parse \
-	gst-plugins-bad-faad \
+        gst-plugins-bad-h264parse \
+        gst-plugins-bad-faad \
 	gst-plugins-bad-videoparsersbad \
-	gst-plugins-ugly \
-	gst-plugins-ugly-asf \
+        gst-plugins-ugly \
+        gst-plugins-ugly-asf \
 	gst-openmax \
 "

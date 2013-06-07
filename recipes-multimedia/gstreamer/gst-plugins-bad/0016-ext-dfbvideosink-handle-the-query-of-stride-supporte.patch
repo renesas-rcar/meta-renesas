@@ -1,0 +1,74 @@
+From 575f442636d41927e42d3a79b93761c87beef775 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 9 May 2012 16:58:18 +0900
+Subject: [PATCH 16/97] ext/dfbvideosink: handle the query of stride-supported
+
+The query of stride-supported is sent for asking whether
+dealing with rowstride is supported.
+This patch adds the handler for receiving this query.
+
+This is preliminary for using rowstride obtained by caps
+to be set to libshvio.
+---
+ ext/directfb/dfbvideosink.c |   31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 8c47da3..2842d69 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -2410,6 +2410,32 @@ gst_dfbvideosink_get_property (GObject * object, guint prop_id,
+   }
+ }
+ 
++static gboolean
++gst_dfbvideosink_handle_sink_query (GstPad * pad, GstQuery * query)
++{
++  gboolean res = FALSE;
++  GstDfbVideoSink *dfbvideosink;
++  GstQueryType query_type_stride;
++
++  dfbvideosink = GST_DFBVIDEOSINK (gst_pad_get_parent (pad));
++
++  GST_LOG_OBJECT (dfbvideosink, "%s query", GST_QUERY_TYPE_NAME (query));
++
++  query_type_stride = gst_query_type_get_by_nick ("stride-supported");
++  if (query_type_stride == GST_QUERY_TYPE (query)) {
++    GstStructure *structure = gst_query_get_structure (query);
++    gst_structure_set (structure, "stride-supported", G_TYPE_BOOLEAN, FALSE,
++        NULL);
++    res = TRUE;
++  } else {
++    res = gst_pad_query_default (pad, query);
++  }
++
++  gst_object_unref (dfbvideosink);
++
++  return res;
++}
++
+ /* =========================================== */
+ /*                                             */
+ /*              Init & Class init              */
+@@ -2440,6 +2466,8 @@ gst_dfbvideosink_finalize (GObject * object)
+ static void
+ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
+ {
++  GstPad *pad = GST_BASE_SINK_PAD (dfbvideosink);
++
+   dfbvideosink->pool_lock = g_mutex_new ();
+   dfbvideosink->buffer_pool = NULL;
+   dfbvideosink->video_height = dfbvideosink->out_height = 0;
+@@ -2473,6 +2501,9 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
+   dfbvideosink->saturation = -1;
+ 
+   dfbvideosink->par = NULL;
++
++  gst_pad_set_query_function (pad,
++      GST_DEBUG_FUNCPTR (gst_dfbvideosink_handle_sink_query));
+ }
+ 
+ static void
+-- 
+1.7.10.4
+

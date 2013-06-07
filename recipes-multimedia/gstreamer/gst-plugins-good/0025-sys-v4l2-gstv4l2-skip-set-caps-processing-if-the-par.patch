@@ -1,0 +1,86 @@
+From 91b8fe5f2e81eb1c5fcdd2f27e5d40ce64a4433f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 16 May 2012 15:41:40 +0900
+Subject: [PATCH 25/31] sys/v4l2/gstv4l2: skip set caps processing if the
+ parameters are unchanged
+
+v4l2src re-creates the buffer pool in set_caps() when the buffers
+already have been allocated. If always-copy is set to false,
+the buffer dequeued from V4L2 driver can be passed to next plugin
+without copying. Therefore, set_caps() could free the buffer which
+is in use.
+
+set_caps() may be invoked by core libraries even if there is no change
+to the caps value. This behavior could free the buffer which is in use
+by another plugin. This patch skips the set_caps() processing if the caps
+parameters are unchanged.
+---
+ sys/v4l2/gstv4l2src.c |   36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index d3f9a3c..3f9c6ba 100644
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -628,6 +628,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+   struct v4l2_fmtdesc *format;
+   guint fps_n, fps_d;
+   guint size;
++  struct v4l2_format prev_format;
+ 
+   v4l2src = GST_V4L2SRC (src);
+ 
+@@ -635,8 +636,35 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+   if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object))
+     return FALSE;
+ 
++  /* we want our own v4l2 type of fourcc codes */
++  if (!gst_v4l2_object_get_caps_info (v4l2src->v4l2object, caps, &format, &w,
++          &h, &interlaced, &fps_n, &fps_d, &size)) {
++    GST_INFO_OBJECT (v4l2src,
++        "can't get capture format from caps %" GST_PTR_FORMAT, caps);
++    return FALSE;
++  }
++
+   /* make sure we stop capturing and dealloc buffers */
+   if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
++    memset (&prev_format, 0x00, sizeof (struct v4l2_format));
++    prev_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++    if (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_G_FMT,
++            &prev_format) < 0) {
++      GST_ERROR_OBJECT (v4l2src, "Call to G_FMT failed: (%s)",
++          g_strerror (errno));
++      return FALSE;
++    }
++
++    if (prev_format.fmt.pix.width == w &&
++        prev_format.fmt.pix.height == h &&
++        prev_format.fmt.pix.pixelformat == format->pixelformat &&
++        (v4l2src->fps_n == 0 || v4l2src->fps_n == fps_n) &&
++        (v4l2src->fps_d == 0 || v4l2src->fps_d == fps_d) &&
++        v4l2src->frame_byte_size == size) {
++      GST_LOG_OBJECT (v4l2src, "skip set caps because of no need to change");
++      return TRUE;
++    }
++
+     /* both will throw an element-error on failure */
+     if (!gst_v4l2src_capture_stop (v4l2src))
+       return FALSE;
+@@ -644,14 +672,6 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+       return FALSE;
+   }
+ 
+-  /* we want our own v4l2 type of fourcc codes */
+-  if (!gst_v4l2_object_get_caps_info (v4l2src->v4l2object, caps, &format, &w,
+-          &h, &interlaced, &fps_n, &fps_d, &size)) {
+-    GST_INFO_OBJECT (v4l2src,
+-        "can't get capture format from caps %" GST_PTR_FORMAT, caps);
+-    return FALSE;
+-  }
+-
+   GST_DEBUG_OBJECT (v4l2src, "trying to set_capture %dx%d at %d/%d fps, "
+       "format %s", w, h, fps_n, fps_d, format->description);
+ 
+-- 
+1.7.9.5
+

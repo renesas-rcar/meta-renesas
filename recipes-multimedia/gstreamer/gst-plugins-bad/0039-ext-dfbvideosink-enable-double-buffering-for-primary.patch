@@ -1,0 +1,35 @@
+From 6a32c62b5623a5d51b94eca1a3ee3cd3250dec3d Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 19 Jul 2012 16:11:30 +0900
+Subject: [PATCH 39/97] ext/dfbvideosink: enable double buffering for primary
+ surface
+
+---
+ ext/directfb/dfbvideosink.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 87841c2..05170cf 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -752,6 +752,17 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+ 
+       dfbvideosink->layer->EnableCursor (dfbvideosink->layer, TRUE);
+ 
++      /* We prefer a double buffered primary surface */
++      if (dfbvideosink->backbuffer) {
++        DFBDisplayLayerConfig lc;
++
++        lc.flags = DLCONF_BUFFERMODE | DLCONF_SURFACE_CAPS;
++        lc.buffermode = DLBM_BACKVIDEO;
++        lc.surface_caps = DSCAPS_FLIPPING;
++
++        dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &lc);
++      }
++
+       GST_DEBUG_OBJECT (dfbvideosink, "getting primary surface");
+       dfbvideosink->layer->GetSurface (dfbvideosink->layer,
+           &dfbvideosink->primary);
+-- 
+1.7.10.4
+

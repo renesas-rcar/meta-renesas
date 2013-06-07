@@ -1,0 +1,32 @@
+From d13fa761751f252c89032248fbf3b363d4f1827c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 29 Nov 2012 14:06:33 +0900
+Subject: [PATCH 23/31] videocrop: skip the transforming caps process when the
+ passthrough mode is set
+
+When the passthrough mode is set, the basetransform class tries to accommodate
+a difference between input and output caps. This behavior causes
+the reallocation of the output buffers, and discarding the physical buffers
+used for zero-copy processing.
+To avoid this problem, the transforming caps process shouldn't be performed.
+---
+ gst/videocrop/gstvideocrop.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index 4887137..caeb0b1 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -614,6 +614,9 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+ 
+   vcrop = GST_VIDEO_CROP (trans);
+ 
++  if (gst_base_transform_is_passthrough (trans))
++    return gst_caps_ref (caps);
++
+   GST_OBJECT_LOCK (vcrop);
+ 
+   GST_LOG_OBJECT (vcrop, "l=%d,r=%d,b=%d,t=%d",
+-- 
+1.7.9.5
+

@@ -1,0 +1,29 @@
+From 1e290d543a940944461d90ca5526a8ef693d252c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 20 Sep 2012 17:25:14 +0900
+Subject: [PATCH 66/97] dfb-video-example: set playback rate as specified when
+ seeking in slow playback mode
+
+This patch fixes a defect that resets the playback rate to 1.0 (normal speed)
+when seeking in slow playback mode.
+---
+ ext/directfb/dfb-video-example.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfb-video-example.c b/ext/directfb/dfb-video-example.c
+index fa79ee1..15ea9f3 100644
+--- a/ext/directfb/dfb-video-example.c
++++ b/ext/directfb/dfb-video-example.c
+@@ -272,7 +272,8 @@ channel_cb (GIOChannel * source, GIOCondition condition, gpointer data)
+ 
+     cur_time += atoi (param) * GST_SECOND;
+ 
+-    if (!gst_element_seek (pipeline, 1.0, GST_FORMAT_TIME,
++    if (!gst_element_seek (pipeline, MIN (1.0, playback_rate),
++            GST_FORMAT_TIME,
+             seek_flags,
+             GST_SEEK_TYPE_SET, cur_time,
+             GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+-- 
+1.7.10.4
+

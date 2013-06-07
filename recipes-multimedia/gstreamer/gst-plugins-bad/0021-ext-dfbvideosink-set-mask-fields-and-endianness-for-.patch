@@ -1,0 +1,153 @@
+From 6f7343cffa4c38b26ac95b07713963a5f25ed09c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 11 Apr 2012 20:03:01 +0900
+Subject: [PATCH 21/97] ext/dfbvideosink: set mask fields and endianness for
+ the caps negotiation
+
+---
+ ext/directfb/dfbvideosink.c |   84 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 61 insertions(+), 23 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 1208f90..709ce14 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -879,34 +879,44 @@ gst_dfbvideosink_get_format_from_caps (GstCaps * caps)
+   structure = gst_caps_get_structure (caps, 0);
+ 
+   if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
+-    gint bpp, depth;
++    gint bpp, depth, endianness, a_mask, r_mask, g_mask, b_mask;
++    gboolean have_alpha;
+ 
+     ret = gst_structure_get_int (structure, "bpp", &bpp);
+     ret &= gst_structure_get_int (structure, "depth", &depth);
++    ret &= gst_structure_get_int (structure, "endianness", &endianness);
++    ret &= gst_structure_get_int (structure, "red_mask", &r_mask);
++    ret &= gst_structure_get_int (structure, "green_mask", &g_mask);
++    ret &= gst_structure_get_int (structure, "blue_mask", &b_mask);
++    have_alpha = gst_structure_get_int (structure, "alpha_mask", &a_mask);
+ 
+     if (!ret) {
+       goto beach;
+     }
+ 
+-    switch (bpp) {
+-      case 16:
++    if (!have_alpha) {
++      if (bpp == 16 && depth == 16 && endianness == G_BIG_ENDIAN &&
++          r_mask == 0xf800 && g_mask == 0x07e0 && b_mask == 0x001f) {
+         pixel_format = DSPF_RGB16;
+-        break;
+-      case 24:
++      } else if (bpp == 24 && depth == 24 && endianness == G_BIG_ENDIAN &&
++          r_mask == 0xff0000 && g_mask == 0x00ff00 && b_mask == 0x0000ff) {
+         pixel_format = DSPF_RGB24;
+-        break;
+-      case 32:
+-        if (depth == 24) {
+-          pixel_format = DSPF_RGB32;
+-        } else if (depth == 32) {
+-          pixel_format = DSPF_ARGB;
+-        } else {
+-          goto beach;
+-        }
+-        break;
+-      default:
+-        GST_WARNING ("unhandled RGB format, bpp %d, depth %d", bpp, depth);
+-        goto beach;
++      } else if (bpp == 32 && depth == 24 && endianness == G_BIG_ENDIAN &&
++          r_mask == 0x00ff0000 && g_mask == 0x0000ff00 &&
++          b_mask == 0x000000ff) {
++        pixel_format = DSPF_RGB32;
++      }
++    } else {
++      if (bpp == 32 && depth == 32 && endianness == G_BIG_ENDIAN &&
++          a_mask == 0xff000000 && r_mask == 0x00ff0000 &&
++          g_mask == 0x0000ff00 && b_mask == 0x000000ff) {
++        pixel_format = DSPF_ARGB;
++      }
++    }
++
++    if (pixel_format == DSPF_UNKNOWN) {
++      GST_WARNING ("unhandled RGB format, bpp %d, depth %d", bpp, depth);
++      goto beach;
+     }
+   } else if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
+     guint32 fourcc;
+@@ -949,8 +959,8 @@ static GstCaps *
+ gst_dfbvideosink_get_caps_from_format (DFBSurfacePixelFormat format)
+ {
+   GstCaps *caps = NULL;
+-  gboolean is_rgb = FALSE, is_yuv = FALSE;
+-  gint bpp, depth;
++  gboolean is_rgb = FALSE, is_alpha = FALSE, is_yuv = FALSE;
++  gint bpp, depth, r_mask, g_mask, b_mask, a_mask, endianness;
+   guint32 fourcc;
+ 
+   g_return_val_if_fail (format != DSPF_UNKNOWN, NULL);
+@@ -960,21 +970,38 @@ gst_dfbvideosink_get_caps_from_format (DFBSurfacePixelFormat format)
+       is_rgb = TRUE;
+       bpp = 16;
+       depth = 16;
++      endianness = G_BIG_ENDIAN;
++      r_mask = 0xf800;
++      g_mask = 0x07e0;
++      b_mask = 0x001f;
+       break;
+     case DSPF_RGB24:
+       is_rgb = TRUE;
+       bpp = 24;
+       depth = 24;
++      endianness = G_BIG_ENDIAN;
++      r_mask = 0xff0000;
++      g_mask = 0x00ff00;
++      b_mask = 0x0000ff;
+       break;
+     case DSPF_RGB32:
+       is_rgb = TRUE;
+       bpp = 32;
+       depth = 24;
++      endianness = G_BIG_ENDIAN;
++      r_mask = 0x00ff0000;
++      g_mask = 0x0000ff00;
++      b_mask = 0x000000ff;
+       break;
+     case DSPF_ARGB:
+-      is_rgb = TRUE;
++      is_rgb = is_alpha = TRUE;
+       bpp = 32;
+       depth = 32;
++      endianness = G_BIG_ENDIAN;
++      a_mask = 0xff000000;
++      r_mask = 0x00ff0000;
++      g_mask = 0x0000ff00;
++      b_mask = 0x000000ff;
+       break;
+     case DSPF_YUY2:
+       is_yuv = TRUE;
+@@ -999,8 +1026,19 @@ gst_dfbvideosink_get_caps_from_format (DFBSurfacePixelFormat format)
+   }
+ 
+   if (is_rgb) {
+-    caps = gst_caps_new_simple ("video/x-raw-rgb",
+-        "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
++    if (is_alpha)
++      caps = gst_caps_new_simple ("video/x-raw-rgb",
++          "alpha_mask", G_TYPE_INT, a_mask,
++          "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth,
++          "red_mask", G_TYPE_INT, r_mask, "green_mask", G_TYPE_INT, g_mask,
++          "blue_mask", G_TYPE_INT, b_mask, "endianness", G_TYPE_INT, endianness,
++          NULL);
++    else
++      caps = gst_caps_new_simple ("video/x-raw-rgb",
++          "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth,
++          "red_mask", G_TYPE_INT, r_mask, "green_mask", G_TYPE_INT, g_mask,
++          "blue_mask", G_TYPE_INT, b_mask, "endianness", G_TYPE_INT, endianness,
++          NULL);
+   } else if (is_yuv) {
+     caps = gst_caps_new_simple ("video/x-raw-yuv",
+         "format", GST_TYPE_FOURCC, fourcc, NULL);
+-- 
+1.7.10.4
+
