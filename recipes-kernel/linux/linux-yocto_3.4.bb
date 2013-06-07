@@ -490,7 +490,7 @@ S = "${WORKDIR}/git"
 
 FILESEXTRAPATHS_prepend_lager := "${THISDIR}/${PN}:"
 
-KERNEL_DEFCONFIG = "lager_defconfig"
+KERNEL_DEFCONFIG = "shmobile_defconfig"
 
 do_configure_prepend() {
         install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
