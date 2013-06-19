@@ -8,6 +8,3 @@ KMACHINE = "armadillo800eva"
 LINUX_VERSION = "3.4.25"
 SRCREV ?= "48d7d215d960da249104e337104f6941250149a5"
 
-SRC_URI_append = " \
-	file://defconfig \
-	"
