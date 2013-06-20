@@ -1,3 +1,5 @@
+require linux-dtb-append.inc
+
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 COMPATIBLE_MACHINE = "armadillo800eva"
