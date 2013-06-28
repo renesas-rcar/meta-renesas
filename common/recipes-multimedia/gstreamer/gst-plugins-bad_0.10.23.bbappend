@@ -121,4 +121,5 @@ SRC_URI += " \
     file://0007-ext-dfbvideosink-register-framebuffer-memory-to-UIOM.patch \
     file://0008-ext-dfbvideosink-allocate-a-meram-region-at-the-init.patch \
     file://0009-Revert-ext-dfbvideosink-workaround-recreate-a-surfac.patch \
+    file://0001-ext-dfbvideosink-separately-allocate-meram-memory-re.patch \
     "
