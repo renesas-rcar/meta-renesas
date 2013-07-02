@@ -1,0 +1,36 @@
+From 1344ca4d70ca08d6b602d4b861adda6dcabe1be2 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 27 Feb 2013 23:40:34 +0300
+Subject: [PATCH 443/611] ARM: mach-shmobile: marzen: add SATA support
+
+Add SATA support to marzen_defconfig.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit db30abdf3c07c564d4af0f991bb7f38b728f9035)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	arch/arm/configs/marzen_defconfig
+---
+ arch/arm/configs/marzen_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
+index 3930015..3cbb103 100644
+--- a/arch/arm/configs/marzen_defconfig
++++ b/arch/arm/configs/marzen_defconfig
+@@ -47,6 +47,8 @@ CONFIG_DEVTMPFS_MOUNT=y
+ # CONFIG_STANDALONE is not set
+ # CONFIG_PREVENT_FIRMWARE_BUILD is not set
+ # CONFIG_FW_LOADER is not set
++CONFIG_SCSI=y
++CONFIG_BLK_DEV_SD=y
+ CONFIG_ATA=y
+ CONFIG_ATA_SFF=y
+ CONFIG_ATA_BMDMA=y
+-- 
+1.8.2
+

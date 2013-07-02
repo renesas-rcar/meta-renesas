@@ -1,0 +1,167 @@
+From d59461c1ca7f2641a909fdabc09b4a2fd74dedb2 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 4 Jun 2013 11:14:53 +0900
+Subject: [PATCH 532/611] ASoC: simple-card: add asoc_simple_dai for
+ initializing
+
+Current simple-card driver calls asoc_simple_card_dai_init()
+if platform had a asoc_simple_card_dai_init pointer.
+And, this initialization function works only
+when platform has an applicable initial value for each dai settings.
+And basically, almost all sound card requires certain initialization.
+This means that almost all platform has initialization settings,
+and driver do nothing if it doesn't have settings.
+
+And additionally, current simple-card supports sysclk settings but it was
+only for codec.  In order to abolish deviation between cpu and codec,
+and in order to simplify processing,
+this patch adds asoc_simple_dai, and removed pointless
+struct asoc_simple_dai_init_info which was trigger of
+calling asoc_simple_card_dai_init().
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+(cherry picked from commit a4a2992c531f6ca0aa00ce0deb31e51c1b7ae69b)
+
+Conflicts:
+
+        arch/arm/mach-shmobile/board-ap4evb.c
+        arch/arm/mach-shmobile/board-mackerel.c
+        arch/sh/boards/mach-ecovec24/setup.c
+        arch/sh/boards/mach-se/7724/setup.c
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ include/sound/simple_card.h     | 12 ++++-----
+ sound/soc/generic/simple-card.c | 58 +++++++++++++++++++++--------------------
+ 2 files changed, 36 insertions(+), 34 deletions(-)
+
+diff --git a/include/sound/simple_card.h b/include/sound/simple_card.h
+index 4b62b8d..6c74527 100644
+--- a/include/sound/simple_card.h
++++ b/include/sound/simple_card.h
+@@ -14,21 +14,21 @@
+ 
+ #include <sound/soc.h>
+ 
+-struct asoc_simple_dai_init_info {
++struct asoc_simple_dai {
++	const char *name;
+ 	unsigned int fmt;
+-	unsigned int cpu_daifmt;
+-	unsigned int codec_daifmt;
+ 	unsigned int sysclk;
+ };
+ 
+ struct asoc_simple_card_info {
+ 	const char *name;
+ 	const char *card;
+-	const char *cpu_dai;
+ 	const char *codec;
+ 	const char *platform;
+-	const char *codec_dai;
+-	struct asoc_simple_dai_init_info *init; /* for snd_link.init */
++
++	unsigned int daifmt;
++	struct asoc_simple_dai cpu_dai;
++	struct asoc_simple_dai codec_dai;
+ 
+ 	/* used in simple-card.c */
+ 	struct snd_soc_dai_link snd_link;
+diff --git a/sound/soc/generic/simple-card.c b/sound/soc/generic/simple-card.c
+index bc050ec..6cf8355 100644
+--- a/sound/soc/generic/simple-card.c
++++ b/sound/soc/generic/simple-card.c
+@@ -16,33 +16,38 @@
+ #define asoc_simple_get_card_info(p) \
+ 	container_of(p->dai_link, struct asoc_simple_card_info, snd_link)
+ 
++static int __asoc_simple_card_dai_init(struct snd_soc_dai *dai,
++				       struct asoc_simple_dai *set,
++				       unsigned int daifmt)
++{
++	int ret = 0;
++
++	daifmt |= set->fmt;
++
++	if (!ret && daifmt)
++		ret = snd_soc_dai_set_fmt(dai, daifmt);
++
++	if (!ret && set->sysclk)
++		ret = snd_soc_dai_set_sysclk(dai, 0, set->sysclk, 0);
++
++	return ret;
++}
++
+ static int asoc_simple_card_dai_init(struct snd_soc_pcm_runtime *rtd)
+ {
+-	struct asoc_simple_card_info *cinfo = asoc_simple_get_card_info(rtd);
+-	struct asoc_simple_dai_init_info *iinfo = cinfo->init;
++	struct asoc_simple_card_info *info = asoc_simple_get_card_info(rtd);
+ 	struct snd_soc_dai *codec = rtd->codec_dai;
+ 	struct snd_soc_dai *cpu = rtd->cpu_dai;
+-	unsigned int cpu_daifmt = iinfo->fmt | iinfo->cpu_daifmt;
+-	unsigned int codec_daifmt = iinfo->fmt | iinfo->codec_daifmt;
++	unsigned int daifmt = info->daifmt;
+ 	int ret;
+ 
+-	if (codec_daifmt) {
+-		ret = snd_soc_dai_set_fmt(codec, codec_daifmt);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+-	if (iinfo->sysclk) {
+-		ret = snd_soc_dai_set_sysclk(codec, 0, iinfo->sysclk, 0);
+-		if (ret < 0)
+-			return ret;
+-	}
++	ret = __asoc_simple_card_dai_init(codec, &info->codec_dai, daifmt);
++	if (ret < 0)
++		return ret;
+ 
+-	if (cpu_daifmt) {
+-		ret = snd_soc_dai_set_fmt(cpu, cpu_daifmt);
+-		if (ret < 0)
+-			return ret;
+-	}
++	ret = __asoc_simple_card_dai_init(cpu, &info->cpu_dai, daifmt);
++	if (ret < 0)
++		return ret;
+ 
+ 	return 0;
+ }
+@@ -59,10 +64,10 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
+ 
+ 	if (!cinfo->name	||
+ 	    !cinfo->card	||
+-	    !cinfo->cpu_dai	||
+ 	    !cinfo->codec	||
+ 	    !cinfo->platform	||
+-	    !cinfo->codec_dai) {
++	    !cinfo->cpu_dai.name ||
++	    !cinfo->codec_dai.name) {
+ 		dev_err(dev, "insufficient asoc_simple_card_info settings\n");
+ 		return -EINVAL;
+ 	}
+@@ -72,14 +77,11 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
+ 	 */
+ 	cinfo->snd_link.name		= cinfo->name;
+ 	cinfo->snd_link.stream_name	= cinfo->name;
+-	cinfo->snd_link.cpu_dai_name	= cinfo->cpu_dai;
++	cinfo->snd_link.cpu_dai_name	= cinfo->cpu_dai.name;
+ 	cinfo->snd_link.platform_name	= cinfo->platform;
+ 	cinfo->snd_link.codec_name	= cinfo->codec;
+-	cinfo->snd_link.codec_dai_name	= cinfo->codec_dai;
+-
+-	/* enable snd_link.init if cinfo has settings */
+-	if (cinfo->init)
+-		cinfo->snd_link.init	= asoc_simple_card_dai_init;
++	cinfo->snd_link.codec_dai_name	= cinfo->codec_dai.name;
++	cinfo->snd_link.init		= asoc_simple_card_dai_init;
+ 
+ 	/*
+ 	 * init snd_soc_card
+-- 
+1.8.2
+

@@ -1,7 +1,7 @@
-From 88ca6ac75a10941cb3e61dbc83744721c7eaec71 Mon Sep 17 00:00:00 2001
+From c61323c5dc7ea4340bceda534f6a1b5654527a3d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:15 +0300
-Subject: [PATCH 001/138] drm: Move drm_format_num_planes() to drm_crtc.c
+Subject: [PATCH 001/611] drm: Move drm_format_num_planes() to drm_crtc.c
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,17 +15,17 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c        |   32 ++++++++++++++++++++++++++++++++
- drivers/gpu/drm/drm_crtc_helper.c |   33 ---------------------------------
- include/drm/drm_crtc.h            |    2 ++
- include/drm/drm_crtc_helper.h     |    2 --
+ drivers/gpu/drm/drm_crtc.c        | 32 ++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/drm_crtc_helper.c | 33 ---------------------------------
+ include/drm/drm_crtc.h            |  2 ++
+ include/drm/drm_crtc_helper.h     |  2 --
  4 files changed, 34 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index 4fd363f..97c087a 100644
+index c61e672..63142ae 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
-@@ -3468,3 +3468,35 @@ void drm_fb_get_bpp_depth(uint32_t format, unsigned int *depth,
+@@ -3469,3 +3469,35 @@ void drm_fb_get_bpp_depth(uint32_t format, unsigned int *depth,
  	}
  }
  EXPORT_SYMBOL(drm_fb_get_bpp_depth);
@@ -125,5 +125,5 @@ index 37515d1..3add00e 100644
 -
  #endif
 -- 
-1.7.5.4
+1.8.2
 

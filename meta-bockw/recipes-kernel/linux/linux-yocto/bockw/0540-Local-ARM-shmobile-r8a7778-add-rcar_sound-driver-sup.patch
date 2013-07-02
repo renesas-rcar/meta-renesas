@@ -1,0 +1,174 @@
+From a67f65fabb824cdca4e8c417d894ebfcdc6caf7a Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 4 Jun 2013 10:58:50 +0900
+Subject: [PATCH 540/611] Local: ARM: shmobile: r8a7778: add rcar_sound driver
+ support
+
+Add a platform device for the r8a7778 SRU/SSI sound
+PIO playback/capture only at this point
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7778.c        | 40 ++++++++++++++++++++++++++-
+ arch/arm/mach-shmobile/include/mach/r8a7778.h |  5 ++++
+ arch/arm/mach-shmobile/setup-r8a7778.c        | 24 ++++++++++++++++
+ 3 files changed, 68 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index 18d44f5..d751c32 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -69,6 +69,15 @@ static struct clk extal_clk = {
+ 	.mapping = &cpg_mapping,
+ };
+ 
++static struct clk audio_clk_a = {
++};
++
++static struct clk audio_clk_b = {
++};
++
++static struct clk audio_clk_c = {
++};
++
+ /*
+  * clock ratio of these clock will be updated
+  * on r8a7778_clock_init()
+@@ -100,15 +109,19 @@ static struct clk *main_clks[] = {
+ 	&p_clk,
+ 	&g_clk,
+ 	&z_clk,
++	&audio_clk_a,
++	&audio_clk_b,
++	&audio_clk_c,
+ };
+ 
+ enum {
+ 	MSTP331,
+ 	MSTP323, MSTP322, MSTP321,
++	MSTP311, MSTP310, MSTP309, MSTP308, MSTP307,
+ 	MSTP114,
+ 	MSTP030,
+ 	MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023, MSTP022, MSTP021,
+-	MSTP016, MSTP015,
++	MSTP016, MSTP015, MSTP012, MSTP011, MSTP010, MSTP009, MSTP008,
+ 	MSTP007,
+ 	MSTP_NR };
+ 
+@@ -117,6 +130,11 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP323] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 23, 0), /* SDHI0 */
+ 	[MSTP322] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 22, 0), /* SDHI1 */
+ 	[MSTP321] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 21, 0), /* SDHI2 */
++	[MSTP311] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 11, 0), /* SSI4 */
++	[MSTP310] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 10, 0), /* SSI5 */
++	[MSTP309] = SH_CLK_MSTP32(&p_clk, MSTPCR3,  9, 0), /* SSI6 */
++	[MSTP308] = SH_CLK_MSTP32(&p_clk, MSTPCR3,  8, 0), /* SSI7 */
++	[MSTP307] = SH_CLK_MSTP32(&p_clk, MSTPCR3,  7, 0), /* SSI8 */
+ 	[MSTP114] = SH_CLK_MSTP32(&p_clk, MSTPCR1, 14, 0), /* Ether */
+ 	[MSTP030] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 30, 0), /* I2C0 */
+ 	[MSTP029] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 29, 0), /* I2C1 */
+@@ -130,6 +148,11 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP021] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 21, 0), /* SCIF5 */
+ 	[MSTP016] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 16, 0), /* TMU0 */
+ 	[MSTP015] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 15, 0), /* TMU1 */
++	[MSTP012] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 12, 0), /* SSI0 */
++	[MSTP011] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 11, 0), /* SSI1 */
++	[MSTP010] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 10, 0), /* SSI2 */
++	[MSTP009] = SH_CLK_MSTP32(&p_clk, MSTPCR0,  9, 0), /* SSI3 */
++	[MSTP008] = SH_CLK_MSTP32(&p_clk, MSTPCR0,  8, 0), /* SRU */
+ 	[MSTP007] = SH_CLK_MSTP32(&p_clk, MSTPCR0,  7, 0), /* HSPI */
+ };
+ 
+@@ -137,6 +160,10 @@ static struct clk_lookup lookups[] = {
+ 	/* main */
+ 	CLKDEV_CON_ID("shyway_clk",	&s_clk),
+ 	CLKDEV_CON_ID("peripheral_clk",	&p_clk),
++	CLKDEV_CON_ID("audio_clk_a",	&audio_clk_a),
++	CLKDEV_CON_ID("audio_clk_b",	&audio_clk_b),
++	CLKDEV_CON_ID("audio_clk_c",	&audio_clk_c),
++	CLKDEV_CON_ID("audio_clk_internal",	&s1_clk),
+ 
+ 	/* MSTP32 clocks */
+ 	CLKDEV_DEV_ID("sh_mmcif", &mstp_clks[MSTP331]), /* MMC */
+@@ -156,9 +183,20 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh-sci.5", &mstp_clks[MSTP021]), /* SCIF6 */
+ 	CLKDEV_DEV_ID("sh_tmu.0", &mstp_clks[MSTP016]), /* TMU00 */
+ 	CLKDEV_DEV_ID("sh_tmu.1", &mstp_clks[MSTP015]), /* TMU01 */
++	CLKDEV_DEV_ID("rcar_sound", &mstp_clks[MSTP008]), /* SRU */
+ 	CLKDEV_DEV_ID("sh-hspi.0", &mstp_clks[MSTP007]), /* HSPI0 */
+ 	CLKDEV_DEV_ID("sh-hspi.1", &mstp_clks[MSTP007]), /* HSPI1 */
+ 	CLKDEV_DEV_ID("sh-hspi.2", &mstp_clks[MSTP007]), /* HSPI2 */
++
++	CLKDEV_ICK_ID("ssi.0", "rcar_sound", &mstp_clks[MSTP012]),
++	CLKDEV_ICK_ID("ssi.1", "rcar_sound", &mstp_clks[MSTP011]),
++	CLKDEV_ICK_ID("ssi.2", "rcar_sound", &mstp_clks[MSTP010]),
++	CLKDEV_ICK_ID("ssi.3", "rcar_sound", &mstp_clks[MSTP009]),
++	CLKDEV_ICK_ID("ssi.4", "rcar_sound", &mstp_clks[MSTP311]),
++	CLKDEV_ICK_ID("ssi.5", "rcar_sound", &mstp_clks[MSTP310]),
++	CLKDEV_ICK_ID("ssi.6", "rcar_sound", &mstp_clks[MSTP309]),
++	CLKDEV_ICK_ID("ssi.7", "rcar_sound", &mstp_clks[MSTP308]),
++	CLKDEV_ICK_ID("ssi.8", "rcar_sound", &mstp_clks[MSTP307]),
+ };
+ 
+ void __init r8a7778_clock_init(void)
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7778.h b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+index fcf3c90..908e4a8 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7778.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+@@ -21,6 +21,8 @@
+ #include <linux/mmc/sh_mmcif.h>
+ #include <linux/mmc/sh_mobile_sdhi.h>
+ #include <linux/sh_eth.h>
++#include <sound/rcar_snd.h>
++#include <sound/simple_card.h>
+ 
+ extern void r8a7778_add_standard_devices(void);
+ extern void r8a7778_add_standard_devices_dt(void);
+@@ -28,6 +30,9 @@ extern void r8a7778_add_ether_device(struct sh_eth_plat_data *pdata);
+ extern void r8a7778_add_i2c_device(int id);
+ extern void r8a7778_add_hspi_device(int id);
+ extern void r8a7778_add_mmc_device(struct sh_mmcif_plat_data *info);
++extern void r8a7778_add_rsnd_devices(struct rcar_snd_info *rsnd_info,
++				     struct asoc_simple_card_info *card_info,
++				     int card_info_nr);
+ 
+ extern void r8a7778_init_delay(void);
+ extern void r8a7778_init_irq(void);
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index 3146306..bf40668 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -235,6 +235,30 @@ void __init r8a7778_add_mmc_device(struct sh_mmcif_plat_data *info)
+ 		info, sizeof(*info));
+ }
+ 
++/* SRU/SSI */
++static struct resource rsnd_resources[] __initdata = {
++	[RSND_GEN1_SRU] = DEFINE_RES_MEM(0xffd90000, 0x1000),
++	[RSND_GEN1_SSI] = DEFINE_RES_MEM(0xffd91000, 0x1240),
++	[RSND_GEN1_ADG] = DEFINE_RES_MEM(0xfffe0000, 0x24),
++};
++
++void __init r8a7778_add_rsnd_devices(struct rcar_snd_info *rsnd_info,
++				     struct asoc_simple_card_info *card_info,
++				     int card_info_nr)
++{
++	int i;
++
++	platform_device_register_resndata(
++		&platform_bus, "rcar_sound", -1,
++		rsnd_resources, ARRAY_SIZE(rsnd_resources),
++		rsnd_info, sizeof(*rsnd_info));
++
++	for (i = 0; i < card_info_nr; i++)
++		platform_device_register_data(
++			&platform_bus, "asoc-simple-card", i,
++			&card_info[i], sizeof(struct asoc_simple_card_info));
++}
++
+ void __init r8a7778_add_standard_devices(void)
+ {
+ 	int i;
+-- 
+1.8.2
+

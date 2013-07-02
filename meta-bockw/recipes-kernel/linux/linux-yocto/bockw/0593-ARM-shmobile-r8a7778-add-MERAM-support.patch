@@ -1,0 +1,25 @@
+From b783e56dd5e61a9a258a48c11eb61bf26d51f791 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Tue, 11 Jun 2013 20:00:44 +0900
+Subject: [PATCH 593/611] ARM: shmobile: r8a7778: add MERAM support
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7778.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index 9fc2891..75ad38a 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -473,7 +473,6 @@ void __init r8a7778_add_vpc_device(struct uio_info *info)
+ static struct resource meram_resources[] __initdata = {
+ 	DEFINE_RES_MEM(0xfd200000, 0x418 + 0x020 * 32 -1),
+ 	DEFINE_RES_MEM(0xfd480000, ((512 - 32) << 10) - 1),
+-
+ };
+ 
+ void __init r8a7778_add_meram_device(struct uio_info *info)
+-- 
+1.8.2
+

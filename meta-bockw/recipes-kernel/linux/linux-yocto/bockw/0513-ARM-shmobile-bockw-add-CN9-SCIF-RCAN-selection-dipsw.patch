@@ -1,0 +1,40 @@
+From ffc35ef65e2975e917881f73a773b2b6fd35e87d Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 8 Apr 2013 23:54:16 -0700
+Subject: [PATCH 513/611] ARM: shmobile: bockw: add CN9 SCIF/RCAN selection
+ dipswitch explanation
+
+Debug serial (= SCIF0) is connected to CN9 upper side,
+and it is shared by RCAN.
+This patch adds SCIF/RCAN dipswitch explanation on
+comment area for developers.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 398092592f52c4e8c5367b80d2f511625a5fb179)
+---
+ arch/arm/mach-shmobile/board-bockw.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index c58338a..df2ee7d 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -25,6 +25,14 @@
+ #include <mach/r8a7778.h>
+ #include <asm/mach/arch.h>
+ 
++/*
++ *	CN9(Upper side) SCIF/RCAN selection
++ *
++ *		1,4	3,6
++ * SW40		SCIF	RCAN
++ * SW41		SCIF	RCAN
++ */
++
+ static struct smsc911x_platform_config smsc911x_data = {
+ 	.irq_polarity	= SMSC911X_IRQ_POLARITY_ACTIVE_LOW,
+ 	.irq_type	= SMSC911X_IRQ_TYPE_PUSH_PULL,
+-- 
+1.8.2
+

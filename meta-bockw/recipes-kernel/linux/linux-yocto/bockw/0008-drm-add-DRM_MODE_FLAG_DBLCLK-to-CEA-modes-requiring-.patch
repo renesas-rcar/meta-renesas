@@ -1,7 +1,7 @@
-From 80ab651847a400f9dea7a5b0a0ffeccdd7120f04 Mon Sep 17 00:00:00 2001
+From 7f8b4f36345ba56639af7b08f4d62c7062ed8214 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Fri, 13 Apr 2012 16:31:39 -0300
-Subject: [PATCH 008/138] drm: add DRM_MODE_FLAG_DBLCLK to CEA modes requiring
+Subject: [PATCH 008/611] drm: add DRM_MODE_FLAG_DBLCLK to CEA modes requiring
  it
 
 CEA modes 6, 7, 8, 9, 21, 22, 23, 24, 44, 45, 50, 51, 54, 55, 58 and 59
@@ -15,8 +15,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_modes.h |   38 ++++++++++++++++++++++----------------
- 1 files changed, 22 insertions(+), 16 deletions(-)
+ drivers/gpu/drm/drm_edid_modes.h | 38 ++++++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
 index 712786a..96190ae 100644
@@ -138,5 +138,5 @@ index 712786a..96190ae 100644
  	{ DRM_MODE("1280x720", DRM_MODE_TYPE_DRIVER, 59400, 1280, 3040,
  		   3080, 3300, 0, 720, 725, 730, 750, 0,
 -- 
-1.7.5.4
+1.8.2
 

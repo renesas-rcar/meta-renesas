@@ -1,0 +1,42 @@
+From b81fc129d29af150b1f875a32deb2aca488d2565 Mon Sep 17 00:00:00 2001
+From: Paul Mundt <lethal@linux-sh.org>
+Date: Tue, 25 Sep 2012 11:51:05 +0900
+Subject: [PATCH 224/611] sh: pfc: Fix up GPIO mux type reconfig case.
+
+Some drivers need to switch pin states between GPIO and pin function at
+runtime, which was inadvertently broken in the pinctrl driver for GPIOs
+being bound to a specific direction.
+
+This fixes up the request path to ensure that previously configured GPIOs
+don't cause us to inadvertently error out with an unsupported mux on
+reconfig, which in practice is primarily aimed at trapping pull-up/down
+users that have yet to be implemented under the new API.
+
+Fixes up regressions in the TPU PWM driver, amongst others.
+
+Reported-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Tested-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+(cherry picked from commit 16d74ebeb1b056dfc80e69b44cc3a26515db1925)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/sh/pfc/pinctrl.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
+index a3ac39b..0646bf6 100644
+--- a/drivers/sh/pfc/pinctrl.c
++++ b/drivers/sh/pfc/pinctrl.c
+@@ -208,6 +208,8 @@ static int sh_pfc_gpio_request_enable(struct pinctrl_dev *pctldev,
+ 
+ 		break;
+ 	case PINMUX_TYPE_GPIO:
++	case PINMUX_TYPE_INPUT:
++	case PINMUX_TYPE_OUTPUT:
+ 		break;
+ 	default:
+ 		pr_err("Unsupported mux type (%d), bailing...\n", pinmux_type);
+-- 
+1.8.2
+

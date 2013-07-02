@@ -1,0 +1,39 @@
+From 087d8c885aabe3599ed84e99b89493a73eb32bfc Mon Sep 17 00:00:00 2001
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Date: Mon, 9 Jul 2012 12:22:56 +0100
+Subject: [PATCH 176/611] gpiolib: Defer failed gpio requests by default
+
+Since users must be explicitly provided with a GPIO number in order to
+request one the overwhelmingly common case for failing to request will
+be that the required GPIO driver has not yet registered and we should
+therefore defer until it has registered.
+
+In order to avoid having to code this logic in individual drivers have
+gpio_request() return -EPROBE_DEFER when failing to look up the GPIO.
+Drivers which don't want this behaviour can override it if they desire.
+
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit e93545763021988def06fbda28fe5da133589a96)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index bd76017..f03ae68 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1188,7 +1188,7 @@ int gpio_request(unsigned gpio, const char *label)
+ {
+ 	struct gpio_desc	*desc;
+ 	struct gpio_chip	*chip;
+-	int			status = -EINVAL;
++	int			status = -EPROBE_DEFER;
+ 	unsigned long		flags;
+ 
+ 	spin_lock_irqsave(&gpio_lock, flags);
+-- 
+1.8.2
+

@@ -1,0 +1,27 @@
+From 1263aa3bb8d19945a05073053f1bdcb861083005 Mon Sep 17 00:00:00 2001
+From: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
+Date: Sun, 10 Feb 2013 19:54:07 +0100
+Subject: [PATCH 484/611] mtd: m25p80: add support for EON EN25QH256
+
+Signed-off-by: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+(cherry picked from commit 6b75152bbfce9bed30de44189d6032099c74c855)
+---
+ drivers/mtd/devices/m25p80.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mtd/devices/m25p80.c b/drivers/mtd/devices/m25p80.c
+index 66fcdc6..15b2f2f 100644
+--- a/drivers/mtd/devices/m25p80.c
++++ b/drivers/mtd/devices/m25p80.c
+@@ -728,6 +728,7 @@ static const struct spi_device_id m25p_ids[] = {
+ 	{ "en25q32b", INFO(0x1c3016, 0, 64 * 1024,  64, 0) },
+ 	{ "en25p64", INFO(0x1c2017, 0, 64 * 1024, 128, 0) },
+ 	{ "en25q64", INFO(0x1c3017, 0, 64 * 1024, 128, SECT_4K) },
++	{ "en25qh256", INFO(0x1c7019, 0, 64 * 1024, 512, 0) },
+ 
+ 	/* Everspin */
+ 	{ "mr25h256", CAT25_INFO(  32 * 1024, 1, 256, 2) },
+-- 
+1.8.2
+

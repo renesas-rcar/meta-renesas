@@ -1,0 +1,32 @@
+From d196dcb5b92c3ba6bee77f2c3aaa7952bda707a2 Mon Sep 17 00:00:00 2001
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 11 Dec 2012 13:12:35 +0100
+Subject: [PATCH 163/611] pinctrl: fix comment mistake
+
+This variable pertains to pinctrl handles not muxes
+specifically.
+
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit b0666ba4745e35adc4e4f25e46c883cc84075ced)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pinctrl/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
+index 009efd8..e8e393a 100644
+--- a/drivers/pinctrl/core.c
++++ b/drivers/pinctrl/core.c
+@@ -642,7 +642,7 @@ static struct pinctrl *create_pinctrl(struct device *dev)
+ 		}
+ 	}
+ 
+-	/* Add the pinmux to the global list */
++	/* Add the pinctrl handle to the global list */
+ 	list_add_tail(&p->node, &pinctrl_list);
+ 
+ 	return p;
+-- 
+1.8.2
+

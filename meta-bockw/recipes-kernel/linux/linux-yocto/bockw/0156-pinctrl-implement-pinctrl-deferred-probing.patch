@@ -1,0 +1,42 @@
+From 4e752866569311f4f6edc4a5da20568b5ef7cdfd Mon Sep 17 00:00:00 2001
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 10 Apr 2012 10:00:38 +0200
+Subject: [PATCH 156/611] pinctrl: implement pinctrl deferred probing
+
+If drivers try to obtain pinctrl handles for a pin controller that
+has not yet registered to the subsystem, we need to be able to
+back out and retry with deferred probing. So let's return
+-EPROBE_DEFER whenever this location fails. Also downgrade the
+errors to info, maybe we will even set them to debug once the
+deferred probing is commonplace.
+
+Cc: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Acked-by: Stephen Warren <swarren@wwwdotorg.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit c05127c4e2c6e7d9949347a76fd05c337bcd5e84)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ Documentation/pinctrl.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Documentation/pinctrl.txt b/Documentation/pinctrl.txt
+index e40f4b4..f46b5b4 100644
+--- a/Documentation/pinctrl.txt
++++ b/Documentation/pinctrl.txt
+@@ -1057,6 +1057,11 @@ requested pinctrl handles, for example if the pinctrl driver has not yet
+ registered. Thus make sure that the error path in your driver gracefully
+ cleans up and is ready to retry the probing later in the startup process.
+ 
++NOTE: the pinctrl system will return -EPROBE_DEFER if it cannot find the
++requested pinctrl handles, for example if the pinctrl driver has not yet
++registered. Thus make sure that the error path in your driver gracefully
++cleans up and is ready to retry the probing later in the startup process.
++
+ 
+ System pin control hogging
+ ==========================
+-- 
+1.8.2
+

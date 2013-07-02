@@ -1,7 +1,7 @@
-From 607c695d903ee3e75a988069c4b1e583dc142424 Mon Sep 17 00:00:00 2001
+From bb676b1c009975952cbcaca3ca7fa314c6e52694 Mon Sep 17 00:00:00 2001
 From: Jim Cromie <jim.cromie@gmail.com>
 Date: Fri, 20 Apr 2012 13:12:16 +0100
-Subject: [PATCH 021/138] drm: replace open-coded ARRAY_SIZE with macro
+Subject: [PATCH 021/611] drm: replace open-coded ARRAY_SIZE with macro
 
 [airlied: fixed one more new one added since]
 
@@ -11,8 +11,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_modes.h |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/gpu/drm/drm_edid_modes.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
 index b027fd5..ff98a7e 100644
@@ -44,5 +44,5 @@ index b027fd5..ff98a7e 100644
 -	sizeof (edid_cea_modes) / sizeof (edid_cea_modes[0]);
 +static const int drm_num_cea_modes = ARRAY_SIZE(edid_cea_modes);
 -- 
-1.7.5.4
+1.8.2
 

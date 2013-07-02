@@ -1,0 +1,153 @@
+From e60f076be48477909a4282ad0a0af5ca027e2678 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 18 Mar 2013 13:16:08 +0100
+Subject: [PATCH 140/611] drm/rcar-du: Reorganize CRTC start/stop and power
+ management code
+
+The DU is acquired in the CRTC start handler and released in its stop
+handler. This prevents accessing the hardware from encoder code.
+
+Reorganize the CRTC code to acquire the DU at mode set prepare time and
+DPMS on time, and release it when the CRTC is disabled.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit c8f79e4087c2df2515e541d2a03d1fa92bc96d33)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 53 +++++++++++++++++++++++++++-------
+ 1 file changed, 43 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 0e5eab1..98c54ff 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -232,8 +232,6 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 	if (WARN_ON(rcrtc->plane->format == NULL))
+ 		return;
+ 
+-	rcar_du_get(rcdu);
+-
+ 	/* Set display off and background to black */
+ 	rcar_du_crtc_write(rcrtc, DOOR, DOOR_RGB(0, 0, 0));
+ 	rcar_du_crtc_write(rcrtc, BPOR, BPOR_RGB(0, 0, 0));
+@@ -290,21 +288,25 @@ static void rcar_du_crtc_stop(struct rcar_du_crtc *rcrtc)
+ 
+ 	rcar_du_start_stop(rcdu, false);
+ 
+-	rcar_du_put(rcdu);
+-
+ 	rcrtc->started = false;
+ }
+ 
+ void rcar_du_crtc_suspend(struct rcar_du_crtc *rcrtc)
+ {
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
+ 	rcar_du_crtc_stop(rcrtc);
++	rcar_du_put(rcdu);
+ }
+ 
+ void rcar_du_crtc_resume(struct rcar_du_crtc *rcrtc)
+ {
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
+ 	if (rcrtc->dpms != DRM_MODE_DPMS_ON)
+ 		return;
+ 
++	rcar_du_get(rcdu);
+ 	rcar_du_crtc_start(rcrtc);
+ }
+ 
+@@ -318,15 +320,19 @@ static void rcar_du_crtc_update_base(struct rcar_du_crtc *rcrtc)
+ 
+ static void rcar_du_crtc_dpms(struct drm_crtc *crtc, int mode)
+ {
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+ 
+ 	if (rcrtc->dpms == mode)
+ 		return;
+ 
+-	if (mode == DRM_MODE_DPMS_ON)
++	if (mode == DRM_MODE_DPMS_ON) {
++		rcar_du_get(rcdu);
+ 		rcar_du_crtc_start(rcrtc);
+-	else
++	} else {
+ 		rcar_du_crtc_stop(rcrtc);
++		rcar_du_put(rcdu);
++	}
+ 
+ 	rcrtc->dpms = mode;
+ }
+@@ -341,10 +347,21 @@ static bool rcar_du_crtc_mode_fixup(struct drm_crtc *crtc,
+ 
+ static void rcar_du_crtc_mode_prepare(struct drm_crtc *crtc)
+ {
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+ 
+-	rcar_du_crtc_dpms(crtc, DRM_MODE_DPMS_OFF);
++	/* We need to access the hardware during mode set, acquire a reference
++	 * to the DU.
++	 */
++	rcar_du_get(rcdu);
++
++	/* Stop the CRTC and release the plane. Force the DPMS mode to off as a
++	 * result.
++	 */
++	rcar_du_crtc_stop(rcrtc);
+ 	rcar_du_plane_release(rcrtc->plane);
++
++	rcrtc->dpms = DRM_MODE_DPMS_OFF;
+ }
+ 
+ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+@@ -362,12 +379,13 @@ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+ 	if (format == NULL) {
+ 		dev_dbg(rcdu->dev, "mode_set: unsupported format %08x\n",
+ 			crtc->fb->pixel_format);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto error;
+ 	}
+ 
+ 	ret = rcar_du_plane_reserve(rcrtc->plane, format);
+ 	if (ret < 0)
+-		return ret;
++		goto error;
+ 
+ 	rcrtc->plane->format = format;
+ 	rcrtc->plane->pitch = crtc->fb->pitches[0];
+@@ -380,11 +398,26 @@ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+ 	rcar_du_plane_compute_base(rcrtc->plane, crtc->fb);
+ 
+ 	return 0;
++
++error:
++	/* There's no rollback/abort operation to clean up in case of error. We
++	 * thus need to release the reference to the DU acquired in prepare()
++	 * here.
++	 */
++	rcar_du_put(rcdu);
++	return ret;
+ }
+ 
+ static void rcar_du_crtc_mode_commit(struct drm_crtc *crtc)
+ {
+-	rcar_du_crtc_dpms(crtc, DRM_MODE_DPMS_ON);
++	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++
++	/* We're done, restart the CRTC and set the DPMS mode to on. The
++	 * reference to the DU acquired at prepare() time will thus be released
++	 * by the DPMS handler (possibly called by the disable() handler).
++	 */
++	rcar_du_crtc_start(rcrtc);
++	rcrtc->dpms = DRM_MODE_DPMS_ON;
+ }
+ 
+ static int rcar_du_crtc_mode_set_base(struct drm_crtc *crtc, int x, int y,
+-- 
+1.8.2
+

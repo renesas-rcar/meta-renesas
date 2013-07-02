@@ -1,7 +1,7 @@
-From f143b2efb9bf87e682fb14da11f79244ef98e748 Mon Sep 17 00:00:00 2001
+From 8949c7b68b831cdf969a6f9f12bbbd1ae8570b66 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Mon, 30 Apr 2012 07:26:16 +0100
-Subject: [PATCH 026/138] drm/edid: fix collision between two patches breaking
+Subject: [PATCH 026/611] drm/edid: fix collision between two patches breaking
  build
 
 this fixes a report that the new load code needed to be updated for
@@ -12,8 +12,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_load.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/gpu/drm/drm_edid_load.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid_load.c b/drivers/gpu/drm/drm_edid_load.c
 index da9acba..48c927c 100644
@@ -38,5 +38,5 @@ index da9acba..48c927c 100644
  	}
  
 -- 
-1.7.5.4
+1.8.2
 

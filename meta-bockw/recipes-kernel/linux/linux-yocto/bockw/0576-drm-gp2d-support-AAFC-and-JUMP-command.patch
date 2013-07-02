@@ -1,0 +1,89 @@
+From 34665ae9ff02b02191d2ef786341411739f8466e Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 7 Mar 2013 17:18:57 +0900
+Subject: [PATCH 576/611] drm: gp2d: support AAFC and JUMP command
+
+AAFC is for alpha map rendering, JUMP is to get over the alpha map
+blob in command buffer.
+---
+ drivers/gpu/drm/gp2d/gp2d_drm_gem.c | 50 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/drivers/gpu/drm/gp2d/gp2d_drm_gem.c b/drivers/gpu/drm/gp2d/gp2d_drm_gem.c
+index f1a7a48..6b4f6ec 100644
+--- a/drivers/gpu/drm/gp2d/gp2d_drm_gem.c
++++ b/drivers/gpu/drm/gp2d/gp2d_drm_gem.c
+@@ -598,6 +598,8 @@ int gp2d_drm_gem_mmap_ioctl(struct drm_device *dev, void *data,
+ #define M2DG_OPCODE_LINE_C      0xB0000000
+ #define M2DG_OPCODE_BITBLTA     0xA2000100
+ #define M2DG_OPCODE_BITBLTC     0xA0000000
++#define M2DG_OPCODE_AAFC        0xA8000000
++#define M2DG_OPCODE_JUMP        0x28000000
+ 
+ 
+ static int
+@@ -680,6 +682,18 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 			n += 2;
+ 			break;
+ 
++		case M2DG_OPCODE_JUMP:
++#if DUMP_BUFFER
++			printk( KERN_DEBUG "gp2d: JUMP (0x%08x)\n", code[n] );
++#endif
++			if (!(code[n] & 0x80)) {
++				printk( KERN_ERR "gp2d: invalid draw mode 0x%04x\n", code[n] & 0xffff );
++				return -EPERM;
++			}
++			REQUIRE_WORDS( 2 + code[n+1] / 4 );
++			n += 2 + code[n+1] / 4;
++			break;
++
+ 		case (M2DG_OPCODE_BITBLTA & 0xff000000):
+ 		case M2DG_OPCODE_BITBLTC:
+ 		case M2DG_OPCODE_POLYGON_4C:
+@@ -687,6 +701,42 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 			n += 6;
+ 			break;
+ 
++		case M2DG_OPCODE_AAFC:
++#if DUMP_BUFFER
++			printk( KERN_DEBUG "gp2d: AAFC (0x%08x)\n", code[n] );
++#endif
++			if (code[n] & 0x80) {
++				u32 addr, w, h;
++
++				REQUIRE_WORDS( 6 );
++
++				addr = n * 4 + code[n+2];
++				if (addr & 7) {
++					printk( KERN_ERR "gp2d: invalid alpha map offset 0x%04x\n", addr );
++					return -EINVAL;
++				}
++
++				w = (code[n+3] & 0xffff) + (code[n+3] >> 16) + 1;
++				h = (code[n+4] & 0xffff) + (code[n+4] >> 16) + 1;
++
++				if (w & 7) {
++					printk( KERN_ERR "gp2d: invalid alpha map width %u\n", w );
++					return -EINVAL;
++				}
++
++				REQUIRE_WORDS( code[n+2] / 4 + w / 4 * h );
++
++				n += code[n+2] / 4 + w / 4 * h;
++			}
++			else {
++				REQUIRE_WORDS( 6 );
++				ret = gp2d_get_dma_buf_phys( private, code[n+2], (unsigned long*) &code[n+2] );
++				if (ret)
++					return ret;
++				n += 6;
++			}
++			break;
++
+ 		case M2DG_OPCODE_POLYGON_4A:
+ 			if (!(code[n] & 0x100)) {
+ 				printk( KERN_ERR "gp2d: invalid draw mode 0x%04x\n", code[n] & 0xffff );
+-- 
+1.8.2
+

@@ -1,0 +1,135 @@
+From 3981645c9a6c0a1d28b0864caa22735bc1104d09 Mon Sep 17 00:00:00 2001
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 6 Nov 2012 17:16:39 +0100
+Subject: [PATCH 190/611] gpiolib: iron out include ladder mistakes
+
+The <*/gpio.h> includes are updated again: now we need to account
+for the problem introduced by commit:
+595679a8038584df7b9398bf34f61db3c038bfea
+"gpiolib: fix up function prototypes etc"
+
+Actually we need static inlines in include/asm-generic/gpio.h
+as well since we may have GPIOLIB but not PINCTRL.
+Make sure to move all the CONFIG_PINCTRL business
+to the end of the file so we are sure we have
+declared struct gpio_chip.
+
+And we need to keep the static inlines in <linux/gpio.h>
+but here for the !CONFIG_GENERIC_GPIO case, and then we
+may as well throw in a few warnings like the other
+prototypes there, if someone would have the bad taste
+of compiling without GENERIC_GPIO even.
+
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 50309a9c2e576ac4ad29e30f5854acb87bdc2ac4)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ include/asm-generic/gpio.h | 56 +++++++++++++++++++++++++++++-----------------
+ include/linux/gpio.h       |  7 +++---
+ 2 files changed, 38 insertions(+), 25 deletions(-)
+
+diff --git a/include/asm-generic/gpio.h b/include/asm-generic/gpio.h
+index b433c63..b6516f3 100644
+--- a/include/asm-generic/gpio.h
++++ b/include/asm-generic/gpio.h
+@@ -48,27 +48,6 @@ struct seq_file;
+ struct module;
+ struct device_node;
+ 
+-#ifdef CONFIG_PINCTRL
+-
+-/**
+- * struct gpio_pin_range - pin range controlled by a gpio chip
+- * @head: list for maintaining set of pin ranges, used internally
+- * @pctldev: pinctrl device which handles corresponding pins
+- * @range: actual range of pins controlled by a gpio controller
+- */
+-
+-struct gpio_pin_range {
+-	struct list_head node;
+-	struct pinctrl_dev *pctldev;
+-	struct pinctrl_gpio_range range;
+-};
+-
+-int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+-			   unsigned int pin_base, unsigned int npins);
+-void gpiochip_remove_pin_ranges(struct gpio_chip *chip);
+-
+-#endif
+-
+ /**
+  * struct gpio_chip - abstract a GPIO controller
+  * @label: for diagnostics
+@@ -291,4 +270,39 @@ static inline void gpio_unexport(unsigned gpio)
+ }
+ #endif	/* CONFIG_GPIO_SYSFS */
+ 
++#ifdef CONFIG_PINCTRL
++
++/**
++ * struct gpio_pin_range - pin range controlled by a gpio chip
++ * @head: list for maintaining set of pin ranges, used internally
++ * @pctldev: pinctrl device which handles corresponding pins
++ * @range: actual range of pins controlled by a gpio controller
++ */
++
++struct gpio_pin_range {
++	struct list_head node;
++	struct pinctrl_dev *pctldev;
++	struct pinctrl_gpio_range range;
++};
++
++int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
++			   unsigned int pin_base, unsigned int npins);
++void gpiochip_remove_pin_ranges(struct gpio_chip *chip);
++
++#else
++
++static inline int
++gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
++		       unsigned int pin_base, unsigned int npins)
++{
++	return 0;
++}
++
++static inline void
++gpiochip_remove_pin_ranges(struct gpio_chip *chip)
++{
++}
++
++#endif /* CONFIG_PINCTRL */
++
+ #endif /* _ASM_GENERIC_GPIO_H */
+diff --git a/include/linux/gpio.h b/include/linux/gpio.h
+index b5bf774..9bf6ee7 100644
+--- a/include/linux/gpio.h
++++ b/include/linux/gpio.h
+@@ -183,21 +183,20 @@ static inline int irq_to_gpio(unsigned irq)
+ 	return -EINVAL;
+ }
+ 
+-#ifdef CONFIG_PINCTRL
+-
+ static inline int
+ gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+ 		       unsigned int pin_base, unsigned int npins)
+ {
++	WARN_ON(1);
++	return -EINVAL;
+ }
+ 
+ static inline void
+ gpiochip_remove_pin_ranges(struct gpio_chip *chip)
+ {
++	WARN_ON(1);
+ }
+ 
+-#endif /* CONFIG_PINCTRL */
+-
+ #endif /* ! CONFIG_GENERIC_GPIO */
+ 
+ #endif /* __LINUX_GPIO_H */
+-- 
+1.8.2
+

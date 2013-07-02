@@ -1,0 +1,41 @@
+From 4c11b2ccdad06b179a1d054313dde2b1c1529884 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 25 Dec 2012 22:52:33 -0800
+Subject: [PATCH 531/611] ASoC: simple-card: use struct device pointer for
+ dev_xxx()
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+(cherry picked from commit f89983ef61677afc828ed32b3c42ef5a71eb0686)
+---
+ sound/soc/generic/simple-card.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/generic/simple-card.c b/sound/soc/generic/simple-card.c
+index b4b4cab..bc050ec 100644
+--- a/sound/soc/generic/simple-card.c
++++ b/sound/soc/generic/simple-card.c
+@@ -50,9 +50,10 @@ static int asoc_simple_card_dai_init(struct snd_soc_pcm_runtime *rtd)
+ static int asoc_simple_card_probe(struct platform_device *pdev)
+ {
+ 	struct asoc_simple_card_info *cinfo = pdev->dev.platform_data;
++	struct device *dev = &pdev->dev;
+ 
+ 	if (!cinfo) {
+-		dev_err(&pdev->dev, "no info for asoc-simple-card\n");
++		dev_err(dev, "no info for asoc-simple-card\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -62,7 +63,7 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
+ 	    !cinfo->codec	||
+ 	    !cinfo->platform	||
+ 	    !cinfo->codec_dai) {
+-		dev_err(&pdev->dev, "insufficient asoc_simple_card_info settings\n");
++		dev_err(dev, "insufficient asoc_simple_card_info settings\n");
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+1.8.2
+

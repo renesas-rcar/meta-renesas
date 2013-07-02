@@ -1,7 +1,7 @@
-From 761daa59d5b558193c1c32990a530d11d9e6099d Mon Sep 17 00:00:00 2001
+From e7a8a3753565d8b678a16a46997083dbc99c30a4 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:32 -0400
-Subject: [PATCH 012/138] drm/edid: Remove a misleading comment
+Subject: [PATCH 012/611] drm/edid: Remove a misleading comment
 
 mode_in_range() handles what this was warning about.
 
@@ -13,14 +13,14 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+ drivers/gpu/drm/drm_edid.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index ad24ccd..4ddc0e5 100644
+index 602a5c3..169e474 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -1016,10 +1016,6 @@ mode_in_range(const struct drm_display_mode *mode, struct edid *edid,
+@@ -1031,10 +1031,6 @@ mode_in_range(const struct drm_display_mode *mode, struct edid *edid,
  	return true;
  }
  
@@ -32,5 +32,5 @@ index ad24ccd..4ddc0e5 100644
  drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
  			struct detailed_timing *timing)
 -- 
-1.7.5.4
+1.8.2
 

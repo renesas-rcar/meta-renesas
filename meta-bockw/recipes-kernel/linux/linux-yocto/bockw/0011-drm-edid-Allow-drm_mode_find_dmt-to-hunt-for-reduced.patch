@@ -1,7 +1,7 @@
-From 26c7d23ac7dfd2d8ed31042ffae75f3ff942e995 Mon Sep 17 00:00:00 2001
+From 5aefeb6a111c6efc5128211e7f0d32841354dd07 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:31 -0400
-Subject: [PATCH 011/138] drm/edid: Allow drm_mode_find_dmt to hunt for
+Subject: [PATCH 011/611] drm/edid: Allow drm_mode_find_dmt to hunt for
  reduced-blanking modes
 
 It won't find any, yet.  Fix up callers to match: standard mode codes
@@ -19,16 +19,16 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c      |   37 ++++++++++++++++++++++++-------------
- drivers/gpu/drm/drm_fb_helper.c |    2 +-
- include/drm/drm_crtc.h          |    3 ++-
+ drivers/gpu/drm/drm_edid.c      | 37 ++++++++++++++++++++++++-------------
+ drivers/gpu/drm/drm_fb_helper.c |  2 +-
+ include/drm/drm_crtc.h          |  3 ++-
  3 files changed, 27 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index 38f5324..ad24ccd 100644
+index 2b8e64a..602a5c3 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -486,18 +486,29 @@ static void edid_fixup_preferred(struct drm_connector *connector,
+@@ -491,18 +491,29 @@ static void edid_fixup_preferred(struct drm_connector *connector,
  	preferred_mode->type |= DRM_MODE_TYPE_PREFERRED;
  }
  
@@ -59,7 +59,7 @@ index 38f5324..ad24ccd 100644
  {
  	int i;
  
-@@ -509,6 +520,8 @@ struct drm_display_mode *drm_mode_find_dmt(struct drm_device *dev,
+@@ -514,6 +525,8 @@ struct drm_display_mode *drm_mode_find_dmt(struct drm_device *dev,
  			continue;
  		if (fresh != drm_mode_vrefresh(ptr))
  			continue;
@@ -68,7 +68,7 @@ index 38f5324..ad24ccd 100644
  
  		return drm_mode_duplicate(dev, ptr);
  	}
-@@ -742,10 +755,17 @@ drm_mode_std(struct drm_connector *connector, struct edid *edid,
+@@ -747,10 +760,17 @@ drm_mode_std(struct drm_connector *connector, struct edid *edid,
  	}
  
  	/* check whether it can be found in default mode table */
@@ -87,7 +87,7 @@ index 38f5324..ad24ccd 100644
  	switch (timing_level) {
  	case LEVEL_DMT:
  		break;
-@@ -920,15 +940,6 @@ static struct drm_display_mode *drm_mode_detailed(struct drm_device *dev,
+@@ -935,15 +955,6 @@ set_size:
  }
  
  static bool
@@ -103,7 +103,7 @@ index 38f5324..ad24ccd 100644
  mode_in_hsync_range(const struct drm_display_mode *mode,
  		    struct edid *edid, u8 *t)
  {
-@@ -1073,8 +1084,8 @@ drm_est3_modes(struct drm_connector *connector, struct detailed_timing *timing)
+@@ -1088,8 +1099,8 @@ drm_est3_modes(struct drm_connector *connector, struct detailed_timing *timing)
  				mode = drm_mode_find_dmt(connector->dev,
  							 est3_modes[m].w,
  							 est3_modes[m].h,
@@ -142,5 +142,5 @@ index 2d63a02..6f5faf6 100644
  extern int drm_mode_create_dumb_ioctl(struct drm_device *dev,
  				      void *data, struct drm_file *file_priv);
 -- 
-1.7.5.4
+1.8.2
 

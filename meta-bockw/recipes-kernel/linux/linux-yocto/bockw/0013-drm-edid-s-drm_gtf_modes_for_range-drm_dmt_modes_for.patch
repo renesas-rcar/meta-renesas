@@ -1,7 +1,7 @@
-From 8840b2a3152bd4ae795764c671a314a73c1ae2be Mon Sep 17 00:00:00 2001
+From 6e3b0d4a7c39fd52f3a9315733adbe1368e6ffc9 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:33 -0400
-Subject: [PATCH 013/138] drm/edid:
+Subject: [PATCH 013/611] drm/edid:
  s/drm_gtf_modes_for_range/drm_dmt_modes_for_range/
 
 Slightly more honest naming.
@@ -14,14 +14,14 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/gpu/drm/drm_edid.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index 4ddc0e5..6adc8c7 100644
+index 169e474..2972fdb 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -1017,7 +1017,7 @@ mode_in_range(const struct drm_display_mode *mode, struct edid *edid,
+@@ -1032,7 +1032,7 @@ mode_in_range(const struct drm_display_mode *mode, struct edid *edid,
  }
  
  static int
@@ -30,7 +30,7 @@ index 4ddc0e5..6adc8c7 100644
  			struct detailed_timing *timing)
  {
  	int i, modes = 0;
-@@ -1045,7 +1045,7 @@ do_inferred_modes(struct detailed_timing *timing, void *c)
+@@ -1060,7 +1060,7 @@ do_inferred_modes(struct detailed_timing *timing, void *c)
  	int gtf = (closure->edid->features & DRM_EDID_FEATURE_DEFAULT_GTF);
  
  	if (gtf && data->type == EDID_DETAIL_MONITOR_RANGE)
@@ -40,5 +40,5 @@ index 4ddc0e5..6adc8c7 100644
  							  timing);
  }
 -- 
-1.7.5.4
+1.8.2
 

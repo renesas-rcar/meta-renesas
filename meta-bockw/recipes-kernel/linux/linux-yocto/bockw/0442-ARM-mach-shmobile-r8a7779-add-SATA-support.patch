@@ -1,0 +1,57 @@
+From 5e8744df452c23683e1ba305a1581d418ecda5cd Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 31 May 2013 16:01:54 +0900
+Subject: [PATCH 442/611] ARM: mach-shmobile: r8a7779: add SATA support
+
+Add SATA clock for r8a7779 SoC (for both device tree and usual cases).
+Register SATA controller as a "late" platform device on r8a7779 SoC.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit a7b9837c7749bf3333151a7d060d239caff1569d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/setup-r8a7779.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7779.c b/arch/arm/mach-shmobile/setup-r8a7779.c
+index 7c5169c..5f1c597 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7779.c
++++ b/arch/arm/mach-shmobile/setup-r8a7779.c
+@@ -374,6 +374,31 @@ static struct platform_device i2c3_device = {
+ 	.id		= 3,
+ 	.resource	= rcar_i2c3_res,
+ 	.num_resources	= ARRAY_SIZE(rcar_i2c3_res),
++};
++
++static struct resource sata_resources[] = {
++	[0] = {
++		.name	= "rcar-sata",
++		.start	= 0xfc600000,
++		.end	= 0xfc601fff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(100),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device sata_device = {
++	.name		= "sata_rcar",
++	.id		= -1,
++	.resource	= sata_resources,
++	.num_resources	= ARRAY_SIZE(sata_resources),
++	.dev		= {
++		.dma_mask		= &sata_device.dev.coherent_dma_mask,
++		.coherent_dma_mask	= DMA_BIT_MASK(32),
++	},
++};
+ 
+ /* DU */
+ static struct resource du_resources[] = {
+-- 
+1.8.2
+

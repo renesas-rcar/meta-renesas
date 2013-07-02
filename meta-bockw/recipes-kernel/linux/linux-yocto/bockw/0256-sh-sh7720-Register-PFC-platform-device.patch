@@ -1,0 +1,56 @@
+From c9c52b2f37330aa14137bdeaf6afa6868d3050ef Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Dec 2012 23:51:08 +0100
+Subject: [PATCH 256/611] sh: sh7720: Register PFC platform device
+
+Add arch code to register the PFC platform device instead of calling the
+driver directly. Platform device registration in the sh-pfc driver will
+be removed.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 85db6bff7e64410b4810c5451ffa3e13ad4e1dab)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/sh/Kconfig                        | 1 +
+ arch/sh/kernel/cpu/sh3/pinmux-sh7720.c | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index c8b7011..8b29b16 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -349,6 +349,7 @@ config CPU_SUBTYPE_SH7720
+ 	select ARCH_WANT_OPTIONAL_GPIOLIB
+ 	select USB_ARCH_HAS_OHCI
+ 	select USB_OHCI_SH if USB_OHCI_HCD
++	select PINCTRL
+ 	help
+ 	  Select SH7720 if you have a SH3-DSP SH7720 CPU.
+ 
+diff --git a/arch/sh/kernel/cpu/sh3/pinmux-sh7720.c b/arch/sh/kernel/cpu/sh3/pinmux-sh7720.c
+index 9ca1546..df0648f 100644
+--- a/arch/sh/kernel/cpu/sh3/pinmux-sh7720.c
++++ b/arch/sh/kernel/cpu/sh3/pinmux-sh7720.c
+@@ -11,6 +11,7 @@
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/gpio.h>
++#include <cpu/pfc.h>
+ #include <cpu/sh7720.h>
+ 
+ enum {
+@@ -1236,7 +1237,7 @@ static struct pinmux_info sh7720_pinmux_info = {
+ 
+ static int __init plat_pinmux_setup(void)
+ {
+-	return register_pinmux(&sh7720_pinmux_info);
++	return sh_pfc_register_info(NULL, NULL, 0, &sh7720_pinmux_info);
+ }
+ 
+ arch_initcall(plat_pinmux_setup);
+-- 
+1.8.2
+

@@ -1,0 +1,90 @@
+From 81c2caadd181a2a61df89824619c546bf761f239 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Fri, 14 Jun 2013 11:22:13 +0900
+Subject: [PATCH 607/611] ARM: shmobile: r8a7778: add WDT support
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c          |  5 +++++
+ arch/arm/mach-shmobile/include/mach/r8a7778.h |  2 ++
+ arch/arm/mach-shmobile/setup-r8a7778.c        | 21 +++++++++++++++++++++
+ 3 files changed, 28 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index f40320d..733908b 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -202,6 +202,10 @@ static struct uio_info icb_plat = {
+ 	.irq = -1,
+ };
+ 
++static struct rcar_wdt_platform_config rcar_wdt_config = {
++	.timermode = WDT_WT_MODE,	/* Watchdog Mode */
++};
++
+ /* SSI/AK4554 */
+ static struct rsnd_ssi_platform_info rsnd_ssi[] = {
+ 	RSND_SSI_UNUSED, /* SSI 0 */
+@@ -507,6 +511,7 @@ static void __init bockw_init(void)
+ 	r8a7778_add_vpu_device();
+ 	r8a7778_add_icb_device(&icb_plat);
+ 	r8a7778_add_pwm_device();
++	r8a7778_add_wdt_device(&rcar_wdt_config);
+ 	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 0,
+ 				      &iclink0_ml86v7667,
+ 				      sizeof(iclink0_ml86v7667));
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7778.h b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+index bd74bfb..f3ecdb6 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7778.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+@@ -26,6 +26,7 @@
+ #include <linux/platform_data/usb-rcar-phy.h>
+ #include <linux/platform_data/camera-rcar.h>
+ #include <linux/platform_data/rcar-du.h>
++#include <linux/rcar-wdt.h>
+ 
+ extern void r8a7778_add_standard_devices(void);
+ extern void r8a7778_add_standard_devices_dt(void);
+@@ -48,6 +49,7 @@ extern void r8a7778_add_vio_device(void);
+ extern void r8a7778_add_vpu_device(void);
+ extern void r8a7778_add_icb_device(struct uio_info *info);
+ extern void r8a7778_add_pwm_device(void);
++extern void r8a7778_add_wdt_device(struct rcar_wdt_platform_config *config);
+ 
+ 
+ extern void r8a7778_init_late(void);
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index 5c2213a..120efe5 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -600,6 +600,27 @@ void __init r8a7778_add_pwm_device(void)
+ 	platform_device_register_full(&pdevinfo);
+ }
+ 
++/* WDT */
++static struct resource wdt_resources[] __initdata = {
++	DEFINE_RES_MEM(0xffcc0000, 0x20),
++	DEFINE_RES_IRQ(gic_iid(0x4b)),
++};
++
++void __init r8a7778_add_wdt_device(struct rcar_wdt_platform_config *config)
++{
++	struct platform_device_info pdevinfo = {
++		.parent		= &platform_bus,
++		.name		= "rcar-wdt",
++		.id		= -1,
++		.res		= wdt_resources,
++		.num_res	= ARRAY_SIZE(wdt_resources),
++		.data		= config,
++		.size_data	= sizeof(*config),
++	};
++
++	platform_device_register_full(&pdevinfo);
++}
++
+ void __init r8a7778_add_standard_devices(void)
+ {
+ 	int i;
+-- 
+1.8.2
+

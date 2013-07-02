@@ -1,0 +1,44 @@
+From f88fed12df45295758ee56eda5c01bca12ef7a84 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Dec 2012 23:50:51 +0100
+Subject: [PATCH 241/611] sh-pfc: Remove check for impossible error condition
+
+The pfc pointer can't be NULL in the get and set value functions, remove
+the error check.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Paul Mundt <lethal@linux-sh.org>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit a99ebec16c0586ec0838558fd1a050801037ebc9)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/sh/pfc/gpio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/sh/pfc/gpio.c b/drivers/sh/pfc/gpio.c
+index 37493e5..c11c1bb 100644
+--- a/drivers/sh/pfc/gpio.c
++++ b/drivers/sh/pfc/gpio.c
+@@ -52,7 +52,7 @@ static void sh_gpio_set_value(struct sh_pfc *pfc, unsigned gpio, int value)
+ 	struct pinmux_data_reg *dr = NULL;
+ 	int bit = 0;
+ 
+-	if (!pfc || sh_pfc_get_data_reg(pfc, gpio, &dr, &bit) != 0)
++	if (sh_pfc_get_data_reg(pfc, gpio, &dr, &bit) != 0)
+ 		BUG();
+ 	else
+ 		sh_pfc_write_bit(dr, bit, value);
+@@ -63,7 +63,7 @@ static int sh_gpio_get_value(struct sh_pfc *pfc, unsigned gpio)
+ 	struct pinmux_data_reg *dr = NULL;
+ 	int bit = 0;
+ 
+-	if (!pfc || sh_pfc_get_data_reg(pfc, gpio, &dr, &bit) != 0)
++	if (sh_pfc_get_data_reg(pfc, gpio, &dr, &bit) != 0)
+ 		return -EINVAL;
+ 
+ 	return sh_pfc_read_bit(dr, bit);
+-- 
+1.8.2
+

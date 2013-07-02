@@ -1,7 +1,7 @@
-From 6868674e29139fa6cd5e98de0fee54a19405bff0 Mon Sep 17 00:00:00 2001
+From df423c0117e854f9c6fae9531c530666607c9962 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:36 -0400
-Subject: [PATCH 016/138] drm/edid: Do drm_dmt_modes_for_range() for all range
+Subject: [PATCH 016/611] drm/edid: Do drm_dmt_modes_for_range() for all range
  descriptor types
 
 EDID 1.4 retcons the meaning of the "GTF feature" bit to mean "is
@@ -18,14 +18,14 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/gpu/drm/drm_edid.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index 6adc8c7..154c156 100644
+index 2972fdb..80310e7 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -1042,12 +1042,13 @@ do_inferred_modes(struct detailed_timing *timing, void *c)
+@@ -1057,12 +1057,13 @@ do_inferred_modes(struct detailed_timing *timing, void *c)
  {
  	struct detailed_mode_closure *closure = c;
  	struct detailed_non_pixel *data = &timing->data.other_data;
@@ -45,5 +45,5 @@ index 6adc8c7..154c156 100644
  
  static int
 -- 
-1.7.5.4
+1.8.2
 

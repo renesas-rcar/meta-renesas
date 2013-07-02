@@ -1,7 +1,7 @@
-From 4ef691779d6d356b1252bcab68670bcf326375dd Mon Sep 17 00:00:00 2001
+From 4bf67438289ccd83c20d06e54cdded2a0e4881cf Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:18 +0300
-Subject: [PATCH 004/138] drm: Add sanity checks to framebuffer creation
+Subject: [PATCH 004/611] drm: Add sanity checks to framebuffer creation
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,11 +15,11 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   47 ++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 43 insertions(+), 4 deletions(-)
+ drivers/gpu/drm/drm_crtc.c | 47 ++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 43 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index d1d49e9..a4c6742 100644
+index 59f0110..68be693 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -2185,6 +2185,47 @@ static int format_check(struct drm_mode_fb_cmd2 *r)
@@ -85,5 +85,5 @@ index d1d49e9..a4c6742 100644
  	mutex_lock(&dev->mode_config.mutex);
  
 -- 
-1.7.5.4
+1.8.2
 

@@ -1,7 +1,7 @@
-From 1a097f27444985c12bbbdc641f1beb5a380f71b0 Mon Sep 17 00:00:00 2001
+From 8b907e8d9455d68f09afc71ad8336d512e155c6d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:24 +0200
-Subject: [PATCH 038/138] drm: Make the CRTC gamma_set operation optional
+Subject: [PATCH 038/611] drm: Make the CRTC gamma_set operation optional
 
 Drivers for hardware without gamma support should not be forced to
 implement a no-op gamma set operation.
@@ -13,13 +13,13 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c          |    5 +++++
- drivers/gpu/drm/drm_fb_helper.c     |    3 +++
- drivers/staging/omapdrm/omap_crtc.c |    7 -------
+ drivers/gpu/drm/drm_crtc.c          | 5 +++++
+ drivers/gpu/drm/drm_fb_helper.c     | 3 +++
+ drivers/staging/omapdrm/omap_crtc.c | 7 -------
  3 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index 72770d6..168fa4b 100644
+index 8c56851..4172510 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -3332,6 +3332,11 @@ int drm_mode_gamma_set_ioctl(struct drm_device *dev,
@@ -74,5 +74,5 @@ index 490a7f1..8b864af 100644
  	.destroy = omap_crtc_destroy,
  	.page_flip = omap_crtc_page_flip_locked,
 -- 
-1.7.5.4
+1.8.2
 

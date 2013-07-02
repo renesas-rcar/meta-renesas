@@ -1,0 +1,56 @@
+From e1c8730ba7d009661ac8fb54eb028f52dd97f047 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 23 Apr 2013 11:08:05 +0000
+Subject: [PATCH 450/611] sh-pfc: r8a7778: Fix outdated GPIO_FN comments
+
+Function GPIOs have been removed, remove comments that refer to them.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 05be36aa55db495fbcfbb27998a3bbe037b31bc1)
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7778.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7778.c b/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
+index b1925cc..72f7a3c 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
+@@ -376,19 +376,19 @@ enum {
+ 	AVS1_MARK,
+ 	AVS2_MARK,
+ 
+-	VI0_R0_C_MARK,  /* see GPIO_FN_VI0_R0_A */
+-	VI0_R1_C_MARK,  /* see GPIO_FN_VI0_R1_A */
+-	VI0_R2_C_MARK,  /* see GPIO_FN_VI0_R2_A */
+-	/* VI0_R3_C_MARK,  see GPIO_FN_VI0_R3_A */
+-	VI0_R4_C_MARK,  /* see GPIO_FN_VI0_R4_A */
+-	VI0_R5_C_MARK,  /* see GPIO_FN_VI0_R5_A */
+-
+-	VI0_R0_D_MARK,  /* see GPIO_FN_VI0_R0_B */
+-	VI0_R1_D_MARK,  /* see GPIO_FN_VI0_R1_B */
+-	VI0_R2_D_MARK,  /* see GPIO_FN_VI0_R2_B */
+-	VI0_R3_D_MARK,  /* see GPIO_FN_VI0_R3_B */
+-	VI0_R4_D_MARK,  /* see GPIO_FN_VI0_R4_B */
+-	VI0_R5_D_MARK,  /* see GPIO_FN_VI0_R5_B */
++	VI0_R0_C_MARK,		/* see sel_vi0 */
++	VI0_R1_C_MARK,		/* see sel_vi0 */
++	VI0_R2_C_MARK,		/* see sel_vi0 */
++	/* VI0_R3_C_MARK, */
++	VI0_R4_C_MARK,		/* see sel_vi0 */
++	VI0_R5_C_MARK,		/* see sel_vi0 */
++
++	VI0_R0_D_MARK,		/* see sel_vi0 */
++	VI0_R1_D_MARK,		/* see sel_vi0 */
++	VI0_R2_D_MARK,		/* see sel_vi0 */
++	VI0_R3_D_MARK,		/* see sel_vi0 */
++	VI0_R4_D_MARK,		/* see sel_vi0 */
++	VI0_R5_D_MARK,		/* see sel_vi0 */
+ 
+ 	/* IPSR0 */
+ 	PRESETOUT_MARK,	PWM1_MARK,	AUDATA0_MARK,
+-- 
+1.8.2
+

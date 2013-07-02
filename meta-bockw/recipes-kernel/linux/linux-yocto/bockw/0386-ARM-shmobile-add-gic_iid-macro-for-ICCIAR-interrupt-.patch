@@ -1,0 +1,41 @@
+From 89181db18af968a22690934288dab951de4c30ed Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 25 Feb 2013 01:39:44 -0800
+Subject: [PATCH 386/611] ARM: shmobile: add gic_iid macro for ICCIAR /
+ interrupt ID
+
+R-Car H1 datasheet GIC number is indicating
+GIC ICCIAR / interrupt ID number, not SPI number,
+but current marzen board code is using gic_spi() with
+un-understandable calculation.
+
+This patch adds new gic_iid() macro which means
+ICCIAR / interrupt ID, and used the number
+currently written on datasheet.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+(cherry picked from commit d03ebe7f470b2ecdee549c0b995f7b66e3370360)
+
+Conflicts:
+	arch/arm/mach-shmobile/board-marzen.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/include/mach/irqs.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/irqs.h b/arch/arm/mach-shmobile/include/mach/irqs.h
+index 3b1e8f2..b2074e2 100644
+--- a/arch/arm/mach-shmobile/include/mach/irqs.h
++++ b/arch/arm/mach-shmobile/include/mach/irqs.h
+@@ -5,6 +5,7 @@
+ 
+ /* GIC */
+ #define gic_spi(nr)		((nr) + 32)
++#define gic_iid(nr)		(nr) /* ICCIAR / interrupt ID */
+ 
+ /* INTCS */
+ #define INTCS_VECT_BASE		0x3400
+-- 
+1.8.2
+

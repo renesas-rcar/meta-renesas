@@ -1,0 +1,56 @@
+From ae8e3b2bf9dc32f4789b473897c64ff7a26dfec3 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 9 Apr 2013 02:37:15 -0700
+Subject: [PATCH 514/611] ARM: shmobile: bockw: add dummy regulators for SMSC
+
+SMSC driver will try to get regulator if .config had CONFIG_REGULATOR,
+and, shmobile_defconfig has it.
+SMSC driver on Bock-W board will be failed if it doens't have
+dummy regulator settings.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 1d076aed0b201e2398765802fdec892ab14c9cec)
+---
+ arch/arm/mach-shmobile/board-bockw.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index df2ee7d..bfcccee 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -19,6 +19,8 @@
+  */
+ 
+ #include <linux/platform_device.h>
++#include <linux/regulator/fixed.h>
++#include <linux/regulator/machine.h>
+ #include <linux/smsc911x.h>
+ #include <mach/common.h>
+ #include <mach/irqs.h>
+@@ -33,6 +35,12 @@
+  * SW41		SCIF	RCAN
+  */
+ 
++/* Dummy supplies, where voltage doesn't matter */
++static struct regulator_consumer_supply dummy_supplies[] = {
++	REGULATOR_SUPPLY("vddvario", "smsc911x"),
++	REGULATOR_SUPPLY("vdd33a", "smsc911x"),
++};
++
+ static struct smsc911x_platform_config smsc911x_data = {
+ 	.irq_polarity	= SMSC911X_IRQ_POLARITY_ACTIVE_LOW,
+ 	.irq_type	= SMSC911X_IRQ_TYPE_PUSH_PULL,
+@@ -68,6 +76,9 @@ static void __init bockw_init(void)
+ 		iowrite16(val, fpga + IRQ0MR);
+ 		iounmap(fpga);
+ 
++		regulator_register_fixed(0, dummy_supplies,
++					 ARRAY_SIZE(dummy_supplies));
++
+ 		platform_device_register_resndata(
+ 			&platform_bus, "smsc911x", -1,
+ 			smsc911x_resources, ARRAY_SIZE(smsc911x_resources),
+-- 
+1.8.2
+

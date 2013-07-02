@@ -1,7 +1,7 @@
-From 03ae7ebb15fa41d574da381dfce41ce2e579f2ed Mon Sep 17 00:00:00 2001
+From a53c6e6096d05d60f77bb71c8c73b13b2fc65b9d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:21 +0200
-Subject: [PATCH 035/138] drm: Don't initialize local ret variable when not
+Subject: [PATCH 035/611] drm: Don't initialize local ret variable when not
  needed
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
@@ -11,19 +11,19 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c        |   12 ++++++------
- drivers/gpu/drm/drm_crtc_helper.c |    2 +-
- drivers/gpu/drm/drm_edid_load.c   |    8 ++++----
- drivers/gpu/drm/drm_fb_helper.c   |    5 +----
- drivers/gpu/drm/drm_gem.c         |    2 +-
- drivers/gpu/drm/drm_irq.c         |   21 ++++++++-------------
- drivers/gpu/drm/drm_lock.c        |    2 +-
- drivers/gpu/drm/drm_stub.c        |    2 +-
- drivers/gpu/drm/drm_sysfs.c       |    2 +-
+ drivers/gpu/drm/drm_crtc.c        | 12 ++++++------
+ drivers/gpu/drm/drm_crtc_helper.c |  2 +-
+ drivers/gpu/drm/drm_edid_load.c   |  8 ++++----
+ drivers/gpu/drm/drm_fb_helper.c   |  5 +----
+ drivers/gpu/drm/drm_gem.c         |  2 +-
+ drivers/gpu/drm/drm_irq.c         | 21 ++++++++-------------
+ drivers/gpu/drm/drm_lock.c        |  2 +-
+ drivers/gpu/drm/drm_stub.c        |  2 +-
+ drivers/gpu/drm/drm_sysfs.c       |  2 +-
  9 files changed, 24 insertions(+), 32 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index e4e9e8c..de9ee51 100644
+index 6a1042e..636b96f 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -1829,7 +1829,7 @@ int drm_mode_setcrtc(struct drm_device *dev, void *data,
@@ -265,5 +265,5 @@ index 5a7bd51..c29fa9c 100644
  	/* We shouldn't get called more than once for the same connector */
  	BUG_ON(device_is_registered(&connector->kdev));
 -- 
-1.7.5.4
+1.8.2
 

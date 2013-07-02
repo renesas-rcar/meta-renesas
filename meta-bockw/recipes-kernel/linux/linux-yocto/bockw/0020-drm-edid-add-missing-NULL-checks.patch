@@ -1,7 +1,7 @@
-From 64981293889b727db6485c522c2a848ab0be0051 Mon Sep 17 00:00:00 2001
+From aceb86ea1079885349d11d66234b27315726990c Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Fri, 20 Apr 2012 12:59:33 +0100
-Subject: [PATCH 020/138] drm/edid: add missing NULL checks.
+Subject: [PATCH 020/611] drm/edid: add missing NULL checks.
 
 Reviewed-by: Dave Airlie <airlied@redhat.com>
 Signed-off-by: Dave Airlie <airlied@redhat.com>
@@ -9,14 +9,14 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/gpu/drm/drm_edid.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index f0b18b54..e8ef017 100644
+index 5c6a994..8fea658 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -779,6 +779,8 @@ drm_mode_std(struct drm_connector *connector, struct edid *edid,
+@@ -784,6 +784,8 @@ drm_mode_std(struct drm_connector *connector, struct edid *edid,
  		 * secondary GTF curve.  Please don't do that.
  		 */
  		mode = drm_gtf_mode(dev, hsize, vsize, vrefresh_rate, 0, 0);
@@ -25,7 +25,7 @@ index f0b18b54..e8ef017 100644
  		if (drm_mode_hsync(mode) > drm_gtf2_hbreak(edid)) {
  			drm_mode_destroy(dev, mode);
  			mode = drm_gtf_mode_complex(dev, hsize, vsize,
-@@ -1048,6 +1050,8 @@ drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
+@@ -1063,6 +1065,8 @@ drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
  	for (i = 0; i < num_extra_modes; i++) {
  		const struct minimode *m = &extra_modes[i];
  		newmode = drm_gtf_mode(dev, m->w, m->h, m->r, 0, 0);
@@ -34,7 +34,7 @@ index f0b18b54..e8ef017 100644
  
  		if (!mode_in_range(newmode, edid, timing)) {
  			drm_mode_destroy(dev, newmode);
-@@ -1073,6 +1077,8 @@ drm_cvt_modes_for_range(struct drm_connector *connector, struct edid *edid,
+@@ -1088,6 +1092,8 @@ drm_cvt_modes_for_range(struct drm_connector *connector, struct edid *edid,
  	for (i = 0; i < num_extra_modes; i++) {
  		const struct minimode *m = &extra_modes[i];
  		newmode = drm_cvt_mode(dev, m->w, m->h, m->r, rb, 0, 0);
@@ -44,5 +44,5 @@ index f0b18b54..e8ef017 100644
  		if (!mode_in_range(newmode, edid, timing)) {
  			drm_mode_destroy(dev, newmode);
 -- 
-1.7.5.4
+1.8.2
 

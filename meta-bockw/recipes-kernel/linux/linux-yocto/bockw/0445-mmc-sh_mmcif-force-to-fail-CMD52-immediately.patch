@@ -1,0 +1,35 @@
+From 478741fd6ee620c04d2c759009f91d9cb716c5cb Mon Sep 17 00:00:00 2001
+From: Teppei Kamijou <teppei.kamijou.yb@renesas.com>
+Date: Wed, 12 Dec 2012 15:38:05 +0100
+Subject: [PATCH 445/611] mmc: sh_mmcif: force to fail CMD52 immediately
+
+mmc_rescan() sends CMD52 (SD_IO_RW_DIRECT) to reset SDIO card during
+card detection. CMD52 should be ignored by SD/eMMC cards, but we can
+also abort it in the driver immediately, since MMCIF doesn't support
+SDIO cards anyway.
+
+Signed-off-by: Teppei Kamijou <teppei.kamijou.yb@renesas.com>
+Signed-off-by: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Signed-off-by: Chris Ball <cjb@laptop.org>
+(cherry picked from commit 92ff0c5bc4000d6b2b1bfc8cd40bd1397a03c8ec)
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ drivers/mmc/host/sh_mmcif.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mmc/host/sh_mmcif.c b/drivers/mmc/host/sh_mmcif.c
+index 74027e3..816f463 100644
+--- a/drivers/mmc/host/sh_mmcif.c
++++ b/drivers/mmc/host/sh_mmcif.c
+@@ -911,6 +911,7 @@ static void sh_mmcif_request(struct mmc_host *mmc, struct mmc_request *mrq)
+ 		if ((mrq->cmd->flags & MMC_CMD_MASK) != MMC_CMD_BCR)
+ 			break;
+ 	case MMC_APP_CMD:
++	case SD_IO_RW_DIRECT:
+ 		host->state = STATE_IDLE;
+ 		mrq->cmd->error = -ETIMEDOUT;
+ 		mmc_request_done(mmc, mrq);
+-- 
+1.8.2
+

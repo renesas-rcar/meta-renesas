@@ -1,0 +1,35 @@
+From c63c75d53156a79170240b0aea76c4706717eed6 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Thu, 4 Apr 2013 00:05:42 -0700
+Subject: [PATCH 491/611] ARM: shmobile: remove ";" from SH_FIXED_RATIO_CLK*()
+ macro
+
+Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit d79090c9f1b75c4c0381503fb2be497be3b0d6ab)
+---
+ arch/arm/mach-shmobile/include/mach/clock.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/clock.h b/arch/arm/mach-shmobile/include/mach/clock.h
+index 76ac612..8902044 100644
+--- a/arch/arm/mach-shmobile/include/mach/clock.h
++++ b/arch/arm/mach-shmobile/include/mach/clock.h
+@@ -24,11 +24,11 @@ struct clk name = {			\
+ }
+ 
+ #define SH_FIXED_RATIO_CLK(name, p, r)		\
+-static SH_FIXED_RATIO_CLKg(name, p, r);
++static SH_FIXED_RATIO_CLKg(name, p, r)
+ 
+ #define SH_FIXED_RATIO_CLK_SET(name, p, m, d)	\
+ 	SH_CLK_RATIO(name, m, d);		\
+-	SH_FIXED_RATIO_CLK(name, p, name);
++	SH_FIXED_RATIO_CLK(name, p, name)
+ 
+ #define SH_CLK_SET_RATIO(p, m, d)	\
+ {			\
+-- 
+1.8.2
+

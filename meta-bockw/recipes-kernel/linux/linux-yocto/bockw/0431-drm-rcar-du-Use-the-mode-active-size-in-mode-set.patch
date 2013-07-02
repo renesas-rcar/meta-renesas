@@ -1,0 +1,34 @@
+From ff24127c2f87764605ae25db1734f42ff0e178b1 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 3 Apr 2013 14:47:10 +0200
+Subject: [PATCH 431/611] drm/rcar-du: Use the mode active size in mode set
+
+The driver currently configures the dislay to the frame buffer size
+while it should use the requested mode active size. Fix it.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 126b60c61cefc9ec1d1ac2255229ed7400580e62)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 1b49b54..08a69db 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -412,8 +412,8 @@ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+ 
+ 	rcrtc->plane->src_x = x;
+ 	rcrtc->plane->src_y = y;
+-	rcrtc->plane->width = crtc->fb->width;
+-	rcrtc->plane->height = crtc->fb->height;
++	rcrtc->plane->width = mode->hdisplay;
++	rcrtc->plane->height = mode->vdisplay;
+ 
+ 	rcar_du_plane_compute_base(rcrtc->plane, crtc->fb);
+ 
+-- 
+1.8.2
+

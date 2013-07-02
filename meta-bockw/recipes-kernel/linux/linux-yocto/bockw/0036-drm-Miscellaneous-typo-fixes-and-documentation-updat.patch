@@ -1,7 +1,7 @@
-From 2ebd9c3a0f76f2eb8999a0329fd94d1fbf4e0b80 Mon Sep 17 00:00:00 2001
+From 4e007d0df15b23ec2b88be97ca1859ddae8ac21d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:20 +0200
-Subject: [PATCH 036/138] drm: Miscellaneous typo fixes and documentation
+Subject: [PATCH 036/611] drm: Miscellaneous typo fixes and documentation
  updates
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
@@ -11,15 +11,15 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c    |    2 +-
- drivers/gpu/drm/drm_sysfs.c   |    8 ++++----
- include/drm/drmP.h            |   10 +++++-----
- include/drm/drm_crtc.h        |   21 +++++++--------------
- include/drm/drm_crtc_helper.h |   21 +++++++++++++++++++++
+ drivers/gpu/drm/drm_crtc.c    |  2 +-
+ drivers/gpu/drm/drm_sysfs.c   |  8 ++++----
+ include/drm/drmP.h            | 10 +++++-----
+ include/drm/drm_crtc.h        | 21 +++++++--------------
+ include/drm/drm_crtc_helper.h | 21 +++++++++++++++++++++
  5 files changed, 38 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index de9ee51..72770d6 100644
+index 636b96f..8c56851 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -363,7 +363,7 @@ EXPORT_SYMBOL(drm_framebuffer_cleanup);
@@ -169,5 +169,5 @@ index 3add00e..7988e55 100644
  	int (*get_modes)(struct drm_connector *connector);
  	int (*mode_valid)(struct drm_connector *connector,
 -- 
-1.7.5.4
+1.8.2
 

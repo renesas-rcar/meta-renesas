@@ -1,7 +1,7 @@
-From 678a69800e3e5710f2c7c6a6e155a87eff659523 Mon Sep 17 00:00:00 2001
+From 9fe148382bbd8b4d53785d83283908d455b6013c Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Mon, 16 Apr 2012 10:40:08 -0400
-Subject: [PATCH 024/138] drm/edid: Try harder to fix up base EDID blocks
+Subject: [PATCH 024/611] drm/edid: Try harder to fix up base EDID blocks
 
 Requiring the first byte of the EDID base block header to be 0 means we
 don't fix up as many transfer errors as we could.  Instead have the
@@ -17,15 +17,15 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   10 +++++-----
- include/drm/drm_crtc.h     |    2 +-
+ drivers/gpu/drm/drm_edid.c | 10 +++++-----
+ include/drm/drm_crtc.h     |  2 +-
  2 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index 261b766..f93a784 100644
+index 32f3e48..51491c2 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -149,13 +149,13 @@ EXPORT_SYMBOL(drm_edid_header_is_valid);
+@@ -154,13 +154,13 @@ EXPORT_SYMBOL(drm_edid_header_is_valid);
   * Sanity check the EDID block (base or extension).  Return 0 if the block
   * doesn't check out, or 1 if it's valid.
   */
@@ -41,7 +41,7 @@ index 261b766..f93a784 100644
  		int score = drm_edid_header_is_valid(raw_edid);
  		if (score == 8) ;
  		else if (score >= 6) {
-@@ -219,7 +219,7 @@ bool drm_edid_is_valid(struct edid *edid)
+@@ -224,7 +224,7 @@ bool drm_edid_is_valid(struct edid *edid)
  		return false;
  
  	for (i = 0; i <= edid->extensions; i++)
@@ -50,7 +50,7 @@ index 261b766..f93a784 100644
  			return false;
  
  	return true;
-@@ -299,7 +299,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+@@ -304,7 +304,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
  	for (i = 0; i < 4; i++) {
  		if (drm_do_probe_ddc_edid(adapter, block, 0, EDID_LENGTH))
  			goto out;
@@ -59,7 +59,7 @@ index 261b766..f93a784 100644
  			break;
  		if (i == 0 && drm_edid_is_zero(block, EDID_LENGTH)) {
  			connector->null_edid_counter++;
-@@ -324,7 +324,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+@@ -329,7 +329,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
  				  block + (valid_extensions + 1) * EDID_LENGTH,
  				  j, EDID_LENGTH))
  				goto out;
@@ -82,5 +82,5 @@ index 6f5faf6..f35e7ed 100644
  struct drm_display_mode *drm_mode_find_dmt(struct drm_device *dev,
  					   int hsize, int vsize, int fresh,
 -- 
-1.7.5.4
+1.8.2
 

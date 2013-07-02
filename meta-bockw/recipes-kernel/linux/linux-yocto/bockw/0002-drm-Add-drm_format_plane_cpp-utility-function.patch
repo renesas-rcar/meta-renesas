@@ -1,7 +1,7 @@
-From 6b1bcbd33d18441408a62cb79d41682dc379160d Mon Sep 17 00:00:00 2001
+From b731efbfa106b1136068bb4499b0d49d29103db7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:16 +0300
-Subject: [PATCH 002/138] drm: Add drm_format_plane_cpp() utility function
+Subject: [PATCH 002/611] drm: Add drm_format_plane_cpp() utility function
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,15 +15,15 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   45 ++++++++++++++++++++++++++++++++++++++++++++
- include/drm/drm_crtc.h     |    1 +
- 2 files changed, 46 insertions(+), 0 deletions(-)
+ drivers/gpu/drm/drm_crtc.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ include/drm/drm_crtc.h     |  1 +
+ 2 files changed, 46 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index 97c087a..5d2f87b 100644
+index 63142ae..7b0d192 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
-@@ -3500,3 +3500,48 @@ int drm_format_num_planes(uint32_t format)
+@@ -3501,3 +3501,48 @@ int drm_format_num_planes(uint32_t format)
  	}
  }
  EXPORT_SYMBOL(drm_format_num_planes);
@@ -84,5 +84,5 @@ index 9dd3ed8..2d128eb 100644
  
  #endif /* __DRM_CRTC_H__ */
 -- 
-1.7.5.4
+1.8.2
 

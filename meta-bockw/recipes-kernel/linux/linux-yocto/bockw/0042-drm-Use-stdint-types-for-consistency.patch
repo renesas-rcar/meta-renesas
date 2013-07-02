@@ -1,7 +1,7 @@
-From 334071b2a6f2cecb0f79c5014121db8129bd97ea Mon Sep 17 00:00:00 2001
+From 4e35a44b790bb6d57546fbe73e5739a64f8765bd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 24 May 2012 20:53:58 +0300
-Subject: [PATCH 042/138] drm: Use stdint types for consistency
+Subject: [PATCH 042/611] drm: Use stdint types for consistency
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,11 +16,11 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/gpu/drm/drm_crtc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index cca03f6..af81f77 100644
+index 367a55f..3859f43 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -3126,7 +3126,7 @@ int drm_mode_connector_update_edid_property(struct drm_connector *connector,
@@ -42,5 +42,5 @@ index cca03f6..af81f77 100644
  			valid_mask |= (1ULL << property->values[i]);
  		return !(value & ~valid_mask);
 -- 
-1.7.5.4
+1.8.2
 

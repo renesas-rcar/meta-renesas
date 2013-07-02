@@ -1,0 +1,1158 @@
+From 2a47680073d7158e22d3a120941b44fca16c906c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 14 Mar 2013 13:17:45 +0900
+Subject: [PATCH 578/611] gp2d: add some supports for R-GP2D acceleration
+
+This change is temporary on debugging.
+---
+ drivers/gpu/drm/drm_prime.c         |   2 +-
+ drivers/gpu/drm/gp2d/gp2d_drm_drv.c | 188 +++++++++++++-----------
+ drivers/gpu/drm/gp2d/gp2d_drm_drv.h | 135 ++++++++++++++++-
+ drivers/gpu/drm/gp2d/gp2d_drm_gem.c | 286 +++++++++++++++++++++++-------------
+ drivers/gpu/drm/gp2d/gp2d_drm_gem.h |   2 +-
+ 5 files changed, 422 insertions(+), 191 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_prime.c b/drivers/gpu/drm/drm_prime.c
+index 1bdf2b5..b75fa91 100644
+--- a/drivers/gpu/drm/drm_prime.c
++++ b/drivers/gpu/drm/drm_prime.c
+@@ -164,7 +164,7 @@ int drm_prime_handle_to_fd_ioctl(struct drm_device *dev, void *data,
+ 	uint32_t flags;
+ 
+ 	if (!drm_core_check_feature(dev, DRIVER_PRIME))
+-		return -EINVAL;
++		return -ENOSYS;
+ 
+ 	if (!dev->driver->prime_handle_to_fd)
+ 		return -ENOSYS;
+diff --git a/drivers/gpu/drm/gp2d/gp2d_drm_drv.c b/drivers/gpu/drm/gp2d/gp2d_drm_drv.c
+index e9e5581..3f6707d 100644
+--- a/drivers/gpu/drm/gp2d/gp2d_drm_drv.c
++++ b/drivers/gpu/drm/gp2d/gp2d_drm_drv.c
+@@ -26,7 +26,6 @@
+  */
+ 
+ #include <drm/drmP.h>
+-//#include "drm_crtc_helper.h"
+ 
+ #include <linux/clk.h>
+ #include <linux/pm_runtime.h>
+@@ -40,52 +39,57 @@
+ #define DRIVER_DESC	"Renesas R-Car GP2D DRM"
+ #define DRIVER_DATE	"20130112"
+ #define DRIVER_MAJOR	0
+-#define DRIVER_MINOR	1
+-
+-#define FRQMR   0xffc80014
+-#define MSTPCR0 0xffc80030
+-#define MSTPCR1 0xffc80034
+-#define MSTPCR2 0xffc80038
+-#define MSTPCR3 0xffc8003c
+-#define MSTPSR1 0xffc80044
+-#define MSTPSR4 0xffc80048
+-#define MSTPSR6 0xffc8004c
+-#define MSTPCR4 0xffc80050
+-#define MSTPCR5 0xffc80054
+-#define MSTPCR6 0xffc80058
+-#define MSTPCR7 0xffc80040
++#define DRIVER_MINOR	5
+ 
+ 
+-#ifdef GP2D_IRQ_POLLER
++/*
++ * Hardware functions
++ */
+ 
+-static void test_reg(struct gp2d_drm_private *private,const char *name,unsigned long offset, int start, int stop)
++void
++gp2d_drm_reset( struct gp2d_drm_private *private )
+ {
+-	int i;
++	GP2D_DEBUG( VERBOSE, "%s: Resetting core...\n", __FUNCTION__ );
++
++	GP2D_SCLR = GP2D_SCLR_RESET;
++	udelay( 5 );
++	GP2D_SCLR = 0;
++
++	GP2D_DEBUG( VERBOSE, "%s: Clearing interrupts...\n", __FUNCTION__ );
+ 
+-	for (i=start; i<=stop; i++) {
+-		if (readl(offset) & (1 << i))
+-		    continue;
++	GP2D_STATUS_CLEAR = GP2D_INT_ANY;
++
++	GP2D_DEBUG( VERBOSE, "%s: Enabling interrupts...\n", __FUNCTION__ );
++
++	GP2D_INT_ENABLE   = GP2D_INT_ANY;
+ 
+-		printk( "test %s - %d...\n", name, i );
+ 
+-		schedule_timeout( 1 );
++	GP2D_DEBUG( MAIN, "%s: GP2D STATUS 0x%08x\n", __FUNCTION__, GP2D_STATUS );
++}
+ 
+-		writel( readl( offset ) | 1 << i, offset );
++void
++gp2d_drm_start( struct gp2d_drm_private *private,
++			 struct gp2d_execution   *exec )
++{
++	unsigned long dma_addr = exec->buffer->dma_addr;
+ 
+-		schedule_timeout( 1 );
++	GP2D_DEBUG( VERBOSE, "%s: Running buffer at 0x%08lx\n", __FUNCTION__, dma_addr );
+ 
+-		GP2D_SCLR = GP2D_SCLR_RESET;
+-		udelay( 5 );
+-		GP2D_SCLR = 0;
++	GP2D_DRM_ASSERT( private->busy == 0 );
++	GP2D_DRM_ASSERT( exec->running == 0 );
+ 
+-		schedule_timeout( 1 );
++	private->busy = 1;
+ 
+-		printk( "STATUS 0x%08x\n", GP2D_STATUS );
++	exec->running = jiffies ? jiffies : 1;
+ 
+-		schedule_timeout( 1 );
+-	}
++	GP2D_DLSAR   = dma_addr;
++	GP2D_ADREXTR = dma_addr;
++	GP2D_SCLR    = GP2D_SCLR_START;
+ }
+ 
++
++
++#ifdef GP2D_IRQ_POLLER
+ static int
+ gp2d_irq_poller( void *arg )
+ {
+@@ -95,20 +99,10 @@ gp2d_irq_poller( void *arg )
+ 
+      sigfillset( &current->blocked );
+ 
+-//	schedule_timeout( 20 * HZ );
+-//
+-//	test_reg( private, "MSTPCR0", MSTPCR0, 0, 31 );
+-//	test_reg( private, "MSTPCR1", MSTPCR1, 2, 31 );
+-//	test_reg( private, "MSTPCR2", MSTPCR2, 0, 31 );
+-//	test_reg( private, "MSTPCR3", MSTPCR3, 0, 31 );
+-//	test_reg( private, "MSTPCR4", MSTPCR4, 0, 31 );
+-//	test_reg( private, "MSTPCR5", MSTPCR5, 0, 31 );
+-//	test_reg( private, "MSTPCR6", MSTPCR6, 0, 31 );
+-//	test_reg( private, "MSTPCR7", MSTPCR7, 0, 31 );
+-//	test_reg( private, "FRQMR",   FRQMR,   0, 31 );
+-
+ 	while (!private->stop_poller) {
+-          set_current_state( TASK_UNINTERRUPTIBLE );
++		GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
++
++		set_current_state( TASK_UNINTERRUPTIBLE );
+           schedule_timeout( 1 );
+ 
+           gp2d_irq_handler( private->irq, (void*) arg );
+@@ -123,6 +117,8 @@ gp2d_irq_poller( void *arg )
+ 
+ static void stop_irq(struct gp2d_drm_private *private)
+ {
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
++
+ #ifdef GP2D_IRQ_POLLER
+ 	private->stop_poller = 1;
+ 
+@@ -159,9 +155,6 @@ static int gp2d_drm_load(struct drm_device *dev, unsigned long flags)
+ 
+ 	drm_mode_config_init(dev);
+ 
+-	/* init kms poll for handling hpd */
+-//	drm_kms_helper_poll_init(dev);
+-
+ 	/*
+ 	 * probe sub drivers such as display controller and hdmi driver,
+ 	 * that were registered at probe() of platform driver
+@@ -194,13 +187,15 @@ static int gp2d_drm_load(struct drm_device *dev, unsigned long flags)
+ 
+ 	private->irq = res->start;
+ 
++	GP2D_DRM_MAGIC_SET( private, gp2d_drm_private );
++
+ #ifdef GP2D_IRQ_POLLER
+      kernel_thread( gp2d_irq_poller, private, CLONE_KERNEL );
+ #else
+ 	ret = request_irq(private->irq, gp2d_irq_handler, 0, "gp2d", private);
+ 	if (ret) {
+ 		DRM_ERROR("request interrupt failed.\n");
+-		goto err_drm_device;
++		goto err_magic;
+ 	}
+ #endif
+ 
+@@ -211,37 +206,13 @@ static int gp2d_drm_load(struct drm_device *dev, unsigned long flags)
+ 	pm_runtime_enable(dev->dev);
+ 	pm_runtime_get_sync(dev->dev);
+ 
+-#if 0
+-	volatile u32 *resetregs = ioremap( 0xffcc0000, 4096 );
+-
+-	resetregs[0x2c/4] = resetregs[0x2c/4] | 0x80;
+-	//writel( readl(0xffcc002c) | 0x80, 0xffcc002c );
+-	udelay( 5 );
+-	resetregs[0x2c/4] = resetregs[0x2c/4] & ~0x80;
+-	//writel( readl(0xffcc002c) & ~0x80, 0xffcc002c );
+-#endif
+-
+-//	QPRINT( "Resetting hardware..." );
+-
+-	GP2D_SCLR = GP2D_SCLR_RESET;
+-	udelay( 5 );
+-	GP2D_SCLR = 0;
+-
+-//	QPRINT( "Clearing interrupts..." );
+-
+-	GP2D_STATUS_CLEAR = GP2D_INT_ANY;
+-
+-	GP2D_INT_ENABLE   = GP2D_INT_ANY;
+-
+-//	QDUMP( "Ready" );
+-
+-	printk( "GP2D STATUS 0x%08x\n", GP2D_STATUS );
++	gp2d_drm_reset( private );
+ 
+ 	return 0;
+ 
+ 
+-err_irq:
+-	stop_irq(private);
++err_magic:
++	GP2D_DRM_MAGIC_CLEAR( private );
+ err_drm_device:
+ 	gp2d_drm_device_unregister(dev);
+ err_alloc:
+@@ -258,9 +229,11 @@ static int gp2d_drm_unload(struct drm_device *dev)
+ 
+ 	stop_irq(private);
+ 
++	destroy_workqueue(private->work_queue);
++
+ 	gp2d_drm_device_unregister(dev);
+-//	drm_kms_helper_poll_fini(dev);
+ 	drm_mode_config_cleanup(dev);
++	GP2D_DRM_MAGIC_CLEAR( private );
+ 	kfree(dev->dev_private);
+ 
+ 	dev->dev_private = NULL;
+@@ -272,28 +245,71 @@ static void gp2d_drm_preclose(struct drm_device *dev,
+ 					struct drm_file *file)
+ {
+ 	struct gp2d_drm_private *private = dev->dev_private;
+-	struct gp2d_execution *e, *t;
++	struct gp2d_execution *exec, *next;
+ 	unsigned long flags;
++	int ret;
++
++	GP2D_DEBUG( MAIN, "%s: dev %p, file %p, pid %d\n", __FUNCTION__, dev, file, current->pid );
+ 
+ 	DRM_DEBUG_DRIVER("%s\n", __FILE__);
+ 
+-	wait_event_interruptible_timeout( private->wq, !private->busy, 10 * HZ );
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
+ 
+ 	/* release events of current file */
+ 	spin_lock_irqsave(&dev->event_lock, flags);
+-	list_for_each_entry_safe(e, t, &private->executions, event.base.link) {
+-		if (e->event.base.file_priv == file) {
+-			list_del(&e->event.base.link);
+-			e->event.base.destroy(&e->event.base);
++
++	/*
++	 * Discard any pending command buffers except they are started already
++	 */
++	list_for_each_entry_safe(exec, next, &private->executions, link) {
++		GP2D_DRM_MAGIC_ASSERT( exec, gp2d_execution );
++
++		if (!exec->running && exec->event.base.file_priv == file) {
++			GP2D_DEBUG( MAIN, "%s:   deleting execution %p\n", __FUNCTION__, exec );
++
++			list_del(&exec->link);
++
++			exec->event.base.destroy( &exec->event.base );
++		}
++	}
++
++	/*
++	 * Check if the running package is ours
++	 */
++	if (!list_empty( &private->executions )) {
++		exec = list_first_entry( &private->executions, struct gp2d_execution, link );
++		if (exec->event.base.file_priv == file) {
++			unsigned int old_serial = private->buffer_serial;
++
++			GP2D_DEBUG( MAIN, "%s:   waiting for execution %p\n", __FUNCTION__, exec );
++
++			spin_unlock_irqrestore(&dev->event_lock, flags);
++
++			/*
++			 * Wait for buffer to be processed
++			 */
++			ret = wait_event_timeout( private->wq, old_serial != private->buffer_serial, 10 * HZ );
++			if (ret == 0)
++				printk( KERN_WARNING "gp2d-drm: Timeout waiting for last package, busy %d, empty %d, buffer jiffies %lu (%lu ago)\n",
++					   private->busy, list_empty( &private->executions ), private->buffer_jiffies, jiffies - private->buffer_jiffies );
++			else
++				GP2D_DEBUG( MAIN, "%s:   done\n", __FUNCTION__ );
++
++			return;
+ 		}
+ 	}
++
+ 	spin_unlock_irqrestore(&dev->event_lock, flags);
+ }
+ 
+ static void gp2d_drm_postclose(struct drm_device *dev, struct drm_file *file)
+ {
++	struct gp2d_drm_private *private = dev->dev_private;
++
+ 	DRM_DEBUG_DRIVER("%s\n", __FILE__);
+ 
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
++
+ 	if (!file->driver_priv)
+ 		return;
+ 
+@@ -406,6 +422,12 @@ static void __exit gp2d_drm_exit(void)
+ module_init(gp2d_drm_init);
+ module_exit(gp2d_drm_exit);
+ 
++
++unsigned int gp2d_drm_debug = 1 | 4;
++
++module_param(gp2d_drm_debug, uint, 0);
++MODULE_PARM_DESC(gp2d_drm_debug, "Select debug flags (1=MAIN 2=GEM 4=EXEC 8=IRQ 16=VERBOSE 32=BUFFER)");
++
+ MODULE_AUTHOR("Denis Oliver Kropp <dok@directfb.org>");
+ MODULE_DESCRIPTION("Renesas R-Car GP2D DRM Driver");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/gpu/drm/gp2d/gp2d_drm_drv.h b/drivers/gpu/drm/gp2d/gp2d_drm_drv.h
+index 2b5cd3c..de2afa0 100644
+--- a/drivers/gpu/drm/gp2d/gp2d_drm_drv.h
++++ b/drivers/gpu/drm/gp2d/gp2d_drm_drv.h
+@@ -61,16 +61,135 @@ struct drm_device;
+ #define GP2D_INT_BREAK        0x0008
+ #define GP2D_INT_ANY          0x000F
+ 
++/*
++ * Magic, Assertions & Utilities
++ */
++
++#define GP2D_DEBUG_FLAG_MAIN       0x01
++#define GP2D_DEBUG_FLAG_GEM        0x02
++#define GP2D_DEBUG_FLAG_EXEC       0x04
++#define GP2D_DEBUG_FLAG_IRQ        0x08
++#define GP2D_DEBUG_FLAG_VERBOSE    0x10
++#define GP2D_DEBUG_FLAG_BUFFER     0x20
++
++extern unsigned int gp2d_drm_debug;
++
++#define GP2D_DEBUG( _FLAG, ... )                            \
++     do {                                                   \
++          if (gp2d_drm_debug & GP2D_DEBUG_FLAG_##_FLAG)     \
++               printk( KERN_DEBUG __VA_ARGS__ );            \
++     } while (0)
++
++#define GP2D_DRM_MAGIC(spell)             ( (((spell)[sizeof(spell)*8/9] << 24) | \
++                                      ((spell)[sizeof(spell)*7/9] << 16) | \
++                                      ((spell)[sizeof(spell)*6/9] <<  8) | \
++                                      ((spell)[sizeof(spell)*5/9]      )) ^  \
++                                     (((spell)[sizeof(spell)*4/9] << 24) | \
++                                      ((spell)[sizeof(spell)*3/9] << 16) | \
++                                      ((spell)[sizeof(spell)*2/9] <<  8) | \
++                                      ((spell)[sizeof(spell)*1/9]      )) )
++
++static inline void
++gp2d_drm_assertion( const char *exp,
++                    const char *func,
++                    const char *file,
++                    int         line )
++{
++     struct timespec  ts;
++     long        micros;
++     const char      *name = NULL;
++
++     ktime_get_ts( &ts );
++
++     micros = ts.tv_sec * 1000 + ts.tv_nsec / 1000;
++
++     printk( KERN_EMERG
++                        "(!) [%-15s %3ld.%03ld] (%5d) *** Assertion [%s] failed *** [%s:%d in %s()]\n",
++                        name ? name : "  NO NAME  ", micros / 1000, micros % 1000,
++                        current->pid, exp, file, line, func );
++
++     dump_stack();
++
++     *(char*) 0 = 0;
++}
++
++static inline void
++gp2d_drm_assumption( const char *exp,
++                     const char *func,
++                     const char *file,
++                     int         line )
++{
++     struct timespec  ts;
++     long        micros;
++     const char      *name = NULL;
++
++     ktime_get_ts( &ts );
++
++     micros = ts.tv_sec * 1000 + ts.tv_nsec / 1000;
++
++     printk( KERN_EMERG
++                        "(!) [%-15s %3ld.%03ld] (%5d) *** Assumption [%s] failed *** [%s:%d in %s()]\n",
++                        name ? name : "  NO NAME  ", micros / 1000, micros % 1000,
++                        current->pid, exp, file, line, func );
++
++     dump_stack();
++}
++
++#define GP2D_DRM_ASSERT(exp)                                                                \
++     do {                                                                            \
++          if (!(exp))                                                                \
++               gp2d_drm_assertion( #exp, __FUNCTION__, __FILE__, __LINE__ );           \
++     } while (0)
++
++#define GP2D_DRM_ASSUME(exp)                                                                \
++     do {                                                                            \
++          if (!(exp))                                                                \
++               gp2d_drm_assumption( #exp, __FUNCTION__, __FILE__, __LINE__ );           \
++     } while (0)
++
++
++#define GP2D_DRM_MAGIC_SET(o,m)    do {                                              \
++                                        GP2D_DRM_ASSERT( (o) != NULL );                     \
++                                        GP2D_DRM_ASSUME( (o)->magic != GP2D_DRM_MAGIC(#m) );       \
++                                                                                     \
++                                        (o)->magic = GP2D_DRM_MAGIC(#m);                    \
++                                   } while (0)
++
++#define GP2D_DRM_MAGIC_SET_ONLY(o,m) do {                                              \
++                                        GP2D_DRM_ASSERT( (o) != NULL );                     \
++                                                                                     \
++                                        (o)->magic = GP2D_DRM_MAGIC(#m);                    \
++                                   } while (0)
++
++#define GP2D_DRM_MAGIC_ASSERT(o,m) do {                                              \
++                                        GP2D_DRM_ASSERT( (o) != NULL );                     \
++                                        GP2D_DRM_ASSERT( (o)->magic == GP2D_DRM_MAGIC(#m) );       \
++                                   } while (0)
++
++#define GP2D_DRM_MAGIC_ASSERT_IF(o,m) do {                                              \
++                                        if (o)                                       \
++                                             GP2D_DRM_ASSERT( (o)->magic == GP2D_DRM_MAGIC(#m) );  \
++                                   } while (0)
++
++#define GP2D_DRM_MAGIC_CLEAR(o)    do {                                              \
++                                        GP2D_DRM_ASSERT( (o) != NULL );                     \
++                                        GP2D_DRM_ASSUME( (o)->magic != 0 );                 \
++                                                                                     \
++                                        (o)->magic = 0;                              \
++                                   } while (0)
+ 
+ /*
+  * GP2D drm private structure.
+  */
+ struct gp2d_drm_private {
++     int magic;
++
+ 	struct drm_device *device;
+ 
+ 	unsigned long regs;
+ 	int irq;
+ 	int busy;
++	unsigned long buffer_jiffies;
+ 	unsigned int buffer_serial;
+ 	unsigned int mode_32bit;
+ 	wait_queue_head_t wq;
+@@ -89,11 +208,19 @@ struct gp2d_executed_pending_event {
+ struct gp2d_execution {
+ 	struct gp2d_executed_pending_event event;
+ 
+-	/* for running/pending executions, once finished event.base.link is used */
++     int                                magic;
++
++	/* for running/pending executions (private->execution), once finished event.base.link is used (dev->event_list) */
+ 	struct list_head				link;
+ 
+ 	struct gp2d_drm_gem_buf 		    *buffer;
+ 	struct drm_gem_object		    *obj;
++
++     /* when non-zero, contains jiffies of time where buffer was issued to hardware or done */
++     unsigned long                      running;
++     unsigned long                      done;
++
++     struct work_struct work;
+ };
+ 
+ /*
+@@ -108,4 +235,10 @@ int gp2d_drm_device_register(struct drm_device *dev);
+  */
+ int gp2d_drm_device_unregister(struct drm_device *dev);
+ 
++
++void gp2d_drm_reset(struct gp2d_drm_private *private);
++
++void gp2d_drm_start( struct gp2d_drm_private *private,
++                     struct gp2d_execution   *exec );
++
+ #endif
+diff --git a/drivers/gpu/drm/gp2d/gp2d_drm_gem.c b/drivers/gpu/drm/gp2d/gp2d_drm_gem.c
+index 2c5ed8b..7a1e132 100644
+--- a/drivers/gpu/drm/gp2d/gp2d_drm_gem.c
++++ b/drivers/gpu/drm/gp2d/gp2d_drm_gem.c
+@@ -144,9 +144,13 @@ static int gp2d_drm_gem_map_pages(struct drm_gem_object *obj,
+ 					unsigned long f_vaddr,
+ 					pgoff_t page_offset)
+ {
++	unsigned long			pfn;
++	struct gp2d_drm_gem_buf *buf;
+ 	struct gp2d_drm_gem_obj *gp2d_gem_obj = to_gp2d_gem_obj(obj);
+-	struct gp2d_drm_gem_buf *buf = gp2d_gem_obj->buffer;
+-	unsigned long pfn;
++
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
++	buf = gp2d_gem_obj->buffer;
+ 
+ 	if (gp2d_gem_obj->flags & GP2D_BO_NONCONTIG) {
+ 		if (!buf->pages)
+@@ -162,12 +166,16 @@ static int gp2d_drm_gem_map_pages(struct drm_gem_object *obj,
+ static int gp2d_drm_gem_get_pages(struct drm_gem_object *obj)
+ {
+ 	struct gp2d_drm_gem_obj *gp2d_gem_obj = to_gp2d_gem_obj(obj);
+-	struct gp2d_drm_gem_buf *buf = gp2d_gem_obj->buffer;
++	struct gp2d_drm_gem_buf *buf;
+ 	struct scatterlist *sgl;
+ 	struct page **pages;
+ 	unsigned int npages, i = 0;
+ 	int ret;
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
++	buf = gp2d_gem_obj->buffer;
++
+ 	if (buf->pages) {
+ 		DRM_DEBUG_KMS("already allocated.\n");
+ 		return -EINVAL;
+@@ -221,7 +229,11 @@ err:
+ static void gp2d_drm_gem_put_pages(struct drm_gem_object *obj)
+ {
+ 	struct gp2d_drm_gem_obj *gp2d_gem_obj = to_gp2d_gem_obj(obj);
+-	struct gp2d_drm_gem_buf *buf = gp2d_gem_obj->buffer;
++	struct gp2d_drm_gem_buf *buf;
++
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
++	buf = gp2d_gem_obj->buffer;
+ 
+ 	/*
+ 	 * if buffer typs is GP2D_BO_NONCONTIG then release all pages
+@@ -265,6 +277,8 @@ void gp2d_drm_gem_destroy(struct gp2d_drm_gem_obj *gp2d_gem_obj)
+ 
+ 	DRM_DEBUG_KMS("%s\n", __FILE__);
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	if (!gp2d_gem_obj)
+ 		return;
+ 
+@@ -288,6 +302,8 @@ void gp2d_drm_gem_destroy(struct gp2d_drm_gem_obj *gp2d_gem_obj)
+ 	/* release file pointer to gem object. */
+ 	drm_gem_object_release(obj);
+ 
++	GP2D_DRM_MAGIC_CLEAR( gp2d_gem_obj );
++
+ 	kfree(gp2d_gem_obj);
+ 	gp2d_gem_obj = NULL;
+ }
+@@ -315,21 +331,13 @@ static struct gp2d_drm_gem_obj *gp2d_drm_gem_init(struct drm_device *dev,
+ 		return NULL;
+ 	}
+ 
++	GP2D_DRM_MAGIC_SET( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	DRM_DEBUG_KMS("created file object = 0x%x\n", (unsigned int)obj->filp);
+ 
+ 	return gp2d_gem_obj;
+ }
+ 
+-static void
+-gp2d_drm_gem_obj_unref_worker(
+-	struct work_struct	*work)
+-{
+-	struct gp2d_drm_gem_obj *gp2d_gem_obj = container_of(work,
+-						struct gp2d_drm_gem_obj, work);
+-
+-	drm_gem_object_unreference_unlocked( (struct drm_gem_object*) gp2d_gem_obj );
+-}
+-
+ struct gp2d_drm_gem_obj *gp2d_drm_gem_create(struct drm_device *dev,
+ 						unsigned int flags,
+ 						unsigned long size)
+@@ -360,13 +368,13 @@ struct gp2d_drm_gem_obj *gp2d_drm_gem_create(struct drm_device *dev,
+ 		goto err_fini_buf;
+ 	}
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	gp2d_gem_obj->buffer = buf;
+ 
+ 	/* set memory type and cache attribute from user side. */
+ 	gp2d_gem_obj->flags = flags;
+ 
+-	INIT_WORK(&gp2d_gem_obj->work, gp2d_drm_gem_obj_unref_worker);
+-
+ 
+ 	/*
+ 	 * allocate all pages as desired size if user wants to allocate
+@@ -406,6 +414,8 @@ int gp2d_drm_gem_create_ioctl(struct drm_device *dev, void *data,
+ 	if (IS_ERR(gp2d_gem_obj))
+ 		return PTR_ERR(gp2d_gem_obj);
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	ret = gp2d_drm_gem_handle_create(&gp2d_gem_obj->base, file_priv,
+ 			&args->handle);
+ 	if (ret) {
+@@ -431,6 +441,8 @@ void *gp2d_drm_gem_get_dma_addr(struct drm_device *dev,
+ 
+ 	gp2d_gem_obj = to_gp2d_gem_obj(obj);
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	if (gp2d_gem_obj->flags & GP2D_BO_NONCONTIG) {
+ 		DRM_DEBUG_KMS("not support NONCONTIG type.\n");
+ 		drm_gem_object_unreference_unlocked(obj);
+@@ -457,6 +469,8 @@ void gp2d_drm_gem_put_dma_addr(struct drm_device *dev,
+ 
+ 	gp2d_gem_obj = to_gp2d_gem_obj(obj);
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	if (gp2d_gem_obj->flags & GP2D_BO_NONCONTIG) {
+ 		DRM_DEBUG_KMS("not support NONCONTIG type.\n");
+ 		drm_gem_object_unreference_unlocked(obj);
+@@ -504,6 +518,8 @@ static int gp2d_drm_gem_mmap_buffer(struct file *filp,
+ 
+ 	DRM_DEBUG_KMS("%s\n", __FILE__);
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	vma->vm_flags |= VM_IO;//(VM_IO | VM_RESERVED);
+ 
+ 	/* in case of direct mapping, always having non-cachable attribute */
+@@ -567,6 +583,7 @@ int gp2d_drm_gem_mmap_ioctl(struct drm_device *dev, void *data,
+ 			      struct drm_file *file_priv)
+ {
+ 	struct drm_gp2d_gem_mmap *args = data;
++	struct gp2d_drm_gem_obj *gp2d_gem_obj;
+ 	struct drm_gem_object *obj;
+ 	unsigned int addr;
+ 
+@@ -583,6 +600,10 @@ int gp2d_drm_gem_mmap_ioctl(struct drm_device *dev, void *data,
+ 		return -EINVAL;
+ 	}
+ 
++	gp2d_gem_obj = to_gp2d_gem_obj(obj);
++
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	obj->filp->f_op = &gp2d_drm_gem_fops;
+ 	obj->filp->private_data = obj;
+ 
+@@ -625,6 +646,10 @@ gp2d_get_dma_buf_phys( struct gp2d_drm_private *private,
+ 	struct dma_buf_attachment *attachment	= NULL;
+ 	struct sg_table		 *table		= NULL;
+ 
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
++
++	GP2D_DEBUG( BUFFER, "%s: fd %d\n", __FUNCTION__, fd );
++
+ 	buf = dma_buf_get( fd );
+ 	if (IS_ERR_OR_NULL(buf)) {
+ 		printk( "gp2d_get_dma_buf_phys: dma_buf_get(%d) failed!\n", fd );
+@@ -647,6 +672,8 @@ gp2d_get_dma_buf_phys( struct gp2d_drm_private *private,
+ 
+ 	*ret_phys = table->sgl->dma_address;
+ 
++	GP2D_DEBUG( BUFFER, "%s: -> phys 0x%08lx (table %p, attachment %p, buf %p)\n", __FUNCTION__, *ret_phys, table, attachment, buf );
++
+ 	ret = 0;
+ 
+ error:
+@@ -662,7 +689,20 @@ error:
+ }
+ 
+ 
+-#define DUMP_BUFFER (0)
++#define ADDREXT_CHECK( _cmd, _addr )																	\
++	do {																							\
++		if (((_addr) & 0xe0000000) != (buffer->dma_addr & 0xe0000000)) { 									\
++			static int once = 0;																	\
++																								\
++			if (!once) {																			\
++				printk( KERN_ERR "gp2d: address for " _cmd " in different extension (buffer 0x%08x, ref 0x%08x)\n", \
++					buffer->dma_addr, code[n+2] );  													\
++				once = 1;																			\
++			}																					\
++																								\
++			return -EIO;   																		\
++		}    																					\
++	} while (0)
+ 
+ static int
+ gp2d_parse_buffer( struct gp2d_drm_private *private,
+@@ -673,6 +713,8 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 	u32  i    = 0;
+ 	int  ret;
+ 
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
++
+ #define REQUIRE_WORDS(x)												\
+ 	do {															\
+ 		u32 left = buffer->size/4 - n;								\
+@@ -683,38 +725,28 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 		}														\
+ 	} while (0)
+ 
+-#if DUMP_BUFFER
+-	printk( KERN_DEBUG "gp2d: %s()\n", __FUNCTION__ );
+-#endif
++	GP2D_DEBUG( BUFFER, "gp2d: %s( %p )\n", __FUNCTION__, buffer );
+ 
+ 	while (n < buffer->size/4) {
+ 		switch (code[n] & 0xff000000) {
+ 		case M2DG_OPCODE_TRAP:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: TRAP (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: TRAP (0x%08x)\n", code[n] );
+ 			return 0;
+ 
+ 		case M2DG_OPCODE_SYNC:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: SYNC (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: SYNC (0x%08x)\n", code[n] );
+ 			n += 1;
+ 			break;
+ 
+ 		case M2DG_OPCODE_MOVE:
+ 		case M2DG_OPCODE_LCOFS:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: MOVE/LCOFS (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: MOVE/LCOFS (0x%08x)\n", code[n] );
+ 			REQUIRE_WORDS( 2 );
+ 			n += 2;
+ 			break;
+ 
+ 		case M2DG_OPCODE_JUMP:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: JUMP (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: JUMP (0x%08x)\n", code[n] );
+ 			if (!(code[n] & 0x80)) {
+ 				printk( KERN_ERR "gp2d: invalid draw mode 0x%04x\n", code[n] & 0xffff );
+ 				return -EPERM;
+@@ -726,17 +758,13 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 		case (M2DG_OPCODE_BITBLTA & 0xff000000):
+ 		case M2DG_OPCODE_BITBLTC:
+ 		case M2DG_OPCODE_POLYGON_4C:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: BITBLTA/BITBLTC/POLYGON_4C (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: BITBLTA/BITBLTC/POLYGON_4C (0x%08x)\n", code[n] );
+ 			REQUIRE_WORDS( 6 );
+ 			n += 6;
+ 			break;
+ 
+ 		case M2DG_OPCODE_AAFC:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: AAFC (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: AAFC (0x%08x)\n", code[n] );
+ 			if (code[n] & 0x80) {
+ 				u32 addr, w, h;
+ 
+@@ -765,14 +793,13 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 				ret = gp2d_get_dma_buf_phys( private, code[n+2], (unsigned long*) &code[n+2] );
+ 				if (ret)
+ 					return ret;
++				ADDREXT_CHECK( "AAFC", code[n+2] );
+ 				n += 6;
+ 			}
+ 			break;
+ 
+ 		case M2DG_OPCODE_POLYGON_4A:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: POLYGON_4A (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: POLYGON_4A (0x%08x)\n", code[n] );
+ 			if (!(code[n] & 0x100)) {
+ 				printk( KERN_ERR "gp2d: invalid draw mode 0x%04x\n", code[n] & 0xffff );
+ 				return -EPERM;
+@@ -782,9 +809,7 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 			break;
+ 
+ 		case M2DG_OPCODE_WPR:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: WPR (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: WPR (0x%08x)\n", code[n] );
+ 			if (code[n] & 0x600) {
+ 				printk( KERN_ERR "gp2d: invalid draw mode 0x%04x\n", code[n] & 0xffff );
+ 				return -EPERM;
+@@ -798,15 +823,14 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 
+ 			// TODO: check for which registers get set?
+ 			for (i=0; i<=(code[n+1] >> 16); i++) {
+-#if DUMP_BUFFER
+-				printk( KERN_DEBUG "gp2d: Set reg 0x%03x = 0x%08x\n", (code[n+1] & 0xfff) + i*4, code[n+2+i] );
+-#endif
++				GP2D_DEBUG( BUFFER, "gp2d: Set reg 0x%03x = 0x%08x\n", (code[n+1] & 0xfff) + i*4, code[n+2+i] );
+ 				switch ((code[n+1] & 0xfff) + i*4) {
+ 				case 0x50:	// RSAR
+ 					//printk("RSAR 0x%x (%d)\n",code[n+2+i],code[n+2+i]);
+ 					ret = gp2d_get_dma_buf_phys( private, code[n+2+i], (unsigned long*) &code[n+2+i] );
+ 					if (ret)
+ 						return ret;
++					ADDREXT_CHECK( "RSAR", code[n+2+i] );
+ 					break;
+ 
+ 				case 0x5c:	// DSTRR
+@@ -818,6 +842,7 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 					ret = gp2d_get_dma_buf_phys( private, code[n+2+i], (unsigned long*) &code[n+2+i] );
+ 					if (ret)
+ 						return ret;
++					ADDREXT_CHECK( "SSAR", code[n+2+i] );
+ 					break;
+ 
+ 				case 0x58:	// SSTRR
+@@ -826,6 +851,7 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 
+ 				case 0x80:	//
+ 				case 0x88:	//
++				case 0x98:	//
+ 				case 0xd4:	//
+ 				case 0xd8:	//
+ 				case 0xc0:	//
+@@ -856,9 +882,7 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 			break;
+ 
+ 		case M2DG_OPCODE_LINE_C:
+-#if DUMP_BUFFER
+-			printk( KERN_DEBUG "gp2d: LINE_C (0x%08x)\n", code[n] );
+-#endif
++			GP2D_DEBUG( BUFFER, "gp2d: LINE_C (0x%08x)\n", code[n] );
+ 			if (code[n] & 0x600) {
+ 				printk( KERN_ERR "gp2d: invalid draw mode 0x%04x\n", code[n] & 0xffff );
+ 				return -EPERM;
+@@ -871,12 +895,13 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 					return -EPROTO;
+ 				}
+ 				REQUIRE_WORDS( 4 + (code[n+2] & 0xffff) );
+-#if DUMP_BUFFER
+-				printk( KERN_DEBUG "gp2d:   count %u, width %u\n", code[n+2] & 0xffff, code[n+3] );
+-				for (i=0; i<(code[n+2] & 0xffff); i++) {
+-					printk( KERN_DEBUG "gp2d:   [%u] 0x%08x\n", i, code[n+4+i] );
++
++				if (gp2d_drm_debug & GP2D_DEBUG_FLAG_BUFFER) {
++					GP2D_DEBUG( BUFFER, "gp2d:   count %u, width %u\n", code[n+2] & 0xffff, code[n+3] );
++					for (i=0; i<(code[n+2] & 0xffff); i++) {
++						GP2D_DEBUG( BUFFER, "gp2d:   [%u] 0x%08x\n", i, code[n+4+i] );
++					}
+ 				}
+-#endif
+ 				n += 4 + (code[n+2] & 0xffff);
+ 			}
+ 			else {
+@@ -886,12 +911,13 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 					return -EPROTO;
+ 				}
+ 				REQUIRE_WORDS( 3 + (code[n+1] & 0xffff) );
+-#if DUMP_BUFFER
+-				printk( KERN_DEBUG "gp2d:   count %u, width %u\n", code[n+1] & 0xffff, code[n+2] );
+-				for (i=0; i<(code[n+1] & 0xffff); i++) {
+-					printk( KERN_DEBUG "gp2d:   [%u] 0x%08x\n", i, code[n+3+i] );
++
++				if (gp2d_drm_debug & GP2D_DEBUG_FLAG_BUFFER) {
++					GP2D_DEBUG( BUFFER, "gp2d:   count %u, width %u\n", code[n+1] & 0xffff, code[n+2] );
++					for (i=0; i<(code[n+1] & 0xffff); i++) {
++						GP2D_DEBUG( BUFFER, "gp2d:   [%u] 0x%08x\n", i, code[n+3+i] );
++					}
+ 				}
+-#endif
+ 				n += 3 + (code[n+1] & 0xffff);
+ 			}
+ 			break;
+@@ -909,6 +935,32 @@ gp2d_parse_buffer( struct gp2d_drm_private *private,
+ 	return -EPROTO;
+ }
+ 
++static void
++gp2d_drm_gem_execution_destroy(struct drm_pending_event *event)
++{
++	struct gp2d_execution *exec = (struct gp2d_execution *) event;
++
++	GP2D_DRM_MAGIC_ASSERT( exec, gp2d_execution );
++
++	drm_gem_object_unreference_unlocked( exec->obj );
++
++	GP2D_DRM_MAGIC_CLEAR( exec );
++
++	kfree( exec );
++}
++
++static void
++gp2d_drm_gem_obj_unref_worker(
++	struct work_struct	*work)
++{
++	struct gp2d_execution *exec = container_of(work,
++						struct gp2d_execution, work);
++
++	GP2D_DRM_MAGIC_ASSERT( exec, gp2d_execution );
++
++	exec->event.base.destroy( &exec->event.base );
++}
++
+ int gp2d_drm_gem_execute_ioctl(struct drm_device *dev, void *data,
+ 			      struct drm_file *file_priv)
+ {
+@@ -924,7 +976,9 @@ int gp2d_drm_gem_execute_ioctl(struct drm_device *dev, void *data,
+ 
+ 	DRM_DEBUG_KMS("%s\n", __FILE__);
+ 
+-	//printk("%d %lu\n",__LINE__,jiffies);
++	GP2D_DEBUG( EXEC, "%s: handle %u, size %u, user data %p\n", __FUNCTION__, args->handle, args->size, args->user_data );
++
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
+ 
+ 	if (!(dev->driver->driver_features & DRIVER_GEM)) {
+ 		DRM_ERROR("does not support GEM.\n");
+@@ -937,16 +991,16 @@ int gp2d_drm_gem_execute_ioctl(struct drm_device *dev, void *data,
+ 		return -EINVAL;
+ 	}
+ 
+-	//printk("%d %lu\n",__LINE__,jiffies);
+ 	gp2d_gem_obj = to_gp2d_gem_obj(obj);
+ 
++	GP2D_DRM_MAGIC_ASSERT( gp2d_gem_obj, gp2d_drm_gem_obj );
++
+ 	buffer = gp2d_gem_obj->buffer;
+ 
+ 	ret = gp2d_parse_buffer( private, buffer );
+ 	if (ret)
+ 		goto error;
+ 
+-	//printk("%d %lu\n",__LINE__,jiffies);
+ 	exec = kzalloc( sizeof(struct gp2d_execution), GFP_KERNEL );
+ 	if (unlikely(exec == NULL)) {
+ 		DRM_ERROR("Failed to allocate an execution.\n");
+@@ -954,10 +1008,13 @@ int gp2d_drm_gem_execute_ioctl(struct drm_device *dev, void *data,
+ 		goto error;
+ 	}
+ 
+-	//printk("%d %lu\n",__LINE__,jiffies);
++	GP2D_DRM_MAGIC_SET( exec, gp2d_execution );
++
++	INIT_WORK(&exec->work, gp2d_drm_gem_obj_unref_worker);
++
+ 	exec->event.base.event     = &exec->event.event.base;
+ 	exec->event.base.file_priv = file_priv;
+-	exec->event.base.destroy   = (void (*) (struct drm_pending_event *)) kfree;
++	exec->event.base.destroy   = gp2d_drm_gem_execution_destroy;
+ 
+ 	exec->event.event.base.type   = DRM_GP2D_EVENT_EXECUTED;
+ 	exec->event.event.base.length = sizeof(exec->event.event);
+@@ -970,24 +1027,18 @@ int gp2d_drm_gem_execute_ioctl(struct drm_device *dev, void *data,
+ 	spin_lock_irqsave(&dev->event_lock, irq_flags);
+ 	list_add_tail(&exec->link, &private->executions);
+ 
+-	//printk("%d %lu\n",__LINE__,jiffies);
+ 	if (!private->busy) {
+-		//printk("%d %lu\n",__LINE__,jiffies);
+-		private->busy = 1;
+-
+-		//		printk("command 0x%08x (phys 0x%08lx)\n",*(u32*)buffer->kvaddr,buffer->dma_addr);
+-		//printk("command 0x%08x (phys 0x%08lx)\n",ioread32(buffer->dma_addr),buffer->dma_addr);
++		/*
++		 * Start buffer...
++		 */
++		GP2D_DEBUG( EXEC, "%s: START execution %p (0x%08lx)\n", __FUNCTION__, exec, (unsigned long)exec->buffer->dma_addr );
+ 
+-//		*(u32*)buffer->kvaddr = 0;
++//		*(u32*)exec->buffer->kvaddr = 0;
+ 
+-		GP2D_DLSAR   = (unsigned long) buffer->dma_addr;
+-		GP2D_ADREXTR = (unsigned long) buffer->dma_addr;
+-		GP2D_SCLR    = GP2D_SCLR_START;
++		gp2d_drm_start( private, exec );
+ 	}
+ 
+-	//printk("%d %lu\n",__LINE__,jiffies);
+ 	spin_unlock_irqrestore(&dev->event_lock, irq_flags);
+-	//printk("%d %lu\n",__LINE__,jiffies);
+ 
+ 	return 0;
+ 
+@@ -1007,6 +1058,8 @@ int gp2d_drm_waitidle_ioctl(struct drm_device *dev, void *data,
+ 
+ 	DRM_DEBUG_KMS("%s\n", __FILE__);
+ 
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
++
+ 	if (!(dev->driver->driver_features & DRIVER_GEM)) {
+ 		DRM_ERROR("does not support GEM.\n");
+ 		return -ENODEV;
+@@ -1020,8 +1073,11 @@ int gp2d_drm_waitidle_ioctl(struct drm_device *dev, void *data,
+ 			return ret;
+ 	} while (ret == 0 && old_serial != private->buffer_serial);
+ 
+-	if (ret == 0)
++	if (ret == 0) {
++		printk( KERN_WARNING "gp2d-drm: Timeout waiting for idle engine, busy %d, empty %d, buffer jiffies %lu (%lu ago)\n",
++			   private->busy, list_empty( &private->executions ), private->buffer_jiffies, jiffies - private->buffer_jiffies );
+ 		return -ETIMEDOUT;
++	}
+ 
+ 	return 0;
+ }
+@@ -1034,30 +1090,21 @@ gp2d_irq_handler( int irq, void *ctx )
+ 
+ 	u32 status = GP2D_STATUS;
+ 
+-//	printk( KERN_DEBUG "%s: IRQ - STATUS 0x%08x\n", __FUNCTION__, status );
++	GP2D_DEBUG( IRQ, "%s: IRQ - STATUS 0x%08x\n", __FUNCTION__, status );
++
++	GP2D_DRM_MAGIC_ASSERT( private, gp2d_drm_private );
+ 
+ 	if (! (status & GP2D_INT_ANY)) {
+ #ifndef GP2D_IRQ_POLLER
+-//          printk( KERN_WARNING "%s: bogus interrupt, STATUS 0x%08x!\n", __FUNCTION__, status );
++		GP2D_DEBUG( IRQ, "%s: bogus interrupt, STATUS 0x%08x!\n", __FUNCTION__, status );
+ #endif
+           return IRQ_NONE;
+      }
+ 
+      if (status & GP2D_INT_ERROR) {
+-          printk( KERN_ERR "%s: error! STATUS 0x%08x! Resetting core...\n", __FUNCTION__, status );
+-	//	QPRINT( "Resetting hardware..." );
+-
+-		GP2D_SCLR = GP2D_SCLR_RESET;
+-		udelay( 5 );
+-		GP2D_SCLR = 0;
+-
+-	//	QPRINT( "Clearing interrupts..." );
+-
+-		GP2D_STATUS_CLEAR = GP2D_INT_ANY;
+-
+-		GP2D_INT_ENABLE   = GP2D_INT_ANY;
++          printk( KERN_ERR "%s: ERROR IRQ! STATUS 0x%08x!\n", __FUNCTION__, status );
+ 
+-	//	QDUMP( "Ready" );
++		gp2d_drm_reset( private );
+ 	}
+ 	else
+ 		/* Clear the interrupt. */
+@@ -1073,33 +1120,62 @@ gp2d_irq_handler( int irq, void *ctx )
+ 			struct drm_file   	  *file_priv;
+ 			struct gp2d_execution *exec = list_first_entry( &private->executions, struct gp2d_execution, link );
+ 
+-			file_priv = exec->event.base.file_priv;
++			GP2D_DRM_MAGIC_ASSERT( exec, gp2d_execution );
++
++			GP2D_DEBUG( EXEC, "%s: DONE execution %p (started %lu, %lu ago)\n", __FUNCTION__, exec, exec->running, jiffies - exec->running );
++
++			exec->done = jiffies ? jiffies : 1;
+ 
++			/*
++			 * Remove 'done' execution from list
++			 */
+ 			list_del(&exec->link);
+ 
+-			queue_work( private->work_queue, &((struct gp2d_drm_gem_obj*) exec->obj)->work );
+-			//drm_gem_object_unreference_unlocked( exec->obj );
++			/*
++			 * Execution can be abandoned by setting this to NULL, but we don't make use of that right now.
++			 * Instead we discard pending packets and wait for the running one if needed
++			 *
++			 * 	See gp2d_drm_preclose() in gp2d_drm_gem.c
++			 */
++			file_priv = exec->event.base.file_priv;
++			if (file_priv) {
++				/*
++				 * Transfer execution to event queue, for the user space to reuse buffers, handle synchronisation...
++				 */
++				list_add_tail(&exec->event.base.link, &file_priv->event_list);
+ 
+-			list_add_tail(&exec->event.base.link, &file_priv->event_list);
+-			wake_up_all(&file_priv->event_wait);
++				wake_up_all(&file_priv->event_wait);
++			}
++			else
++				queue_work( private->work_queue, &exec->work );
+ 		}
++		else
++			printk( KERN_ERR "%s: TRAP IRQ without pending execution! STATUS 0x%08x!\n", __FUNCTION__, status );
+ 
+-		if (list_empty( &private->executions )) {
+-//			GP2D_SCLR = 0;
++		private->busy = 0;
+ 
+-			private->busy = 0;
++		if (list_empty( &private->executions )) {
++			/*
++			 * Become idle...
++			 */
++			GP2D_DEBUG( EXEC, "%s: IDLE\n", __FUNCTION__ );
+ 		}
+ 		else {
+ 			struct gp2d_execution *exec = list_first_entry( &private->executions, struct gp2d_execution, link );
+ 
+-			GP2D_DLSAR = (unsigned long)exec->buffer->dma_addr;
+-			GP2D_SCLR  = GP2D_SCLR_START;
++			GP2D_DRM_MAGIC_ASSERT( exec, gp2d_execution );
++
++			/*
++			 * Start next buffer...
++			 */
++			GP2D_DEBUG( EXEC, "%s: START execution %p (0x%08lx)\n", __FUNCTION__, exec, (unsigned long)exec->buffer->dma_addr );
++
++			gp2d_drm_start( private, exec );
+ 		}
+ 
++		private->buffer_jiffies = jiffies;
+ 		private->buffer_serial++;
+ 
+-		wmb();
+-
+ 		wake_up_all( &private->wq );
+ 
+ 		spin_unlock_irqrestore(&dev->event_lock, irq_flags);
+diff --git a/drivers/gpu/drm/gp2d/gp2d_drm_gem.h b/drivers/gpu/drm/gp2d/gp2d_drm_gem.h
+index 2b688a7..817b0c4 100644
+--- a/drivers/gpu/drm/gp2d/gp2d_drm_gem.h
++++ b/drivers/gpu/drm/gp2d/gp2d_drm_gem.h
+@@ -69,10 +69,10 @@ struct gp2d_drm_gem_buf {
+  */
+ struct gp2d_drm_gem_obj {
+ 	struct drm_gem_object		base;
++     int                           magic;
+ 	struct gp2d_drm_gem_buf	*buffer;
+ 	unsigned long			size;
+ 	unsigned int			flags;
+-     struct work_struct work;
+ };
+ 
+ /* destroy a buffer with gem object */
+-- 
+1.8.2
+

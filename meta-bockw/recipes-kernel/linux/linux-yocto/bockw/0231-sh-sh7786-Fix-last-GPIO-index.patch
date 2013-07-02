@@ -1,0 +1,37 @@
+From a3c030a4f937f062f67de9a89ebde8c21c0a792b Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Dec 2012 23:50:40 +0100
+Subject: [PATCH 231/611] sh: sh7786: Fix last GPIO index
+
+A careless look at the code shows that the last entry in the
+pinmux_gpios seems to be GPIO_FN_FSE. However, entries are ordered by
+the GPIO number, as the PINMUX_GPIO macro is expended to an indexed
+array initializer. The last entry in the array is thus GPIO_FN_IRL4. Set
+the pinmux_info last_gpio field accordingly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 451d0a9044bb3272c454f4ddb0e389dc49a6d9ba)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c b/arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c
+index c24a777..60df99c 100644
+--- a/arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c
++++ b/arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c
+@@ -825,7 +825,7 @@ static struct pinmux_info sh7786_pinmux_info = {
+ 	.function = { PINMUX_FUNCTION_BEGIN, PINMUX_FUNCTION_END },
+ 
+ 	.first_gpio = GPIO_PA7,
+-	.last_gpio = GPIO_FN_FSE,
++	.last_gpio = GPIO_FN_IRL4,
+ 
+ 	.gpios = pinmux_gpios,
+ 	.cfg_regs = pinmux_config_regs,
+-- 
+1.8.2
+

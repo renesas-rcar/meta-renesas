@@ -1,7 +1,7 @@
-From 23e06607a436cd4424538b28f9a7fb105bd86575 Mon Sep 17 00:00:00 2001
+From e73cb0305cff6b6e3f5e6f07fdbcd2cda8be7927 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:39 -0400
-Subject: [PATCH 018/138] drm/edid: Add extra_modes
+Subject: [PATCH 018/611] drm/edid: Add extra_modes
 
 Some common sizes that don't show up in DMT.
 
@@ -13,8 +13,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_modes.h |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ drivers/gpu/drm/drm_edid_modes.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
 index c212133..b027fd5 100644
@@ -39,5 +39,5 @@ index c212133..b027fd5 100644
   * Probably taken from CEA-861 spec.
   * This table is converted from xorg's hw/xfree86/modes/xf86EdidModes.c.
 -- 
-1.7.5.4
+1.8.2
 

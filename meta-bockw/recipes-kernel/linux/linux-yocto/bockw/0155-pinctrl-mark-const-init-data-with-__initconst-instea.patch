@@ -1,0 +1,67 @@
+From 464e8a60b24d22a0cdcab9c1d706eeaffa0358f6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+Date: Fri, 30 Mar 2012 22:04:51 +0200
+Subject: [PATCH 155/611] pinctrl: mark const init data with __initconst
+ instead of __initdata
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+As long as there is no other non-const variable marked __initdata in the
+same compilation unit it doesn't hurt. If there were one however
+compilation would fail with
+
+	error: $variablename causes a section type conflict
+
+because a section containing const variables is marked read only and so
+cannot contain non-const variables.
+
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+Cc: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 122dbe7e58c7d064a17eefd33205227e6bce85ca)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ Documentation/pinctrl.txt        | 2 +-
+ drivers/pinctrl/pinctrl-coh901.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/pinctrl.txt b/Documentation/pinctrl.txt
+index 2c6897c..e40f4b4 100644
+--- a/Documentation/pinctrl.txt
++++ b/Documentation/pinctrl.txt
+@@ -779,7 +779,7 @@ and spi on the second function mapping:
+ 
+ #include <linux/pinctrl/machine.h>
+ 
+-static const struct pinctrl_map __initdata mapping[] = {
++static const struct pinctrl_map mapping[] __initconst = {
+ 	{
+ 		.dev_name = "foo-spi.0",
+ 		.name = PINCTRL_STATE_DEFAULT,
+diff --git a/drivers/pinctrl/pinctrl-coh901.c b/drivers/pinctrl/pinctrl-coh901.c
+index 0797eba..55697a5 100644
+--- a/drivers/pinctrl/pinctrl-coh901.c
++++ b/drivers/pinctrl/pinctrl-coh901.c
+@@ -174,7 +174,7 @@ struct u300_gpio_confdata {
+ 
+ 
+ /* Initial configuration */
+-static const struct __initdata u300_gpio_confdata
++static const struct __initconst u300_gpio_confdata
+ bs335_gpio_config[BS335_GPIO_NUM_PORTS][U300_GPIO_PINS_PER_PORT] = {
+ 	/* Port 0, pins 0-7 */
+ 	{
+@@ -255,7 +255,7 @@ bs335_gpio_config[BS335_GPIO_NUM_PORTS][U300_GPIO_PINS_PER_PORT] = {
+ 	}
+ };
+ 
+-static const struct __initdata u300_gpio_confdata
++static const struct __initconst u300_gpio_confdata
+ bs365_gpio_config[BS365_GPIO_NUM_PORTS][U300_GPIO_PINS_PER_PORT] = {
+ 	/* Port 0, pins 0-7 */
+ 	{
+-- 
+1.8.2
+

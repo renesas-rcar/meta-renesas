@@ -1,0 +1,30 @@
+From f2e95ea0a0f1d1d5bd06e2d9cf05d973cadc5e48 Mon Sep 17 00:00:00 2001
+From: Thomas Abraham <thomas.abraham@linaro.org>
+Date: Wed, 9 May 2012 04:04:54 +0530
+Subject: [PATCH 465/611] mtd: m25p80: Add support for Winbond W25Q80BW
+
+Winbond W25Q80BW is a 8Mbit serial flash memory device.
+
+Signed-off-by: Thomas Abraham <thomas.abraham@linaro.org>
+Signed-off-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+(cherry picked from commit 4fba37aec7e43f7c80a89425cc820622fcf07464)
+---
+ drivers/mtd/devices/m25p80.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mtd/devices/m25p80.c b/drivers/mtd/devices/m25p80.c
+index eb1cc97..5d0d68c 100644
+--- a/drivers/mtd/devices/m25p80.c
++++ b/drivers/mtd/devices/m25p80.c
+@@ -732,6 +732,7 @@ static const struct spi_device_id m25p_ids[] = {
+ 	{ "w25q32", INFO(0xef4016, 0, 64 * 1024,  64, SECT_4K) },
+ 	{ "w25x64", INFO(0xef3017, 0, 64 * 1024, 128, SECT_4K) },
+ 	{ "w25q64", INFO(0xef4017, 0, 64 * 1024, 128, SECT_4K) },
++	{ "w25q80", INFO(0xef5014, 0, 64 * 1024,  16, SECT_4K) },
+ 
+ 	/* Catalyst / On Semiconductor -- non-JEDEC */
+ 	{ "cat25c11", CAT25_INFO(  16, 8, 16, 1) },
+-- 
+1.8.2
+

@@ -1,7 +1,7 @@
-From 338c3b2f02e21350ca36507c7aefc04069ff96c3 Mon Sep 17 00:00:00 2001
+From 36b8ee72cee313041004d511c1d72344471eda7a Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:40 -0400
-Subject: [PATCH 019/138] drm/edid: Generate modes from extra_modes for range
+Subject: [PATCH 019/611] drm/edid: Generate modes from extra_modes for range
  descriptors
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>
@@ -12,14 +12,14 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   73 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 73 insertions(+), 0 deletions(-)
+ drivers/gpu/drm/drm_edid.c | 73 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index 154c156..f0b18b54 100644
+index 80310e7..5c6a994 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -1037,11 +1037,61 @@ drm_dmt_modes_for_range(struct drm_connector *connector, struct edid *edid,
+@@ -1052,11 +1052,61 @@ drm_dmt_modes_for_range(struct drm_connector *connector, struct edid *edid,
  	return modes;
  }
  
@@ -81,7 +81,7 @@ index 154c156..f0b18b54 100644
  
  	if (data->type != EDID_DETAIL_MONITOR_RANGE)
  		return;
-@@ -1049,6 +1099,29 @@ do_inferred_modes(struct detailed_timing *timing, void *c)
+@@ -1064,6 +1114,29 @@ do_inferred_modes(struct detailed_timing *timing, void *c)
  	closure->modes += drm_dmt_modes_for_range(closure->connector,
  						  closure->edid,
  						  timing);
@@ -112,5 +112,5 @@ index 154c156..f0b18b54 100644
  
  static int
 -- 
-1.7.5.4
+1.8.2
 

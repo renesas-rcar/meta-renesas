@@ -1,0 +1,31 @@
+From a8f87aaae2689b50c86f5feea91aa20012fb232c Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 13 May 2013 21:10:17 -0700
+Subject: [PATCH 455/611] sh-pfc: r8a7778: fixup IRQ1A settings
+
+IP2[31] func2 is IRQ1A, not IRQ3A
+
+Reported-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit b0547a7ea12a48e67ab15dd6c089b29baca17008)
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7778.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7778.c b/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
+index bc20083..6b2c6b5 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
+@@ -2080,7 +2080,7 @@ static struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 			     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 			     1, 1, 1, 1, 3, 2, 3, 3, 3, 3) {
+ 		/* IP2_31 [1] */
+-		FN_MLB_CLK,	FN_IRQ3_A,
++		FN_MLB_CLK,	FN_IRQ1_A,
+ 		/* IP2_30 [1] */
+ 		FN_RD_WR_B,	FN_IRQ0,
+ 		/* IP2_29 [1] */
+-- 
+1.8.2
+

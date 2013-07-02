@@ -1,0 +1,173 @@
+From 5203a8225c3e431d15b621d3efe77b4d3ed64d65 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 11 Jun 2013 17:26:58 +0900
+Subject: [PATCH 580/611] ARM: shmobile: bockw: Add Display Unit support
+
+Only the DU0 VGA output is currently supported. Support for the DU0 LVDS
+and DU1 LVDS outputs will require information about the panels that will
+be connected to those outputs.
+---
+ arch/arm/mach-shmobile/board-bockw.c          | 30 +++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/clock-r8a7778.c        |  6 +++---
+ arch/arm/mach-shmobile/include/mach/r8a7778.h |  2 ++
+ arch/arm/mach-shmobile/setup-r8a7778.c        | 22 ++++++++++++++++++++
+ 4 files changed, 57 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 58d1670..8f9406e 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -24,15 +24,18 @@
+ #include <linux/mtd/partitions.h>
+ #include <linux/pinctrl/machine.h>
+ #include <linux/platform_device.h>
++#include <linux/platform_data/rcar-du.h>
+ #include <linux/regulator/fixed.h>
+ #include <linux/regulator/machine.h>
+ #include <linux/smsc911x.h>
+ #include <linux/spi/spi.h>
+ #include <linux/spi/flash.h>
++#include <linux/gpio.h>
+ #include <mach/common.h>
+ #include <mach/irqs.h>
+ #include <mach/r8a7778.h>
+ #include <media/soc_camera.h>
++#include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ 
+ #define FPGA	0x18200000
+@@ -156,6 +159,19 @@ static struct sh_mmcif_plat_data sh_mmcif_plat = {
+ 			  MMC_CAP_NEEDS_POLL,
+ };
+ 
++/* DU */
++static struct rcar_du_encoder_data rcar_du_encoders[] = {
++	{
++		.encoder = RCAR_DU_ENCODER_VGA,
++		.output = 0,
++	},
++};
++
++static struct rcar_du_platform_data rcar_du_plat = {
++	.encoders = rcar_du_encoders,
++	.num_encoders = ARRAY_SIZE(rcar_du_encoders),
++};
++
+ /* SSI/AK4554 */
+ static struct rsnd_ssi_platform_info rsnd_ssi[] = {
+ 	RSND_SSI_UNUSED, /* SSI 0 */
+@@ -417,6 +433,19 @@ static const struct pinctrl_map bockw_pinctrl_map[] = {
+ 				  "vin1_clk", "vin1"),
+ 	PIN_MAP_MUX_GROUP_DEFAULT("r8a7778-vin.1", "pfc-r8a7778",
+ 				  "vin1_data8", "vin1"),
++	/* DU0(CN10: ARGB0) */
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du", "pfc-r8a7778",
++				  "du0_data8r", "du0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du", "pfc-r8a7778",
++				  "du0_data8g", "du0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du", "pfc-r8a7778",
++				  "du0_data8b", "du0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du", "pfc-r8a7778",
++				  "du0_clk", "du0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du", "pfc-r8a7778",
++				  "du0_sync", "du0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du", "pfc-r8a7778",
++				  "du0_disp", "du0"),
+ };
+ 
+ #define PFC	0xfffc0000
+@@ -435,6 +464,7 @@ static void __init bockw_init(void)
+ 	r8a7778_add_usb_phy_device(&usb_phy_platform_data);
+ 	r8a7778_add_vin_device(0, &vin_platform_data);
+ 	r8a7778_add_vin_device(1, &vin_platform_data);
++	r8a7778_add_du_device(&rcar_du_plat);
+ 	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 0,
+ 				      &iclink0_ml86v7667,
+ 				      sizeof(iclink0_ml86v7667));
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index faa4c57..2638021 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -118,9 +118,7 @@ enum {
+ 	MSTP331,
+ 	MSTP323, MSTP322, MSTP321,
+ 	MSTP311, MSTP310, MSTP309, MSTP308, MSTP307,
+-	MSTP114,
+-	MSTP110, MSTP109,
+-	MSTP100,
++	MSTP114, MSTP110, MSTP109, MSTP103, MSTP100,
+ 	MSTP030,
+ 	MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023, MSTP022, MSTP021,
+ 	MSTP016, MSTP015, MSTP012, MSTP011, MSTP010, MSTP009, MSTP008,
+@@ -140,6 +138,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP114] = SH_CLK_MSTP32(&p_clk, MSTPCR1, 14, 0), /* Ether */
+ 	[MSTP110] = SH_CLK_MSTP32(&s_clk, MSTPCR1, 10, 0), /* VIN0 */
+ 	[MSTP109] = SH_CLK_MSTP32(&s_clk, MSTPCR1,  9, 0), /* VIN1 */
++	[MSTP103] = SH_CLK_MSTP32(&s_clk, MSTPCR1,  3, 0), /* DU */
+ 	[MSTP100] = SH_CLK_MSTP32(&p_clk, MSTPCR1,  0, 0), /* USB0/1 */
+ 	[MSTP030] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 30, 0), /* I2C0 */
+ 	[MSTP029] = SH_CLK_MSTP32(&p_clk, MSTPCR0, 29, 0), /* I2C1 */
+@@ -178,6 +177,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh-eth",	&mstp_clks[MSTP114]), /* Ether */
+ 	CLKDEV_DEV_ID("r8a7778-vin.0", &mstp_clks[MSTP110]), /* VIN0 */
+ 	CLKDEV_DEV_ID("r8a7778-vin.1", &mstp_clks[MSTP109]), /* VIN1 */
++	CLKDEV_DEV_ID("rcar-du",	&mstp_clks[MSTP103]), /* DU */
+ 	CLKDEV_DEV_ID("ehci-platform", &mstp_clks[MSTP100]), /* USB EHCI port0/1 */
+ 	CLKDEV_DEV_ID("ohci-platform", &mstp_clks[MSTP100]), /* USB OHCI port0/1 */
+ 	CLKDEV_DEV_ID("i2c-rcar.0", &mstp_clks[MSTP030]), /* I2C0 */
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7778.h b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+index f52f72a..d0af676 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7778.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+@@ -25,6 +25,7 @@
+ #include <sound/simple_card.h>
+ #include <linux/platform_data/usb-rcar-phy.h>
+ #include <linux/platform_data/camera-rcar.h>
++#include <linux/platform_data/rcar-du.h>
+ 
+ extern void r8a7778_add_standard_devices(void);
+ extern void r8a7778_add_standard_devices_dt(void);
+@@ -38,6 +39,7 @@ extern void r8a7778_add_rsnd_devices(struct rcar_snd_info *rsnd_info,
+ extern void r8a7778_add_usb_phy_device(struct rcar_phy_platform_data *pdata);
+ extern void r8a7778_add_vin_device(int id,
+ 				   struct rcar_vin_platform_data *pdata);
++extern void r8a7778_add_du_device(struct rcar_du_platform_data *info);
+ 
+ extern void r8a7778_init_late(void);
+ extern void r8a7778_init_delay(void);
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index e449651..e16ec7b 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -392,6 +392,28 @@ void __init r8a7778_add_vin_device(int id, struct rcar_vin_platform_data *pdata)
+ 	platform_device_register_full(vin_info_table[id]);
+ }
+ 
++/* DU0 */
++static struct resource du_resources[] __initdata = {
++	DEFINE_RES_MEM(0xfff80000, 0x31008),
++	DEFINE_RES_IRQ(gic_iid(0x3f)),
++};
++
++void __init r8a7778_add_du_device(struct rcar_du_platform_data *info)
++{
++	struct platform_device_info pdevinfo = {
++		.parent		= &platform_bus,
++		.name		= "rcar-du",
++		.id		= -1,
++		.res		= du_resources,
++		.num_res	= ARRAY_SIZE(du_resources),
++		.data		= info,
++		.size_data	= sizeof(*info),
++		.dma_mask	= ~0,
++	};
++
++	platform_device_register_full(&pdevinfo);
++}
++
+ void __init r8a7778_add_standard_devices(void)
+ {
+ 	int i;
+-- 
+1.8.2
+

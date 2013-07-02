@@ -1,7 +1,7 @@
-From 3e4e82c49caa0df3cbb183fbbb8e178fa6b177e7 Mon Sep 17 00:00:00 2001
+From c1de587cc6a22c58c688cfd01309593c32002591 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:34 -0400
-Subject: [PATCH 014/138] drm/edid: Add the reduced blanking DMT modes to the
+Subject: [PATCH 014/611] drm/edid: Add the reduced blanking DMT modes to the
  DMT list
 
 Copied from the list in xserver.
@@ -14,8 +14,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_modes.h |   94 +++++++++++++++++++++++++++++++++++++-
- 1 files changed, 93 insertions(+), 1 deletions(-)
+ drivers/gpu/drm/drm_edid_modes.h | 94 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 93 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
 index 96190ae..a8f604a 100644
@@ -236,5 +236,5 @@ index 96190ae..a8f604a 100644
  static const int drm_num_dmt_modes =
  	sizeof(drm_dmt_modes) / sizeof(struct drm_display_mode);
 -- 
-1.7.5.4
+1.8.2
 

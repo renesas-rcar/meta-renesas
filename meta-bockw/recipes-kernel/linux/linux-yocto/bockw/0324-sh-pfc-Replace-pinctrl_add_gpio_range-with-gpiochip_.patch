@@ -1,0 +1,73 @@
+From eb3262c64b36e399fea5ecfd9383018fe428470c Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 8 Mar 2013 00:45:12 +0100
+Subject: [PATCH 324/611] sh-pfc: Replace pinctrl_add_gpio_range() with
+ gpiochip_add_pin_range()
+
+Adding a GPIO range to a pinctrl device logically belongs to the GPIO
+driver. Switch to the right API.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 247127f90ba1fcc234008e00e937537a89eef9ca)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pinctrl/sh-pfc/gpio.c    | 6 ++++++
+ drivers/pinctrl/sh-pfc/pinctrl.c | 9 ---------
+ 2 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/gpio.c b/drivers/pinctrl/sh-pfc/gpio.c
+index 45090d8..32a9c78 100644
+--- a/drivers/pinctrl/sh-pfc/gpio.c
++++ b/drivers/pinctrl/sh-pfc/gpio.c
+@@ -220,6 +220,7 @@ sh_pfc_add_gpiochip(struct sh_pfc *pfc, void(*setup)(struct sh_pfc_chip *))
+ int sh_pfc_register_gpiochip(struct sh_pfc *pfc)
+ {
+ 	struct sh_pfc_chip *chip;
++	int ret;
+ 
+ 	chip = sh_pfc_add_gpiochip(pfc, gpio_pin_setup);
+ 	if (IS_ERR(chip))
+@@ -227,6 +228,11 @@ int sh_pfc_register_gpiochip(struct sh_pfc *pfc)
+ 
+ 	pfc->gpio = chip;
+ 
++	ret = gpiochip_add_pin_range(&chip->gpio_chip, dev_name(pfc->dev), 0, 0,
++				     chip->gpio_chip.ngpio);
++	if (ret < 0)
++		return ret;
++
+ 	chip = sh_pfc_add_gpiochip(pfc, gpio_function_setup);
+ 	if (IS_ERR(chip))
+ 		return PTR_ERR(chip);
+diff --git a/drivers/pinctrl/sh-pfc/pinctrl.c b/drivers/pinctrl/sh-pfc/pinctrl.c
+index 78bd277..a60c317 100644
+--- a/drivers/pinctrl/sh-pfc/pinctrl.c
++++ b/drivers/pinctrl/sh-pfc/pinctrl.c
+@@ -28,7 +28,6 @@
+ struct sh_pfc_pinctrl {
+ 	struct pinctrl_dev *pctl;
+ 	struct pinctrl_desc pctl_desc;
+-	struct pinctrl_gpio_range range;
+ 
+ 	struct sh_pfc *pfc;
+ 
+@@ -377,14 +376,6 @@ int sh_pfc_register_pinctrl(struct sh_pfc *pfc)
+ 	if (IS_ERR(pmx->pctl))
+ 		return PTR_ERR(pmx->pctl);
+ 
+-	pmx->range.name = DRV_NAME,
+-	pmx->range.id = 0;
+-	pmx->range.npins = pfc->info->nr_pins;
+-	pmx->range.base = 0;
+-	pmx->range.pin_base = 0;
+-
+-	pinctrl_add_gpio_range(pmx->pctl, &pmx->range);
+-
+ 	return 0;
+ }
+ 
+-- 
+1.8.2
+

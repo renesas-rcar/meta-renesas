@@ -1,0 +1,28 @@
+From 8f311c0fc5cbf38bd41c66bf025790661985f0d0 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 16 Apr 2013 22:18:11 -0700
+Subject: [PATCH 518/611] ARM: shmobile: bockw: enable SDHI on defconfig
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit b8eb2fdd416958810f58b0fe5054571802579b17)
+---
+ arch/arm/configs/bockw_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/configs/bockw_defconfig b/arch/arm/configs/bockw_defconfig
+index 6524cdf..b74a4d4 100644
+--- a/arch/arm/configs/bockw_defconfig
++++ b/arch/arm/configs/bockw_defconfig
+@@ -72,6 +72,8 @@ CONFIG_SERIAL_SH_SCI_CONSOLE=y
+ # CONFIG_HW_RANDOM is not set
+ # CONFIG_HWMON is not set
+ # CONFIG_USB_SUPPORT is not set
++CONFIG_MMC=y
++CONFIG_MMC_SDHI=y
+ CONFIG_UIO=y
+ CONFIG_UIO_PDRV_GENIRQ=y
+ # CONFIG_IOMMU_SUPPORT is not set
+-- 
+1.8.2
+

@@ -1,7 +1,7 @@
-From 87ed9154140d8bed47610fece10733de88ed64ca Mon Sep 17 00:00:00 2001
+From dbe0d2223dfb84e367db468cc95a4a29b3c8f858 Mon Sep 17 00:00:00 2001
 From: Ian Pilcher <arequipeno@gmail.com>
 Date: Sun, 22 Apr 2012 11:40:26 -0500
-Subject: [PATCH 025/138] drm: Store vendor IDs directly in the EDID quirk
+Subject: [PATCH 025/611] drm: Store vendor IDs directly in the EDID quirk
  structure
 
 EDID vendor IDs are always 3 characters long (4 with the terminating
@@ -15,14 +15,14 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/gpu/drm/drm_edid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index f93a784..03353b3 100644
+index 51491c2..e5d1c5c 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -81,7 +81,7 @@ struct detailed_mode_closure {
+@@ -83,7 +83,7 @@ struct detailed_mode_closure {
  #define LEVEL_CVT	3
  
  static struct edid_quirk {
@@ -32,5 +32,5 @@ index f93a784..03353b3 100644
  	u32 quirks;
  } edid_quirk_list[] = {
 -- 
-1.7.5.4
+1.8.2
 

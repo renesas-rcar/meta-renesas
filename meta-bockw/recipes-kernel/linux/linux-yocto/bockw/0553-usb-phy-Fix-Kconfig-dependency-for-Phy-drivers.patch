@@ -1,0 +1,51 @@
+From d9aea5ee29709fa40cc21e18178b78df90b70b9d Mon Sep 17 00:00:00 2001
+From: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
+Date: Tue, 26 Jun 2012 11:56:48 -0300
+Subject: [PATCH 553/611] usb: phy: Fix Kconfig dependency for Phy drivers
+
+USB phy layer driver are only built if usb host is selected, but they
+are used too by USB_GADGET drivers
+
+Signed-off-by: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
+Acked-by: Roland Stigge <stigge@antcom.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit c6156328dec52a55f90688cbfad21c83f8711d84)
+---
+ drivers/usb/Makefile    | 2 +-
+ drivers/usb/phy/Kconfig | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/usb/Makefile b/drivers/usb/Makefile
+index 77c835a..f7d7fc6 100644
+--- a/drivers/usb/Makefile
++++ b/drivers/usb/Makefile
+@@ -46,7 +46,7 @@ obj-$(CONFIG_USB_MICROTEK)	+= image/
+ obj-$(CONFIG_USB_SERIAL)	+= serial/
+ 
+ obj-$(CONFIG_USB)		+= misc/
+-obj-$(CONFIG_USB)		+= phy/
++obj-$(CONFIG_USB_COMMON)	+= phy/
+ obj-$(CONFIG_EARLY_PRINTK_DBGP)	+= early/
+ 
+ obj-$(CONFIG_USB_ATM)		+= atm/
+diff --git a/drivers/usb/phy/Kconfig b/drivers/usb/phy/Kconfig
+index 3cfabcb..e7cf84f 100644
+--- a/drivers/usb/phy/Kconfig
++++ b/drivers/usb/phy/Kconfig
+@@ -2,11 +2,11 @@
+ # Physical Layer USB driver configuration
+ #
+ comment "USB Physical Layer drivers"
+-	depends on USB
++	depends on USB || USB_GADGET
+ 
+ config USB_ISP1301
+ 	tristate "NXP ISP1301 USB transceiver support"
+-	depends on USB
++	depends on USB || USB_GADGET
+ 	depends on I2C
+ 	help
+ 	  Say Y here to add support for the NXP ISP1301 USB transceiver driver.
+-- 
+1.8.2
+

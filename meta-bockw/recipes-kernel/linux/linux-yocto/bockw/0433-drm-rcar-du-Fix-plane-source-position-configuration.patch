@@ -1,0 +1,49 @@
+From d5f8ad7ae01c3ed6c5479b534b6a3ae46b049023 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Thu, 4 Apr 2013 01:56:59 +0200
+Subject: [PATCH 433/611] drm/rcar-du: Fix plane source position configuration
+
+According to the datasheet the Y position is expressed in raster line
+units. However, this doesn't seem to be the case in practice for 32bpp
+and NV12/NV21 formats. Set the Y position register accordingly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 7f71160a5bec8fd3f8c24a6dda4d4980baf7b316)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 6d63d8b..13a9c87 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -103,15 +103,22 @@ void rcar_du_plane_update_base(struct rcar_du_plane *plane)
+ 	struct rcar_du_device *rcdu = plane->dev;
+ 	unsigned int index = plane->hwindex;
+ 
++	/* According to the datasheet the Y position is expressed in raster line
++	 * units. However, 32bpp formats seem to require a doubled Y position
++	 * value. Similarly, for the second plane, NV12 and NV21 formats seem to
++	 * require a halved Y position value.
++	 */
+ 	rcar_du_plane_write(rcdu, index, PnSPXR, plane->src_x);
+-	rcar_du_plane_write(rcdu, index, PnSPYR, plane->src_y);
++	rcar_du_plane_write(rcdu, index, PnSPYR, plane->src_y *
++			    (plane->format->bpp == 32 ? 2 : 1));
+ 	rcar_du_plane_write(rcdu, index, PnDSA0R, plane->dma[0]);
+ 
+ 	if (plane->format->planes == 2) {
+ 		index = (index + 1) % 8;
+ 
+ 		rcar_du_plane_write(rcdu, index, PnSPXR, plane->src_x);
+-		rcar_du_plane_write(rcdu, index, PnSPYR, plane->src_y);
++		rcar_du_plane_write(rcdu, index, PnSPYR, plane->src_y *
++				    (plane->format->bpp == 16 ? 2 : 1) / 2);
+ 		rcar_du_plane_write(rcdu, index, PnDSA0R, plane->dma[1]);
+ 	}
+ }
+-- 
+1.8.2
+

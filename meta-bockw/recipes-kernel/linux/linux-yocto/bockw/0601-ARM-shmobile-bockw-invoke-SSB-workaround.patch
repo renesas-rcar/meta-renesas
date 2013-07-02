@@ -1,0 +1,24 @@
+From 9eac7a5fe7c36c6a26fb23037b80cb3685d4b4d3 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 16 Apr 2013 14:51:34 +0900
+Subject: [PATCH 601/611] ARM: shmobile: bockw: invoke SSB workaround
+
+---
+ arch/arm/mach-shmobile/board-bockw.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index a7400d6..f3847ca 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -505,6 +505,7 @@ static void __init bockw_init(void)
+ 	i2c_register_board_info(0, i2c0_devices,
+ 				ARRAY_SIZE(i2c0_devices));
+ 	r8a7778_meram_workaround();
++	r8a7778_ssb_workaround();
+ 
+ 	spi_register_board_info(spi_board_info,
+ 				ARRAY_SIZE(spi_board_info));
+-- 
+1.8.2
+

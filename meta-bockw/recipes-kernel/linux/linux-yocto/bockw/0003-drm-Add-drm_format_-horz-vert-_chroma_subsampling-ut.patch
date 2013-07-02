@@ -1,8 +1,8 @@
-From d4dcdc44b28b89aab9d75b9851aad735c85caf5e Mon Sep 17 00:00:00 2001
+From f7a9f280222e3d8aad4558151a789254236f2300 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:17 +0300
-Subject: [PATCH 003/138] drm: Add drm_format_{horz,
- vert}_chroma_subsampling() utility functions
+Subject: [PATCH 003/611] drm: Add drm_format_{horz, vert}_chroma_subsampling()
+ utility functions
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,15 +16,15 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   60 ++++++++++++++++++++++++++++++++++++++++++++
- include/drm/drm_crtc.h     |    2 +
- 2 files changed, 62 insertions(+), 0 deletions(-)
+ drivers/gpu/drm/drm_crtc.c | 60 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/drm/drm_crtc.h     |  2 ++
+ 2 files changed, 62 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index 5d2f87b..d1d49e9 100644
+index 7b0d192..59f0110 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
-@@ -3545,3 +3545,63 @@ int drm_format_plane_cpp(uint32_t format, int plane)
+@@ -3546,3 +3546,63 @@ int drm_format_plane_cpp(uint32_t format, int plane)
  	}
  }
  EXPORT_SYMBOL(drm_format_plane_cpp);
@@ -101,5 +101,5 @@ index 2d128eb..2d63a02 100644
  
  #endif /* __DRM_CRTC_H__ */
 -- 
-1.7.5.4
+1.8.2
 

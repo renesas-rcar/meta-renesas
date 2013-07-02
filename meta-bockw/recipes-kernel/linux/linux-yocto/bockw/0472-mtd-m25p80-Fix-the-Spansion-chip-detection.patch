@@ -1,0 +1,60 @@
+From bc5def80c0bac7d9c477f55288a9fb1adeb5d34b Mon Sep 17 00:00:00 2001
+From: Marek Vasut <marex@denx.de>
+Date: Fri, 6 Jul 2012 08:10:26 +0200
+Subject: [PATCH 472/611] mtd: m25p80: Fix the Spansion chip detection
+
+Due to the implementation of the following loop at the end
+of jedec_probe():
+
+776         for (tmp = 0; tmp < ARRAY_SIZE(m25p_ids) - 1; tmp++) {
+777                 info = (void *)m25p_ids[tmp].driver_data;
+778                 if (info->jedec_id == jedec) {
+779                         if (info->ext_id != 0 && info->ext_id != ext_jedec)
+780                                 continue;
+781                         return &m25p_ids[tmp];
+782                 }
+783         }
+
+In particular line 779 in the above numbering, the chips with ext_id != 0 must
+be ordered first in the list of chips (m25p_ids[]).
+
+Signed-off-by: Marek Vasut <marex@denx.de>
+Signed-off-by: Artem Bityutskiy <Artem.Bityutskiy@linux.intel.com>
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+(cherry picked from commit 8bb8b85f6732ed579222a465d0749f66a3cace4d)
+---
+ drivers/mtd/devices/m25p80.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/mtd/devices/m25p80.c b/drivers/mtd/devices/m25p80.c
+index a3f4832..d16f75c 100644
+--- a/drivers/mtd/devices/m25p80.c
++++ b/drivers/mtd/devices/m25p80.c
+@@ -665,12 +665,7 @@ static const struct spi_device_id m25p_ids[] = {
+ 	/* Spansion -- single (large) sector size only, at least
+ 	 * for the chips listed here (without boot sectors).
+ 	 */
+-	{ "s25sl004a",  INFO(0x010212,      0,  64 * 1024,   8, 0) },
+-	{ "s25sl008a",  INFO(0x010213,      0,  64 * 1024,  16, 0) },
+-	{ "s25sl016a",  INFO(0x010214,      0,  64 * 1024,  32, 0) },
+-	{ "s25sl032a",  INFO(0x010215,      0,  64 * 1024,  64, 0) },
+ 	{ "s25sl032p",  INFO(0x010215, 0x4d00,  64 * 1024,  64, SECT_4K) },
+-	{ "s25sl064a",  INFO(0x010216,      0,  64 * 1024, 128, 0) },
+ 	{ "s25sl064p",  INFO(0x010216, 0x4d00,  64 * 1024, 128, SECT_4K) },
+ 	{ "s25fl256s0", INFO(0x010219, 0x4d00, 256 * 1024, 128, 0) },
+ 	{ "s25fl256s1", INFO(0x010219, 0x4d01,  64 * 1024, 512, 0) },
+@@ -680,6 +675,11 @@ static const struct spi_device_id m25p_ids[] = {
+ 	{ "s25sl12801", INFO(0x012018, 0x0301,  64 * 1024, 256, 0) },
+ 	{ "s25fl129p0", INFO(0x012018, 0x4d00, 256 * 1024,  64, 0) },
+ 	{ "s25fl129p1", INFO(0x012018, 0x4d01,  64 * 1024, 256, 0) },
++	{ "s25sl004a",  INFO(0x010212,      0,  64 * 1024,   8, 0) },
++	{ "s25sl008a",  INFO(0x010213,      0,  64 * 1024,  16, 0) },
++	{ "s25sl016a",  INFO(0x010214,      0,  64 * 1024,  32, 0) },
++	{ "s25sl032a",  INFO(0x010215,      0,  64 * 1024,  64, 0) },
++	{ "s25sl064a",  INFO(0x010216,      0,  64 * 1024, 128, 0) },
+ 	{ "s25fl016k",  INFO(0xef4015,      0,  64 * 1024,  32, SECT_4K) },
+ 	{ "s25fl064k",  INFO(0xef4017,      0,  64 * 1024, 128, SECT_4K) },
+ 
+-- 
+1.8.2
+

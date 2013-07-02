@@ -1,7 +1,7 @@
-From 86527a22bf6dbd59149aa7d2ad239b7334ebb695 Mon Sep 17 00:00:00 2001
+From e27230c8a055504d6c1004e78a18ca1580192f0a Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 17 May 2012 02:23:27 -0600
-Subject: [PATCH 040/138] drm: add plane properties
+Subject: [PATCH 040/611] drm: add plane properties
 
 The omapdrm driver uses this for setting per-overlay rotation.  It
 is likely also useful for setting YUV->RGB colorspace conversion
@@ -14,12 +14,12 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   19 +++++++++++++++++++
- include/drm/drm_crtc.h     |    7 +++++++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ drivers/gpu/drm/drm_crtc.c | 19 +++++++++++++++++++
+ include/drm/drm_crtc.h     |  7 +++++++
+ 2 files changed, 26 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index 290c4b4..9c89332 100644
+index 8b28b9a..511dff6 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -608,6 +608,7 @@ int drm_plane_init(struct drm_device *dev, struct drm_plane *plane,
@@ -102,5 +102,5 @@ index 9b33629..73e4560 100644
  
  /**
 -- 
-1.7.5.4
+1.8.2
 

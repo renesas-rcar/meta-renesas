@@ -1,0 +1,28 @@
+From bf0f7f2409f9429d3a235ca9b3fdebce1738531f Mon Sep 17 00:00:00 2001
+From: Marek Vasut <marex@denx.de>
+Date: Fri, 6 Jul 2012 08:10:25 +0200
+Subject: [PATCH 471/611] mtd: m25p80: add support for Spansion s25sl064p chip
+
+Signed-off-by: Marek Vasut <marex@denx.de>
+Signed-off-by: Artem Bityutskiy <Artem.Bityutskiy@linux.intel.com>
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+(cherry picked from commit f728598f8d8edd6df2b53665ddadaf18401e5b11)
+---
+ drivers/mtd/devices/m25p80.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mtd/devices/m25p80.c b/drivers/mtd/devices/m25p80.c
+index 5257345..a3f4832 100644
+--- a/drivers/mtd/devices/m25p80.c
++++ b/drivers/mtd/devices/m25p80.c
+@@ -671,6 +671,7 @@ static const struct spi_device_id m25p_ids[] = {
+ 	{ "s25sl032a",  INFO(0x010215,      0,  64 * 1024,  64, 0) },
+ 	{ "s25sl032p",  INFO(0x010215, 0x4d00,  64 * 1024,  64, SECT_4K) },
+ 	{ "s25sl064a",  INFO(0x010216,      0,  64 * 1024, 128, 0) },
++	{ "s25sl064p",  INFO(0x010216, 0x4d00,  64 * 1024, 128, SECT_4K) },
+ 	{ "s25fl256s0", INFO(0x010219, 0x4d00, 256 * 1024, 128, 0) },
+ 	{ "s25fl256s1", INFO(0x010219, 0x4d01,  64 * 1024, 512, 0) },
+ 	{ "s25fl512s",  INFO(0x010220, 0x4d00, 256 * 1024, 256, 0) },
+-- 
+1.8.2
+

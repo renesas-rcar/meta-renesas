@@ -1,7 +1,7 @@
-From e46fd0140f0d62ad00ec7a8efafa09562c46c082 Mon Sep 17 00:00:00 2001
+From 8f858a1e3fe928a5bf8f266fd1ab714c8cff2501 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:08:59 -0300
-Subject: [PATCH 028/138] drm: add drm_property_change_is_valid
+Subject: [PATCH 028/611] drm: add drm_property_change_is_valid
 
 Move code from drm_mode_connector_property_set_ioctl to a new
 function, so we can reuse this code when we add crtc properties.
@@ -15,11 +15,11 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   39 +++++++++++++++++++--------------------
- 1 files changed, 19 insertions(+), 20 deletions(-)
+ drivers/gpu/drm/drm_crtc.c | 39 +++++++++++++++++++--------------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index dffedd6..8330f33 100644
+index 04b0e1e..c657484 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -3074,6 +3074,24 @@ int drm_mode_connector_update_edid_property(struct drm_connector *connector,
@@ -78,5 +78,5 @@ index dffedd6..8330f33 100644
  	if (property == connector->dev->mode_config.dpms_property) {
  		if (connector->funcs->dpms)
 -- 
-1.7.5.4
+1.8.2
 

@@ -1,0 +1,351 @@
+From 18932eb38af8458a5353b6cb7850990bd59b5c0b Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Thu, 13 Jun 2013 17:22:59 +0900
+Subject: [PATCH 543/611] Local: ARM: shmobile: bockw: add R-Car sound support
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/mach-shmobile/Kconfig       |   2 +
+ arch/arm/mach-shmobile/board-bockw.c | 256 +++++++++++++++++++++++++++++++++--
+ 2 files changed, 250 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index 969e1a6..c819519 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -119,6 +119,8 @@ config MACH_BOCKW
+ 	select ARCH_REQUIRE_GPIOLIB
+ 	select RENESAS_INTC_IRQPIN
+ 	select USE_OF
++	select SND_SOC_AK4554 if SND_SIMPLE_CARD
++	select SND_SOC_AK4642 if SND_SIMPLE_CARD
+ 
+ config MACH_MARZEN
+ 	bool "MARZEN board"
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index d120dc5..536b982 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -33,6 +33,11 @@
+ #include <mach/r8a7778.h>
+ #include <asm/mach/arch.h>
+ 
++#define FPGA	0x18200000
++#define IRQ0MR	0x30
++#define COMCTLR	0x101c
++static void __iomem *fpga;
++
+ /*
+  *	CN9(Upper side) SCIF/RCAN selection
+  *
+@@ -58,6 +63,27 @@
+  * SW19	(MMC)	1 pin
+  */
+ 
++/*
++ *     SSI settings
++ *
++ * SW45: 1-4 side      (SSI5 out, ROUT/LOUT CN19 Mid)
++ * SW46: 1101          (SSI6 Recorde)
++ * SW47: 1110          (SSI5 Playback)
++ * SW48: 11            (Recorde power)
++ * SW49: 1             (SSI slave mode)
++ * SW50: 1111          (SSI7, SSI8)
++ * SW51: 1111          (SSI3, SSI4)
++ * SW54: 1pin          (ak4554 FPGA control)
++ * SW55: 1             (CLKB is 24.5760MHz)
++ * SW60: 1pin          (ak4554 FPGA control)
++ * SW61: 3pin          (use X11 clock)
++ * SW78: 3-6           (ak4642 connects I2C0)
++ *
++ * this command is required when playback.
++ *
++ * # amixer set "LINEOUT Mixer DACL" on
++ */
++
+ /* Dummy supplies, where voltage doesn't matter */
+ static struct regulator_consumer_supply dummy_supplies[] = {
+ 	REGULATOR_SUPPLY("vddvario", "smsc911x"),
+@@ -87,7 +113,9 @@ static struct sh_mobile_sdhi_info sdhi0_info = {
+ static struct i2c_board_info i2c0_devices[] = {
+ 	{
+ 		I2C_BOARD_INFO("rx8581", 0x51),
+-	},
++	}, {
++		I2C_BOARD_INFO("ak4643", 0x12),
++	}
+ };
+ 
+ /* HSPI*/
+@@ -126,6 +154,195 @@ static struct sh_mmcif_plat_data sh_mmcif_plat = {
+ 			  MMC_CAP_NEEDS_POLL,
+ };
+ 
++/* SSI/AK4554 */
++static struct rsnd_ssi_platform_info rsnd_ssi[] = {
++	RSND_SSI_UNUSED, /* SSI 0 */
++	RSND_SSI_UNUSED, /* SSI 1 */
++	RSND_SSI_UNUSED, /* SSI 2 */
++	RSND_SSI_SET(1, gic_iid(0x85), RSND_SSI_PLAY),
++	RSND_SSI_SET(2, gic_iid(0x85), RSND_SSI_CLK_PIN_SHARE | RSND_SSI_CLK_FROM_ADG),
++	RSND_SSI_SET(0, gic_iid(0x86), RSND_SSI_PLAY),
++	RSND_SSI_SET(0, gic_iid(0x86), 0),
++	RSND_SSI_SET(3, gic_iid(0x86), RSND_SSI_PLAY),
++	RSND_SSI_SET(4, gic_iid(0x86), RSND_SSI_CLK_PIN_SHARE | RSND_SSI_CLK_FROM_ADG),
++};
++
++static struct rsnd_scu_platform_info rsnd_scu[9] = {
++	/* no member at this point */
++};
++
++enum {
++	AK4554_34 = 0,
++	AK4643_56,
++	AK4554_78,
++	SOUND_MAX,
++};
++
++static int rsnd_codec_power(int id, int enable)
++{
++	static int sound_user[SOUND_MAX] = {0, 0, 0};
++	int *usr = NULL;
++	u32 bit;
++
++	switch (id) {
++	case 3:
++	case 4:
++		usr = sound_user + AK4554_34;
++		bit = (1 << 10);
++		break;
++	case 5:
++	case 6:
++		usr = sound_user + AK4643_56;
++		bit = (1 << 6);
++		break;
++	case 7:
++	case 8:
++		usr = sound_user + AK4554_78;
++		bit = (1 << 7);
++		break;
++	}
++
++	if (!usr)
++		return -EIO;
++
++	if (enable) {
++		if (*usr == 0) {
++			u32 val = ioread16(fpga + COMCTLR);
++			val &= ~bit;
++			iowrite16(val, fpga + COMCTLR);
++		}
++
++		(*usr)++;
++	} else {
++		if (*usr == 0)
++			return 0;
++
++		(*usr)--;
++
++		if (*usr == 0) {
++			u32 val = ioread16(fpga + COMCTLR);
++			val |= bit;
++			iowrite16(val, fpga + COMCTLR);
++		}
++	}
++
++	return 0;
++}
++
++static int rsnd_start(int id)
++{
++	return rsnd_codec_power(id, 1);
++}
++
++static int rsnd_stop(int id)
++{
++	return rsnd_codec_power(id, 0);
++}
++
++static struct rcar_snd_info rsnd_info = {
++	.flags		= RSND_GEN1,
++	.ssi_info	= rsnd_ssi,
++	.ssi_info_nr	= ARRAY_SIZE(rsnd_ssi),
++	.scu_info	= rsnd_scu,
++	.scu_info_nr	= ARRAY_SIZE(rsnd_scu),
++	.start		= rsnd_start,
++	.stop		= rsnd_stop,
++};
++
++static struct asoc_simple_card_info rsnd_card_info[] = {
++	/* SSI5, SSI6 */
++	{
++		.name		= "AK4643",
++		.card		= "SSI5-AK4643",
++		.codec		= "ak4642-codec.0-0012",
++		.platform	= "rcar_sound",
++		.daifmt		= SND_SOC_DAIFMT_LEFT_J,
++		.cpu_dai = {
++			.name	= "rsnd-dai.0",
++			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++		},
++		.codec_dai = {
++			.name	= "ak4642-hifi",
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++			.sysclk	= 11289600,
++		},
++	},
++	/* SSI3 */
++	{
++		.name		= "AK4554",
++		.card		= "SSI3-AK4554(playback)",
++		.codec		= "ak4554-adc-dac.0",
++		.platform	= "rcar_sound",
++		.daifmt		= SND_SOC_DAIFMT_RIGHT_J,
++		.cpu_dai = {
++			.name	= "rsnd-dai.1",
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++		},
++		.codec_dai = {
++			.name	= "ak4554-hifi-playback",
++			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++		},
++	},
++	/* SSI4 */
++	{
++		.name		= "AK4554",
++		.card		= "SSI4-AK4554(capture)",
++		.codec		= "ak4554-adc-dac.0",
++		.platform	= "rcar_sound",
++		.daifmt		= SND_SOC_DAIFMT_LEFT_J,
++		.cpu_dai = {
++			.name	= "rsnd-dai.2",
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++		},
++		.codec_dai = {
++			.name	= "ak4554-hifi-capture",
++			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++		},
++	},
++	/* SSI7 */
++	{
++		.name		= "AK4554",
++		.card		= "SSI7-AK4554(playback)",
++		.codec		= "ak4554-adc-dac.1",
++		.platform	= "rcar_sound",
++		.daifmt		= SND_SOC_DAIFMT_RIGHT_J,
++		.cpu_dai = {
++			.name	= "rsnd-dai.3",
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++		},
++		.codec_dai = {
++			.name	= "ak4554-hifi-playback",
++			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++		},
++	},
++	/* SSI8 */
++	{
++		.name		= "AK4554",
++		.card		= "SSI8-AK4554(capture)",
++		.codec		= "ak4554-adc-dac.1",
++		.platform	= "rcar_sound",
++		.daifmt		= SND_SOC_DAIFMT_LEFT_J,
++		.cpu_dai = {
++			.name	= "rsnd-dai.4",
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++		},
++		.codec_dai = {
++			.name	= "ak4554-hifi-capture",
++			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++		},
++	}
++};
++
++static struct platform_device ak4554_ssi34_device = {
++	.name	= "ak4554-adc-dac",
++	.id	= 0,
++};
++
++static struct platform_device ak4554_ssi78_device = {
++	.name   = "ak4554-adc-dac",
++	.id	= 1,
++};
++
+ static const struct pinctrl_map bockw_pinctrl_map[] = {
+ 	/* HSPI0 */
+ 	PIN_MAP_MUX_GROUP_DEFAULT("sh-hspi.0", "pfc-r8a7778",
+@@ -149,15 +366,27 @@ static const struct pinctrl_map bockw_pinctrl_map[] = {
+ 				  "sdhi0_data4", "sdhi0"),
+ 	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.0", "pfc-r8a7778",
+ 				  "sdhi0_wp", "sdhi0"),
++	/* AUDIO */
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar_sound", "pfc-r8a7778",
++				  "audio_clk_a", "audio_clk"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar_sound", "pfc-r8a7778",
++				  "audio_clk_b", "audio_clk"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar_sound", "pfc-r8a7778",
++				  "ssi78", "ssi"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar_sound", "pfc-r8a7778",
++				  "ssi6", "ssi"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar_sound", "pfc-r8a7778",
++				  "ssi5", "ssi"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar_sound", "pfc-r8a7778",
++				  "ssi34", "ssi"),
+ };
+ 
+-#define FPGA	0x18200000
+-#define IRQ0MR	0x30
+ #define PFC	0xfffc0000
+ #define PUPR4	0x110
+ static void __init bockw_init(void)
+ {
+ 	void __iomem *base;
++	struct clk *clk_b;
+ 
+ 	r8a7778_clock_init();
+ 	r8a7778_init_irq_extpin(1);
+@@ -177,8 +406,8 @@ static void __init bockw_init(void)
+ 	r8a7778_pinmux_init();
+ 
+ 	/* for SMSC */
+-	base = ioremap_nocache(FPGA, SZ_1M);
+-	if (base) {
++	fpga = ioremap_nocache(FPGA, SZ_1M);
++	if (fpga) {
+ 		/*
+ 		 * CAUTION
+ 		 *
+@@ -186,10 +415,9 @@ static void __init bockw_init(void)
+ 		 * it should be cared in the future
+ 		 * Now, it is assuming IRQ0 was used only from SMSC.
+ 		 */
+-		u16 val = ioread16(base + IRQ0MR);
++		u16 val = ioread16(fpga + IRQ0MR);
+ 		val &= ~(1 << 4); /* enable SMSC911x */
+-		iowrite16(val, base + IRQ0MR);
+-		iounmap(base);
++		iowrite16(val, fpga + IRQ0MR);
+ 
+ 		regulator_register_fixed(0, dummy_supplies,
+ 					 ARRAY_SIZE(dummy_supplies));
+@@ -213,6 +441,18 @@ static void __init bockw_init(void)
+ 
+ 		r8a7778_sdhi_init(0, &sdhi0_info);
+ 	}
++
++	/* for Audio */
++	clk_b = clk_get(NULL, "audio_clk_b");
++	clk_set_rate(clk_b, 24576000);
++	clk_put(clk_b);
++	rsnd_codec_power(5, 1); /* enable ak4642 */
++
++	platform_device_register(&ak4554_ssi34_device);
++	platform_device_register(&ak4554_ssi78_device);
++	r8a7778_add_rsnd_devices(&rsnd_info,
++				 rsnd_card_info,
++				 ARRAY_SIZE(rsnd_card_info));
+ }
+ 
+ static const char *bockw_boards_compat_dt[] __initdata = {
+-- 
+1.8.2
+

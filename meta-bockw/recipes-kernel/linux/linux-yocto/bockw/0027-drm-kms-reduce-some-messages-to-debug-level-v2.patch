@@ -1,7 +1,7 @@
-From 7d11d9631a9809887062bf7ef83a9b191d814138 Mon Sep 17 00:00:00 2001
+From 9eac0675d3586acb032413c54925d95c6b0f3fd6 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Tue, 1 May 2012 17:38:35 +0100
-Subject: [PATCH 027/138] drm/kms: reduce some messages to debug level (v2)
+Subject: [PATCH 027/611] drm/kms: reduce some messages to debug level (v2)
 
 These can all be trigged from userspace if you pass the right values.
 
@@ -13,11 +13,11 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/gpu/drm/drm_crtc.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
-index 0eac61f..dffedd6 100644
+index de5d057..04b0e1e 100644
 --- a/drivers/gpu/drm/drm_crtc.c
 +++ b/drivers/gpu/drm/drm_crtc.c
 @@ -2104,7 +2104,7 @@ int drm_mode_addfb(struct drm_device *dev,
@@ -93,5 +93,5 @@ index 0eac61f..dffedd6 100644
  		goto out;
  	}
 -- 
-1.7.5.4
+1.8.2
 

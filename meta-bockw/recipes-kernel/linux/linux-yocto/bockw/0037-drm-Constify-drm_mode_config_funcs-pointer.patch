@@ -1,7 +1,7 @@
-From 51c4566543a07143a24af844d871faaa3d339ab0 Mon Sep 17 00:00:00 2001
+From 69f0aa38ccd2bb561f7e7ddc8c538d6b05358cf2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:23 +0200
-Subject: [PATCH 037/138] drm: Constify drm_mode_config_funcs pointer
+Subject: [PATCH 037/611] drm: Constify drm_mode_config_funcs pointer
 
 The DRM mode config functions structure declared by drivers and pointed
 to by the drm_mode_config funcs field is never modified. Make it a const
@@ -20,15 +20,15 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/exynos/exynos_drm_fb.c    |    2 +-
- drivers/gpu/drm/gma500/framebuffer.c      |    2 +-
- drivers/gpu/drm/i915/intel_display.c      |    2 +-
- drivers/gpu/drm/nouveau/nouveau_display.c |    2 +-
- drivers/gpu/drm/radeon/radeon_display.c   |    2 +-
- drivers/gpu/drm/udl/udl_modeset.c         |    2 +-
- drivers/gpu/drm/vmwgfx/vmwgfx_kms.c       |    2 +-
- drivers/staging/omapdrm/omap_drv.c        |    2 +-
- include/drm/drm_crtc.h                    |    2 +-
+ drivers/gpu/drm/exynos/exynos_drm_fb.c    | 2 +-
+ drivers/gpu/drm/gma500/framebuffer.c      | 2 +-
+ drivers/gpu/drm/i915/intel_display.c      | 2 +-
+ drivers/gpu/drm/nouveau/nouveau_display.c | 2 +-
+ drivers/gpu/drm/radeon/radeon_display.c   | 2 +-
+ drivers/gpu/drm/udl/udl_modeset.c         | 2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_kms.c       | 2 +-
+ drivers/staging/omapdrm/omap_drv.c        | 2 +-
+ include/drm/drm_crtc.h                    | 2 +-
  9 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/gpu/drm/exynos/exynos_drm_fb.c b/drivers/gpu/drm/exynos/exynos_drm_fb.c
@@ -58,10 +58,10 @@ index 8ea202f..ba48e4d 100644
  	/* set memory base */
  	/* Oaktrail and Poulsbo should use BAR 2*/
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index dd3e7e4..524f573 100644
+index 84867a8..5bc57ec 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -9204,7 +9204,7 @@ void intel_modeset_init(struct drm_device *dev)
+@@ -9247,7 +9247,7 @@ void intel_modeset_init(struct drm_device *dev)
  	dev->mode_config.preferred_depth = 24;
  	dev->mode_config.prefer_shadow = 1;
  
@@ -84,10 +84,10 @@ index f233b8f..63b5431 100644
  
  	dev->mode_config.min_width = 0;
 diff --git a/drivers/gpu/drm/radeon/radeon_display.c b/drivers/gpu/drm/radeon/radeon_display.c
-index 0a1d4bd..1e74406 100644
+index 00d9cac..0009403 100644
 --- a/drivers/gpu/drm/radeon/radeon_display.c
 +++ b/drivers/gpu/drm/radeon/radeon_display.c
-@@ -1251,7 +1251,7 @@ int radeon_modeset_init(struct radeon_device *rdev)
+@@ -1258,7 +1258,7 @@ int radeon_modeset_init(struct radeon_device *rdev)
  	drm_mode_config_init(rdev->ddev);
  	rdev->mode_info.mode_config_initialized = true;
  
@@ -149,5 +149,5 @@ index 3ecee19..b88b28f 100644
  
  	/* output poll support */
 -- 
-1.7.5.4
+1.8.2
 

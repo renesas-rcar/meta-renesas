@@ -1,0 +1,42 @@
+From cfbc83514aa7ceba624c9d9a82af1eaadc2afc81 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Tue, 11 Jun 2013 20:10:09 +0900
+Subject: [PATCH 596/611] ARM: shmobile: r8a7778: add VIO clock support
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7778.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index 4a6b810..4d49ed5 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -115,7 +115,7 @@ static struct clk *main_clks[] = {
+ };
+ 
+ enum {
+-	MSTP513,
++	MSTP517, MSTP513,
+ 	MSTP410,
+ 	MSTP408,
+ 	MSTP331,
+@@ -129,6 +129,7 @@ enum {
+ 	MSTP_NR };
+ 
+ static struct clk mstp_clks[MSTP_NR] = {
++	[MSTP517] = SH_CLK_MSTP32(&s3_clk, MSTPCR5, 17, 0), /* VIO6C */
+ 	[MSTP513] = SH_CLK_MSTP32(&s3_clk, MSTPCR5, 13, 0), /* MERAM */
+ 	[MSTP410] = SH_CLK_MSTP32(&s3_clk, MSTPCR4, 10, 0), /* ICB */
+ 	[MSTP408] = SH_CLK_MSTP32(&s3_clk, MSTPCR4,  8, 0), /* VPC */
+@@ -177,6 +178,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("audio_clk_internal",	&s1_clk),
+ 
+ 	/* MSTP32 clocks */
++	CLKDEV_DEV_ID("uio_dmem_genirq.0",	&mstp_clks[MSTP517]), /* VIO6C */
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.2",	&mstp_clks[MSTP513]), /* MERAM */
+ 	CLKDEV_CON_ID("icb",		&mstp_clks[MSTP410]), /* ICB */
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.1",      &mstp_clks[MSTP408]), /* VPC */
+-- 
+1.8.2
+

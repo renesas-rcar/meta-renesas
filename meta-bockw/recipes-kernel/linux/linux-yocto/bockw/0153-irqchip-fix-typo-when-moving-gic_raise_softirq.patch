@@ -1,0 +1,39 @@
+From a6305cb480dccf3a57990e769554eb940b356422 Mon Sep 17 00:00:00 2001
+From: Javi Merino <javi.merino@arm.com>
+Date: Tue, 19 Feb 2013 13:52:22 +0000
+Subject: [PATCH 153/611] irqchip: fix typo when moving gic_raise_softirq()
+
+In b1cffebf (ARM: GIC: remove direct use of gic_raise_softirq)
+gic_raise_softirq() was moved inside arch/arm/common/gic.c but in the
+process it reverted by mistake a change to that function made by
+384a290 (ARM: gic: use a private mapping for CPU target interfaces).
+This breaks multicluster systems on ARM.
+
+This patch fixes the typo.
+
+Signed-off-by: Javi Merino <javi.merino@arm.com>
+Acked-by: Rob Herring <rob.herring@calxeda.com>
+Signed-off-by: Olof Johansson <olof@lixom.net>
+(cherry picked from commit 91bdf0d0c48c9254fb73037bfb8ee1777093225b)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/irqchip/irq-gic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 644d724..a32e0d5 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -648,7 +648,7 @@ void gic_raise_softirq(const struct cpumask *mask, unsigned int irq)
+ 
+ 	/* Convert our logical CPU mask into a physical one. */
+ 	for_each_cpu(cpu, mask)
+-		map |= 1 << cpu_logical_map(cpu);
++		map |= gic_cpu_map[cpu];
+ 
+ 	/*
+ 	 * Ensure that stores to Normal memory are visible to the
+-- 
+1.8.2
+

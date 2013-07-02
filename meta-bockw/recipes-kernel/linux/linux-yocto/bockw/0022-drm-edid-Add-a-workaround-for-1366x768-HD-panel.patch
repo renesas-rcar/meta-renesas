@@ -1,7 +1,7 @@
-From 39882156aaa18942c41110dc7773056d2f2a43be Mon Sep 17 00:00:00 2001
+From eaaba3a41d88376b660b21977dfde2ccbb6f0df7 Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Mon, 23 Apr 2012 17:40:33 +0100
-Subject: [PATCH 022/138] drm/edid: Add a workaround for 1366x768 HD panel
+Subject: [PATCH 022/611] drm/edid: Add a workaround for 1366x768 HD panel
 
 HD panel (1366x768) found most commonly on laptops can't be represented
 exactly in CVT/DMT expression, which leads to 1368x768 instead, because
@@ -16,14 +16,14 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/gpu/drm/drm_edid.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
-index e8ef017..261b766 100644
+index 8fea658..32f3e48 100644
 --- a/drivers/gpu/drm/drm_edid.c
 +++ b/drivers/gpu/drm/drm_edid.c
-@@ -1039,6 +1039,19 @@ drm_dmt_modes_for_range(struct drm_connector *connector, struct edid *edid,
+@@ -1054,6 +1054,19 @@ drm_dmt_modes_for_range(struct drm_connector *connector, struct edid *edid,
  	return modes;
  }
  
@@ -43,7 +43,7 @@ index e8ef017..261b766 100644
  static int
  drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
  			struct detailed_timing *timing)
-@@ -1053,6 +1066,7 @@ drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
+@@ -1068,6 +1081,7 @@ drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
  		if (!newmode)
  			return modes;
  
@@ -51,7 +51,7 @@ index e8ef017..261b766 100644
  		if (!mode_in_range(newmode, edid, timing)) {
  			drm_mode_destroy(dev, newmode);
  			continue;
-@@ -1080,6 +1094,7 @@ drm_cvt_modes_for_range(struct drm_connector *connector, struct edid *edid,
+@@ -1095,6 +1109,7 @@ drm_cvt_modes_for_range(struct drm_connector *connector, struct edid *edid,
  		if (!newmode)
  			return modes;
  
@@ -60,5 +60,5 @@ index e8ef017..261b766 100644
  			drm_mode_destroy(dev, newmode);
  			continue;
 -- 
-1.7.5.4
+1.8.2
 

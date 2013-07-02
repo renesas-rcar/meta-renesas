@@ -1,0 +1,65 @@
+From 92f5819359d0e75433addee8f32a38efa745dda0 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 12 Apr 2013 05:37:50 +0000
+Subject: [PATCH 500/611] ARM: shmobile: r8a7778: Register PFC device
+
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 92f6039b84afa275934c652c4a82ef0da18cd2d0)
+---
+ arch/arm/mach-shmobile/Kconfig                |  1 +
+ arch/arm/mach-shmobile/include/mach/r8a7778.h |  1 +
+ arch/arm/mach-shmobile/setup-r8a7778.c        | 13 +++++++++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index ccf0782..ae0e053 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -24,6 +24,7 @@ config ARCH_R8A7740
+ 
+ config ARCH_R8A7778
+ 	bool "R-Car M1 (R8A77780)"
++	select ARCH_WANT_OPTIONAL_GPIOLIB
+ 	select CPU_V7
+ 	select SH_CLK_CPG
+ 	select ARM_GIC
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7778.h b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+index 951149e..68053fc 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7778.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+@@ -28,5 +28,6 @@ extern void r8a7778_init_irq(void);
+ extern void r8a7778_init_irq_dt(void);
+ extern void r8a7778_clock_init(void);
+ extern void r8a7778_init_irq_extpin(int irlm);
++extern void r8a7778_pinmux_init(void);
+ 
+ #endif /* __ASM_R8A7778_H__ */
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index ee21376..ee315a0 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -103,6 +103,19 @@ void __init r8a7778_add_ether_device(struct sh_eth_plat_data *pdata)
+ 					  pdata, sizeof(*pdata));
+ }
+ 
++/* PFC */
++static struct resource pfc_resources[] = {
++	DEFINE_RES_MEM(0xfffc0000, 0x118),
++};
++
++void __init r8a7778_pinmux_init(void)
++{
++	platform_device_register_simple(
++		"pfc-r8a7778", -1,
++		pfc_resources,
++		ARRAY_SIZE(pfc_resources));
++}
++
+ void __init r8a7778_add_standard_devices(void)
+ {
+ 	int i;
+-- 
+1.8.2
+

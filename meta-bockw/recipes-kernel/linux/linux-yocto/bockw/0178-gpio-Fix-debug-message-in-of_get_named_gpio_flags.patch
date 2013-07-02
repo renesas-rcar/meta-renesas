@@ -1,0 +1,33 @@
+From 1bdde2ffbac776bb6f6cfaf630e65e2d27162445 Mon Sep 17 00:00:00 2001
+From: Thierry Reding <thierry.reding@avionic-design.de>
+Date: Thu, 9 Aug 2012 08:38:43 +0200
+Subject: [PATCH 178/611] gpio: Fix debug message in of_get_named_gpio_flags()
+
+This was probably missed in the conversion done in commit 3d0f7cf
+("gpio: Adjust of_xlate API to support multiple GPIO chips").
+
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit c61307a7cc1be87b6785dad0885492b6ca7998db)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib-of.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
+index a18c4aa..f1a4599 100644
+--- a/drivers/gpio/gpiolib-of.c
++++ b/drivers/gpio/gpiolib-of.c
+@@ -82,7 +82,7 @@ int of_get_named_gpio_flags(struct device_node *np, const char *propname,
+ 	gpiochip_find(&gg_data, of_gpiochip_find_and_xlate);
+ 
+ 	of_node_put(gg_data.gpiospec.np);
+-	pr_debug("%s exited with status %d\n", __func__, ret);
++	pr_debug("%s exited with status %d\n", __func__, gg_data.out_gpio);
+ 	return gg_data.out_gpio;
+ }
+ EXPORT_SYMBOL(of_get_named_gpio_flags);
+-- 
+1.8.2
+

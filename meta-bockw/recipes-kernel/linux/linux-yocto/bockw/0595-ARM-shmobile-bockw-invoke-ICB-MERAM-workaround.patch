@@ -1,0 +1,24 @@
+From 8d8910e084964110a2f73728981e5ae94aafe544 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 15 Apr 2013 13:50:54 +0900
+Subject: [PATCH 595/611] ARM: shmobile: bockw: invoke ICB MERAM workaround
+
+---
+ arch/arm/mach-shmobile/board-bockw.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index d697130..c493dfd 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -501,6 +501,7 @@ static void __init bockw_init(void)
+ 
+ 	i2c_register_board_info(0, i2c0_devices,
+ 				ARRAY_SIZE(i2c0_devices));
++	r8a7778_meram_workaround();
+ 
+ 	spi_register_board_info(spi_board_info,
+ 				ARRAY_SIZE(spi_board_info));
+-- 
+1.8.2
+

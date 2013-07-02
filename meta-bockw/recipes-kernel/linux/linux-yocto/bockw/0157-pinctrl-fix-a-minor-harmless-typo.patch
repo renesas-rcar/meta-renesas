@@ -1,0 +1,35 @@
+From 17b85f2d8c401b77e5a9dce63333b9b3b42e5582 Mon Sep 17 00:00:00 2001
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Date: Wed, 23 May 2012 00:20:17 +0200
+Subject: [PATCH 157/611] pinctrl: fix a minor harmless typo
+
+The way the for_each_maps() macro is currently used, using "i" instead of
+"_i_" works and is harmless. Still, this is a bug, that can trigger any
+time, if the code around that macro changes. Better fix it now.
+
+Acked-by: Stephen Warren <swarren@wwwdotorg.org>
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit bc66468cee4c23856b2e51d711e62e4ef773001a)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pinctrl/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
+index 5f8a7d2..b06a72a 100644
+--- a/drivers/pinctrl/core.c
++++ b/drivers/pinctrl/core.c
+@@ -61,7 +61,7 @@ static LIST_HEAD(pinctrl_maps);
+ 	list_for_each_entry(_maps_node_, &pinctrl_maps, node) \
+ 		for (_i_ = 0, _map_ = &_maps_node_->maps[_i_]; \
+ 			_i_ < _maps_node_->num_maps; \
+-			i++, _map_ = &_maps_node_->maps[_i_])
++			_i_++, _map_ = &_maps_node_->maps[_i_])
+ 
+ /**
+  * pinctrl_provide_dummies() - indicate if pinctrl provides dummy state support
+-- 
+1.8.2
+

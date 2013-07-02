@@ -1,0 +1,35 @@
+From 074b9086aa1d513f8f0c8a6f48b2252544a31ef9 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Thu, 6 Jun 2013 13:41:18 +0900
+Subject: [PATCH 574/611] ARM: shmobile: BOCK-W: enable VIN and ML86V7667 in
+ defconfig
+
+Add the VIN and ML86V7667 drivers to 'bockw_defconfig'.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+---
+ arch/arm/configs/bockw_defconfig | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/configs/bockw_defconfig b/arch/arm/configs/bockw_defconfig
+index d2f4a15..0c6d036 100644
+--- a/arch/arm/configs/bockw_defconfig
++++ b/arch/arm/configs/bockw_defconfig
+@@ -96,6 +96,13 @@ CONFIG_SND=y
+ # CONFIG_SND_USB is not set
+ CONFIG_SND_SOC=y
+ CONFIG_SND_SOC_RCAR=y
++CONFIG_MEDIA_SUPPORT=y
++CONFIG_VIDEO_DEV=y
++CONFIG_VIDEO_ML86V7667=y
++# CONFIG_V4L_USB_DRIVERS is not set
++CONFIG_V4L_PLATFORM_DRIVERS=y
++CONFIG_SOC_CAMERA=y
++CONFIG_VIDEO_RCAR_VIN=y
+ CONFIG_USB=y
+ CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
+ CONFIG_USB_EHCI_HCD=y
+-- 
+1.8.2
+
