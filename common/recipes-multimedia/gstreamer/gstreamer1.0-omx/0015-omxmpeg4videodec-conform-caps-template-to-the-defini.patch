@@ -1,0 +1,30 @@
+From d2e63c6780b323ae8dc03b0236e7e87c0a8832dc Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 1 Jul 2013 13:33:07 +0900
+Subject: [PATCH 15/15] omxmpeg4videodec: conform caps template to the
+ definition described in avidemux
+
+This is to avoid the caps negotiation failure between avidemux and
+omxmpeg4videodec.
+---
+ omx/gstomxmpeg4videodec.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/omx/gstomxmpeg4videodec.c b/omx/gstomxmpeg4videodec.c
+index d912d74..ade12fc 100644
+--- a/omx/gstomxmpeg4videodec.c
++++ b/omx/gstomxmpeg4videodec.c
+@@ -62,9 +62,7 @@ gst_omx_mpeg4_video_dec_class_init (GstOMXMPEG4VideoDecClass * klass)
+       GST_DEBUG_FUNCPTR (gst_omx_mpeg4_video_dec_set_format);
+ 
+   videodec_class->cdata.default_sink_template_caps = "video/mpeg, "
+-      "mpegversion=(int) 4, "
+-      "systemstream=(boolean) false, "
+-      "parsed=(boolean) true, " "width=(int) [1,MAX], " "height=(int) [1,MAX]";
++      "mpegversion=(int) 4, " "width=(int) [1,MAX], " "height=(int) [1,MAX]";
+ 
+   gst_element_class_set_static_metadata (element_class,
+       "OpenMAX MPEG4 Video Decoder",
+-- 
+1.8.1.2
+

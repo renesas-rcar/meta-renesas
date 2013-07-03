@@ -1,0 +1,29 @@
+From fc7d4dec94367fcd9a3757667a10715897276c22 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 5 Jun 2013 17:28:47 +0900
+Subject: [PATCH 02/14] omxvideodec: populate output buffers in the component
+
+All of the output buffers must be populated in the component with
+FillThisBuffer() beforehand so that gst_omx_video_dec_loop() waits
+for output buffers to be obtained properly.
+---
+ omx/gstomxvideodec.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 7f6a48e..73f677b 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -2111,6 +2111,9 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
+     if (gst_omx_component_get_state (self->dec,
+             GST_CLOCK_TIME_NONE) != OMX_StateExecuting)
+       return FALSE;
++
++    if (gst_omx_port_populate (self->dec_out_port) != OMX_ErrorNone)
++      return FALSE;
+   }
+ 
+   /* Unset flushing to allow ports to accept data again */
+-- 
+1.8.1.2
+

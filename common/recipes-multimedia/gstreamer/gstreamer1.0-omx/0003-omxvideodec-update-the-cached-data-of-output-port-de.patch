@@ -1,0 +1,27 @@
+From 881373684539709a23f842cdfd8cbc1dbef76673 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 5 Jun 2013 17:52:18 +0900
+Subject: [PATCH 03/14] omxvideodec: update the cached data of output port
+ definition after its changes
+
+This change reflects the change by negotiating caps with downstream.
+---
+ omx/gstomxvideodec.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 73f677b..df6362b 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1443,6 +1443,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+ 
+     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+ 
++    gst_omx_port_update_port_definition (self->dec_out_port, NULL);
++
+     if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+       err = gst_omx_video_dec_allocate_output_buffers (self);
+       if (err != OMX_ErrorNone)
+-- 
+1.8.1.2
+
