@@ -1,0 +1,38 @@
+From 93fc29995b1c6d68c63eaa895a8f0cda4055f143 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Jun 2013 11:58:09 +0900
+Subject: [PATCH 08/21] dfbvideosink: set GstColorBalanceType with
+ get_balance_type method
+
+---
+ ext/directfb/dfbvideosink.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 350f4b2..54d60de 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1621,13 +1621,19 @@ gst_dfbvideosink_colorbalance_get_value (GstColorBalance * balance,
+   return value;
+ }
+ 
++static GstColorBalanceType
++gst_dfbvideosink_colorbalance_get_balance_type (GstColorBalance * balance)
++{
++  return GST_COLOR_BALANCE_HARDWARE;
++}
++
+ static void
+ gst_dfbvideosink_colorbalance_init (GstColorBalanceInterface * iface)
+ {
+-  GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;
+   iface->list_channels = gst_dfbvideosink_colorbalance_list_channels;
+   iface->set_value = gst_dfbvideosink_colorbalance_set_value;
+   iface->get_value = gst_dfbvideosink_colorbalance_get_value;
++  iface->get_balance_type = gst_dfbvideosink_colorbalance_get_balance_type;
+ }
+ 
+ /* Properties */
+-- 
+1.8.1.2
+

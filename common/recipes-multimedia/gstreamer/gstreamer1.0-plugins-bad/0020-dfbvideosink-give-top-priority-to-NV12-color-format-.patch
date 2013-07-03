@@ -1,0 +1,41 @@
+From b6184f18cd4a14a2ea23e79c6d68033137446a7f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 21:15:00 +0900
+Subject: [PATCH 20/21] dfbvideosink: give top priority to NV12 color format
+ when negotiating caps
+
+---
+ ext/directfb/dfbvideosink.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 6e7252e..f78c47a 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1334,6 +1334,11 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink, GstCaps * filter)
+       caps = gst_caps_new_empty ();
+ 
+       do {
++        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_NV12,
++                accelerated)) {
++          gst_caps_append (caps,
++              gst_dfbvideosink_get_caps_from_format (DSPF_NV12));
++        }
+         if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB16,
+                 accelerated)) {
+           gst_caps_append (caps,
+@@ -1374,11 +1379,6 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink, GstCaps * filter)
+           gst_caps_append (caps,
+               gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
+         }
+-        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_NV12,
+-                accelerated)) {
+-          gst_caps_append (caps,
+-              gst_dfbvideosink_get_caps_from_format (DSPF_NV12));
+-        }
+         accelerated = !accelerated;
+       } while (accelerated == FALSE);
+     }
+-- 
+1.8.1.2
+

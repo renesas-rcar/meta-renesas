@@ -1,0 +1,30 @@
+From 25e5f63e5e519e44098a7f921ad3dad71861c303 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 12 Jun 2013 12:09:43 +0900
+Subject: [PATCH 04/21] h264parse: set the same timestamp as a last frame or
+ nal when the timestamp is invalid
+
+This is required to set timestamps to the nal packets separated from
+a frame because timestamps aren't set to the subsequent nals.
+In this case, the nals belonging to a frame should be all set to
+the same timestamp.
+---
+ gst/videoparsers/gsth264parse.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/gst/videoparsers/gsth264parse.c b/gst/videoparsers/gsth264parse.c
+index 267a7fc..a5ad5f5 100644
+--- a/gst/videoparsers/gsth264parse.c
++++ b/gst/videoparsers/gsth264parse.c
+@@ -1384,6 +1384,8 @@ gst_h264_parse_get_timestamp (GstH264Parse * h264parse,
+ exit:
+   if (GST_CLOCK_TIME_IS_VALID (upstream))
+     *out_ts = h264parse->dts = upstream;
++  else
++    *out_ts = h264parse->dts;
+ 
+   if (GST_CLOCK_TIME_IS_VALID (*out_dur) &&
+       GST_CLOCK_TIME_IS_VALID (h264parse->dts))
+-- 
+1.8.1.2
+

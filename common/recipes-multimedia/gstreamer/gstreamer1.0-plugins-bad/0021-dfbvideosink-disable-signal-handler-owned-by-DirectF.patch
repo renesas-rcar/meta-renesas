@@ -1,0 +1,36 @@
+From 4043c3f0365b57d2d3d32dbdfd9f25fc7c707a4d Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 21:31:28 +0900
+Subject: [PATCH 21/21] dfbvideosink: disable signal handler owned by DirectFB
+
+DirectFB kills its own process when it catches an interrupt signal.
+This behavior makes GStreamer terminate without normal termination
+processing.
+
+This patch passes "--dfb:no-sighandler" option to DirectFBInit()
+to disable the signal handler owned by DirectFB. It allows
+GStreamer's termination processing to proceed normally.
+---
+ ext/directfb/dfbvideosink.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index f78c47a..119038f 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -783,8 +783,10 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+         "DirectFB fullscreen");
+     if (!dfbvideosink->dfb) {
+       DFBGraphicsDeviceDescription hw_caps;
+-      char *argv[] = { (char *) "-", (char *) "--dfb:quiet", NULL };
+-      int argc = 2;
++      char *argv[] = { (char *) "-", (char *) "--dfb:quiet",
++        (char *) "--dfb:no-sighandler", NULL
++      };
++      int argc = 3;
+       char **args;
+ 
+       GST_DEBUG_OBJECT (dfbvideosink, "initializing DirectFB");
+-- 
+1.8.1.2
+

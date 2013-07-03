@@ -1,0 +1,97 @@
+From a5dd82f2e6734b43df141b71ff605bfac0d63e74 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Jun 2013 14:52:38 +0900
+Subject: [PATCH 15/21] dfbvideosink: adjust the framebuffer offset and stride
+ for each planar format
+
+This change is required to accommodate the chroma plane offsets of
+the framebuffer in planar formats.
+---
+ ext/directfb/dfbvideosink.c | 45 ++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 42 insertions(+), 3 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index e1eb1dc..64c3277 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1340,6 +1340,10 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+   gint plane;
+   GstVideoInfo src_info;
+   GstVideoFrame src_frame;
++  const gchar *str;
++  GstVideoFormat format;
++  guint offset[GST_VIDEO_MAX_PLANES] = { 0 };
++  guint stride[GST_VIDEO_MAX_PLANES] = { 0 };
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (bsink);
+ 
+@@ -1407,6 +1411,15 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     ret = GST_FLOW_ERROR;
+     goto beach;
+   }
++
++  str = gst_structure_get_string (structure, "format");
++  if (str == NULL) {
++    GST_WARNING ("failed grabbing fourcc from caps %" GST_PTR_FORMAT, caps);
++    ret = GST_FLOW_ERROR;
++    goto beach;
++  }
++  format = gst_video_format_from_string (str);
++
+   gst_caps_unref (caps);
+ 
+   if (!gst_video_frame_map (&src_frame, &src_info, buf, GST_MAP_READ)) {
+@@ -1415,10 +1428,36 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     goto beach;
+   }
+ 
++  switch (format) {
++    case GST_VIDEO_FORMAT_I420:
++      offset[1] = dest_pitch * (dfbvideosink->out_height - result.y / 2);
++      offset[2] =
++          dest_pitch * (dfbvideosink->out_height * 3 / 2 - result.y / 2);
++      stride[0] = stride[1] = stride[2] = dest_pitch;
++      break;
++    case GST_VIDEO_FORMAT_YV12:
++      offset[1] = dest_pitch * ((dfbvideosink->out_height - result.y) +
++          result.y / 4);
++      offset[2] = offset[1] + dest_pitch * dfbvideosink->out_height / 4;
++      stride[0] = dest_pitch;
++      stride[1] = stride[2] = dest_pitch / 2;
++      break;
++    case GST_VIDEO_FORMAT_NV12:
++      offset[1] = dest_pitch * (dfbvideosink->out_height - result.y / 2);
++      stride[0] = stride[1] = dest_pitch;
++      break;
++    default:
++      stride[0] = dest_pitch;
++      break;
++  }
++
+   line = 0;
+   for (plane = 0; plane < src_info.finfo->n_planes; plane++) {
+     guint plane_h;
+     guint plane_line;
++    guint8 *w_buf;
++
++    w_buf = data + offset[plane];
+ 
+     plane_h = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, plane);
+ 
+@@ -1426,10 +1465,10 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     for (plane_line = 0; line < result.h || plane_line < plane_h;
+         line++, plane_line++) {
+       /* We do clipping */
+-      memcpy (data, (gchar *) src_frame.data[plane] +
++      memcpy (w_buf, (gchar *) src_frame.data[plane] +
+           (plane_line * src_info.stride[plane]),
+-          MIN (src_info.stride[plane], dest_pitch));
+-      data += dest_pitch;
++          MIN (src_info.stride[plane], stride[plane]));
++      w_buf += stride[plane];
+     }
+   }
+ 
+-- 
+1.8.1.2
+

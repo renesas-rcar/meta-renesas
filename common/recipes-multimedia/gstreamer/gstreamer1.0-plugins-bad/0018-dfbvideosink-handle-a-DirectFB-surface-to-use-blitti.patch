@@ -1,0 +1,363 @@
+From 9d8c6515b3335b3506df451c44138c4e8fef1bcc Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 20:58:01 +0900
+Subject: [PATCH 18/21] dfbvideosink: handle a DirectFB surface to use blitting
+
+---
+ ext/directfb/dfbvideosink.c | 311 +++++++++++++++++++++++++++-----------------
+ 1 file changed, 190 insertions(+), 121 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index f8493fb..fd8a2e0 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1711,18 +1711,8 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+   DFBResult res;
+   GstVideoRectangle dst, src, result;
+   GstFlowReturn ret = GST_FLOW_OK;
+-  IDirectFBSurface *dest = NULL, *surface = NULL;
+-  guint8 *data;
+-  gint dest_pitch, line;
+-  GstStructure *structure;
+-  GstCaps *caps;
+-  gint plane;
+-  GstVideoInfo src_info;
+-  GstVideoFrame src_frame;
+-  const gchar *str;
+-  GstVideoFormat format;
+-  guint offset[GST_VIDEO_MAX_PLANES] = { 0 };
+-  guint stride[GST_VIDEO_MAX_PLANES] = { 0 };
++  gboolean mem_cpy = TRUE;
++  GstMetaDfbSurface *meta;
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (bsink);
+ 
+@@ -1731,137 +1721,216 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     goto beach;
+   }
+ 
+-  /* As we are not blitting no acceleration is possible. If the surface is
+-   * too small we do clipping, if it's too big we center. Theoretically as
+-   * we are using buffer_alloc, there's a chance that we have been able to
+-   * do reverse caps negotiation */
++  meta = GST_META_DFBSURFACE_GET (buf);
+ 
+-  if (dfbvideosink->ext_surface) {
+-    surface = dfbvideosink->ext_surface;
+-    GST_DEBUG_OBJECT (dfbvideosink, "memcpy to an external surface "
+-        "subsurface (vsync %d)", dfbvideosink->vsync);
++  /* Is that a buffer we allocated ourselves ? */
++  if (meta != NULL) {
++    /* Does it have a surface ? */
++    if (meta->surface) {
++      mem_cpy = FALSE;
++      GST_DEBUG_OBJECT (dfbvideosink, "we have a buffer (%p) we allocated "
++          "ourselves and it has a surface, no memcpy then", buf);
++    } else {
++      /* No surface, that's a malloc */
++      GST_DEBUG_OBJECT (dfbvideosink, "we have a buffer (%p) we allocated "
++          "ourselves but it does not hold a surface", buf);
++    }
+   } else {
+-    surface = dfbvideosink->primary;
+-    GST_DEBUG_OBJECT (dfbvideosink, "memcpy to a primary subsurface "
+-        "(vsync %d)", dfbvideosink->vsync);
+-  }
++    /* Not our baby */
++    GST_DEBUG_OBJECT (dfbvideosink, "we have a buffer (%p) we did not allocate",
++        buf);
++  }
++
++  if (mem_cpy) {
++    IDirectFBSurface *dest = NULL, *surface = NULL;
++    guint8 *data;
++    gint dest_pitch, line;
++    GstStructure *structure;
++    GstCaps *caps;
++    gint plane;
++    GstVideoInfo src_info;
++    GstVideoFrame src_frame;
++    const gchar *str;
++    GstVideoFormat format;
++    guint offset[GST_VIDEO_MAX_PLANES] = { 0 };
++    guint stride[GST_VIDEO_MAX_PLANES] = { 0 };
++
++    /* As we are not blitting no acceleration is possible. If the surface is
++     * too small we do clipping, if it's too big we center. Theoretically as
++     * we are using propose_allocation, there's a chance that we have been
++     * able to do reverse caps negotiation */
+ 
+-  /* Get the video frame geometry from the buffer caps */
+-  caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
+-  structure = gst_caps_get_structure (caps, 0);
+-  if (structure) {
+-    gst_structure_get_int (structure, "width", &src.w);
+-    gst_structure_get_int (structure, "height", &src.h);
+-  } else {
+-    src.w = dfbvideosink->video_width;
+-    src.h = dfbvideosink->video_height;
+-  }
+-  gst_caps_unref (caps);
+-  res = surface->GetSize (surface, &dst.w, &dst.h);
++    if (dfbvideosink->ext_surface) {
++      surface = dfbvideosink->ext_surface;
++      GST_DEBUG_OBJECT (dfbvideosink, "memcpy to an external surface "
++          "subsurface (vsync %d)", dfbvideosink->vsync);
++    } else {
++      surface = dfbvideosink->primary;
++      GST_DEBUG_OBJECT (dfbvideosink, "memcpy to a primary subsurface "
++          "(vsync %d)", dfbvideosink->vsync);
++    }
+ 
+-  /* Center / Clip */
+-  gst_video_sink_center_rect (src, dst, &result, FALSE);
++    /* Get the video frame geometry from the buffer caps */
++    caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
++    structure = gst_caps_get_structure (caps, 0);
++    if (structure) {
++      gst_structure_get_int (structure, "width", &src.w);
++      gst_structure_get_int (structure, "height", &src.h);
++    } else {
++      src.w = dfbvideosink->video_width;
++      src.h = dfbvideosink->video_height;
++    }
++    gst_caps_unref (caps);
++    res = surface->GetSize (surface, &dst.w, &dst.h);
+ 
+-  res =
+-      surface->GetSubSurface (surface, (DFBRectangle *) (void *) &result,
+-      &dest);
+-  if (res != DFB_OK) {
+-    GST_WARNING_OBJECT (dfbvideosink, "failed when getting a sub surface");
+-    ret = GST_FLOW_EOS;
+-    goto beach;
+-  }
++    /* Center / Clip */
++    gst_video_sink_center_rect (src, dst, &result, FALSE);
+ 
+-  /* If we are not using Flip we wait for VSYNC before blit */
+-  if (!dfbvideosink->backbuffer && dfbvideosink->vsync) {
+-    dfbvideosink->layer->WaitForSync (dfbvideosink->layer);
+-  }
++    res =
++        surface->GetSubSurface (surface, (DFBRectangle *) (void *) &result,
++        &dest);
++    if (res != DFB_OK) {
++      GST_WARNING_OBJECT (dfbvideosink, "failed when getting a sub surface");
++      ret = GST_FLOW_EOS;
++      goto beach;
++    }
+ 
+-  res = dest->Lock (dest, DSLF_WRITE, (void *) &data, &dest_pitch);
+-  if (res != DFB_OK) {
+-    GST_WARNING_OBJECT (dfbvideosink, "failed locking the external "
+-        "subsurface for writing");
+-    ret = GST_FLOW_ERROR;
+-    goto beach;
+-  }
++    /* If we are not using Flip we wait for VSYNC before blit */
++    if (!dfbvideosink->backbuffer && dfbvideosink->vsync) {
++      dfbvideosink->layer->WaitForSync (dfbvideosink->layer);
++    }
+ 
+-  caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
+-  if (!gst_video_info_from_caps (&src_info, caps)) {
+-    GST_WARNING_OBJECT (dfbvideosink, "failed getting video info");
+-    ret = GST_FLOW_ERROR;
+-    goto beach;
+-  }
++    res = dest->Lock (dest, DSLF_WRITE, (void *) &data, &dest_pitch);
++    if (res != DFB_OK) {
++      GST_WARNING_OBJECT (dfbvideosink, "failed locking the external "
++          "subsurface for writing");
++      ret = GST_FLOW_ERROR;
++      goto beach;
++    }
+ 
+-  str = gst_structure_get_string (structure, "format");
+-  if (str == NULL) {
+-    GST_WARNING ("failed grabbing fourcc from caps %" GST_PTR_FORMAT, caps);
+-    ret = GST_FLOW_ERROR;
+-    goto beach;
+-  }
+-  format = gst_video_format_from_string (str);
++    caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
++    if (!gst_video_info_from_caps (&src_info, caps)) {
++      GST_WARNING_OBJECT (dfbvideosink, "failed getting video info");
++      ret = GST_FLOW_ERROR;
++      goto beach;
++    }
+ 
+-  gst_caps_unref (caps);
++    str = gst_structure_get_string (structure, "format");
++    if (str == NULL) {
++      GST_WARNING ("failed grabbing fourcc from caps %" GST_PTR_FORMAT, caps);
++      ret = GST_FLOW_ERROR;
++      goto beach;
++    }
++    format = gst_video_format_from_string (str);
+ 
+-  if (!gst_video_frame_map (&src_frame, &src_info, buf, GST_MAP_READ)) {
+-    GST_WARNING_OBJECT (dfbvideosink, "failed mapping frame");
+-    ret = GST_FLOW_ERROR;
+-    goto beach;
+-  }
++    gst_caps_unref (caps);
+ 
+-  switch (format) {
+-    case GST_VIDEO_FORMAT_I420:
+-      offset[1] = dest_pitch * (dfbvideosink->out_height - result.y / 2);
+-      offset[2] =
+-          dest_pitch * (dfbvideosink->out_height * 3 / 2 - result.y / 2);
+-      stride[0] = stride[1] = stride[2] = dest_pitch;
+-      break;
+-    case GST_VIDEO_FORMAT_YV12:
+-      offset[1] = dest_pitch * ((dfbvideosink->out_height - result.y) +
+-          result.y / 4);
+-      offset[2] = offset[1] + dest_pitch * dfbvideosink->out_height / 4;
+-      stride[0] = dest_pitch;
+-      stride[1] = stride[2] = dest_pitch / 2;
+-      break;
+-    case GST_VIDEO_FORMAT_NV12:
+-      offset[1] = dest_pitch * (dfbvideosink->out_height - result.y / 2);
+-      stride[0] = stride[1] = dest_pitch;
+-      break;
+-    default:
+-      stride[0] = dest_pitch;
+-      break;
+-  }
++    if (!gst_video_frame_map (&src_frame, &src_info, buf, GST_MAP_READ)) {
++      GST_WARNING_OBJECT (dfbvideosink, "failed mapping frame");
++      ret = GST_FLOW_ERROR;
++      goto beach;
++    }
+ 
+-  line = 0;
+-  for (plane = 0; plane < src_info.finfo->n_planes; plane++) {
+-    guint plane_h;
+-    guint plane_line;
+-    guint8 *w_buf;
++    switch (format) {
++      case GST_VIDEO_FORMAT_I420:
++        offset[1] = dest_pitch * (dfbvideosink->out_height - result.y / 2);
++        offset[2] =
++            dest_pitch * (dfbvideosink->out_height * 3 / 2 - result.y / 2);
++        stride[0] = stride[1] = stride[2] = dest_pitch;
++        break;
++      case GST_VIDEO_FORMAT_YV12:
++        offset[1] = dest_pitch * ((dfbvideosink->out_height - result.y) +
++            result.y / 4);
++        offset[2] = offset[1] + dest_pitch * dfbvideosink->out_height / 4;
++        stride[0] = dest_pitch;
++        stride[1] = stride[2] = dest_pitch / 2;
++        break;
++      case GST_VIDEO_FORMAT_NV12:
++        offset[1] = dest_pitch * (dfbvideosink->out_height - result.y / 2);
++        stride[0] = stride[1] = dest_pitch;
++        break;
++      default:
++        stride[0] = dest_pitch;
++        break;
++    }
++
++    line = 0;
++    for (plane = 0; plane < src_info.finfo->n_planes; plane++) {
++      guint plane_h;
++      guint plane_line;
++      guint8 *w_buf;
+ 
+-    w_buf = data + offset[plane];
++      w_buf = data + offset[plane];
+ 
+-    plane_h = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, plane);
++      plane_h = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, plane);
+ 
+-    /* Write each line respecting subsurface pitch */
+-    for (plane_line = 0; line < result.h || plane_line < plane_h;
+-        line++, plane_line++) {
+-      /* We do clipping */
+-      memcpy (w_buf, (gchar *) src_frame.data[plane] +
+-          (plane_line * src_info.stride[plane]),
+-          MIN (src_info.stride[plane], stride[plane]));
+-      w_buf += stride[plane];
++      /* Write each line respecting subsurface pitch */
++      for (plane_line = 0; line < result.h || plane_line < plane_h;
++          line++, plane_line++) {
++        /* We do clipping */
++        memcpy (w_buf, (gchar *) src_frame.data[plane] +
++            (plane_line * src_info.stride[plane]),
++            MIN (src_info.stride[plane], stride[plane]));
++        w_buf += stride[plane];
++      }
+     }
+-  }
+ 
+-  gst_video_frame_unmap (&src_frame);
++    gst_video_frame_unmap (&src_frame);
+ 
+-  res = dest->Unlock (dest);
++    res = dest->Unlock (dest);
+ 
+-  dest->Release (dest);
++    dest->Release (dest);
+ 
+-  if (dfbvideosink->backbuffer) {
+-    if (dfbvideosink->vsync) {
+-      res = surface->Flip (surface, NULL, DSFLIP_ONSYNC);
++    if (dfbvideosink->backbuffer) {
++      if (dfbvideosink->vsync) {
++        res = surface->Flip (surface, NULL, DSFLIP_ONSYNC);
++      } else {
++        res = surface->Flip (surface, NULL, DSFLIP_NONE);
++      }
++    }
++  } else {
++    /* Else we will [Stretch]Blit to our primary */
++    GST_DEBUG_OBJECT (dfbvideosink, "blitting to a primary surface (vsync %d)",
++        dfbvideosink->vsync);
++
++    src.w = GST_VIDEO_SINK_WIDTH (dfbvideosink);
++    src.h = GST_VIDEO_SINK_HEIGHT (dfbvideosink);
++
++    dfbvideosink->primary->GetSize (dfbvideosink->primary, &dst.w, &dst.h);
++
++    /* Unlocking surface before blit */
++    if (meta->locked) {
++      meta->surface->Unlock (meta->surface);
++      meta->locked = FALSE;
++    }
++
++    gst_video_sink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
++
++    /* If we are not using Flip we wait for VSYNC before blit */
++    if (!dfbvideosink->backbuffer && dfbvideosink->vsync) {
++      dfbvideosink->layer->WaitForSync (dfbvideosink->layer);
++    }
++
++    if (dfbvideosink->hw_scaling) {
++      dfbvideosink->primary->StretchBlit (dfbvideosink->primary,
++          meta->surface, NULL, (DFBRectangle *) (void *) &result);
+     } else {
+-      res = surface->Flip (surface, NULL, DSFLIP_NONE);
++      DFBRectangle clip;
++
++      clip.x = clip.y = 0;
++      clip.w = result.w;
++      clip.h = result.h;
++      dfbvideosink->primary->Blit (dfbvideosink->primary, meta->surface,
++          &clip, result.x, result.y);
++    }
++
++    if (dfbvideosink->backbuffer) {
++      if (dfbvideosink->vsync) {
++        dfbvideosink->primary->Flip (dfbvideosink->primary, NULL,
++            DSFLIP_ONSYNC);
++      } else {
++        dfbvideosink->primary->Flip (dfbvideosink->primary, NULL, DSFLIP_NONE);
++      }
+     }
+   }
+ 
+-- 
+1.8.1.2
+

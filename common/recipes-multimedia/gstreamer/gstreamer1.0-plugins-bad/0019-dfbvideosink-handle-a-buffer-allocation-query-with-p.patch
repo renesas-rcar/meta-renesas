@@ -1,0 +1,80 @@
+From cc1b5477fbbe2a8d13e8567f9a4597a7ff8af97f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 21:07:10 +0900
+Subject: [PATCH 19/21] dfbvideosink: handle a buffer allocation query with
+ propose_allocation
+
+This change kicks off providing the preallocated buffers to upstream
+plugins.
+---
+ ext/directfb/dfbvideosink.c | 47 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index fd8a2e0..6e7252e 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -2210,6 +2210,52 @@ gst_dfbvideosink_get_property (GObject * object, guint prop_id,
+   }
+ }
+ 
++static gboolean
++gst_dfbvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
++{
++  GstDfbVideoSink *dfbvideosink;
++  GstBufferPool *pool;
++  GstCaps *caps;
++  gboolean need_pool;
++  guint size;
++
++  dfbvideosink = GST_DFBVIDEOSINK (bsink);
++
++  gst_query_parse_allocation (query, &caps, &need_pool);
++
++  if ((pool = dfbvideosink->pool))
++    gst_object_ref (pool);
++
++  if (pool != NULL) {
++    GstCaps *pcaps;
++    GstStructure *config;
++
++    /* we had a pool, check caps */
++    config = gst_buffer_pool_get_config (pool);
++    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
++
++    GST_DEBUG_OBJECT (dfbvideosink,
++        "buffer pool configuration caps %" GST_PTR_FORMAT, pcaps);
++    if (!gst_caps_is_equal (caps, pcaps)) {
++      gst_structure_free (config);
++      gst_object_unref (pool);
++      GST_WARNING_OBJECT (dfbvideosink, "pool has different caps");
++      return FALSE;
++    }
++    gst_structure_free (config);
++  }
++
++  gst_query_add_allocation_pool (query, pool, size, 1, 0);
++
++  /* we also support various metadata */
++  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
++
++  if (pool)
++    gst_object_unref (pool);
++
++  return TRUE;
++}
++
+ /* =========================================== */
+ /*                                             */
+ /*              Init & Class init              */
+@@ -2328,6 +2374,7 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
+   gstbasesink_class->get_times = gst_dfbvideosink_get_times;
+   gstbasesink_class->preroll = gst_dfbvideosink_show_frame;
+   gstbasesink_class->render = gst_dfbvideosink_show_frame;
++  gstbasesink_class->propose_allocation = gst_dfbvideosink_propose_allocation;
+ }
+ 
+ static gboolean
+-- 
+1.8.1.2
+

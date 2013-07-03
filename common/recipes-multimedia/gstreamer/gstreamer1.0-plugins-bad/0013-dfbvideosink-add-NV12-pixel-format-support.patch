@@ -1,0 +1,48 @@
+From 3b1e69d934eef6e343e9241d706d7dfa368293e2 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Jun 2013 14:36:38 +0900
+Subject: [PATCH 13/21] dfbvideosink: add NV12 pixel format support
+
+---
+ ext/directfb/dfbvideosink.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 4da5728..fd24302 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -748,6 +748,9 @@ gst_dfbvideosink_get_format_from_caps (GstCaps * caps)
+     case GST_VIDEO_FORMAT_UYVY:
+       pixel_format = DSPF_UYVY;
+       break;
++    case GST_VIDEO_FORMAT_NV12:
++      pixel_format = DSPF_NV12;
++      break;
+     default:
+       GST_WARNING ("unhandled pixel format %s", str);
+       return DSPF_UNKNOWN;
+@@ -788,6 +791,9 @@ gst_dfbvideosink_get_caps_from_format (DFBSurfacePixelFormat format)
+     case DSPF_YV12:
+       fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_YV12);
+       break;
++    case DSPF_NV12:
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_NV12);
++      break;
+     default:
+       GST_WARNING ("unknown pixel format %s",
+           gst_dfbvideosink_get_format_name (format));
+@@ -1012,6 +1018,11 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink, GstCaps * filter)
+           gst_caps_append (caps,
+               gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
+         }
++        if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_NV12,
++                accelerated)) {
++          gst_caps_append (caps,
++              gst_dfbvideosink_get_caps_from_format (DSPF_NV12));
++        }
+         accelerated = !accelerated;
+       } while (accelerated == FALSE);
+     }
+-- 
+1.8.1.2
+

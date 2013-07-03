@@ -1,0 +1,297 @@
+From 5842d9bc289390d18647018e72779d7c9767fa59 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Jun 2013 12:36:47 +0900
+Subject: [PATCH 09/21] dfbvideosink: support the treatment of the GstCaps
+ style in version 1.0
+
+---
+ ext/directfb/dfbvideosink.c | 180 +++++++++++++++++---------------------------
+ 1 file changed, 69 insertions(+), 111 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 54d60de..1212c72 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -88,6 +88,8 @@
+ #include <gst/video/navigation.h>
+ #include <gst/video/colorbalance.h>
+ 
++#include <gst/video/video.h>
++
+ /* Object header */
+ #include "dfbvideosink.h"
+ 
+@@ -103,13 +105,9 @@ static GstStaticPadTemplate gst_dfbvideosink_sink_template_factory =
+     GST_STATIC_PAD_TEMPLATE ("sink",
+     GST_PAD_SINK,
+     GST_PAD_ALWAYS,
+-    GST_STATIC_CAPS ("video/x-raw-rgb, "
+-        "framerate = (fraction) [ 0, MAX ], "
+-        "width = (int) [ 1, MAX ], "
+-        "height = (int) [ 1, MAX ]; "
+-        "video/x-raw-yuv, "
++    GST_STATIC_CAPS ("video/x-raw, "
+         "framerate = (fraction) [ 0, MAX ], "
+-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
++        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]; ")
+     );
+ 
+ /* Signals and args */
+@@ -711,145 +709,93 @@ static DFBSurfacePixelFormat
+ gst_dfbvideosink_get_format_from_caps (GstCaps * caps)
+ {
+   GstStructure *structure;
+-  gboolean ret;
+   DFBSurfacePixelFormat pixel_format = DSPF_UNKNOWN;
++  const gchar *str;
++  GstVideoFormat format;
+ 
+   g_return_val_if_fail (GST_IS_CAPS (caps), DSPF_UNKNOWN);
+ 
+   structure = gst_caps_get_structure (caps, 0);
++  str = gst_structure_get_string (structure, "format");
++  if (str == NULL) {
++    GST_WARNING ("failed grabbing fourcc from caps %" GST_PTR_FORMAT, caps);
++    return DSPF_UNKNOWN;
++  }
+ 
+-  if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
+-    gint bpp, depth;
+-
+-    ret = gst_structure_get_int (structure, "bpp", &bpp);
+-    ret &= gst_structure_get_int (structure, "depth", &depth);
+-
+-    if (!ret) {
+-      goto beach;
+-    }
+-
+-    switch (bpp) {
+-      case 16:
+-        pixel_format = DSPF_RGB16;
+-        break;
+-      case 24:
+-        pixel_format = DSPF_RGB24;
+-        break;
+-      case 32:
+-        if (depth == 24) {
+-          pixel_format = DSPF_RGB32;
+-        } else if (depth == 32) {
+-          pixel_format = DSPF_ARGB;
+-        } else {
+-          goto beach;
+-        }
+-        break;
+-      default:
+-        GST_WARNING ("unhandled RGB format, bpp %d, depth %d", bpp, depth);
+-        goto beach;
+-    }
+-  } else if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
+-    guint32 fourcc;
+-
+-    ret = gst_structure_get_fourcc (structure, "format", &fourcc);
+-
+-    if (!ret) {
+-      GST_WARNING ("failed grabbing fourcc from caps %" GST_PTR_FORMAT, caps);
+-      goto beach;
+-    }
+-
+-    switch (fourcc) {
+-      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+-        pixel_format = DSPF_I420;
+-        break;
+-      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+-        pixel_format = DSPF_YV12;
+-        break;
+-      case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+-        pixel_format = DSPF_YUY2;
+-        break;
+-      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+-        pixel_format = DSPF_UYVY;
+-        break;
+-      default:
+-        GST_WARNING ("unhandled YUV format %" GST_FOURCC_FORMAT,
+-            GST_FOURCC_ARGS (fourcc));
+-        goto beach;
+-    }
+-  } else {
+-    GST_WARNING ("unknown caps name received %" GST_PTR_FORMAT, caps);
+-    goto beach;
++  format = gst_video_format_from_string (str);
++  switch (format) {
++    case GST_VIDEO_FORMAT_RGB16:
++      pixel_format = DSPF_RGB16;
++      break;
++    case GST_VIDEO_FORMAT_RGB:
++      pixel_format = DSPF_RGB24;
++      break;
++    case GST_VIDEO_FORMAT_xRGB:
++      pixel_format = DSPF_RGB32;
++      break;
++    case GST_VIDEO_FORMAT_ARGB:
++      pixel_format = DSPF_ARGB;
++      break;
++    case GST_VIDEO_FORMAT_I420:
++      pixel_format = DSPF_I420;
++      break;
++    case GST_VIDEO_FORMAT_YV12:
++      pixel_format = DSPF_YV12;
++      break;
++    case GST_VIDEO_FORMAT_YUY2:
++      pixel_format = DSPF_YUY2;
++      break;
++    case GST_VIDEO_FORMAT_UYVY:
++      pixel_format = DSPF_UYVY;
++      break;
++    default:
++      GST_WARNING ("unhandled pixel format %s", str);
++      return DSPF_UNKNOWN;
+   }
+ 
+-beach:
+   return pixel_format;
+ }
+ 
+ static GstCaps *
+ gst_dfbvideosink_get_caps_from_format (DFBSurfacePixelFormat format)
+ {
+-  GstCaps *caps = NULL;
+-  gboolean is_rgb = FALSE, is_yuv = FALSE;
+-  gint bpp, depth;
+-  guint32 fourcc;
++  const char *fourcc;
+ 
+   g_return_val_if_fail (format != DSPF_UNKNOWN, NULL);
+ 
+   switch (format) {
+     case DSPF_RGB16:
+-      is_rgb = TRUE;
+-      bpp = 16;
+-      depth = 16;
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_RGB16);
+       break;
+     case DSPF_RGB24:
+-      is_rgb = TRUE;
+-      bpp = 24;
+-      depth = 24;
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_RGB);
+       break;
+     case DSPF_RGB32:
+-      is_rgb = TRUE;
+-      bpp = 32;
+-      depth = 24;
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_xRGB);
+       break;
+     case DSPF_ARGB:
+-      is_rgb = TRUE;
+-      bpp = 32;
+-      depth = 32;
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_ARGB);
+       break;
+     case DSPF_YUY2:
+-      is_yuv = TRUE;
+-      fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_YUY2);
+       break;
+     case DSPF_UYVY:
+-      is_yuv = TRUE;
+-      fourcc = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_UYVY);
+       break;
+     case DSPF_I420:
+-      is_yuv = TRUE;
+-      fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_I420);
+       break;
+     case DSPF_YV12:
+-      is_yuv = TRUE;
+-      fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
++      fourcc = gst_video_format_to_string (GST_VIDEO_FORMAT_YV12);
+       break;
+     default:
+       GST_WARNING ("unknown pixel format %s",
+           gst_dfbvideosink_get_format_name (format));
+-      goto beach;
++      return NULL;
+   }
+ 
+-  if (is_rgb) {
+-    caps = gst_caps_new_simple ("video/x-raw-rgb",
+-        "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
+-  } else if (is_yuv) {
+-    caps = gst_caps_new_simple ("video/x-raw-yuv",
+-        "format", GST_TYPE_FOURCC, fourcc, NULL);
+-  } else {
+-    GST_WARNING ("neither rgb nor yuv, something strange here");
+-  }
+-
+-beach:
+-  return caps;
++  return gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, fourcc,
++      NULL);
+ }
+ 
+ static gboolean
+@@ -998,10 +944,11 @@ beach:
+ }
+ 
+ static GstCaps *
+-gst_dfbvideosink_getcaps (GstBaseSink * bsink)
++gst_dfbvideosink_getcaps (GstBaseSink * bsink, GstCaps * filter)
+ {
+   GstDfbVideoSink *dfbvideosink;
+   GstCaps *caps = NULL;
++  GstCaps *returned_caps;
+   gint i;
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (bsink);
+@@ -1088,10 +1035,18 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
+     }
+   }
+ 
+-  GST_DEBUG_OBJECT (dfbvideosink, "returning our caps %" GST_PTR_FORMAT, caps);
+-
+ beach:
+-  return caps;
++  if (filter) {
++    returned_caps = gst_caps_intersect_full (filter, caps,
++        GST_CAPS_INTERSECT_FIRST);
++    gst_caps_unref (caps);
++  } else
++    returned_caps = caps;
++
++  GST_DEBUG_OBJECT (dfbvideosink, "returning our caps %" GST_PTR_FORMAT,
++      returned_caps);
++
++  return returned_caps;
+ }
+ 
+ static gboolean
+@@ -1370,6 +1325,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+   guint8 *data;
+   gint dest_pitch, src_pitch, line;
+   GstStructure *structure;
++  GstCaps *caps;
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (bsink);
+ 
+@@ -1394,7 +1350,8 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+   }
+ 
+   /* Get the video frame geometry from the buffer caps */
+-  structure = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
++  caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
++  structure = gst_caps_get_structure (caps, 0);
+   if (structure) {
+     gst_structure_get_int (structure, "width", &src.w);
+     gst_structure_get_int (structure, "height", &src.h);
+@@ -1402,6 +1359,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     src.w = dfbvideosink->video_width;
+     src.h = dfbvideosink->video_height;
+   }
++  gst_caps_unref (caps);
+   res = surface->GetSize (surface, &dst.w, &dst.h);
+ 
+   /* Center / Clip */
+-- 
+1.8.1.2
+

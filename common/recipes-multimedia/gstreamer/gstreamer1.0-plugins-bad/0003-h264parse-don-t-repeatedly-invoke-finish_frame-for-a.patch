@@ -1,0 +1,42 @@
+From 86278d8281cdbe674608e625cd3cd9cde31635ee Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 12 Jun 2013 11:54:20 +0900
+Subject: [PATCH 03/21] h264parse: don't repeatedly invoke finish_frame for a
+ handle_frame invocation
+
+gst_base_parse_finish_frame() invalidates a buffer instance passed
+through itself after being invoked, so it can't be repeatedly invoked.
+When a frame is split with gst_base_parse_finish_frame(),
+the remaning data will be passed through handle_frame at the next
+invocation.
+---
+ gst/videoparsers/gsth264parse.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/gst/videoparsers/gsth264parse.c b/gst/videoparsers/gsth264parse.c
+index 59a6bfa..267a7fc 100644
+--- a/gst/videoparsers/gsth264parse.c
++++ b/gst/videoparsers/gsth264parse.c
+@@ -689,7 +689,7 @@ gst_h264_parse_handle_frame_packetized (GstBaseParse * parse,
+   parse_res = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
+       map.data, 0, map.size, nl, &nalu);
+ 
+-  while (parse_res == GST_H264_PARSER_OK) {
++  if (parse_res == GST_H264_PARSER_OK) {
+     GST_DEBUG_OBJECT (h264parse, "AVC nal offset %d", nalu.offset + nalu.size);
+ 
+     /* either way, have a look at it */
+@@ -703,7 +703,9 @@ gst_h264_parse_handle_frame_packetized (GstBaseParse * parse,
+        * a replacement output buffer is provided anyway. */
+       gst_h264_parse_parse_frame (parse, frame);
+       ret = gst_base_parse_finish_frame (parse, frame, nl + nalu.size);
+-      left -= nl + nalu.size;
++      gst_buffer_unmap (buffer, &map);
++      gst_buffer_unref (buffer);
++      return ret;
+     }
+ 
+     parse_res = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
+-- 
+1.8.1.2
+

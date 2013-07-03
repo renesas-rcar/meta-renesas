@@ -1,0 +1,448 @@
+From 6a9f6dd5c111372fad1f152a3616b4e8c7809c50 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 20:24:14 +0900
+Subject: [PATCH 16/21] dfbvideosink: add the methods to manage preallocated
+ buffers with GstBufferPool
+
+---
+ ext/directfb/dfbvideosink.c | 351 ++++++++++++++++++++++++++++++++++++++++++++
+ ext/directfb/dfbvideosink.h |  44 ++++++
+ 2 files changed, 395 insertions(+)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 64c3277..4c6ec2f 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -87,6 +87,7 @@
+ 
+ #include <gst/video/navigation.h>
+ #include <gst/video/colorbalance.h>
++#include <gst/video/gstvideometa.h>
+ 
+ #include <gst/video/video.h>
+ 
+@@ -130,9 +131,359 @@ static void gst_dfbvideosink_update_colorbalance (GstDfbVideoSink *
+ static void gst_dfbvideosink_navigation_init (GstNavigationInterface * iface);
+ static void gst_dfbvideosink_colorbalance_init (GstColorBalanceInterface
+     * iface);
++static const char *gst_dfbvideosink_get_format_name (DFBSurfacePixelFormat
++    format);
+ 
+ static GstVideoSinkClass *parent_class = NULL;
+ 
++GType
++gst_meta_dfbsurface_api_get_type (void)
++{
++  static volatile GType type;
++  static const gchar *tags[] = { "memory", NULL };
++
++  if (g_once_init_enter (&type)) {
++    GType _type = gst_meta_api_type_register ("GstMetaDfbSurfaceAPI", tags);
++    g_once_init_leave (&type, _type);
++  }
++  return type;
++}
++
++/* our metadata */
++const GstMetaInfo *
++gst_meta_dfbsurface_get_info (void)
++{
++  static const GstMetaInfo *meta_info = NULL;
++
++  if (g_once_init_enter (&meta_info)) {
++    const GstMetaInfo *meta =
++        gst_meta_register (gst_meta_dfbsurface_api_get_type (),
++        "GstMetaDfbSurface", sizeof (GstMetaDfbSurface),
++        (GstMetaInitFunction) NULL, (GstMetaFreeFunction) NULL,
++        (GstMetaTransformFunction) NULL);
++    g_once_init_leave (&meta_info, meta);
++  }
++  return meta_info;
++}
++
++G_DEFINE_TYPE (GstDfbBufferPool, gst_dfb_buffer_pool, GST_TYPE_BUFFER_POOL);
++
++static gboolean
++gst_dfb_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
++{
++  GstDfbBufferPool *dfbpool = GST_DFB_BUFFER_POOL_CAST (pool);
++  GstCaps *caps;
++  DFBSurfacePixelFormat pixel_format = DSPF_UNKNOWN;
++  GstStructure *structure;
++  gint width, height;
++  DFBResult ret;
++  DFBSurfaceDescription s_dsc;
++  IDirectFBSurface *surface;
++  gpointer data;
++  gint pitch;
++  guint size;
++  guint min_buffers;
++  guint max_buffers;
++
++  if (!dfbpool->dfbvideosink->setup) {
++    GST_WARNING_OBJECT (pool, "DirectFB hasn't been initialized yet.");
++    return FALSE;
++  }
++
++  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
++          &max_buffers)) {
++    GST_WARNING_OBJECT (pool, "invalid config");
++    return FALSE;
++  }
++
++  pixel_format = gst_dfbvideosink_get_format_from_caps (caps);
++
++  structure = gst_caps_get_structure (caps, 0);
++  if (!gst_structure_get_int (structure, "width", &width) ||
++      !gst_structure_get_int (structure, "height", &height)) {
++    GST_WARNING_OBJECT (pool, "failed getting geometry from caps %"
++        GST_PTR_FORMAT, caps);
++    return FALSE;
++  }
++
++  /* temporarily create a surface to get the pitch */
++  s_dsc.flags = DSDESC_PIXELFORMAT | DSDESC_WIDTH | DSDESC_HEIGHT;
++  s_dsc.pixelformat = pixel_format;
++  s_dsc.width = width;
++  s_dsc.height = height;
++
++  ret = dfbpool->dfbvideosink->dfb->CreateSurface (dfbpool->dfbvideosink->dfb,
++      &s_dsc, &surface);
++  if (ret != DFB_OK) {
++    GST_WARNING_OBJECT (pool, "failed creating surface with format %s",
++        gst_dfbvideosink_get_format_name (pixel_format));
++    return FALSE;
++  }
++
++  ret = surface->Lock (surface, DSLF_READ, &data, &pitch);
++  if (ret != DFB_OK) {
++    GST_WARNING_OBJECT (pool, "failed locking the surface");
++    surface->Release (surface);
++    return FALSE;
++  }
++  surface->Unlock (surface);
++  surface->Release (surface);
++
++  size = pitch * height;
++
++  gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
++      max_buffers);
++
++  dfbpool->caps = gst_caps_ref (caps);
++
++  return GST_BUFFER_POOL_CLASS (gst_dfb_buffer_pool_parent_class)->set_config
++      (pool, config);
++}
++
++static void
++gst_dfb_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * surface)
++{
++  GstMetaDfbSurface *meta;
++
++  meta = GST_META_DFBSURFACE_GET (surface);
++
++  /* Release our internal surface */
++  if (meta->surface) {
++    if (meta->locked) {
++      meta->surface->Unlock (meta->surface);
++      meta->locked = FALSE;
++    }
++    meta->surface->Release (meta->surface);
++  }
++
++  if (meta->dfbvideosink)
++    /* Release the ref to our sink */
++    gst_object_unref (meta->dfbvideosink);
++
++  GST_BUFFER_POOL_CLASS (gst_dfb_buffer_pool_parent_class)->free_buffer (bpool,
++      surface);
++}
++
++static GstFlowReturn
++gst_dfb_buffer_pool_alloc_buffer (GstBufferPool * bpool,
++    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
++{
++  GstDfbBufferPool *dfbpool = GST_DFB_BUFFER_POOL_CAST (bpool);
++  GstBuffer *surface;
++  GstMetaDfbSurface *meta;
++  GstStructure *structure;
++  DFBResult ret;
++  DFBSurfaceDescription s_dsc;
++  gpointer data;
++  gint pitch;
++  GstFlowReturn result = GST_FLOW_ERROR;
++  gsize alloc_size;
++  gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
++  gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
++  gsize max_size;
++  gsize plane_size[GST_VIDEO_MAX_PLANES] = { 0 };
++  guint n_planes;
++  const gchar *str;
++  GstVideoFormat format;
++  gint i;
++
++  surface = gst_buffer_new ();
++  meta = GST_META_DFBSURFACE_ADD (surface);
++
++  /* Keep a ref to our sink */
++  meta->dfbvideosink = gst_object_ref (dfbpool->dfbvideosink);
++  /* Surface is not locked yet */
++  meta->locked = FALSE;
++
++  structure = gst_caps_get_structure (dfbpool->caps, 0);
++
++  if (!gst_structure_get_int (structure, "width", &meta->width) ||
++      !gst_structure_get_int (structure, "height", &meta->height)) {
++    GST_WARNING_OBJECT (bpool, "failed getting geometry from caps %"
++        GST_PTR_FORMAT, dfbpool->caps);
++    goto fallback;
++  }
++
++  /* Pixel format from caps */
++  meta->pixel_format = gst_dfbvideosink_get_format_from_caps (dfbpool->caps);
++  if (meta->pixel_format == DSPF_UNKNOWN) {
++    goto fallback;
++  }
++
++  if (!dfbpool->dfbvideosink->dfb) {
++    GST_DEBUG_OBJECT (bpool, "no DirectFB context to create a surface");
++    goto fallback;
++  }
++
++  /* Creating an internal surface which will be used as GstBuffer, we used
++     the detected pixel format and video dimensions */
++
++  s_dsc.flags = DSDESC_PIXELFORMAT | DSDESC_WIDTH | DSDESC_HEIGHT;
++
++  s_dsc.pixelformat = meta->pixel_format;
++  s_dsc.width = meta->width;
++  s_dsc.height = meta->height;
++
++  ret =
++      dfbpool->dfbvideosink->dfb->CreateSurface (dfbpool->dfbvideosink->dfb,
++      &s_dsc, &meta->surface);
++  if (ret != DFB_OK) {
++    GST_WARNING_OBJECT (bpool, "failed creating a DirectFB surface");
++    meta->surface = NULL;
++    goto fallback;
++  }
++
++  /* Clearing surface */
++  meta->surface->Clear (meta->surface, 0x00, 0x00, 0x00, 0xFF);
++
++  /* Locking the surface to acquire the memory pointer */
++  meta->surface->Lock (meta->surface, DSLF_WRITE, &data, &pitch);
++  meta->locked = TRUE;
++
++  GST_DEBUG_OBJECT (bpool, "creating a %dx%d surface (%p) with %s "
++      "pixel format, line pitch %d", meta->width, meta->height, surface,
++      gst_dfbvideosink_get_format_name (meta->pixel_format), pitch);
++
++  structure = gst_caps_get_structure (dfbpool->caps, 0);
++  str = gst_structure_get_string (structure, "format");
++  if (str == NULL) {
++    GST_WARNING ("failed grabbing fourcc from caps %" GST_PTR_FORMAT,
++        dfbpool->caps);
++    return GST_FLOW_ERROR;
++  }
++
++  format = gst_video_format_from_string (str);
++  switch (format) {
++    case GST_VIDEO_FORMAT_I420:
++      offset[1] = pitch * meta->height;
++      offset[2] = pitch * meta->height * 3 / 2;
++      stride[0] = stride[1] = stride[2] = pitch;
++
++      plane_size[0] = offset[1];
++      plane_size[1] = plane_size[2] = pitch * meta->height / 2;
++      max_size = plane_size[0] * 2;
++      n_planes = 3;
++      break;
++    case GST_VIDEO_FORMAT_YV12:
++      offset[1] = pitch * meta->height;
++      offset[2] = offset[1] + pitch / 2 * meta->height / 2;
++      stride[0] = pitch;
++      stride[1] = stride[2] = pitch / 2;
++
++      plane_size[0] = offset[1];
++      plane_size[1] = plane_size[2] = plane_size[0] / 4;
++      max_size = plane_size[0] * 3 / 2;
++      n_planes = 3;
++      break;
++    case GST_VIDEO_FORMAT_NV12:
++      offset[1] = pitch * meta->height;
++      stride[0] = stride[1] = pitch;
++
++      plane_size[0] = offset[1];
++      plane_size[1] = pitch * meta->height / 2;
++      max_size = plane_size[0] * 3 / 2;
++      n_planes = 2;
++      break;
++    default:
++      stride[0] = pitch;
++      plane_size[0] = max_size = pitch * meta->height;
++      n_planes = 1;
++      break;
++  }
++
++  for (i = 0; i < n_planes; i++) {
++    gst_buffer_append_memory (surface,
++        gst_memory_new_wrapped (0, data, max_size, offset[i], plane_size[i],
++            NULL, NULL));
++  }
++
++  gst_buffer_add_video_meta_full (surface, GST_VIDEO_FRAME_FLAG_NONE,
++      format, meta->width, meta->height, n_planes, offset, stride);
++
++  result = GST_FLOW_OK;
++
++  goto beach;
++
++fallback:
++
++  /* We allocate a standard buffer ourselves to store it in our buffer pool,
++     this is an optimisation for memory allocation */
++  alloc_size = meta->width * meta->height;
++  surface = gst_buffer_new_allocate (NULL, alloc_size, NULL);
++  if (surface == NULL) {
++    GST_WARNING_OBJECT (bpool, "failed allocating a gstbuffer");
++    goto beach;
++  }
++
++  if (meta->surface) {
++    if (meta->locked) {
++      meta->surface->Unlock (meta->surface);
++      meta->locked = FALSE;
++    }
++    meta->surface->Release (meta->surface);
++    meta->surface = NULL;
++  }
++  GST_DEBUG_OBJECT (bpool, "allocating a buffer (%p) of %u bytes",
++      surface, (guint) alloc_size);
++
++  result = GST_FLOW_OK;
++
++beach:
++  if (result != GST_FLOW_OK) {
++    gst_dfb_buffer_pool_free_buffer (bpool, surface);
++    *buffer = NULL;
++  } else
++    *buffer = surface;
++
++  return result;
++}
++
++static GstBufferPool *
++gst_dfb_buffer_pool_new (GstDfbVideoSink * dfbvideosink)
++{
++  GstDfbBufferPool *pool;
++
++  g_return_val_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink), NULL);
++
++  pool = g_object_new (GST_TYPE_DFB_BUFFER_POOL, NULL);
++  pool->dfbvideosink = gst_object_ref (dfbvideosink);
++
++  GST_LOG_OBJECT (pool, "new dfb buffer pool %p", pool);
++
++  return GST_BUFFER_POOL_CAST (pool);
++}
++
++static void
++gst_dfb_buffer_pool_finalize (GObject * object)
++{
++  GstDfbBufferPool *pool = GST_DFB_BUFFER_POOL_CAST (object);
++
++  if (pool->caps)
++    gst_caps_unref (pool->caps);
++  gst_object_unref (pool->dfbvideosink);
++
++  G_OBJECT_CLASS (gst_dfb_buffer_pool_parent_class)->finalize (object);
++}
++
++static void
++gst_dfb_buffer_pool_init (GstDfbBufferPool * pool)
++{
++  /* No processing */
++}
++
++static void
++gst_dfb_buffer_pool_class_init (GstDfbBufferPoolClass * klass)
++{
++  GObjectClass *gobject_class = (GObjectClass *) klass;
++  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
++
++  gobject_class->finalize = gst_dfb_buffer_pool_finalize;
++
++  gstbufferpool_class->alloc_buffer = gst_dfb_buffer_pool_alloc_buffer;
++  gstbufferpool_class->set_config = gst_dfb_buffer_pool_set_config;
++  gstbufferpool_class->free_buffer = gst_dfb_buffer_pool_free_buffer;
++}
++
+ G_DEFINE_TYPE_WITH_CODE (GstDfbVideoSink, gst_dfbvideosink, GST_TYPE_VIDEO_SINK,
+     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+         gst_dfbvideosink_navigation_init);
+diff --git a/ext/directfb/dfbvideosink.h b/ext/directfb/dfbvideosink.h
+index 16e3c0b..3cf4614 100644
+--- a/ext/directfb/dfbvideosink.h
++++ b/ext/directfb/dfbvideosink.h
+@@ -35,6 +35,49 @@ G_BEGIN_DECLS
+ typedef struct _GstDfbVideoSink GstDfbVideoSink;
+ typedef struct _GstDfbVideoSinkClass GstDfbVideoSinkClass;
+ 
++typedef struct _GstMetaDfbSurface GstMetaDfbSurface;
++
++GType gst_meta_dfbsurface_api_get_type (void);
++const GstMetaInfo * gst_meta_dfbsurface_get_info (void);
++
++#define GST_TYPE_DFB_BUFFER_POOL     (gst_dfb_buffer_pool_get_type())
++#define GST_META_DFBSURFACE_GET(buf) ((GstMetaDfbSurface *)gst_buffer_get_meta(buf,gst_meta_dfbsurface_api_get_type()))
++#define GST_META_DFBSURFACE_ADD(buf) ((GstMetaDfbSurface *)gst_buffer_add_meta(buf,gst_meta_dfbsurface_get_info(),NULL))
++#define GST_DFB_BUFFER_POOL_CAST(obj) ((GstDfbBufferPool*)(obj))
++
++struct _GstMetaDfbSurface {
++  GstMeta meta;
++
++  IDirectFBSurface *surface;
++
++  gint width;
++  gint height;
++
++  gboolean locked;
++
++  DFBSurfacePixelFormat pixel_format;
++
++  GstDfbVideoSink *dfbvideosink;
++};
++
++typedef struct _GstDfbBufferPool GstDfbBufferPool;
++
++struct _GstDfbBufferPool
++{
++  GstBufferPool bufferpool;
++
++  GstDfbVideoSink *dfbvideosink;
++
++  GstCaps *caps;
++};
++
++typedef struct _GstDfbBufferPoolClass GstDfbBufferPoolClass;
++
++struct _GstDfbBufferPoolClass
++{
++  GstBufferPoolClass parent_class;
++};
++
+ typedef struct _GstDfbVMode GstDfbVMode;
+ 
+ struct _GstDfbVMode {
+@@ -97,6 +140,7 @@ struct _GstDfbVideoSinkClass {
+ };
+ 
+ GType gst_dfbvideosink_get_type (void);
++GType gst_dfb_buffer_pool_get_type (void);
+ 
+ G_END_DECLS
+ 
+-- 
+1.8.1.2
+

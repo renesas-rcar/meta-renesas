@@ -1,0 +1,26 @@
+From 77f5cd4fa7cd5237166618ff654c7856827987da Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Jun 2013 10:53:57 +0900
+Subject: [PATCH 12/21] dfbvideosink: remove from non-ported list in
+ configure.ac
+
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index b7d872c..f7333c0 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -498,7 +498,7 @@ GST_PLUGINS_NONPORTED=" aiff \
+  sdi stereo tta videofilters \
+  videomeasure videosignal vmnc \
+  fbdev linsys vcd \
+- apexsink cdaudio cog dc1394 dirac directfb \
++ apexsink cdaudio cog dc1394 dirac \
+  gsettings jasper ladspa \
+  musepack musicbrainz nas neon ofa openal rsvg sdl sndfile timidity \
+  directdraw direct3d9 acm wininet \
+-- 
+1.8.1.2
+

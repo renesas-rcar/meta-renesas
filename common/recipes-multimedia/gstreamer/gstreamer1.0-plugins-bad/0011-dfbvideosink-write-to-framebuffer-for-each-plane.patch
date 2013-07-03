@@ -1,0 +1,80 @@
+From a5748f88b5ccc7a8affebb8eeeaa81be67abe5d5 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Jun 2013 14:16:08 +0900
+Subject: [PATCH 11/21] dfbvideosink: write to framebuffer for each plane
+
+This change supports the rendering processing in planar color formats.
+---
+ ext/directfb/dfbvideosink.c | 44 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 35 insertions(+), 9 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 96b2aa7..4da5728 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1323,9 +1323,12 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+   GstFlowReturn ret = GST_FLOW_OK;
+   IDirectFBSurface *dest = NULL, *surface = NULL;
+   guint8 *data;
+-  gint dest_pitch, src_pitch, line;
++  gint dest_pitch, line;
+   GstStructure *structure;
+   GstCaps *caps;
++  gint plane;
++  GstVideoInfo src_info;
++  GstVideoFrame src_frame;
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (bsink);
+ 
+@@ -1387,17 +1390,40 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     goto beach;
+   }
+ 
+-  /* Source video rowbytes */
+-  src_pitch = GST_BUFFER_SIZE (buf) / src.h;
++  caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
++  if (!gst_video_info_from_caps (&src_info, caps)) {
++    GST_WARNING_OBJECT (dfbvideosink, "failed getting video info");
++    ret = GST_FLOW_ERROR;
++    goto beach;
++  }
++  gst_caps_unref (caps);
+ 
+-  /* Write each line respecting subsurface pitch */
+-  for (line = 0; line < result.h; line++) {
+-    /* We do clipping */
+-    memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch),
+-        MIN (src_pitch, dest_pitch));
+-    data += dest_pitch;
++  if (!gst_video_frame_map (&src_frame, &src_info, buf, GST_MAP_READ)) {
++    GST_WARNING_OBJECT (dfbvideosink, "failed mapping frame");
++    ret = GST_FLOW_ERROR;
++    goto beach;
+   }
+ 
++  line = 0;
++  for (plane = 0; plane < src_info.finfo->n_planes; plane++) {
++    guint plane_h;
++    guint plane_line;
++
++    plane_h = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, plane);
++
++    /* Write each line respecting subsurface pitch */
++    for (plane_line = 0; line < result.h || plane_line < plane_h;
++        line++, plane_line++) {
++      /* We do clipping */
++      memcpy (data, (gchar *) src_frame.data[plane] +
++          (plane_line * src_info.stride[plane]),
++          MIN (src_info.stride[plane], dest_pitch));
++      data += dest_pitch;
++    }
++  }
++
++  gst_video_frame_unmap (&src_frame);
++
+   res = dest->Unlock (dest);
+ 
+   dest->Release (dest);
+-- 
+1.8.1.2
+

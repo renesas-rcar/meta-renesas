@@ -1,0 +1,30 @@
+From 7984006156a8c2044ba8795116b530a5dc5ed4f3 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Jun 2013 11:07:14 +0900
+Subject: [PATCH 05/21] dfbvideosink: change interfaces header pathes
+
+GstNavigation and GstColorBalance have been part of the video library
+in gst-plugins-base.
+---
+ ext/directfb/dfbvideosink.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 9dbc7a2..d23506a 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -85,9 +85,8 @@
+ #include "config.h"
+ #endif
+ 
+-/* Our interfaces */
+-#include <gst/interfaces/navigation.h>
+-#include <gst/interfaces/colorbalance.h>
++#include <gst/video/navigation.h>
++#include <gst/video/colorbalance.h>
+ 
+ /* Object header */
+ #include "dfbvideosink.h"
+-- 
+1.8.1.2
+
