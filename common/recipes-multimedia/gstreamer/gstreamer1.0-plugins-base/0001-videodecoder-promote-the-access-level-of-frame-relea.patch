@@ -1,0 +1,52 @@
+From bab992e4e92888ca750d70791dd1cf881da29cff Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 13 Jun 2013 12:28:08 +0900
+Subject: [PATCH] videodecoder: promote the access level of frame release
+ function to be public
+
+This allows to release queued frames arbitrarily, giving VideoDecoder
+class more flexibility.
+---
+ gst-libs/gst/video/gstvideodecoder.c | 4 +---
+ gst-libs/gst/video/gstvideodecoder.h | 3 +++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/gst-libs/gst/video/gstvideodecoder.c b/gst-libs/gst/video/gstvideodecoder.c
+index c2940d1..aa766bf 100644
+--- a/gst-libs/gst/video/gstvideodecoder.c
++++ b/gst-libs/gst/video/gstvideodecoder.c
+@@ -430,8 +430,6 @@ static void gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full);
+ static GstFlowReturn gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
+     GstVideoCodecFrame * frame);
+ 
+-static void gst_video_decoder_release_frame (GstVideoDecoder * dec,
+-    GstVideoCodecFrame * frame);
+ static GstClockTime gst_video_decoder_get_frame_duration (GstVideoDecoder *
+     decoder, GstVideoCodecFrame * frame);
+ static GstVideoCodecFrame *gst_video_decoder_new_frame (GstVideoDecoder *
+@@ -2273,7 +2271,7 @@ no_output_buffer:
+   }
+ }
+ 
+-static void
++void
+ gst_video_decoder_release_frame (GstVideoDecoder * dec,
+     GstVideoCodecFrame * frame)
+ {
+diff --git a/gst-libs/gst/video/gstvideodecoder.h b/gst-libs/gst/video/gstvideodecoder.h
+index 8e2b7c7..facd7f3 100644
+--- a/gst-libs/gst/video/gstvideodecoder.h
++++ b/gst-libs/gst/video/gstvideodecoder.h
+@@ -365,6 +365,9 @@ void             gst_video_decoder_merge_tags (GstVideoDecoder *dec,
+                                                const GstTagList *tags,
+                                                GstTagMergeMode mode);
+ 
++void             gst_video_decoder_release_frame (GstVideoDecoder * dec,
++                                                  GstVideoCodecFrame * frame);
++
+ G_END_DECLS
+ 
+ #endif
+-- 
+1.8.1.2
+
