@@ -60,6 +60,7 @@ do_configure_prepend() {
 do_install_append () {
 	install -d ${D}/etc
         install -m 0644 ${WORKDIR}/directfbrc ${D}/etc/
+	rm -rf ${D}/usr/lib/nm-n.*
 }
 
 LEAD_SONAME = "libdirectfb-1.7.so.0"
