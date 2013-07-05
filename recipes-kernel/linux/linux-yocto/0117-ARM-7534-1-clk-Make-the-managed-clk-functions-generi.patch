@@ -1,8 +1,8 @@
 From b21d88a7f15de03355d455cc2ef69c50371683a1 Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Tue, 11 Sep 2012 19:56:23 +0100
-Subject: ARM: 7534/1: clk: Make the managed clk functions generically
- available
+Subject: [PATCH 117/715] ARM: 7534/1: clk: Make the managed clk functions
+ generically available
 
 The managed clk functions are currently only available when the generic clk
 lookup framework is build. But the managed clk functions are merely wrappers
@@ -26,7 +26,6 @@ Conflicts:
 	drivers/clk/clkdev.c
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/clk/Makefile     |    3 ++-
  drivers/clk/clk-devres.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++

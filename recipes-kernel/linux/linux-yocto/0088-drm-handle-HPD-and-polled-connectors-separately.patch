@@ -1,7 +1,7 @@
 From c5ffe29b5a8ca18a83dff1674fa448ba18264481 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:33 +0000
-Subject: drm: handle HPD and polled connectors separately
+Subject: [PATCH 088/715] drm: handle HPD and polled connectors separately
 
 Instead of reusing the polling code for hpd handling, split them up.
 This has a few consequences:
@@ -37,7 +37,6 @@ Conflicts:
 	drivers/gpu/drm/drm_crtc_helper.c
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc_helper.c |   51 ++++++++++++++++++++++++++++++-------
  include/drm/drm_crtc.h            |    1 +

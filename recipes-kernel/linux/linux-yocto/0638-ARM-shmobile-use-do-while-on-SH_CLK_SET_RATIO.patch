@@ -1,0 +1,39 @@
+From 724a134f1df969382cd47d657d448ce7a85abca2 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 12 Apr 2013 00:41:07 -0700
+Subject: [PATCH 638/715] ARM: shmobile: use do{ }while() on
+ SH_CLK_SET_RATIO()
+
+SH_CLK_SET_RATIO() will be trouble without this patch
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit af07908911fac1c2549f16ddc6d7b1f450d0c4a7)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 44ccb22b0a076dc0c324f53c7d37f3374c6df9e3)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/include/mach/clock.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/clock.h b/arch/arm/mach-shmobile/include/mach/clock.h
+index 8902044..03e5607 100644
+--- a/arch/arm/mach-shmobile/include/mach/clock.h
++++ b/arch/arm/mach-shmobile/include/mach/clock.h
+@@ -31,9 +31,9 @@ static SH_FIXED_RATIO_CLKg(name, p, r)
+ 	SH_FIXED_RATIO_CLK(name, p, name)
+ 
+ #define SH_CLK_SET_RATIO(p, m, d)	\
+-{			\
++do {			\
+ 	(p)->mul = m;	\
+ 	(p)->div = d;	\
+-}
++} while (0)
+ 
+ #endif
+-- 
+1.7.10.4
+

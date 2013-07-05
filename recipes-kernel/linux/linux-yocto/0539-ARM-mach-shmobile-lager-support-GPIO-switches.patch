@@ -1,0 +1,76 @@
+From 0906893919ec7257212a2a489d4ae4fd6adf68a1 Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Mon, 13 May 2013 16:04:31 +0900
+Subject: [PATCH 539/715] ARM: mach-shmobile: lager: support GPIO switches
+
+The lager board has pins 1 - 4 of SW2 wired up to GPIO pins.
+This patch allows access to those pins as KEYS 1 - 4 using
+gpio-keys.
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 715066e412d9a5d22331365f8b5394339f5e0a64)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 68652020afddd6aeaf2c98009b69caa03c2b49ab)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c |   24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index 986fe39..45b7d71 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -19,6 +19,9 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <linux/gpio.h>
++#include <linux/gpio_keys.h>
++#include <linux/input.h>
+ #include <linux/interrupt.h>
+ #include <linux/irqchip.h>
+ #include <linux/kernel.h>
+@@ -53,11 +56,27 @@ static struct gpio_led lager_leds[] = {
+ 	},
+ };
+ 
+-static struct gpio_led_platform_data lager_leds_pdata = {
++static __initdata struct gpio_led_platform_data lager_leds_pdata = {
+ 	.leds		= lager_leds,
+ 	.num_leds	= ARRAY_SIZE(lager_leds),
+ };
+ 
++/* GPIO KEY */
++#define GPIO_KEY(c, g, d, ...) \
++	{ .code = c, .gpio = g, .desc = d, .active_low = 1 }
++
++static __initdata struct gpio_keys_button gpio_buttons[] = {
++	GPIO_KEY(KEY_4,		RCAR_GP_PIN(1, 28),	"SW2-pin4"),
++	GPIO_KEY(KEY_3,		RCAR_GP_PIN(1, 26),	"SW2-pin3"),
++	GPIO_KEY(KEY_2,		RCAR_GP_PIN(1, 24),	"SW2-pin2"),
++	GPIO_KEY(KEY_1,		RCAR_GP_PIN(1, 14),	"SW2-pin1"),
++};
++
++static __initdata struct gpio_keys_platform_data lager_keys_pdata = {
++	.buttons	= gpio_buttons,
++	.nbuttons	= ARRAY_SIZE(gpio_buttons),
++};
++
+ static const struct pinctrl_map lager_pinctrl_map[] = {
+ 	/* SCIF0 (CN19: DEBUG SERIAL0) */
+ 	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.6", "pfc-r8a7790",
+@@ -101,6 +120,9 @@ static void __init lager_add_standard_devices(void)
+ 	platform_device_register_data(&platform_bus, "leds-gpio", -1,
+ 				      &lager_leds_pdata,
+ 				      sizeof(lager_leds_pdata));
++	platform_device_register_data(&platform_bus, "gpio-keys", -1,
++				      &lager_keys_pdata,
++				      sizeof(lager_keys_pdata));
+ }
+ 
+ static const char *lager_boards_compat_dt[] __initdata = {
+-- 
+1.7.10.4
+

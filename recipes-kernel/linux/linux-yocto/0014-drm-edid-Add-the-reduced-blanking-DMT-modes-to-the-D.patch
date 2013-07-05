@@ -1,7 +1,8 @@
 From 44900d08347047943f2db18ca04aadfa9099365c Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:34 -0400
-Subject: drm/edid: Add the reduced blanking DMT modes to the DMT list
+Subject: [PATCH 014/715] drm/edid: Add the reduced blanking DMT modes to the
+ DMT list
 
 Copied from the list in xserver.
 
@@ -12,7 +13,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 383a6d5fdd9a36832a7f35e2ba17de95a8a10eba)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid_modes.h |   94 +++++++++++++++++++++++++++++++++++++-
  1 file changed, 93 insertions(+), 1 deletion(-)

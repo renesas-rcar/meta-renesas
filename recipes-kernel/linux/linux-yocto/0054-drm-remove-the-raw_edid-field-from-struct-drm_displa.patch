@@ -1,7 +1,8 @@
 From f9921dbf3f1a66d9084f6eac2dfedb487d8bb3f8 Mon Sep 17 00:00:00 2001
 From: Jani Nikula <jani.nikula@intel.com>
 Date: Wed, 15 Aug 2012 09:32:39 +0000
-Subject: drm: remove the raw_edid field from struct drm_display_info
+Subject: [PATCH 054/715] drm: remove the raw_edid field from struct
+ drm_display_info
 
 Neither the drm core nor any of the drivers really need the raw_edid field
 of struct drm_display_info for anything. Instead of being useful, it
@@ -21,7 +22,6 @@ Conflicts:
 	drivers/gpu/drm/i915/intel_dp.c
 	drivers/gpu/drm/i915/intel_modes.c
 	drivers/gpu/drm/mgag200/mgag200_mode.c
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c                    |    3 ---
  drivers/gpu/drm/drm_edid_load.c               |   23 +++++++++++++----------

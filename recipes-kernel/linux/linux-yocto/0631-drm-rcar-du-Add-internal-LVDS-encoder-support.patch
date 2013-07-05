@@ -1,0 +1,621 @@
+From 6b59665601c62a937f321bdb7962401af4efab89 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 17 Jun 2013 13:48:27 +0200
+Subject: [PATCH 631/715] drm/rcar-du: Add internal LVDS encoder support
+
+The R8A7790 includes two internal LVDS encoders. Support them in the DU
+driver.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 5a8bf586f813d3da84a825155bd99c0425126f90)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 4a3fd8945d1e170dea2f1ba802e1065422f9507e)
+
+Conflicts:
+	drivers/gpu/drm/rcar-du/Kconfig
+	drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/Kconfig           |   22 +---
+ drivers/gpu/drm/rcar-du/Makefile          |    4 +-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |    3 -
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h    |    2 +
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c     |    2 +
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h     |    4 +
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c |   38 ++++++
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h |    2 +
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     |    5 +
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c |  191 +++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h |   46 +++++++
+ drivers/gpu/drm/rcar-du/rcar_lvds_regs.h  |   69 +++++++++++
+ 12 files changed, 366 insertions(+), 22 deletions(-)
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_lvds_regs.h
+
+diff --git a/drivers/gpu/drm/rcar-du/Kconfig b/drivers/gpu/drm/rcar-du/Kconfig
+index 0566ef1..33616cd 100644
+--- a/drivers/gpu/drm/rcar-du/Kconfig
++++ b/drivers/gpu/drm/rcar-du/Kconfig
+@@ -8,23 +8,9 @@ config DRM_RCAR_DU
+ 	  Choose this option if you have an R-Car chipset.
+ 	  If M is selected the module will be called rcar-du-drm.
+ 
+-config ANALOG_RGB_CH
+-	int "Display analog RGB output channel"
+-	range 0 1
+-	default 0
++config DRM_RCAR_LVDS
++	bool "R-Car DU LVDS Encoder Support"
+ 	depends on DRM_RCAR_DU
+ 	help
+-	  This option is selection of DU channel for analog RGB
+-	  output.
+-	  if you want to set Analog RGB output to DU0, you set "0".
+-	  if you want to set Analog RGB output to DU1, you set "1".
+-
+-config LVDS_CH
+-	int "Display LVDS output channel"
+-	range 1 1
+-	default 1
+-	depends on DRM_RCAR_DU
+-	help
+-	  This option is selection of DU channel for LVDS
+-	  output.
+-	  if you want to set LVDS output to DU1, you set "1".
++	  Enable support the R-Car Display Unit embedded LVDS encoders
++	  (currently only on R8A7790).
+diff --git a/drivers/gpu/drm/rcar-du/Makefile b/drivers/gpu/drm/rcar-du/Makefile
+index b9b5e66..12b8d44 100644
+--- a/drivers/gpu/drm/rcar-du/Makefile
++++ b/drivers/gpu/drm/rcar-du/Makefile
+@@ -7,4 +7,6 @@ rcar-du-drm-y := rcar_du_crtc.o \
+ 		 rcar_du_plane.o \
+ 		 rcar_du_vgacon.o
+ 
+-obj-$(CONFIG_DRM_RCAR_DU)	+= rcar-du-drm.o
++rcar-du-drm-$(CONFIG_DRM_RCAR_LVDS)	+= rcar_du_lvdsenc.o
++
++obj-$(CONFIG_DRM_RCAR_DU)		+= rcar-du-drm.o
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 7ba4f5f..aa7ea17 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -26,9 +26,6 @@
+ #include "rcar_du_plane.h"
+ #include "rcar_du_regs.h"
+ 
+-#define to_rcar_crtc(c)	container_of(c, struct rcar_du_crtc, crtc)
+-#define WORK_AROUND
+-
+ static u32 rcar_du_crtc_read(struct rcar_du_crtc *rcrtc, u32 reg)
+ {
+ 	struct rcar_du_device *rcdu = rcrtc->group->dev;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+index 39a983d..43e7575 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+@@ -39,6 +39,8 @@ struct rcar_du_crtc {
+ 	struct rcar_du_plane *plane;
+ };
+ 
++#define to_rcar_crtc(c)	container_of(c, struct rcar_du_crtc, crtc)
++
+ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index);
+ void rcar_du_crtc_enable_vblank(struct rcar_du_crtc *rcrtc, bool enable);
+ void rcar_du_crtc_cancel_page_flip(struct rcar_du_crtc *rcrtc,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 9bc6b6f..046ee3f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -245,6 +245,7 @@ static const struct rcar_du_device_info rcar_du_r8a7779_info = {
+ 			.encoder_type = DRM_MODE_ENCODER_NONE,
+ 		},
+ 	},
++	.num_lvds = 0,
+ };
+ 
+ static const struct rcar_du_device_info rcar_du_r8a7790_info = {
+@@ -268,6 +269,7 @@ static const struct rcar_du_device_info rcar_du_r8a7790_info = {
+ 			.encoder_type = DRM_MODE_ENCODER_LVDS,
+ 		},
+ 	},
++	.num_lvds = 2,
+ };
+ 
+ static const struct platform_device_id rcar_du_id_table[] = {
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index 4ff9fe6..014a5d0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -25,6 +25,7 @@ struct device;
+ struct drm_device;
+ struct drm_fbdev_cma;
+ struct rcar_du_device;
++struct rcar_du_lvdsenc;
+ 
+ #define RCAR_DU_FEATURE_CRTC_IRQ_CLOCK	(1 << 0)	/* Per-CRTC IRQ and clock */
+ #define RCAR_DU_FEATURE_ALIGN_128B	(1 << 1)	/* Align pitches to 128 bytes */
+@@ -49,11 +50,13 @@ struct rcar_du_output_routing {
+  * @features: device features (RCAR_DU_FEATURE_*)
+  * @num_crtcs: total number of CRTCs
+  * @routes: array of CRTC to output routes, indexed by output (RCAR_DU_OUTPUT_*)
++ * @num_lvds: number of internal LVDS encoders
+  */
+ struct rcar_du_device_info {
+ 	unsigned int features;
+ 	unsigned int num_crtcs;
+ 	struct rcar_du_output_routing routes[RCAR_DU_OUTPUT_MAX];
++	unsigned int num_lvds;
+ };
+ 
+ struct rcar_du_device {
+@@ -72,6 +75,7 @@ struct rcar_du_device {
+ 	struct rcar_du_group groups[2];
+ 
+ 	unsigned int dpad0_source;
++	struct rcar_du_lvdsenc *lvds[2];
+ };
+ 
+ static inline bool rcar_du_has(struct rcar_du_device *rcdu,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+index 2aac28d..3daa7a1 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+@@ -11,6 +11,8 @@
+  * (at your option) any later version.
+  */
+ 
++#include <linux/export.h>
++
+ #include <drm/drmP.h>
+ #include <drm/drm_crtc.h>
+ #include <drm/drm_crtc_helper.h>
+@@ -19,6 +21,7 @@
+ #include "rcar_du_encoder.h"
+ #include "rcar_du_kms.h"
+ #include "rcar_du_lvdscon.h"
++#include "rcar_du_lvdsenc.h"
+ #include "rcar_du_vgacon.h"
+ 
+ /* -----------------------------------------------------------------------------
+@@ -39,12 +42,17 @@ rcar_du_connector_best_encoder(struct drm_connector *connector)
+ 
+ static void rcar_du_encoder_dpms(struct drm_encoder *encoder, int mode)
+ {
++	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++
++	if (renc->lvds)
++		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc, mode);
+ }
+ 
+ static bool rcar_du_encoder_mode_fixup(struct drm_encoder *encoder,
+ 				       const struct drm_display_mode *mode,
+ 				       struct drm_display_mode *adjusted_mode)
+ {
++	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
+ 	const struct drm_display_mode *panel_mode;
+ 	struct drm_device *dev = encoder->dev;
+ 	struct drm_connector *connector;
+@@ -82,15 +90,32 @@ static bool rcar_du_encoder_mode_fixup(struct drm_encoder *encoder,
+ 	/* The flat panel mode is fixed, just copy it to the adjusted mode. */
+ 	drm_mode_copy(adjusted_mode, panel_mode);
+ 
++	/* The internal LVDS encoder has a clock frequency operating range of
++	 * 30MHz to 150MHz. Clamp the clock accordingly.
++	 */
++	if (renc->lvds)
++		adjusted_mode->clock = clamp(adjusted_mode->clock,
++					     30000, 150000);
++
+ 	return true;
+ }
+ 
+ static void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder)
+ {
++	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++
++	if (renc->lvds)
++		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc,
++				     DRM_MODE_DPMS_OFF);
+ }
+ 
+ static void rcar_du_encoder_mode_commit(struct drm_encoder *encoder)
+ {
++	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++
++	if (renc->lvds)
++		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc,
++				     DRM_MODE_DPMS_ON);
+ }
+ 
+ static void rcar_du_encoder_mode_set(struct drm_encoder *encoder,
+@@ -129,6 +154,19 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 
+ 	renc->output = output;
+ 
++	switch (output) {
++	case RCAR_DU_OUTPUT_LVDS0:
++		renc->lvds = rcdu->lvds[0];
++		break;
++
++	case RCAR_DU_OUTPUT_LVDS1:
++		renc->lvds = rcdu->lvds[1];
++		break;
++
++	default:
++		break;
++	}
++
+ 	switch (type) {
+ 	case RCAR_DU_ENCODER_VGA:
+ 		encoder_type = DRM_MODE_ENCODER_DAC;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h b/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+index 2310416..0e5a65e 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+@@ -19,10 +19,12 @@
+ #include <drm/drm_crtc.h>
+ 
+ struct rcar_du_device;
++struct rcar_du_lvdsenc;
+ 
+ struct rcar_du_encoder {
+ 	struct drm_encoder encoder;
+ 	enum rcar_du_output output;
++	struct rcar_du_lvdsenc *lvds;
+ };
+ 
+ #define to_rcar_encoder(e) \
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index ad5495d..3e55c66 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -23,6 +23,7 @@
+ #include "rcar_du_drv.h"
+ #include "rcar_du_encoder.h"
+ #include "rcar_du_kms.h"
++#include "rcar_du_lvdsenc.h"
+ #include "rcar_du_regs.h"
+ 
+ static bool rcar_du_fbdev_pan = true;
+@@ -231,6 +232,10 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	}
+ 
+ 	/* Initialize the encoders. */
++	ret = rcar_du_lvdsenc_init(rcdu);
++	if (ret < 0)
++		return ret;
++
+ 	for (i = 0; i < rcdu->pdata->num_encoders; ++i) {
+ 		const struct rcar_du_encoder_data *pdata =
+ 			&rcdu->pdata->encoders[i];
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+new file mode 100644
+index 0000000..6ed6441
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+@@ -0,0 +1,191 @@
++/*
++ * rcar_du_lvdsenc.c  --  R-Car Display Unit LVDS Encoder
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_encoder.h"
++#include "rcar_du_lvdsenc.h"
++#include "rcar_lvds_regs.h"
++
++struct rcar_du_lvdsenc {
++	unsigned int index;
++	void __iomem *mmio;
++	struct clk *clock;
++	int dpms;
++
++	enum rcar_lvds_input input;
++};
++
++static void rcar_lvds_write(struct rcar_du_lvdsenc *lvds, u32 reg, u32 data)
++{
++	iowrite32(data, lvds->mmio + reg);
++}
++
++static int rcar_du_lvdsenc_start(struct rcar_du_lvdsenc *lvds,
++				 struct rcar_du_crtc *rcrtc)
++{
++	const struct drm_display_mode *mode = &rcrtc->crtc.mode;
++	unsigned int freq = mode->clock;
++	u32 lvdcr0;
++	u32 pllcr;
++	int ret;
++
++	if (lvds->dpms == DRM_MODE_DPMS_ON)
++		return 0;
++
++	ret = clk_prepare_enable(lvds->clock);
++	if (ret < 0)
++		return ret;
++
++	/* PLL clock configuration */
++	if (freq <= 38000)
++		pllcr = LVDPLLCR_CEEN | LVDPLLCR_COSEL | LVDPLLCR_PLLDLYCNT_38M;
++	else if (freq <= 60000)
++		pllcr = LVDPLLCR_CEEN | LVDPLLCR_COSEL | LVDPLLCR_PLLDLYCNT_60M;
++	else if (freq <= 121000)
++		pllcr = LVDPLLCR_CEEN | LVDPLLCR_COSEL | LVDPLLCR_PLLDLYCNT_121M;
++	else
++		pllcr = LVDPLLCR_PLLDLYCNT_150M;
++
++	rcar_lvds_write(lvds, LVDPLLCR, pllcr);
++
++	/* Hardcode the channels and control signals routing for now.
++	 *
++	 * HSYNC -> CTRL0
++	 * VSYNC -> CTRL1
++	 * DISP  -> CTRL2
++	 * 0     -> CTRL3
++	 *
++	 * FIXME: Channels 1 and 3 need to be switched, find out why.
++	 */
++	rcar_lvds_write(lvds, LVDCTRCR, LVDCTRCR_CTR3SEL_ZERO |
++			LVDCTRCR_CTR2SEL_DISP | LVDCTRCR_CTR1SEL_VSYNC |
++			LVDCTRCR_CTR0SEL_HSYNC);
++	rcar_lvds_write(lvds, LVDCHCR, LVDCHCR_CHSEL_CH(0, 0) |
++			LVDCHCR_CHSEL_CH(1, 3) | LVDCHCR_CHSEL_CH(2, 2) |
++			LVDCHCR_CHSEL_CH(3, 1));
++
++	/* Select the input, hardcode mode 0, enable LVDS operation and turn
++	 * bias circuitry on.
++	 */
++	lvdcr0 = LVDCR0_BEN | LVDCR0_LVEN;
++	if (rcrtc->index == 2)
++		lvdcr0 |= LVDCR0_DUSEL;
++	rcar_lvds_write(lvds, LVDCR0, lvdcr0);
++
++	/* Turn all the channels on. */
++	rcar_lvds_write(lvds, LVDCR1, LVDCR1_CHSTBY(3) | LVDCR1_CHSTBY(2) |
++			LVDCR1_CHSTBY(1) | LVDCR1_CHSTBY(0) | LVDCR1_CLKSTBY);
++
++	/* Turn the PLL on, wait for the startup delay, and turn the output on. */
++	lvdcr0 |= LVDCR0_PLLEN;
++	rcar_lvds_write(lvds, LVDCR0, lvdcr0);
++
++	usleep_range(100, 150);
++
++	lvdcr0 |= LVDCR0_LVRES;
++	rcar_lvds_write(lvds, LVDCR0, lvdcr0);
++
++	lvds->dpms = DRM_MODE_DPMS_ON;
++	return 0;
++}
++
++static void rcar_du_lvdsenc_stop(struct rcar_du_lvdsenc *lvds)
++{
++	if (lvds->dpms == DRM_MODE_DPMS_OFF)
++		return;
++
++	rcar_lvds_write(lvds, LVDCR0, 0);
++	rcar_lvds_write(lvds, LVDCR1, 0);
++
++	clk_disable_unprepare(lvds->clock);
++
++	lvds->dpms = DRM_MODE_DPMS_OFF;
++}
++
++int rcar_du_lvdsenc_dpms(struct rcar_du_lvdsenc *lvds,
++			 struct drm_crtc *crtc, int mode)
++{
++	if (mode == DRM_MODE_DPMS_OFF) {
++		rcar_du_lvdsenc_stop(lvds);
++		return 0;
++	} else if (crtc) {
++		struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++		return rcar_du_lvdsenc_start(lvds, rcrtc);
++	} else
++		return -EINVAL;
++}
++
++static int rcar_du_lvdsenc_get_resources(struct rcar_du_lvdsenc *lvds,
++					 struct platform_device *pdev)
++{
++	struct resource *mem;
++	char name[7];
++
++	sprintf(name, "lvds.%u", lvds->index);
++
++	mem = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
++	if (mem == NULL) {
++		dev_err(&pdev->dev, "failed to get memory resource for %s\n",
++			name);
++		return -EINVAL;
++	}
++
++	lvds->mmio = devm_ioremap_resource(&pdev->dev, mem);
++	if (lvds->mmio == NULL) {
++		dev_err(&pdev->dev, "failed to remap memory resource for %s\n",
++			name);
++		return -ENOMEM;
++	}
++
++	lvds->clock = devm_clk_get(&pdev->dev, name);
++	if (IS_ERR(lvds->clock)) {
++		dev_err(&pdev->dev, "failed to get clock for %s\n", name);
++		return PTR_ERR(lvds->clock);
++	}
++
++	return 0;
++}
++
++int rcar_du_lvdsenc_init(struct rcar_du_device *rcdu)
++{
++	struct platform_device *pdev = to_platform_device(rcdu->dev);
++	struct rcar_du_lvdsenc *lvds;
++	unsigned int i;
++	int ret;
++
++	for (i = 0; i < rcdu->info->num_lvds; ++i) {
++		lvds = devm_kzalloc(&pdev->dev, sizeof(*lvds), GFP_KERNEL);
++		if (lvds == NULL) {
++			dev_err(&pdev->dev, "failed to allocate private data\n");
++			return -ENOMEM;
++		}
++
++		lvds->index = i;
++		lvds->input = i ? RCAR_LVDS_INPUT_DU1 : RCAR_LVDS_INPUT_DU0;
++		lvds->dpms = DRM_MODE_DPMS_OFF;
++
++		ret = rcar_du_lvdsenc_get_resources(lvds, pdev);
++		if (ret < 0)
++			return ret;
++
++		rcdu->lvds[i] = lvds;
++	}
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h
+new file mode 100644
+index 0000000..7051c6d
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h
+@@ -0,0 +1,46 @@
++/*
++ * rcar_du_lvdsenc.h  --  R-Car Display Unit LVDS Encoder
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_LVDSENC_H__
++#define __RCAR_DU_LVDSENC_H__
++
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/platform_data/rcar-du.h>
++
++struct rcar_drm_crtc;
++struct rcar_du_lvdsenc;
++
++enum rcar_lvds_input {
++	RCAR_LVDS_INPUT_DU0,
++	RCAR_LVDS_INPUT_DU1,
++	RCAR_LVDS_INPUT_DU2,
++};
++
++#if IS_ENABLED(CONFIG_DRM_RCAR_LVDS)
++int rcar_du_lvdsenc_init(struct rcar_du_device *rcdu);
++int rcar_du_lvdsenc_dpms(struct rcar_du_lvdsenc *lvds,
++			 struct drm_crtc *crtc, int mode);
++#else
++static inline int rcar_du_lvdsenc_init(struct rcar_du_device *rcdu)
++{
++	return 0;
++}
++static inline int rcar_du_lvdsenc_dpms(struct rcar_du_lvdsenc *lvds,
++				       struct drm_crtc *crtc, int mode)
++{
++	return 0;
++}
++#endif
++
++#endif /* __RCAR_DU_LVDSENC_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_lvds_regs.h b/drivers/gpu/drm/rcar-du/rcar_lvds_regs.h
+new file mode 100644
+index 0000000..50a6d85
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_lvds_regs.h
+@@ -0,0 +1,69 @@
++/*
++ * rcar_lvds_regs.h  --  R-Car LVDS Interface Registers Definitions
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ */
++
++#ifndef __RCAR_LVDS_REGS_H__
++#define __RCAR_LVDS_REGS_H__
++
++#define LVDCR0				0x0000
++#define LVDCR0_DUSEL			(1 << 15)
++#define LVDCR0_DMD			(1 << 12)
++#define LVDCR0_LVMD_MASK		(0xf << 8)
++#define LVDCR0_LVMD_SHIFT		8
++#define LVDCR0_PLLEN			(1 << 4)
++#define LVDCR0_BEN			(1 << 2)
++#define LVDCR0_LVEN			(1 << 1)
++#define LVDCR0_LVRES			(1 << 0)
++
++#define LVDCR1				0x0004
++#define LVDCR1_CKSEL			(1 << 15)
++#define LVDCR1_CHSTBY(n)		(3 << (2 + (n) * 2))
++#define LVDCR1_CLKSTBY			(3 << 0)
++
++#define LVDPLLCR			0x0008
++#define LVDPLLCR_CEEN			(1 << 14)
++#define LVDPLLCR_FBEN			(1 << 13)
++#define LVDPLLCR_COSEL			(1 << 12)
++#define LVDPLLCR_PLLDLYCNT_150M		(0x1c7 << 0)
++#define LVDPLLCR_PLLDLYCNT_121M		(0x22c << 0)
++#define LVDPLLCR_PLLDLYCNT_60M		(0x77b << 0)
++#define LVDPLLCR_PLLDLYCNT_38M		(0x69a << 0)
++#define LVDPLLCR_PLLDLYCNT_MASK		(0x7ff << 0)
++
++#define LVDCTRCR			0x000c
++#define LVDCTRCR_CTR3SEL_ZERO		(0 << 12)
++#define LVDCTRCR_CTR3SEL_ODD		(1 << 12)
++#define LVDCTRCR_CTR3SEL_CDE		(2 << 12)
++#define LVDCTRCR_CTR3SEL_MASK		(7 << 12)
++#define LVDCTRCR_CTR2SEL_DISP		(0 << 8)
++#define LVDCTRCR_CTR2SEL_ODD		(1 << 8)
++#define LVDCTRCR_CTR2SEL_CDE		(2 << 8)
++#define LVDCTRCR_CTR2SEL_HSYNC		(3 << 8)
++#define LVDCTRCR_CTR2SEL_VSYNC		(4 << 8)
++#define LVDCTRCR_CTR2SEL_MASK		(7 << 8)
++#define LVDCTRCR_CTR1SEL_VSYNC		(0 << 4)
++#define LVDCTRCR_CTR1SEL_DISP		(1 << 4)
++#define LVDCTRCR_CTR1SEL_ODD		(2 << 4)
++#define LVDCTRCR_CTR1SEL_CDE		(3 << 4)
++#define LVDCTRCR_CTR1SEL_HSYNC		(4 << 4)
++#define LVDCTRCR_CTR1SEL_MASK		(7 << 4)
++#define LVDCTRCR_CTR0SEL_HSYNC		(0 << 0)
++#define LVDCTRCR_CTR0SEL_VSYNC		(1 << 0)
++#define LVDCTRCR_CTR0SEL_DISP		(2 << 0)
++#define LVDCTRCR_CTR0SEL_ODD		(3 << 0)
++#define LVDCTRCR_CTR0SEL_CDE		(4 << 0)
++#define LVDCTRCR_CTR0SEL_MASK		(7 << 0)
++
++#define LVDCHCR				0x0010
++#define LVDCHCR_CHSEL_CH(n, c)		((((c) - (n)) & 3) << ((n) * 4))
++#define LVDCHCR_CHSEL_MASK(n)		(3 << ((n) * 4))
++
++#endif /* __RCAR_LVDS_REGS_H__ */
+-- 
+1.7.10.4
+

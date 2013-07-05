@@ -1,7 +1,7 @@
 From f006e2cfe84bcac9bd24a6dd52bb2228310bfda0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 8 Nov 2012 09:09:42 +0000
-Subject: drm: Reject addfb2 with undefined flag bits set
+Subject: [PATCH 082/715] drm: Reject addfb2 with undefined flag bits set
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -11,7 +11,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit e3cc3520dc2f554b9686b8fc5773d8b8bc8e9c9a)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |    5 +++++
  1 file changed, 5 insertions(+)

@@ -1,7 +1,8 @@
 From 5fe3bf0e7be17facec524acff050c56d11688a24 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Sat, 27 Oct 2012 15:52:04 +0200
-Subject: drm: add helper to sort panels to the head of the connector list
+Subject: [PATCH 076/715] drm: add helper to sort panels to the head of the
+ connector list
 
 Userspace seems to like this, see
 
@@ -28,7 +29,6 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 (cherry picked from commit cfc1a062063bb5b8e3fa2b007043dfc9e27b5a40)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc_helper.c |   18 ++++++++++++++++++
  include/drm/drm_crtc_helper.h     |    2 ++

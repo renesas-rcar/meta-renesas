@@ -1,0 +1,34 @@
+From 8946681d54b2da24cd0d73b4e943afa249eeb64d Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Sat, 3 Nov 2012 12:59:51 -0500
+Subject: [PATCH 201/715] ARM: GIC: set handle_arch_irq in GIC initialization
+
+Set handle_arch_irq to gic_handle_irq. Only the first GIC initialized can
+setup the handler.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Acked-by: Olof Johansson <olof@lixom.net>
+(cherry picked from commit cfed7d6014589f51a092463f9c4aca3683fffdb8)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/common/gic.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
+index f0a8740..80a15c5 100644
+--- a/arch/arm/common/gic.c
++++ b/arch/arm/common/gic.c
+@@ -788,6 +788,9 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
+ #ifdef CONFIG_SMP
+ 	set_smp_cross_call(gic_raise_softirq);
+ #endif
++
++	set_handle_irq(gic_handle_irq);
++
+ 	gic_chip.flags |= gic_arch_extn.flags;
+ 	gic_dist_init(gic);
+ 	gic_cpu_init(gic);
+-- 
+1.7.10.4
+

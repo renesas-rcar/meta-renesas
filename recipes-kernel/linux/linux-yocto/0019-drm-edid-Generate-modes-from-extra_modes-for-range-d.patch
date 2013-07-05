@@ -1,7 +1,8 @@
 From 36e607e04bb773f385ca6b203e27ad5423715fb5 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:40 -0400
-Subject: drm/edid: Generate modes from extra_modes for range descriptors
+Subject: [PATCH 019/715] drm/edid: Generate modes from extra_modes for range
+ descriptors
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>
 Tested-by: Takashi Iwai <tiwai@suse.de>
@@ -10,7 +11,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit b309bd37a1357bd4391dace247cceb9d9121d20a)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   73 ++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 73 insertions(+)

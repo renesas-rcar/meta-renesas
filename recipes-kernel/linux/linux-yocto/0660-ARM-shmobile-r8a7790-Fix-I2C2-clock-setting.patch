@@ -1,0 +1,88 @@
+From 74f6d3cbf554a18b2ca08b005a8042b4abf60587 Mon Sep 17 00:00:00 2001
+From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+Date: Sat, 22 Jun 2013 20:34:26 +0900
+Subject: [PATCH 660/715] ARM: shmobile: r8a7790: Fix I2C2 clock setting
+
+SCL clock of I2C2 is changed to 100kHz for stable communication.
+The recommended value of H2 H/W specifications is used for setting of
+ICCCR, ICCCR2, ICMPR, ICHPR and ICLPR register.
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+(cherry picked from commit dc5c57d51d467a22dcb688ff12f67734e374beb3)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7790.c |   29 ++++++++++++++++++++++-------
+ 1 file changed, 22 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 904493a..a88ca16 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -813,9 +813,24 @@ static struct spi_board_info spi_info[] __initdata = {
+ };
+ 
+ /* I2C */
+-static struct i2c_rcar_platform_data i2c_pd = {
+-	.bus_speed	= 400000,
+-	.icccr_cdf_width = I2C_RCAR_ICCCR_IS_3BIT,
++static struct i2c_rcar_platform_data i2c_pd[] = {
++	{
++		.bus_speed	= 400000,
++		.icccr_cdf_width = I2C_RCAR_ICCCR_IS_3BIT,
++	}, {
++		.bus_speed	= 400000,
++		.icccr_cdf_width = I2C_RCAR_ICCCR_IS_3BIT,
++	}, {
++		/* Recommended values of bus speed 100kHz by H2 H/W spec. */
++		.icccr	= 6,
++		.icccr2	= 7,
++		.icmpr	= 10,
++		.ichpr	= 632,
++		.iclpr	= 640,
++	}, {
++		.bus_speed	= 400000,
++		.icccr_cdf_width = I2C_RCAR_ICCCR_IS_3BIT,
++	},
+ };
+ 
+ static struct resource rcar_i2c0_res[] = {
+@@ -866,7 +881,7 @@ static struct platform_device i2c0_device = {
+ 	.name		= "i2c-rcar",
+ 	.id		= 0,
+ 	.dev = {
+-		.platform_data = &i2c_pd,
++		.platform_data = &i2c_pd[0],
+ 	},
+ 	.num_resources	= ARRAY_SIZE(rcar_i2c0_res),
+ 	.resource	= rcar_i2c0_res,
+@@ -876,7 +891,7 @@ static struct platform_device i2c1_device = {
+ 	.name		= "i2c-rcar",
+ 	.id		= 1,
+ 	.dev = {
+-		.platform_data = &i2c_pd,
++		.platform_data = &i2c_pd[1],
+ 	},
+ 	.num_resources	= ARRAY_SIZE(rcar_i2c1_res),
+ 	.resource	= rcar_i2c1_res,
+@@ -886,7 +901,7 @@ static struct platform_device i2c2_device = {
+ 	.name		= "i2c-rcar",
+ 	.id		= 2,
+ 	.dev = {
+-		.platform_data = &i2c_pd,
++		.platform_data = &i2c_pd[2],
+ 	},
+ 	.num_resources	= ARRAY_SIZE(rcar_i2c2_res),
+ 	.resource	= rcar_i2c2_res,
+@@ -896,7 +911,7 @@ static struct platform_device i2c3_device = {
+ 	.name		= "i2c-rcar",
+ 	.id		= 3,
+ 	.dev = {
+-		.platform_data = &i2c_pd,
++		.platform_data = &i2c_pd[3],
+ 	},
+ 	.num_resources	= ARRAY_SIZE(rcar_i2c3_res),
+ 	.resource	= rcar_i2c3_res,
+-- 
+1.7.10.4
+

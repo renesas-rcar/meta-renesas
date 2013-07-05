@@ -1,0 +1,51 @@
+From e727a0caa4b98090bb8bb65313c4058e7ae0978f Mon Sep 17 00:00:00 2001
+From: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+Date: Thu, 27 Jun 2013 18:34:02 +0900
+Subject: [PATCH 682/715] mmc: tmio: Add SDIO status reserved bits for SH
+ Mobile series
+
+Signed-off-by: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+(cherry picked from commit 38cc7a40eea8b0a6bafb7248e1ee253fa2ccfc47)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c |    8 +++++++-
+ include/linux/mfd/tmio.h        |    3 +++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 8f9acf8..3f3b9a2 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -677,7 +677,13 @@ irqreturn_t tmio_mmc_sdio_irq(int irq, void *devid)
+ 	status = sd_ctrl_read16(host, CTL_SDIO_STATUS);
+ 	ireg = status & TMIO_SDIO_MASK_ALL & ~host->sdcard_irq_mask;
+ 
+-	sd_ctrl_write16(host, CTL_SDIO_STATUS, status & ~TMIO_SDIO_MASK_ALL);
++	if (pdata->flags & TMIO_MMC_SDIO_STATUS_QUIRK) {
++		sd_ctrl_write16(host, CTL_SDIO_STATUS,
++					(status & ~TMIO_SDIO_MASK_ALL) | 6);
++	} else {
++		sd_ctrl_write16(host, CTL_SDIO_STATUS,
++					status & ~TMIO_SDIO_MASK_ALL);
++	}
+ 
+ 	if (mmc->caps & MMC_CAP_SDIO_IRQ && ireg & TMIO_SDIO_STAT_IOIRQ)
+ 		mmc_signal_sdio_irq(mmc);
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index 9cf576b..d4c3303 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -98,6 +98,9 @@
+ /* The start or stop of SD clock don't wait 10msec. */
+ #define TMIO_MMC_CLK_NO_SLEEP		(1 << 10)
+ 
++/* Add SDIO status reserved bits for SH Mobile series. */
++#define TMIO_MMC_SDIO_STATUS_QUIRK	(1 << 11)
++
+ int tmio_core_mmc_enable(void __iomem *cnf, int shift, unsigned long base);
+ int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
+ void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
+-- 
+1.7.10.4
+

@@ -1,7 +1,8 @@
 From 9fb57b40b125054876c377283a0d66174c11b39e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 19 Feb 2013 18:01:39 +0100
-Subject: drm/rcar-du: Use drm_encoder_cleanup() directly as .destroy handlers
+Subject: [PATCH 122/715] drm/rcar-du: Use drm_encoder_cleanup() directly as
+ .destroy handlers
 
 There's no need for a local static encoder .destroy handler that only
 calls drm_encoder_cleanup(), as the function prototypes are identical.
@@ -11,7 +12,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit bed71e68fe43a1367d356f27a248090ff3b486a8)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_lvds.c |    7 +------
  drivers/gpu/drm/rcar-du/rcar_du_vga.c  |    7 +------

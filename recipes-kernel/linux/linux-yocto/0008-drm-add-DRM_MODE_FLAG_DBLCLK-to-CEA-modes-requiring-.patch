@@ -1,7 +1,8 @@
 From a78bfa9fb9d4524b2eea4bedc26a6eb7d2dad565 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Fri, 13 Apr 2012 16:31:39 -0300
-Subject: drm: add DRM_MODE_FLAG_DBLCLK to CEA modes requiring it
+Subject: [PATCH 008/715] drm: add DRM_MODE_FLAG_DBLCLK to CEA modes requiring
+ it
 
 CEA modes 6, 7, 8, 9, 21, 22, 23, 24, 44, 45, 50, 51, 54, 55, 58 and 59
 require sending pixel data 2 times. This doesn't mean the modes will
@@ -13,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit a31546e25563b13f2a5d7216ec83da93ecf6d1ca)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid_modes.h |   38 ++++++++++++++++++++++----------------
  1 file changed, 22 insertions(+), 16 deletions(-)

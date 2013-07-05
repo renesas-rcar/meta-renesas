@@ -1,8 +1,8 @@
 From 14e3508aa6ac1be8b99f1a1a11aee6421a46c4a9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 01:54:26 +0100
-Subject: drm: GEM CMA: Split object creation into object alloc and DMA memory
- alloc
+Subject: [PATCH 119/715] drm: GEM CMA: Split object creation into object
+ alloc and DMA memory alloc
 
 This allows creating a GEM CMA object without an associated DMA memory
 buffer, and will be used to implement DRM PRIME support.
@@ -11,7 +11,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit a8d3127f5ed399cfaa11cab6b554d034afe66474)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_gem_cma_helper.c |   83 ++++++++++++++++++++--------------
  1 file changed, 48 insertions(+), 35 deletions(-)

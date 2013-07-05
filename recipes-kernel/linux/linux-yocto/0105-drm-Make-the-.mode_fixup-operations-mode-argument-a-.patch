@@ -1,7 +1,8 @@
 From 3c9c525226dcd22afc188f4015a59cec0d9237b2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Tue, 17 Jul 2012 17:56:50 +0200
-Subject: drm: Make the .mode_fixup() operations mode argument a const pointer
+Subject: [PATCH 105/715] drm: Make the .mode_fixup() operations mode argument
+ a const pointer
 
 The passed mode must not be modified by the operation, make it const.
 
@@ -17,7 +18,6 @@ Conflicts:
 	drivers/gpu/drm/mgag200/mgag200_mode.c
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/exynos/exynos_drm_crtc.c        |    2 +-
  drivers/gpu/drm/exynos/exynos_drm_drv.h         |    2 +-

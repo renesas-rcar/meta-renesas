@@ -1,7 +1,7 @@
 From eccf1d7ed4d5380c7a17ab4a199de78f55268a62 Mon Sep 17 00:00:00 2001
 From: Akinobu Mita <akinobu.mita@gmail.com>
 Date: Fri, 9 Nov 2012 12:10:42 +0000
-Subject: drm: use memchr_inv()
+Subject: [PATCH 093/715] drm: use memchr_inv()
 
 Use memchr_inv() to check the specified memory region is filled with zero.
 
@@ -12,7 +12,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 6311803b1294432ee680fec5e628efae0d485fa2)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |    7 ++-----
  1 file changed, 2 insertions(+), 5 deletions(-)

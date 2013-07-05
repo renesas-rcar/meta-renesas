@@ -1,0 +1,66 @@
+From ae8a763a0ef58b58a36fe3b0dc1fa4c3ba205375 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Fri, 14 Jun 2013 12:05:25 +0900
+Subject: [PATCH 510/715] mmc: tmio: Add CTL_CLK_AND_WAIT_CTL register access
+ pass option
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit 6de97b54c5a030c7d1b282e01066dbcd745dc9da)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c |    8 ++++++--
+ include/linux/mfd/tmio.h        |    3 +++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 0cf4a3a..d05482b 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -161,9 +161,11 @@ static void tmio_mmc_set_clock(struct tmio_mmc_host *host, int new_clock)
+ static void tmio_mmc_clk_stop(struct tmio_mmc_host *host)
+ {
+ 	struct resource *res = platform_get_resource(host->pdev, IORESOURCE_MEM, 0);
++	struct tmio_mmc_data *pdata = host->pdata;
+ 
+ 	/* implicit BUG_ON(!res) */
+-	if (resource_size(res) > 0x100) {
++	if (!(pdata->flags & TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL)
++		&& resource_size(res) > 0x100) {
+ 		sd_ctrl_write16(host, CTL_CLK_AND_WAIT_CTL, 0x0000);
+ 		msleep(10);
+ 	}
+@@ -176,13 +178,15 @@ static void tmio_mmc_clk_stop(struct tmio_mmc_host *host)
+ static void tmio_mmc_clk_start(struct tmio_mmc_host *host)
+ {
+ 	struct resource *res = platform_get_resource(host->pdev, IORESOURCE_MEM, 0);
++	struct tmio_mmc_data *pdata = host->pdata;
+ 
+ 	sd_ctrl_write16(host, CTL_SD_CARD_CLK_CTL, 0x0100 |
+ 		sd_ctrl_read16(host, CTL_SD_CARD_CLK_CTL));
+ 	msleep(10);
+ 
+ 	/* implicit BUG_ON(!res) */
+-	if (resource_size(res) > 0x100) {
++	if (!(pdata->flags & TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL)
++		&& resource_size(res) > 0x100) {
+ 		sd_ctrl_write16(host, CTL_CLK_AND_WAIT_CTL, 0x0100);
+ 		msleep(10);
+ 	}
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index c19c5fc..79d8a56 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -88,6 +88,9 @@
+ /* NO_CTL_RESET_SDIO register don't work. */
+ #define TMIO_MMC_NO_CTL_RESET_SDIO	(1 << 7)
+ 
++/* CTL_CLK_AND_WAIT_CTL register don't work. */
++#define TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL	(1 << 8)
++
+ int tmio_core_mmc_enable(void __iomem *cnf, int shift, unsigned long base);
+ int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
+ void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
+-- 
+1.7.10.4
+

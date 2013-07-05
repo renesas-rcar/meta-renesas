@@ -1,0 +1,50 @@
+From 0fcb2597b1cfad08f69bcaeb5e5e610c8439ac4b Mon Sep 17 00:00:00 2001
+From: Shawn Guo <shawn.guo@linaro.org>
+Date: Tue, 6 Nov 2012 03:48:40 +0100
+Subject: [PATCH 198/715] ARM: 7571/1: SMP: add function
+ arch_send_wakeup_ipi_mask()
+
+Add function arch_send_wakeup_ipi_mask(), so that platform code can
+use it as an easy way to wake up cores that are in WFI.
+
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit b62655f4c6f3e4d21934eee14ac2ac5cd479c97c)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/include/asm/smp.h |    1 +
+ arch/arm/kernel/smp.c      |    5 +++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/arch/arm/include/asm/smp.h b/arch/arm/include/asm/smp.h
+index f79a9f5..57ed1da 100644
+--- a/arch/arm/include/asm/smp.h
++++ b/arch/arm/include/asm/smp.h
+@@ -92,6 +92,7 @@ extern void platform_cpu_enable(unsigned int cpu);
+ 
+ extern void arch_send_call_function_single_ipi(int cpu);
+ extern void arch_send_call_function_ipi_mask(const struct cpumask *mask);
++extern void arch_send_wakeup_ipi_mask(const struct cpumask *mask);
+ 
+ struct smp_operations {
+ #ifdef CONFIG_SMP
+diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
+index ece680b..fa6ab83 100644
+--- a/arch/arm/kernel/smp.c
++++ b/arch/arm/kernel/smp.c
+@@ -441,6 +441,11 @@ void arch_send_call_function_ipi_mask(const struct cpumask *mask)
+ 	smp_cross_call(mask, IPI_CALL_FUNC);
+ }
+ 
++void arch_send_wakeup_ipi_mask(const struct cpumask *mask)
++{
++	smp_cross_call(mask, IPI_WAKEUP);
++}
++
+ void arch_send_call_function_single_ipi(int cpu)
+ {
+ 	smp_cross_call(cpumask_of(cpu), IPI_CALL_FUNC_SINGLE);
+-- 
+1.7.10.4
+

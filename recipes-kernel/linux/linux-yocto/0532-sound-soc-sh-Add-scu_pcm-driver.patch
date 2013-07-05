@@ -1,0 +1,4618 @@
+From 1a02d9a898d829850d0a02d37d22d6b22ae6d7c9 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Thu, 13 Jun 2013 14:33:32 +0900
+Subject: [PATCH 532/715] sound: soc: sh: Add scu_pcm driver
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit 6b6ab4912be63a90a37c9ba44ac7a9f6c1fb5b13)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/sound/sh_scu.h | 2086 ++++++++++++++++++++++++++++++++++++++++++++++++
+ sound/soc/sh/Kconfig   |   32 +
+ sound/soc/sh/Makefile  |    4 +
+ sound/soc/sh/lager.c   |  682 ++++++++++++++++
+ sound/soc/sh/scu_dai.c |  984 +++++++++++++++++++++++
+ sound/soc/sh/scu_pcm.c |  746 +++++++++++++++++
+ 6 files changed, 4534 insertions(+)
+ create mode 100644 include/sound/sh_scu.h
+ create mode 100644 sound/soc/sh/lager.c
+ create mode 100644 sound/soc/sh/scu_dai.c
+ create mode 100644 sound/soc/sh/scu_pcm.c
+
+diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
+new file mode 100644
+index 0000000..9e6ae85
+--- /dev/null
++++ b/include/sound/sh_scu.h
+@@ -0,0 +1,2086 @@
++/*
++ * include/sound/sh_scu.h
++ *     This file is header file for SCU peripheral.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#ifndef SH_SCU_H
++#define SH_SCU_H
++
++#include <linux/sh_dma-desc.h>
++#include <mach/r8a7790.h>
++
++/************************************************************************
++
++	define
++
++************************************************************************/
++/*
++ *	ALSA
++ */
++/* buffer information */
++#define SCU_PERIOD_BYTES_MIN	(16 * 1024)
++#define SCU_PERIOD_BYTES_MAX	(16 * 1024)
++#define SCU_PERIODS_MIN		4
++#define SCU_PERIODS_MAX		4
++#define SCU_BUFFER_BYTES_MAX	(SCU_PERIOD_BYTES_MAX * SCU_PERIODS_MAX)
++
++/* scu dapm route information */
++/* playback route */
++#define	W_SSI0			0x00000001
++#define	W_SRC0			0x00000002
++#define	W_DVC0			0x00000004
++#define RP_MEM_SSI0		W_SSI0
++#define RP_MEM_SRC0_SSI0	(W_SSI0 | W_SRC0)
++#define RP_MEM_SRC0_DVC0_SSI0	(W_SSI0 | W_SRC0 | W_DVC0)
++/* capture route */
++#define	W_SSI1			0x00000001
++#define	W_SRC1			0x00000002
++#define	W_DVC1			0x00000004
++#define RC_SSI1_MEM		W_SSI1
++#define RC_SSI1_SRC1_MEM	(W_SSI1 | W_SRC1)
++#define RC_SSI1_SRC1_DVC1_MEM	(W_SSI1 | W_SRC1 | W_DVC1)
++
++/* dma direction */
++#define	DMA_DIR(d)	((d == 0) ? DMA_TO_DEVICE : DMA_FROM_DEVICE)
++
++/* IP channel */
++#define	MAXCH_SRC	10
++#define	MAXCH_CTU	8
++#define	MAXCH_CMD	2
++#define	MAXCH_SSI	10
++#define	MAXCH_SSIDATA	22	/* SSI0,1,2,9=4ch, SSI3-8=1ch */
++
++/*
++ *	SCU
++ */
++/* register offset */
++#define	SRC0IN_BUSIF_MODE	0x0000
++#define	SRC0OUT_BUSIF_MODE	0x0004
++#define	SRC0_BUSIF_DALIGN	0x0008
++#define	SRC0_MODE		0x000c
++#define	SRC0_CONTROL		0x0010
++#define	SRC0_STATUS		0x0014
++#define	SRC0_INT_ENABLE0	0x0018
++#define	SRC1IN_BUSIF_MODE	0x0020
++#define	SRC1OUT_BUSIF_MODE	0x0024
++#define	SRC1_BUSIF_DALIGN	0x0028
++#define	SRC1_MODE		0x002c
++#define	SRC1_CONTROL		0x0030
++#define	SRC1_STATUS		0x0034
++#define	SRC1_INT_ENABLE0	0x0038
++#define	SRC2IN_BUSIF_MODE	0x0040
++#define	SRC2OUT_BUSIF_MODE	0x0044
++#define	SRC2_BUSIF_DALIGN	0x0048
++#define	SRC2_MODE		0x004c
++#define	SRC2_CONTROL		0x0050
++#define	SRC2_STATUS		0x0054
++#define	SRC2_INT_ENABLE0	0x0058
++#define	SRC3IN_BUSIF_MODE	0x0060
++#define	SRC3OUT_BUSIF_MODE	0x0064
++#define	SRC3_BUSIF_DALIGN	0x0068
++#define	SRC3_MODE		0x006c
++#define	SRC3_CONTROL		0x0070
++#define	SRC3_STATUS		0x0074
++#define	SRC3_INT_ENABLE0	0x0078
++#define	SRC4IN_BUSIF_MODE	0x0080
++#define	SRC4OUT_BUSIF_MODE	0x0084
++#define	SRC4_BUSIF_DALIGN	0x0088
++#define	SRC4_MODE		0x008c
++#define	SRC4_CONTROL		0x0090
++#define	SRC4_STATUS		0x0094
++#define	SRC4_INT_ENABLE0	0x0098
++#define	SRC5IN_BUSIF_MODE	0x00a0
++#define	SRC5OUT_BUSIF_MODE	0x00a4
++#define	SRC5_BUSIF_DALIGN	0x00a8
++#define	SRC5_MODE		0x00ac
++#define	SRC5_CONTROL		0x00b0
++#define	SRC5_STATUS		0x00b4
++#define	SRC5_INT_ENABLE0	0x00b8
++#define	SRC6IN_BUSIF_MODE	0x00c0
++#define	SRC6OUT_BUSIF_MODE	0x00c4
++#define	SRC6_BUSIF_DALIGN	0x00c8
++#define	SRC6_MODE		0x00cc
++#define	SRC6_CONTROL		0x00d0
++#define	SRC6_STATUS		0x00d4
++#define	SRC6_INT_ENABLE0	0x00d8
++#define	SRC7IN_BUSIF_MODE	0x00e0
++#define	SRC7OUT_BUSIF_MODE	0x00e4
++#define	SRC7_BUSIF_DALIGN	0x00e8
++#define	SRC7_MODE		0x00ec
++#define	SRC7_CONTROL		0x00f0
++#define	SRC7_STATUS		0x00f4
++#define	SRC7_INT_ENABLE0	0x00f8
++#define	SRC8IN_BUSIF_MODE	0x0100
++#define	SRC8OUT_BUSIF_MODE	0x0104
++#define	SRC8_BUSIF_DALIGN	0x0108
++#define	SRC8_MODE		0x010c
++#define	SRC8_CONTROL		0x0110
++#define	SRC8_STATUS		0x0114
++#define	SRC8_INT_ENABLE0	0x0118
++#define	SRC9IN_BUSIF_MODE	0x0120
++#define	SRC9OUT_BUSIF_MODE	0x0124
++#define	SRC9_BUSIF_DALIGN	0x0128
++#define	SRC9_MODE		0x012c
++#define	SRC9_CONTROL		0x0130
++#define	SRC9_STATUS		0x0134
++#define	SRC9_INT_ENABLE0	0x0138
++#define	CMD0OUT_BUSIF_MODE	0x0184
++#define	CMD0_BUSIF_DALIGN	0x0188
++#define	CMD0_MODE		0x018c
++#define	CMD0_CONTROL		0x0190
++#define	CMD1OUT_BUSIF_MODE	0x01a4
++#define	CMD1_BUSIF_DALIGN	0x01a8
++#define	CMD1_MODE		0x01ac
++#define	CMD1_CONTROL		0x01b0
++#define	SCU_SYSTEM_STATUS0	0x01c8
++#define	SCU_SYSTEM_INT_ENABLE0	0x01cc
++
++/* SRC input/output */
++#define	SRC_INOUT		0
++#define	SRC_IN			1
++#define	SRC_OUT			2
++
++/* SRC_MODE */
++#define	SRC_MODE_UF_DATA_0	(1<<16)
++#define	SRC_MODE_SRCUSE		(1<<0)
++
++/* SRC_CONTROL */
++#define	SRC_MODE_START_OUT	(1<<4)
++#define	SRC_MODE_START_IN	(1<<0)
++
++/*
++ *	SRC
++ */
++/* SRC_ADINR */
++#define	SRCADIN_OTBL_24BIT	(0<<16)
++#define	SRCADIN_OTBL_22BIT	(2<<16)
++#define	SRCADIN_OTBL_20BIT	(4<<16)
++#define	SRCADIN_OTBL_18BIT	(6<<16)
++#define	SRCADIN_OTBL_16BIT	(8<<16)
++#define	SRCADIN_OTBL_8BIT	(16<<16)
++#define	SRCADIN_CHNUM_0		(0<<0)
++#define	SRCADIN_CHNUM_1		(1<<0)
++#define	SRCADIN_CHNUM_2		(2<<0)
++#define	SRCADIN_CHNUM_4		(4<<0)
++#define	SRCADIN_CHNUM_6		(6<<0)
++#define	SRCADIN_CHNUM_8		(8<<0)
++
++/* SRC_IFSVR */
++#define	SRC_IFS_FSO	0x00400000ULL	/* 2^22 */
++#define	SRC_IFS_44KHZ	44100ULL
++#define	SRC_IFS_48KHZ	48000ULL
++
++/*
++ *	SSIU
++ */
++/* register offset */
++#define	SSI0_0_BUSIF_MODE	0x0000
++#define	SSI0_0_BUSIF_ADINR	0x0004
++#define	SSI0_0_BUSIF_DALIGN	0x0008
++#define	SSI0_0_MODE		0x000c
++#define	SSI0_0_CONTROL		0x0010
++#define	SSI0_0_STATUS		0x0014
++#define	SSI0_0_INT_ENABLE_MAIN	0x0018
++#define	SSI0_1_BUSIF_MODE	0x0020
++#define	SSI0_1_BUSIF_ADINR	0x0024
++#define	SSI0_1_BUSIF_DALIGN	0x0028
++#define	SSI0_2_BUSIF_MODE	0x0040
++#define	SSI0_2_BUSIF_ADINR	0x0044
++#define	SSI0_2_BUSIF_DALIGN	0x0048
++#define	SSI0_3_BUSIF_MODE	0x0060
++#define	SSI0_3_BUSIF_ADINR	0x0064
++#define	SSI0_3_BUSIF_DALIGN	0x0068
++#define	SSI1_0_BUSIF_MODE	0x0080
++#define	SSI1_0_BUSIF_ADINR	0x0084
++#define	SSI1_0_BUSIF_DALIGN	0x0088
++#define	SSI1_0_MODE		0x008c
++#define	SSI1_0_CONTROL		0x0090
++#define	SSI1_0_STATUS		0x0094
++#define	SSI1_0_INT_ENABLE_MAIN	0x0098
++#define	SSI1_1_BUSIF_MODE	0x00a0
++#define	SSI1_1_BUSIF_ADINR	0x00a4
++#define	SSI1_1_BUSIF_DALIGN	0x00a8
++#define	SSI1_2_BUSIF_MODE	0x00c0
++#define	SSI1_2_BUSIF_ADINR	0x00c4
++#define	SSI1_2_BUSIF_DALIGN	0x00c8
++#define	SSI1_3_BUSIF_MODE	0x00e0
++#define	SSI1_3_BUSIF_ADINR	0x00e4
++#define	SSI1_3_BUSIF_DALIGN	0x00e8
++#define	SSI2_0_BUSIF_MODE	0x0100
++#define	SSI2_0_BUSIF_ADINR	0x0104
++#define	SSI2_0_BUSIF_DALIGN	0x0108
++#define	SSI2_0_MODE		0x010c
++#define	SSI2_0_CONTROL		0x0110
++#define	SSI2_0_STATUS		0x0114
++#define	SSI2_0_INT_ENABLE_MAIN	0x0118
++#define	SSI2_1_BUSIF_MODE	0x0120
++#define	SSI2_1_BUSIF_ADINR	0x0124
++#define	SSI2_1_BUSIF_DALIGN	0x0128
++#define	SSI2_2_BUSIF_MODE	0x0140
++#define	SSI2_2_BUSIF_ADINR	0x0144
++#define	SSI2_2_BUSIF_DALIGN	0x0148
++#define	SSI2_3_BUSIF_MODE	0x0160
++#define	SSI2_3_BUSIF_ADINR	0x0164
++#define	SSI2_3_BUSIF_DALIGN	0x0168
++#define	SSI3_BUSIF_MODE		0x0180
++#define	SSI3_BUSIF_ADINR	0x0184
++#define	SSI3_BUSIF_DALIGN	0x0188
++#define	SSI3_MODE		0x018c
++#define	SSI3_CONTROL		0x0190
++#define	SSI3_STATUS		0x0194
++#define	SSI3_INT_ENABLE_MAIN	0x0198
++#define	SSI4_BUSIF_MODE		0x0200
++#define	SSI4_BUSIF_ADINR	0x0204
++#define	SSI4_BUSIF_DALIGN	0x0208
++#define	SSI4_MODE		0x020c
++#define	SSI4_CONTROL		0x0210
++#define	SSI4_STATUS		0x0214
++#define	SSI4_INT_ENABLE_MAIN	0x0218
++#define	SSI5_BUSIF_MODE		0x0280
++#define	SSI5_BUSIF_ADINR	0x0284
++#define	SSI5_BUSIF_DALIGN	0x0288
++#define	SSI5_MODE		0x028c
++#define	SSI5_CONTROL		0x0290
++#define	SSI5_STATUS		0x0294
++#define	SSI5_INT_ENABLE_MAIN	0x0298
++#define	SSI6_BUSIF_MODE		0x0300
++#define	SSI6_BUSIF_ADINR	0x0304
++#define	SSI6_BUSIF_DALIGN	0x0308
++#define	SSI6_MODE		0x030c
++#define	SSI6_CONTROL		0x0310
++#define	SSI6_STATUS		0x0314
++#define	SSI6_INT_ENABLE_MAIN	0x0318
++#define	SSI7_BUSIF_MODE		0x0380
++#define	SSI7_BUSIF_ADINR	0x0384
++#define	SSI7_BUSIF_DALIGN	0x0388
++#define	SSI7_MODE		0x038c
++#define	SSI7_CONTROL		0x0390
++#define	SSI7_STATUS		0x0394
++#define	SSI7_INT_ENABLE_MAIN	0x0398
++#define	SSI8_BUSIF_MODE		0x0400
++#define	SSI8_BUSIF_ADINR	0x0404
++#define	SSI8_BUSIF_DALIGN	0x0408
++#define	SSI8_MODE		0x040c
++#define	SSI8_CONTROL		0x0410
++#define	SSI8_STATUS		0x0414
++#define	SSI8_INT_ENABLE_MAIN	0x0418
++#define	SSI9_0_BUSIF_MODE	0x0480
++#define	SSI9_0_BUSIF_ADINR	0x0484
++#define	SSI9_0_BUSIF_DALIGN	0x0488
++#define	SSI9_0_MODE		0x048c
++#define	SSI9_0_CONTROL		0x0490
++#define	SSI9_0_STATUS		0x0494
++#define	SSI9_0_INT_ENABLE_MAIN	0x0498
++#define	SSI9_1_BUSIF_MODE	0x04a0
++#define	SSI9_1_BUSIF_ADINR	0x04a4
++#define	SSI9_1_BUSIF_DALIGN	0x04a8
++#define	SSI9_2_BUSIF_MODE	0x04c0
++#define	SSI9_2_BUSIF_ADINR	0x04c4
++#define	SSI9_2_BUSIF_DALIGN	0x04c8
++#define	SSI9_3_BUSIF_MODE	0x04e0
++#define	SSI9_3_BUSIF_ADINR	0x04e4
++#define	SSI9_3_BUSIF_DALIGN	0x04e8
++#define	SSI_MODE0		0x0800
++#define	SSI_MODE1		0x0804
++#define	SSI_MODE2		0x0808
++#define	SSI_MODE3		0x080c
++#define	SSI_CONTROL		0x0810
++#define	SSI_SYSTEM_STATUS0	0x0840
++#define	SSI_SYSTEM_STATUS1	0x0844
++#define	SSI_SYSTEM_STATUS2	0x0848
++#define	SSI_SYSTEM_STATUS3	0x084c
++#define	SSI_SYSTEM_INT_ENABLE0	0x0850
++#define	SSI_SYSTEM_INT_ENABLE1	0x0854
++#define	SSI_SYSTEM_INT_ENABLE2	0x0858
++#define	SSI_SYSTEM_INT_ENABLE3	0x085c
++
++/* SSI_BUSIF_ADINR bit */
++#define	SSI_ADINR_OTBL_24BIT	(0<<16)
++#define	SSI_ADINR_OTBL_22BIT	(2<<16)
++#define	SSI_ADINR_OTBL_20BIT	(4<<16)
++#define	SSI_ADINR_OTBL_18BIT	(6<<16)
++#define	SSI_ADINR_OTBL_16BIT	(8<<16)
++#define	SSI_ADINR_OTBL_8BIT	(16<<16)
++#define	SSI_ADINR_CHNUM_1CH	(1<<0)
++#define	SSI_ADINR_CHNUM_2CH	(2<<0)
++#define	SSI_ADINR_CHNUM_4CH	(4<<0)
++#define	SSI_ADINR_CHNUM_6CH	(6<<0)
++#define	SSI_ADINR_CHNUM_8CH	(8<<0)
++
++/* SSI_CONTROL */
++#define	SSI_CTRL_4CH_START3	(1<<12)
++#define	SSI_CTRL_4CH_START2	(1<<8)
++#define	SSI_CTRL_4CH_START1	(1<<4)
++#define	SSI_CTRL_4CH_START0	(1<<0)
++#define	SSI_CTRL_1CH_START	(1<<0)
++
++/* SSI_MODE0 bit */
++#define	SSI_MODE0_SWAP9	(1<<25)
++#define	SSI_MODE0_SWAP8	(1<<24)
++#define	SSI_MODE0_SWAP7	(1<<23)
++#define	SSI_MODE0_SWAP6	(1<<22)
++#define	SSI_MODE0_SWAP5	(1<<21)
++#define	SSI_MODE0_SWAP4	(1<<20)
++#define	SSI_MODE0_SWAP3	(1<<19)
++#define	SSI_MODE0_SWAP2	(1<<18)
++#define	SSI_MODE0_SWAP1	(1<<17)
++#define	SSI_MODE0_SWAP0	(1<<16)
++#define	SSI_MODE0_IND9	(1<<9)
++#define	SSI_MODE0_IND8	(1<<8)
++#define	SSI_MODE0_IND7	(1<<7)
++#define	SSI_MODE0_IND6	(1<<6)
++#define	SSI_MODE0_IND5	(1<<5)
++#define	SSI_MODE0_IND4	(1<<4)
++#define	SSI_MODE0_IND3	(1<<3)
++#define	SSI_MODE0_IND2	(1<<2)
++#define	SSI_MODE0_IND1	(1<<1)
++#define	SSI_MODE0_IND0	(1<<0)
++
++/* SSI_MODE1 bit */
++#define	SSI_MODE1_SSI34_SYNC	(1<<20)
++#define	SSI_MODE1_SSI4_IND	(0<<16)	/* SSI4 independent        */
++#define	SSI_MODE1_SSI4_SLAVE	(1<<16)	/* SSI4 slave, SSI3 slave  */
++#define	SSI_MODE1_SSI4_MASTER	(2<<16)	/* SSI4 slave, SSI3 master */
++#define	SSI_MODE1_SSI012_3MOD	(1<<4)
++#define	SSI_MODE1_SSI2_IND	(0<<2)	/* SSI2 independent        */
++#define	SSI_MODE1_SSI2_SLAVE	(1<<2)	/* SSI2 slave, SSI0 slave  */
++#define	SSI_MODE1_SSI2_MASTER	(2<<2)	/* SSI2 slave, SSI0 master */
++#define	SSI_MODE1_SSI1_IND	(0<<0)	/* SSI1 independent        */
++#define	SSI_MODE1_SSI1_SLAVE	(1<<0)	/* SSI1 slave, SSI0 slave  */
++#define	SSI_MODE1_SSI1_MASTER	(2<<0)	/* SSI1 slave, SSI0 master */
++
++/* SSI_MODE2 bit */
++#define	SSI_MODE2_SSI0129_4MOD	(1<<4)
++#define	SSI_MODE2_SSI9_IND	(0<<0)	/* SSI9 independent        */
++#define	SSI_MODE2_SSI9_SLAVE0	(1<<0)	/* SSI9 slave, SSI0 slave  */
++#define	SSI_MODE2_SSI9_MASTER0	(2<<0)	/* SSI9 slave, SSI0 master */
++#define	SSI_MODE2_SSI9_SLAVE3	(5<<0)	/* SSI9 slave, SSI3 slave  */
++#define	SSI_MODE2_SSI9_MASTER3	(6<<0)	/* SSI9 slave, SSI3 master */
++
++/* SSI_MODE3 bit */
++#define	SSI_MODE3_SSI3_IND	(0<<0)	/* SSI9 independent        */
++#define	SSI_MODE3_SSI3_SLAVE	(1<<0)	/* SSI9 slave, SSI0 slave  */
++#define	SSI_MODE3_SSI3_MASTER	(2<<0)	/* SSI9 slave, SSI0 master */
++
++/*
++ *	SSI
++ */
++/* SSICRn bit */
++#define	SSICR_EN	(1<<0)
++#define	SSICR_TRMD_RX	(0<<1)
++#define	SSICR_TRMD_TX	(1<<1)
++#define	SSICR_CPEN	(1<<2)
++#define	SSICR_MUEN	(1<<3)
++#define	SSICR_CKDV_1	(0<<4)
++#define	SSICR_CKDV_2	(1<<4)
++#define	SSICR_CKDV_4	(2<<4)
++#define	SSICR_CKDV_8	(3<<4)
++#define	SSICR_CKDV_16	(4<<4)
++#define	SSICR_CKDV_6	(5<<4)
++#define	SSICR_CKDV_12	(6<<4)
++#define	SSICR_BREN	(1<<7)
++#define	SSICR_DEL	(1<<8)
++#define	SSICR_PDTA	(1<<9)
++#define	SSICR_SDTA	(1<<10)
++#define	SSICR_SPDP	(1<<11)
++#define	SSICR_SWSP	(1<<12)
++#define	SSICR_SCKP	(1<<13)
++#define	SSICR_M_SLAVE	(0<<14)
++#define	SSICR_M_MASTER	(3<<14)
++#define	SSICR_SWSD	(1<<14)
++#define	SSICR_SCKD	(1<<15)
++#define	SSICR_SWL_ST8	(0<<16)
++#define	SSICR_SWL_ST16	(1<<16)
++#define	SSICR_SWL_ST24	(2<<16)
++#define	SSICR_SWL_ST32	(3<<16)
++#define	SSICR_SWL_ST48	(4<<16)
++#define	SSICR_SWL_ST64	(5<<16)
++#define	SSICR_SWL_ST128	(6<<16)
++#define	SSICR_SWL_ST256	(7<<16)
++#define	SSICR_SWL_MN16	(0<<16)
++#define	SSICR_SWL_MN32	(1<<16)
++#define	SSICR_SWL_MN48	(2<<16)
++#define	SSICR_SWL_MN64	(3<<16)
++#define	SSICR_SWL_MN96	(4<<16)
++#define	SSICR_SWL_MN128	(5<<16)
++#define	SSICR_SWL_MN256	(6<<16)
++#define	SSICR_SWL_MN512	(7<<16)
++#define	SSICR_DWL_ST8	(0<<19)
++#define	SSICR_DWL_ST16	(1<<19)
++#define	SSICR_DWL_ST18	(2<<19)
++#define	SSICR_DWL_ST20	(3<<19)
++#define	SSICR_DWL_ST22	(4<<19)
++#define	SSICR_DWL_ST24	(5<<19)
++#define	SSICR_DWL_ST32	(6<<19)
++#define	SSICR_DWL_MN8	(0<<19)
++#define	SSICR_DWL_MN16	(1<<19)
++#define	SSICR_CHNL_ST1	(0<<22)
++#define	SSICR_CHNL_ST2	(1<<22)
++#define	SSICR_CHNL_ST3	(2<<22)
++#define	SSICR_CHNL_ST4	(3<<22)
++#define	SSICR_CHNL_MN	(0<<22)
++#define	SSICR_DIEN	(1<<24)
++#define	SSICR_IIEN	(1<<25)
++#define	SSICR_OIEN	(1<<26)
++#define	SSICR_UIEN	(1<<27)
++#define	SSICR_DMEN	(1<<28)
++#define	SSICR_FORCE	(1<<31)
++
++/*
++ * SSICR setting for AK4643
++ *   playback, master, 16bit, stereo
++ *   SCLK=256fs(MCLK)/8=32fs
++ */
++#define	SSICR_P4643_ST	(SSICR_FORCE    | \
++			 SSICR_CHNL_ST1 | \
++			 SSICR_DWL_ST16 | \
++			 SSICR_SWL_ST16 | \
++			 SSICR_M_MASTER | \
++			 SSICR_CKDV_8   | \
++			 SSICR_TRMD_TX)
++
++/*
++ * SSICR setting for AK4643
++ *   capture, slave, 16bit, stereo
++ *   SCLK=256fs(MCLK)/8=32fs
++ */
++#define	SSICR_C4643_ST	(SSICR_FORCE    | \
++			 SSICR_CHNL_ST1 | \
++			 SSICR_DWL_ST16 | \
++			 SSICR_SWL_ST16 | \
++			 SSICR_M_SLAVE  | \
++			 SSICR_TRMD_RX)
++
++/* for SSI start */
++#define	SSICR_ENABLE	(SSICR_EN	| \
++			 SSICR_OIEN	| \
++			 SSICR_UIEN	| \
++			 SSICR_DMEN)
++
++/* SSISRn bit */
++#define	SSISR_IDST	(1<<0)
++#define	SSISR_SWNO	(1<<1)
++#define	SSISR_CHNO0	(1<<2)
++#define	SSISR_CHNO1	(1<<3)
++#define	SSISR_DIRQ	(1<<24)
++#define	SSISR_IIRQ	(1<<25)
++#define	SSISR_OIRQ	(1<<26)
++#define	SSISR_UIRQ	(1<<27)
++#define	SSISR_DMRQ	(1<<28)
++
++/* SSIWSRn bit */
++#define	SSIWSR_MODE_ST	(0<<0)
++#define	SSIWSR_MODE_MN	(1<<0)
++#define	SSIWSR_MONO	(1<<1)
++#define	SSIWSR_CONT	(1<<8)
++#define	SSIWSR_WIDTH_1	(1<<16)
++#define	SSIWSR_WIDTH_2	(2<<16)
++#define	SSIWSR_WIDTH_3	(3<<16)
++#define	SSIWSR_WIDTH_4	(4<<16)
++#define	SSIWSR_WIDTH_5	(5<<16)
++#define	SSIWSR_WIDTH_6	(6<<16)
++#define	SSIWSR_WIDTH_7	(7<<16)
++#define	SSIWSR_WIDTH_8	(8<<16)
++#define	SSIWSR_WIDTH_9	(9<<16)
++#define	SSIWSR_WIDTH_10	(10<<16)
++#define	SSIWSR_WIDTH_11	(11<<16)
++#define	SSIWSR_WIDTH_12	(12<<16)
++#define	SSIWSR_WIDTH_13	(13<<16)
++#define	SSIWSR_WIDTH_14	(14<<16)
++#define	SSIWSR_WIDTH_15	(15<<16)
++#define	SSIWSR_WIDTH_16	(16<<16)
++#define	SSIWSR_WIDTH_17	(17<<16)
++#define	SSIWSR_WIDTH_18	(18<<16)
++#define	SSIWSR_WIDTH_19	(19<<16)
++#define	SSIWSR_WIDTH_20	(20<<16)
++#define	SSIWSR_WIDTH_21	(21<<16)
++#define	SSIWSR_WIDTH_22	(22<<16)
++#define	SSIWSR_WIDTH_23	(23<<16)
++#define	SSIWSR_WIDTH_24	(24<<16)
++#define	SSIWSR_WIDTH_25	(25<<16)
++#define	SSIWSR_WIDTH_26	(26<<16)
++#define	SSIWSR_WIDTH_27	(27<<16)
++#define	SSIWSR_WIDTH_28	(28<<16)
++#define	SSIWSR_WIDTH_29	(29<<16)
++#define	SSIWSR_WIDTH_30	(30<<16)
++#define	SSIWSR_WIDTH_31	(31<<16)
++
++/*
++ * SSIWS setting
++ *   playback(master) only, 16bit, stereo
++ */
++#define	SSIWS_ST	SSIWSR_CONT
++
++/*
++ *	ADG information
++ */
++/* ADG register address */
++#define	ADG_BRRA		0x0000	/* BRGA baud rate set              */
++#define	ADG_BRRB		0x0004	/* BRGB baud rate set              */
++#define	ADG_SSICKR		0x0008	/* clock select                    */
++#define	ADG_AUDIO_CLK_SEL0	0x000c	/* AUDIO CLOCK select 0            */
++#define	ADG_AUDIO_CLK_SEL1	0x0010	/* AUDIO CLOCK select 1            */
++#define	ADG_AUDIO_CLK_SEL2	0x0014	/* AUDIO CLOCK select 2            */
++#define	ADG_DIV_EN		0x0030	/* clock frequency division enable */
++#define	ADG_SRCIN_TIMSEL0	0x0034	/* SRC input timing select 0       */
++#define	ADG_SRCIN_TIMSEL1	0x0038	/* SRC input timing select 1       */
++#define	ADG_SRCIN_TIMSEL2	0x003c	/* SRC input timing select 2       */
++#define	ADG_SRCIN_TIMSEL3	0x0040	/* SRC input timing select 3       */
++#define	ADG_SRCIN_TIMSEL4	0x0044	/* SRC input timing select 4       */
++#define	ADG_SRCOUT_TIMSEL0	0x0048	/* SRC output timing select 0      */
++#define	ADG_SRCOUT_TIMSEL1	0x004c	/* SRC output timing select 1      */
++#define	ADG_SRCOUT_TIMSEL2	0x0050	/* SRC output timing select 2      */
++#define	ADG_SRCOUT_TIMSEL3	0x0054	/* SRC output timing select 3      */
++#define	ADG_SRCOUT_TIMSEL4	0x0058	/* SRC output timing select 4      */
++#define	ADG_CMDOUT_TIMSEL	0x005c	/* CMD output timing select        */
++#define	ADG_ADSPOUT_TIMSEL	0x0060	/* ADSP output timing select       */
++#define	ADG_DTCP_TIMSEL		0x0064	/* DTCP timing select              */
++
++/* ADG BRRA bit */
++#define	ADG_BRRA_CKS_ACLKA		(0<<8)
++#define	ADG_BRRA_CKS_ACLKA_DIV4		(1<<8)
++#define	ADG_BRRA_CKS_ACLKA_DIV16	(2<<8)
++#define	ADG_BRRA_CKS_ACLKA_DIV64	(3<<8)
++
++/* ADG BRRB bit */
++#define	ADG_BRRB_CKS_ACLKB		(0<<8)
++#define	ADG_BRRB_CKS_ACLKB_DIV4		(1<<8)
++#define	ADG_BRRB_CKS_ACLKB_DIV16	(2<<8)
++#define	ADG_BRRB_CKS_ACLKB_DIV64	(3<<8)
++
++/* ADG SSICKR bit */
++#define	ADG_SSICK_CLKOUT_BRGA		(0<<31)
++#define	ADG_SSICK_CLKOUT_BRGB		(1<<31)
++#define	ADG_SSICK_BRGA_AUDIO_CLKA	(0<<20)
++#define	ADG_SSICK_BRGA_AUDIO_CLKB	(1<<20)
++#define	ADG_SSICK_BRGA_XM2CK		(2<<20)
++#define	ADG_SSICK_BRGA_AUDIO_CLKC	(4<<20)
++#define	ADG_SSICK_BRGB_AUDIO_CLKA	(0<<16)
++#define	ADG_SSICK_BRGB_AUDIO_CLKB	(1<<16)
++#define	ADG_SSICK_BRGB_XM2CK		(2<<16)
++#define	ADG_SSICK_BRGB_AUDIO_CLKC	(4<<16)
++
++/* ADG AUDIO_CLK_SEL0 bit */
++#define	ADG_SEL0_SSI3_DIV1		(0<<27)		/* bit27,30,31 */
++#define	ADG_SEL0_SSI3_DIV2		(1<<27)		/* bit27,30,31 */
++#define	ADG_SEL0_SSI3_DIV4		(8<<27)		/* bit27,30,31 */
++#define	ADG_SEL0_SSI3_DIV8		(9<<27)		/* bit27,30,31 */
++#define	ADG_SEL0_SSI3_DIV16		(16<<27)	/* bit27,30,31 */
++#define	ADG_SEL0_SSI3_DIV32		(17<<27)	/* bit27,30,31 */
++#define	ADG_SEL0_SSI3_DIV_MASK		(25<<27)	/* bit27,30,31 */
++#define	ADG_SEL0_SSI3_ACLK_DIV		(0<<28)
++#define	ADG_SEL0_SSI3_ACLK_BRGA		(1<<28)
++#define	ADG_SEL0_SSI3_ACLK_BRGB		(2<<28)
++#define	ADG_SEL0_SSI3_DIVCLK_FIX	(0<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_CLKA	(1<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_CLKB	(2<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_CLKC	(3<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_MLPCLK	(4<<24)
++#define	ADG_SEL0_SSI2_DIV1		(0<<19)		/* bit19,22,23 */
++#define	ADG_SEL0_SSI2_DIV2		(1<<19)		/* bit19,22,23 */
++#define	ADG_SEL0_SSI2_DIV4		(8<<19)		/* bit19,22,23 */
++#define	ADG_SEL0_SSI2_DIV8		(9<<19)		/* bit19,22,23 */
++#define	ADG_SEL0_SSI2_DIV16		(16<<19)	/* bit19,22,23 */
++#define	ADG_SEL0_SSI2_DIV32		(17<<19)	/* bit19,22,23 */
++#define	ADG_SEL0_SSI2_DIV_MASK		(25<<19)	/* bit19,22,23 */
++#define	ADG_SEL0_SSI2_ACLK_DIV		(0<<20)
++#define	ADG_SEL0_SSI2_ACLK_BRGA		(1<<20)
++#define	ADG_SEL0_SSI2_ACLK_BRGB		(2<<20)
++#define	ADG_SEL0_SSI2_DIVCLK_FIX	(0<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_CLKA	(1<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_CLKB	(2<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_CLKC	(3<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_MLPCLK	(4<<16)
++#define	ADG_SEL0_SSI1_DIV1		(0<<11)		/* bit11,14,15 */
++#define	ADG_SEL0_SSI1_DIV2		(1<<11)		/* bit11,14,15 */
++#define	ADG_SEL0_SSI1_DIV4		(8<<11)		/* bit11,14,15 */
++#define	ADG_SEL0_SSI1_DIV8		(9<<11)		/* bit11,14,15 */
++#define	ADG_SEL0_SSI1_DIV16		(16<<11)	/* bit11,14,15 */
++#define	ADG_SEL0_SSI1_DIV32		(17<<11)	/* bit11,14,15 */
++#define	ADG_SEL0_SSI1_DIV_MASK		(25<<11)	/* bit11,14,15 */
++#define	ADG_SEL0_SSI1_ACLK_DIV		(0<<12)
++#define	ADG_SEL0_SSI1_ACLK_BRGA		(1<<12)
++#define	ADG_SEL0_SSI1_ACLK_BRGB		(2<<12)
++#define	ADG_SEL0_SSI1_DIVCLK_FIX	(0<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_CLKA	(1<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_CLKB	(2<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_CLKC	(3<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_MLPCLK	(4<<8)
++#define	ADG_SEL0_SSI0_DIV1		(0<<3)		/* bit3,6,7 */
++#define	ADG_SEL0_SSI0_DIV2		(1<<3)		/* bit3,6,7 */
++#define	ADG_SEL0_SSI0_DIV4		(8<<3)		/* bit3,6,7 */
++#define	ADG_SEL0_SSI0_DIV8		(9<<3)		/* bit3,6,7 */
++#define	ADG_SEL0_SSI0_DIV16		(16<<3)		/* bit3,6,7 */
++#define	ADG_SEL0_SSI0_DIV32		(17<<3)		/* bit3,6,7 */
++#define	ADG_SEL0_SSI0_DIV_MASK		(25<<3)		/* bit3,6,7 */
++#define	ADG_SEL0_SSI0_ACLK_DIV		(0<<4)
++#define	ADG_SEL0_SSI0_ACLK_BRGA		(1<<4)
++#define	ADG_SEL0_SSI0_ACLK_BRGB		(2<<4)
++#define	ADG_SEL0_SSI0_DIVCLK_FIX	(0<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_CLKA	(1<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_CLKB	(2<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_CLKC	(3<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_MLPCLK	(4<<0)
++
++/* ADG AUDIO_CLK_SEL1 bit */
++#define	ADG_SEL1_SSI7_DIV1		(0<<27)		/* bit27,30,31 */
++#define	ADG_SEL1_SSI7_DIV2		(1<<27)		/* bit27,30,31 */
++#define	ADG_SEL1_SSI7_DIV4		(8<<27)		/* bit27,30,31 */
++#define	ADG_SEL1_SSI7_DIV8		(9<<27)		/* bit27,30,31 */
++#define	ADG_SEL1_SSI7_DIV16		(16<<27)	/* bit27,30,31 */
++#define	ADG_SEL1_SSI7_DIV32		(17<<27)	/* bit27,30,31 */
++#define	ADG_SEL1_SSI7_DIV_MASK		(25<<27)	/* bit27,30,31 */
++#define	ADG_SEL1_SSI7_ACLK_DIV		(0<<28)
++#define	ADG_SEL1_SSI7_ACLK_BRGA		(1<<28)
++#define	ADG_SEL1_SSI7_ACLK_BRGB		(2<<28)
++#define	ADG_SEL1_SSI7_DIVCLK_FIX	(0<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_CLKA	(1<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_CLKB	(2<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_CLKC	(3<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_MLPCLK	(4<<24)
++#define	ADG_SEL1_SSI6_DIV1		(0<<19)		/* bit19,22,23 */
++#define	ADG_SEL1_SSI6_DIV2		(1<<19)		/* bit19,22,23 */
++#define	ADG_SEL1_SSI6_DIV4		(8<<19)		/* bit19,22,23 */
++#define	ADG_SEL1_SSI6_DIV8		(9<<19)		/* bit19,22,23 */
++#define	ADG_SEL1_SSI6_DIV16		(16<<19)	/* bit19,22,23 */
++#define	ADG_SEL1_SSI6_DIV32		(17<<19)	/* bit19,22,23 */
++#define	ADG_SEL1_SSI6_DIV_MASK		(25<<19)	/* bit19,22,23 */
++#define	ADG_SEL1_SSI6_ACLK_DIV		(0<<20)
++#define	ADG_SEL1_SSI6_ACLK_BRGA		(1<<20)
++#define	ADG_SEL1_SSI6_ACLK_BRGB		(2<<20)
++#define	ADG_SEL1_SSI6_DIVCLK_FIX	(0<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_CLKA	(1<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_CLKB	(2<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_CLKC	(3<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_MLPCLK	(4<<16)
++#define	ADG_SEL1_SSI5_DIV1		(0<<11)		/* bit11,14,15 */
++#define	ADG_SEL1_SSI5_DIV2		(1<<11)		/* bit11,14,15 */
++#define	ADG_SEL1_SSI5_DIV4		(8<<11)		/* bit11,14,15 */
++#define	ADG_SEL1_SSI5_DIV8		(9<<11)		/* bit11,14,15 */
++#define	ADG_SEL1_SSI5_DIV16		(16<<11)	/* bit11,14,15 */
++#define	ADG_SEL1_SSI5_DIV32		(17<<11)	/* bit11,14,15 */
++#define	ADG_SEL1_SSI5_DIV_MASK		(25<<11)	/* bit11,14,15 */
++#define	ADG_SEL1_SSI5_ACLK_DIV		(0<<12)
++#define	ADG_SEL1_SSI5_ACLK_BRGA		(1<<12)
++#define	ADG_SEL1_SSI5_ACLK_BRGB		(2<<12)
++#define	ADG_SEL1_SSI5_DIVCLK_FIX	(0<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_CLKA	(1<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_CLKB	(2<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_CLKC	(3<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_MLPCLK	(4<<8)
++#define	ADG_SEL1_SSI4_DIV1		(0<<3)		/* bit3,6,7 */
++#define	ADG_SEL1_SSI4_DIV2		(1<<3)		/* bit3,6,7 */
++#define	ADG_SEL1_SSI4_DIV4		(8<<3)		/* bit3,6,7 */
++#define	ADG_SEL1_SSI4_DIV8		(9<<3)		/* bit3,6,7 */
++#define	ADG_SEL1_SSI4_DIV16		(16<<3)		/* bit3,6,7 */
++#define	ADG_SEL1_SSI4_DIV32		(17<<3)		/* bit3,6,7 */
++#define	ADG_SEL1_SSI4_DIV_MASK		(25<<3)		/* bit3,6,7 */
++#define	ADG_SEL1_SSI4_ACLK_DIV		(0<<4)
++#define	ADG_SEL1_SSI4_ACLK_BRGA		(1<<4)
++#define	ADG_SEL1_SSI4_ACLK_BRGB		(2<<4)
++#define	ADG_SEL1_SSI4_DIVCLK_FIX	(0<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_CLKA	(1<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_CLKB	(2<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_CLKC	(3<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_MLPCLK	(4<<0)
++
++/* ADG AUDIO_CLK_SEL2 bit */
++#define	ADG_SEL2_SSI9_DIV1		(0<<11)		/* bit11,14,15 */
++#define	ADG_SEL2_SSI9_DIV2		(1<<11)		/* bit11,14,15 */
++#define	ADG_SEL2_SSI9_DIV4		(8<<11)		/* bit11,14,15 */
++#define	ADG_SEL2_SSI9_DIV8		(9<<11)		/* bit11,14,15 */
++#define	ADG_SEL2_SSI9_DIV16		(16<<11)	/* bit11,14,15 */
++#define	ADG_SEL2_SSI9_DIV32		(17<<11)	/* bit11,14,15 */
++#define	ADG_SEL2_SSI9_DIV_MASK		(25<<11)	/* bit11,14,15 */
++#define	ADG_SEL2_SSI9_ACLK_DIV		(0<<12)
++#define	ADG_SEL2_SSI9_ACLK_BRGA		(1<<12)
++#define	ADG_SEL2_SSI9_ACLK_BRGB		(2<<12)
++#define	ADG_SEL2_SSI9_DIVCLK_FIX	(0<<8)
++#define	ADG_SEL2_SSI9_DIVCLK_CLKA	(1<<8)
++#define	ADG_SEL2_SSI9_DIVCLK_CLKB	(2<<8)
++#define	ADG_SEL2_SSI9_DIVCLK_CLKC	(3<<8)
++#define	ADG_SEL2_SSI9_DIVCLK_MLPCLK	(4<<8)
++
++/* ADG DIV_EN bit */
++#define	ADG_DIVEN_BRGB			(1<<5)
++#define	ADG_DIVEN_BRGA			(1<<4)
++#define	ADG_DIVEN_AUDIO_CLKC		(1<<3)
++#define	ADG_DIVEN_AUDIO_CLKB		(1<<2)
++#define	ADG_DIVEN_AUDIO_CLKA		(1<<1)
++#define	ADG_DIVEN_MLP			(1<<0)
++
++/* ADG SRCIN_TIMSEL0 bit */
++#define	ADG_SRCIN0_SRC1_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCIN0_SRC1_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV128		(11<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV192		(12<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV256		(13<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV384		(14<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV512		(15<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV768		(16<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCIN0_SRC1_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCIN0_SRC0_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCIN0_SRC0_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV128		(11<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV192		(12<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV256		(13<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV384		(14<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV512		(15<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV768		(16<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCIN0_SRC0_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCIN_TIMSEL1 bit */
++#define	ADG_SRCIN1_SRC3_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCIN1_SRC3_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV128		(11<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV192		(12<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV256		(13<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV384		(14<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV512		(15<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV768		(16<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCIN1_SRC3_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCIN1_SRC2_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCIN1_SRC2_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV128		(11<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV192		(12<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV256		(13<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV384		(14<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV512		(15<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV768		(16<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCIN1_SRC2_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCIN_TIMSEL2 bit */
++#define	ADG_SRCIN2_SRC5_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCIN2_SRC5_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV128		(11<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV192		(12<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV256		(13<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV384		(14<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV512		(15<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV768		(16<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCIN2_SRC5_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCIN2_SRC4_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCIN2_SRC4_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV128		(11<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV192		(12<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV256		(13<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV384		(14<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV512		(15<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV768		(16<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCIN2_SRC4_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCIN_TIMSEL3 bit */
++#define	ADG_SRCIN3_SRC7_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCIN3_SRC7_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV128		(11<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV192		(12<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV256		(13<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV384		(14<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV512		(15<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV768		(16<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCIN3_SRC7_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCIN3_SRC6_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCIN3_SRC6_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV128		(11<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV192		(12<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV256		(13<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV384		(14<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV512		(15<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV768		(16<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCIN3_SRC6_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCIN_TIMSEL4 bit */
++#define	ADG_SRCIN4_SRC9_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCIN4_SRC9_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV128		(11<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV192		(12<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV256		(13<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV384		(14<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV512		(15<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV768		(16<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCIN4_SRC9_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCIN4_SRC8_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCIN4_SRC8_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV128		(11<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV192		(12<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV256		(13<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV384		(14<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV512		(15<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV768		(16<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCIN4_SRC8_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCOUT_TIMSEL0 bit */
++#define	ADG_SRCOUT0_SRC1_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV128	(11<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV192	(12<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV256	(13<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV384	(14<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV512	(15<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV768	(16<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCOUT0_SRC1_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV128	(11<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV192	(12<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV256	(13<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV384	(14<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV512	(15<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV768	(16<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCOUT0_SRC0_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCOUT_TIMSEL1 bit */
++#define	ADG_SRCOUT1_SRC3_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCOUT1_SRC3_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV128	(11<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV192	(12<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV256	(13<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV384	(14<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV512	(15<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV768	(16<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCOUT1_SRC3_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCOUT1_SRC2_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV128	(11<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV192	(12<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV256	(13<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV384	(14<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV512	(15<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV768	(16<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCOUT1_SRC2_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCOUT_TIMSEL2 bit */
++#define	ADG_SRCOUT2_SRC5_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCOUT2_SRC5_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV128	(11<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV192	(12<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV256	(13<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV384	(14<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV512	(15<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV768	(16<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCOUT2_SRC5_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCOUT2_SRC4_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV128	(11<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV192	(12<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV256	(13<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV384	(14<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV512	(15<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV768	(16<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCOUT2_SRC4_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCOUT_TIMSEL3 bit */
++#define	ADG_SRCOUT3_SRC7_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCOUT3_SRC7_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV128	(11<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV192	(12<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV256	(13<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV384	(14<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV512	(15<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV768	(16<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCOUT3_SRC7_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCOUT3_SRC6_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV128	(11<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV192	(12<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV256	(13<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV384	(14<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV512	(15<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV768	(16<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCOUT3_SRC6_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG SRCOUT_TIMSEL4 bit */
++#define	ADG_SRCOUT4_SRC9_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_BRGA		(3<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_BRGB		(4<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_SRCOUT4_SRC9_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV2		(0<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV4		(1<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV6		(2<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV8		(3<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV12		(4<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV16		(5<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV24		(6<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV32		(7<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV48		(8<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV64		(9<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV96		(10<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV128	(11<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV192	(12<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV256	(13<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV384	(14<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV512	(15<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV768	(16<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_SRCOUT4_SRC9_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_BRGA		(3<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_BRGB		(4<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_SRCOUT4_SRC8_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV2		(0<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV4		(1<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV6		(2<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV8		(3<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV12		(4<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV16		(5<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV24		(6<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV32		(7<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV48		(8<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV64		(9<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV96		(10<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV128	(11<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV192	(12<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV256	(13<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV384	(14<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV512	(15<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV768	(16<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_SRCOUT4_SRC8_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG CMDOUT_TIMSEL bit */
++#define	ADG_CMDOUT_CMD1_DIVCLK_AUDIO_CLKA	(0<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_AUDIO_CLKB	(1<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_AUDIO_CLKC	(2<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_BRGA		(3<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_BRGB		(4<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_CMDOUT_CMD1_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV2		(0<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV4		(1<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV6		(2<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV8		(3<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV12		(4<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV16		(5<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV24		(6<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV32		(7<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV48		(8<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV64		(9<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV96		(10<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV128		(11<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV192		(12<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV256		(13<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV384		(14<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV512		(15<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV768		(16<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV1024	(17<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV1536	(18<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV2048	(19<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV3072	(20<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV4096	(21<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV6144	(22<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV8192	(23<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV12288	(24<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV16384	(25<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV24576	(26<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV32768	(27<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV49152	(28<<16)
++#define	ADG_CMDOUT_CMD1_DIVRATIO_DIV98304	(29<<16)
++#define	ADG_CMDOUT_CMD0_DIVCLK_AUDIO_CLKA	(0<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_AUDIO_CLKB	(1<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_AUDIO_CLKC	(2<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_BRGA		(3<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_BRGB		(4<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_MLPCLK		(5<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS0		(6<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS1		(7<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS2		(8<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS3		(9<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS4		(10<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS5		(11<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS6		(12<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS7		(13<<8)
++#define	ADG_CMDOUT_CMD0_DIVCLK_SSI_WS9		(14<<8)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV2		(0<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV4		(1<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV6		(2<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV8		(3<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV12		(4<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV16		(5<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV24		(6<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV32		(7<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV48		(8<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV64		(9<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV96		(10<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV128		(11<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV192		(12<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV256		(13<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV384		(14<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV512		(15<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV768		(16<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV1024	(17<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV1536	(18<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV2048	(19<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV3072	(20<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV4096	(21<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV6144	(22<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV8192	(23<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV12288	(24<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV16384	(25<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV24576	(26<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV32768	(27<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV49152	(28<<0)
++#define	ADG_CMDOUT_CMD0_DIVRATIO_DIV98304	(29<<0)
++
++/* ADG ADSPOUT_TIMSEL bit */
++#define	ADG_ADSPOUT_DIVCLK_AUDIO_CLKA		(0<<24)
++#define	ADG_ADSPOUT_DIVCLK_AUDIO_CLKB		(1<<24)
++#define	ADG_ADSPOUT_DIVCLK_AUDIO_CLKC		(2<<24)
++#define	ADG_ADSPOUT_DIVCLK_BRGA			(3<<24)
++#define	ADG_ADSPOUT_DIVCLK_BRGB			(4<<24)
++#define	ADG_ADSPOUT_DIVCLK_MLPCLK		(5<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS0		(6<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS1		(7<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS2		(8<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS3		(9<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS4		(10<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS5		(11<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS6		(12<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS7		(13<<24)
++#define	ADG_ADSPOUT_DIVCLK_SSI_WS9		(14<<24)
++#define	ADG_ADSPOUT_DIVRATIO_DIV2		(0<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV4		(1<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV6		(2<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV8		(3<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV12		(4<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV16		(5<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV24		(6<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV32		(7<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV48		(8<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV64		(9<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV96		(10<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV128		(11<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV192		(12<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV256		(13<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV384		(14<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV512		(15<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV768		(16<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV1024		(17<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV1536		(18<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV2048		(19<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV3072		(20<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV4096		(21<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV6144		(22<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV8192		(23<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV12288		(24<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV16384		(25<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV24576		(26<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV32768		(27<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV49152		(28<<16)
++#define	ADG_ADSPOUT_DIVRATIO_DIV98304		(29<<16)
++
++/* ADG DTCP_TIMSEL bit */
++#define	ADG_DTCP_DIVCLK_AUDIO_CLKA		(0<<24)
++#define	ADG_DTCP_DIVCLK_AUDIO_CLKB		(1<<24)
++#define	ADG_DTCP_DIVCLK_AUDIO_CLKC		(2<<24)
++#define	ADG_DTCP_DIVCLK_BRGA			(3<<24)
++#define	ADG_DTCP_DIVCLK_BRGB			(4<<24)
++#define	ADG_DTCP_DIVCLK_MLPCLK			(5<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS0			(6<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS1			(7<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS2			(8<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS3			(9<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS4			(10<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS5			(11<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS6			(12<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS7			(13<<24)
++#define	ADG_DTCP_DIVCLK_SSI_WS9			(14<<24)
++#define	ADG_DTCP_DIVRATIO_DIV2			(0<<16)
++#define	ADG_DTCP_DIVRATIO_DIV4			(1<<16)
++#define	ADG_DTCP_DIVRATIO_DIV6			(2<<16)
++#define	ADG_DTCP_DIVRATIO_DIV8			(3<<16)
++#define	ADG_DTCP_DIVRATIO_DIV12			(4<<16)
++#define	ADG_DTCP_DIVRATIO_DIV16			(5<<16)
++#define	ADG_DTCP_DIVRATIO_DIV24			(6<<16)
++#define	ADG_DTCP_DIVRATIO_DIV32			(7<<16)
++#define	ADG_DTCP_DIVRATIO_DIV48			(8<<16)
++#define	ADG_DTCP_DIVRATIO_DIV64			(9<<16)
++#define	ADG_DTCP_DIVRATIO_DIV96			(10<<16)
++#define	ADG_DTCP_DIVRATIO_DIV128		(11<<16)
++#define	ADG_DTCP_DIVRATIO_DIV192		(12<<16)
++#define	ADG_DTCP_DIVRATIO_DIV256		(13<<16)
++#define	ADG_DTCP_DIVRATIO_DIV384		(14<<16)
++#define	ADG_DTCP_DIVRATIO_DIV512		(15<<16)
++#define	ADG_DTCP_DIVRATIO_DIV768		(16<<16)
++#define	ADG_DTCP_DIVRATIO_DIV1024		(17<<16)
++#define	ADG_DTCP_DIVRATIO_DIV1536		(18<<16)
++#define	ADG_DTCP_DIVRATIO_DIV2048		(19<<16)
++#define	ADG_DTCP_DIVRATIO_DIV3072		(20<<16)
++#define	ADG_DTCP_DIVRATIO_DIV4096		(21<<16)
++#define	ADG_DTCP_DIVRATIO_DIV6144		(22<<16)
++#define	ADG_DTCP_DIVRATIO_DIV8192		(23<<16)
++#define	ADG_DTCP_DIVRATIO_DIV12288		(24<<16)
++#define	ADG_DTCP_DIVRATIO_DIV16384		(25<<16)
++#define	ADG_DTCP_DIVRATIO_DIV24576		(26<<16)
++#define	ADG_DTCP_DIVRATIO_DIV32768		(27<<16)
++#define	ADG_DTCP_DIVRATIO_DIV49152		(28<<16)
++#define	ADG_DTCP_DIVRATIO_DIV98304		(29<<16)
++
++
++/************************************************************************
++
++	structure
++
++************************************************************************/
++struct scu_src_regs {
++	u32	in_busif_mode;
++	u32	out_busif_mode;
++	u32	dalign;
++	u32	mode;
++	u32	control;
++	u32	status;
++	u32	int_enable0;
++};
++
++struct scu_cmd_regs {
++	u32	out_busif_mode;
++	u32	dalign;
++	u32	mode;
++	u32	control;
++};
++
++struct src_regs {
++	u32	swrsr;
++	u32	srcir;
++	u32	rsv1[3];	/* reserved */
++	u32	adinr;
++	u32	rsv2;		/* reserved */
++	u32	ifscr;
++	u32	ifsvr;
++	u32	srccr;
++	u32	mnfsr;
++	u32	bsdsr;
++	u32	rsv3[2];	/* reserved */
++	u32	bsisr;
++};
++
++struct ctu_regs {
++	u32	swrsr;
++	u32	ctuir;
++	u32	adinr;
++	u32	rsv;		/* reserved */
++	u32	cpmdr;
++	u32	scmdr;
++	u32	sv00r;
++	u32	sv01r;
++	u32	sv02r;
++	u32	sv03r;
++	u32	sv04r;
++	u32	sv05r;
++	u32	sv06r;
++	u32	sv07r;
++	u32	sv10r;
++	u32	sv11r;
++	u32	sv12r;
++	u32	sv13r;
++	u32	sv14r;
++	u32	sv15r;
++	u32	sv16r;
++	u32	sv17r;
++	u32	sv20r;
++	u32	sv21r;
++	u32	sv22r;
++	u32	sv23r;
++	u32	sv24r;
++	u32	sv25r;
++	u32	sv26r;
++	u32	sv27r;
++	u32	sv30r;
++	u32	sv31r;
++	u32	sv32r;
++	u32	sv33r;
++	u32	sv34r;
++	u32	sv35r;
++	u32	sv36r;
++	u32	sv37r;
++};
++
++struct mix_regs {
++	u32	swrsr;
++	u32	mixir;
++	u32	adinr;
++	u32	rsv;		/* reserved */
++	u32	mixmr;
++	u32	mvpdr;
++	u32	mdbar;
++	u32	mdbbr;
++	u32	mdbcr;
++	u32	mdbdr;
++	u32	mdber;
++	u32	mixsr;
++};
++
++struct dvc_regs {
++	u32	swrsr;
++	u32	dvuir;
++	u32	adinr;
++	u32	rsv;		/* reserved */
++	u32	dvucr;
++	u32	zcmcr;
++	u32	vrctr;
++	u32	vrpdr;
++	u32	vrdbr;
++	u32	vrwtr;
++	u32	vol0r;
++	u32	vol1r;
++	u32	vol2r;
++	u32	vol3r;
++	u32	vol4r;
++	u32	vol5r;
++	u32	vol6r;
++	u32	vol7r;
++	u32	dvuer;
++	u32	dvusr;
++	u32	dvier;
++};
++
++struct ssi_regs {
++	u32	cr;
++	u32	sr;
++	u32	tdr;
++	u32	rdr;
++	u32	rsv[4];		/* reserved */
++	u32	wsr;
++	u32	fmr;
++	u32	fsr;
++};
++
++struct scu_reg_info {
++	void __iomem		*scureg;
++	struct scu_src_regs	*scusrcreg[MAXCH_SRC];
++	struct scu_cmd_regs	*scucmdreg[MAXCH_CMD];
++	struct src_regs		*srcreg[MAXCH_SRC];
++	struct ctu_regs		*ctureg[MAXCH_CTU];
++	struct mix_regs		*mixreg[MAXCH_CMD];
++	struct dvc_regs		*dvcreg[MAXCH_CMD];
++	void __iomem		*ssiureg;
++	struct ssi_regs		*ssireg[MAXCH_SSI];
++	void __iomem		*adgreg;
++};
++
++struct scu_playback_callback {
++	void (*init_ssi)(void);
++	void (*init_ssi_src)(void);
++	void (*init_ssi_dvc)(void);
++	void (*init_src)(void);
++	void (*init_dvc)(void);
++	void (*deinit_ssi)(void);
++	void (*deinit_ssi_src)(void);
++	void (*deinit_ssi_dvc)(void);
++	void (*deinit_src)(void);
++	void (*deinit_dvc)(void);
++};
++
++struct scu_capture_callback {
++	void (*init_ssi)(void);
++	void (*init_ssi_src)(void);
++	void (*init_ssi_dvc)(void);
++	void (*init_src)(void);
++	void (*init_src_dvc)(void);
++	void (*init_dvc)(void);
++	void (*deinit_ssi)(void);
++	void (*deinit_ssi_src)(void);
++	void (*deinit_ssi_dvc)(void);
++	void (*deinit_src)(void);
++	void (*deinit_src_dvc)(void);
++	void (*deinit_dvc)(void);
++};
++
++struct scu_route_info {
++	int p_route;		/* playback route */
++	int c_route;		/* capture route */
++	/* snd_kcontrol */
++	int route_ssi[MAXCH_SSI];
++	int route_src[MAXCH_SRC];
++	int route_ctu[MAXCH_CMD];
++	int route_mix[MAXCH_CMD];
++	int route_dvc[MAXCH_CMD];
++	/* playback callback */
++	struct scu_playback_callback pcb;
++	/* capture callback */
++	struct scu_capture_callback ccb;
++};
++
++struct scu_clock_info {
++	struct clk *adg_clk;
++	struct clk *scu_clk;
++	struct clk *src0_clk;
++	struct clk *src1_clk;
++	struct clk *dvc0_clk;
++	struct clk *dvc1_clk;
++	struct clk *ssiu_clk;
++	struct clk *ssi0_clk;
++	struct clk *ssi1_clk;
++};
++
++struct scu_audio_info {
++	struct scu_reg_info reginfo;
++	struct scu_route_info routeinfo;
++	struct scu_clock_info clockinfo;
++	spinlock_t scu_lock;		/* for common register */
++};
++
++struct scu_pcm_info {
++	int flag_first;			/* for PCM 1st process */
++	int flag_start;			/* for DMA control */
++	unsigned int period;		/* for buffer control */
++	unsigned int tran_period;	/* A number of transferred period */
++	spinlock_t pcm_lock;		/* for trigger process */
++	struct dma_chan *de_chan[SHDMA_SLAVE_PCM_MAX];
++	struct sh_dmadesc_slave de_param[SHDMA_SLAVE_PCM_MAX];
++	struct work_struct	work;
++	struct scu_route_info *routeinfo;
++	struct snd_pcm_substream *ss;
++};
++
++/************************************************************************
++
++	external prototype declaration
++
++************************************************************************/
++extern struct snd_soc_platform_driver scu_platform;
++
++extern struct scu_route_info *scu_get_route_info(void);
++extern void scu_src_control(int src_ch, struct snd_pcm_substream *ss);
++
++extern void scu_init_ssi0(void);
++extern void scu_init_ssi0_src0(void);
++extern void scu_init_ssi0_dvc0(void);
++extern void scu_init_src0(void);
++extern void scu_init_dvc0(void);
++extern void scu_deinit_ssi0(void);
++extern void scu_deinit_ssi0_src0(void);
++extern void scu_deinit_ssi0_dvc0(void);
++extern void scu_deinit_src0(void);
++extern void scu_deinit_dvc0(void);
++
++extern void scu_init_ssi1(void);
++extern void scu_init_ssi1_src1(void);
++extern void scu_init_ssi1_dvc1(void);
++extern void scu_init_src1(void);
++extern void scu_init_src1_dvc1(void);
++extern void scu_init_dvc1(void);
++extern void scu_deinit_ssi1(void);
++extern void scu_deinit_ssi1_src1(void);
++extern void scu_deinit_ssi1_dvc1(void);
++extern void scu_deinit_src1(void);
++extern void scu_deinit_src1_dvc1(void);
++extern void scu_deinit_dvc1(void);
++
++extern int scu_check_route(int dir, struct scu_route_info *routeinfo);
++
++#endif /* SH_SCU_H */
+diff --git a/sound/soc/sh/Kconfig b/sound/soc/sh/Kconfig
+index 6bcb116..3d15f58 100644
+--- a/sound/soc/sh/Kconfig
++++ b/sound/soc/sh/Kconfig
+@@ -34,6 +34,12 @@ config SND_SOC_SH4_SIU
+ 	select SH_DMAE
+ 	select FW_LOADER
+ 
++config SND_SOC_SCU
++	tristate
++	depends on MACH_LAGER
++	select DMA_ENGINE
++	select DMADEVICES
++
+ ##
+ ## Boards
+ ##
+@@ -55,4 +61,30 @@ config SND_SIU_MIGOR
+ 	help
+ 	  This option enables sound support for the SH7722 Migo-R board
+ 
++config SND_SCU_LAGER
++	tristate "SCU sound support on LAGER"
++	depends on MACH_LAGER
++	select SND_SOC_SCU
++	select SND_LAGER_AK4643
++	help
++	  Enable sound support for the R8A77900 LAGER board.
++	  This is supported to the Renesas SCU peripheral.
++	  Say Y here if you have enabled, otherwise say N.
++	  To compile this driver as a module, say M.
++
++config SND_LAGER_AK4643
++        tristate "LAGER AK4643 sound support"
++        depends on SND_SCU_LAGER
++        select SND_SOC_AK4642
++        help
++          Enable the sound support for AK4643 on LAGER board.
++	  This option is dependent on SND_SCU_LAGER.
++	  If you will enable, say Y to SND_SCU_LAGER.
++	  This option enables SND_SOC_AK4642.
++
++config SND_SOC_LAGER_AK4643
++        bool
++        depends on SND_LAGER_AK4643
++        default y
++
+ endmenu
+diff --git a/sound/soc/sh/Makefile b/sound/soc/sh/Makefile
+index 849b387..a76aea8 100644
+--- a/sound/soc/sh/Makefile
++++ b/sound/soc/sh/Makefile
+@@ -7,14 +7,18 @@ snd-soc-hac-objs	:= hac.o
+ snd-soc-ssi-objs	:= ssi.o
+ snd-soc-fsi-objs	:= fsi.o
+ snd-soc-siu-objs	:= siu_pcm.o siu_dai.o
++snd-soc-scu-objs	:= scu_pcm.o scu_dai.o
+ obj-$(CONFIG_SND_SOC_SH4_HAC)	+= snd-soc-hac.o
+ obj-$(CONFIG_SND_SOC_SH4_SSI)	+= snd-soc-ssi.o
+ obj-$(CONFIG_SND_SOC_SH4_FSI)	+= snd-soc-fsi.o
+ obj-$(CONFIG_SND_SOC_SH4_SIU)	+= snd-soc-siu.o
++obj-$(CONFIG_SND_SOC_SCU)	+= snd-soc-scu.o
+ 
+ ## boards
+ snd-soc-sh7760-ac97-objs	:= sh7760-ac97.o
+ snd-soc-migor-objs		:= migor.o
++snd-soc-lager-objs		:= lager.o
+ 
+ obj-$(CONFIG_SND_SH7760_AC97)	+= snd-soc-sh7760-ac97.o
+ obj-$(CONFIG_SND_SIU_MIGOR)	+= snd-soc-migor.o
++obj-$(CONFIG_SND_SCU_LAGER)	+= snd-soc-lager.o
+diff --git a/sound/soc/sh/lager.c b/sound/soc/sh/lager.c
+new file mode 100644
+index 0000000..2b177e2
+--- /dev/null
++++ b/sound/soc/sh/lager.c
+@@ -0,0 +1,682 @@
++/*
++ * sound/soc/sh/lager.c
++ *     This file is ALSA SoC driver for LAGER.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the sound/soc/sh/migor.c
++ *
++ * ALSA SoC driver for Migo-R
++ *
++ * Copyright (C) 2009-2010 Guennadi Liakhovetski <g.liakhovetski@gmx.de>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/device.h>
++#include <linux/module.h>
++
++#include <sound/core.h>
++#include <sound/pcm.h>
++#include <sound/soc.h>
++#include <sound/sh_scu.h>
++
++#undef DEBUG
++#ifdef DEBUG
++#define FNC_ENTRY	pr_info("entry:%s:%d\n", __func__, __LINE__);
++#define FNC_EXIT	pr_info("exit:%s:%d\n", __func__, __LINE__);
++#define DBG_POINT()	pr_info("check:%s:%d\n", __func__, __LINE__);
++#define DBG_MSG(args...)	pr_info(args)
++#else  /* DEBUG */
++#define FNC_ENTRY
++#define FNC_EXIT
++#define DBG_POINT()
++#define DBG_MSG(args...)
++#endif /* DEBUG */
++
++static struct scu_route_info *routeinfo;
++
++int scu_check_route(int dir, struct scu_route_info *routeinfo)
++{
++	if (!dir) { /* playback */
++		if (routeinfo->p_route != RP_MEM_SSI0 &&
++		    routeinfo->p_route != RP_MEM_SRC0_SSI0 &&
++		    routeinfo->p_route != RP_MEM_SRC0_DVC0_SSI0) {
++			pr_info("scu playback route is invalid.\n");
++			return -EPERM;
++		}
++	} else { /* capture */
++		if (routeinfo->c_route != RC_SSI1_MEM &&
++		    routeinfo->c_route != RC_SSI1_SRC1_MEM &&
++		    routeinfo->c_route != RC_SSI1_SRC1_DVC1_MEM) {
++			pr_info("scu capture route is invalid.\n");
++			return -EPERM;
++		}
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(scu_check_route);
++
++/************************************************************************
++
++	DAPM
++
++************************************************************************/
++#undef EV_PRINT
++#ifdef EV_PRINT
++static void event_print(int event, char *evt_str)
++{
++	switch (event) {
++	case SND_SOC_DAPM_PRE_PMU:
++		printk(KERN_INFO "%s SND_SOC_DAPM_PRE_PMU\n", evt_str);
++		break;
++	case SND_SOC_DAPM_POST_PMU:
++		printk(KERN_INFO "%s SND_SOC_DAPM_POST_PMU\n", evt_str);
++		break;
++	case SND_SOC_DAPM_PRE_PMD:
++		printk(KERN_INFO "%s SND_SOC_DAPM_PRE_PMD\n", evt_str);
++		break;
++	case SND_SOC_DAPM_POST_PMD:
++		printk(KERN_INFO "%s SND_SOC_DAPM_POST_PMD\n", evt_str);
++		break;
++	default:
++		printk(KERN_INFO "%s unknown event\n", evt_str);
++	}
++}
++#else
++#define event_print(a, b)
++#endif
++
++static int event_ssi0(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "ssi0");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->pcb.init_ssi = scu_init_ssi0;
++		routeinfo->pcb.deinit_ssi = scu_deinit_ssi0;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->pcb.init_ssi = NULL;
++		routeinfo->pcb.deinit_ssi = NULL;
++	}
++	return 0;
++}
++
++static int event_ssi0_src0(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "ssi0_src0");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->pcb.init_ssi_src = scu_init_ssi0_src0;
++		routeinfo->pcb.deinit_ssi_src = scu_deinit_ssi0_src0;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->pcb.init_ssi_src = NULL;
++		routeinfo->pcb.deinit_ssi_src = NULL;
++	}
++	return 0;
++}
++
++static int event_ssi0_dvc0(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "ssi0_dvc0");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->pcb.init_ssi_dvc = scu_init_ssi0_dvc0;
++		routeinfo->pcb.deinit_ssi_dvc = scu_deinit_ssi0_dvc0;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->pcb.init_ssi_dvc = NULL;
++		routeinfo->pcb.deinit_ssi_dvc = NULL;
++	}
++	return 0;
++}
++
++static int event_src0(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "src0");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->pcb.init_src = scu_init_src0;
++		routeinfo->pcb.deinit_src = scu_deinit_src0;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->pcb.init_src = NULL;
++		routeinfo->pcb.deinit_src = NULL;
++	}
++	return 0;
++}
++
++static int event_dvc0(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "dvc0");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->pcb.init_dvc = scu_init_dvc0;
++		routeinfo->pcb.deinit_dvc = scu_deinit_dvc0;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->pcb.init_dvc = NULL;
++		routeinfo->pcb.deinit_dvc = NULL;
++	}
++	return 0;
++}
++
++static int event_ssi1(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "ssi1");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->ccb.init_ssi = scu_init_ssi1;
++		routeinfo->ccb.deinit_ssi = scu_deinit_ssi1;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->ccb.init_ssi = NULL;
++		routeinfo->ccb.deinit_ssi = NULL;
++	}
++	return 0;
++}
++
++static int event_ssi1_src1(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "ssi1_src1");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->ccb.init_ssi_src = scu_init_ssi1_src1;
++		routeinfo->ccb.deinit_ssi_src = scu_deinit_ssi1_src1;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->ccb.init_ssi_src = NULL;
++		routeinfo->ccb.deinit_ssi_src = NULL;
++	}
++	return 0;
++}
++
++static int event_ssi1_dvc1(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "ssi1_dvc1");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->ccb.init_ssi_dvc = scu_init_ssi1_dvc1;
++		routeinfo->ccb.deinit_ssi_dvc = scu_deinit_ssi1_dvc1;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->ccb.init_ssi_dvc = NULL;
++		routeinfo->ccb.deinit_ssi_dvc = NULL;
++	}
++	return 0;
++}
++
++static int event_src1(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "src1");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->ccb.init_src = scu_init_src1;
++		routeinfo->ccb.deinit_src = scu_deinit_src1;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->ccb.init_src = NULL;
++		routeinfo->ccb.deinit_src = NULL;
++	}
++	return 0;
++}
++
++static int event_src1_dvc1(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "src1_dvc1");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->ccb.init_src_dvc = scu_init_src1_dvc1;
++		routeinfo->ccb.deinit_src_dvc = scu_deinit_src1_dvc1;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->ccb.init_src_dvc = NULL;
++		routeinfo->ccb.deinit_src_dvc = NULL;
++	}
++	return 0;
++}
++
++static int event_dvc1(struct snd_soc_dapm_widget *w,
++		struct snd_kcontrol *kcontrol, int event)
++{
++	event_print(event, "dvc1");
++	if (event == SND_SOC_DAPM_POST_PMU) {
++		routeinfo->ccb.init_dvc = scu_init_dvc1;
++		routeinfo->ccb.deinit_dvc = scu_deinit_dvc1;
++	} else if (event == SND_SOC_DAPM_PRE_PMD) {
++		routeinfo->ccb.init_dvc = NULL;
++		routeinfo->ccb.deinit_dvc = NULL;
++	}
++	return 0;
++}
++
++static void scu_playback_route_control(struct snd_soc_dapm_context *dapm)
++{
++	snd_soc_dapm_disable_pin(dapm, "SSI0_OUT0");
++	snd_soc_dapm_disable_pin(dapm, "SSI0_OUT1");
++	snd_soc_dapm_disable_pin(dapm, "SSI0_OUT2");
++
++	switch (routeinfo->p_route) {
++	case RP_MEM_SSI0:
++		snd_soc_dapm_enable_pin(dapm, "SSI0_OUT0");
++		break;
++	case RP_MEM_SRC0_SSI0:
++		snd_soc_dapm_enable_pin(dapm, "SSI0_OUT1");
++		break;
++	case RP_MEM_SRC0_DVC0_SSI0:
++		snd_soc_dapm_enable_pin(dapm, "SSI0_OUT2");
++		break;
++	default:
++		break;
++	};
++}
++
++static void scu_capture_route_control(struct snd_soc_dapm_context *dapm)
++{
++	snd_soc_dapm_disable_pin(dapm, "SSI1_IN0");
++	snd_soc_dapm_disable_pin(dapm, "SSI1_IN1");
++	snd_soc_dapm_disable_pin(dapm, "SSI1_IN2");
++
++	switch (routeinfo->c_route) {
++	case RC_SSI1_MEM:
++		snd_soc_dapm_enable_pin(dapm, "SSI1_IN0");
++		break;
++	case RC_SSI1_SRC1_MEM:
++		snd_soc_dapm_enable_pin(dapm, "SSI1_IN1");
++		break;
++	case RC_SSI1_SRC1_DVC1_MEM:
++		snd_soc_dapm_enable_pin(dapm, "SSI1_IN2");
++		break;
++	default:
++		break;
++	};
++}
++
++static int scu_get_ssi0_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	ucontrol->value.integer.value[0] = routeinfo->route_ssi[0];
++
++	return 0;
++}
++
++static int scu_set_ssi0_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
++
++	if (routeinfo->route_ssi[0] == ucontrol->value.integer.value[0])
++		return 0;
++
++	routeinfo->route_ssi[0] = ucontrol->value.integer.value[0];
++	if (routeinfo->route_ssi[0])
++		routeinfo->p_route |= W_SSI0;
++	else
++		routeinfo->p_route &= ~W_SSI0;
++	scu_playback_route_control(&card->dapm);
++
++	return 1;
++}
++
++static int scu_get_src0_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	ucontrol->value.integer.value[0] = routeinfo->route_src[0];
++
++	return 0;
++}
++
++static int scu_set_src0_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
++
++	if (routeinfo->route_src[0] == ucontrol->value.integer.value[0])
++		return 0;
++
++	routeinfo->route_src[0] = ucontrol->value.integer.value[0];
++	if (routeinfo->route_src[0])
++		routeinfo->p_route |= W_SRC0;
++	else
++		routeinfo->p_route &= ~W_SRC0;
++	scu_playback_route_control(&card->dapm);
++
++	return 1;
++}
++
++static int scu_get_dvc0_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	ucontrol->value.integer.value[0] = routeinfo->route_dvc[0];
++
++	return 0;
++}
++
++static int scu_set_dvc0_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
++
++	if (routeinfo->route_dvc[0] == ucontrol->value.integer.value[0])
++		return 0;
++
++	routeinfo->route_dvc[0] = ucontrol->value.integer.value[0];
++	if (routeinfo->route_dvc[0])
++		routeinfo->p_route |= W_DVC0;
++	else
++		routeinfo->p_route &= ~W_DVC0;
++	scu_playback_route_control(&card->dapm);
++
++	return 1;
++}
++
++static int scu_get_ssi1_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	ucontrol->value.integer.value[0] = routeinfo->route_ssi[1];
++
++	return 0;
++}
++
++static int scu_set_ssi1_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
++
++	if (routeinfo->route_ssi[1] == ucontrol->value.integer.value[0])
++		return 0;
++
++	routeinfo->route_ssi[1] = ucontrol->value.integer.value[0];
++	if (routeinfo->route_ssi[1])
++		routeinfo->c_route |= W_SSI1;
++	else
++		routeinfo->c_route &= ~W_SSI1;
++	scu_capture_route_control(&card->dapm);
++
++	return 1;
++}
++
++static int scu_get_src1_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	ucontrol->value.integer.value[0] = routeinfo->route_src[1];
++
++	return 0;
++}
++
++static int scu_set_src1_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
++
++	if (routeinfo->route_src[1] == ucontrol->value.integer.value[0])
++		return 0;
++
++	routeinfo->route_src[1] = ucontrol->value.integer.value[0];
++	if (routeinfo->route_src[1])
++		routeinfo->c_route |= W_SRC1;
++	else
++		routeinfo->c_route &= ~W_SRC1;
++	scu_capture_route_control(&card->dapm);
++
++	return 1;
++}
++
++static int scu_get_dvc1_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	ucontrol->value.integer.value[0] = routeinfo->route_dvc[1];
++
++	return 0;
++}
++
++static int scu_set_dvc1_route(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
++{
++	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
++
++	if (routeinfo->route_dvc[1] == ucontrol->value.integer.value[0])
++		return 0;
++
++	routeinfo->route_dvc[1] = ucontrol->value.integer.value[0];
++	if (routeinfo->route_dvc[1])
++		routeinfo->c_route |= W_DVC1;
++	else
++		routeinfo->c_route &= ~W_DVC1;
++	scu_capture_route_control(&card->dapm);
++
++	return 1;
++}
++
++static const char * const widget_switch[] = {"Off", "On"};
++
++static const struct soc_enum widget_switch_enum =
++	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(widget_switch), widget_switch);
++
++static const struct snd_kcontrol_new playback_controls[] = {
++	SOC_ENUM_EXT("SSI0 control", widget_switch_enum,
++		scu_get_ssi0_route, scu_set_ssi0_route),
++	SOC_ENUM_EXT("SRC0 control", widget_switch_enum,
++		scu_get_src0_route, scu_set_src0_route),
++	SOC_ENUM_EXT("DVC0 control", widget_switch_enum,
++		scu_get_dvc0_route, scu_set_dvc0_route),
++};
++
++static const struct snd_kcontrol_new capture_controls[] = {
++	SOC_ENUM_EXT("SSI1 control", widget_switch_enum,
++		scu_get_ssi1_route, scu_set_ssi1_route),
++	SOC_ENUM_EXT("SRC1 control", widget_switch_enum,
++		scu_get_src1_route, scu_set_src1_route),
++	SOC_ENUM_EXT("DVC1 control", widget_switch_enum,
++		scu_get_dvc1_route, scu_set_dvc1_route),
++};
++
++static const struct snd_soc_dapm_widget lager_dapm_widgets[] = {
++	/* Playback */
++	SND_SOC_DAPM_OUTPUT("SSI0_OUT0"),
++	SND_SOC_DAPM_OUTPUT("SSI0_OUT1"),
++	SND_SOC_DAPM_OUTPUT("SSI0_OUT2"),
++
++	SND_SOC_DAPM_DAC("MEM_OUT", "HiFi Playback", SND_SOC_NOPM, 0, 0),
++
++	SND_SOC_DAPM_MIXER_E("SSI0", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_ssi0,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("SSI0_SRC0", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_ssi0_src0,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("SSI0_DVC0", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_ssi0_dvc0,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("SRC0", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_src0,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("DVC0", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_dvc0,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++
++	/* Capture */
++	SND_SOC_DAPM_ADC("MEM_IN", "HiFi Capture", SND_SOC_NOPM, 0, 0),
++
++	SND_SOC_DAPM_INPUT("SSI1_IN0"),
++	SND_SOC_DAPM_INPUT("SSI1_IN1"),
++	SND_SOC_DAPM_INPUT("SSI1_IN2"),
++
++	SND_SOC_DAPM_MIXER_E("SSI1", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_ssi1,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("SSI1_SRC1", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_ssi1_src1,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("SSI1_DVC1", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_ssi1_dvc1,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("SRC1", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_src1,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("SRC1_DVC1", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_src1_dvc1,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++	SND_SOC_DAPM_MIXER_E("DVC1", SND_SOC_NOPM, 0, 0, NULL, 0,
++		event_dvc1,
++		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_PRE_PMD),
++};
++
++static const struct snd_soc_dapm_route audio_map[] = {
++	/*
++	 * Playback route
++	 */
++	/* SSI<-MEM */
++	{"SSI0", NULL, "MEM_OUT"},
++	{"SSI0_OUT0", NULL, "SSI0"},
++	/* SSI<-SRC<-MEM */
++	{"SRC0", NULL, "MEM_OUT"},
++	{"SSI0_SRC0", NULL, "SRC0"},
++	{"SSI0_OUT1", NULL, "SSI0_SRC0"},
++	/* SSI<-DVC<-SRC<-MEM */
++	{"DVC0", NULL, "SRC0"},
++	{"SSI0_DVC0", NULL, "DVC0"},
++	{"SSI0_OUT2", NULL, "SSI0_DVC0"},
++
++	/*
++	 * Capture route
++	 */
++	/* MEM<-SSI */
++	{"SSI1", NULL, "SSI1_IN0"},
++	{"MEM_IN", NULL, "SSI1"},
++	/* MEM<-SRC<-SSI */
++	{"SSI1_SRC1", NULL, "SSI1_IN1"},
++	{"SRC1", NULL, "SSI1_SRC1"},
++	{"MEM_IN", NULL, "SRC1"},
++	/* MEM<-DVC<-SRC<-SSI */
++	{"SSI1_DVC1", NULL, "SSI1_IN2"},
++	{"SRC1_DVC1", NULL, "SSI1_DVC1"},
++	{"DVC1", NULL, "SRC1_DVC1"},
++	{"MEM_IN", NULL, "DVC1"},
++};
++
++/************************************************************************
++
++	ALSA SoC
++
++************************************************************************/
++static int lager_hw_params(struct snd_pcm_substream *substream,
++			   struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *codec_dai = rtd->codec_dai;
++	int ret;
++
++	/* set PLL clock */
++	ret = snd_soc_dai_set_sysclk(codec_dai, 0, 11289600, SND_SOC_CLOCK_IN);
++	if (ret) {
++		pr_err("snd_soc_dai_set_sysclk err=%d\n", ret);
++		return ret;
++	}
++
++	ret = snd_soc_dai_set_fmt(codec_dai, SND_SOC_DAIFMT_CBS_CFS |
++					 SND_SOC_DAIFMT_I2S);
++	if (ret) {
++		pr_err("snd_soc_dai_set_fmt err=%d\n", ret);
++		return ret;
++	}
++
++	return ret;
++}
++
++static int lager_hw_free(struct snd_pcm_substream *substream)
++{
++	return 0;
++}
++
++static struct snd_soc_ops lager_dai_ops = {
++	.hw_params = lager_hw_params,
++	.hw_free = lager_hw_free,
++};
++
++static int lager_dai_init(struct snd_soc_pcm_runtime *rtd)
++{
++	struct snd_soc_codec *codec = rtd->codec;
++	struct snd_soc_dapm_context *dapm = &codec->dapm;
++	int ret;
++
++	FNC_ENTRY
++	/* Add controls */
++	ret = snd_soc_add_card_controls(rtd->card, playback_controls,
++					ARRAY_SIZE(playback_controls));
++	if (ret) {
++		pr_err("snd_soc_add_card_controls(playback) err=%d\n", ret);
++		return ret;
++	}
++
++	ret = snd_soc_add_card_controls(rtd->card, capture_controls,
++					ARRAY_SIZE(capture_controls));
++	if (ret) {
++		pr_err("snd_soc_add_card_controls(capture) err=%d\n", ret);
++		return ret;
++	}
++
++	/* Add widget and route for scu */
++	ret = snd_soc_dapm_new_controls(dapm, lager_dapm_widgets,
++				  ARRAY_SIZE(lager_dapm_widgets));
++	if (ret) {
++		pr_err("snd_soc_dapm_new_controls err=%d\n", ret);
++		return ret;
++	}
++
++	ret = snd_soc_dapm_add_routes(dapm, audio_map, ARRAY_SIZE(audio_map));
++	if (ret) {
++		pr_err("snd_soc_dapm_add_routes err=%d\n", ret);
++		return ret;
++	}
++
++	scu_playback_route_control(dapm);
++	scu_capture_route_control(dapm);
++
++	FNC_EXIT
++	return ret;
++}
++
++/* lager digital audio interface glue - connects codec <--> CPU */
++static struct snd_soc_dai_link lager_dai = {
++	.name		= "ak4643",
++	.stream_name	= "AK4643",
++	.cpu_dai_name	= "scu-ssi-dai",
++	.codec_dai_name	= "ak4642-hifi",
++	.platform_name	= "scu-pcm-audio.0",
++	.codec_name	= "ak4642-codec.2-0012",
++	.ops		= &lager_dai_ops,
++	.init		= lager_dai_init,
++};
++
++/* lager audio machine driver */
++static struct snd_soc_card snd_soc_lager = {
++	.name = "lager-ak4643",
++	.owner = THIS_MODULE,
++	.dai_link = &lager_dai,
++	.num_links = 1,
++};
++
++static int __devinit lager_probe(struct platform_device *pdev)
++{
++	int ret = -ENOMEM;
++
++	FNC_ENTRY
++	routeinfo = scu_get_route_info();
++
++	snd_soc_lager.dev = &pdev->dev;
++	ret = snd_soc_register_card(&snd_soc_lager);
++	if (ret)
++		pr_err("Unable to register sourd card\n");
++
++	FNC_EXIT
++	return ret;
++}
++
++static struct platform_driver lager_alsa_driver = {
++	.driver = {
++		.name = "lager_alsa_soc_platform",
++		.owner = THIS_MODULE,
++	},
++	.probe = lager_probe,
++};
++
++module_platform_driver(lager_alsa_driver);
++
++MODULE_AUTHOR("Renesas Electronics");
++MODULE_DESCRIPTION("ALSA SoC LAGER");
++MODULE_LICENSE("GPL v2");
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+new file mode 100644
+index 0000000..95fe501
+--- /dev/null
++++ b/sound/soc/sh/scu_dai.c
+@@ -0,0 +1,984 @@
++/*
++ * sound/soc/sh/scu_dai.c
++ *     This file is ALSA SoC driver for SCU peripheral.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the sound/soc/sh/siu_dai.c
++ *
++ * siu_dai.c - ALSA SoC driver for Renesas SH7343, SH7722 SIU peripheral.
++ *
++ * Copyright (C) 2009-2010 Guennadi Liakhovetski <g.liakhovetski@gmx.de>
++ * Copyright (C) 2006 Carlos Munoz <carlos@kenati.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include <linux/delay.h>
++#include <linux/firmware.h>
++#include <linux/pm_runtime.h>
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/clk.h>
++
++#include <sound/control.h>
++#include <sound/soc.h>
++#include <sound/sh_scu.h>
++
++#undef DEBUG
++#ifdef DEBUG
++#define FNC_ENTRY	pr_info("entry:%s:%d\n", __func__, __LINE__);
++#define FNC_EXIT	pr_info("exit:%s:%d\n", __func__, __LINE__);
++#define DBG_POINT()	pr_info("check:%s:%d\n", __func__, __LINE__);
++#define DBG_MSG(args...)	pr_info(args)
++#else  /* DEBUG */
++#define FNC_ENTRY
++#define FNC_EXIT
++#define DBG_POINT()
++#define DBG_MSG(args...)
++#endif /* DEBUG */
++
++static struct scu_reg_info *rinfo;
++static spinlock_t *sculock;
++static struct scu_audio_info *ainfo;
++
++struct scu_route_info *scu_get_route_info(void)
++{
++	return &ainfo->routeinfo;
++}
++EXPORT_SYMBOL(scu_get_route_info);
++
++/************************************************************************
++
++	basic function
++
++************************************************************************/
++static void scu_or_writel(u32 data, u32 *reg)
++{
++	u32 val;
++
++	spin_lock(sculock);
++	val = readl(reg);
++	writel((val | data), reg);
++	spin_unlock(sculock);
++}
++
++static void scu_and_writel(u32 data, u32 *reg)
++{
++	u32 val;
++
++	spin_lock(sculock);
++	val = readl(reg);
++	writel((val & data), reg);
++	spin_unlock(sculock);
++}
++
++/************************************************************************
++
++	peripheral function
++
++************************************************************************/
++static void adg_init(void)
++{
++	FNC_ENTRY
++
++	/* clock select */
++	scu_or_writel(0x23550000,
++		(u32 *)(rinfo->adgreg + ADG_SSICKR));
++
++	/* audio clock select */
++	scu_or_writel(((ADG_SEL0_SSI1_DIV1 | ADG_SEL0_SSI1_ACLK_DIV |
++		ADG_SEL0_SSI1_DIVCLK_CLKA) | (ADG_SEL0_SSI0_DIV1 |
++		ADG_SEL0_SSI0_ACLK_DIV | ADG_SEL0_SSI0_DIVCLK_CLKA)),
++		(u32 *)(rinfo->adgreg + ADG_AUDIO_CLK_SEL0));
++
++	/* SRC Input Timing */
++	scu_or_writel(ADG_SRCIN0_SRC0_DIVCLK_SSI_WS0,
++		(u32 *)(rinfo->adgreg + ADG_SRCIN_TIMSEL0));
++
++	/* SRC Output Timing */
++	scu_or_writel(ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS0,
++		(u32 *)(rinfo->adgreg + ADG_SRCOUT_TIMSEL0));
++
++	/* CMD Output Timing */
++	/* not implement */
++
++	/* division enable */
++	scu_or_writel(ADG_DIVEN_AUDIO_CLKA,
++			(u32 *)(rinfo->adgreg + ADG_DIV_EN));
++
++	FNC_EXIT
++	return;
++}
++
++static void scu_ssiu_init(void)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return;
++}
++
++static void scu_ssi_control(int master_ch, int slave_ch)
++{
++	FNC_ENTRY
++	/* SSI setting */
++	writel(SSICR_P4643_ST, &rinfo->ssireg[master_ch]->cr);
++	writel(SSIWS_ST, &rinfo->ssireg[master_ch]->wsr);
++	writel(SSICR_C4643_ST, &rinfo->ssireg[slave_ch]->cr);
++
++	FNC_EXIT
++	return;
++}
++
++static void scu_ssi_start(int ssi_ch)
++{
++	u32 val, reg;
++
++	FNC_ENTRY
++	/* SSI enable (figure.39.12 flow) */
++	val = readl(&rinfo->ssireg[ssi_ch]->cr);
++	val |= (SSICR_DMEN | SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
++	writel(val, &rinfo->ssireg[ssi_ch]->cr);
++
++	/* SSIU start (figure.39.12 flow) */
++	if (ssi_ch == 0)
++		reg = SSI0_0_CONTROL;
++	else
++		reg = SSI1_0_CONTROL;
++
++	scu_or_writel(SSI_CTRL_4CH_START0,
++		(u32 *)(rinfo->ssiureg + reg));
++
++	FNC_EXIT
++	return;
++}
++
++static void scu_ssi_stop(int ssi_ch)
++{
++	u32 val, reg;
++
++	FNC_ENTRY
++	/* SSI disable (figure.39.13 flow) */
++	val = readl(&rinfo->ssireg[ssi_ch]->cr);
++	val &= ~(SSICR_DMEN | SSICR_UIEN | SSICR_UIEN | SSICR_ENABLE);
++	writel(val, &rinfo->ssireg[ssi_ch]->cr);
++	FNC_EXIT
++
++	/* SSIU stop (figure.39.13 flow) */
++	if (ssi_ch == 0)
++		reg = SSI0_0_CONTROL;
++	else
++		reg = SSI1_0_CONTROL;
++
++	writel(0, (u32 *)(rinfo->ssiureg + reg));
++}
++
++void scu_src_control(int src_ch, struct snd_pcm_substream *ss)
++{
++	u64 val = 0;
++
++	FNC_ENTRY
++	/* SRC Activation (SRC_SWRSR) Figure42.7 */
++	writel(0, (u32 *)&rinfo->srcreg[src_ch]->swrsr);
++	writel(1, (u32 *)&rinfo->srcreg[src_ch]->swrsr);
++
++	/* SRC_SRCIR */
++	writel(1, (u32 *)&rinfo->srcreg[src_ch]->srcir);
++
++	/* SRC_ADINR *//* only stereo now */
++	writel((SRCADIN_OTBL_16BIT | SRCADIN_CHNUM_2),
++		(u32 *)&rinfo->srcreg[src_ch]->adinr);
++
++	/* SRC_IFSCR INTIFS enable */
++	writel(1, (u32 *)&rinfo->srcreg[src_ch]->ifscr);
++
++	/* SRC_IFSVR INTIFS calculation */
++#ifdef CONVERT_48KHZ
++	/* Convert example (48kHz) */
++	val = div_u64(SRC_IFS_FSO * ss->runtime->rate, SRC_IFS_48KHZ);
++#else
++	/* Not convert example (CODEC driver converts by itself) */
++	val = SRC_IFS_FSO;
++#endif
++	writel((u32)val, (u32 *)&rinfo->srcreg[src_ch]->ifsvr);
++
++	/* SRC_SRCCR */
++	writel(0x00010111, (u32 *)&rinfo->srcreg[src_ch]->srccr);
++
++	/* SRC_MNFSR MINFS calculation */
++	val = div_u64(val * 98, 100);	/* 98% */
++	writel(val, (u32 *)&rinfo->srcreg[src_ch]->mnfsr);
++
++	/* SRC_BSDSR (FSO/FSI Ratio is 6-1) */
++	writel(0x00400000, (u32 *)&rinfo->srcreg[src_ch]->bsdsr);
++
++	/* SRC_BSISR (FSO/FSI Ratio is 6-1) */
++	writel(0x00100020, (u32 *)&rinfo->srcreg[src_ch]->bsisr);
++
++	/* SRC_SRCIR */
++	writel(0, (u32 *)&rinfo->srcreg[src_ch]->srcir);
++
++	FNC_EXIT
++	return;
++}
++EXPORT_SYMBOL(scu_src_control);
++
++static void scu_src_start(int src_ch, int src_dir)
++{
++	FNC_ENTRY
++	/* SCU SRC_MODE */
++	writel(SRC_MODE_SRCUSE, (u32 *)&rinfo->scusrcreg[src_ch]->mode);
++
++	/* SRC_CONTROL */
++	if (src_dir == SRC_INOUT)
++		scu_or_writel((SRC_MODE_START_IN | SRC_MODE_START_OUT),
++			(u32 *)&rinfo->scusrcreg[src_ch]->control);
++	else if (src_dir == SRC_OUT)
++		scu_or_writel(SRC_MODE_START_OUT,
++			(u32 *)&rinfo->scusrcreg[src_ch]->control);
++	else /* SRC_IN */
++		scu_or_writel(SRC_MODE_START_IN,
++			(u32 *)&rinfo->scusrcreg[src_ch]->control);
++	FNC_EXIT
++	return;
++}
++
++static void scu_src_stop(int src_ch, int src_dir)
++{
++	FNC_ENTRY
++	/* SRC_CONTROL */
++	if (src_dir == SRC_INOUT)
++		scu_and_writel(~(SRC_MODE_START_IN | SRC_MODE_START_OUT),
++			(u32 *)&rinfo->scusrcreg[src_ch]->control);
++	if (src_dir == SRC_OUT)
++		scu_and_writel(~SRC_MODE_START_OUT,
++			(u32 *)&rinfo->scusrcreg[src_ch]->control);
++	else /* SRC_IN */
++		scu_and_writel(~SRC_MODE_START_IN,
++			(u32 *)&rinfo->scusrcreg[src_ch]->control);
++
++	/* SCU SRC_MODE */
++	writel(0, (u32 *)&rinfo->scusrcreg[src_ch]->mode);
++
++	FNC_EXIT
++	return;
++}
++
++/************************************************************************
++
++	DAPM callback function
++
++************************************************************************/
++static void scu_ssi_control(int master_ch, int slave_ch);
++static void scu_ssi_start(int ssi_ch);
++static void scu_ssi_stop(int ssi_ch);
++
++void scu_init_ssi0(void)
++{
++	/* SSI0_0_BUSIF_ADINR */
++	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++	/* SSI_MODE0 (SSI independant) */
++	scu_or_writel(SSI_MODE0_IND0, (u32 *)(rinfo->ssiureg + SSI_MODE0));
++	/* SSI init */
++	scu_ssi_control(0, 1);
++	/* SSI start */
++	scu_ssi_start(0);
++}
++EXPORT_SYMBOL(scu_init_ssi0);
++
++void scu_deinit_ssi0(void)
++{
++	/* SSI stop */
++	scu_ssi_stop(0);
++	/* SSI_MODE0 (SSI independant) */
++	scu_and_writel(~SSI_MODE0_IND0, (u32 *)(rinfo->ssiureg + SSI_MODE0));
++	/* SSI0_0_BUSIF_ADINR */
++	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++}
++EXPORT_SYMBOL(scu_deinit_ssi0);
++
++void scu_init_ssi0_src0(void)
++{
++	/* SSI0_0_BUSIF_ADINR */
++	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++	/* SSI init */
++	scu_ssi_control(0, 1);
++	/* SSI start */
++	scu_ssi_start(0);
++}
++EXPORT_SYMBOL(scu_init_ssi0_src0);
++
++void scu_deinit_ssi0_src0(void)
++{
++	/* SSI stop */
++	scu_ssi_stop(0);
++	/* SSI0_0_BUSIF_ADINR */
++	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++}
++EXPORT_SYMBOL(scu_deinit_ssi0_src0);
++
++void scu_init_ssi0_dvc0(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_init_ssi0_dvc0);
++
++void scu_deinit_ssi0_dvc0(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_deinit_ssi0_dvc0);
++
++void scu_init_src0(void)
++{
++	/* start src */
++	scu_src_start(0, SRC_INOUT);
++}
++EXPORT_SYMBOL(scu_init_src0);
++
++void scu_deinit_src0(void)
++{
++	/* stop src */
++	scu_src_stop(0, SRC_INOUT);
++}
++EXPORT_SYMBOL(scu_deinit_src0);
++
++void scu_init_dvc0(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_init_dvc0);
++
++void scu_deinit_dvc0(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_deinit_dvc0);
++
++void scu_init_ssi1(void)
++{
++	/* SSI1_0_BUSIF_ADINR */
++	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++	/* SSI_MODE0 (SSI independant) */
++	scu_or_writel(SSI_MODE0_IND1, (u32 *)(rinfo->ssiureg + SSI_MODE0));
++	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++	scu_or_writel(SSI_MODE1_SSI1_MASTER,
++			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	/* SSI init */
++	scu_ssi_control(0, 1);
++	/* SSI start */
++	scu_ssi_start(1);
++}
++EXPORT_SYMBOL(scu_init_ssi1);
++
++void scu_deinit_ssi1(void)
++{
++	/* SSI stop */
++	scu_ssi_stop(1);
++	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++	scu_and_writel(~SSI_MODE1_SSI1_MASTER,
++			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	/* SSI_MODE0 (SSI independant) */
++	scu_and_writel(~SSI_MODE0_IND1, (u32 *)(rinfo->ssiureg + SSI_MODE0));
++	/* SSI0_0_BUSIF_ADINR */
++	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++}
++EXPORT_SYMBOL(scu_deinit_ssi1);
++
++void scu_init_ssi1_src1(void)
++{
++	/* SSI1_0_BUSIF_ADINR */
++	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++	scu_or_writel(SSI_MODE1_SSI1_MASTER,
++			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	/* SSI init */
++	scu_ssi_control(0, 1);
++	/* SSI start */
++	scu_ssi_start(1);
++}
++EXPORT_SYMBOL(scu_init_ssi1_src1);
++
++void scu_deinit_ssi1_src1(void)
++{
++	/* SSI stop */
++	scu_ssi_stop(1);
++	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++	scu_and_writel(~SSI_MODE1_SSI1_MASTER,
++			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	/* SSI0_0_BUSIF_ADINR */
++	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++}
++EXPORT_SYMBOL(scu_deinit_ssi1_src1);
++
++void scu_init_ssi1_dvc1(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_init_ssi1_dvc1);
++
++void scu_deinit_ssi1_dvc1(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_deinit_ssi1_dvc1);
++
++void scu_init_src1(void)
++{
++	/* start src */
++	scu_src_start(1, SRC_INOUT);
++}
++EXPORT_SYMBOL(scu_init_src1);
++
++void scu_deinit_src1(void)
++{
++	/* stop src */
++	scu_src_stop(1, SRC_INOUT);
++}
++EXPORT_SYMBOL(scu_deinit_src1);
++
++void scu_init_src1_dvc1(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_init_src1_dvc1);
++
++void scu_deinit_src1_dvc1(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_deinit_src1_dvc1);
++
++void scu_init_dvc1(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_init_dvc1);
++
++void scu_deinit_dvc1(void)
++{
++	/* no process (not implement ) */
++}
++EXPORT_SYMBOL(scu_deinit_dvc1);
++
++/************************************************************************
++
++	dai ops
++
++************************************************************************/
++/* Playback and capture hardware properties are identical */
++static struct snd_pcm_hardware scu_dai_pcm_hw = {
++	.info			= (SNDRV_PCM_INFO_INTERLEAVED	|
++				   SNDRV_PCM_INFO_MMAP		|
++				   SNDRV_PCM_INFO_MMAP_VALID	|
++				   SNDRV_PCM_INFO_PAUSE),
++	.formats		= SNDRV_PCM_FMTBIT_S16_LE,
++	.rates			= SNDRV_PCM_RATE_8000_48000,
++	.rate_min		= 8000,
++	.rate_max		= 48000,
++	.channels_min		= 2,
++	.channels_max		= 2,
++	.buffer_bytes_max	= SCU_BUFFER_BYTES_MAX,
++	.period_bytes_min	= SCU_PERIOD_BYTES_MIN,
++	.period_bytes_max	= SCU_PERIOD_BYTES_MAX,
++	.periods_min		= SCU_PERIODS_MIN,
++	.periods_max		= SCU_PERIODS_MAX,
++};
++
++static int scu_dai_startup(struct snd_pcm_substream *substream,
++			   struct snd_soc_dai *dai)
++{
++	int ret = 0;
++
++	FNC_ENTRY
++	snd_soc_set_runtime_hwparams(substream, &scu_dai_pcm_hw);
++
++	FNC_EXIT
++	return ret;
++}
++
++static void scu_dai_shutdown(struct snd_pcm_substream *substream,
++			     struct snd_soc_dai *dai)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return;
++}
++
++static int scu_dai_prepare(struct snd_pcm_substream *substream,
++			   struct snd_soc_dai *dai)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return 0;
++}
++
++static int scu_dai_set_fmt(struct snd_soc_dai *dai,
++			   unsigned int fmt)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return 0;
++}
++
++static int scu_dai_set_sysclk(struct snd_soc_dai *dai, int clk_id,
++			      unsigned int freq, int dir)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return 0;
++}
++
++static const struct snd_soc_dai_ops scu_dai_ops = {
++	.startup	= scu_dai_startup,
++	.shutdown	= scu_dai_shutdown,
++	.prepare	= scu_dai_prepare,
++	.set_sysclk	= scu_dai_set_sysclk,
++	.set_fmt	= scu_dai_set_fmt,
++};
++
++static struct snd_soc_dai_driver scu_ssi_dai = {
++	.name	= "scu-ssi-dai",
++	.playback = {
++		.channels_min = 2,
++		.channels_max = 2,
++		.formats = SNDRV_PCM_FMTBIT_S16,
++		.rates = SNDRV_PCM_RATE_8000_48000,
++	},
++	.capture = {
++		.channels_min = 2,
++		.channels_max = 2,
++		.formats = SNDRV_PCM_FMTBIT_S16,
++		.rates = SNDRV_PCM_RATE_8000_48000,
++	 },
++	.ops = &scu_dai_ops,
++};
++
++static void scu_alloc_scureg(void __iomem *mem)
++{
++	int i;
++	void __iomem *offset;
++
++	/* SCU common */
++	rinfo->scureg = mem + 0x500000;
++	DBG_MSG("scureg=%08x\n", (int)rinfo->scureg);
++
++	/* SCU common SRC */
++	offset = mem + 0x500000;
++	for (i = 0; i < MAXCH_SRC; i++) {
++		rinfo->scusrcreg[i] = (struct scu_src_regs *)offset;
++		offset += 0x20;
++		DBG_MSG("scusrcreg[%2d]=%08x\n", i, (int)rinfo->scusrcreg[i]);
++	}
++
++	/* SCU common CMD */
++	offset = mem + 0x500184;
++	for (i = 0; i < MAXCH_CMD; i++) {
++		rinfo->scucmdreg[i] = (struct scu_cmd_regs *)offset;
++		offset += 0x20;
++		DBG_MSG("scucmdreg[%2d]=%08x\n", i, (int)rinfo->scucmdreg[i]);
++	}
++
++	/* SRC */
++	offset = mem + 0x500200;
++	for (i = 0; i < MAXCH_SRC; i++) {
++		rinfo->srcreg[i] = (struct src_regs *)offset;
++		offset += 0x40;
++		DBG_MSG("srcreg[%2d]=%08x\n", i, (int)rinfo->srcreg[i]);
++	}
++
++	/* CTU */
++	offset = mem + 0x500500;
++	for (i = 0; i < MAXCH_CTU; i++) {
++		rinfo->ctureg[i] = (struct ctu_regs *)offset;
++		offset += 0x100;
++		DBG_MSG("ctureg[%2d]=%08x\n", i, (int)rinfo->ctureg[i]);
++	}
++
++	/* MIX */
++	offset = mem + 0x500d00;
++	for (i = 0; i < MAXCH_CMD; i++) {
++		rinfo->mixreg[i] = (struct mix_regs *)offset;
++		offset += 0x40;
++		DBG_MSG("mixreg[%2d]=%08x\n", i, (int)rinfo->mixreg[i]);
++	}
++
++	/* DVC */
++	offset = mem + 0x500e00;
++	for (i = 0; i < MAXCH_CMD; i++) {
++		rinfo->dvcreg[i] = (struct dvc_regs *)offset;
++		offset += 0x100;
++		DBG_MSG("dvcreg[%2d]=%08x\n", i, (int)rinfo->dvcreg[i]);
++	}
++
++	return;
++}
++
++static void scu_alloc_ssireg(void __iomem *mem)
++{
++	int i;
++	void __iomem *offset;
++
++	offset = mem;
++	for (i = 0; i < MAXCH_SSI; i++) {
++		rinfo->ssireg[i] = (struct ssi_regs *)offset;
++		offset += 0x40;
++		DBG_MSG("ssireg[%2d]=%08x\n", i, (int)rinfo->ssireg[i]);
++	}
++
++	return;
++}
++
++static int __devinit scu_probe(struct platform_device *pdev)
++{
++	int ret = 0;
++	struct scu_clock_info *cinfo;
++	struct resource *scu_res;
++	struct resource *scu_region = NULL;
++	struct resource *ssiu_res;
++	struct resource *ssiu_region = NULL;
++	struct resource *ssi_res;
++	struct resource *ssi_region = NULL;
++	struct resource *adg_res;
++	struct resource *adg_region = NULL;
++	void __iomem *mem;
++
++	FNC_ENTRY
++	if (pdev->id != 0) {
++		dev_err(&pdev->dev, "current scu support id 0 only now\n");
++		return -ENODEV;
++	}
++
++	ainfo = kzalloc(sizeof(struct scu_audio_info), GFP_KERNEL);
++	if (!ainfo) {
++		dev_err(&pdev->dev, "no memory\n");
++		return -ENOMEM;
++	}
++	cinfo = &ainfo->clockinfo;
++	rinfo = &ainfo->reginfo;
++
++	spin_lock_init(&ainfo->scu_lock);
++	sculock = &ainfo->scu_lock;
++
++	/* request clocks */
++	cinfo->adg_clk = clk_get(NULL, "adg");
++	if (IS_ERR(cinfo->adg_clk)) {
++		dev_err(&pdev->dev, "Unable to get adg clock\n");
++		ret = PTR_ERR(cinfo->adg_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->scu_clk = clk_get(NULL, "scu");
++	if (IS_ERR(cinfo->scu_clk)) {
++		dev_err(&pdev->dev, "Unable to get scu clock\n");
++		ret = PTR_ERR(cinfo->scu_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->src0_clk = clk_get(NULL, "src0");
++	if (IS_ERR(cinfo->src0_clk)) {
++		dev_err(&pdev->dev, "Unable to get src0 clock\n");
++		ret = PTR_ERR(cinfo->src0_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->src1_clk = clk_get(NULL, "src1");
++	if (IS_ERR(cinfo->src1_clk)) {
++		dev_err(&pdev->dev, "Unable to get src1 clock\n");
++		ret = PTR_ERR(cinfo->src1_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->dvc0_clk = clk_get(NULL, "dvc0");
++	if (IS_ERR(cinfo->dvc0_clk)) {
++		dev_err(&pdev->dev, "Unable to get dvc0 clock\n");
++		ret = PTR_ERR(cinfo->dvc0_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->dvc1_clk = clk_get(NULL, "dvc1");
++	if (IS_ERR(cinfo->dvc1_clk)) {
++		dev_err(&pdev->dev, "Unable to get dvc1 clock\n");
++		ret = PTR_ERR(cinfo->dvc1_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->ssiu_clk = clk_get(NULL, "ssi");
++	if (IS_ERR(cinfo->ssiu_clk)) {
++		dev_err(&pdev->dev, "Unable to get ssiu clock\n");
++		ret = PTR_ERR(cinfo->ssiu_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->ssi0_clk = clk_get(NULL, "ssi0");
++	if (IS_ERR(cinfo->ssi0_clk)) {
++		dev_err(&pdev->dev, "Unable to get ssi0 clock\n");
++		ret = PTR_ERR(cinfo->ssi0_clk);
++		goto error_clk_put;
++	}
++
++	cinfo->ssi1_clk = clk_get(NULL, "ssi1");
++	if (IS_ERR(cinfo->ssi1_clk)) {
++		dev_err(&pdev->dev, "Unable to get ssi1 clock\n");
++		ret = PTR_ERR(cinfo->ssi1_clk);
++		goto error_clk_put;
++	}
++
++	/* resource */
++	scu_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!scu_res) {
++		dev_err(&pdev->dev, "No memory (0) resource\n");
++		ret = -ENODEV;
++		goto error_clk_put;
++	}
++
++	ssiu_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (!ssiu_res) {
++		dev_err(&pdev->dev, "No memory (1) resource\n");
++		ret = -ENODEV;
++		goto error_clk_put;
++	}
++
++	ssi_res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
++	if (!ssiu_res) {
++		dev_err(&pdev->dev, "No memory (2) resource\n");
++		ret = -ENODEV;
++		goto error_clk_put;
++	}
++
++	adg_res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
++	if (!adg_res) {
++		dev_err(&pdev->dev, "No memory (3) resource\n");
++		ret = -ENODEV;
++		goto error_clk_put;
++	}
++
++	scu_region = request_mem_region(scu_res->start,
++			resource_size(scu_res), pdev->name);
++	if (!scu_region) {
++		dev_err(&pdev->dev, "SCU region already claimed\n");
++		ret = -EBUSY;
++		goto error_release;
++	}
++
++	ssiu_region = request_mem_region(ssiu_res->start,
++			resource_size(ssiu_res), pdev->name);
++	if (!ssiu_region) {
++		dev_err(&pdev->dev, "SSIU region already claimed\n");
++		ret = -EBUSY;
++		goto error_release;
++	}
++
++	ssi_region = request_mem_region(ssi_res->start,
++			resource_size(ssi_res), pdev->name);
++	if (!ssi_region) {
++		dev_err(&pdev->dev, "SSI region already claimed\n");
++		ret = -EBUSY;
++		goto error_release;
++	}
++
++	adg_region = request_mem_region(adg_res->start,
++			resource_size(adg_res), pdev->name);
++	if (!adg_region) {
++		dev_err(&pdev->dev, "ADG region already claimed\n");
++		ret = -EBUSY;
++		goto error_release;
++	}
++
++	/* mapping scu */
++	mem = ioremap_nocache(scu_res->start, resource_size(scu_res));
++	if (!mem) {
++		dev_err(&pdev->dev, "ioremap failed for scu\n");
++		ret = -ENOMEM;
++		goto error_unmap;
++	}
++	scu_alloc_scureg(mem);
++
++	mem = ioremap_nocache(ssiu_res->start, resource_size(ssiu_res));
++	if (!mem) {
++		dev_err(&pdev->dev, "ioremap failed for ssiu\n");
++		ret = -ENOMEM;
++		goto error_unmap;
++	}
++	rinfo->ssiureg = mem;
++	DBG_MSG("ssiureg=%08x\n", (int)rinfo->ssiureg);
++
++	mem = ioremap_nocache(ssi_res->start, resource_size(ssi_res));
++	if (!mem) {
++		dev_err(&pdev->dev, "ioremap failed for ssi\n");
++		ret = -ENOMEM;
++		goto error_unmap;
++	}
++	scu_alloc_ssireg(mem);
++
++	mem = ioremap_nocache(adg_res->start, resource_size(adg_res));
++	if (!mem) {
++		dev_err(&pdev->dev, "ioremap failed for adg\n");
++		ret = -ENOMEM;
++		goto error_unmap;
++	}
++	rinfo->adgreg = mem;
++	DBG_MSG("adgreg=%08x\n", (int)rinfo->adgreg);
++
++	clk_enable(cinfo->adg_clk);
++	clk_enable(cinfo->scu_clk);
++	clk_enable(cinfo->src0_clk);
++	clk_enable(cinfo->src1_clk);
++	clk_enable(cinfo->dvc0_clk);
++	clk_enable(cinfo->dvc1_clk);
++	clk_enable(cinfo->ssiu_clk);
++	clk_enable(cinfo->ssi0_clk);
++	clk_enable(cinfo->ssi1_clk);
++
++	ret = snd_soc_register_platform(&pdev->dev, &scu_platform);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "cannot snd soc register\n");
++		goto error_unmap;
++	}
++
++	ret = snd_soc_register_dais(&pdev->dev, &scu_ssi_dai, 1);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "cannot snd soc dais register\n");
++		goto error_unregister;
++	}
++
++	adg_init();
++	scu_ssiu_init();
++
++	FNC_EXIT
++	return ret;
++
++error_unregister:
++	snd_soc_unregister_platform(&pdev->dev);
++
++error_unmap:
++	if (rinfo->scureg)
++		iounmap(rinfo->scureg);
++	if (rinfo->ssiureg)
++		iounmap(rinfo->ssiureg);
++	if (rinfo->ssireg)
++		iounmap(rinfo->ssireg);
++	if (rinfo->adgreg)
++		iounmap(rinfo->adgreg);
++
++error_release:
++	if (scu_region)
++		release_mem_region(scu_res->start, resource_size(scu_res));
++	if (ssiu_region)
++		release_mem_region(ssiu_res->start, resource_size(ssiu_res));
++	if (ssi_region)
++		release_mem_region(ssi_res->start, resource_size(ssi_res));
++	if (adg_region)
++		release_mem_region(adg_res->start, resource_size(adg_res));
++
++error_clk_put:
++	if (!IS_ERR(cinfo->adg_clk))
++		clk_put(cinfo->adg_clk);
++	if (!IS_ERR(cinfo->scu_clk))
++		clk_put(cinfo->scu_clk);
++	if (!IS_ERR(cinfo->src0_clk))
++		clk_put(cinfo->src0_clk);
++	if (!IS_ERR(cinfo->src1_clk))
++		clk_put(cinfo->src1_clk);
++	if (!IS_ERR(cinfo->dvc0_clk))
++		clk_put(cinfo->dvc0_clk);
++	if (!IS_ERR(cinfo->dvc1_clk))
++		clk_put(cinfo->dvc1_clk);
++	if (!IS_ERR(cinfo->ssiu_clk))
++		clk_put(cinfo->ssiu_clk);
++	if (!IS_ERR(cinfo->ssi0_clk))
++		clk_put(cinfo->ssi0_clk);
++	if (!IS_ERR(cinfo->ssi1_clk))
++		clk_put(cinfo->ssi1_clk);
++
++	FNC_EXIT
++	return ret;
++}
++
++static int __devexit scu_remove(struct platform_device *pdev)
++{
++	struct scu_clock_info *cinfo = &ainfo->clockinfo;
++	struct resource *res;
++
++	FNC_ENTRY
++	snd_soc_unregister_dai(&pdev->dev);
++	snd_soc_unregister_platform(&pdev->dev);
++
++	clk_disable(cinfo->adg_clk);
++	clk_disable(cinfo->scu_clk);
++	clk_disable(cinfo->src0_clk);
++	clk_disable(cinfo->src1_clk);
++	clk_disable(cinfo->dvc0_clk);
++	clk_disable(cinfo->dvc1_clk);
++	clk_disable(cinfo->ssiu_clk);
++	clk_disable(cinfo->ssi0_clk);
++	clk_disable(cinfo->ssi1_clk);
++
++	clk_put(cinfo->adg_clk);
++	clk_put(cinfo->scu_clk);
++	clk_put(cinfo->src0_clk);
++	clk_put(cinfo->src1_clk);
++	clk_put(cinfo->dvc0_clk);
++	clk_put(cinfo->dvc1_clk);
++	clk_put(cinfo->ssiu_clk);
++	clk_put(cinfo->ssi0_clk);
++	clk_put(cinfo->ssi1_clk);
++
++	iounmap(rinfo->scureg);
++	iounmap(rinfo->ssiureg);
++	iounmap(rinfo->ssireg);
++	iounmap(rinfo->adgreg);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (res)
++		release_mem_region(res->start, resource_size(res));
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (res)
++		release_mem_region(res->start, resource_size(res));
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
++	if (res)
++		release_mem_region(res->start, resource_size(res));
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
++	if (res)
++		release_mem_region(res->start, resource_size(res));
++
++	kfree(ainfo);
++
++	FNC_EXIT
++	return 0;
++}
++
++static struct platform_driver scu_driver = {
++	.driver		= {
++		.owner	= THIS_MODULE,
++		.name	= "scu-pcm-audio",
++	},
++	.probe		= scu_probe,
++	.remove		= __devexit_p(scu_remove),
++};
++
++module_platform_driver(scu_driver);
++
++MODULE_AUTHOR("Carlos Munoz <carlos@kenati.com>");
++MODULE_DESCRIPTION("ALSA SoC SH7722 SIU driver");
++MODULE_LICENSE("GPL");
+diff --git a/sound/soc/sh/scu_pcm.c b/sound/soc/sh/scu_pcm.c
+new file mode 100644
+index 0000000..f4a436e
+--- /dev/null
++++ b/sound/soc/sh/scu_pcm.c
+@@ -0,0 +1,746 @@
++/*
++ * sound/soc/sh/scu_pcm.c
++ *     This file is ALSA SoC driver for SCU peripheral.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the sound/soc/sh/siu_pcm.c
++ *
++ * siu_pcm.c - ALSA driver for Renesas SH7343, SH7722 SIU peripheral.
++ *
++ * Copyright (C) 2009-2010 Guennadi Liakhovetski <g.liakhovetski@gmx.de>
++ * Copyright (C) 2006 Carlos Munoz <carlos@kenati.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#include <linux/delay.h>
++#include <linux/dma-mapping.h>
++#include <linux/dmaengine.h>
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++#include <linux/workqueue.h>
++#include <sound/control.h>
++#include <sound/core.h>
++#include <sound/pcm.h>
++#include <sound/pcm_params.h>
++#include <sound/soc.h>
++#include <sound/sh_scu.h>
++
++#undef DEBUG
++#ifdef DEBUG
++#define FNC_ENTRY	pr_info("entry:%s:%d\n", __func__, __LINE__);
++#define FNC_EXIT	pr_info("exit:%s:%d\n", __func__, __LINE__);
++#define DBG_POINT()	pr_info("check:%s:%d\n", __func__, __LINE__);
++#define DBG_MSG(args...)	pr_info(args)
++#else  /* DEBUG */
++#define FNC_ENTRY
++#define FNC_EXIT
++#define DBG_POINT()
++#define DBG_MSG(args...)
++#endif /* DEBUG */
++
++static u64 dma_mask = DMA_BIT_MASK(32);
++
++static struct snd_soc_dai *scu_get_dai(struct snd_pcm_substream *ss)
++{
++	struct snd_soc_pcm_runtime *rtd = ss->private_data;
++
++	return  rtd->cpu_dai;
++}
++
++static void scu_dma_callback(struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	struct snd_soc_dai *dai = scu_get_dai(ss);
++	struct snd_pcm_runtime *runtime = ss->runtime;
++	int dir = ss->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int buf_pos;
++	u32 dma_size;
++	u32 dma_paddr;
++
++	FNC_ENTRY
++
++	buf_pos = pcminfo->period & (SCU_PERIODS_MAX - 1);
++	dma_size = frames_to_bytes(runtime, runtime->period_size);
++	dma_paddr = runtime->dma_addr + (buf_pos * dma_size);
++	dma_sync_single_for_cpu(dai->dev, dma_paddr, dma_size, DMA_DIR(dir));
++
++	pcminfo->tran_period++;
++
++	/* Notify alsa: a period is done */
++	snd_pcm_period_elapsed(ss);
++
++	/* stop dma */
++	if (pcminfo->flag_start == 0)
++		return;
++
++	schedule_work(&pcminfo->work);
++
++	FNC_EXIT
++}
++
++static bool filter_audma(struct dma_chan *chan, void *slave)
++{
++	struct shdma_slave *param = slave;
++	struct platform_device *pdev = to_platform_device(chan->device->dev);
++
++	DBG_MSG("%s: pdev->id=%d, slave_id=%d\n",
++				__func__, pdev->id, param->slave_id);
++
++	if ((pdev->id != SHDMA_DEVID_AUDIO_LO) &&
++	    (pdev->id != SHDMA_DEVID_AUDIO_UP))
++		return false;
++
++	chan->private = param;
++	return true;
++}
++
++static bool filter_audmapp(struct dma_chan *chan, void *slave)
++{
++	struct shdma_slave *param = slave;
++	struct platform_device *pdev = to_platform_device(chan->device->dev);
++
++	DBG_MSG("%s: pdev->id=%d, slave_id=%d\n",
++				__func__, pdev->id, param->slave_id);
++
++	if (pdev->id != SHDMA_DEVID_AUDIOPP)
++		return false;
++
++	chan->private = param;
++	return true;
++}
++
++static int scu_dmae_req_chan(int sid, int did, struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	struct sh_dmadesc_slave *param = &pcminfo->de_param[sid];
++	dma_cap_mask_t mask;
++	int ret = 0;
++
++	dma_cap_zero(mask);
++	dma_cap_set(DMA_SLAVE, mask);
++	DBG_MSG("sid=%d, did=%d\n", sid, did);
++
++	FNC_ENTRY
++	/* set dma slave id */
++	param->shdma_slave.slave_id = sid;
++
++	/* request dma channel */
++	if (pcminfo->de_chan[sid] == NULL) {
++		if (did == SHDMA_DEVID_AUDIO)
++			pcminfo->de_chan[sid] = dma_request_channel(mask,
++							filter_audma, param);
++		else /* did == SHDMA_DEVID_AUDIOPP */
++			pcminfo->de_chan[sid] = dma_request_channel(mask,
++							filter_audmapp, param);
++		if (!pcminfo->de_chan[sid]) {
++			printk(KERN_ERR "DMA channel request error\n");
++			ret = -EBUSY;
++		}
++	}
++
++	DBG_MSG("chan=0x%08x\n", (int)pcminfo->de_chan[sid]);
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_dmae_rel_chan(int sid, struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	int ret = 0;
++
++	FNC_ENTRY
++
++	/* release dma channel */
++	if (pcminfo->de_chan[sid]) {
++		dma_release_channel(pcminfo->de_chan[sid]);
++		pcminfo->de_chan[sid] = NULL;
++	}
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_dmae_rel_allchan(struct snd_pcm_substream *ss)
++{
++	int i;
++	int ret = 0;
++
++	FNC_ENTRY
++
++	/* release all dma channel */
++	for (i = 0; i < SHDMA_SLAVE_PCM_MAX; i++)
++		ret = scu_dmae_rel_chan(i, ss);
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_dmae_request(struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	int dir = ss->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int ret = 0;
++
++	FNC_ENTRY
++	if (!dir) { /* playback */
++		/* ssi0 */
++		if (pcminfo->routeinfo->pcb.init_ssi) {
++			/* dma channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_MEM_SSI0,
++						SHDMA_DEVID_AUDIO, ss);
++		}
++
++		/* ssi0 via src0 */
++		if (pcminfo->routeinfo->pcb.init_ssi_src &&
++		    pcminfo->routeinfo->pcb.init_src) {
++			/* dma(mem->src) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_MEM_SRC0,
++						SHDMA_DEVID_AUDIO, ss);
++
++			/* dma(src->ssi) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SRC0_SSI0,
++						SHDMA_DEVID_AUDIOPP, ss);
++		}
++
++		/* ssi0 via src0,dvc0 */
++		/* not implement */
++	} else { /* capture */
++		/* ssi1 */
++		if (pcminfo->routeinfo->ccb.init_ssi) {
++			/* dma channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SSI1_MEM,
++						SHDMA_DEVID_AUDIO, ss);
++		}
++
++		/* ssi1 via src1 */
++		if (pcminfo->routeinfo->ccb.init_ssi_src &&
++		    pcminfo->routeinfo->ccb.init_src) {
++			/* dma(ssi->src) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SSI1_SRC1,
++						SHDMA_DEVID_AUDIOPP, ss);
++
++			/* dma(src->mem) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SRC1_MEM,
++						SHDMA_DEVID_AUDIO, ss);
++		}
++
++		/* ssi1 via src1,dvc1 */
++		/* not implement */
++	}
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_dmae_release(struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	int dir = ss->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int ret = 0;
++
++	FNC_ENTRY
++	if (!dir) { /* playback */
++		/* ssi */
++		if (pcminfo->routeinfo->pcb.init_ssi)
++			ret = scu_dmae_rel_allchan(ss);
++
++		/* ssi via src */
++		if (pcminfo->routeinfo->pcb.init_ssi_src &&
++		    pcminfo->routeinfo->pcb.init_src) {
++			ret = scu_dmae_rel_allchan(ss);
++		}
++
++		/* ssi via src/dvc */
++		/* not implement */
++
++	} else { /* capture */
++		/* ssi */
++		if (pcminfo->routeinfo->ccb.init_ssi)
++			ret = scu_dmae_rel_allchan(ss);
++
++		/* ssi via src */
++		if (pcminfo->routeinfo->ccb.init_ssi_src &&
++		    pcminfo->routeinfo->ccb.init_src) {
++			ret = scu_dmae_rel_allchan(ss);
++		}
++
++		/* ssi via src/dvc */
++		/* not implement */
++	}
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_audma_start(int sid, struct snd_pcm_substream *ss)
++{
++	int dir = ss->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int buf_pos;
++	struct snd_pcm_runtime *runtime = ss->runtime;
++	struct scu_pcm_info *pcminfo = runtime->private_data;
++	struct device *dev = ss->pcm->card->dev;
++	struct dma_async_tx_descriptor *desc;
++	dma_cookie_t cookie;
++	u32 dma_size;
++	u32 dma_paddr;
++	struct snd_soc_dai *dai;
++
++	FNC_ENTRY
++	dai = scu_get_dai(ss);
++
++	/* buffer control */
++	buf_pos = pcminfo->period & (SCU_PERIODS_MAX - 1);
++	DBG_MSG("buf_pos=%d\n", buf_pos);
++
++	/* DMA size */
++	dma_size = frames_to_bytes(runtime, runtime->period_size);
++	DBG_MSG("dma_size=%d\n", dma_size);
++
++	/* DMA physical adddress */
++	dma_paddr = runtime->dma_addr + (buf_pos * dma_size);
++	DBG_MSG("dma_paddr=0x%08x\n", dma_paddr);
++
++	dma_sync_single_for_device(dai->dev, dma_paddr, dma_size, DMA_DIR(dir));
++
++	desc = dmaengine_prep_slave_single(pcminfo->de_chan[sid], dma_paddr,
++		dma_size, DMA_DIR(dir), DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
++	if (!desc) {
++		dev_err(dai->dev, "dmaengine_prep_slave_sg_single() fail\n");
++		return -ENOMEM;
++	}
++
++	desc->callback = (dma_async_tx_callback)scu_dma_callback;
++	desc->callback_param = ss;
++
++	cookie = dmaengine_submit(desc);
++	if (cookie < 0) {
++		dev_err(dev, "Failed to submit a dma transfer\n");
++		FNC_EXIT
++		return cookie;
++	}
++
++	dma_async_issue_pending(pcminfo->de_chan[sid]);
++
++	/* Update period */
++	pcminfo->period++;
++
++	FNC_EXIT
++	return 0;
++}
++
++static int scu_audma_stop(struct snd_pcm_substream *ss)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return 0;
++}
++
++static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	int dir = ss->stream == SNDRV_PCM_STREAM_CAPTURE;
++
++	FNC_ENTRY
++	if (!dir) { /* playback */
++		/* ssi */
++		if (pcminfo->routeinfo->pcb.init_ssi) {
++			/* start dma */
++			scu_audma_start(SHDMA_SLAVE_PCM_MEM_SSI0, ss);
++
++			if (first_flag) {
++				/* start ssi */
++				pcminfo->routeinfo->pcb.init_ssi();
++			}
++		}
++
++		/* ssi via src */
++		if (pcminfo->routeinfo->pcb.init_ssi_src &&
++		    pcminfo->routeinfo->pcb.init_src) {
++			/* start dma */
++			scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
++
++			if (first_flag) {
++				/* control src */
++				scu_src_control(0, ss);
++
++				/* start ssi */
++				pcminfo->routeinfo->pcb.init_ssi_src();
++
++				/* start src */
++				pcminfo->routeinfo->pcb.init_src();
++			}
++		}
++
++		/* ssi via src/dvc */
++		/* not implement */
++
++	} else { /* capture */
++		/* ssi */
++		if (pcminfo->routeinfo->ccb.init_ssi) {
++			/* start dma */
++			scu_audma_start(SHDMA_SLAVE_PCM_SSI1_MEM, ss);
++
++			if (first_flag) {
++				/* start ssi */
++				pcminfo->routeinfo->ccb.init_ssi();
++			}
++		}
++
++		/* ssi via src */
++		if (pcminfo->routeinfo->ccb.init_ssi_src &&
++		    pcminfo->routeinfo->ccb.init_src) {
++			/* start dma */
++			scu_audma_start(SHDMA_SLAVE_PCM_SRC1_MEM, ss);
++
++			if (first_flag) {
++				/* control src */
++				scu_src_control(1, ss);
++
++				/* start ssi */
++				pcminfo->routeinfo->ccb.init_ssi_src();
++
++				/* start src */
++				pcminfo->routeinfo->ccb.init_src();
++			}
++		}
++
++		/* ssi via src/dvc */
++		/* not implement */
++	}
++
++	FNC_EXIT
++	return;
++}
++
++static void scu_pcm_stop(struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	int dir = ss->stream == SNDRV_PCM_STREAM_CAPTURE;
++
++	FNC_ENTRY
++	if (!dir) { /* playback */
++		/* ssi */
++		if (pcminfo->routeinfo->pcb.deinit_ssi) {
++			DBG_MSG("post:ssi\n");
++			/* stop ssi */
++			pcminfo->routeinfo->pcb.deinit_ssi();
++			/* stop dma */
++			scu_audma_stop(ss);
++		}
++
++		/* ssi via src */
++		if (pcminfo->routeinfo->pcb.deinit_ssi_src &&
++		    pcminfo->routeinfo->pcb.deinit_src) {
++			DBG_MSG("post:src->ssi\n");
++			/* stop src */
++			pcminfo->routeinfo->pcb.deinit_src();
++			/* stop ssi */
++			pcminfo->routeinfo->pcb.deinit_ssi_src();
++			/* stop dma */
++			scu_audma_stop(ss);
++		}
++
++		/* ssi via src/dvc */
++		/* not implement */
++
++	} else { /* capture */
++		/* ssi */
++		if (pcminfo->routeinfo->ccb.deinit_ssi) {
++			DBG_MSG("post:ssi\n");
++			/* stop ssi */
++			pcminfo->routeinfo->ccb.deinit_ssi();
++			/* stop dma */
++			scu_audma_stop(ss);
++		}
++
++		/* ssi via src */
++		if (pcminfo->routeinfo->ccb.deinit_ssi_src &&
++		    pcminfo->routeinfo->ccb.deinit_src) {
++			DBG_MSG("post:src->ssi\n");
++			/* stop src */
++			pcminfo->routeinfo->ccb.deinit_src();
++			/* stop ssi */
++			pcminfo->routeinfo->ccb.deinit_ssi_src();
++			/* stop dma */
++			scu_audma_stop(ss);
++		}
++
++		/* ssi via src/dvc */
++		/* not implement */
++	}
++
++	FNC_EXIT
++	return;
++}
++
++static void scu_dma_do_work(struct work_struct *work)
++{
++	struct scu_pcm_info *pcminfo =
++			container_of(work, struct scu_pcm_info, work);
++	struct snd_pcm_substream *ss = pcminfo->ss;
++
++	FNC_ENTRY
++	/* start pcm process */
++	scu_pcm_start(ss, pcminfo->flag_first);
++	if (pcminfo->flag_first == 1)
++		pcminfo->flag_first = 0;
++
++	FNC_EXIT
++	return;
++}
++
++static int scu_audio_start(struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++	int ret = 0;
++
++	FNC_ENTRY
++	/* dma channel request */
++	ret = scu_dmae_request(ss);
++	if (ret < 0) {
++		pr_info("scu_dmae_request faild\n");
++		FNC_EXIT
++		return ret;
++	}
++
++	/* DMA control */
++	pcminfo->flag_start = 1;
++	/* PCM 1st process */
++	pcminfo->flag_first = 1;
++
++	schedule_work(&pcminfo->work);
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_audio_stop(struct snd_pcm_substream *ss)
++{
++	int ret = 0;
++	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
++
++	FNC_ENTRY
++	/* stop dma */
++	pcminfo->flag_start = 0;
++
++	/* stop pcm process */
++	scu_pcm_stop(ss);
++
++	/* dma channel release */
++	ret = scu_dmae_release(ss);
++
++	FNC_EXIT
++	return ret;
++}
++
++static struct scu_pcm_info *scu_pcm_new_stream(struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo;
++	int i;
++
++	FNC_ENTRY
++	/* allocate scu_pcm_info structure */
++	pcminfo = kzalloc(sizeof(struct scu_pcm_info), GFP_KERNEL);
++	if (!pcminfo)
++		return pcminfo;
++
++	/* initialize rcar_pcm_info structure */
++	pcminfo->period      = 0;
++	pcminfo->tran_period = 0;
++	pcminfo->routeinfo   = scu_get_route_info();
++	pcminfo->ss          = ss;
++	for (i = 0; i < SHDMA_SLAVE_PCM_MAX; i++)
++		pcminfo->de_chan[i] = NULL;
++
++	spin_lock_init(&pcminfo->pcm_lock);
++
++	INIT_WORK(&pcminfo->work, scu_dma_do_work);
++	FNC_EXIT
++	return pcminfo;
++}
++
++static void scu_pcm_free_stream(struct snd_pcm_runtime *runtime)
++{
++	struct scu_pcm_info *pcminfo = runtime->private_data;
++
++	FNC_ENTRY
++
++	/* post process */
++	cancel_work_sync(&pcminfo->work);
++	kfree(runtime->private_data);	/* free pcminfo structure */
++
++	FNC_EXIT
++	return;
++}
++
++static int scu_pcm_open(struct snd_pcm_substream *ss)
++{
++	struct scu_pcm_info *pcminfo;
++	int dir = ss->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int ret = 0;
++
++	FNC_ENTRY
++	pcminfo = scu_pcm_new_stream(ss);
++	if (pcminfo == NULL)
++		return -ENOMEM;
++
++	ret = scu_check_route(dir, pcminfo->routeinfo);
++	if (ret < 0)
++		return ret;
++
++	ss->runtime->private_data = pcminfo;
++	ss->runtime->private_free = scu_pcm_free_stream;
++
++	FNC_EXIT
++	return 0;
++}
++
++static int scu_pcm_close(struct snd_pcm_substream *ss)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return 0;
++}
++
++static int scu_pcm_hw_params(struct snd_pcm_substream *ss,
++			     struct snd_pcm_hw_params *hw_params)
++{
++	struct device *dev = ss->pcm->card->dev;
++	int ret;
++
++	FNC_ENTRY
++	ret = snd_pcm_lib_malloc_pages(ss, params_buffer_bytes(hw_params));
++	if (ret < 0)
++		dev_err(dev, "snd_pcm_lib_malloc_pages() failed\n");
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_pcm_hw_free(struct snd_pcm_substream *ss)
++{
++	struct device *dev = ss->pcm->card->dev;
++	int ret;
++
++	FNC_ENTRY
++	ret = snd_pcm_lib_free_pages(ss);
++	if (ret < 0)
++		dev_err(dev, "snd_pcm_lib_free_pages() failed\n");
++
++	FNC_EXIT
++	return ret;
++}
++
++static int scu_pcm_prepare(struct snd_pcm_substream *ss)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return 0;
++}
++
++static int scu_pcm_trigger(struct snd_pcm_substream *ss, int cmd)
++{
++	int ret = 0;
++	struct snd_pcm_runtime *runtime = ss->runtime;
++	struct scu_pcm_info *pcminfo = runtime->private_data;
++
++	spin_lock(&pcminfo->pcm_lock);
++
++	FNC_ENTRY
++	switch (cmd) {
++	case SNDRV_PCM_TRIGGER_START:
++		ret = scu_audio_start(ss);
++		break;
++	case SNDRV_PCM_TRIGGER_STOP:
++		ret = scu_audio_stop(ss);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++
++	spin_unlock(&pcminfo->pcm_lock);
++
++	FNC_EXIT
++	return ret;
++}
++
++static snd_pcm_uframes_t scu_pcm_pointer_dma(struct snd_pcm_substream *ss)
++{
++	struct snd_pcm_runtime *runtime = ss->runtime;
++	struct scu_pcm_info *pcminfo = runtime->private_data;
++	snd_pcm_uframes_t position = 0;
++
++	position = runtime->period_size *
++			(pcminfo->tran_period & (SCU_PERIODS_MAX - 1));
++
++	DBG_MSG("\tposition = %d\n", (u32)position);
++
++	return position;
++}
++
++static int scu_pcm_new(struct snd_soc_pcm_runtime *rtd)
++{
++	int ret = 0;
++	struct snd_card *card = rtd->card->snd_card;
++
++	FNC_ENTRY
++	if (!card->dev->dma_mask)
++		card->dev->dma_mask = &dma_mask;
++
++	if (!card->dev->coherent_dma_mask)
++		card->dev->coherent_dma_mask = DMA_BIT_MASK(32);
++
++	ret = snd_pcm_lib_preallocate_pages_for_all(
++		rtd->pcm,
++		SNDRV_DMA_TYPE_DEV,
++		rtd->card->snd_card->dev,
++		SCU_BUFFER_BYTES_MAX, SCU_BUFFER_BYTES_MAX);
++
++	FNC_EXIT
++	return ret;
++}
++
++static void scu_pcm_free(struct snd_pcm *pcm)
++{
++	FNC_ENTRY
++
++	/* free dma buffer */
++	snd_pcm_lib_preallocate_free_for_all(pcm);
++
++	FNC_EXIT
++}
++
++static struct snd_pcm_ops scu_pcm_ops = {
++	.open		= scu_pcm_open,
++	.close		= scu_pcm_close,
++	.ioctl		= snd_pcm_lib_ioctl,
++	.hw_params	= scu_pcm_hw_params,
++	.hw_free	= scu_pcm_hw_free,
++	.prepare	= scu_pcm_prepare,
++	.trigger	= scu_pcm_trigger,
++	.pointer	= scu_pcm_pointer_dma,
++};
++
++struct snd_soc_platform_driver scu_platform = {
++	.ops		= &scu_pcm_ops,
++	.pcm_new	= scu_pcm_new,
++	.pcm_free	= scu_pcm_free,
++};
++EXPORT_SYMBOL_GPL(scu_platform);
+-- 
+1.7.10.4
+

@@ -1,7 +1,7 @@
 From 87e8d96f3ec13e2ecd69d94ed6045c239531de01 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 28 Feb 2013 22:19:05 +0100
-Subject: drm/rcar-du: Split hardware and KMS planes
+Subject: [PATCH 134/715] drm/rcar-du: Split hardware and KMS planes
 
 Hardware planes and KMS planes are distinct objects, separate them. This
 prepares the driver for multiple CRTCs support.
@@ -10,7 +10,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 9a39106864583ea42fb2d2c29d0fe219b91407b5)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |   11 ++++-----
  drivers/gpu/drm/rcar-du/rcar_du_kms.c   |    4 ++++

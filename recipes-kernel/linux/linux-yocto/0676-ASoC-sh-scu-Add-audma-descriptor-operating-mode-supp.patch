@@ -1,0 +1,84 @@
+From f56be5e9e962304d133e1bc137a20591ba3ba782 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Wed, 26 Jun 2013 13:50:24 +0900
+Subject: [PATCH 676/715] ASoC: sh: scu: Add audma descriptor operating mode
+ support
+
+Add the process that the information of 2nd descriptor step is added to
+PCM process.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit ce984242608cd9d480760cb48fe7f7d63807b7ce)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ sound/soc/sh/scu_pcm.c |   18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/sound/soc/sh/scu_pcm.c b/sound/soc/sh/scu_pcm.c
+index 0da0266..5971200 100644
+--- a/sound/soc/sh/scu_pcm.c
++++ b/sound/soc/sh/scu_pcm.c
+@@ -379,6 +379,9 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 			scu_audma_start(SHDMA_SLAVE_PCM_MEM_SSI0, ss);
+ 
+ 			if (first_flag) {
++				/* start dma */
++				scu_audma_start(SHDMA_SLAVE_PCM_MEM_SSI0, ss);
++
+ 				/* start ssi */
+ 				pcminfo->routeinfo->pcb.init_ssi();
+ 			}
+@@ -391,6 +394,9 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 			scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 
+ 			if (first_flag) {
++				/* start dma */
++				scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
++
+ 				/* start ssi */
+ 				pcminfo->routeinfo->pcb.init_ssi_src();
+ 
+@@ -408,6 +414,9 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 			scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 
+ 			if (first_flag) {
++				/* start dma */
++				scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
++
+ 				/* start ssi */
+ 				pcminfo->routeinfo->pcb.init_ssi_dvc();
+ 
+@@ -426,6 +435,9 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 			scu_audma_start(SHDMA_SLAVE_PCM_SSI1_MEM, ss);
+ 
+ 			if (first_flag) {
++				/* start dma */
++				scu_audma_start(SHDMA_SLAVE_PCM_SSI1_MEM, ss);
++
+ 				/* start ssi */
+ 				pcminfo->routeinfo->ccb.init_ssi();
+ 			}
+@@ -438,6 +450,9 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 			scu_audma_start(SHDMA_SLAVE_PCM_SRC1_MEM, ss);
+ 
+ 			if (first_flag) {
++				/* start dma */
++				scu_audma_start(SHDMA_SLAVE_PCM_SRC1_MEM, ss);
++
+ 				/* start ssi */
+ 				pcminfo->routeinfo->ccb.init_ssi_src();
+ 
+@@ -455,6 +470,9 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 			scu_audma_start(SHDMA_SLAVE_PCM_CMD1_MEM, ss);
+ 
+ 			if (first_flag) {
++				/* start dma */
++				scu_audma_start(SHDMA_SLAVE_PCM_CMD1_MEM, ss);
++
+ 				/* start ssi */
+ 				pcminfo->routeinfo->ccb.init_ssi_dvc();
+ 
+-- 
+1.7.10.4
+

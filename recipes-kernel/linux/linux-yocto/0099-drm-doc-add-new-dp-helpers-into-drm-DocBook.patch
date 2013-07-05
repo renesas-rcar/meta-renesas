@@ -1,7 +1,7 @@
 From 7992220d9c4f0ef7141ece1398fc56046d86503e Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:18 +0100
-Subject: drm/doc: add new dp helpers into drm DocBook
+Subject: [PATCH 099/715] drm/doc: add new dp helpers into drm DocBook
 
 I didn't bother with documenting the really trivial new "extract
 something from dpcd" helpers, but the i2c over aux ch is now
@@ -17,7 +17,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 28164fdad85ec806f30c76fe98ed0e3abc91d2d7)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  Documentation/DocBook/drm.tmpl  |    6 ++++++
  drivers/gpu/drm/drm_dp_helper.c |   21 +++++++++++++++++++++

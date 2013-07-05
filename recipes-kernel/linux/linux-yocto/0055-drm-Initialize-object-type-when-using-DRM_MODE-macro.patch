@@ -1,7 +1,8 @@
 From f8cf5f5bbbb048641eed8ddbd7b1c72de4b57e6b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Tue, 14 Aug 2012 10:53:38 +0000
-Subject: drm: Initialize object type when using DRM_MODE() macro
+Subject: [PATCH 055/715] drm: Initialize object type when using DRM_MODE()
+ macro
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,7 +17,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 22f5d115a2b087c977128f84ee557ad71530330e)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  include/drm/drm_crtc.h |    3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)

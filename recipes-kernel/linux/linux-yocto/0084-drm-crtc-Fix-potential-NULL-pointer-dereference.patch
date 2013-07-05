@@ -1,7 +1,7 @@
 From b0408bf9b98c7482af3706bef892191730d61ecb Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Mon, 19 Nov 2012 09:44:57 +0000
-Subject: drm/crtc: Fix potential NULL pointer dereference
+Subject: [PATCH 084/715] drm/crtc: Fix potential NULL pointer dereference
 
 drm_property_create_blob() could return NULL in which case NULL pointer
 dereference error (on connector->edid_blob_ptr) is possible. Return if
@@ -17,7 +17,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit e655d122a71332d0d26b5c0909eb395da31af0c0)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |    2 ++
  1 file changed, 2 insertions(+)

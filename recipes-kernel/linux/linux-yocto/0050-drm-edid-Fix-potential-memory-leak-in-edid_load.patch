@@ -1,7 +1,7 @@
 From 7dbdd7d94a6c7b09ab79f886bf986f8f3e164c99 Mon Sep 17 00:00:00 2001
 From: Alexey Khoroshilov <khoroshilov@ispras.ru>
 Date: Tue, 7 Aug 2012 12:23:06 +0000
-Subject: drm/edid: Fix potential memory leak in edid_load()
+Subject: [PATCH 050/715] drm/edid: Fix potential memory leak in edid_load()
 
 Do not leak memory by updating pointer with potentially
 NULL realloc return value.
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit f7b83b908fbecadefa73c0d76b9c719d09c1d96d)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid_load.c |    8 +++++---
  1 file changed, 5 insertions(+), 3 deletions(-)

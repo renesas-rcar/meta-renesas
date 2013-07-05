@@ -1,7 +1,7 @@
 From 36e5f12bbe73d8e5295da9f50e35c8eb7ebb7630 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Sun, 20 May 2012 12:33:56 +0530
-Subject: dma-buf: add vmap interface
+Subject: [PATCH 113/715] dma-buf: add vmap interface
 
 The main requirement I have for this interface is for scanning out
 using the USB gpu devices. Since these devices have to read the
@@ -18,7 +18,6 @@ Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
 (cherry picked from commit 98f86c9e4ae3205e4c85c535691a5d36426360ee)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/base/dma-buf.c  |   34 ++++++++++++++++++++++++++++++++++
  include/linux/dma-buf.h |   14 ++++++++++++++

@@ -1,0 +1,37 @@
+From cdbadde0bb68d3abfc4d6288c18c3fc91160bd0c Mon Sep 17 00:00:00 2001
+From: Ulrich Hecht <ulrich.hecht@gmail.com>
+Date: Fri, 31 May 2013 17:57:04 +0200
+Subject: [PATCH 647/715] ARM: shmobile: r8a7790: don't use external clock for
+ SCIFs
+
+This is an external component and may or may not be there, while the
+internal clock always works.
+
+Signed-off-by: Ulrich Hecht <ulrich.hecht@gmail.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit c972f024c1097fa0798beafc21be1eeeba21ac34)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 8c318f80e85490efa677b09a2d01fee2603770f2)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7790.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 3250af2..18e6fb8 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -117,7 +117,7 @@ void __init r8a7790_pinmux_init(void)
+ [index] = {						\
+ 	SCIF_COMMON(PORT_SCIF, baseaddr, irq),		\
+ 	.scbrr_algo_id	= SCBRR_ALGO_2,			\
+-	.scscr = SCSCR_RE | SCSCR_TE | SCSCR_CKE1,	\
++	.scscr = SCSCR_RE | SCSCR_TE,	\
+ }
+ 
+ #define HSCIF_DATA(index, baseaddr, irq)		\
+-- 
+1.7.10.4
+

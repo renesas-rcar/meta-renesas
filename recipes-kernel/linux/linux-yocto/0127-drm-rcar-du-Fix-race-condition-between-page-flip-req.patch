@@ -1,8 +1,8 @@
 From 6dd0568f1028444c2d5e8dbad5673d42eeba2489 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 26 Feb 2013 20:20:36 +0100
-Subject: drm/rcar-du: Fix race condition between page flip request and
- handler
+Subject: [PATCH 127/715] drm/rcar-du: Fix race condition between page flip
+ request and handler
 
 The page flip handler stores the page flip event pointer and then calls
 drm_vblank_get() to enable the vblank interrupt. Due to the vblank off
@@ -20,7 +20,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 667ca8e2f58236b166aff4c1575ea38c5e3be91c)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

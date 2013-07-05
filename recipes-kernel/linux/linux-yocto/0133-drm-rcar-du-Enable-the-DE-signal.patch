@@ -1,7 +1,7 @@
 From 9652c08db3d784f44d566f1b8346f18927fe0883 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 00:50:45 +0100
-Subject: drm/rcar-du: Enable the DE signal
+Subject: [PATCH 133/715] drm/rcar-du: Enable the DE signal
 
 Output the DE signal on the DISP pin by default and configure it to
 cover the whole horizontal active period. When new use cases requiring a
@@ -12,7 +12,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 9bba5c36355774c77ac55ae2461235d2ebab8b69)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    6 +++++-
  1 file changed, 5 insertions(+), 1 deletion(-)

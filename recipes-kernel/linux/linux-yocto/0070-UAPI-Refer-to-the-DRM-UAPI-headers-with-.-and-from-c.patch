@@ -1,8 +1,8 @@
 From 0e9b0920d8fb85aa49fe10b08e9e3c000da7e691 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 2 Oct 2012 18:01:03 +0100
-Subject: UAPI: Refer to the DRM UAPI headers with <...> and from certain
- headers only
+Subject: [PATCH 070/715] UAPI: Refer to the DRM UAPI headers with <...> and
+ from certain headers only
 
 Only refer to the DRM UAPI headers (drm.h, drm_mode.h and drm_sarea.h) from
 within drmP.h and drm_crtc.h, and use #include <...> to refer to them so that
@@ -17,7 +17,6 @@ Acked-by: Dave Jones <davej@redhat.com>
 (cherry picked from commit 19218e482d3f023166b26143c1a1c6d166a30415)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  include/drm/drmP.h     |    3 ++-
  include/drm/drm_crtc.h |    1 +

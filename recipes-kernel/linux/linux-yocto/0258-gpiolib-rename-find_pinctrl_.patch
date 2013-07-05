@@ -1,0 +1,72 @@
+From 37c46d93e2001f59625cdeaad5b455cbf6409e24 Mon Sep 17 00:00:00 2001
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 20 Nov 2012 14:03:37 +0100
+Subject: [PATCH 258/715] gpiolib: rename find_pinctrl_*
+
+Rename the function find_pinctrl_and_add_gpio_range()
+to pinctrl_find_and_add_gpio_range() so as to be consistent
+with the rest of the functions.
+
+Reviewed-by: Stephen Warren <swarren@nvidia.com>
+Reviewed-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 192c369c6165dff233f22aa70209a92b030d233d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib.c          |    2 +-
+ drivers/pinctrl/core.c          |    4 ++--
+ include/linux/pinctrl/pinctrl.h |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index 940b9a6..a2a5119 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1253,7 +1253,7 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+ 	pin_range->range.base = chip->base + offset;
+ 	pin_range->range.pin_base = pin_base;
+ 	pin_range->range.npins = npins;
+-	pin_range->pctldev = find_pinctrl_and_add_gpio_range(pinctl_name,
++	pin_range->pctldev = pinctrl_find_and_add_gpio_range(pinctl_name,
+ 			&pin_range->range);
+ 	if (!pin_range->pctldev) {
+ 		pr_err("%s: GPIO chip: could not create pin range\n",
+diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
+index 20a8244..d4c29b5b 100644
+--- a/drivers/pinctrl/core.c
++++ b/drivers/pinctrl/core.c
+@@ -352,7 +352,7 @@ void pinctrl_add_gpio_ranges(struct pinctrl_dev *pctldev,
+ }
+ EXPORT_SYMBOL_GPL(pinctrl_add_gpio_ranges);
+ 
+-struct pinctrl_dev *find_pinctrl_and_add_gpio_range(const char *devname,
++struct pinctrl_dev *pinctrl_find_and_add_gpio_range(const char *devname,
+ 		struct pinctrl_gpio_range *range)
+ {
+ 	struct pinctrl_dev *pctldev = get_pinctrl_dev_from_devname(devname);
+@@ -363,7 +363,7 @@ struct pinctrl_dev *find_pinctrl_and_add_gpio_range(const char *devname,
+ 	pinctrl_add_gpio_range(pctldev, range);
+ 	return pctldev;
+ }
+-EXPORT_SYMBOL_GPL(find_pinctrl_and_add_gpio_range);
++EXPORT_SYMBOL_GPL(pinctrl_find_and_add_gpio_range);
+ 
+ /**
+  * pinctrl_get_group_selector() - returns the group selector for a group
+diff --git a/include/linux/pinctrl/pinctrl.h b/include/linux/pinctrl/pinctrl.h
+index 559ba85..36409c2 100644
+--- a/include/linux/pinctrl/pinctrl.h
++++ b/include/linux/pinctrl/pinctrl.h
+@@ -126,7 +126,7 @@ extern void pinctrl_add_gpio_ranges(struct pinctrl_dev *pctldev,
+ 				struct pinctrl_gpio_range *ranges,
+ 				unsigned nranges);
+ 
+-extern struct pinctrl_dev *find_pinctrl_and_add_gpio_range(const char *devname,
++extern struct pinctrl_dev *pinctrl_find_and_add_gpio_range(const char *devname,
+ 		struct pinctrl_gpio_range *range);
+ 
+ #ifdef CONFIG_OF
+-- 
+1.7.10.4
+

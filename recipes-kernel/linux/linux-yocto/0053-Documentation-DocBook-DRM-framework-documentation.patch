@@ -1,14 +1,13 @@
 From f7665e3b48c7fd3db92cc5efb48ff767cae12847 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 13 Jul 2012 00:57:26 +0200
-Subject: Documentation: DocBook DRM framework documentation
+Subject: [PATCH 053/715] Documentation: DocBook DRM framework documentation
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Reviewed-by: Rob Clark <rob.clark@linaro.org>
 (cherry picked from commit 9cad9c95d7e8d6d61d8c9729e0b6bbd18f47d86d)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  Documentation/DocBook/drm.tmpl | 2835 +++++++++++++++++++++++++++++++---------
  1 file changed, 2226 insertions(+), 609 deletions(-)

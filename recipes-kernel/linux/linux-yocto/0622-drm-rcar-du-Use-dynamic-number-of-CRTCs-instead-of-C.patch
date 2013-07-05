@@ -1,0 +1,51 @@
+From 1efae362e174653b39be8ae210316be0fa0f9ae2 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sun, 16 Jun 2013 22:22:23 +0200
+Subject: [PATCH 622/715] drm/rcar-du: Use dynamic number of CRTCs instead of
+ CRTCs array size
+
+The rcar_du_device structure contains a field that stores the number of
+CRTCs, use it instead of the CRTCs array size. This prepares the driver
+to support a variable number of CRTCs.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 368feeda5725e18d25c37e5c1ae57b2f99986caa)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 6a62a637246042b6b3f10bdf10e7013566a3700d)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c |    2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 500d39c..ad7d080 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -115,7 +115,7 @@ static void rcar_du_preclose(struct drm_device *dev, struct drm_file *file)
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+ 	unsigned int i;
+ 
+-	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i)
++	for (i = 0; i < rcdu->num_crtcs; ++i)
+ 		rcar_du_crtc_cancel_page_flip(&rcdu->crtcs[i], file);
+ }
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index e0f4b7f..a3f5562 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -211,7 +211,7 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 		if (pdata->type == RCAR_DU_ENCODER_UNUSED)
+ 			continue;
+ 
+-		if (pdata->output >= ARRAY_SIZE(rcdu->crtcs)) {
++		if (pdata->output >= rcdu->num_crtcs) {
+ 			dev_warn(rcdu->dev,
+ 				 "encoder %u references unexisting output %u, skipping\n",
+ 				 i, pdata->output);
+-- 
+1.7.10.4
+

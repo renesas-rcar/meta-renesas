@@ -1,0 +1,101 @@
+From 04f1b158f853dd0c7d6ae0c5d0fa406c7dc5cbe5 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 17 Apr 2013 01:19:41 +0200
+Subject: [PATCH 652/715] ARM: shmobile: lager: Add Display Unit support
+
+Only the VGA output is currently supported.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 845edd54c435477c95041eecdf09a6b30a452734)
+
+Conflicts:
+	arch/arm/mach-shmobile/board-lager.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 747ddfaf9c65ee88faf8d78692dd28451aa79c79)
+
+Conflicts:
+	arch/arm/mach-shmobile/board-lager.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c |   42 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index 45b7d71..aabf760 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -28,6 +28,7 @@
+ #include <linux/leds.h>
+ #include <linux/pinctrl/machine.h>
+ #include <linux/platform_data/gpio-rcar.h>
++#include <linux/platform_data/rcar-du.h>
+ #include <linux/platform_device.h>
+ #include <linux/i2c.h>
+ #include <mach/common.h>
+@@ -39,6 +40,38 @@ static struct i2c_board_info lager_i2c_devices[] = {
+ 	{ I2C_BOARD_INFO("ak4642", 0x12), },
+ };
+ 
++/* DU */
++static struct rcar_du_encoder_data lager_du_encoders[] = {
++	{
++		.type = RCAR_DU_ENCODER_VGA,
++		.output = RCAR_DU_OUTPUT_DPAD0,
++	}, {
++		.type = RCAR_DU_ENCODER_NONE,
++		.output = RCAR_DU_OUTPUT_LVDS1,
++		.connector.lvds.panel = {
++			.width_mm = 210,
++			.height_mm = 158,
++			.mode = {
++				.clock = 65000,
++				.hdisplay = 1024,
++				.hsync_start = 1048,
++				.hsync_end = 1184,
++				.htotal = 1344,
++				.vdisplay = 768,
++				.vsync_start = 771,
++				.vsync_end = 777,
++				.vtotal = 806,
++				.flags = 0,
++			},
++		},
++	},
++};
++
++static struct rcar_du_platform_data lager_du_pdata = {
++	.encoders = lager_du_encoders,
++	.num_encoders = ARRAY_SIZE(lager_du_encoders),
++};
++
+ /* LEDS */
+ static struct gpio_led lager_leds[] = {
+ 	{
+@@ -78,6 +111,13 @@ static __initdata struct gpio_keys_platform_data lager_keys_pdata = {
+ };
+ 
+ static const struct pinctrl_map lager_pinctrl_map[] = {
++	/* DU (CN10: ARGB0, CN13: LVDS) */
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du-r8a7790", "pfc-r8a7790",
++				  "du_rgb666", "du"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du-r8a7790", "pfc-r8a7790",
++				  "du_sync_1", "du"),
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-du-r8a7790", "pfc-r8a7790",
++				  "du_clk_out_0", "du"),
+ 	/* SCIF0 (CN19: DEBUG SERIAL0) */
+ 	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.6", "pfc-r8a7790",
+ 				  "scif0_data", "scif0"),
+@@ -117,6 +157,8 @@ static void __init lager_add_standard_devices(void)
+ 	i2c_register_board_info(2, lager_i2c_devices,
+ 				ARRAY_SIZE(lager_i2c_devices));
+ 
++	r8a7790_add_du_device(&lager_du_pdata);
++
+ 	platform_device_register_data(&platform_bus, "leds-gpio", -1,
+ 				      &lager_leds_pdata,
+ 				      sizeof(lager_leds_pdata));
+-- 
+1.7.10.4
+

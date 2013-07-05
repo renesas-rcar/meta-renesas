@@ -1,0 +1,94 @@
+From 01d33a77e97cf7b914c640b8ecf42a8991c54683 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 14 Jun 2013 13:38:33 +0200
+Subject: [PATCH 610/715] drm/rcar-du: Add platform module device table
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 228f3847fab89a70f07baea0081463e61904a5f1)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit c737dab29f0a3416a53eb0cc99f719a91387c10f)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c |   13 +++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h |   15 +++++++++++++++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 4f54a7a..03ca147 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -155,6 +155,7 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 
+ 	rcdu->dev = &pdev->dev;
+ 	rcdu->pdata = pdata;
++	rcdu->info = (struct rcar_du_device_info *)pdev->id_entry->driver_data;
+ 	rcdu->ddev = dev;
+ 	dev->dev_private = rcdu;
+ 
+@@ -408,6 +409,17 @@ static int rcar_du_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct rcar_du_device_info rcar_du_r8a7779_info = {
++	.features = 0,
++};
++
++static const struct platform_device_id rcar_du_id_table[] = {
++	{ "rcar-du-r8a7779", (kernel_ulong_t)&rcar_du_r8a7779_info },
++	{ }
++};
++
++MODULE_DEVICE_TABLE(platform, rcar_du_id_table);
++
+ static struct platform_driver rcar_du_platform_driver = {
+ 	.probe		= rcar_du_probe,
+ 	.remove		= rcar_du_remove,
+@@ -416,6 +428,7 @@ static struct platform_driver rcar_du_platform_driver = {
+ 		.name	= "rcar-du",
+ 		.pm	= &rcar_du_pm_ops,
+ 	},
++	.id_table	= rcar_du_id_table,
+ };
+ 
+ module_platform_driver(rcar_du_platform_driver);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index ad963b5..873514b 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -26,9 +26,18 @@ struct device;
+ struct drm_device;
+ struct drm_fbdev_cma;
+ 
++/*
++ * struct rcar_du_device_info - DU model-specific information
++ * @features: device features (RCAR_DU_FEATURE_*)
++ */
++struct rcar_du_device_info {
++	unsigned int features;
++};
++
+ struct rcar_du_device {
+ 	struct device *dev;
+ 	const struct rcar_du_platform_data *pdata;
++	const struct rcar_du_device_info *info;
+ 
+ 	void __iomem *mmio;
+ 	void __iomem *lvds0_mmio;
+@@ -57,6 +66,12 @@ struct rcar_du_device {
+ 	} planes;
+ };
+ 
++static inline bool rcar_du_has(struct rcar_du_device *rcdu,
++			       unsigned int feature)
++{
++	return rcdu->info->features & feature;
++}
++
+ int rcar_du_get(struct rcar_du_device *rcdu);
+ void rcar_du_put(struct rcar_du_device *rcdu);
+ 
+-- 
+1.7.10.4
+

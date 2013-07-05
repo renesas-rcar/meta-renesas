@@ -1,0 +1,70 @@
+From 25746cc30e638e2a362afc1ad3abecee10fda4b5 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 11 Jun 2013 14:54:53 +0900
+Subject: [PATCH 479/715] ARM: shmobile: Fix shmobile_defconfig for r8a7790
+
+ARCH_REQUIRE_GPIOLIB added to MACH_LAGER in mach-shmobile/Kconfig.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+(cherry picked from commit 1ae29640c26bb810c8ecde1ae93ea230f4a077a4)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig |   12 ++++--------
+ arch/arm/mach-shmobile/Kconfig      |    1 +
+ 2 files changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 7dba53f..8dc551f 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -12,14 +12,8 @@ CONFIG_SLAB=y
+ # CONFIG_IOSCHED_DEADLINE is not set
+ # CONFIG_IOSCHED_CFQ is not set
+ CONFIG_ARCH_SHMOBILE=y
+-CONFIG_ARCH_SH7372=y
+-CONFIG_ARCH_R8A7740=y
+ CONFIG_ARCH_R8A7790=y
+-CONFIG_ARCH_EMEV2=y
+-CONFIG_MACH_MACKEREL=y
+-CONFIG_MACH_ARMADILLO800EVA=y
+ CONFIG_MACH_LAGER=y
+-CONFIG_MACH_KZM9D=y
+ # CONFIG_SH_TIMER_TMU is not set
+ # CONFIG_SWP_EMULATE is not set
+ CONFIG_ARM_ERRATA_430973=y
+@@ -35,8 +29,8 @@ CONFIG_ARM_ERRATA_754322=y
+ CONFIG_PL310_ERRATA_769419=y
+ CONFIG_ARM_ERRATA_775420=y
+ CONFIG_SMP=y
+-CONFIG_NR_CPUS=2
+-# CONFIG_LOCAL_TIMERS is not set
++CONFIG_NR_CPUS=4
++CONFIG_LOCAL_TIMERS=y
+ CONFIG_AEABI=y
+ # CONFIG_OABI_COMPAT is not set
+ CONFIG_FORCE_MAX_ZONEORDER=13
+@@ -62,6 +56,8 @@ CONFIG_IP_PNP_DHCP=y
+ # CONFIG_IPV6 is not set
+ # CONFIG_WIRELESS is not set
+ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
+ CONFIG_MTD=y
+ CONFIG_MTD_CHAR=y
+ CONFIG_MTD_BLOCK=y
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index 403159f..b5f3b2d 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -114,6 +114,7 @@ config MACH_MARZEN
+ config MACH_LAGER
+ 	bool "Lager board"
+ 	depends on ARCH_R8A7790
++	select ARCH_REQUIRE_GPIOLIB
+ 	select USE_OF
+ 
+ config MACH_KZM9D
+-- 
+1.7.10.4
+

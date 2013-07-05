@@ -1,0 +1,49 @@
+From d291794bf2a07a5bfc674e95cf82798502231031 Mon Sep 17 00:00:00 2001
+From: Grant Likely <grant.likely@secretlab.ca>
+Date: Fri, 18 May 2012 23:01:05 -0600
+Subject: [PATCH 239/715] gpiolib: Remove 'const' from data argument of
+ gpiochip_find()
+
+Commit 3d0f7cf0 "gpio: Adjust of_xlate API to support multiple GPIO
+chips" changed the api of gpiochip_find to drop const from the data
+parameter of the match hook, but didn't also drop const from data
+causing a build warning.
+
+Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+(cherry picked from commit 07ce8ec7308ab3fa55fe2861671b157f857fff58)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib.c     |    2 +-
+ include/asm-generic/gpio.h |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index b7cea45..bd76017 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1156,7 +1156,7 @@ EXPORT_SYMBOL_GPL(gpiochip_remove);
+  * non-zero, this function will return to the caller and not iterate over any
+  * more gpio_chips.
+  */
+-struct gpio_chip *gpiochip_find(const void *data,
++struct gpio_chip *gpiochip_find(void *data,
+ 				int (*match)(struct gpio_chip *chip,
+ 					     void *data))
+ {
+diff --git a/include/asm-generic/gpio.h b/include/asm-generic/gpio.h
+index 1ba08f0..365ea09 100644
+--- a/include/asm-generic/gpio.h
++++ b/include/asm-generic/gpio.h
+@@ -142,7 +142,7 @@ extern int __must_check gpiochip_reserve(int start, int ngpio);
+ /* add/remove chips */
+ extern int gpiochip_add(struct gpio_chip *chip);
+ extern int __must_check gpiochip_remove(struct gpio_chip *chip);
+-extern struct gpio_chip *gpiochip_find(const void *data,
++extern struct gpio_chip *gpiochip_find(void *data,
+ 					int (*match)(struct gpio_chip *chip,
+ 						     void *data));
+ 
+-- 
+1.7.10.4
+

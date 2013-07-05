@@ -1,13 +1,12 @@
 From 46f9859f803171c1f7ff6b572fb5a571648a2d95 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 18 May 2012 23:47:40 +0200
-Subject: drm: Add NV24 and NV42 pixel formats
+Subject: [PATCH 066/715] drm: Add NV24 and NV42 pixel formats
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 (cherry picked from commit ba623f6a5a419ac31806e77682da38a9f9b5b462)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |    6 ++++++
  include/drm/drm_fourcc.h   |    2 ++

@@ -1,7 +1,7 @@
 From 84666ca2573b491b8cf76fa0540e727e5b001c45 Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Tue, 16 Oct 2012 22:48:40 +0000
-Subject: drm: add drm_send_vblank_event() helper (v5)
+Subject: [PATCH 086/715] drm: add drm_send_vblank_event() helper (v5)
 
 A helper that drivers can use to send vblank event after a pageflip.
 If the driver doesn't support proper vblank irq based time/seqn then
@@ -24,7 +24,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit c6eefa1750ec0308956895027c3a79eee2ef9726)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  Documentation/DocBook/drm.tmpl |   20 +++--------
  drivers/gpu/drm/drm_irq.c      |   74 ++++++++++++++++++++++++++++------------

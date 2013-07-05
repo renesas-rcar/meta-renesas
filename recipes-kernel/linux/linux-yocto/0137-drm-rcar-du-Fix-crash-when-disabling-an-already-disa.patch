@@ -1,7 +1,8 @@
 From c1b40c31ee49a6e6766e842d917f5afb081afccd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 20 Mar 2013 13:14:55 +0100
-Subject: drm/rcar-du: Fix crash when disabling an already disabled plane
+Subject: [PATCH 137/715] drm/rcar-du: Fix crash when disabling an already
+ disabled plane
 
 The plane disable code tries to dereference a NULL pointer if the plane
 is already disabled. Return immediately in that case.
@@ -10,7 +11,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 22f1261b8f2c96dd4e542bb77e06800598531bfe)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_plane.c |    3 +++
  1 file changed, 3 insertions(+)

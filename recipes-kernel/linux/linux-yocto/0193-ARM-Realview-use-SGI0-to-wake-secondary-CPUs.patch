@@ -1,0 +1,29 @@
+From 9cd14a780ec04ffbd25a3cf241a53d7081174230 Mon Sep 17 00:00:00 2001
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Date: Mon, 11 Jun 2012 20:23:20 +0100
+Subject: [PATCH 193/715] ARM: Realview: use SGI0 to wake secondary CPUs
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit 98437b83ee9e8c4adc84efa7f5a02647041f675b)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/plat-versatile/platsmp.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/plat-versatile/platsmp.c b/arch/arm/plat-versatile/platsmp.c
+index 49c7db4..d7c5c17 100644
+--- a/arch/arm/plat-versatile/platsmp.c
++++ b/arch/arm/plat-versatile/platsmp.c
+@@ -85,7 +85,7 @@ int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
+ 	 * the boot monitor to read the system wide flags register,
+ 	 * and branch to the address found there.
+ 	 */
+-	gic_raise_softirq(cpumask_of(cpu), 1);
++	gic_raise_softirq(cpumask_of(cpu), 0);
+ 
+ 	timeout = jiffies + (1 * HZ);
+ 	while (time_before(jiffies, timeout)) {
+-- 
+1.7.10.4
+

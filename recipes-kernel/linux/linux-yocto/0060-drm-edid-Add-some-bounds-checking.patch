@@ -1,7 +1,7 @@
 From 5213703f7f39b25976d263d5f36c09005fb83b6f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 16 Aug 2012 14:55:04 +0000
-Subject: drm: edid: Add some bounds checking
+Subject: [PATCH 060/715] drm: edid: Add some bounds checking
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,7 +15,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 9e50b9d55e9c38440175a0f27f77708e2270b140)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   99 ++++++++++++++++++++++++++++++++------------
  1 file changed, 73 insertions(+), 26 deletions(-)

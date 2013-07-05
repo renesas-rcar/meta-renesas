@@ -1,0 +1,39 @@
+From b529e8dcc5570589472a0fc6d1d9bf59988c285f Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 26 Jun 2013 14:49:28 +0900
+Subject: [PATCH 699/715] drivers: Fix gpu order for i2c codec support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit 95534f20c889db33306e01cb8860883664c195b9)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/Makefile |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 1480802..05c451e 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -34,9 +34,6 @@ obj-$(CONFIG_REGULATOR)		+= regulator/
+ obj-y				+= tty/
+ obj-y				+= char/
+ 
+-# gpu/ comes after char for AGP vs DRM startup
+-obj-y				+= gpu/
+-
+ obj-$(CONFIG_CONNECTOR)		+= connector/
+ 
+ # i810fb and intelfb depend on char/agp/
+@@ -80,6 +77,8 @@ obj-$(CONFIG_INPUT)		+= input/
+ obj-$(CONFIG_I2O)		+= message/
+ obj-$(CONFIG_RTC_LIB)		+= rtc/
+ obj-y				+= i2c/ media/
++# gpu/ comes after char for AGP vs DRM startup
++obj-y				+= gpu/
+ obj-$(CONFIG_PPS)		+= pps/
+ obj-$(CONFIG_PTP_1588_CLOCK)	+= ptp/
+ obj-$(CONFIG_W1)		+= w1/
+-- 
+1.7.10.4
+

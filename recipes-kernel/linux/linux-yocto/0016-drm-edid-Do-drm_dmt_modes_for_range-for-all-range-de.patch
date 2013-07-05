@@ -1,8 +1,8 @@
 From ee6b8098fea3e8ba6bb4e4944a640f2115d2963b Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:36 -0400
-Subject: drm/edid: Do drm_dmt_modes_for_range() for all range descriptor
- types
+Subject: [PATCH 016/715] drm/edid: Do drm_dmt_modes_for_range() for all range
+ descriptor types
 
 EDID 1.4 retcons the meaning of the "GTF feature" bit to mean "is
 continuous frequency", and moves the set of supported timing formulas
@@ -17,7 +17,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit cb21aafe121b1c3ad4c77cc5c22320163f16ba42)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   11 ++++++-----
  1 file changed, 6 insertions(+), 5 deletions(-)

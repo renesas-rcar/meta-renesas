@@ -1,0 +1,733 @@
+From d7d18bccd9e8aa38e21ce0fb4af59b2ecf793e15 Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Tue, 20 Nov 2012 19:52:32 -0600
+Subject: [PATCH 202/715] ARM: remove mach .handle_irq for GIC users
+
+Now that the GIC initialization sets up the handle_arch_irq pointer, we
+can remove it for all machines and make it static.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Anton Vorontsov <avorontsov@mvista.com>
+Cc: Kyungmin Park <kyungmin.park@samsung.com>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: David Brown <davidb@codeaurora.org>
+Cc: Daniel Walker <dwalker@fifo99.com>
+Cc: Bryan Huntsman <bryanh@codeaurora.org>
+Acked-by: Tony Lindgren <tony@atomide.com>
+Cc: Paul Mundt <lethal@linux-sh.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Dinh Nguyen <dinguyen@altera.com>
+Cc: Shiraz Hashim <shiraz.hashim@st.com>
+Acked-by: Stephen Warren <swarren@nvidia.com>
+Cc: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+Acked-by: Kukjin Kim <kgene.kim@samsung.com>
+Acked-by: Shawn Guo <shawn.guo@linaro.org>
+Acked-by: Olof Johansson <olof@lixom.net>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+(cherry picked from commit 1d5cc604f42ff1acdec0407247b2f720135ba0c2)
+
+Conflicts:
+	arch/arm/mach-bcm/board_bcm.c
+	arch/arm/mach-exynos/mach-exynos4-dt.c
+	arch/arm/mach-exynos/mach-exynos5-dt.c
+	arch/arm/mach-exynos/mct.c
+	arch/arm/mach-imx/common.h
+	arch/arm/mach-msm/board-dt-8660.c
+	arch/arm/mach-msm/board-dt-8960.c
+	arch/arm/mach-omap2/board-generic.c
+	arch/arm/mach-shmobile/platsmp.c
+	arch/arm/mach-socfpga/socfpga.c
+	arch/arm/mach-spear13xx/spear1310.c
+	arch/arm/mach-spear13xx/spear1340.c
+	arch/arm/mach-tegra/board-dt-tegra20.c
+	arch/arm/mach-tegra/board-dt-tegra30.c
+	arch/arm/mach-ux500/board-mop500.c
+	arch/arm/mach-ux500/cpu-db8500.c
+	arch/arm/mach-vexpress/v2m.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/common/gic.c                      |    2 +-
+ arch/arm/include/asm/hardware/gic.h        |    1 -
+ arch/arm/kernel/smp_twd.c                  |    1 -
+ arch/arm/mach-cns3xxx/cns3420vb.c          |    2 --
+ arch/arm/mach-exynos/mach-armlex4210.c     |    2 --
+ arch/arm/mach-exynos/mach-exynos4-dt.c     |    2 --
+ arch/arm/mach-exynos/mach-exynos5-dt.c     |    2 --
+ arch/arm/mach-exynos/mach-nuri.c           |    2 --
+ arch/arm/mach-exynos/mach-origen.c         |    2 --
+ arch/arm/mach-exynos/mach-smdk4x12.c       |    3 ---
+ arch/arm/mach-exynos/mach-smdkv310.c       |    3 ---
+ arch/arm/mach-exynos/mach-universal_c210.c |    2 --
+ arch/arm/mach-exynos/mct.c                 |    2 +-
+ arch/arm/mach-highbank/highbank.c          |    1 -
+ arch/arm/mach-imx/mach-imx6q.c             |    1 -
+ arch/arm/mach-msm/timer.c                  |    1 -
+ arch/arm/mach-omap2/board-4430sdp.c        |    1 -
+ arch/arm/mach-omap2/board-generic.c        |    2 --
+ arch/arm/mach-omap2/board-omap4panda.c     |    1 -
+ arch/arm/mach-realview/core.c              |    1 -
+ arch/arm/mach-realview/realview_eb.c       |    1 -
+ arch/arm/mach-realview/realview_pb1176.c   |    1 -
+ arch/arm/mach-realview/realview_pb11mp.c   |    1 -
+ arch/arm/mach-realview/realview_pba8.c     |    1 -
+ arch/arm/mach-realview/realview_pbx.c      |    1 -
+ arch/arm/mach-shmobile/board-ag5evm.c      |    1 -
+ arch/arm/mach-shmobile/board-kota2.c       |    1 -
+ arch/arm/mach-shmobile/board-kzm9d.c       |    2 --
+ arch/arm/mach-shmobile/board-kzm9g.c       |    1 -
+ arch/arm/mach-shmobile/board-marzen.c      |    2 --
+ arch/arm/mach-shmobile/platsmp.c           |    6 +++++-
+ arch/arm/mach-shmobile/setup-emev2.c       |    1 -
+ arch/arm/mach-tegra/board-dt-tegra20.c     |    3 ---
+ arch/arm/mach-tegra/board-dt-tegra30.c     |    2 --
+ arch/arm/mach-ux500/board-mop500.c         |    5 -----
+ arch/arm/mach-vexpress/platsmp.c           |    1 -
+ arch/arm/mach-vexpress/v2m.c               |    2 --
+ arch/arm/mach-zynq/common.c                |    1 -
+ 38 files changed, 7 insertions(+), 60 deletions(-)
+
+diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
+index 80a15c5..0a2dd3b 100644
+--- a/arch/arm/common/gic.c
++++ b/arch/arm/common/gic.c
+@@ -276,7 +276,7 @@ static int gic_set_wake(struct irq_data *d, unsigned int on)
+ #define gic_set_wake	NULL
+ #endif
+ 
+-asmlinkage void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
++static asmlinkage void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
+ {
+ 	u32 irqstat, irqnr;
+ 	struct gic_chip_data *gic = &gic_data[0];
+diff --git a/arch/arm/include/asm/hardware/gic.h b/arch/arm/include/asm/hardware/gic.h
+index cfd3a7e..2a16e03 100644
+--- a/arch/arm/include/asm/hardware/gic.h
++++ b/arch/arm/include/asm/hardware/gic.h
+@@ -38,7 +38,6 @@ void gic_init_bases(unsigned int, int, void __iomem *, void __iomem *,
+ 		    u32 offset, struct device_node *);
+ int gic_of_init(struct device_node *node, struct device_node *parent);
+ void gic_secondary_init(unsigned int);
+-void gic_handle_irq(struct pt_regs *regs);
+ void gic_cascade_irq(unsigned int gic_nr, unsigned int irq);
+ 
+ static inline void gic_init(unsigned int nr, int start,
+diff --git a/arch/arm/kernel/smp_twd.c b/arch/arm/kernel/smp_twd.c
+index fef42b2..469483c 100644
+--- a/arch/arm/kernel/smp_twd.c
++++ b/arch/arm/kernel/smp_twd.c
+@@ -25,7 +25,6 @@
+ 
+ #include <asm/smp_twd.h>
+ #include <asm/localtimer.h>
+-#include <asm/hardware/gic.h>
+ 
+ /* set up by the platform code */
+ static void __iomem *twd_base;
+diff --git a/arch/arm/mach-cns3xxx/cns3420vb.c b/arch/arm/mach-cns3xxx/cns3420vb.c
+index 2c5fb4c..9b8c3d5 100644
+--- a/arch/arm/mach-cns3xxx/cns3420vb.c
++++ b/arch/arm/mach-cns3xxx/cns3420vb.c
+@@ -26,7 +26,6 @@
+ #include <linux/mtd/partitions.h>
+ #include <asm/setup.h>
+ #include <asm/mach-types.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+ #include <asm/mach/time.h>
+@@ -202,7 +201,6 @@ MACHINE_START(CNS3420VB, "Cavium Networks CNS3420 Validation Board")
+ 	.map_io		= cns3420_map_io,
+ 	.init_irq	= cns3xxx_init_irq,
+ 	.timer		= &cns3xxx_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= cns3420_init,
+ 	.restart	= cns3xxx_restart,
+ MACHINE_END
+diff --git a/arch/arm/mach-exynos/mach-armlex4210.c b/arch/arm/mach-exynos/mach-armlex4210.c
+index d726fcd..9a2b996 100644
+--- a/arch/arm/mach-exynos/mach-armlex4210.c
++++ b/arch/arm/mach-exynos/mach-armlex4210.c
+@@ -16,7 +16,6 @@
+ #include <linux/smsc911x.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ 
+ #include <plat/cpu.h>
+@@ -212,7 +211,6 @@ MACHINE_START(ARMLEX4210, "ARMLEX4210")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= armlex4210_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= armlex4210_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.restart	= exynos4_restart,
+diff --git a/arch/arm/mach-exynos/mach-exynos4-dt.c b/arch/arm/mach-exynos/mach-exynos4-dt.c
+index 8245f1c..392dd2d 100644
+--- a/arch/arm/mach-exynos/mach-exynos4-dt.c
++++ b/arch/arm/mach-exynos/mach-exynos4-dt.c
+@@ -15,7 +15,6 @@
+ #include <linux/serial_core.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <mach/map.h>
+ 
+ #include <plat/cpu.h>
+@@ -81,7 +80,6 @@ DT_MACHINE_START(EXYNOS4210_DT, "Samsung Exynos4 (Flattened Device Tree)")
+ 	/* Maintainer: Thomas Abraham <thomas.abraham@linaro.org> */
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= exynos4210_dt_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= exynos4210_dt_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.dt_compat	= exynos4210_dt_compat,
+diff --git a/arch/arm/mach-exynos/mach-exynos5-dt.c b/arch/arm/mach-exynos/mach-exynos5-dt.c
+index 4711c89..a664875 100644
+--- a/arch/arm/mach-exynos/mach-exynos5-dt.c
++++ b/arch/arm/mach-exynos/mach-exynos5-dt.c
+@@ -13,7 +13,6 @@
+ #include <linux/serial_core.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <mach/map.h>
+ 
+ #include <plat/cpu.h>
+@@ -70,7 +69,6 @@ DT_MACHINE_START(EXYNOS5_DT, "SAMSUNG EXYNOS5 (Flattened Device Tree)")
+ 	/* Maintainer: Kukjin Kim <kgene.kim@samsung.com> */
+ 	.init_irq	= exynos5_init_irq,
+ 	.map_io		= exynos5250_dt_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= exynos5250_dt_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.dt_compat	= exynos5250_dt_compat,
+diff --git a/arch/arm/mach-exynos/mach-nuri.c b/arch/arm/mach-exynos/mach-nuri.c
+index ed90aef..05be007 100644
+--- a/arch/arm/mach-exynos/mach-nuri.c
++++ b/arch/arm/mach-exynos/mach-nuri.c
+@@ -33,7 +33,6 @@
+ #include <media/v4l2-mediabus.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ 
+ #include <plat/adc.h>
+@@ -1349,7 +1348,6 @@ MACHINE_START(NURI, "NURI")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= nuri_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= nuri_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.reserve        = &nuri_reserve,
+diff --git a/arch/arm/mach-exynos/mach-origen.c b/arch/arm/mach-exynos/mach-origen.c
+index 878d4c9..f5b54b1 100644
+--- a/arch/arm/mach-exynos/mach-origen.c
++++ b/arch/arm/mach-exynos/mach-origen.c
+@@ -23,7 +23,6 @@
+ #include <linux/rfkill-gpio.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ 
+ #include <video/platform_lcd.h>
+@@ -733,7 +732,6 @@ MACHINE_START(ORIGEN, "ORIGEN")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= origen_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= origen_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.reserve	= &origen_reserve,
+diff --git a/arch/arm/mach-exynos/mach-smdk4x12.c b/arch/arm/mach-exynos/mach-smdk4x12.c
+index d00e4f0..375b5aa 100644
+--- a/arch/arm/mach-exynos/mach-smdk4x12.c
++++ b/arch/arm/mach-exynos/mach-smdk4x12.c
+@@ -21,7 +21,6 @@
+ #include <linux/serial_core.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ 
+ #include <plat/backlight.h>
+@@ -289,7 +288,6 @@ MACHINE_START(SMDK4212, "SMDK4212")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= smdk4x12_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= smdk4x12_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.restart	= exynos4_restart,
+@@ -301,7 +299,6 @@ MACHINE_START(SMDK4412, "SMDK4412")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= smdk4x12_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= smdk4x12_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.restart	= exynos4_restart,
+diff --git a/arch/arm/mach-exynos/mach-smdkv310.c b/arch/arm/mach-exynos/mach-smdkv310.c
+index 83b91fa..d1bce08 100644
+--- a/arch/arm/mach-exynos/mach-smdkv310.c
++++ b/arch/arm/mach-exynos/mach-smdkv310.c
+@@ -21,7 +21,6 @@
+ #include <linux/pwm_backlight.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ 
+ #include <video/platform_lcd.h>
+@@ -379,7 +378,6 @@ MACHINE_START(SMDKV310, "SMDKV310")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= smdkv310_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= smdkv310_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.reserve	= &smdkv310_reserve,
+@@ -391,7 +389,6 @@ MACHINE_START(SMDKC210, "SMDKC210")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= smdkv310_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= smdkv310_machine_init,
+ 	.timer		= &exynos4_timer,
+ 	.restart	= exynos4_restart,
+diff --git a/arch/arm/mach-exynos/mach-universal_c210.c b/arch/arm/mach-exynos/mach-universal_c210.c
+index a34036e..a0ec9b6b 100644
+--- a/arch/arm/mach-exynos/mach-universal_c210.c
++++ b/arch/arm/mach-exynos/mach-universal_c210.c
+@@ -25,7 +25,6 @@
+ #include <linux/i2c/atmel_mxt_ts.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ 
+ #include <plat/regs-serial.h>
+@@ -1113,7 +1112,6 @@ MACHINE_START(UNIVERSAL_C210, "UNIVERSAL_C210")
+ 	.atag_offset	= 0x100,
+ 	.init_irq	= exynos4_init_irq,
+ 	.map_io		= universal_map_io,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= universal_machine_init,
+ 	.timer		= &s5p_timer,
+ 	.reserve        = &universal_reserve,
+diff --git a/arch/arm/mach-exynos/mct.c b/arch/arm/mach-exynos/mct.c
+index 897d9a9..cbaf5a6 100644
+--- a/arch/arm/mach-exynos/mct.c
++++ b/arch/arm/mach-exynos/mct.c
+@@ -20,7 +20,7 @@
+ #include <linux/delay.h>
+ #include <linux/percpu.h>
+ 
+-#include <asm/hardware/gic.h>
++#include <asm/arch_timer.h>
+ #include <asm/localtimer.h>
+ 
+ #include <plat/cpu.h>
+diff --git a/arch/arm/mach-highbank/highbank.c b/arch/arm/mach-highbank/highbank.c
+index 410a112..8e29c43 100644
+--- a/arch/arm/mach-highbank/highbank.c
++++ b/arch/arm/mach-highbank/highbank.c
+@@ -144,7 +144,6 @@ DT_MACHINE_START(HIGHBANK, "Highbank")
+ 	.map_io		= highbank_map_io,
+ 	.init_irq	= highbank_init_irq,
+ 	.timer		= &highbank_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= highbank_init,
+ 	.dt_compat	= highbank_match,
+ 	.restart	= highbank_restart,
+diff --git a/arch/arm/mach-imx/mach-imx6q.c b/arch/arm/mach-imx/mach-imx6q.c
+index da6c1d9..7e9f159 100644
+--- a/arch/arm/mach-imx/mach-imx6q.c
++++ b/arch/arm/mach-imx/mach-imx6q.c
+@@ -139,7 +139,6 @@ static const char *imx6q_dt_compat[] __initdata = {
+ DT_MACHINE_START(IMX6Q, "Freescale i.MX6 Quad (Device Tree)")
+ 	.map_io		= imx6q_map_io,
+ 	.init_irq	= imx6q_init_irq,
+-	.handle_irq	= imx6q_handle_irq,
+ 	.timer		= &imx6q_timer,
+ 	.init_machine	= imx6q_init_machine,
+ 	.dt_compat	= imx6q_dt_compat,
+diff --git a/arch/arm/mach-msm/timer.c b/arch/arm/mach-msm/timer.c
+index 81280825..2dec328 100644
+--- a/arch/arm/mach-msm/timer.c
++++ b/arch/arm/mach-msm/timer.c
+@@ -22,7 +22,6 @@
+ #include <linux/io.h>
+ 
+ #include <asm/mach/time.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/localtimer.h>
+ #include <asm/sched_clock.h>
+ 
+diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/board-4430sdp.c
+index 130ab00..d63f7ce 100644
+--- a/arch/arm/mach-omap2/board-4430sdp.c
++++ b/arch/arm/mach-omap2/board-4430sdp.c
+@@ -967,7 +967,6 @@ MACHINE_START(OMAP_4430SDP, "OMAP4430 4430SDP board")
+ 	.map_io		= omap4_map_io,
+ 	.init_early	= omap4430_init_early,
+ 	.init_irq	= gic_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= omap_4430sdp_init,
+ 	.timer		= &omap4_timer,
+ 	.restart	= omap_prcm_restart,
+diff --git a/arch/arm/mach-omap2/board-generic.c b/arch/arm/mach-omap2/board-generic.c
+index 098d183..b144302 100644
+--- a/arch/arm/mach-omap2/board-generic.c
++++ b/arch/arm/mach-omap2/board-generic.c
+@@ -18,7 +18,6 @@
+ #include <linux/i2c/twl.h>
+ 
+ #include <mach/hardware.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/arch.h>
+ 
+ #include <plat/board.h>
+@@ -156,7 +155,6 @@ DT_MACHINE_START(OMAP4_DT, "Generic OMAP4 (Flattened Device Tree)")
+ 	.map_io		= omap4_map_io,
+ 	.init_early	= omap4430_init_early,
+ 	.init_irq	= omap_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= omap4_init,
+ 	.timer		= &omap4_timer,
+ 	.dt_compat	= omap4_boards_compat,
+diff --git a/arch/arm/mach-omap2/board-omap4panda.c b/arch/arm/mach-omap2/board-omap4panda.c
+index 1b782ba..582256a 100644
+--- a/arch/arm/mach-omap2/board-omap4panda.c
++++ b/arch/arm/mach-omap2/board-omap4panda.c
+@@ -580,7 +580,6 @@ MACHINE_START(OMAP4_PANDA, "OMAP4 Panda board")
+ 	.map_io		= omap4_map_io,
+ 	.init_early	= omap4430_init_early,
+ 	.init_irq	= gic_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= omap4_panda_init,
+ 	.timer		= &omap4_timer,
+ 	.restart	= omap_prcm_restart,
+diff --git a/arch/arm/mach-realview/core.c b/arch/arm/mach-realview/core.c
+index 45868bb..bf4441f 100644
+--- a/arch/arm/mach-realview/core.c
++++ b/arch/arm/mach-realview/core.c
+@@ -44,7 +44,6 @@
+ #include <asm/mach/irq.h>
+ #include <asm/mach/map.h>
+ 
+-#include <asm/hardware/gic.h>
+ 
+ #include <mach/platform.h>
+ #include <mach/irqs.h>
+diff --git a/arch/arm/mach-realview/realview_eb.c b/arch/arm/mach-realview/realview_eb.c
+index baf382c..4d537fa 100644
+--- a/arch/arm/mach-realview/realview_eb.c
++++ b/arch/arm/mach-realview/realview_eb.c
+@@ -476,7 +476,6 @@ MACHINE_START(REALVIEW_EB, "ARM-RealView EB")
+ 	.init_early	= realview_init_early,
+ 	.init_irq	= gic_init_irq,
+ 	.timer		= &realview_eb_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= realview_eb_init,
+ #ifdef CONFIG_ZONE_DMA
+ 	.dma_zone_size	= SZ_256M,
+diff --git a/arch/arm/mach-realview/realview_pb1176.c b/arch/arm/mach-realview/realview_pb1176.c
+index b1d7caf..26e4ca6 100644
+--- a/arch/arm/mach-realview/realview_pb1176.c
++++ b/arch/arm/mach-realview/realview_pb1176.c
+@@ -389,7 +389,6 @@ MACHINE_START(REALVIEW_PB1176, "ARM-RealView PB1176")
+ 	.init_early	= realview_init_early,
+ 	.init_irq	= gic_init_irq,
+ 	.timer		= &realview_pb1176_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= realview_pb1176_init,
+ #ifdef CONFIG_ZONE_DMA
+ 	.dma_zone_size	= SZ_256M,
+diff --git a/arch/arm/mach-realview/realview_pb11mp.c b/arch/arm/mach-realview/realview_pb11mp.c
+index a98c536..836c621 100644
+--- a/arch/arm/mach-realview/realview_pb11mp.c
++++ b/arch/arm/mach-realview/realview_pb11mp.c
+@@ -371,7 +371,6 @@ MACHINE_START(REALVIEW_PB11MP, "ARM-RealView PB11MPCore")
+ 	.init_early	= realview_init_early,
+ 	.init_irq	= gic_init_irq,
+ 	.timer		= &realview_pb11mp_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= realview_pb11mp_init,
+ #ifdef CONFIG_ZONE_DMA
+ 	.dma_zone_size	= SZ_256M,
+diff --git a/arch/arm/mach-realview/realview_pba8.c b/arch/arm/mach-realview/realview_pba8.c
+index 5965017..b0f2336 100644
+--- a/arch/arm/mach-realview/realview_pba8.c
++++ b/arch/arm/mach-realview/realview_pba8.c
+@@ -313,7 +313,6 @@ MACHINE_START(REALVIEW_PBA8, "ARM-RealView PB-A8")
+ 	.init_early	= realview_init_early,
+ 	.init_irq	= gic_init_irq,
+ 	.timer		= &realview_pba8_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= realview_pba8_init,
+ #ifdef CONFIG_ZONE_DMA
+ 	.dma_zone_size	= SZ_256M,
+diff --git a/arch/arm/mach-realview/realview_pbx.c b/arch/arm/mach-realview/realview_pbx.c
+index 3f2f605..2e3242e 100644
+--- a/arch/arm/mach-realview/realview_pbx.c
++++ b/arch/arm/mach-realview/realview_pbx.c
+@@ -408,7 +408,6 @@ MACHINE_START(REALVIEW_PBX, "ARM-RealView PBX")
+ 	.init_early	= realview_init_early,
+ 	.init_irq	= gic_init_irq,
+ 	.timer		= &realview_pbx_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= realview_pbx_init,
+ #ifdef CONFIG_ZONE_DMA
+ 	.dma_zone_size	= SZ_256M,
+diff --git a/arch/arm/mach-shmobile/board-ag5evm.c b/arch/arm/mach-shmobile/board-ag5evm.c
+index 5b70666..e102aaf 100644
+--- a/arch/arm/mach-shmobile/board-ag5evm.c
++++ b/arch/arm/mach-shmobile/board-ag5evm.c
+@@ -579,7 +579,6 @@ MACHINE_START(AG5EVM, "ag5evm")
+ 	.init_early	= sh73a0_add_early_devices,
+ 	.nr_irqs	= NR_IRQS_LEGACY,
+ 	.init_irq	= sh73a0_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= ag5evm_init,
+ 	.init_late	= shmobile_init_late,
+ 	.timer		= &shmobile_timer,
+diff --git a/arch/arm/mach-shmobile/board-kota2.c b/arch/arm/mach-shmobile/board-kota2.c
+index 2625ea9..a0b3f50 100644
+--- a/arch/arm/mach-shmobile/board-kota2.c
++++ b/arch/arm/mach-shmobile/board-kota2.c
+@@ -520,7 +520,6 @@ MACHINE_START(KOTA2, "kota2")
+ 	.init_early	= sh73a0_add_early_devices,
+ 	.nr_irqs	= NR_IRQS_LEGACY,
+ 	.init_irq	= sh73a0_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= kota2_init,
+ 	.init_late	= shmobile_init_late,
+ 	.timer		= &shmobile_timer,
+diff --git a/arch/arm/mach-shmobile/board-kzm9d.c b/arch/arm/mach-shmobile/board-kzm9d.c
+index ea29978..b9885ee 100644
+--- a/arch/arm/mach-shmobile/board-kzm9d.c
++++ b/arch/arm/mach-shmobile/board-kzm9d.c
+@@ -26,7 +26,6 @@
+ #include <mach/emev2.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ 
+ /* Ether */
+ static struct resource smsc911x_resources[] = {
+@@ -79,7 +78,6 @@ DT_MACHINE_START(KZM9D_DT, "kzm9d")
+ 	.init_early	= emev2_add_early_devices,
+ 	.nr_irqs	= NR_IRQS_LEGACY,
+ 	.init_irq	= emev2_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= kzm9d_add_standard_devices,
+ 	.timer		= &shmobile_timer,
+ 	.dt_compat	= kzm9d_boards_compat_dt,
+diff --git a/arch/arm/mach-shmobile/board-kzm9g.c b/arch/arm/mach-shmobile/board-kzm9g.c
+index f342e64..bfc8547 100644
+--- a/arch/arm/mach-shmobile/board-kzm9g.c
++++ b/arch/arm/mach-shmobile/board-kzm9g.c
+@@ -749,7 +749,6 @@ DT_MACHINE_START(KZM9G_DT, "kzm9g")
+ 	.init_early	= sh73a0_add_early_devices,
+ 	.nr_irqs	= NR_IRQS_LEGACY,
+ 	.init_irq	= sh73a0_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= kzm_init,
+ 	.timer		= &shmobile_timer,
+ 	.restart	= kzm9g_restart,
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index b772bb5..aedf0db 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -36,7 +36,6 @@
+ #include <mach/irqs.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/traps.h>
+ 
+ /* Dummy supplies, where voltage doesn't matter */
+@@ -108,7 +107,6 @@ MACHINE_START(MARZEN, "marzen")
+ 	.init_early	= r8a7779_add_early_devices,
+ 	.nr_irqs	= NR_IRQS_LEGACY,
+ 	.init_irq	= r8a7779_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= marzen_init,
+ 	.init_late	= shmobile_init_late,
+ 	.timer		= &shmobile_timer,
+diff --git a/arch/arm/mach-shmobile/platsmp.c b/arch/arm/mach-shmobile/platsmp.c
+index d393c52..5833c60 100644
+--- a/arch/arm/mach-shmobile/platsmp.c
++++ b/arch/arm/mach-shmobile/platsmp.c
+@@ -12,7 +12,11 @@
+  */
+ #include <linux/init.h>
+ #include <linux/smp.h>
+-#include <asm/hardware/gic.h>
++#include <linux/io.h>
++#include <linux/of.h>
++#include <asm/mach-types.h>
++#include <mach/common.h>
++#include <mach/emev2.h>
+ 
+ void __init shmobile_smp_init_cpus(unsigned int ncores)
+ {
+diff --git a/arch/arm/mach-shmobile/setup-emev2.c b/arch/arm/mach-shmobile/setup-emev2.c
+index 5b46651..8fcfae7 100644
+--- a/arch/arm/mach-shmobile/setup-emev2.c
++++ b/arch/arm/mach-shmobile/setup-emev2.c
+@@ -444,7 +444,6 @@ DT_MACHINE_START(EMEV2_DT, "Generic Emma Mobile EV2 (Flattened Device Tree)")
+ 	.init_early	= emev2_init_delay,
+ 	.nr_irqs	= NR_IRQS_LEGACY,
+ 	.init_irq	= emev2_init_irq_dt,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= emev2_add_standard_devices_dt,
+ 	.timer		= &shmobile_timer,
+ 	.dt_compat	= emev2_boards_compat_dt,
+diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
+index 0952494..2229383 100644
+--- a/arch/arm/mach-tegra/board-dt-tegra20.c
++++ b/arch/arm/mach-tegra/board-dt-tegra20.c
+@@ -25,14 +25,12 @@
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+ #include <linux/of_fdt.h>
+-#include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/pda_power.h>
+ #include <linux/io.h>
+ #include <linux/i2c.h>
+ #include <linux/i2c-tegra.h>
+ 
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/time.h>
+@@ -139,7 +137,6 @@ DT_MACHINE_START(TEGRA_DT, "nVidia Tegra20 (Flattened Device Tree)")
+ 	.map_io		= tegra_map_common_io,
+ 	.init_early	= tegra20_init_early,
+ 	.init_irq	= tegra_dt_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.timer		= &tegra_timer,
+ 	.init_machine	= tegra_dt_init,
+ 	.restart	= tegra_assert_system_reset,
+diff --git a/arch/arm/mach-tegra/board-dt-tegra30.c b/arch/arm/mach-tegra/board-dt-tegra30.c
+index 5f7c03e..6ca3108 100644
+--- a/arch/arm/mach-tegra/board-dt-tegra30.c
++++ b/arch/arm/mach-tegra/board-dt-tegra30.c
+@@ -31,7 +31,6 @@
+ #include <linux/of_platform.h>
+ 
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include "board.h"
+ #include "clock.h"
+@@ -77,7 +76,6 @@ DT_MACHINE_START(TEGRA30_DT, "NVIDIA Tegra30 (Flattened Device Tree)")
+ 	.map_io		= tegra_map_common_io,
+ 	.init_early	= tegra30_init_early,
+ 	.init_irq	= tegra_dt_init_irq,
+-	.handle_irq	= gic_handle_irq,
+ 	.timer		= &tegra_timer,
+ 	.init_machine	= tegra30_dt_init,
+ 	.restart	= tegra_assert_system_reset,
+diff --git a/arch/arm/mach-ux500/board-mop500.c b/arch/arm/mach-ux500/board-mop500.c
+index 77d03c1..38cd7fc 100644
+--- a/arch/arm/mach-ux500/board-mop500.c
++++ b/arch/arm/mach-ux500/board-mop500.c
+@@ -36,7 +36,6 @@
+ #include <linux/leds.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include <plat/i2c.h>
+ #include <plat/ste_dma40.h>
+@@ -720,7 +719,6 @@ MACHINE_START(U8500, "ST-Ericsson MOP500 platform")
+ 	.init_irq	= ux500_init_irq,
+ 	/* we re-use nomadik timer here */
+ 	.timer		= &ux500_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= mop500_init_machine,
+ MACHINE_END
+ 
+@@ -729,7 +727,6 @@ MACHINE_START(HREFV60, "ST-Ericsson U8500 Platform HREFv60+")
+ 	.map_io		= u8500_map_io,
+ 	.init_irq	= ux500_init_irq,
+ 	.timer		= &ux500_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= hrefv60_init_machine,
+ MACHINE_END
+ 
+@@ -739,7 +736,6 @@ MACHINE_START(SNOWBALL, "Calao Systems Snowball platform")
+ 	.init_irq	= ux500_init_irq,
+ 	/* we re-use nomadik timer here */
+ 	.timer		= &ux500_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= snowball_init_machine,
+ MACHINE_END
+ 
+@@ -828,7 +824,6 @@ DT_MACHINE_START(U8500_DT, "ST-Ericsson U8500 platform (Device Tree Support)")
+ 	.init_irq	= ux500_init_irq,
+ 	/* we re-use nomadik timer here */
+ 	.timer		= &ux500_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= u8500_init_machine,
+ 	.dt_compat      = u8500_dt_board_compat,
+ MACHINE_END
+diff --git a/arch/arm/mach-vexpress/platsmp.c b/arch/arm/mach-vexpress/platsmp.c
+index 2343084..d86334b 100644
+--- a/arch/arm/mach-vexpress/platsmp.c
++++ b/arch/arm/mach-vexpress/platsmp.c
+@@ -15,7 +15,6 @@
+ #include <linux/of_fdt.h>
+ 
+ #include <asm/smp_scu.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/map.h>
+ 
+ #include <mach/motherboard.h>
+diff --git a/arch/arm/mach-vexpress/v2m.c b/arch/arm/mach-vexpress/v2m.c
+index 47cdcca..aa82608 100644
+--- a/arch/arm/mach-vexpress/v2m.c
++++ b/arch/arm/mach-vexpress/v2m.c
+@@ -479,7 +479,6 @@ MACHINE_START(VEXPRESS, "ARM-Versatile Express")
+ 	.init_early	= v2m_init_early,
+ 	.init_irq	= v2m_init_irq,
+ 	.timer		= &v2m_timer,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= v2m_init,
+ 	.restart	= v2m_restart,
+ MACHINE_END
+@@ -680,7 +679,6 @@ DT_MACHINE_START(VEXPRESS_DT, "ARM-Versatile Express")
+ 	.init_irq	= v2m_dt_init_irq,
+ 	.timer		= &v2m_dt_timer,
+ 	.init_machine	= v2m_dt_init,
+-	.handle_irq	= gic_handle_irq,
+ 	.restart	= v2m_restart,
+ MACHINE_END
+ 
+diff --git a/arch/arm/mach-zynq/common.c b/arch/arm/mach-zynq/common.c
+index ab5cfdd..73e9368 100644
+--- a/arch/arm/mach-zynq/common.c
++++ b/arch/arm/mach-zynq/common.c
+@@ -112,7 +112,6 @@ static const char *xilinx_dt_match[] = {
+ MACHINE_START(XILINX_EP107, "Xilinx Zynq Platform")
+ 	.map_io		= xilinx_map_io,
+ 	.init_irq	= xilinx_irq_init,
+-	.handle_irq	= gic_handle_irq,
+ 	.init_machine	= xilinx_init_machine,
+ 	.timer		= &xttcpss_sys_timer,
+ 	.dt_compat	= xilinx_dt_match,
+-- 
+1.7.10.4
+

@@ -1,7 +1,7 @@
 From 28acb4813af649495205d4b9c3cda099be15db6b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Mar 2013 22:41:36 +0100
-Subject: drm/rcar-du: Prepare/unprepare clock
+Subject: [PATCH 138/715] drm/rcar-du: Prepare/unprepare clock
 
 Use clk_prepare_enable() and clk_disable_unprepare() to prepare/enable
 and disable/unprepare the DU clock.
@@ -10,7 +10,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 3294cc64275b3cd4f74c149be7165843ffe0128c)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

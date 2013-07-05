@@ -1,7 +1,7 @@
 From d12b170e557cd291769cfd76586b2c13684a3d4f Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:00 -0300
-Subject: drm: WARN() when drm_connector_attach_property fails
+Subject: [PATCH 029/715] drm: WARN() when drm_connector_attach_property fails
 
 Also return void instead of int. We have more than 100 callers and
 no one checks for the return value.
@@ -18,7 +18,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit afea2ad53f1fef0b57d0e59fa062f54797158b14)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   10 +++++-----
  include/drm/drm_crtc.h     |    4 ++--

@@ -1,0 +1,34 @@
+From d69601f917c5b66856900b95e62fb4e3e9641d12 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Fri, 14 Jun 2013 15:16:06 +0900
+Subject: [PATCH 515/715] mmc: tmio: Add error IRQ status clear
+
+After a card is ejected during card access,
+the re-inserted card does not identified.
+It can be identified by clearing error IRQ status.
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit 094d33a5cbf5ec45b4e471a59a045b49e4c04aab)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index fae0057..67df17b 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -587,6 +587,9 @@ static void tmio_mmc_card_irq_status(struct tmio_mmc_host *host,
+ 
+ 	pr_debug_status(*status);
+ 	pr_debug_status(*ireg);
++
++	/* Clear the status except the interrupt status */
++	sd_ctrl_write32(host, CTL_STATUS, TMIO_MASK_IRQ);
+ }
+ 
+ static bool __tmio_mmc_card_detect_irq(struct tmio_mmc_host *host,
+-- 
+1.7.10.4
+

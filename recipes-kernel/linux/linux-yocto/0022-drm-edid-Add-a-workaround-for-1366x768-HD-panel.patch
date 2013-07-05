@@ -1,7 +1,7 @@
 From fce4d0675760db7f5fe29cb3bd991f087faec80c Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Mon, 23 Apr 2012 17:40:33 +0100
-Subject: drm/edid: Add a workaround for 1366x768 HD panel
+Subject: [PATCH 022/715] drm/edid: Add a workaround for 1366x768 HD panel
 
 HD panel (1366x768) found most commonly on laptops can't be represented
 exactly in CVT/DMT expression, which leads to 1368x768 instead, because
@@ -15,7 +15,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit c09dedb7a50e23f0166e0bbae61c75c7ec23cf7f)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   15 +++++++++++++++
  1 file changed, 15 insertions(+)

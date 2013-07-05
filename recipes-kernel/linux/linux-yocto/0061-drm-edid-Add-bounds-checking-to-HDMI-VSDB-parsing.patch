@@ -1,7 +1,7 @@
 From daa4bfa7a4ef7ff75a0135bd08a763af75e144bb Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 16 Aug 2012 14:55:05 +0000
-Subject: drm: edid: Add bounds checking to HDMI VSDB parsing
+Subject: [PATCH 061/715] drm: edid: Add bounds checking to HDMI VSDB parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,7 +16,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 8504072a2a47c80344c1cf81537d1d433a979fc6)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   33 +++++++++++++++++++++------------
  1 file changed, 21 insertions(+), 12 deletions(-)

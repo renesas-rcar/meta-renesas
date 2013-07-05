@@ -1,7 +1,8 @@
 From 02819c981d6c48aec6731e74f6ff832fc04427a9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:21 +0200
-Subject: drm: Don't initialize local ret variable when not needed
+Subject: [PATCH 035/715] drm: Don't initialize local ret variable when not
+ needed
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
@@ -9,7 +10,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 4a1b0714275796fdbc35427cf361eb4123e5e9f6)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c        |   12 ++++++------
  drivers/gpu/drm/drm_crtc_helper.c |    2 +-

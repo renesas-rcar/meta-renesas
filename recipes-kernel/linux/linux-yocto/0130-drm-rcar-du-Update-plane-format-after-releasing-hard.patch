@@ -1,7 +1,8 @@
 From 4e6f7c21f4b847d6a1bb1c0f5afa5204bb565e9c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 01:25:56 +0100
-Subject: drm/rcar-du: Update plane format after releasing hardware planes
+Subject: [PATCH 130/715] drm/rcar-du: Update plane format after releasing
+ hardware planes
 
 Hardware planes were released after updating the plane format, which
 resulted in an invalid number of hardware planes being released if the
@@ -13,7 +14,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit bef7cb8aae6e5f634510dfe2e094c50259bb15ea)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |    7 ++++++-
  drivers/gpu/drm/rcar-du/rcar_du_plane.c |   27 ++++++++++++++-------------

@@ -1,8 +1,8 @@
 From 81f107c1edd640422cd783045f096e8831ece5c8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:17 +0300
-Subject: drm: Add drm_format_{horz, vert}_chroma_subsampling() utility
- functions
+Subject: [PATCH 003/715] drm: Add drm_format_{horz,
+ vert}_chroma_subsampling() utility functions
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,7 +15,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 01b68b0483627631c738dcfca0dee7e22892c420)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   60 ++++++++++++++++++++++++++++++++++++++++++++
  include/drm/drm_crtc.h     |    2 ++

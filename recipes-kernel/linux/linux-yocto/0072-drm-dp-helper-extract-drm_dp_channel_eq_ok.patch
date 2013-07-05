@@ -1,7 +1,7 @@
 From f9b200d90137de139e279c2402e87bfe17cf1477 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 18 Oct 2012 10:15:24 +0200
-Subject: drm: dp helper: extract drm_dp_channel_eq_ok
+Subject: [PATCH 072/715] drm: dp helper: extract drm_dp_channel_eq_ok
 
 radeon and intel use the exact same definition.
 
@@ -11,7 +11,6 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 (cherry picked from commit 1ffdff134eb2d943bde3e4901ac48a9656a7e7a5)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_dp_helper.c      |   50 ++++++++++++++++++++++++++++++++++
  drivers/gpu/drm/i915/intel_dp.c      |   35 ++----------------------

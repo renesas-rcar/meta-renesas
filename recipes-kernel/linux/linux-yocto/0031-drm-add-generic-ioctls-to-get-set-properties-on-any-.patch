@@ -1,7 +1,8 @@
 From 2f6abe4592303b98bb4aa3162df385f8dac585a3 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:02 -0300
-Subject: drm: add generic ioctls to get/set properties on any object
+Subject: [PATCH 031/715] drm: add generic ioctls to get/set properties on any
+ object
 
 Useless for connector properties (since they already have their own
 ioctls), but useful when we add properties to CRTCs, planes and other
@@ -15,7 +16,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit c543188afb7a83e66161c026dc6fd5eb38dc0b63)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |  182 ++++++++++++++++++++++++++++++++++++++++++++
  drivers/gpu/drm/drm_drv.c  |    4 +-

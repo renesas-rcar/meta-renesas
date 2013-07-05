@@ -1,7 +1,8 @@
 From 9b5bccf5999ef37d9b2ebebfad272cd1d28e973e Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:36 +0000
-Subject: drm: don't start the poll engine in probe_single_connector
+Subject: [PATCH 091/715] drm: don't start the poll engine in
+ probe_single_connector
 
 Actually there's a reason this stuff is there, and it's called
 
@@ -41,7 +42,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 905bc9ff6575f78aab24c0261e8785425b5a0397)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc_helper.c |    7 ++++++-
  include/drm/drm_crtc.h            |    1 +

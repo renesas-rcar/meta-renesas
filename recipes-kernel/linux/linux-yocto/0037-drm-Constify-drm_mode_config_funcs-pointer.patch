@@ -1,7 +1,7 @@
 From b2981d952198197203ae6589913cacd8fdc8312d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:23 +0200
-Subject: drm: Constify drm_mode_config_funcs pointer
+Subject: [PATCH 037/715] drm: Constify drm_mode_config_funcs pointer
 
 The DRM mode config functions structure declared by drivers and pointed
 to by the drm_mode_config funcs field is never modified. Make it a const
@@ -19,7 +19,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit e6ecefaadfcdb03db8ac9e739b4ba7a93a8811b3)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/exynos/exynos_drm_fb.c    |    2 +-
  drivers/gpu/drm/gma500/framebuffer.c      |    2 +-

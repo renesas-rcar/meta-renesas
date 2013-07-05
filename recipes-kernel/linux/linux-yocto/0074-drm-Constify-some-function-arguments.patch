@@ -1,7 +1,7 @@
 From 7d07f698420c9b3b63046d47db50a5d9b3747d58 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:05 +0000
-Subject: drm: Constify some function arguments
+Subject: [PATCH 074/715] drm: Constify some function arguments
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,7 +15,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 0b3904ab2a48488e23332ac1ecd2d45961ec6718)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_modes.c |    8 ++++----
  include/drm/drm_crtc.h      |    8 ++++----

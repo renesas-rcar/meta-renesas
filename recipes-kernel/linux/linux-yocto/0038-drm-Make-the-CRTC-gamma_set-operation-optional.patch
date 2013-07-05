@@ -1,7 +1,7 @@
 From 577c6754bbcad6484f9d6b05cec76d5422ce02c1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:24 +0200
-Subject: drm: Make the CRTC gamma_set operation optional
+Subject: [PATCH 038/715] drm: Make the CRTC gamma_set operation optional
 
 Drivers for hardware without gamma support should not be forced to
 implement a no-op gamma set operation.
@@ -12,7 +12,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit ebe0f2442cc4c5493a85c875d2d8a44ffecc1175)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c          |    5 +++++
  drivers/gpu/drm/drm_fb_helper.c     |    3 +++

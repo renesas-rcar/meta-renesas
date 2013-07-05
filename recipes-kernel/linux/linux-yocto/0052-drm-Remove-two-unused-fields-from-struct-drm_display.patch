@@ -1,7 +1,8 @@
 From 9abf9f663f2a5d19accfc58bcee467e9765f1e99 Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Fri, 17 Aug 2012 14:20:02 +0000
-Subject: drm: Remove two unused fields from struct drm_display_mode
+Subject: [PATCH 052/715] drm: Remove two unused fields from struct
+ drm_display_mode
 
 Signed-off-by: Damien Lespiau <damien.lespiau@intel.com>
 Reviewed-by: Jani Nikula <jani.nikula@intel.com>
@@ -9,7 +10,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 04ccfe77f132b973659f11954443214659014072)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_modes.c |    3 ---
  include/drm/drm_crtc.h      |    2 --

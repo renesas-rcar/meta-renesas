@@ -1,0 +1,29 @@
+From d1dd47bcf963d1be0a75b9deb41b3922f24868f1 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Wed, 26 Jun 2013 14:23:34 +0900
+Subject: [PATCH 680/715] ASoC: sh: scu: Fix SSICR register mask
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit 3157c93363fc48dea03b8194896f3adcf4242755)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ sound/soc/sh/scu_dai.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index af3f601..bb60176 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -179,7 +179,7 @@ static void scu_ssi_stop(int ssi_ch)
+ 	FNC_ENTRY
+ 	/* SSI disable (figure.39.13 flow) */
+ 	val = readl(&rinfo->ssireg[ssi_ch]->cr);
+-	val &= ~(SSICR_DMEN | SSICR_UIEN | SSICR_UIEN | SSICR_ENABLE);
++	val &= ~(SSICR_DMEN | SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
+ 	writel(val, &rinfo->ssireg[ssi_ch]->cr);
+ 	FNC_EXIT
+ 
+-- 
+1.7.10.4
+

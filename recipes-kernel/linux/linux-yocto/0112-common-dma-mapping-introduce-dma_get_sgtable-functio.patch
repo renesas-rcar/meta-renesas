@@ -1,7 +1,8 @@
 From f364953a5ae9aaf92abb84cd3111a0e119e61234 Mon Sep 17 00:00:00 2001
 From: Marek Szyprowski <m.szyprowski@samsung.com>
 Date: Wed, 13 Jun 2012 10:05:52 +0200
-Subject: common: dma-mapping: introduce dma_get_sgtable() function
+Subject: [PATCH 112/715] common: dma-mapping: introduce dma_get_sgtable()
+ function
 
 This patch adds dma_get_sgtable() function which is required to let
 drivers to share the buffers allocated by DMA-mapping subsystem. Right
@@ -27,7 +28,6 @@ Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 (cherry picked from commit d2b7428eb0caa7c66e34b6ac869a43915b294123)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/base/dma-mapping.c               |   18 ++++++++++++++++++
  include/asm-generic/dma-mapping-common.h |   18 ++++++++++++++++++

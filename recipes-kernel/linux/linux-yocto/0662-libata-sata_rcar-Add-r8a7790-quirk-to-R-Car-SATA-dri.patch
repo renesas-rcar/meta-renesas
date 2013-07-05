@@ -1,0 +1,73 @@
+From eeacbe93a6a39d006daa8c714dca3f72f17b4366 Mon Sep 17 00:00:00 2001
+From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+Date: Tue, 25 Jun 2013 17:46:31 +0900
+Subject: [PATCH 662/715] libata: sata_rcar: Add r8a7790 quirk to R-Car SATA
+ driver
+
+Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+(cherry picked from commit 2c7a188216320a63ae2b1877c1c5bc66a443d29a)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/ata/sata_rcar.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index caf33f6..499f0f2 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -4,6 +4,7 @@
+  * Author: Vladimir Barinov <source@cogentembedded.com>
+  * Copyright (C) 2013 Cogent Embedded, Inc.
+  * Copyright (C) 2013 Renesas Solutions Corp.
++ * Copyright (C) 2013 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute  it and/or modify it
+  * under  the terms of  the GNU General  Public License as published by the
+@@ -125,6 +126,7 @@ struct sata_rcar_priv {
+ 	struct clk *clk;
+ };
+ 
++#ifndef CONFIG_ARCH_R8A7790
+ static void sata_rcar_phy_initialize(struct sata_rcar_priv *priv)
+ {
+ 	/* idle state */
+@@ -163,6 +165,7 @@ static void sata_rcar_phy_write(struct sata_rcar_priv *priv, u16 reg, u32 val,
+ 	/* idle state */
+ 	iowrite32(0, priv->base + SATAPHYADDR_REG);
+ }
++#endif
+ 
+ static void sata_rcar_freeze(struct ata_port *ap)
+ {
+@@ -705,7 +708,11 @@ static void sata_rcar_setup_port(struct ata_host *host)
+ 	ap->ops		= &sata_rcar_port_ops;
+ 	ap->pio_mask	= ATA_PIO4;
+ 	ap->udma_mask	= ATA_UDMA6;
++#ifdef CONFIG_ARCH_R8A7790
++	ap->flags	|= (ATA_FLAG_SATA | ATA_FLAG_NO_DIPM);
++#else
+ 	ap->flags	|= ATA_FLAG_SATA;
++#endif
+ 
+ 	ioaddr->cmd_addr = priv->base + SDATA_REG;
+ 	ioaddr->ctl_addr = priv->base + SSDEVCON_REG;
+@@ -729,6 +736,7 @@ static void sata_rcar_init_controller(struct ata_host *host)
+ 	struct sata_rcar_priv *priv = host->private_data;
+ 	u32 val;
+ 
++#ifndef CONFIG_ARCH_R8A7790
+ 	/* reset and setup phy */
+ 	sata_rcar_phy_initialize(priv);
+ 	sata_rcar_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 0);
+@@ -737,6 +745,7 @@ static void sata_rcar_init_controller(struct ata_host *host)
+ 	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 0);
+ 	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 1);
+ 	sata_rcar_phy_write(priv, SATAPCTLR4_REG, 0x28E80000, 0);
++#endif
+ 
+ 	/* SATA-IP reset state */
+ 	val = ioread32(priv->base + ATAPI_CONTROL1_REG);
+-- 
+1.7.10.4
+

@@ -1,7 +1,8 @@
 From b1eff4f79c6bc2d99714c8bc9a4eccb5e259016f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 00:42:58 +0100
-Subject: drm/rcar-du: Fix register access for global registers
+Subject: [PATCH 131/715] drm/rcar-du: Fix register access for global
+ registers
 
 The DEFRn DEFE* bits are located in the CRTC 0 registers only. Access
 them as global registers instead of per-CRTC registers.
@@ -13,7 +14,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 9b11ea2d85c1dd980c656cbecca39067f9a770d3)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c |   13 +++++++------
  1 file changed, 7 insertions(+), 6 deletions(-)

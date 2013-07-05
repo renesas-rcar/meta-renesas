@@ -1,0 +1,69 @@
+From cf96c85f26ee7cf7e39af5f44e2c350cc293839c Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 16 Apr 2013 14:32:34 +0200
+Subject: [PATCH 556/715] drm: GEM CMA: Split object mapping into GEM mapping
+ and CMA mapping
+
+The CMA-specific mapping code will be used to implement dma-buf mmap
+support.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 261d1243304a209b7413f93a78708c1d08692ee2)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit fc2cccbd082f1f4e0354ca46f05ff27570f2b3c3)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_gem_cma_helper.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_gem_cma_helper.c b/drivers/gpu/drm/drm_gem_cma_helper.c
+index 897441c..ab501ab 100644
+--- a/drivers/gpu/drm/drm_gem_cma_helper.c
++++ b/drivers/gpu/drm/drm_gem_cma_helper.c
+@@ -258,13 +258,26 @@ const struct vm_operations_struct drm_gem_cma_vm_ops = {
+ };
+ EXPORT_SYMBOL_GPL(drm_gem_cma_vm_ops);
+ 
++static int drm_gem_cma_mmap_obj(struct drm_gem_cma_object *cma_obj,
++				struct vm_area_struct *vma)
++{
++	int ret;
++
++	ret = remap_pfn_range(vma, vma->vm_start, cma_obj->paddr >> PAGE_SHIFT,
++			vma->vm_end - vma->vm_start, vma->vm_page_prot);
++	if (ret)
++		drm_gem_vm_close(vma);
++
++	return ret;
++}
++
+ /*
+  * drm_gem_cma_mmap - (struct file_operation)->mmap callback function
+  */
+ int drm_gem_cma_mmap(struct file *filp, struct vm_area_struct *vma)
+ {
+-	struct drm_gem_object *gem_obj;
+ 	struct drm_gem_cma_object *cma_obj;
++	struct drm_gem_object *gem_obj;
+ 	int ret;
+ 
+ 	ret = drm_gem_mmap(filp, vma);
+@@ -274,12 +287,7 @@ int drm_gem_cma_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	gem_obj = vma->vm_private_data;
+ 	cma_obj = to_drm_gem_cma_obj(gem_obj);
+ 
+-	ret = remap_pfn_range(vma, vma->vm_start, cma_obj->paddr >> PAGE_SHIFT,
+-			vma->vm_end - vma->vm_start, vma->vm_page_prot);
+-	if (ret)
+-		drm_gem_vm_close(vma);
+-
+-	return ret;
++	return drm_gem_cma_mmap_obj(cma_obj, vma);
+ }
+ EXPORT_SYMBOL_GPL(drm_gem_cma_mmap);
+ 
+-- 
+1.7.10.4
+

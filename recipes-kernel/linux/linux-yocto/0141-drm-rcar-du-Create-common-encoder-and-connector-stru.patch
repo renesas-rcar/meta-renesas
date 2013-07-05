@@ -1,7 +1,8 @@
 From 8f1499df5a703a765ab8bf2b8b83809d12eb3426 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 13:43:20 +0100
-Subject: drm/rcar-du: Create common encoder and connector structures
+Subject: [PATCH 141/715] drm/rcar-du: Create common encoder and connector
+ structures
 
 Create rcar_du_encoder and rcar_du_connector structures to store fields
 common to all DU encoders and connectors. Move common encoder and
@@ -11,7 +12,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit e8312a8c693946961046534de847a59a06920f01)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_kms.c  |   26 ++++++++++++
  drivers/gpu/drm/rcar-du/rcar_du_kms.h  |   25 +++++++++++

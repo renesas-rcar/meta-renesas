@@ -1,7 +1,7 @@
 From f039be87ee0d4fab78da51ddf397643a8ac1351f Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 17 May 2012 02:23:26 -0600
-Subject: drm: add bitmask property type
+Subject: [PATCH 039/715] drm: add bitmask property type
 
 A bitmask property is similar to an enum.  The enum value is a bit
 position (0-63), and valid property values consist of a mask of
@@ -15,7 +15,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 49e2754578b9f99bde18ad318d888a462d271479)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   47 +++++++++++++++++++++++++++++++++++++++++---
  include/drm/drm_crtc.h     |    4 ++++

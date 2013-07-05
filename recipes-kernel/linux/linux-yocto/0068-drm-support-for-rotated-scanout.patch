@@ -1,7 +1,7 @@
 From ebb3d2cf84e70e1846047c5e91c433bcdfab5091 Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Tue, 4 Sep 2012 16:35:56 +0000
-Subject: drm: support for rotated scanout
+Subject: [PATCH 068/715] drm: support for rotated scanout
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -23,7 +23,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 7c80e128429d639742043f8fbdd7f1551c940ea3)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   46 +++++++++++++++++++++++++++++---------------
  include/drm/drm_crtc.h     |    5 +++++

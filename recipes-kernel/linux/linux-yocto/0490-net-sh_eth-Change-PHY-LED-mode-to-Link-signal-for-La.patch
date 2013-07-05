@@ -1,0 +1,41 @@
+From e94dc4b8b9632716e052ce46458e72cee21be5f1 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Wed, 12 Jun 2013 16:40:33 +0900
+Subject: [PATCH 490/715] net: sh_eth: Change PHY LED mode to Link signal for
+ Lager board
+
+ETH_LINK pin connects to LED0 pin of ethernet PHY device.
+Initial setting of LED0 pin output is Link and Activity signal.
+Interrupt signal from LED0 pin is used as Link via ETH_LINK pin.
+The LED0 pin must be set as the Link signal only for runtime.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+(cherry picked from commit a9affe96cd4d1140b6c2e59f5a2f1688ccfc3a2f)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/net/ethernet/renesas/sh_eth.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index 9ed64da..c64e290 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -1452,6 +1452,14 @@ static int sh_eth_phy_start(struct net_device *ndev)
+ 
+ 	/* reset phy - this also wakes it from PDOWN */
+ 	phy_write(mdp->phydev, MII_BMCR, BMCR_RESET);
++
++#if defined(CONFIG_ARCH_R8A7790)
++	ret = phy_read(mdp->phydev, 0x1e);
++	ret &= ~0xc000;
++	ret |= 0x4000;
++	phy_write(mdp->phydev, 0x1e, ret);
++#endif
++
+ 	phy_start(mdp->phydev);
+ 
+ 	return 0;
+-- 
+1.7.10.4
+

@@ -1,0 +1,990 @@
+From 77550c42ffffb116710c4ff5dec68acc2532e512 Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Thu, 27 Dec 2012 13:10:24 -0600
+Subject: [PATCH 205/715] irqchip: Move ARM gic.h to
+ include/linux/irqchip/arm-gic.h
+
+Now that we have GIC moved to drivers/irqchip and all GIC DT init for
+platforms using irqchip_init, move gic.h and update the remaining
+includes.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Anton Vorontsov <avorontsov@mvista.com>
+Cc: Kukjin Kim <kgene.kim@samsung.com>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: David Brown <davidb@codeaurora.org>
+Cc: Daniel Walker <dwalker@fifo99.com>
+Cc: Bryan Huntsman <bryanh@codeaurora.org>
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Paul Mundt <lethal@linux-sh.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: Shiraz Hashim <shiraz.hashim@st.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+(cherry picked from commit 520f7bd73354f003a9a59937b28e4903d985c420)
+
+Conflicts:
+        arch/arm/mach-exynos/common.c
+        arch/arm/mach-msm/board-msm8960.c
+        arch/arm/mach-msm/board-msm8x60.c
+        arch/arm/mach-omap2/board-4430sdp.c
+        arch/arm/mach-omap2/board-omap4panda.c
+        arch/arm/mach-omap2/omap4-common.c
+        arch/arm/mach-realview/realview_eb.c
+        arch/arm/mach-realview/realview_pb1176.c
+        arch/arm/mach-realview/realview_pb11mp.c
+        arch/arm/mach-realview/realview_pba8.c
+        arch/arm/mach-realview/realview_pbx.c
+        arch/arm/mach-shmobile/board-ag5evm.c
+        arch/arm/mach-shmobile/smp-sh73a0.c
+        arch/arm/mach-socfpga/platsmp.c
+        arch/arm/mach-spear13xx/platsmp.c
+        arch/arm/mach-tegra/board-dt-tegra20.c
+        arch/arm/mach-tegra/board-harmony.c
+        arch/arm/mach-tegra/board-paz00.c
+        arch/arm/mach-tegra/board-seaboard.c
+        arch/arm/mach-tegra/board-trimslice.c
+        arch/arm/mach-ux500/board-u5500.c
+        arch/arm/mach-ux500/cpu.c
+        arch/arm/mach-vexpress/ct-ca9x4.c
+        arch/arm/mach-vexpress/v2m.c
+        arch/arm/mach-zynq/common.c
+        drivers/mfd/db8500-prcmu.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/include/asm/hardware/gic.h          |   48 --------------------------
+ arch/arm/mach-cns3xxx/core.c                 |    2 +-
+ arch/arm/mach-exynos/common.c                |    2 +-
+ arch/arm/mach-exynos/include/mach/regs-irq.h |    2 +-
+ arch/arm/mach-exynos/platsmp.c               |    2 +-
+ arch/arm/mach-highbank/platsmp.c             |    2 +-
+ arch/arm/mach-imx/gpc.c                      |    2 +-
+ arch/arm/mach-imx/platsmp.c                  |    2 +-
+ arch/arm/mach-msm/board-msm8960.c            |    2 +-
+ arch/arm/mach-msm/board-msm8x60.c            |    2 +-
+ arch/arm/mach-msm/platsmp.c                  |    2 +-
+ arch/arm/mach-omap2/board-4430sdp.c          |    2 +-
+ arch/arm/mach-omap2/board-omap4panda.c       |    2 +-
+ arch/arm/mach-omap2/omap-smp.c               |    2 +-
+ arch/arm/mach-omap2/omap-wakeupgen.c         |    3 +-
+ arch/arm/mach-omap2/omap4-common.c           |    2 +-
+ arch/arm/mach-realview/realview_eb.c         |    2 +-
+ arch/arm/mach-realview/realview_pb1176.c     |    2 +-
+ arch/arm/mach-realview/realview_pb11mp.c     |    2 +-
+ arch/arm/mach-realview/realview_pba8.c       |    2 +-
+ arch/arm/mach-realview/realview_pbx.c        |    2 +-
+ arch/arm/mach-shmobile/board-ag5evm.c        |    2 +-
+ arch/arm/mach-shmobile/board-kota2.c         |    2 +-
+ arch/arm/mach-shmobile/board-kzm9g.c         |    2 +-
+ arch/arm/mach-shmobile/intc-r8a7779.c        |    2 +-
+ arch/arm/mach-shmobile/intc-sh73a0.c         |    2 +-
+ arch/arm/mach-shmobile/setup-emev2.c         |    2 +-
+ arch/arm/mach-shmobile/smp-emev2.c           |    2 +-
+ arch/arm/mach-shmobile/smp-r8a7779.c         |    2 +-
+ arch/arm/mach-shmobile/smp-sh73a0.c          |    2 +-
+ arch/arm/mach-tegra/board-dt-tegra20.c       |    2 +-
+ arch/arm/mach-tegra/board-harmony.c          |    2 +-
+ arch/arm/mach-tegra/board-paz00.c            |    2 +-
+ arch/arm/mach-tegra/board-seaboard.c         |    2 +-
+ arch/arm/mach-tegra/board-trimslice.c        |    2 +-
+ arch/arm/mach-tegra/irq.c                    |    3 +-
+ arch/arm/mach-tegra/platsmp.c                |    2 +-
+ arch/arm/mach-ux500/board-u5500.c            |    2 +-
+ arch/arm/mach-ux500/cpu.c                    |    2 +-
+ arch/arm/mach-ux500/platsmp.c                |    2 +-
+ arch/arm/mach-vexpress/ct-ca9x4.c            |    2 +-
+ arch/arm/mach-vexpress/v2m.c                 |    2 +-
+ arch/arm/mach-zynq/common.c                  |    2 +-
+ arch/arm/plat-versatile/platsmp.c            |    2 +-
+ drivers/irqchip/irq-gic.c                    |    2 +-
+ drivers/mfd/db8500-prcmu.c                   |    2 +-
+ include/linux/irqchip/arm-gic.h              |   48 ++++++++++++++++++++++++++
+ 47 files changed, 93 insertions(+), 95 deletions(-)
+ delete mode 100644 arch/arm/include/asm/hardware/gic.h
+ create mode 100644 include/linux/irqchip/arm-gic.h
+
+diff --git a/arch/arm/include/asm/hardware/gic.h b/arch/arm/include/asm/hardware/gic.h
+deleted file mode 100644
+index 5c14398..0000000
+--- a/arch/arm/include/asm/hardware/gic.h
++++ /dev/null
+@@ -1,48 +0,0 @@
+-/*
+- *  arch/arm/include/asm/hardware/gic.h
+- *
+- *  Copyright (C) 2002 ARM Limited, All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-#ifndef __ASM_ARM_HARDWARE_GIC_H
+-#define __ASM_ARM_HARDWARE_GIC_H
+-
+-#define GIC_CPU_CTRL			0x00
+-#define GIC_CPU_PRIMASK			0x04
+-#define GIC_CPU_BINPOINT		0x08
+-#define GIC_CPU_INTACK			0x0c
+-#define GIC_CPU_EOI			0x10
+-#define GIC_CPU_RUNNINGPRI		0x14
+-#define GIC_CPU_HIGHPRI			0x18
+-
+-#define GIC_DIST_CTRL			0x000
+-#define GIC_DIST_CTR			0x004
+-#define GIC_DIST_ENABLE_SET		0x100
+-#define GIC_DIST_ENABLE_CLEAR		0x180
+-#define GIC_DIST_PENDING_SET		0x200
+-#define GIC_DIST_PENDING_CLEAR		0x280
+-#define GIC_DIST_ACTIVE_BIT		0x300
+-#define GIC_DIST_PRI			0x400
+-#define GIC_DIST_TARGET			0x800
+-#define GIC_DIST_CONFIG			0xc00
+-#define GIC_DIST_SOFTINT		0xf00
+-
+-struct device_node;
+-
+-extern struct irq_chip gic_arch_extn;
+-
+-void gic_init_bases(unsigned int, int, void __iomem *, void __iomem *,
+-		    u32 offset, struct device_node *);
+-void gic_secondary_init(unsigned int);
+-void gic_cascade_irq(unsigned int gic_nr, unsigned int irq);
+-
+-static inline void gic_init(unsigned int nr, int start,
+-			    void __iomem *dist , void __iomem *cpu)
+-{
+-	gic_init_bases(nr, start, dist, cpu, 0, NULL);
+-}
+-
+-#endif
+diff --git a/arch/arm/mach-cns3xxx/core.c b/arch/arm/mach-cns3xxx/core.c
+index 031805b..db3806c 100644
+--- a/arch/arm/mach-cns3xxx/core.c
++++ b/arch/arm/mach-cns3xxx/core.c
+@@ -12,10 +12,10 @@
+ #include <linux/interrupt.h>
+ #include <linux/clockchips.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <asm/mach/map.h>
+ #include <asm/mach/time.h>
+ #include <asm/mach/irq.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ #include <mach/cns3xxx.h>
+ #include "core.h"
+diff --git a/arch/arm/mach-exynos/common.c b/arch/arm/mach-exynos/common.c
+index a487079..bafe4d9 100644
+--- a/arch/arm/mach-exynos/common.c
++++ b/arch/arm/mach-exynos/common.c
+@@ -20,11 +20,11 @@
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+ #include <linux/irqchip.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/proc-fns.h>
+ #include <asm/exception.h>
+ #include <asm/hardware/cache-l2x0.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/map.h>
+ #include <asm/mach/irq.h>
+ #include <asm/cacheflush.h>
+diff --git a/arch/arm/mach-exynos/include/mach/regs-irq.h b/arch/arm/mach-exynos/include/mach/regs-irq.h
+index 9c7b4bf..f2b5050 100644
+--- a/arch/arm/mach-exynos/include/mach/regs-irq.h
++++ b/arch/arm/mach-exynos/include/mach/regs-irq.h
+@@ -13,7 +13,7 @@
+ #ifndef __ASM_ARCH_REGS_IRQ_H
+ #define __ASM_ARCH_REGS_IRQ_H __FILE__
+ 
+-#include <asm/hardware/gic.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <mach/map.h>
+ 
+ #endif /* __ASM_ARCH_REGS_IRQ_H */
+diff --git a/arch/arm/mach-exynos/platsmp.c b/arch/arm/mach-exynos/platsmp.c
+index 916ce33..43506f2 100644
+--- a/arch/arm/mach-exynos/platsmp.c
++++ b/arch/arm/mach-exynos/platsmp.c
+@@ -20,9 +20,9 @@
+ #include <linux/jiffies.h>
+ #include <linux/smp.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/cacheflush.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/smp_plat.h>
+ #include <asm/smp_scu.h>
+ 
+diff --git a/arch/arm/mach-highbank/platsmp.c b/arch/arm/mach-highbank/platsmp.c
+index 1e68f95..973a9b9 100644
+--- a/arch/arm/mach-highbank/platsmp.c
++++ b/arch/arm/mach-highbank/platsmp.c
+@@ -17,9 +17,9 @@
+ #include <linux/init.h>
+ #include <linux/smp.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/smp_scu.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include "core.h"
+ 
+diff --git a/arch/arm/mach-imx/gpc.c b/arch/arm/mach-imx/gpc.c
+index e1537f9..ff24920 100644
+--- a/arch/arm/mach-imx/gpc.c
++++ b/arch/arm/mach-imx/gpc.c
+@@ -15,7 +15,7 @@
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+-#include <asm/hardware/gic.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #define GPC_IMR1		0x008
+ #define GPC_PGC_CPU_PDN		0x2a0
+diff --git a/arch/arm/mach-imx/platsmp.c b/arch/arm/mach-imx/platsmp.c
+index a8cfb46..86fe870 100644
+--- a/arch/arm/mach-imx/platsmp.c
++++ b/arch/arm/mach-imx/platsmp.c
+@@ -12,9 +12,9 @@
+ 
+ #include <linux/init.h>
+ #include <linux/smp.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <asm/page.h>
+ #include <asm/smp_scu.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/map.h>
+ #include <mach/common.h>
+ #include <mach/hardware.h>
+diff --git a/arch/arm/mach-msm/board-msm8960.c b/arch/arm/mach-msm/board-msm8960.c
+index ed35981..ddc051b 100644
+--- a/arch/arm/mach-msm/board-msm8960.c
++++ b/arch/arm/mach-msm/board-msm8960.c
+@@ -19,12 +19,12 @@
+ #include <linux/platform_device.h>
+ #include <linux/io.h>
+ #include <linux/irq.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/clkdev.h>
+ #include <linux/memblock.h>
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/setup.h>
+ 
+ #include <mach/board.h>
+diff --git a/arch/arm/mach-msm/board-msm8x60.c b/arch/arm/mach-msm/board-msm8x60.c
+index fb3496a..7b19c9e 100644
+--- a/arch/arm/mach-msm/board-msm8x60.c
++++ b/arch/arm/mach-msm/board-msm8x60.c
+@@ -14,6 +14,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/io.h>
+ #include <linux/irq.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/irqdomain.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+@@ -23,7 +24,6 @@
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/setup.h>
+ 
+ #include <mach/board.h>
+diff --git a/arch/arm/mach-msm/platsmp.c b/arch/arm/mach-msm/platsmp.c
+index 333f3f4..d89d651 100644
+--- a/arch/arm/mach-msm/platsmp.c
++++ b/arch/arm/mach-msm/platsmp.c
+@@ -15,8 +15,8 @@
+ #include <linux/jiffies.h>
+ #include <linux/smp.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+-#include <asm/hardware/gic.h>
+ #include <asm/cacheflush.h>
+ #include <asm/cputype.h>
+ #include <asm/mach-types.h>
+diff --git a/arch/arm/mach-omap2/board-4430sdp.c b/arch/arm/mach-omap2/board-4430sdp.c
+index d63f7ce..0de26c6 100644
+--- a/arch/arm/mach-omap2/board-4430sdp.c
++++ b/arch/arm/mach-omap2/board-4430sdp.c
+@@ -26,10 +26,10 @@
+ #include <linux/regulator/fixed.h>
+ #include <linux/leds.h>
+ #include <linux/leds_pwm.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/platform_data/omap4-keypad.h>
+ 
+ #include <mach/hardware.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+diff --git a/arch/arm/mach-omap2/board-omap4panda.c b/arch/arm/mach-omap2/board-omap4panda.c
+index 582256a..27891f4 100644
+--- a/arch/arm/mach-omap2/board-omap4panda.c
++++ b/arch/arm/mach-omap2/board-omap4panda.c
+@@ -29,10 +29,10 @@
+ #include <linux/regulator/machine.h>
+ #include <linux/regulator/fixed.h>
+ #include <linux/wl12xx.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/platform_data/omap-abe-twl6040.h>
+ 
+ #include <mach/hardware.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+diff --git a/arch/arm/mach-omap2/omap-smp.c b/arch/arm/mach-omap2/omap-smp.c
+index 5d8f6b2..b09e10d 100644
+--- a/arch/arm/mach-omap2/omap-smp.c
++++ b/arch/arm/mach-omap2/omap-smp.c
+@@ -19,9 +19,9 @@
+ #include <linux/device.h>
+ #include <linux/smp.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/cacheflush.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/smp_scu.h>
+ 
+ #include <mach/hardware.h>
+diff --git a/arch/arm/mach-omap2/omap-wakeupgen.c b/arch/arm/mach-omap2/omap-wakeupgen.c
+index 42cd7fb..3269a5b 100644
+--- a/arch/arm/mach-omap2/omap-wakeupgen.c
++++ b/arch/arm/mach-omap2/omap-wakeupgen.c
+@@ -24,8 +24,7 @@
+ #include <linux/cpu.h>
+ #include <linux/notifier.h>
+ #include <linux/cpu_pm.h>
+-
+-#include <asm/hardware/gic.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <mach/omap-wakeupgen.h>
+ #include <mach/omap-secure.h>
+diff --git a/arch/arm/mach-omap2/omap4-common.c b/arch/arm/mach-omap2/omap4-common.c
+index 70de277..1c6d696 100644
+--- a/arch/arm/mach-omap2/omap4-common.c
++++ b/arch/arm/mach-omap2/omap4-common.c
+@@ -16,8 +16,8 @@
+ #include <linux/io.h>
+ #include <linux/platform_device.h>
+ #include <linux/memblock.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ #include <asm/mach/map.h>
+ #include <asm/memblock.h>
+diff --git a/arch/arm/mach-realview/realview_eb.c b/arch/arm/mach-realview/realview_eb.c
+index 4d537fa..92a65ef 100644
+--- a/arch/arm/mach-realview/realview_eb.c
++++ b/arch/arm/mach-realview/realview_eb.c
+@@ -27,6 +27,7 @@
+ #include <linux/amba/mmci.h>
+ #include <linux/amba/pl022.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <mach/hardware.h>
+ #include <asm/irq.h>
+@@ -34,7 +35,6 @@
+ #include <asm/mach-types.h>
+ #include <asm/pmu.h>
+ #include <asm/pgtable.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ #include <asm/smp_twd.h>
+ 
+diff --git a/arch/arm/mach-realview/realview_pb1176.c b/arch/arm/mach-realview/realview_pb1176.c
+index 26e4ca6..7ff8122 100644
+--- a/arch/arm/mach-realview/realview_pb1176.c
++++ b/arch/arm/mach-realview/realview_pb1176.c
+@@ -29,6 +29,7 @@
+ #include <linux/mtd/physmap.h>
+ #include <linux/mtd/partitions.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <mach/hardware.h>
+ #include <asm/irq.h>
+@@ -36,7 +37,6 @@
+ #include <asm/mach-types.h>
+ #include <asm/pmu.h>
+ #include <asm/pgtable.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ 
+ #include <asm/mach/arch.h>
+diff --git a/arch/arm/mach-realview/realview_pb11mp.c b/arch/arm/mach-realview/realview_pb11mp.c
+index 836c621..7027be5 100644
+--- a/arch/arm/mach-realview/realview_pb11mp.c
++++ b/arch/arm/mach-realview/realview_pb11mp.c
+@@ -27,6 +27,7 @@
+ #include <linux/amba/mmci.h>
+ #include <linux/amba/pl022.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <mach/hardware.h>
+ #include <asm/irq.h>
+@@ -34,7 +35,6 @@
+ #include <asm/mach-types.h>
+ #include <asm/pmu.h>
+ #include <asm/pgtable.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ #include <asm/smp_twd.h>
+ 
+diff --git a/arch/arm/mach-realview/realview_pba8.c b/arch/arm/mach-realview/realview_pba8.c
+index b0f2336..4142c68 100644
+--- a/arch/arm/mach-realview/realview_pba8.c
++++ b/arch/arm/mach-realview/realview_pba8.c
+@@ -27,13 +27,13 @@
+ #include <linux/amba/mmci.h>
+ #include <linux/amba/pl022.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/irq.h>
+ #include <asm/leds.h>
+ #include <asm/mach-types.h>
+ #include <asm/pmu.h>
+ #include <asm/pgtable.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+diff --git a/arch/arm/mach-realview/realview_pbx.c b/arch/arm/mach-realview/realview_pbx.c
+index 2e3242e..70a841d 100644
+--- a/arch/arm/mach-realview/realview_pbx.c
++++ b/arch/arm/mach-realview/realview_pbx.c
+@@ -26,6 +26,7 @@
+ #include <linux/amba/mmci.h>
+ #include <linux/amba/pl022.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/irq.h>
+ #include <asm/leds.h>
+@@ -33,7 +34,6 @@
+ #include <asm/pmu.h>
+ #include <asm/smp_twd.h>
+ #include <asm/pgtable.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ 
+ #include <asm/mach/arch.h>
+diff --git a/arch/arm/mach-shmobile/board-ag5evm.c b/arch/arm/mach-shmobile/board-ag5evm.c
+index e102aaf..d10c08f 100644
+--- a/arch/arm/mach-shmobile/board-ag5evm.c
++++ b/arch/arm/mach-shmobile/board-ag5evm.c
+@@ -39,6 +39,7 @@
+ #include <linux/mfd/tmio.h>
+ #include <linux/sh_clk.h>
+ #include <linux/videodev2.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <video/sh_mobile_lcdc.h>
+ #include <video/sh_mipi_dsi.h>
+ #include <sound/sh_fsi.h>
+@@ -48,7 +49,6 @@
+ #include <mach/common.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ #include <asm/traps.h>
+ 
+diff --git a/arch/arm/mach-shmobile/board-kota2.c b/arch/arm/mach-shmobile/board-kota2.c
+index a0b3f50..02fe85d 100644
+--- a/arch/arm/mach-shmobile/board-kota2.c
++++ b/arch/arm/mach-shmobile/board-kota2.c
+@@ -33,6 +33,7 @@
+ #include <linux/input/sh_keysc.h>
+ #include <linux/gpio_keys.h>
+ #include <linux/leds.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/platform_data/leds-renesas-tpu.h>
+ #include <linux/mmc/host.h>
+ #include <linux/mmc/sh_mmcif.h>
+@@ -45,7 +46,6 @@
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/time.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ #include <asm/traps.h>
+ 
+diff --git a/arch/arm/mach-shmobile/board-kzm9g.c b/arch/arm/mach-shmobile/board-kzm9g.c
+index bfc8547..ac08d0d 100644
+--- a/arch/arm/mach-shmobile/board-kzm9g.c
++++ b/arch/arm/mach-shmobile/board-kzm9g.c
+@@ -25,6 +25,7 @@
+ #include <linux/i2c.h>
+ #include <linux/i2c/pcf857x.h>
+ #include <linux/input.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/mmc/host.h>
+ #include <linux/mmc/sh_mmcif.h>
+ #include <linux/mmc/sh_mobile_sdhi.h>
+@@ -40,7 +41,6 @@
+ #include <mach/sh73a0.h>
+ #include <mach/common.h>
+ #include <asm/hardware/cache-l2x0.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <video/sh_mobile_lcdc.h>
+diff --git a/arch/arm/mach-shmobile/intc-r8a7779.c b/arch/arm/mach-shmobile/intc-r8a7779.c
+index 1c1efd2..616013d 100644
+--- a/arch/arm/mach-shmobile/intc-r8a7779.c
++++ b/arch/arm/mach-shmobile/intc-r8a7779.c
+@@ -25,11 +25,11 @@
+ #include <linux/io.h>
+ #include <linux/platform_data/irq-renesas-intc-irqpin.h>
+ #include <linux/irqchip.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <mach/common.h>
+ #include <mach/intc.h>
+ #include <mach/irqs.h>
+ #include <mach/r8a7779.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ 
+diff --git a/arch/arm/mach-shmobile/intc-sh73a0.c b/arch/arm/mach-shmobile/intc-sh73a0.c
+index 588555a..a70b753 100644
+--- a/arch/arm/mach-shmobile/intc-sh73a0.c
++++ b/arch/arm/mach-shmobile/intc-sh73a0.c
+@@ -23,10 +23,10 @@
+ #include <linux/irq.h>
+ #include <linux/io.h>
+ #include <linux/sh_intc.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <mach/intc.h>
+ #include <mach/irqs.h>
+ #include <mach/sh73a0.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ 
+diff --git a/arch/arm/mach-shmobile/setup-emev2.c b/arch/arm/mach-shmobile/setup-emev2.c
+index 8aa0ba2..7ea5a8a 100644
+--- a/arch/arm/mach-shmobile/setup-emev2.c
++++ b/arch/arm/mach-shmobile/setup-emev2.c
+@@ -27,6 +27,7 @@
+ #include <linux/delay.h>
+ #include <linux/input.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <mach/hardware.h>
+ #include <mach/common.h>
+ #include <mach/emev2.h>
+@@ -35,7 +36,6 @@
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+ #include <asm/mach/time.h>
+-#include <asm/hardware/gic.h>
+ 
+ static struct map_desc emev2_io_desc[] __initdata = {
+ #ifdef CONFIG_SMP
+diff --git a/arch/arm/mach-shmobile/smp-emev2.c b/arch/arm/mach-shmobile/smp-emev2.c
+index 6262d67..953eb1f 100644
+--- a/arch/arm/mach-shmobile/smp-emev2.c
++++ b/arch/arm/mach-shmobile/smp-emev2.c
+@@ -23,11 +23,11 @@
+ #include <linux/spinlock.h>
+ #include <linux/io.h>
+ #include <linux/delay.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <mach/common.h>
+ #include <mach/emev2.h>
+ #include <asm/smp_plat.h>
+ #include <asm/smp_scu.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/cacheflush.h>
+ 
+ #define EMEV2_SCU_BASE 0x1e000000
+diff --git a/arch/arm/mach-shmobile/smp-r8a7779.c b/arch/arm/mach-shmobile/smp-r8a7779.c
+index 2ce6af9..3a4acf2 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7779.c
++++ b/arch/arm/mach-shmobile/smp-r8a7779.c
+@@ -23,12 +23,12 @@
+ #include <linux/spinlock.h>
+ #include <linux/io.h>
+ #include <linux/delay.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <mach/common.h>
+ #include <mach/r8a7779.h>
+ #include <asm/smp_plat.h>
+ #include <asm/smp_scu.h>
+ #include <asm/smp_twd.h>
+-#include <asm/hardware/gic.h>
+ 
+ #define AVECR IOMEM(0xfe700040)
+ 
+diff --git a/arch/arm/mach-shmobile/smp-sh73a0.c b/arch/arm/mach-shmobile/smp-sh73a0.c
+index 624f00f..5c5bcb5 100644
+--- a/arch/arm/mach-shmobile/smp-sh73a0.c
++++ b/arch/arm/mach-shmobile/smp-sh73a0.c
+@@ -23,12 +23,12 @@
+ #include <linux/spinlock.h>
+ #include <linux/io.h>
+ #include <linux/delay.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <mach/common.h>
+ #include <asm/smp_plat.h>
+ #include <mach/sh73a0.h>
+ #include <asm/smp_scu.h>
+ #include <asm/smp_twd.h>
+-#include <asm/hardware/gic.h>
+ 
+ #define WUPCR		IOMEM(0xe6151010)
+ #define SRESCR		IOMEM(0xe6151018)
+diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
+index 2229383..222c079 100644
+--- a/arch/arm/mach-tegra/board-dt-tegra20.c
++++ b/arch/arm/mach-tegra/board-dt-tegra20.c
+@@ -28,6 +28,7 @@
+ #include <linux/of_platform.h>
+ #include <linux/pda_power.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/i2c.h>
+ #include <linux/i2c-tegra.h>
+ 
+@@ -35,7 +36,6 @@
+ #include <asm/mach/arch.h>
+ #include <asm/mach/time.h>
+ #include <asm/setup.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include <mach/iomap.h>
+ #include <mach/irqs.h>
+diff --git a/arch/arm/mach-tegra/board-harmony.c b/arch/arm/mach-tegra/board-harmony.c
+index 222182e..3d67560 100644
+--- a/arch/arm/mach-tegra/board-harmony.c
++++ b/arch/arm/mach-tegra/board-harmony.c
+@@ -25,6 +25,7 @@
+ #include <linux/pda_power.h>
+ #include <linux/io.h>
+ #include <linux/gpio.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/i2c.h>
+ 
+ #include <sound/wm8903.h>
+@@ -32,7 +33,6 @@
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/time.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/setup.h>
+ 
+ #include <mach/tegra_wm8903_pdata.h>
+diff --git a/arch/arm/mach-tegra/board-paz00.c b/arch/arm/mach-tegra/board-paz00.c
+index d0735c7..8900e99 100644
+--- a/arch/arm/mach-tegra/board-paz00.c
++++ b/arch/arm/mach-tegra/board-paz00.c
+@@ -28,11 +28,11 @@
+ #include <linux/pda_power.h>
+ #include <linux/io.h>
+ #include <linux/input.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/i2c.h>
+ #include <linux/gpio.h>
+ #include <linux/rfkill-gpio.h>
+ 
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/time.h>
+diff --git a/arch/arm/mach-tegra/board-seaboard.c b/arch/arm/mach-tegra/board-seaboard.c
+index 5b687b8..e9fee55 100644
+--- a/arch/arm/mach-tegra/board-seaboard.c
++++ b/arch/arm/mach-tegra/board-seaboard.c
+@@ -23,6 +23,7 @@
+ #include <linux/delay.h>
+ #include <linux/input.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/gpio.h>
+ #include <linux/gpio_keys.h>
+ 
+@@ -35,7 +36,6 @@
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include "board.h"
+ #include "board-seaboard.h"
+diff --git a/arch/arm/mach-tegra/board-trimslice.c b/arch/arm/mach-tegra/board-trimslice.c
+index f735858..40f66d5 100644
+--- a/arch/arm/mach-tegra/board-trimslice.c
++++ b/arch/arm/mach-tegra/board-trimslice.c
+@@ -24,10 +24,10 @@
+ #include <linux/serial_8250.h>
+ #include <linux/of_serial.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/i2c.h>
+ #include <linux/gpio.h>
+ 
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/setup.h>
+diff --git a/arch/arm/mach-tegra/irq.c b/arch/arm/mach-tegra/irq.c
+index 2f5bd2d..6c92b5e 100644
+--- a/arch/arm/mach-tegra/irq.c
++++ b/arch/arm/mach-tegra/irq.c
+@@ -22,8 +22,7 @@
+ #include <linux/irq.h>
+ #include <linux/io.h>
+ #include <linux/of.h>
+-
+-#include <asm/hardware/gic.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <mach/iomap.h>
+ 
+diff --git a/arch/arm/mach-tegra/platsmp.c b/arch/arm/mach-tegra/platsmp.c
+index 7829b97..0efe8b8 100644
+--- a/arch/arm/mach-tegra/platsmp.c
++++ b/arch/arm/mach-tegra/platsmp.c
+@@ -18,9 +18,9 @@
+ #include <linux/jiffies.h>
+ #include <linux/smp.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/cacheflush.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/smp_scu.h>
+ 
+diff --git a/arch/arm/mach-ux500/board-u5500.c b/arch/arm/mach-ux500/board-u5500.c
+index 0ff4be7..b75dbc5 100644
+--- a/arch/arm/mach-ux500/board-u5500.c
++++ b/arch/arm/mach-ux500/board-u5500.c
+@@ -9,10 +9,10 @@
+ #include <linux/platform_device.h>
+ #include <linux/amba/bus.h>
+ #include <linux/irq.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/i2c.h>
+ #include <linux/mfd/abx500/ab5500.h>
+ 
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach-types.h>
+ 
+diff --git a/arch/arm/mach-ux500/cpu.c b/arch/arm/mach-ux500/cpu.c
+index 3932906..447906c 100644
+--- a/arch/arm/mach-ux500/cpu.c
++++ b/arch/arm/mach-ux500/cpu.c
+@@ -19,8 +19,8 @@
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+ #include <linux/irqchip.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/map.h>
+ 
+ #include <mach/hardware.h>
+diff --git a/arch/arm/mach-ux500/platsmp.c b/arch/arm/mach-ux500/platsmp.c
+index 18fb783..29ea823 100644
+--- a/arch/arm/mach-ux500/platsmp.c
++++ b/arch/arm/mach-ux500/platsmp.c
+@@ -16,9 +16,9 @@
+ #include <linux/device.h>
+ #include <linux/smp.h>
+ #include <linux/io.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/cacheflush.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/smp_plat.h>
+ #include <asm/smp_scu.h>
+ #include <mach/hardware.h>
+diff --git a/arch/arm/mach-vexpress/ct-ca9x4.c b/arch/arm/mach-vexpress/ct-ca9x4.c
+index 3d73be5..f0a7276 100644
+--- a/arch/arm/mach-vexpress/ct-ca9x4.c
++++ b/arch/arm/mach-vexpress/ct-ca9x4.c
+@@ -9,10 +9,10 @@
+ #include <linux/amba/bus.h>
+ #include <linux/amba/clcd.h>
+ #include <linux/clkdev.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/hardware/arm_timer.h>
+ #include <asm/hardware/cache-l2x0.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/pmu.h>
+ #include <asm/smp_scu.h>
+ #include <asm/smp_twd.h>
+diff --git a/arch/arm/mach-vexpress/v2m.c b/arch/arm/mach-vexpress/v2m.c
+index 30f3a6a..8e22b57 100644
+--- a/arch/arm/mach-vexpress/v2m.c
++++ b/arch/arm/mach-vexpress/v2m.c
+@@ -7,6 +7,7 @@
+ #include <linux/io.h>
+ #include <linux/init.h>
+ #include <linux/irqchip.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/of_address.h>
+ #include <linux/of_fdt.h>
+ #include <linux/of_irq.h>
+@@ -29,7 +30,6 @@
+ #include <asm/hardware/cache-l2x0.h>
+ #include <asm/hardware/timer-sp.h>
+ #include <asm/hardware/sp810.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include <mach/ct-ca9x4.h>
+ #include <mach/motherboard.h>
+diff --git a/arch/arm/mach-zynq/common.c b/arch/arm/mach-zynq/common.c
+index 73e9368..84f84e3 100644
+--- a/arch/arm/mach-zynq/common.c
++++ b/arch/arm/mach-zynq/common.c
+@@ -22,12 +22,12 @@
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/of.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+ #include <asm/mach-types.h>
+ #include <asm/page.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ 
+ #include <mach/zynq_soc.h>
+diff --git a/arch/arm/plat-versatile/platsmp.c b/arch/arm/plat-versatile/platsmp.c
+index 8235455..a8c4811 100644
+--- a/arch/arm/plat-versatile/platsmp.c
++++ b/arch/arm/plat-versatile/platsmp.c
+@@ -14,10 +14,10 @@
+ #include <linux/device.h>
+ #include <linux/jiffies.h>
+ #include <linux/smp.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/cacheflush.h>
+ #include <asm/smp_plat.h>
+-#include <asm/hardware/gic.h>
+ 
+ /*
+  * control for which core is the next to come out of the secondary
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 792b472..644d724 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -38,12 +38,12 @@
+ #include <linux/interrupt.h>
+ #include <linux/percpu.h>
+ #include <linux/slab.h>
++#include <linux/irqchip/arm-gic.h>
+ 
+ #include <asm/irq.h>
+ #include <asm/exception.h>
+ #include <asm/smp_plat.h>
+ #include <asm/mach/irq.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include "irqchip.h"
+ 
+diff --git a/drivers/mfd/db8500-prcmu.c b/drivers/mfd/db8500-prcmu.c
+index 5be3248..7ed4b2d 100644
+--- a/drivers/mfd/db8500-prcmu.c
++++ b/drivers/mfd/db8500-prcmu.c
+@@ -26,11 +26,11 @@
+ #include <linux/fs.h>
+ #include <linux/platform_device.h>
+ #include <linux/uaccess.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/mfd/core.h>
+ #include <linux/mfd/dbx500-prcmu.h>
+ #include <linux/regulator/db8500-prcmu.h>
+ #include <linux/regulator/machine.h>
+-#include <asm/hardware/gic.h>
+ #include <mach/hardware.h>
+ #include <mach/irqs.h>
+ #include <mach/db8500-regs.h>
+diff --git a/include/linux/irqchip/arm-gic.h b/include/linux/irqchip/arm-gic.h
+new file mode 100644
+index 0000000..a67ca55
+--- /dev/null
++++ b/include/linux/irqchip/arm-gic.h
+@@ -0,0 +1,48 @@
++/*
++ *  include/linux/irqchip/arm-gic.h
++ *
++ *  Copyright (C) 2002 ARM Limited, All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#ifndef __LINUX_IRQCHIP_ARM_GIC_H
++#define __LINUX_IRQCHIP_ARM_GIC_H
++
++#define GIC_CPU_CTRL			0x00
++#define GIC_CPU_PRIMASK			0x04
++#define GIC_CPU_BINPOINT		0x08
++#define GIC_CPU_INTACK			0x0c
++#define GIC_CPU_EOI			0x10
++#define GIC_CPU_RUNNINGPRI		0x14
++#define GIC_CPU_HIGHPRI			0x18
++
++#define GIC_DIST_CTRL			0x000
++#define GIC_DIST_CTR			0x004
++#define GIC_DIST_ENABLE_SET		0x100
++#define GIC_DIST_ENABLE_CLEAR		0x180
++#define GIC_DIST_PENDING_SET		0x200
++#define GIC_DIST_PENDING_CLEAR		0x280
++#define GIC_DIST_ACTIVE_BIT		0x300
++#define GIC_DIST_PRI			0x400
++#define GIC_DIST_TARGET			0x800
++#define GIC_DIST_CONFIG			0xc00
++#define GIC_DIST_SOFTINT		0xf00
++
++struct device_node;
++
++extern struct irq_chip gic_arch_extn;
++
++void gic_init_bases(unsigned int, int, void __iomem *, void __iomem *,
++		    u32 offset, struct device_node *);
++void gic_secondary_init(unsigned int);
++void gic_cascade_irq(unsigned int gic_nr, unsigned int irq);
++
++static inline void gic_init(unsigned int nr, int start,
++			    void __iomem *dist , void __iomem *cpu)
++{
++	gic_init_bases(nr, start, dist, cpu, 0, NULL);
++}
++
++#endif
+-- 
+1.7.10.4
+

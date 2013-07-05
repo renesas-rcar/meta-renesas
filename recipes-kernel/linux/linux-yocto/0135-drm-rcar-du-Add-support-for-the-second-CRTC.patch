@@ -1,7 +1,7 @@
 From d64300206d40519a9eca2b45e80defb5d801b57b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 26 Feb 2013 20:20:36 +0100
-Subject: drm/rcar-du: Add support for the second CRTC
+Subject: [PATCH 135/715] drm/rcar-du: Add support for the second CRTC
 
 Pin controllers 1 and 2 (encoders) inputs are currently restricted to
 the superposition processors (CRTCs) 1 and 2 respectively. Feeding the
@@ -12,7 +12,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 000ad087e5b307b015b2c3a5f74f73091702fa04)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |  121 +++++++++++++++++++++----------
  drivers/gpu/drm/rcar-du/rcar_du_drv.c   |   14 ++--

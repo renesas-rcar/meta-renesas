@@ -1,7 +1,8 @@
 From 51a52af923d4ce5183949206e49aaee7820e06e9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Feb 2013 04:18:22 +0100
-Subject: drm/rcar-du: Add configurable z-order support for planes
+Subject: [PATCH 128/715] drm/rcar-du: Add configurable z-order support for
+ planes
 
 Create a new zpos property and instantiate it for each plane with an
 initial value of 0. Planes with a higher zpos will be displayed on top.
@@ -12,7 +13,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 678f6e92eef5f92e88422143a709209f58ded028)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |   49 ++++++++++++++++++---------
  drivers/gpu/drm/rcar-du/rcar_du_crtc.h  |    3 +-

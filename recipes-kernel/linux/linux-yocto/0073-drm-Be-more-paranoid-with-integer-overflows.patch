@@ -1,7 +1,7 @@
 From 6e7fe08be3043cb39c8f50989ed2889db1b7a9fd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:04 +0000
-Subject: drm: Be more paranoid with integer overflows
+Subject: [PATCH 073/715] drm: Be more paranoid with integer overflows
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,7 +15,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit b180b5d1c7ac930387734664802fc26fa788e26f)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   10 +++++++++-
  1 file changed, 9 insertions(+), 1 deletion(-)

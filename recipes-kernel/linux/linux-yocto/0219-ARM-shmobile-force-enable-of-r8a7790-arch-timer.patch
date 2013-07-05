@@ -1,0 +1,107 @@
+From f70c4604bd931fd73788199934fd69527f102f80 Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm@opensource.se>
+Date: Mon, 8 Apr 2013 10:23:28 +0900
+Subject: [PATCH 219/715] ARM: shmobile: force enable of r8a7790 arch timer
+
+Implement a SoC-specific timer init function for
+r8a7790 that makes sure the architected timer
+is started regardless of boot loader setting.
+
+Signed-off-by: Magnus Damm <damm@opensource.se>
+Tested-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit ab5fdfd5ea621b629da9bfda987af301da973525)
+
+Conflicts:
+	arch/arm/mach-shmobile/setup-r8a7790.c
+	arch/arm/mach-shmobile/include/mach/r8a7790.h
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/include/mach/common.h  |    1 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |    4 ++++
+ arch/arm/mach-shmobile/setup-r8a7790.c        |   18 +++++++++++++++++-
+ arch/arm/mach-shmobile/timer.c                |    2 +-
+ 4 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/common.h b/arch/arm/mach-shmobile/include/mach/common.h
+index 8179780..5642f43 100644
+--- a/arch/arm/mach-shmobile/include/mach/common.h
++++ b/arch/arm/mach-shmobile/include/mach/common.h
+@@ -2,6 +2,7 @@
+ #define __ARCH_MACH_COMMON_H
+ 
+ extern void shmobile_earlytimer_init(void);
++void __init shmobile_timer_init(void);
+ extern struct sys_timer shmobile_timer;
+ extern void shmobile_setup_delay(unsigned int max_cpu_core_mhz,
+ 			 unsigned int mult, unsigned int div);
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+index 9bd6f5c..52bfc30 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7790.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+@@ -1,8 +1,12 @@
+ #ifndef __ASM_R8A7790_H__
+ #define __ASM_R8A7790_H__
+ 
++#include <asm/mach/time.h>
++
+ void r8a7790_add_standard_devices(void);
+ void r8a7790_clock_init(void);
+ void r8a7790_pinmux_init(void);
+ 
++extern struct sys_timer r8a7790_timer;
++
+ #endif /* __ASM_R8A7790_H__ */
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 0759e6b..79ff040 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -118,6 +118,22 @@ void __init r8a7790_add_standard_devices(void)
+ 	r8a7790_register_irqc(0);
+ }
+ 
++void __init r8a7790_timer_init(void)
++{
++	void __iomem *cntcr;
++
++	/* make sure arch timer is started by setting bit 0 of CNTCT */
++	cntcr = ioremap(0xe6080000, PAGE_SIZE);
++	iowrite32(1, cntcr);
++	iounmap(cntcr);
++
++	shmobile_timer_init();
++}
++
++struct sys_timer r8a7790_timer = {
++        .init           = r8a7790_timer_init,
++};
++
+ #ifdef CONFIG_USE_OF
+ void __init r8a7790_add_standard_devices_dt(void)
+ {
+@@ -132,7 +148,7 @@ static const char *r8a7790_boards_compat_dt[] __initdata = {
+ DT_MACHINE_START(R8A7790_DT, "Generic R8A7790 (Flattened Device Tree)")
+ 	.init_irq	= irqchip_init,
+ 	.init_machine	= r8a7790_add_standard_devices_dt,
+-	.timer		= &shmobile_timer,
++	.timer		= &r8a7790_timer,
+ 	.dt_compat	= r8a7790_boards_compat_dt,
+ MACHINE_END
+ #endif /* CONFIG_USE_OF */
+diff --git a/arch/arm/mach-shmobile/timer.c b/arch/arm/mach-shmobile/timer.c
+index b66d65b..a7d890a 100644
+--- a/arch/arm/mach-shmobile/timer.c
++++ b/arch/arm/mach-shmobile/timer.c
+@@ -61,7 +61,7 @@ void __init shmobile_earlytimer_init(void)
+ 	late_time_init = shmobile_late_time_init;
+ }
+ 
+-static void __init shmobile_timer_init(void)
++void __init shmobile_timer_init(void)
+ {
+ 	arch_timer_of_register();
+ 	arch_timer_sched_clock_init();
+-- 
+1.7.10.4
+

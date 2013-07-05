@@ -1,7 +1,7 @@
 From 0c92e384c2dbf6f8893aab3951c85931d23630c0 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:39 -0400
-Subject: drm/edid: Add extra_modes
+Subject: [PATCH 018/715] drm/edid: Add extra_modes
 
 Some common sizes that don't show up in DMT.
 
@@ -12,7 +12,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit b61b2140feaa6aca51c63db94aa5217cd82705d1)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid_modes.h |   11 +++++++++++
  1 file changed, 11 insertions(+)

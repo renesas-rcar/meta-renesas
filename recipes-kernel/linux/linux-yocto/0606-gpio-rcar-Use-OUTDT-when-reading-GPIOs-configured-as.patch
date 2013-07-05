@@ -1,0 +1,45 @@
+From 214c32084791c1b26d3dee2de172a14f6ff1a307 Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm@opensource.se>
+Date: Mon, 17 Jun 2013 08:41:52 +0900
+Subject: [PATCH 606/715] gpio-rcar: Use OUTDT when reading GPIOs configured
+ as output
+
+Testing on r8a7790 shows that INDT does not indicate the correct
+pin state when reading a GPIO configured as output, so update
+the gpio_rcar_get() function to handle this case.
+
+Signed-off-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit ae9550f635533b1ca5d0b50e24a720426ad237c6)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit eaea68e354ebd84760e58c259f9d2ab8d15881f4)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpio/gpio-rcar.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index 5a693dd..d591ea6 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -232,7 +232,14 @@ static int gpio_rcar_direction_input(struct gpio_chip *chip, unsigned offset)
+ 
+ static int gpio_rcar_get(struct gpio_chip *chip, unsigned offset)
+ {
+-	return (int)(gpio_rcar_read(gpio_to_priv(chip), INDT) & BIT(offset));
++	u32 bit = BIT(offset);
++
++	/* testing on r8a7790 shows that INDT does not show correct pin state
++	 * when configured as output, so use OUTDT in case of output pins */
++	if (gpio_rcar_read(gpio_to_priv(chip), INOUTSEL) & bit)
++		return (int)(gpio_rcar_read(gpio_to_priv(chip), OUTDT) & bit);
++	else
++		return (int)(gpio_rcar_read(gpio_to_priv(chip), INDT) & bit);
+ }
+ 
+ static void gpio_rcar_set(struct gpio_chip *chip, unsigned offset, int value)
+-- 
+1.7.10.4
+

@@ -1,7 +1,7 @@
 From 8de02cb158faeb5d730c21e8254f8895e142c3d9 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:08:59 -0300
-Subject: drm: add drm_property_change_is_valid
+Subject: [PATCH 028/715] drm: add drm_property_change_is_valid
 
 Move code from drm_mode_connector_property_set_ioctl to a new
 function, so we can reuse this code when we add crtc properties.
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 26a3481586eb1918a75d338e31c990deab06fb5b)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   39 +++++++++++++++++++--------------------
  1 file changed, 19 insertions(+), 20 deletions(-)

@@ -1,7 +1,7 @@
 From d957762110b1728dfe1310e82c56503fa9c84268 Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Mon, 16 Apr 2012 15:16:19 +0200
-Subject: drm: Parse color format information in CEA blocks
+Subject: [PATCH 006/715] drm: Parse color format information in CEA blocks
 
 The CEA extension block has a field which describes which YCbCr modes are
 supported by the device, use it to fill the drm_display_info color_formats
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit a988bc728f93b58d7d4c6657513c89a5f0eb4706)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   31 +++++++++++++++++++++----------
  1 file changed, 21 insertions(+), 10 deletions(-)

@@ -1,7 +1,7 @@
 From c4672505fcf4bc76ad07cf2816e260cca429683f Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:34 +0000
-Subject: drm: run the hpd irq event code directly
+Subject: [PATCH 089/715] drm: run the hpd irq event code directly
 
 All drivers already have a work item to run the hpd code, so we don't
 need to launch a new one in the helper code. Dave Airlie mentioned
@@ -17,7 +17,6 @@ Conflicts:
 	drivers/gpu/drm/drm_crtc_helper.c
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc_helper.c |   14 +-------------
  include/drm/drm_crtc.h            |    1 -

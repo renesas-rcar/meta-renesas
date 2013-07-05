@@ -1,8 +1,8 @@
 From 591f71f27f9e813814d8b2dfae8385d4b7a276a8 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:03 -0300
-Subject: drm: make the connector properties code use the object properties
- code
+Subject: [PATCH 032/715] drm: make the connector properties code use the
+ object properties code
 
 In the future, we may want to kill the internal functions:
 - drm_connector_attach_property
@@ -20,7 +20,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 0057d8dd8d378bf88f75736496d779f3c9454b5f)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   98 ++++++--------------------------------------
  1 file changed, 12 insertions(+), 86 deletions(-)

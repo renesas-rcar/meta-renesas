@@ -1,0 +1,59 @@
+From ff7ffc46a76f7b59e7ef5f3a3cb60c9d0f968dae Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Mon, 26 Nov 2012 15:05:48 -0600
+Subject: [PATCH 548/715] ARM: GIC: remove direct use of gic_raise_softirq
+
+In preparation of moving gic code to drivers/irqchip, remove the direct
+platform dependencies on gic_raise_softirq. Move the setup of
+smp_cross_call into the gic code and use arch_send_wakeup_ipi_mask
+function to trigger wake-up IPIs.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Kukjin Kim <kgene.kim@samsung.com>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: David Brown <davidb@codeaurora.org>
+Cc: Daniel Walker <dwalker@fifo99.com>
+Cc: Bryan Huntsman <bryanh@codeaurora.org>
+Acked-by: Tony Lindgren <tony@atomide.com>
+Acked-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Cc: Paul Mundt <lethal@linux-sh.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Shiraz Hashim <shiraz.hashim@st.com>
+Acked-by: Stephen Warren <swarren@nvidia.com>
+Cc: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Acked-by: Olof Johansson <olof@lixom.net>
+(cherry picked from commit b1cffebf1029c87e1f1984d48463ee21093a6bc7)
+
+Conflicts:
+	arch/arm/mach-exynos/platsmp.c
+	arch/arm/mach-highbank/platsmp.c
+	arch/arm/mach-socfpga/platsmp.c
+	arch/arm/mach-spear13xx/platsmp.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 902eae50f6453dc10800ceeff15b9f5e7e4964c1)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/platsmp.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/platsmp.c b/arch/arm/mach-shmobile/platsmp.c
+index 5833c60..4d1142f 100644
+--- a/arch/arm/mach-shmobile/platsmp.c
++++ b/arch/arm/mach-shmobile/platsmp.c
+@@ -31,3 +31,8 @@ void __init shmobile_smp_init_cpus(unsigned int ncores)
+ 	for (i = 0; i < ncores; i++)
+ 		set_cpu_possible(i, true);
+ }
++
++void __init platform_smp_prepare_cpus(unsigned int max_cpus)
++{
++	shmobile_smp_prepare_cpus();
++}
+-- 
+1.7.10.4
+

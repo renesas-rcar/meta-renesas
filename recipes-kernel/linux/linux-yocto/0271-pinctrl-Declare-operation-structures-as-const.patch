@@ -1,0 +1,222 @@
+From 63fd5f0cd2bc123da39875ffd7be928e9152eaca Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 16 Feb 2013 10:25:07 +0100
+Subject: [PATCH 271/715] pinctrl: Declare operation structures as const
+
+The pinconf, pinctrl and pinmux operation structures hold function
+pointers that are never modified. Declare them as const.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 022ab148d28e8466e45d28552224e3029f1cccd8)
+
+Conflicts:
+	drivers/pinctrl/mvebu/pinctrl-mvebu.c
+	drivers/pinctrl/pinconf.c
+	drivers/pinctrl/pinctrl-abx500.c
+	drivers/pinctrl/pinctrl-at91.c
+	drivers/pinctrl/pinctrl-bcm2835.c
+	drivers/pinctrl/pinctrl-exynos5440.c
+	drivers/pinctrl/pinctrl-falcon.c
+	drivers/pinctrl/pinctrl-imx.c
+	drivers/pinctrl/pinctrl-lantiq.c
+	drivers/pinctrl/pinctrl-mxs.c
+	drivers/pinctrl/pinctrl-nomadik.c
+	drivers/pinctrl/pinctrl-samsung.c
+	drivers/pinctrl/pinctrl-single.c
+	drivers/pinctrl/pinctrl-sirf.c
+	drivers/pinctrl/pinctrl-sunxi.c
+	drivers/pinctrl/pinctrl-tegra.c
+	drivers/pinctrl/pinctrl-xway.c
+	drivers/pinctrl/spear/pinctrl-spear.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pinctrl/devicetree.c     |    4 ++--
+ drivers/pinctrl/pinctrl-at91.c   |    6 +++---
+ drivers/pinctrl/pinctrl-pxa3xx.c |    4 ++--
+ drivers/pinctrl/pinctrl-sirf.c   |    4 ++--
+ drivers/pinctrl/pinctrl-tegra.c  |    6 +++---
+ drivers/pinctrl/pinctrl-u300.c   |    6 +++---
+ include/linux/pinctrl/pinctrl.h  |    6 +++---
+ 7 files changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pinctrl/devicetree.c b/drivers/pinctrl/devicetree.c
+index fe2d1af..de40767 100644
+--- a/drivers/pinctrl/devicetree.c
++++ b/drivers/pinctrl/devicetree.c
+@@ -41,7 +41,7 @@ static void dt_free_map(struct pinctrl_dev *pctldev,
+ 		     struct pinctrl_map *map, unsigned num_maps)
+ {
+ 	if (pctldev) {
+-		struct pinctrl_ops *ops = pctldev->desc->pctlops;
++		const struct pinctrl_ops *ops = pctldev->desc->pctlops;
+ 		ops->dt_free_map(pctldev, map, num_maps);
+ 	} else {
+ 		/* There is no pctldev for PIN_MAP_TYPE_DUMMY_STATE */
+@@ -122,7 +122,7 @@ static int dt_to_map_one_config(struct pinctrl *p, const char *statename,
+ {
+ 	struct device_node *np_pctldev;
+ 	struct pinctrl_dev *pctldev;
+-	struct pinctrl_ops *ops;
++	const struct pinctrl_ops *ops;
+ 	int ret;
+ 	struct pinctrl_map *map;
+ 	unsigned num_maps;
+diff --git a/drivers/pinctrl/pinctrl-at91.c b/drivers/pinctrl/pinctrl-at91.c
+index f2e4ef5..2e33246 100644
+--- a/drivers/pinctrl/pinctrl-at91.c
++++ b/drivers/pinctrl/pinctrl-at91.c
+@@ -298,7 +298,7 @@ static void at91_dt_free_map(struct pinctrl_dev *pctldev,
+ {
+ }
+ 
+-static struct pinctrl_ops at91_pctrl_ops = {
++static const struct pinctrl_ops at91_pctrl_ops = {
+ 	.get_groups_count	= at91_get_groups_count,
+ 	.get_group_name		= at91_get_group_name,
+ 	.get_group_pins		= at91_get_group_pins,
+@@ -700,7 +700,7 @@ void at91_gpio_disable_free(struct pinctrl_dev *pctldev,
+ 	/* Set the pin to some default state, GPIO is usually default */
+ }
+ 
+-static struct pinmux_ops at91_pmx_ops = {
++static const struct pinmux_ops at91_pmx_ops = {
+ 	.get_functions_count	= at91_pmx_get_funcs_count,
+ 	.get_function_name	= at91_pmx_get_func_name,
+ 	.get_function_groups	= at91_pmx_get_groups,
+@@ -780,7 +780,7 @@ static void at91_pinconf_group_dbg_show(struct pinctrl_dev *pctldev,
+ {
+ }
+ 
+-struct pinconf_ops at91_pinconf_ops = {
++static const struct pinconf_ops at91_pinconf_ops = {
+ 	.pin_config_get			= at91_pinconf_get,
+ 	.pin_config_set			= at91_pinconf_set,
+ 	.pin_config_dbg_show		= at91_pinconf_dbg_show,
+diff --git a/drivers/pinctrl/pinctrl-pxa3xx.c b/drivers/pinctrl/pinctrl-pxa3xx.c
+index 7644e42..1f472df 100644
+--- a/drivers/pinctrl/pinctrl-pxa3xx.c
++++ b/drivers/pinctrl/pinctrl-pxa3xx.c
+@@ -52,7 +52,7 @@ static int pxa3xx_get_group_pins(struct pinctrl_dev *pctrldev,
+ 	return 0;
+ }
+ 
+-static struct pinctrl_ops pxa3xx_pctrl_ops = {
++static const struct pinctrl_ops pxa3xx_pctrl_ops = {
+ 	.get_groups_count = pxa3xx_get_groups_count,
+ 	.get_group_name	= pxa3xx_get_group_name,
+ 	.get_group_pins	= pxa3xx_get_group_pins,
+@@ -165,7 +165,7 @@ static int pxa3xx_pmx_request_gpio(struct pinctrl_dev *pctrldev,
+ 	return 0;
+ }
+ 
+-static struct pinmux_ops pxa3xx_pmx_ops = {
++static const struct pinmux_ops pxa3xx_pmx_ops = {
+ 	.get_functions_count	= pxa3xx_pmx_get_funcs_count,
+ 	.get_function_name	= pxa3xx_pmx_get_func_name,
+ 	.get_function_groups	= pxa3xx_pmx_get_groups,
+diff --git a/drivers/pinctrl/pinctrl-sirf.c b/drivers/pinctrl/pinctrl-sirf.c
+index ba15b1a..0498710 100644
+--- a/drivers/pinctrl/pinctrl-sirf.c
++++ b/drivers/pinctrl/pinctrl-sirf.c
+@@ -879,7 +879,7 @@ static void sirfsoc_pin_dbg_show(struct pinctrl_dev *pctldev, struct seq_file *s
+ 	seq_printf(s, " " DRIVER_NAME);
+ }
+ 
+-static struct pinctrl_ops sirfsoc_pctrl_ops = {
++static const struct pinctrl_ops sirfsoc_pctrl_ops = {
+ 	.get_groups_count = sirfsoc_get_groups_count,
+ 	.get_group_name = sirfsoc_get_group_name,
+ 	.get_group_pins = sirfsoc_get_group_pins,
+@@ -1065,7 +1065,7 @@ static int sirfsoc_pinmux_request_gpio(struct pinctrl_dev *pmxdev,
+ 	return 0;
+ }
+ 
+-static struct pinmux_ops sirfsoc_pinmux_ops = {
++static const struct pinmux_ops sirfsoc_pinmux_ops = {
+ 	.enable = sirfsoc_pinmux_enable,
+ 	.disable = sirfsoc_pinmux_disable,
+ 	.get_functions_count = sirfsoc_pinmux_get_funcs_count,
+diff --git a/drivers/pinctrl/pinctrl-tegra.c b/drivers/pinctrl/pinctrl-tegra.c
+index 7fbc6c2..83a20e1 100644
+--- a/drivers/pinctrl/pinctrl-tegra.c
++++ b/drivers/pinctrl/pinctrl-tegra.c
+@@ -88,7 +88,7 @@ static void tegra_pinctrl_pin_dbg_show(struct pinctrl_dev *pctldev,
+ 	seq_printf(s, " " DRIVER_NAME);
+ }
+ 
+-static struct pinctrl_ops tegra_pinctrl_ops = {
++static const struct pinctrl_ops tegra_pinctrl_ops = {
+ 	.get_groups_count = tegra_pinctrl_get_groups_count,
+ 	.get_group_name = tegra_pinctrl_get_group_name,
+ 	.get_group_pins = tegra_pinctrl_get_group_pins,
+@@ -169,7 +169,7 @@ static void tegra_pinctrl_disable(struct pinctrl_dev *pctldev,
+ 	pmx_writel(pmx, val, g->mux_bank, g->mux_reg);
+ }
+ 
+-static struct pinmux_ops tegra_pinmux_ops = {
++static const struct pinmux_ops tegra_pinmux_ops = {
+ 	.get_functions_count = tegra_pinctrl_get_funcs_count,
+ 	.get_function_name = tegra_pinctrl_get_func_name,
+ 	.get_function_groups = tegra_pinctrl_get_func_groups,
+@@ -368,7 +368,7 @@ static void tegra_pinconf_group_dbg_show(struct pinctrl_dev *pctldev,
+ {
+ }
+ 
+-struct pinconf_ops tegra_pinconf_ops = {
++static const struct pinconf_ops tegra_pinconf_ops = {
+ 	.pin_config_get = tegra_pinconf_get,
+ 	.pin_config_set = tegra_pinconf_set,
+ 	.pin_config_group_get = tegra_pinconf_group_get,
+diff --git a/drivers/pinctrl/pinctrl-u300.c b/drivers/pinctrl/pinctrl-u300.c
+index 10de43c..09d2891 100644
+--- a/drivers/pinctrl/pinctrl-u300.c
++++ b/drivers/pinctrl/pinctrl-u300.c
+@@ -862,7 +862,7 @@ static void u300_pin_dbg_show(struct pinctrl_dev *pctldev, struct seq_file *s,
+ 	seq_printf(s, " " DRIVER_NAME);
+ }
+ 
+-static struct pinctrl_ops u300_pctrl_ops = {
++static const struct pinctrl_ops u300_pctrl_ops = {
+ 	.get_groups_count = u300_get_groups_count,
+ 	.get_group_name = u300_get_group_name,
+ 	.get_group_pins = u300_get_group_pins,
+@@ -1005,7 +1005,7 @@ static int u300_pmx_get_groups(struct pinctrl_dev *pctldev, unsigned selector,
+ 	return 0;
+ }
+ 
+-static struct pinmux_ops u300_pmx_ops = {
++static const struct pinmux_ops u300_pmx_ops = {
+ 	.get_functions_count = u300_pmx_get_funcs_count,
+ 	.get_function_name = u300_pmx_get_func_name,
+ 	.get_function_groups = u300_pmx_get_groups,
+@@ -1089,7 +1089,7 @@ int u300_pin_config_set(struct pinctrl_dev *pctldev,
+ 	return 0;
+ }
+ 
+-static struct pinconf_ops u300_pconf_ops = {
++static const struct pinconf_ops u300_pconf_ops = {
+ 	.is_generic = true,
+ 	.pin_config_get = u300_pin_config_get,
+ 	.pin_config_set = u300_pin_config_set,
+diff --git a/include/linux/pinctrl/pinctrl.h b/include/linux/pinctrl/pinctrl.h
+index aeefb67..a43a391 100644
+--- a/include/linux/pinctrl/pinctrl.h
++++ b/include/linux/pinctrl/pinctrl.h
+@@ -109,9 +109,9 @@ struct pinctrl_desc {
+ 	const char *name;
+ 	struct pinctrl_pin_desc const *pins;
+ 	unsigned int npins;
+-	struct pinctrl_ops *pctlops;
+-	struct pinmux_ops *pmxops;
+-	struct pinconf_ops *confops;
++	const struct pinctrl_ops *pctlops;
++	const struct pinmux_ops *pmxops;
++	const struct pinconf_ops *confops;
+ 	struct module *owner;
+ };
+ 
+-- 
+1.7.10.4
+

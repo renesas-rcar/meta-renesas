@@ -1,7 +1,7 @@
 From 0e97f002aeb6b03afeeffc6940e9467da510c00e Mon Sep 17 00:00:00 2001
 From: Shirish S <s.shirish@samsung.com>
 Date: Thu, 30 Aug 2012 07:04:06 +0000
-Subject: drm: edid: add support for E-DDC
+Subject: [PATCH 063/715] drm: edid: add support for E-DDC
 
 The current logic for probing ddc is limited to
 2 blocks (256 bytes), this patch adds support
@@ -21,7 +21,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit cd004b3f4cd4169815c82bf9e424fda06978898a)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   19 ++++++++++++++++---
  1 file changed, 16 insertions(+), 3 deletions(-)

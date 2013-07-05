@@ -1,7 +1,7 @@
 From e702ebf3e441498a2107b26c961004d40c64b4cb Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Thu, 15 Nov 2012 03:43:28 +0000
-Subject: drm/fb_helper: Fix checkpatch errors
+Subject: [PATCH 077/715] drm/fb_helper: Fix checkpatch errors
 
 Fixes the following checkpatch errors:
 ERROR: trailing statements should be on next line
@@ -19,7 +19,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 6c91083f8e8867a39c70a6448b014478d2acfc48)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_fb_helper.c |   12 +++++++++---
  1 file changed, 9 insertions(+), 3 deletions(-)

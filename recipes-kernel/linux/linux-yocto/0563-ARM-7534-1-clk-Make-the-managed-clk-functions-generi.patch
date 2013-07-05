@@ -1,0 +1,97 @@
+From 0a2857db7717101e2580c13d4d234465d75b7e12 Mon Sep 17 00:00:00 2001
+From: Lars-Peter Clausen <lars@metafoo.de>
+Date: Tue, 11 Sep 2012 19:56:23 +0100
+Subject: [PATCH 563/715] ARM: 7534/1: clk: Make the managed clk functions
+ generically available
+
+The managed clk functions are currently only available when the generic clk
+lookup framework is build. But the managed clk functions are merely wrappers
+around clk_get and clk_put and do not depend on any specifics of the generic
+lookup functions and there are still quite a few custom implementations of the
+clk API. So make the managed functions available whenever the clk API is
+implemented.
+
+The patch also removes the custom implementation of devm_clk_get for the
+coldfire platform.
+
+Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
+Acked-by: Greg Ungerer <gerg@uclinux.org>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit 8ef997b67f0d779c82e7e533a792c5a6837594cd)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	arch/m68k/platform/coldfire/clk.c
+	drivers/clk/Makefile
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 8bda87637443a1731f19cee47397a4df7d8f704a)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit c46d33bac089c3eb279a8b00fc790234f1ea1dfb)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/clk/clkdev.c |   45 ---------------------------------------------
+ 1 file changed, 45 deletions(-)
+
+diff --git a/drivers/clk/clkdev.c b/drivers/clk/clkdev.c
+index a9a1137..6db161f 100644
+--- a/drivers/clk/clkdev.c
++++ b/drivers/clk/clkdev.c
+@@ -89,51 +89,6 @@ void clk_put(struct clk *clk)
+ }
+ EXPORT_SYMBOL(clk_put);
+ 
+-static void devm_clk_release(struct device *dev, void *res)
+-{
+-	clk_put(*(struct clk **)res);
+-}
+-
+-struct clk *devm_clk_get(struct device *dev, const char *id)
+-{
+-	struct clk **ptr, *clk;
+-
+-	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), GFP_KERNEL);
+-	if (!ptr)
+-		return ERR_PTR(-ENOMEM);
+-
+-	clk = clk_get(dev, id);
+-	if (!IS_ERR(clk)) {
+-		*ptr = clk;
+-		devres_add(dev, ptr);
+-	} else {
+-		devres_free(ptr);
+-	}
+-
+-	return clk;
+-}
+-EXPORT_SYMBOL(devm_clk_get);
+-
+-static int devm_clk_match(struct device *dev, void *res, void *data)
+-{
+-	struct clk **c = res;
+-	if (!c || !*c) {
+-		WARN_ON(!c || !*c);
+-		return 0;
+-	}
+-	return *c == data;
+-}
+-
+-void devm_clk_put(struct device *dev, struct clk *clk)
+-{
+-	int ret;
+-
+-	ret = devres_destroy(dev, devm_clk_release, devm_clk_match, clk);
+-
+-	WARN_ON(ret);
+-}
+-EXPORT_SYMBOL(devm_clk_put);
+-
+ void clkdev_add(struct clk_lookup *cl)
+ {
+ 	mutex_lock(&clocks_mutex);
+-- 
+1.7.10.4
+

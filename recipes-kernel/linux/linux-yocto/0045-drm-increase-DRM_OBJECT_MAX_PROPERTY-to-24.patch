@@ -1,7 +1,7 @@
 From 9a8feafd7fc7ac151949aa2e7cc4bb580ec65030 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 12 Jun 2012 11:27:01 -0300
-Subject: drm: increase DRM_OBJECT_MAX_PROPERTY to 24
+Subject: [PATCH 045/715] drm: increase DRM_OBJECT_MAX_PROPERTY to 24
 
 Before Kernel 3.5, no one was checking for the return value of
 drm_connector_attach_property, so we never noticed that we were unable
@@ -27,7 +27,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit fe4561680519019cc15d660862dce513ded2f3a7)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  include/drm/drm_crtc.h |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

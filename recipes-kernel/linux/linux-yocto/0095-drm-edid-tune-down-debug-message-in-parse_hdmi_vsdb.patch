@@ -1,7 +1,7 @@
 From 6502671537bc2f0a7336649837868844904afa52 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 22 Nov 2012 09:53:55 +0100
-Subject: drm/edid: tune down debug message in parse_hdmi_vsdb
+Subject: [PATCH 095/715] drm/edid: tune down debug message in parse_hdmi_vsdb
 
 Those tend to be totally not interesting for end-users, and for
 debugging we tend to dump the entire noise anyway by enabling all
@@ -13,7 +13,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 670c1ef6508c8fdd83dc55968fc1ce7284d849a7)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

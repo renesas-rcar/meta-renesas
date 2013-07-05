@@ -1,0 +1,473 @@
+From 8d8af84f18fdc9f40b92ff68b0491fa65edf7642 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Wed, 26 Jun 2013 19:58:57 +0900
+Subject: [PATCH 665/715] usb: Add Renesas R-Car xhci host driver
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit 471d9158d5284fd5866f90fda759d21018293e96)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/usb/Kconfig          |    1 +
+ drivers/usb/host/Kconfig     |    5 +
+ drivers/usb/host/Makefile    |    4 +
+ drivers/usb/host/xhci-rcar.c |  298 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/usb/host/xhci-rcar.h |   96 ++++++++++++++
+ 5 files changed, 404 insertions(+)
+ create mode 100644 drivers/usb/host/xhci-rcar.c
+ create mode 100644 drivers/usb/host/xhci-rcar.h
+
+diff --git a/drivers/usb/Kconfig b/drivers/usb/Kconfig
+index 74c4a56..df4e4bb 100644
+--- a/drivers/usb/Kconfig
++++ b/drivers/usb/Kconfig
+@@ -55,6 +55,7 @@ config USB_ARCH_HAS_EHCI
+ # some non-PCI HCDs implement xHCI
+ config USB_ARCH_HAS_XHCI
+ 	boolean
++	default y if ARCH_R8A7790
+ 	default PCI
+ 
+ menuconfig USB_SUPPORT
+diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+index f788eb8..2f8c0b4 100644
+--- a/drivers/usb/host/Kconfig
++++ b/drivers/usb/host/Kconfig
+@@ -31,6 +31,11 @@ config USB_XHCI_PLATFORM
+ 	tristate
+ 	depends on USB_XHCI_HCD
+ 
++config USB_XHCI_RCAR
++	tristate
++	depends on USB_XHCI_HCD
++	select USB_XHCI_PLATFORM
++
+ config USB_XHCI_HCD_DEBUGGING
+ 	bool "Debugging for the xHCI host controller"
+ 	depends on USB_XHCI_HCD
+diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
+index 0982bcc..29d27c4 100644
+--- a/drivers/usb/host/Makefile
++++ b/drivers/usb/host/Makefile
+@@ -16,8 +16,12 @@ xhci-hcd-y += xhci-ring.o xhci-hub.o xhci-dbg.o
+ xhci-hcd-$(CONFIG_PCI)	+= xhci-pci.o
+ 
+ ifneq ($(CONFIG_USB_XHCI_PLATFORM), )
++ifneq ($(CONFIG_USB_XHCI_RCAR), )
++	xhci-hcd-y		+= xhci-rcar.o
++else
+ 	xhci-hcd-y		+= xhci-plat.o
+ endif
++endif
+ 
+ obj-$(CONFIG_USB_WHCI_HCD)	+= whci/
+ 
+diff --git a/drivers/usb/host/xhci-rcar.c b/drivers/usb/host/xhci-rcar.c
+new file mode 100644
+index 0000000..5892205
+--- /dev/null
++++ b/drivers/usb/host/xhci-rcar.c
+@@ -0,0 +1,298 @@
++/*
++ * drivers/usb/host/xhci-rcar.c
++ *  xHCI host controller driver platform Bus Glue.
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the drivers/usb/host/xhci-plat.c
++ *
++ * Copyright (C) 2012 Texas Instruments Incorporated - http://www.ti.com
++ * Author: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
++ *
++ * A lot of code borrowed from the Linux xHCI driver.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ */
++
++#include <linux/platform_device.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/firmware.h>
++
++#include "xhci.h"
++#include "xhci-rcar.h"
++
++static int rcar_xhci_start(struct usb_hcd *hcd)
++{
++	if (hcd->regs != NULL) {
++		/* Interrupt Enable */
++		_bitset(hcd->regs + AXI_INT_ENA,
++			(INT_XHC_ENA | INT_PME_ENA | INT_HSE_ENA));
++
++		/* LCLK Select */
++		_writel(hcd->regs + AXI_LCLK,   LCLK_ENA);
++
++		/* USB3.0 Configuration */
++		_writel(hcd->regs + AXI_CONF1,  CONF1_VAL);
++		_writel(hcd->regs + AXI_CONF2,  CONF2_VAL);
++		_writel(hcd->regs + AXI_CONF3,  CONF3_VAL);
++
++		/* USB3.0 Polariy */
++		_writel(hcd->regs + AXI_RX_POL, RX_POL_VAL);
++		_writel(hcd->regs + AXI_TX_POL, TX_POL_VAL);
++	}
++
++	return xhci_run(hcd);
++}
++
++static int rcar_xhci_download_fw
++	(struct platform_device *pdev, struct usb_hcd *hcd)
++{
++	const struct firmware *fw;
++	int retval	= -ENODATA;
++	int index	= 0;
++	int time	= 0;
++	int timeout	= 10000;
++	u32 data	= 0x0;
++	u32 val		= 0x0;
++
++	/* request xHCI firmware */
++	retval = request_firmware(&fw, FIRMWARE_NAME, &pdev->dev);
++	if (retval)
++		return retval;
++
++	/* download xHCI firmware */
++	_bitset((hcd->regs + AXI_DL_CTRL), FW_LOAD_ENABLE);
++
++	for (index = 0; index < fw->size; index += 4) {
++		data = (fw->data[index+3]<<24) | (fw->data[index+2]<<16)
++			| (fw->data[index+1]<<8) | (fw->data[index]);
++		_writel((hcd->regs + AXI_FW_DATA0), data);
++		_bitset((hcd->regs + AXI_DL_CTRL), FW_SET_DATA0);
++
++		for (time = 0; time < timeout; time++) {
++			val = _readl(hcd->regs + AXI_DL_CTRL);
++			if ((val & FW_SET_DATA0) == 0)
++				break;
++			udelay(1);
++		}
++
++		if (time == timeout) {
++			/* failed to write data */
++			retval = -ETIMEDOUT;
++			break;
++		}
++	}
++
++	_bitclr((hcd->regs + AXI_DL_CTRL), FW_LOAD_ENABLE);
++
++	for (time = 0; time < timeout; time++) {
++		val = _readl(hcd->regs + AXI_DL_CTRL);
++		if ((val & FW_SUCCESS) == FW_SUCCESS) {
++			/* succeed in downloading FW */
++			retval = 0;
++			break;
++		}
++		udelay(1);
++	}
++
++	release_firmware(fw);
++
++	return retval;
++}
++
++static void xhci_plat_quirks(struct device *dev, struct xhci_hcd *xhci)
++{
++	/*
++	 * As of now platform drivers don't provide MSI support so we ensure
++	 * here that the generic code does not try to make a pci_dev from our
++	 * dev struct in order to setup MSI
++	 */
++	xhci->quirks |= XHCI_BROKEN_MSI;
++}
++
++/* called during probe() after chip reset completes */
++static int xhci_plat_setup(struct usb_hcd *hcd)
++{
++	return xhci_gen_setup(hcd, xhci_plat_quirks);
++}
++
++static const struct hc_driver xhci_plat_xhci_driver = {
++	.description =		"xhci-hcd",
++	.product_desc =		"xHCI Host Controller",
++	.hcd_priv_size =	sizeof(struct xhci_hcd *),
++
++	/*
++	 * generic hardware linkage
++	 */
++	.irq =			xhci_irq,
++	.flags =		HCD_MEMORY | HCD_USB3 | HCD_SHARED,
++
++	/*
++	 * basic lifecycle operations
++	 */
++	.reset =		xhci_plat_setup,
++	.start =		rcar_xhci_start,
++	.stop =			xhci_stop,
++	.shutdown =		xhci_shutdown,
++
++	/*
++	 * managing i/o requests and associated device resources
++	 */
++	.urb_enqueue =		xhci_urb_enqueue,
++	.urb_dequeue =		xhci_urb_dequeue,
++	.alloc_dev =		xhci_alloc_dev,
++	.free_dev =		xhci_free_dev,
++	.alloc_streams =	xhci_alloc_streams,
++	.free_streams =		xhci_free_streams,
++	.add_endpoint =		xhci_add_endpoint,
++	.drop_endpoint =	xhci_drop_endpoint,
++	.endpoint_reset =	xhci_endpoint_reset,
++	.check_bandwidth =	xhci_check_bandwidth,
++	.reset_bandwidth =	xhci_reset_bandwidth,
++	.address_device =	xhci_address_device,
++	.update_hub_device =	xhci_update_hub_device,
++	.reset_device =		xhci_discover_or_reset_device,
++
++	/*
++	 * scheduling support
++	 */
++	.get_frame_number =	xhci_get_frame,
++
++	/* Root hub support */
++	.hub_control =		xhci_hub_control,
++	.hub_status_data =	xhci_hub_status_data,
++	.bus_suspend =		xhci_bus_suspend,
++	.bus_resume =		xhci_bus_resume,
++};
++
++static int xhci_plat_probe(struct platform_device *pdev)
++{
++	const struct hc_driver	*driver;
++	struct xhci_hcd		*xhci;
++	struct resource         *res;
++	struct usb_hcd		*hcd;
++	int			ret;
++	int			irq;
++
++	if (usb_disabled())
++		return -ENODEV;
++
++	driver = &xhci_plat_xhci_driver;
++
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0)
++		return -ENODEV;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	hcd = usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev));
++	if (!hcd)
++		return -ENOMEM;
++
++	hcd->rsrc_start = res->start;
++	hcd->rsrc_len = resource_size(res);
++
++	if (!request_mem_region(hcd->rsrc_start, hcd->rsrc_len,
++				driver->description)) {
++		dev_dbg(&pdev->dev, "controller already in use\n");
++		ret = -EBUSY;
++		goto put_hcd;
++	}
++
++	hcd->regs = ioremap_nocache(hcd->rsrc_start, hcd->rsrc_len);
++	if (!hcd->regs) {
++		dev_dbg(&pdev->dev, "error mapping memory\n");
++		ret = -EFAULT;
++		goto release_mem_region;
++	}
++
++	/* download xHCI Firmware */
++	ret = rcar_xhci_download_fw(pdev, hcd);
++	if (ret) {
++		dev_err(&pdev->dev, "error [%x] loading xHCI Firmware\n", ret);
++		goto unmap_registers;
++	}
++
++	ret = usb_add_hcd(hcd, irq, IRQF_SHARED);
++	if (ret)
++		goto unmap_registers;
++
++	/* USB 2.0 roothub is stored in the platform_device now. */
++	hcd = dev_get_drvdata(&pdev->dev);
++	xhci = hcd_to_xhci(hcd);
++	xhci->shared_hcd = usb_create_shared_hcd(driver, &pdev->dev,
++			dev_name(&pdev->dev), hcd);
++	if (!xhci->shared_hcd) {
++		ret = -ENOMEM;
++		goto dealloc_usb2_hcd;
++	}
++
++	/*
++	 * Set the xHCI pointer before xhci_plat_setup() (aka hcd_driver.reset)
++	 * is called by usb_add_hcd().
++	 */
++	*((struct xhci_hcd **) xhci->shared_hcd->hcd_priv) = xhci;
++
++	ret = usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED);
++	if (ret)
++		goto put_usb3_hcd;
++
++	return 0;
++
++put_usb3_hcd:
++	usb_put_hcd(xhci->shared_hcd);
++
++dealloc_usb2_hcd:
++	usb_remove_hcd(hcd);
++
++unmap_registers:
++	iounmap(hcd->regs);
++
++release_mem_region:
++	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
++
++put_hcd:
++	usb_put_hcd(hcd);
++
++	return ret;
++}
++
++static int xhci_plat_remove(struct platform_device *dev)
++{
++	struct usb_hcd	*hcd = platform_get_drvdata(dev);
++	struct xhci_hcd	*xhci = hcd_to_xhci(hcd);
++
++	usb_remove_hcd(xhci->shared_hcd);
++	usb_put_hcd(xhci->shared_hcd);
++
++	usb_remove_hcd(hcd);
++	iounmap(hcd->regs);
++	usb_put_hcd(hcd);
++	kfree(xhci);
++
++	return 0;
++}
++
++static struct platform_driver usb_xhci_driver = {
++	.probe	= xhci_plat_probe,
++	.remove	= xhci_plat_remove,
++	.driver	= {
++		.name = "xhci-hcd",
++	},
++};
++MODULE_ALIAS("platform:xhci-hcd");
++
++int xhci_register_plat(void)
++{
++	return platform_driver_register(&usb_xhci_driver);
++}
++
++void xhci_unregister_plat(void)
++{
++	platform_driver_unregister(&usb_xhci_driver);
++}
+diff --git a/drivers/usb/host/xhci-rcar.h b/drivers/usb/host/xhci-rcar.h
+new file mode 100644
+index 0000000..defb12b
+--- /dev/null
++++ b/drivers/usb/host/xhci-rcar.h
+@@ -0,0 +1,96 @@
++/*
++ * drivers/usb/host/xhci-rcar.h
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#ifndef __XHCI_RCAR_H
++#define __XHCI_RCAR_H
++
++#define FIRMWARE_NAME			"UU3DRD1FW_2005L.dlmem"
++
++/*** Register Offset ***/
++/* Interrupt Enable */
++#define AXI_INT_ENA			0x224
++
++/* xHCI Firmware */
++#define AXI_FW_VERSION_OFFSET		0x240
++#define AXI_DL_CTRL			0x250
++#define AXI_FW_DATA0			0x258
++
++/* LCLK Select */
++#define AXI_LCLK			0xA44
++
++/* USB3.0 Configuration */
++#define AXI_CONF1			0xA48
++#define AXI_CONF2			0xA5C
++#define AXI_CONF3			0xAA8
++
++/* USB3.0 Polarity */
++#define AXI_RX_POL			0xAB0
++#define AXI_TX_POL			0xAB8
++
++/*** Register Settings ***/
++/* Interrupt Enable */
++#define INT_XHC_ENA			0x00000001
++#define INT_PME_ENA			0x00000002
++#define INT_HSE_ENA			0x00000004
++
++/* xHCI Firmware */
++#define FW_VERSION			0x00200500
++#define FW_LOAD_ENABLE			0x00000001
++#define FW_SUCCESS			0x00000010
++#define FW_SET_DATA0			0x00000100
++
++/* LCLK Select */
++#define LCLK_ENA			0x01030001
++
++/* USB3.0 Configuraion */
++#define CONF1_VAL			0x00030204
++#define CONF2_VAL			0x00030300
++#define CONF3_VAL			0x13802007
++
++/* USB3.0 Polarity */
++#define RX_POL_VAL			0x00020000
++#define TX_POL_VAL			0x00000010
++
++/* Read */
++static inline u32 _readl(void *address)
++{
++	return __raw_readl(address);
++}
++
++/* Write */
++static inline void _writel(void *address, u32 udata)
++{
++	__raw_writel(udata, address);
++}
++
++/* Set Bit */
++static inline void _bitset(void *address, u32 udata)
++{
++	u32 reg_dt = __raw_readl(address) | (udata);
++	__raw_writel(reg_dt, address);
++}
++
++/* Clear Bit */
++static inline void _bitclr(void *address, u32 udata)
++{
++	u32 reg_dt = __raw_readl(address) & ~(udata);
++	__raw_writel(reg_dt, address);
++}
++
++#endif /* __XHCI_RCAR_H */
+-- 
+1.7.10.4
+

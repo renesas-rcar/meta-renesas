@@ -1,0 +1,87 @@
+From 2d21c1785e73c5ef85418d20373ad6231e3b4f3c Mon Sep 17 00:00:00 2001
+From: Mark Brown <broonie@sirena.org.uk>
+Date: Thu, 5 Apr 2012 11:42:09 +0100
+Subject: [PATCH 562/715] ARM: 7376/1: clkdev: Implement managed clk_get()
+
+Allow clk API users to simplify their cleanup paths by providing a
+managed version of clk_get() and clk_put().
+
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit a8a97db984bdc5e89d42e41891543d2daaf314cb)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	Documentation/driver-model/devres.txt
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 2c41b7df1424b16556f31202abc257d7fa531f2e)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 132c50d9ac6fc62fcebf1e4753225da80f1b13cd)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/clk/clkdev.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+
+diff --git a/drivers/clk/clkdev.c b/drivers/clk/clkdev.c
+index 6db161f..a9a1137 100644
+--- a/drivers/clk/clkdev.c
++++ b/drivers/clk/clkdev.c
+@@ -89,6 +89,51 @@ void clk_put(struct clk *clk)
+ }
+ EXPORT_SYMBOL(clk_put);
+ 
++static void devm_clk_release(struct device *dev, void *res)
++{
++	clk_put(*(struct clk **)res);
++}
++
++struct clk *devm_clk_get(struct device *dev, const char *id)
++{
++	struct clk **ptr, *clk;
++
++	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr)
++		return ERR_PTR(-ENOMEM);
++
++	clk = clk_get(dev, id);
++	if (!IS_ERR(clk)) {
++		*ptr = clk;
++		devres_add(dev, ptr);
++	} else {
++		devres_free(ptr);
++	}
++
++	return clk;
++}
++EXPORT_SYMBOL(devm_clk_get);
++
++static int devm_clk_match(struct device *dev, void *res, void *data)
++{
++	struct clk **c = res;
++	if (!c || !*c) {
++		WARN_ON(!c || !*c);
++		return 0;
++	}
++	return *c == data;
++}
++
++void devm_clk_put(struct device *dev, struct clk *clk)
++{
++	int ret;
++
++	ret = devres_destroy(dev, devm_clk_release, devm_clk_match, clk);
++
++	WARN_ON(ret);
++}
++EXPORT_SYMBOL(devm_clk_put);
++
+ void clkdev_add(struct clk_lookup *cl)
+ {
+ 	mutex_lock(&clocks_mutex);
+-- 
+1.7.10.4
+

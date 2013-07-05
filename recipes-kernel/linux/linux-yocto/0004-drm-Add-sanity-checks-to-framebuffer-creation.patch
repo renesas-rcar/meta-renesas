@@ -1,7 +1,7 @@
 From 6e988c83f8bb9a624c469cb425606225f408c647 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:18 +0300
-Subject: drm: Add sanity checks to framebuffer creation
+Subject: [PATCH 004/715] drm: Add sanity checks to framebuffer creation
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit d1b45d5f0586041fe750d90a62ba09cffb3eace1)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   47 ++++++++++++++++++++++++++++++++++++++++----
  1 file changed, 43 insertions(+), 4 deletions(-)

@@ -1,7 +1,8 @@
 From 77fb180458fde4a9ca7198984e62dfaa49ade4af Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Feb 2013 22:29:48 +0100
-Subject: drm/rcar-du: Don't re-reserve hardware plane at each update
+Subject: [PATCH 124/715] drm/rcar-du: Don't re-reserve hardware plane at each
+ update
 
 Hardware planes only need to be reserved if not already reserved, or if
 the number of required planes has changed. Release the previously
@@ -11,7 +12,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit c38cbeedb6536f8bf9bad0d17fcdceb9bf727583)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_plane.c |   15 ++++++++++++---
  1 file changed, 12 insertions(+), 3 deletions(-)

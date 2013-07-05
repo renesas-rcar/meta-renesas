@@ -1,0 +1,50 @@
+From 48c8e217b8114de4f398d5143bbf49dbd55d0fa6 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 5 Jun 2013 03:11:20 +0200
+Subject: [PATCH 570/715] drm/rcar-du: Use drm_send_vblank_event()
+
+Replace the custom vblank event sending code with a call to the
+appropriate helper function.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 7b97b73b1db090e7adbc17afa335a40da3709990)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 0c490f959a4ee9bbf05494d50c556219beeeeabf)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index dd043df..bd8137d 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -618,7 +618,6 @@ static void rcar_du_crtc_finish_page_flip(struct rcar_du_crtc *rcrtc)
+ {
+ 	struct drm_pending_vblank_event *event;
+ 	struct drm_device *dev = rcrtc->crtc.dev;
+-	struct timeval vblanktime;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&dev->event_lock, flags);
+@@ -629,14 +628,8 @@ static void rcar_du_crtc_finish_page_flip(struct rcar_du_crtc *rcrtc)
+ 	if (event == NULL)
+ 		return;
+ 
+-	event->event.sequence =
+-		drm_vblank_count_and_time(dev, rcrtc->index, &vblanktime);
+-	event->event.tv_sec = vblanktime.tv_sec;
+-	event->event.tv_usec = vblanktime.tv_usec;
+-
+ 	spin_lock_irqsave(&dev->event_lock, flags);
+-	list_add_tail(&event->base.link, &event->base.file_priv->event_list);
+-	wake_up_interruptible(&event->base.file_priv->event_wait);
++	drm_send_vblank_event(dev, rcrtc->index, event);
+ 	spin_unlock_irqrestore(&dev->event_lock, flags);
+ 
+ 	drm_vblank_put(dev, rcrtc->index);
+-- 
+1.7.10.4
+

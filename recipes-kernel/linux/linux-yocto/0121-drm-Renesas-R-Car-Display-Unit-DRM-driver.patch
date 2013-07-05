@@ -1,7 +1,7 @@
 From 6b1ab15c16fd08064f115ae4904558b3f4ee06a2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 9 Jan 2013 23:19:07 +0100
-Subject: drm: Renesas R-Car Display Unit DRM driver
+Subject: [PATCH 121/715] drm: Renesas R-Car Display Unit DRM driver
 
 The R-Car Display Unit (DU) DRM driver supports both superposition
 processors and all eight planes in RGB and YUV formats without alpha
@@ -17,7 +17,6 @@ Conflicts:
 	drivers/gpu/drm/Makefile
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/Kconfig                 |    2 +
  drivers/gpu/drm/Makefile                |    1 +

@@ -1,0 +1,225 @@
+From b1b19ee0a3200f7da5dc98cdda3511beed215553 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Wed, 26 Jun 2013 13:45:11 +0900
+Subject: [PATCH 675/715] ASoC: sh: scu: Fix concurrent playback and recording
+
+If you playback the sound during capture, playback becoms error.
+Modify SSI setting and DMA channel release sequence.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit 5e77502288be67f4210e2280e82f22f7c23348bc)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ sound/soc/sh/scu_dai.c |    9 ++++---
+ sound/soc/sh/scu_pcm.c |   66 ++++++++++++++++++++----------------------------
+ 2 files changed, 33 insertions(+), 42 deletions(-)
+
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index eb0567e..dc67693 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -138,9 +138,12 @@ static void scu_ssi_control(int master_ch, int slave_ch)
+ {
+ 	FNC_ENTRY
+ 	/* SSI setting */
+-	writel(SSICR_P4643_ST, &rinfo->ssireg[master_ch]->cr);
+-	writel(SSIWS_ST, &rinfo->ssireg[master_ch]->wsr);
+-	writel(SSICR_C4643_ST, &rinfo->ssireg[slave_ch]->cr);
++	if ((readl(&rinfo->ssireg[master_ch]->cr) & SSICR_ENABLE) == 0) {
++		writel(SSICR_P4643_ST, &rinfo->ssireg[master_ch]->cr);
++		writel(SSIWS_ST, &rinfo->ssireg[master_ch]->wsr);
++	}
++	if ((readl(&rinfo->ssireg[slave_ch]->cr) & SSICR_ENABLE) == 0)
++		writel(SSICR_C4643_ST, &rinfo->ssireg[slave_ch]->cr);
+ 
+ 	FNC_EXIT
+ 	return;
+diff --git a/sound/soc/sh/scu_pcm.c b/sound/soc/sh/scu_pcm.c
+index fab7ad4..0da0266 100644
+--- a/sound/soc/sh/scu_pcm.c
++++ b/sound/soc/sh/scu_pcm.c
+@@ -159,10 +159,9 @@ static int scu_dmae_req_chan(int sid, int did, struct snd_pcm_substream *ss)
+ 	return ret;
+ }
+ 
+-static int scu_dmae_rel_chan(int sid, struct snd_pcm_substream *ss)
++static void scu_dmae_rel_chan(int sid, struct snd_pcm_substream *ss)
+ {
+ 	struct scu_pcm_info *pcminfo = ss->runtime->private_data;
+-	int ret = 0;
+ 
+ 	FNC_ENTRY
+ 
+@@ -173,22 +172,7 @@ static int scu_dmae_rel_chan(int sid, struct snd_pcm_substream *ss)
+ 	}
+ 
+ 	FNC_EXIT
+-	return ret;
+-}
+-
+-static int scu_dmae_rel_allchan(struct snd_pcm_substream *ss)
+-{
+-	int i;
+-	int ret = 0;
+-
+-	FNC_ENTRY
+-
+-	/* release all dma channel */
+-	for (i = 0; i < SHDMA_SLAVE_PCM_MAX; i++)
+-		ret = scu_dmae_rel_chan(i, ss);
+-
+-	FNC_EXIT
+-	return ret;
++	return;
+ }
+ 
+ static int scu_dmae_request(struct snd_pcm_substream *ss)
+@@ -241,26 +225,26 @@ static int scu_dmae_request(struct snd_pcm_substream *ss)
+ 		/* ssi1 via src1 */
+ 		if (pcminfo->routeinfo->ccb.init_ssi_src &&
+ 		    pcminfo->routeinfo->ccb.init_src) {
+-			/* dma(ssi->src) channel allocation */
+-			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SSI1_SRC1,
+-						SHDMA_DEVID_AUDIOPP, ss);
+-
+ 			/* dma(src->mem) channel allocation */
+ 			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SRC1_MEM,
+ 						SHDMA_DEVID_AUDIO, ss);
++
++			/* dma(ssi->src) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SSI1_SRC1,
++						SHDMA_DEVID_AUDIOPP, ss);
+ 		}
+ 
+ 		/* ssi1 via src1,dvc1 */
+ 		if (pcminfo->routeinfo->ccb.init_ssi_dvc &&
+ 		    pcminfo->routeinfo->ccb.init_src_dvc &&
+ 		    pcminfo->routeinfo->ccb.init_dvc) {
+-			/* dma(ssi->src) channel allocation */
+-			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SSI1_SRC1,
+-						SHDMA_DEVID_AUDIOPP, ss);
+-
+ 			/* dma(cmd->mem) channel allocation */
+ 			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_CMD1_MEM,
+ 						SHDMA_DEVID_AUDIO, ss);
++
++			/* dma(ssi->src) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SSI1_SRC1,
++						SHDMA_DEVID_AUDIOPP, ss);
+ 		}
+ 	}
+ 
+@@ -278,36 +262,40 @@ static int scu_dmae_release(struct snd_pcm_substream *ss)
+ 	if (!dir) { /* playback */
+ 		/* ssi */
+ 		if (pcminfo->routeinfo->pcb.init_ssi)
+-			ret = scu_dmae_rel_allchan(ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_MEM_SSI0, ss);
+ 
+ 		/* ssi via src */
+ 		if (pcminfo->routeinfo->pcb.init_ssi_src &&
+ 		    pcminfo->routeinfo->pcb.init_src) {
+-			ret = scu_dmae_rel_allchan(ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_SRC0_SSI0, ss);
+ 		}
+ 
+ 		/* ssi via src/dvc */
+ 		if (pcminfo->routeinfo->pcb.init_ssi_dvc &&
+ 		    pcminfo->routeinfo->pcb.init_src &&
+ 		    pcminfo->routeinfo->pcb.init_dvc) {
+-			ret = scu_dmae_rel_allchan(ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_CMD0_SSI0, ss);
+ 		}
+ 	} else { /* capture */
+ 		/* ssi */
+ 		if (pcminfo->routeinfo->ccb.init_ssi)
+-			ret = scu_dmae_rel_allchan(ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_SSI1_MEM, ss);
+ 
+ 		/* ssi via src */
+ 		if (pcminfo->routeinfo->ccb.init_ssi_src &&
+ 		    pcminfo->routeinfo->ccb.init_src) {
+-			ret = scu_dmae_rel_allchan(ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_SRC1_MEM, ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_SSI1_SRC1, ss);
+ 		}
+ 
+ 		/* ssi via src/dvc */
+ 		if (pcminfo->routeinfo->ccb.init_ssi_dvc &&
+ 		    pcminfo->routeinfo->ccb.init_src_dvc &&
+ 		    pcminfo->routeinfo->ccb.init_dvc) {
+-			ret = scu_dmae_rel_allchan(ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_CMD1_MEM, ss);
++			scu_dmae_rel_chan(SHDMA_SLAVE_PCM_SSI1_SRC1, ss);
+ 		}
+ 	}
+ 
+@@ -371,7 +359,7 @@ static int scu_audma_start(int sid, struct snd_pcm_substream *ss)
+ 	return 0;
+ }
+ 
+-static int scu_audma_stop(struct snd_pcm_substream *ss)
++static int scu_audma_stop(int sid, struct snd_pcm_substream *ss)
+ {
+ 	FNC_ENTRY
+ 	FNC_EXIT
+@@ -497,7 +485,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 			/* stop ssi */
+ 			pcminfo->routeinfo->pcb.deinit_ssi();
+ 			/* stop dma */
+-			scu_audma_stop(ss);
++			scu_audma_stop(SHDMA_SLAVE_PCM_MEM_SSI0, ss);
+ 		}
+ 
+ 		/* ssi via src */
+@@ -509,7 +497,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 			/* stop ssi */
+ 			pcminfo->routeinfo->pcb.deinit_ssi_src();
+ 			/* stop dma */
+-			scu_audma_stop(ss);
++			scu_audma_stop(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 		}
+ 
+ 		/* ssi via src/dvc */
+@@ -523,7 +511,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 			/* stop ssi */
+ 			pcminfo->routeinfo->pcb.deinit_ssi_dvc();
+ 			/* stop dma */
+-			scu_audma_stop(ss);
++			scu_audma_stop(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 		}
+ 	} else { /* capture */
+ 		/* ssi */
+@@ -532,7 +520,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 			/* stop ssi */
+ 			pcminfo->routeinfo->ccb.deinit_ssi();
+ 			/* stop dma */
+-			scu_audma_stop(ss);
++			scu_audma_stop(SHDMA_SLAVE_PCM_SSI1_MEM, ss);
+ 		}
+ 
+ 		/* ssi via src */
+@@ -544,7 +532,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 			/* stop ssi */
+ 			pcminfo->routeinfo->ccb.deinit_ssi_src();
+ 			/* stop dma */
+-			scu_audma_stop(ss);
++			scu_audma_stop(SHDMA_SLAVE_PCM_SRC1_MEM, ss);
+ 		}
+ 
+ 		/* ssi via src/dvc */
+@@ -558,7 +546,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 			/* start ssi */
+ 			pcminfo->routeinfo->ccb.deinit_ssi_dvc();
+ 			/* start dma */
+-			scu_audma_stop(ss);
++			scu_audma_stop(SHDMA_SLAVE_PCM_CMD1_MEM, ss);
+ 		}
+ 	}
+ 
+-- 
+1.7.10.4
+

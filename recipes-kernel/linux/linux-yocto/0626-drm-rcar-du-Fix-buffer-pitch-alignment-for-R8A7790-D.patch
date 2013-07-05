@@ -1,0 +1,96 @@
+From 9633d35ef68fb409ab55748a3ee4f26486174afc Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 14 Jun 2013 20:52:52 +0200
+Subject: [PATCH 626/715] drm/rcar-du: Fix buffer pitch alignment for R8A7790
+ DU
+
+The R8A7790 DU seems to require a 128 bytes pitch alignment, even though
+the documentation only mentions a 16 pixels alignement as for the
+R8A7779 DU. Make this configurable through a device flag.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit f97b2f6023b40a777e1e5f6e387cafec7bb0f17b)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 309cdd61c802556f2a66f91cea4bae2c1da7b952)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c |    2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h |    1 +
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c |   17 ++++++++++++++---
+ 3 files changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 0493100..64b2749 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -234,7 +234,7 @@ static const struct rcar_du_device_info rcar_du_r8a7779_info = {
+ };
+ 
+ static const struct rcar_du_device_info rcar_du_r8a7790_info = {
+-	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK,
++	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK | RCAR_DU_FEATURE_ALIGN_128B,
+ };
+ 
+ static const struct platform_device_id rcar_du_id_table[] = {
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index f9d9abb..7567a1c 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -27,6 +27,7 @@ struct drm_fbdev_cma;
+ struct rcar_du_device;
+ 
+ #define RCAR_DU_FEATURE_CRTC_IRQ_CLOCK	(1 << 0)	/* Per-CRTC IRQ and clock */
++#define RCAR_DU_FEATURE_ALIGN_128B	(1 << 1)	/* Align pitches to 128 bytes */
+ 
+ /*
+  * struct rcar_du_device_info - DU model-specific information
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index a3f5562..d2cf0c9 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -116,11 +116,18 @@ const struct rcar_du_format_info *rcar_du_format_info(u32 fourcc)
+ int rcar_du_dumb_create(struct drm_file *file, struct drm_device *dev,
+ 			struct drm_mode_create_dumb *args)
+ {
++	struct rcar_du_device *rcdu = dev->dev_private;
+ 	unsigned int min_pitch = DIV_ROUND_UP(args->width * args->bpp, 8);
+ 	unsigned int align;
+ 
+-	/* The pitch must be aligned to a 16 pixels boundary. */
+-	align = 16 * args->bpp / 8;
++	/* The R8A7779 DU requires a 16 pixels pitch alignment as documented,
++	 * but the R8A7790 DU seems to require a 128 bytes pitch alignment.
++	 */
++	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_ALIGN_128B))
++		align = 128;
++	else
++		align = 16 * args->bpp / 8;
++
+ 	args->pitch = roundup(max(args->pitch, min_pitch), align);
+ 
+ 	return drm_gem_cma_dumb_create(file, dev, args);
+@@ -130,6 +137,7 @@ static struct drm_framebuffer *
+ rcar_du_fb_create(struct drm_device *dev, struct drm_file *file_priv,
+ 		  struct drm_mode_fb_cmd2 *mode_cmd)
+ {
++	struct rcar_du_device *rcdu = dev->dev_private;
+ 	const struct rcar_du_format_info *format;
+ 	unsigned int align;
+ 
+@@ -140,7 +148,10 @@ rcar_du_fb_create(struct drm_device *dev, struct drm_file *file_priv,
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	align = 16 * format->bpp / 8;
++	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_ALIGN_128B))
++		align = 128;
++	else
++		align = 16 * format->bpp / 8;
+ 
+ 	if (mode_cmd->pitches[0] & (align - 1) ||
+ 	    mode_cmd->pitches[0] >= 8192) {
+-- 
+1.7.10.4
+

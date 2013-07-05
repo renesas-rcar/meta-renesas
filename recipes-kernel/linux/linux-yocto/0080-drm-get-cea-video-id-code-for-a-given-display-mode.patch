@@ -1,7 +1,7 @@
 From e2e5230866aa378b2b527dd278040a868019e44c Mon Sep 17 00:00:00 2001
 From: Stephane Marchesin <marcheu@chromium.org>
 Date: Fri, 9 Nov 2012 16:21:05 +0000
-Subject: drm: get cea video id code for a given display mode
+Subject: [PATCH 080/715] drm: get cea video id code for a given display mode
 
 This patch adds support for getting CEA Video ID Code for a given
 display mode after matching with edid_cea_modes list. Its index in
@@ -16,7 +16,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit a4799037c3234830e9feb1823d87f905fb4d080a)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |   20 ++++++++++++++++++++
  include/drm/drm_crtc.h     |    1 +

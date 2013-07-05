@@ -1,7 +1,7 @@
 From c1011224d40bc799e4b4cb68f06faa9385bb3200 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Tue, 1 May 2012 17:38:35 +0100
-Subject: drm/kms: reduce some messages to debug level (v2)
+Subject: [PATCH 027/715] drm/kms: reduce some messages to debug level (v2)
 
 These can all be trigged from userspace if you pass the right values.
 
@@ -12,7 +12,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 1aa1b11c57a69fc483218794172f660d74882944)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   18 +++++++++---------
  1 file changed, 9 insertions(+), 9 deletions(-)

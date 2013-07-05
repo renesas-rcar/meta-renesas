@@ -1,7 +1,7 @@
 From 8980b620f17fe8614dde5011d00f412cfbdd6c41 Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Thu, 15 Nov 2012 03:43:29 +0000
-Subject: drm/fb_helper: Convert printk to pr_* and dev_*
+Subject: [PATCH 078/715] drm/fb_helper: Convert printk to pr_* and dev_*
 
 Converted printks to pr_* and dev_* to silence checkpatch warnings.
 
@@ -10,7 +10,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit d56b1b9d48fe266685eb6025c979150e86bb2c6d)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_fb_helper.c |   14 ++++++++------
  1 file changed, 8 insertions(+), 6 deletions(-)

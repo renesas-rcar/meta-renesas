@@ -1,0 +1,47 @@
+From bc526da94194b4d5b2099cbd46d7baf4fa9ee177 Mon Sep 17 00:00:00 2001
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date: Mon, 4 Feb 2013 10:42:27 +0900
+Subject: [PATCH 167/715] ARM: kernel: smp_setup_processor_id() updates
+
+This patch applies some basic changes to the smp_setup_processor_id()
+ARM implementation to make the code that builds cpu_logical_map more
+uniform across the kernel.
+
+The function now prints the full extent of the boot CPU MPIDR[23:0] and
+initializes the cpu_logical_map for CPUs up to nr_cpu_ids.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Nicolas Pitre <nico@linaro.org>
+Acked-by: Will Deacon <will.deacon@arm.com>
+(cherry picked from commit cb8cf4f821044f140ea5b9c8d4f816f0c05fab44)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/kernel/setup.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
+index e15d83b..f05d9fd 100644
+--- a/arch/arm/kernel/setup.c
++++ b/arch/arm/kernel/setup.c
+@@ -434,13 +434,14 @@ int __cpu_logical_map[NR_CPUS];
+ void __init smp_setup_processor_id(void)
+ {
+ 	int i;
+-	u32 cpu = is_smp() ? read_cpuid_mpidr() & 0xff : 0;
++	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
++	u32 cpu = MPIDR_AFFINITY_LEVEL(mpidr, 0);
+ 
+ 	cpu_logical_map(0) = cpu;
+-	for (i = 1; i < NR_CPUS; ++i)
++	for (i = 1; i < nr_cpu_ids; ++i)
+ 		cpu_logical_map(i) = i == cpu ? 0 : i;
+ 
+-	printk(KERN_INFO "Booting Linux on physical CPU %d\n", cpu);
++	printk(KERN_INFO "Booting Linux on physical CPU 0x%x\n", mpidr);
+ }
+ 
+ static void __init setup_processor(void)
+-- 
+1.7.10.4
+

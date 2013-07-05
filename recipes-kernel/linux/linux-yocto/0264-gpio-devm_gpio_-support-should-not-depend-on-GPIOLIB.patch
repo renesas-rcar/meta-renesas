@@ -1,0 +1,106 @@
+From 14830b6f41d4a4a136f5cfe8629bbee0a667a0ac Mon Sep 17 00:00:00 2001
+From: Shawn Guo <shawn.guo@linaro.org>
+Date: Fri, 18 Jan 2013 15:57:46 +0800
+Subject: [PATCH 264/715] gpio: devm_gpio_* support should not depend on
+ GPIOLIB
+
+Some architectures (e.g. blackfin) provide gpio API without requiring
+GPIOLIB support (ARCH_WANT_OPTIONAL_GPIOLIB).  devm_gpio_* functions
+should also work for these architectures, since they do not really
+depend on GPIOLIB.
+
+Add a new option GPIO_DEVRES (enabled by default) to control the build
+of devres.c.  It also removes the empty version of devm_gpio_*
+functions for !GENERIC_GPIO build from linux/gpio.h, and moves the
+function declarations from asm-generic/gpio.h into linux/gpio.h.
+
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 6a89a314ab107a12af08c71420c19a37a30fc2d3)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/Kconfig       |    3 +++
+ drivers/gpio/Makefile      |    3 ++-
+ include/asm-generic/gpio.h |    6 ------
+ include/linux/gpio.h       |   14 ++++++++------
+ 4 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+index 684d851..8805225 100644
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -22,6 +22,9 @@ config ARCH_REQUIRE_GPIOLIB
+ 	  Selecting this from the architecture code will cause the gpiolib
+ 	  code to always get built in.
+ 
++config GPIO_DEVRES
++	def_bool y
++	depends on HAS_IOMEM
+ 
+ 
+ menuconfig GPIOLIB
+diff --git a/drivers/gpio/Makefile b/drivers/gpio/Makefile
+index bc29e11..3c0e2fa 100644
+--- a/drivers/gpio/Makefile
++++ b/drivers/gpio/Makefile
+@@ -2,7 +2,8 @@
+ 
+ ccflags-$(CONFIG_DEBUG_GPIO)	+= -DDEBUG
+ 
+-obj-$(CONFIG_GPIOLIB)		+= gpiolib.o devres.o
++obj-$(CONFIG_GPIO_DEVRES)	+= devres.o
++obj-$(CONFIG_GPIOLIB)		+= gpiolib.o
+ obj-$(CONFIG_OF_GPIO)		+= gpiolib-of.o
+ 
+ # Device drivers. Generally keep list sorted alphabetically
+diff --git a/include/asm-generic/gpio.h b/include/asm-generic/gpio.h
+index 2341014..45b8916 100644
+--- a/include/asm-generic/gpio.h
++++ b/include/asm-generic/gpio.h
+@@ -192,12 +192,6 @@ extern int gpio_request_one(unsigned gpio, unsigned long flags, const char *labe
+ extern int gpio_request_array(const struct gpio *array, size_t num);
+ extern void gpio_free_array(const struct gpio *array, size_t num);
+ 
+-/* bindings for managed devices that want to request gpios */
+-int devm_gpio_request(struct device *dev, unsigned gpio, const char *label);
+-int devm_gpio_request_one(struct device *dev, unsigned gpio,
+-			  unsigned long flags, const char *label);
+-void devm_gpio_free(struct device *dev, unsigned int gpio);
+-
+ #ifdef CONFIG_GPIO_SYSFS
+ 
+ /*
+diff --git a/include/linux/gpio.h b/include/linux/gpio.h
+index 3221142..466258a 100644
+--- a/include/linux/gpio.h
++++ b/include/linux/gpio.h
+@@ -66,12 +66,6 @@ static inline int gpio_request_one(unsigned gpio,
+ 	return -ENOSYS;
+ }
+ 
+-static inline int devm_gpio_request_one(struct device *dev, unsigned gpio,
+-					unsigned long flags, const char *label)
+-{
+-	return -ENOSYS;
+-}
+-
+ static inline int gpio_request_array(const struct gpio *array, size_t num)
+ {
+ 	return -ENOSYS;
+@@ -200,4 +194,12 @@ gpiochip_remove_pin_ranges(struct gpio_chip *chip)
+ 
+ #endif /* ! CONFIG_GENERIC_GPIO */
+ 
++struct device;
++
++/* bindings for managed devices that want to request gpios */
++int devm_gpio_request(struct device *dev, unsigned gpio, const char *label);
++int devm_gpio_request_one(struct device *dev, unsigned gpio,
++			  unsigned long flags, const char *label);
++void devm_gpio_free(struct device *dev, unsigned int gpio);
++
+ #endif /* __LINUX_GPIO_H */
+-- 
+1.7.10.4
+

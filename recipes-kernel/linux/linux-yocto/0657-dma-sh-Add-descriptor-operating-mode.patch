@@ -1,0 +1,437 @@
+From 9f0cdf291e6dd53deb598c24b6fd3c1f7b2a5c90 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Fri, 21 Jun 2013 14:39:50 +0900
+Subject: [PATCH 657/715] dma: sh: Add descriptor operating mode
+
+If you want to use the descriptor transfer function, please add the setting
+to the member of sh_dmadesc_slave_config structure.
+The member is below.
+
+- desc_mode
+Descriptor operating mode
+Specify whether Descriptor is enabled or disabled, and its operating mode.
+Set the value that can be set as DPM of DMACHCR.
+
+- desc_offset
+Base address offset of Descriptor
+The value to 0x7f0 can be set.
+Set the value in consideration of desc_stepnum.
+
+- desc_stepnum
+Descriptor number of step
+Set 2 or more and 128 or less value.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit f44ce7d6ba348cf97af260a6c5d7a0d64e98e99e)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/dma/sh/shdma-base.c |   25 ++++++++-
+ drivers/dma/sh/shdma-desc.c |  129 +++++++++++++++++++++++++++++++++++++------
+ drivers/dma/sh/shdma-desc.h |   17 ++++++
+ include/linux/sh_dma-desc.h |    3 +
+ include/linux/shdma-base.h  |    1 +
+ 5 files changed, 157 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/dma/sh/shdma-base.c b/drivers/dma/sh/shdma-base.c
+index f4cd946..36a1d46 100644
+--- a/drivers/dma/sh/shdma-base.c
++++ b/drivers/dma/sh/shdma-base.c
+@@ -30,6 +30,7 @@ enum shdma_desc_status {
+ 	DESC_IDLE,
+ 	DESC_PREPARED,
+ 	DESC_SUBMITTED,
++	DESC_SETTING,
+ 	DESC_COMPLETED,	/* completed, have to call callback */
+ 	DESC_WAITING,	/* callback called, waiting for ack / re-submit */
+ };
+@@ -57,15 +58,22 @@ static void shdma_chan_xfer_ld_queue(struct shdma_chan *schan)
+ 	struct shdma_dev *sdev = to_shdma_dev(schan->dma_chan.device);
+ 	const struct shdma_ops *ops = sdev->ops;
+ 	struct shdma_desc *sdesc;
++	bool desc_use = false;
+ 
+ 	/* DMA work check */
+ 	if (ops->channel_busy(schan))
+ 		return;
+ 
++	if (ops->dmae_desc_use)
++		desc_use = ops->dmae_desc_use(schan);
++
+ 	/* Find the first not transferred descriptor */
+ 	list_for_each_entry(sdesc, &schan->ld_queue, node)
+ 		if (sdesc->mark == DESC_SUBMITTED) {
+ 			ops->start_xfer(schan, sdesc);
++
++			if (desc_use)
++				sdesc->mark = DESC_SETTING;
+ 			break;
+ 		}
+ }
+@@ -289,6 +297,13 @@ static dma_async_tx_callback __ld_cleanup(struct shdma_chan *schan, bool all)
+ 	dma_async_tx_callback callback = NULL;
+ 	void *param = NULL;
+ 	unsigned long flags;
++	int target_mark = DESC_SUBMITTED;
++	const struct shdma_ops *ops =
++		to_shdma_dev(schan->dma_chan.device)->ops;
++
++	if (ops->dmae_desc_use)
++		target_mark = ops->dmae_desc_use(schan)
++				? DESC_SETTING : DESC_SUBMITTED;
+ 
+ 	spin_lock_irqsave(&schan->chan_lock, flags);
+ 	list_for_each_entry_safe(desc, _desc, &schan->ld_queue, node) {
+@@ -296,6 +311,7 @@ static dma_async_tx_callback __ld_cleanup(struct shdma_chan *schan, bool all)
+ 
+ 		BUG_ON(tx->cookie > 0 && tx->cookie != desc->cookie);
+ 		BUG_ON(desc->mark != DESC_SUBMITTED &&
++		       desc->mark != DESC_SETTING   &&
+ 		       desc->mark != DESC_COMPLETED &&
+ 		       desc->mark != DESC_WAITING);
+ 
+@@ -304,7 +320,7 @@ static dma_async_tx_callback __ld_cleanup(struct shdma_chan *schan, bool all)
+ 		 * completed descriptors, and to (2) update descriptor flags of
+ 		 * any chunks in a (partially) completed chain
+ 		 */
+-		if (!all && desc->mark == DESC_SUBMITTED &&
++		if (!all && desc->mark == target_mark &&
+ 		    desc->cookie != cookie)
+ 			break;
+ 
+@@ -797,10 +813,15 @@ static irqreturn_t chan_irqt(int irq, void *dev)
+ 	const struct shdma_ops *ops =
+ 		to_shdma_dev(schan->dma_chan.device)->ops;
+ 	struct shdma_desc *sdesc;
++	int target_mark = DESC_SUBMITTED;
++
++	if (ops->dmae_desc_use)
++		target_mark = ops->dmae_desc_use(schan)
++				? DESC_SETTING : DESC_SUBMITTED;
+ 
+ 	spin_lock_irq(&schan->chan_lock);
+ 	list_for_each_entry(sdesc, &schan->ld_queue, node) {
+-		if (sdesc->mark == DESC_SUBMITTED &&
++		if (sdesc->mark == target_mark &&
+ 		    ops->desc_completed(schan, sdesc)) {
+ 			dev_dbg(schan->dev, "done #%d@%p\n",
+ 				sdesc->async_tx.cookie, &sdesc->async_tx);
+diff --git a/drivers/dma/sh/shdma-desc.c b/drivers/dma/sh/shdma-desc.c
+index 01dc8b3..1a361e1 100644
+--- a/drivers/dma/sh/shdma-desc.c
++++ b/drivers/dma/sh/shdma-desc.c
+@@ -75,6 +75,11 @@ static u32 sh_dmae_readl(struct sh_dmadesc_chan *sh_dc, u32 reg)
+ 	return __raw_readl(sh_dc->base + reg / sizeof(u32));
+ }
+ 
++static void sh_descmem_writel(struct sh_dmadesc_chan *sh_dc, u32 data, u32 reg)
++{
++	__raw_writel(data, sh_dc->descmem_ptr + reg / sizeof(u32));
++}
++
+ static u16 dmaor_read(struct sh_dmadesc_device *shdev)
+ {
+ 	u32 __iomem *addr = shdev->chan_reg + DMAOR / sizeof(u32);
+@@ -170,6 +175,16 @@ static bool dmae_is_busy(struct sh_dmadesc_chan *sh_chan)
+ 	return false; /* waiting */
+ }
+ 
++static bool dmae_desc_is_used(struct sh_dmadesc_chan *sh_chan)
++{
++	u32 chcr = chcr_read(sh_chan);
++
++	if ((chcr & DPM_MSK) != 0)
++		return true; /* descriptor mode */
++
++	return false; /* normal mode */
++}
++
+ static unsigned int calc_xmit_shift(struct sh_dmadesc_chan *sh_chan, u32 chcr)
+ {
+ 	struct sh_dmadesc_device *shdev = to_sh_dev(sh_chan);
+@@ -208,6 +223,19 @@ static void dmae_set_reg(struct sh_dmadesc_chan *sh_chan,
+ 	sh_dmae_writel(sh_chan, hw->tcr >> sh_chan->xmit_shift, TCR);
+ }
+ 
++static void dmae_set_descmem(struct sh_dmadesc_chan *sh_chan,
++					struct sh_dmadesc_regs *hw)
++{
++	sh_descmem_writel(sh_chan, hw->sar, SAR);
++	sh_descmem_writel(sh_chan, hw->dar, DAR);
++	sh_descmem_writel(sh_chan, hw->tcr >> sh_chan->xmit_shift, TCR);
++
++	/* Update descriptor pointer */
++	sh_chan->descmem_ptr += DESC_STEP_SIZE / sizeof(u32);
++	if (sh_chan->descmem_ptr >= sh_chan->descmem_end)
++		sh_chan->descmem_ptr = sh_chan->descmem_start;
++}
++
+ static void dmae_start(struct sh_dmadesc_chan *sh_chan)
+ {
+ 	struct sh_dmadesc_device *shdev = to_sh_dev(sh_chan);
+@@ -245,6 +273,29 @@ static int dmae_set_chcr(struct sh_dmadesc_chan *sh_chan, u32 val)
+ 	return 0;
+ }
+ 
++static void dmae_desc_init(struct sh_dmadesc_chan *sh_chan,
++				const struct sh_dmadesc_slave_config *cfg)
++{
++	struct sh_dmadesc_device *shdev = to_sh_dev(sh_chan);
++	u32 chcr = cfg->chcr;
++
++	sh_chan->descmem_start = shdev->chan_reg +
++		((DESCMEM_BASE + cfg->desc_offset) / sizeof(u32));
++	sh_chan->descmem_end = sh_chan->descmem_start +
++		(cfg->desc_stepnum * DESC_STEP_SIZE / sizeof(u32));
++	sh_chan->descmem_ptr = sh_chan->descmem_start;
++	sh_chan->xmit_shift = calc_xmit_shift(sh_chan, cfg->chcr);
++
++	sh_dmae_writel(sh_chan, ((u32)sh_chan->descmem_start & 0xfffffff0UL),
++			DPBASE);
++	sh_dmae_writel(sh_chan, (1 << 15), CHCRB);
++	sh_dmae_writel(sh_chan, (cfg->desc_stepnum - 1) << 24, CHCRB);
++
++	chcr |= (cfg->desc_mode << 28);	/* DPM */
++	chcr |= (RPT_SRC | RPT_DST | RPT_TC | DPB | DSIE);
++	chcr_write(sh_chan, chcr);
++}
++
+ static int dmae_set_dmars(struct sh_dmadesc_chan *sh_chan, u16 val)
+ {
+ 	struct sh_dmadesc_device *shdev = to_sh_dev(sh_chan);
+@@ -281,7 +332,8 @@ static void sh_dmae_start_xfer(struct shdma_chan *schan,
+ 		sdesc->async_tx.cookie, sh_chan->shdma_chan.id,
+ 		sh_desc->hw.tcr, sh_desc->hw.sar, sh_desc->hw.dar);
+ 	/* Get the ld start address from ld_queue */
+-	dmae_set_reg(sh_chan, &sh_desc->hw);
++	if (sh_chan->config->desc_mode == 0)
++		dmae_set_reg(sh_chan, &sh_desc->hw);
+ 	dmae_start(sh_chan);
+ }
+ 
+@@ -295,6 +347,16 @@ static bool sh_dmae_channel_busy(struct shdma_chan *schan)
+ 	return ret;
+ }
+ 
++static bool sh_dmae_desc_use(struct shdma_chan *schan)
++{
++	struct sh_dmadesc_chan *sh_chan =
++		container_of(schan, struct sh_dmadesc_chan, shdma_chan);
++	bool ret;
++
++	ret = dmae_desc_is_used(sh_chan);
++	return ret;
++}
++
+ static void sh_dmae_setup_xfer(struct shdma_chan *schan, int slave_id)
+ {
+ 	struct sh_dmadesc_chan *sh_chan =
+@@ -304,7 +366,8 @@ static void sh_dmae_setup_xfer(struct shdma_chan *schan, int slave_id)
+ 		const struct sh_dmadesc_slave_config *cfg = sh_chan->config;
+ 
+ 		dmae_set_dmars(sh_chan, cfg->mid_rid);
+-		dmae_set_chcr(sh_chan, cfg->chcr);
++		if (cfg->desc_mode == 0)
++			dmae_set_chcr(sh_chan, cfg->chcr);
+ 	} else {
+ 		dmae_init(sh_chan);
+ 	}
+@@ -340,8 +403,18 @@ static int sh_dmae_set_slave(struct shdma_chan *schan,
+ 	if (!cfg)
+ 		return -ENODEV;
+ 
+-	if (!try)
++	if (!try) {
+ 		sh_chan->config = cfg;
++		if (cfg->desc_mode != 0) {
++			if (((cfg->desc_offset & 0xf) != 0) ||
++			    (cfg->desc_offset + cfg->desc_stepnum *
++			    DESC_STEP_SIZE > DESCMEM_SIZE) ||
++			    (cfg->desc_stepnum <= 1))
++				return -EINVAL;
++
++			dmae_desc_init(sh_chan, cfg);
++		}
++	}
+ 
+ 	return 0;
+ }
+@@ -351,7 +424,15 @@ static void dmae_halt(struct sh_dmadesc_chan *sh_chan)
+ 	struct sh_dmadesc_device *shdev = to_sh_dev(sh_chan);
+ 	u32 chcr = chcr_read(sh_chan);
+ 
+-	chcr &= ~(CHCR_DE | CHCR_TE | shdev->chcr_ie_bit);
++	chcr &= ~(DSE | CHCR_DE | CHCR_TE | shdev->chcr_ie_bit);
++	chcr_write(sh_chan, chcr);
++}
++
++static void dmae_desc_halt(struct sh_dmadesc_chan *sh_chan)
++{
++	u32 chcr = chcr_read(sh_chan);
++
++	chcr &= ~(DPM_MSK | RPT_SRC | RPT_DST | RPT_TC | DPB | DSIE);
+ 	chcr_write(sh_chan, chcr);
+ }
+ 
+@@ -359,8 +440,10 @@ static int sh_dmae_desc_setup(struct shdma_chan *schan,
+ 			      struct shdma_desc *sdesc,
+ 			      dma_addr_t src, dma_addr_t dst, size_t *len)
+ {
+-	struct sh_dmadesc_desc *sh_desc = container_of(sdesc,
+-					struct sh_dmadesc_desc, shdma_desc);
++	struct sh_dmadesc_chan *sh_chan =
++		container_of(schan, struct sh_dmadesc_chan, shdma_chan);
++	struct sh_dmadesc_desc *sh_desc =
++		container_of(sdesc, struct sh_dmadesc_desc, shdma_desc);
+ 
+ 	if (*len > schan->max_xfer_len)
+ 		*len = schan->max_xfer_len;
+@@ -369,6 +452,9 @@ static int sh_dmae_desc_setup(struct shdma_chan *schan,
+ 	sh_desc->hw.dar = dst;
+ 	sh_desc->hw.tcr = *len;
+ 
++	if (sh_chan->config->desc_mode != 0)
++		dmae_set_descmem(sh_chan, &sh_desc->hw);
++
+ 	return 0;
+ }
+ 
+@@ -379,6 +465,8 @@ static void sh_dmae_halt(struct shdma_chan *schan)
+ 
+ 	/* DMA stop */
+ 	dmae_halt(sh_chan);
++	if (sh_chan->config->desc_mode != 0)
++		dmae_desc_halt(sh_chan);
+ }
+ 
+ static bool sh_dmae_chan_irq(struct shdma_chan *schan, int irq)
+@@ -386,7 +474,8 @@ static bool sh_dmae_chan_irq(struct shdma_chan *schan, int irq)
+ 	struct sh_dmadesc_chan *sh_chan =
+ 		container_of(schan, struct sh_dmadesc_chan, shdma_chan);
+ 
+-	if (!(chcr_read(sh_chan) & CHCR_TE))
++	if ((sh_chan->config->desc_mode == 0) &&
++	    !(chcr_read(sh_chan) & CHCR_TE))
+ 		return false;
+ 
+ 	/* DMA stop */
+@@ -440,14 +529,20 @@ static bool sh_dmae_desc_completed(struct shdma_chan *schan,
+ 					struct sh_dmadesc_chan, shdma_chan);
+ 	struct sh_dmadesc_desc *sh_desc = container_of(sdesc,
+ 					struct sh_dmadesc_desc, shdma_desc);
+-
+-	u32 sar_buf = sh_dmae_readl(sh_chan, SAR);
+-	u32 dar_buf = sh_dmae_readl(sh_chan, DAR);
+-
+-	return	(sdesc->direction == DMA_DEV_TO_MEM &&
+-		 (sh_desc->hw.dar + sh_desc->hw.tcr) == dar_buf) ||
+-		(sdesc->direction != DMA_DEV_TO_MEM &&
+-		 (sh_desc->hw.sar + sh_desc->hw.tcr) == sar_buf);
++	u32 sar_buf;
++	u32 dar_buf;
++
++	if (sh_chan->config->desc_mode != 0)
++		return true;
++	else {
++		sar_buf = sh_dmae_readl(sh_chan, SAR);
++		dar_buf = sh_dmae_readl(sh_chan, DAR);
++
++		return	(sdesc->direction == DMA_DEV_TO_MEM &&
++			 (sh_desc->hw.dar + sh_desc->hw.tcr) == dar_buf) ||
++			(sdesc->direction != DMA_DEV_TO_MEM &&
++			 (sh_desc->hw.sar + sh_desc->hw.tcr) == sar_buf);
++	}
+ }
+ 
+ static int __devinit sh_dmae_chan_probe(struct sh_dmadesc_device *shdev, int id,
+@@ -564,7 +659,8 @@ static int sh_dmae_resume(struct device *dev)
+ 			const struct sh_dmadesc_slave_config *cfg =
+ 							sh_chan->config;
+ 			dmae_set_dmars(sh_chan, cfg->mid_rid);
+-			dmae_set_chcr(sh_chan, cfg->chcr);
++			if (sh_chan->config->desc_mode == 0)
++				dmae_set_chcr(sh_chan, cfg->chcr);
+ 		} else {
+ 			dmae_init(sh_chan);
+ 		}
+@@ -614,6 +710,7 @@ static const struct shdma_ops sh_dmae_shdma_ops = {
+ 	.embedded_desc = sh_dmae_embedded_desc,
+ 	.chan_irq = sh_dmae_chan_irq,
+ 	.get_partial = sh_dmae_get_partial,
++	.dmae_desc_use = sh_dmae_desc_use,
+ };
+ 
+ static int __devinit sh_dmae_probe(struct platform_device *pdev)
+diff --git a/drivers/dma/sh/shdma-desc.h b/drivers/dma/sh/shdma-desc.h
+index 2063fc7..2e33b3f 100644
+--- a/drivers/dma/sh/shdma-desc.h
++++ b/drivers/dma/sh/shdma-desc.h
+@@ -38,6 +38,9 @@ struct sh_dmadesc_chan {
+ 	u32 __iomem *base;
+ 	char dev_id[16];		/* unique name per DMAC of channel */
+ 	int pm_error;
++	u32 __iomem *descmem_start;
++	u32 __iomem *descmem_end;
++	u32 *descmem_ptr;
+ };
+ 
+ struct sh_dmadesc_device {
+@@ -73,15 +76,29 @@ struct sh_dmadesc_desc {
+ #define DAR	0x04
+ #define TCR	0x08
+ #define CHCR	0x0C
++#define CHCRB	0x1C
++#define DPBASE	0x50
+ #define DMAOR	0x60
+ 
+ #define TEND	0x18 /* USB-DMAC */
+ 
++/* DMA descriptor memory */
++#define DESCMEM_BASE	0xa000
++#define DESCMEM_SIZE	0x800
++#define DESC_STEP_SIZE	0x10
++
+ /* DMAOR definitions */
+ #define DMAOR_AE	0x00000004
+ #define DMAOR_DME	0x00000001
+ 
+ /* CHCR definitions */
++#define DPM_MSK	0x30000000
++#define RPT_SRC	0x08000000
++#define RPT_DST	0x04000000
++#define RPT_TC	0x02000000
++#define DPB	0x00400000
++#define DSE	0x00080000
++#define DSIE	0x00040000
+ #define DM_INC	0x00004000
+ #define DM_DEC	0x00008000
+ #define DM_FIX	0x0000c000
+diff --git a/include/linux/sh_dma-desc.h b/include/linux/sh_dma-desc.h
+index 398ff76..dc503b4 100644
+--- a/include/linux/sh_dma-desc.h
++++ b/include/linux/sh_dma-desc.h
+@@ -38,6 +38,9 @@ struct sh_dmadesc_slave_config {
+ 	dma_addr_t	addr;
+ 	u32		chcr;
+ 	char		mid_rid;
++	char		desc_mode:2;
++	u16		desc_offset;
++	u16		desc_stepnum;
+ };
+ 
+ struct sh_dmadesc_channel {
+diff --git a/include/linux/shdma-base.h b/include/linux/shdma-base.h
+index a3728bf..e31b838 100644
+--- a/include/linux/shdma-base.h
++++ b/include/linux/shdma-base.h
+@@ -100,6 +100,7 @@ struct shdma_ops {
+ 	struct shdma_desc *(*embedded_desc)(void *, int);
+ 	bool (*chan_irq)(struct shdma_chan *, int);
+ 	size_t (*get_partial)(struct shdma_chan *, struct shdma_desc *);
++	bool (*dmae_desc_use)(struct shdma_chan *);
+ };
+ 
+ struct shdma_dev {
+-- 
+1.7.10.4
+

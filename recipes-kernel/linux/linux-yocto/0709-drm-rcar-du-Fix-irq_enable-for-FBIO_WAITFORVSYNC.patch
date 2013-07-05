@@ -1,0 +1,29 @@
+From 4df382cb4533c2cccf899e59df39907368b7fef4 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 26 Jun 2013 14:48:17 +0900
+Subject: [PATCH 709/715] drm: rcar-du: Fix irq_enable for FBIO_WAITFORVSYNC
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit d3d012df10f28e4b4ff2744d88b4d4e41be534a6)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 25d074c..bcf63df 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -599,6 +599,8 @@ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index)
+ 		return ret;
+ 	}
+ 
++	rcdu->ddev->irq_enabled = 1;
++
+ 	ret = devm_request_irq(rcdu->dev, irq, rcar_du_crtc_irq, irqflags,
+ 			       dev_name(rcdu->dev), rcrtc);
+ 	if (ret < 0) {
+-- 
+1.7.10.4
+

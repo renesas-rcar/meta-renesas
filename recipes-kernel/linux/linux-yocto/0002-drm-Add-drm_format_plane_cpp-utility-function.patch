@@ -1,7 +1,7 @@
 From b99b75754c32c4bf485d38fe8cc548bf92eeb24c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:16 +0300
-Subject: drm: Add drm_format_plane_cpp() utility function
+Subject: [PATCH 002/715] drm: Add drm_format_plane_cpp() utility function
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 5a86bd552407bd6b3e0df4e88636797484d06430)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   45 ++++++++++++++++++++++++++++++++++++++++++++
  include/drm/drm_crtc.h     |    1 +

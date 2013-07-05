@@ -1,7 +1,7 @@
 From 62fc2d2f74c63eaa2f411a9c942208f3c6282195 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:22 +0200
-Subject: drm: Constify gem_vm_ops pointer
+Subject: [PATCH 106/715] drm: Constify gem_vm_ops pointer
 
 The GEM vm operations structure is passed to the VM core that stores it
 in a const field. There vm operations structures can thus be const in
@@ -17,7 +17,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 78b68556a964e74fb803b08c5b2d9c6ba3ec3787)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/exynos/exynos_drm_drv.c |    2 +-
  drivers/gpu/drm/gma500/framebuffer.c    |    2 +-

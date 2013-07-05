@@ -1,0 +1,46 @@
+From ebbd9c64ac282d672fc1b270f73be3ad567d4094 Mon Sep 17 00:00:00 2001
+From: Axel Lin <axel.lin@ingics.com>
+Date: Wed, 21 Nov 2012 14:33:56 +0800
+Subject: [PATCH 261/715] gpiolib: Fix use after free in
+ gpiochip_add_pin_range
+
+This is introduced by commit 9ab6e988
+"gpiolib: return any error code from range creation".
+
+Signed-off-by: Axel Lin <axel.lin@ingics.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit b4d4b1f087b9d4d730eb70f24032395d7cd7e591)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index 71e14ad..199fca1 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1238,6 +1238,7 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+ 			   unsigned int npins)
+ {
+ 	struct gpio_pin_range *pin_range;
++	int ret;
+ 
+ 	pin_range = kzalloc(sizeof(*pin_range), GFP_KERNEL);
+ 	if (!pin_range) {
+@@ -1256,10 +1257,11 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+ 	pin_range->pctldev = pinctrl_find_and_add_gpio_range(pinctl_name,
+ 			&pin_range->range);
+ 	if (IS_ERR(pin_range->pctldev)) {
++		ret = PTR_ERR(pin_range->pctldev);
+ 		pr_err("%s: GPIO chip: could not create pin range\n",
+ 		       chip->label);
+ 		kfree(pin_range);
+-		return PTR_ERR(pin_range->pctldev);
++		return ret;
+ 	}
+ 	pr_debug("GPIO chip %s: created GPIO range %d->%d ==> %s PIN %d->%d\n",
+ 		 chip->label, gpio_offset, gpio_offset + npins - 1,
+-- 
+1.7.10.4
+

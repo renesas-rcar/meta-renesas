@@ -1,0 +1,63 @@
+From 8b6408cf16ed6e6602955c80871f39a6ece926e3 Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Mon, 11 Mar 2013 16:23:46 -0500
+Subject: [PATCH 583/715] ARM: arch_timer: use full 64-bit counter for
+ sched_clock
+
+Only 32-bits of the arch timer were being used and wrapping was needlessly
+being done in s/w. By using the full counter (56-64 bits), we don't need
+to deal with wrapping and can simplify the implementation when using
+arch timer.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+(cherry picked from commit 023796b9be3a77481cd5ee0b64a13a55bb0d5df4)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit ea79988662b976a8c261aed1638447e6438fde28)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/kernel/arch_timer.c |   18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
+index d957a51..80c458f 100644
+--- a/arch/arm/kernel/arch_timer.c
++++ b/arch/arm/kernel/arch_timer.c
+@@ -22,9 +22,11 @@ static unsigned long arch_timer_read_counter_long(void)
+ 	return arch_timer_read_counter();
+ }
+ 
+-static u32 arch_timer_read_counter_u32(void)
++static u32 sched_clock_mult __read_mostly;
++
++static unsigned long long notrace arch_timer_sched_clock(void)
+ {
+-	return arch_timer_read_counter();
++	return arch_timer_read_counter() * sched_clock_mult;
+ }
+ 
+ static struct delay_timer arch_delay_timer;
+@@ -52,10 +54,16 @@ int __init arch_timer_of_register(void)
+ 
+ int __init arch_timer_sched_clock_init(void)
+ {
+-	if (arch_timer_get_rate() == 0)
++        u32 arch_timer_rate = arch_timer_get_rate();
++
++	if (arch_timer_rate == 0)
+ 		return -ENXIO;
+ 
+-	setup_sched_clock(arch_timer_read_counter_u32,
+-			  32, arch_timer_get_rate());
++	/* Cache the sched_clock multiplier to save a divide in the hot path. */
++	sched_clock_mult = NSEC_PER_SEC / arch_timer_rate;
++	sched_clock_func = arch_timer_sched_clock;
++	pr_info("sched_clock: ARM arch timer >56 bits at %ukHz, resolution %uns\n",
++		arch_timer_rate / 1000, sched_clock_mult);
++
+ 	return 0;
+ }
+-- 
+1.7.10.4
+

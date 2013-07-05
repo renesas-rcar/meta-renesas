@@ -1,0 +1,39 @@
+From 5b22fc16be66eb9525c732974ac2c0df12e7fd5e Mon Sep 17 00:00:00 2001
+From: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
+Date: Fri, 16 Nov 2012 10:51:01 +0900
+Subject: [PATCH 588/715] Revert "sh-sci / PM: Use power.irq_safe"
+
+This reverts commit 5a50a01bf0 (sh-sci / PM: Use power.irq_safe, from
+Rafael J. Wysocki <rjw@sisk.pl>, 2011-08-24).
+
+In order to get console PM work properly, we should implement uart_ops
+->pm() operation, rather than sprinkle band-ading runtime PM calls in
+the driver.
+
+Signed-off-by: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit 8807ec6c707802cabadc0fe1b035ffefa27f1719)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 9b4938572364e9fef28dae20bd312b539b1d597e)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/tty/serial/sh-sci.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 526ad04..9abe977 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -2116,7 +2116,6 @@ static int __devinit sci_init_single(struct platform_device *dev,
+ 
+ 		sci_init_gpios(sci_port);
+ 
+-		pm_runtime_irq_safe(&dev->dev);
+ 		pm_runtime_enable(&dev->dev);
+ 	}
+ 
+-- 
+1.7.10.4
+

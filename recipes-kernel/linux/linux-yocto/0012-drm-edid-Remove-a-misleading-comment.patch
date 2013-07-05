@@ -1,7 +1,7 @@
 From d165199db25bf8bd516e74233d813c22aba51abc Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:32 -0400
-Subject: drm/edid: Remove a misleading comment
+Subject: [PATCH 012/715] drm/edid: Remove a misleading comment
 
 mode_in_range() handles what this was warning about.
 
@@ -12,7 +12,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 9a225c9ce2b03ed70c13fc49ee8ee332cefe4e3a)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |    4 ----
  1 file changed, 4 deletions(-)

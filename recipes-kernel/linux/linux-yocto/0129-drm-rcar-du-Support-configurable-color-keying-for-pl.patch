@@ -1,7 +1,8 @@
 From 68458def18a55244fd37dde30191e9235c22f31b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Feb 2013 04:18:22 +0100
-Subject: drm/rcar-du: Support configurable color keying for planes
+Subject: [PATCH 129/715] drm/rcar-du: Support configurable color keying for
+ planes
 
 The color key is expressed as an RGB888 triplet stored in a 32-bit
 integer in XRGB8888 format. Bit 24 is used as a flag to disable (0) or
@@ -14,7 +15,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 1139f309ec6e1123b3500bfef4cbb920a6196112)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_drv.h   |    1 +
  drivers/gpu/drm/rcar-du/rcar_du_plane.c |  122 ++++++++++++++++++++++++++-----

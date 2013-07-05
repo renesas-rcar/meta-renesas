@@ -1,0 +1,36 @@
+From 6d30b9a3b56628321d0d4956720b2731fbd8bff5 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sun, 12 May 2013 01:26:55 +0400
+Subject: [PATCH 567/715] ARM: mach-shmobile: marzen: add SATA support
+
+Add SATA support to marzen_defconfig.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit db30abdf3c07c564d4af0f991bb7f38b728f9035)
+(cherry picked from commit 72b945c0348fb7f9bc9277d52ac099a770dc027b)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/marzen_defconfig |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
+index 86f583a..3930015 100644
+--- a/arch/arm/configs/marzen_defconfig
++++ b/arch/arm/configs/marzen_defconfig
+@@ -47,6 +47,10 @@ CONFIG_DEVTMPFS_MOUNT=y
+ # CONFIG_STANDALONE is not set
+ # CONFIG_PREVENT_FIRMWARE_BUILD is not set
+ # CONFIG_FW_LOADER is not set
++CONFIG_ATA=y
++CONFIG_ATA_SFF=y
++CONFIG_ATA_BMDMA=y
++CONFIG_SATA_RCAR=y
+ CONFIG_NETDEVICES=y
+ # CONFIG_NET_VENDOR_BROADCOM is not set
+ # CONFIG_NET_VENDOR_FARADAY is not set
+-- 
+1.7.10.4
+

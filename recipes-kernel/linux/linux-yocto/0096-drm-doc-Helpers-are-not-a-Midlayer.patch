@@ -1,7 +1,7 @@
 From 2ba29ad85a6eb145d8c596bb9218fab862edf066 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:15 +0100
-Subject: drm/doc: Helpers are not a Midlayer!
+Subject: [PATCH 096/715] drm/doc: Helpers are not a Midlayer!
 
 I'm devoting all my wrath to that fight, so don't misname it ;-)
 
@@ -13,7 +13,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit e4949f2974167f93961d58ca67cfe949af9d5e09)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  Documentation/DocBook/drm.tmpl |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

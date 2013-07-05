@@ -1,7 +1,8 @@
 From 3f9a23aa3306fc79e6fc1f8cff956eba9f68ba73 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Sun, 12 Aug 2012 18:15:48 +0200
-Subject: drm/fb-helper: don't clobber output routing in setup_crtcs
+Subject: [PATCH 051/715] drm/fb-helper: don't clobber output routing in
+ setup_crtcs
 
 Yet again the too close relationship between the fb helper and the
 crtc helper code strikes. This time around the fb helper resets all
@@ -37,7 +38,6 @@ Signed-Off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 (cherry picked from commit 33faad195eec0c72fec84e638623ea25652eed72)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_fb_helper.c |    6 ------
  1 file changed, 6 deletions(-)

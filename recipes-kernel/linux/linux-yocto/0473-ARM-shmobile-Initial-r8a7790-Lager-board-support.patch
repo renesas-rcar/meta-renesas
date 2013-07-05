@@ -1,0 +1,179 @@
+From 1a8eedb4470a5cd4827af65e3455b58edcad3587 Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm@opensource.se>
+Date: Fri, 29 Mar 2013 17:49:37 +0900
+Subject: [PATCH 473/715] ARM: shmobile: Initial r8a7790 Lager board support
+
+Lager base board support making use of 2 GiB of memory,
+the r8a7790 SoC with the SCIF0 serial port and CA15 with
+ARM architected timer.
+
+Signed-off-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 3cc828fdb32281cc8166d3a40bee32b90ce3cad8)
+
+Conflicts:
+	arch/arm/boot/dts/Makefile
+	arch/arm/mach-shmobile/Kconfig
+	arch/arm/mach-shmobile/Makefile
+	arch/arm/mach-shmobile/Makefile.boot
+	arch/arm/mach-shmobile/board-lager.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7790-lager.dts  |   31 +++++++++++++++++++++++
+ arch/arm/mach-shmobile/Kconfig       |    9 ++++++-
+ arch/arm/mach-shmobile/Makefile      |    1 +
+ arch/arm/mach-shmobile/Makefile.boot |    2 ++
+ arch/arm/mach-shmobile/board-lager.c |   46 ++++++++++++++++++++++++++++++++++
+ 5 files changed, 88 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm/boot/dts/r8a7790-lager.dts
+ create mode 100644 arch/arm/mach-shmobile/board-lager.c
+
+diff --git a/arch/arm/boot/dts/r8a7790-lager.dts b/arch/arm/boot/dts/r8a7790-lager.dts
+new file mode 100644
+index 0000000..09a84fc
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7790-lager.dts
+@@ -0,0 +1,31 @@
++/*
++ * Device Tree Source for the Lager board
++ *
++ * Copyright (C) 2013 Renesas Solutions Corp.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++/dts-v1/;
++/include/ "r8a7790.dtsi"
++
++/ {
++	model = "Lager";
++	compatible = "renesas,lager", "renesas,r8a7790";
++
++	chosen {
++		bootargs = "console=ttySC6,115200 ignore_loglevel";
++	};
++
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0 0x40000000 0 0x80000000>;
++	};
++
++	lbsc {
++		#address-cells = <1>;
++		#size-cells = <1>;
++	};
++};
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index 31ca5bb..403159f 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -111,6 +111,11 @@ config MACH_MARZEN
+ 	depends on ARCH_R8A7779
+ 	select ARCH_REQUIRE_GPIOLIB
+ 
++config MACH_LAGER
++	bool "Lager board"
++	depends on ARCH_R8A7790
++	select USE_OF
++
+ config MACH_KZM9D
+ 	bool "KZM9D board"
+ 	depends on ARCH_EMEV2
+@@ -136,7 +141,8 @@ config MEMORY_START
+ 	default "0x50000000" if MACH_G3EVM
+ 	default "0x40000000" if MACH_G4EVM || MACH_AP4EVB || MACH_AG5EVM || \
+ 				MACH_MACKEREL || MACH_BONITO || \
+-				MACH_ARMADILLO800EVA
++				MACH_ARMADILLO800EVA || \
++				MACH_LAGER
+ 	default "0x41000000" if MACH_KOTA2
+ 	default "0x00000000"
+ 	---help---
+@@ -148,6 +154,7 @@ config MEMORY_SIZE
+ 	hex "Physical memory size"
+ 	default "0x08000000" if MACH_G3EVM
+ 	default "0x08000000" if MACH_G4EVM
++	default "0x80000000" if MACH_LAGER
+ 	default "0x20000000" if MACH_AG5EVM || MACH_BONITO || \
+ 				MACH_ARMADILLO800EVA
+ 	default "0x1e000000" if MACH_KOTA2
+diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
+index 1980d4b..a4401cc 100644
+--- a/arch/arm/mach-shmobile/Makefile
++++ b/arch/arm/mach-shmobile/Makefile
+@@ -41,6 +41,7 @@ obj-$(CONFIG_MACH_MACKEREL)	+= board-mackerel.o
+ obj-$(CONFIG_MACH_KOTA2)	+= board-kota2.o
+ obj-$(CONFIG_MACH_BONITO)	+= board-bonito.o
+ obj-$(CONFIG_MACH_MARZEN)	+= board-marzen.o
++obj-$(CONFIG_MACH_LAGER)	+= board-lager.o
+ obj-$(CONFIG_MACH_ARMADILLO800EVA)	+= board-armadillo800eva.o
+ obj-$(CONFIG_MACH_KZM9D)	+= board-kzm9d.o
+ obj-$(CONFIG_MACH_KZM9G)	+= board-kzm9g.o
+diff --git a/arch/arm/mach-shmobile/Makefile.boot b/arch/arm/mach-shmobile/Makefile.boot
+index 5e41019..670d48d 100644
+--- a/arch/arm/mach-shmobile/Makefile.boot
++++ b/arch/arm/mach-shmobile/Makefile.boot
+@@ -11,3 +11,5 @@ __ZRELADDR	:= $(shell /bin/bash -c 'printf "0x%08x" \
+ dtb-$(CONFIG_MACH_KZM9G) += sh73a0-kzm9g.dtb
+ dtb-$(CONFIG_MACH_KZM9D) += emev2-kzm9d.dtb
+ dtb-$(CONFIG_MACH_ARMADILLO800EVA) += r8a7740-armadillo800eva.dtb
++dtb-$(CONFIG_MACH_ARMADILLO800EVA) += r8a7740-armadillo800eva.dtb
++dtb-$(CONFIG_MACH_LAGER) += r8a7790-lager.dtb
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+new file mode 100644
+index 0000000..7a09b0e
+--- /dev/null
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -0,0 +1,46 @@
++/*
++ * Lager board support
++ *
++ * Copyright (C) 2013  Renesas Solutions Corp.
++ * Copyright (C) 2013  Magnus Damm
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include <linux/interrupt.h>
++#include <linux/irqchip.h>
++#include <linux/kernel.h>
++#include <linux/platform_device.h>
++#include <mach/common.h>
++#include <mach/r8a7790.h>
++#include <asm/mach-types.h>
++#include <asm/mach/arch.h>
++
++static void __init lager_add_standard_devices(void)
++{
++	r8a7790_clock_init();
++	r8a7790_add_standard_devices();
++}
++
++static const char *lager_boards_compat_dt[] __initdata = {
++	"renesas,lager",
++	NULL,
++};
++
++DT_MACHINE_START(LAGER_DT, "lager")
++	.init_irq	= irqchip_init,
++	.timer		= &shmobile_timer,
++	.init_machine	= lager_add_standard_devices,
++	.dt_compat	= lager_boards_compat_dt,
++MACHINE_END
+-- 
+1.7.10.4
+

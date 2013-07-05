@@ -1,7 +1,7 @@
 From cbd6eb04f21c0d07d3c4ff1ca6a42f32b12fb75c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 8 Feb 2013 17:22:58 +0100
-Subject: drm/rcar-du: Enable alpha blending support
+Subject: [PATCH 123/715] drm/rcar-du: Enable alpha blending support
 
 Alpha-blending is unconditinally disabled, treating alpha-aware formats
 as corresponding opaque formats. Fix this.
@@ -10,7 +10,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 7e65e247a2cd7b06d4de60c0121cbc64cc27e231)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_kms.c   |   18 +++++++++---------
  drivers/gpu/drm/rcar-du/rcar_du_kms.h   |    2 +-

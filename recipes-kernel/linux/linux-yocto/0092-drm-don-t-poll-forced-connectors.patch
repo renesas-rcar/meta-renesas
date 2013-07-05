@@ -1,7 +1,7 @@
 From e1cfe0d577d97524584c8b18edd4f3dc3f0f3824 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:38 +0000
-Subject: drm: don't poll forced connectors
+Subject: [PATCH 092/715] drm: don't poll forced connectors
 
 Otherwise if the detect callback reports a different state than what
 the user forced (rather likely), we continously annoy userspace about
@@ -13,7 +13,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 11e686855c81c2e5e647b3dcfabd2a4e473c46f0)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc_helper.c |    4 ++++
  1 file changed, 4 insertions(+)

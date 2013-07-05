@@ -1,7 +1,7 @@
 From fd227e56fd216b9305f7ca908064c1aba5fba8e9 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Fri, 13 Apr 2012 16:31:38 -0300
-Subject: drm: add the VIC number to the CEA EDID modes
+Subject: [PATCH 007/715] drm: add the VIC number to the CEA EDID modes
 
 The specification defines a VIC (Video Identification Code) for each
 mode. When we're browsing drm_edid_modes.h, it really helps to have the
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 099e014b056665c8271a1cd613b5126896c4dac5)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid_modes.h |  128 +++++++++++++++++++-------------------
  1 file changed, 64 insertions(+), 64 deletions(-)

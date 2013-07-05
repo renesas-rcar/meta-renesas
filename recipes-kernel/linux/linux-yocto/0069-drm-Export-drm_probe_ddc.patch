@@ -1,7 +1,7 @@
 From 36a60b6f25294bffc7cc14269181a1b8c60ce8a2 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Tue, 18 Sep 2012 10:58:47 -0400
-Subject: drm: Export drm_probe_ddc()
+Subject: [PATCH 069/715] drm: Export drm_probe_ddc()
 
 Tested-by: Takashi Iwai <tiwai@suse.de>
 Signed-off-by: Adam Jackson <ajax@redhat.com>
@@ -10,7 +10,6 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 (cherry picked from commit fbff4690b8f23289797b18ad8939e19525c403d1)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c |    3 ++-
  include/drm/drm_crtc.h     |    1 +

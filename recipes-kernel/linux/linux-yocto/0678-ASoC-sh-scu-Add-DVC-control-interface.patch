@@ -1,0 +1,283 @@
+From 7e69b62a4f50f8c9ba168a0486c682b363167b7a Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Thu, 27 Jun 2013 16:55:20 +0900
+Subject: [PATCH 678/715] ASoC: sh: scu: Add DVC control interface
+
+Add the following Control.
+	PCM Playback Volume
+	PCM Capture Volume
+	PCM Playback Switch
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit f78074b44268e9876073e738d3d31c8c20041562)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/sound/sh_scu.h |    5 ++
+ sound/soc/sh/scu_dai.c |  197 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 196 insertions(+), 6 deletions(-)
+
+diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
+index ec8005f..73162d3 100644
+--- a/include/sound/sh_scu.h
++++ b/include/sound/sh_scu.h
+@@ -70,6 +70,9 @@
+ #define CTRL_CAPTURE	1
+ /*  rate  */
+ #define	RATE_MAX	0x7fffffff
++/*  volume  */
++#define	VOLUME_MAX_DVC	0x007fffff
++#define	VOLUME_DEFAULT	0x00100000
+ 
+ /*
+  *	SCU
+@@ -2113,6 +2116,8 @@ struct scu_audio_info {
+ 	struct scu_clock_info clockinfo;
+ 	spinlock_t scu_lock;		/* for common register */
+ 	unsigned int rate[2];
++	unsigned int volume[2][2];
++	unsigned int mute[2];
+ };
+ 
+ struct scu_pcm_info {
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index 7ccf0b4..af3f601 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -392,6 +392,8 @@ static void scu_dvc_deinit(int dvc_ch)
+ 
+ void scu_dvc_control(int dvc_ch)
+ {
++	u32 mute;
++
+ 	FNC_ENTRY
+ 	/* DVC Activation (DVC_SWRSR) Figure42.27 */
+ 	writel(0, (u32 *)&rinfo->dvcreg[dvc_ch]->swrsr);
+@@ -411,12 +413,12 @@ void scu_dvc_control(int dvc_ch)
+ 
+ 	/* Digital Volume Function Parameter */
+ 	/*  DVC_VOL*R  */
+-	writel(0x100000, (u32 *)&rinfo->dvcreg[dvc_ch]->vol0r);
+-	writel(0x100000, (u32 *)&rinfo->dvcreg[dvc_ch]->vol1r);
++	writel(ainfo->volume[dvc_ch][0], (u32 *)&rinfo->dvcreg[dvc_ch]->vol0r);
++	writel(ainfo->volume[dvc_ch][1], (u32 *)&rinfo->dvcreg[dvc_ch]->vol1r);
+ 
+ 	/* Zero Cross Mute Function */
+-	/*  0:no mute 1:R 2:L 3:LR  */
+-	writel(0x0, (u32 *)&rinfo->dvcreg[dvc_ch]->zcmcr);
++	mute = (ainfo->mute[1] << 1) + ainfo->mute[0];
++	writel(mute, (u32 *)&rinfo->dvcreg[dvc_ch]->zcmcr);
+ 
+ 	/* DVC_DVUIR */
+ 	writel(0, (u32 *)&rinfo->dvcreg[dvc_ch]->dvuir);
+@@ -793,15 +795,177 @@ static struct snd_kcontrol_new capture_rate_controls = {
+ 	.private_value	= CTRL_CAPTURE,
+ };
+ 
++static int scu_dai_info_volume(struct snd_kcontrol *kctrl,
++			       struct snd_ctl_elem_info *uinfo)
++{
++	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
++	uinfo->count = 2;
++	uinfo->value.integer.min = 0;
++	uinfo->value.integer.max = VOLUME_MAX_DVC;
++
++	return 0;
++}
++
++static int scu_dai_get_volume(struct snd_kcontrol *kctrl,
++			      struct snd_ctl_elem_value *ucontrol)
++{
++	struct scu_audio_info *ainfo = snd_kcontrol_chip(kctrl);
++
++	switch (kctrl->private_value) {
++	case CTRL_PLAYBACK:
++		ucontrol->value.integer.value[0] = ainfo->volume[0][0];
++		ucontrol->value.integer.value[1] = ainfo->volume[0][1];
++		break;
++	case CTRL_CAPTURE:
++		ucontrol->value.integer.value[0] = ainfo->volume[1][0];
++		ucontrol->value.integer.value[1] = ainfo->volume[1][1];
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int scu_dai_put_volume(struct snd_kcontrol *kctrl,
++			      struct snd_ctl_elem_value *ucontrol)
++{
++	struct scu_audio_info *ainfo = snd_kcontrol_chip(kctrl);
++	int change = 0;
++
++	if (ucontrol->value.integer.value[0] < 0 ||
++	    ucontrol->value.integer.value[0] > VOLUME_MAX_DVC ||
++	    ucontrol->value.integer.value[1] < 0 ||
++	    ucontrol->value.integer.value[1] > VOLUME_MAX_DVC)
++		return -EINVAL;
++
++	switch (kctrl->private_value) {
++	case CTRL_PLAYBACK:
++		change |= ((ainfo->volume[0][0] !=
++				ucontrol->value.integer.value[0]) ||
++			   (ainfo->volume[0][1] !=
++				ucontrol->value.integer.value[1]));
++		if (change) {
++			ainfo->volume[0][0] = ucontrol->value.integer.value[0];
++			ainfo->volume[0][1] = ucontrol->value.integer.value[1];
++			/* DVC0 L:vol1r R:vol0r */
++			writel(ainfo->volume[0][0],
++				(u32 *)&rinfo->dvcreg[0]->vol1r);
++			writel(ainfo->volume[0][1],
++				(u32 *)&rinfo->dvcreg[0]->vol0r);
++		}
++		break;
++	case CTRL_CAPTURE:
++		change |= ((ainfo->volume[1][0] !=
++				ucontrol->value.integer.value[0]) ||
++			   (ainfo->volume[1][1] !=
++				ucontrol->value.integer.value[1]));
++		if (change) {
++			ainfo->volume[1][0] = ucontrol->value.integer.value[0];
++			ainfo->volume[1][1] = ucontrol->value.integer.value[1];
++			/* DVC1 L:vol1r R:vol0r */
++			writel(ainfo->volume[1][0],
++				(u32 *)&rinfo->dvcreg[1]->vol1r);
++			writel(ainfo->volume[1][1],
++				(u32 *)&rinfo->dvcreg[1]->vol0r);
++		}
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return change;
++}
++
++static struct snd_kcontrol_new playback_volume_controls = {
++	.iface		= SNDRV_CTL_ELEM_IFACE_MIXER,
++	.name		= "PCM Playback Volume",
++	.index		= 0,
++	.info		= scu_dai_info_volume,
++	.get		= scu_dai_get_volume,
++	.put		= scu_dai_put_volume,
++	.private_value	= CTRL_PLAYBACK,
++};
++
++static struct snd_kcontrol_new capture_volume_controls = {
++	.iface		= SNDRV_CTL_ELEM_IFACE_MIXER,
++	.name		= "PCM Capture Volume",
++	.index		= 0,
++	.info		= scu_dai_info_volume,
++	.get		= scu_dai_get_volume,
++	.put		= scu_dai_put_volume,
++	.private_value	= CTRL_CAPTURE,
++};
++
++static int scu_dai_info_mute(struct snd_kcontrol *kctrl,
++			       struct snd_ctl_elem_info *uinfo)
++{
++	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
++	uinfo->count = 2;
++	uinfo->value.integer.min = 0;
++	uinfo->value.integer.max = 1;
++
++	return 0;
++}
++
++static int scu_dai_get_mute(struct snd_kcontrol *kctrl,
++			      struct snd_ctl_elem_value *ucontrol)
++{
++	struct scu_audio_info *ainfo = snd_kcontrol_chip(kctrl);
++
++	ucontrol->value.integer.value[0] = ainfo->mute[0];
++	ucontrol->value.integer.value[1] = ainfo->mute[1];
++
++	return 0;
++}
++
++static int scu_dai_put_mute(struct snd_kcontrol *kctrl,
++			      struct snd_ctl_elem_value *ucontrol)
++{
++	struct scu_audio_info *ainfo = snd_kcontrol_chip(kctrl);
++	int change = 0;
++	u32 mute = 0;
++
++	if (ucontrol->value.integer.value[0] < 0 ||
++	    ucontrol->value.integer.value[0] > 1 ||
++	    ucontrol->value.integer.value[1] < 0 ||
++	    ucontrol->value.integer.value[1] > 1)
++		return -EINVAL;
++
++	change |= ((ainfo->mute[0] != ucontrol->value.integer.value[0]) ||
++		   (ainfo->mute[1] != ucontrol->value.integer.value[1]));
++	if (change) {
++		ainfo->mute[0] = ucontrol->value.integer.value[0];
++		ainfo->mute[1] = ucontrol->value.integer.value[1];
++		mute = (ainfo->mute[1] << 1) + ainfo->mute[0];
++		writel(mute, (u32 *)&rinfo->dvcreg[0]->zcmcr);
++	}
++
++	return 0;
++}
++
++static struct snd_kcontrol_new playback_mute_controls = {
++	.iface		= SNDRV_CTL_ELEM_IFACE_MIXER,
++	.name		= "PCM Playback Switch",
++	.index		= 0,
++	.info		= scu_dai_info_mute,
++	.get		= scu_dai_get_mute,
++	.put		= scu_dai_put_mute,
++};
++
+ int scu_dai_add_control(struct snd_card *card)
+ {
+ 	struct device *dev = card->dev;
+ 	struct snd_kcontrol *kctrl;
+-	int i, ret;
++	int i, j, ret;
+ 
+ 	/* initial value */
+-	for (i = 0; i < 2; i++)
++	for (i = 0; i < 2; i++) {
+ 		ainfo->rate[i] = 0;
++		ainfo->mute[i] = 0;
++		for (j = 0; j < 2; j++)
++			ainfo->volume[i][j] = VOLUME_DEFAULT;
++	}
+ 
+ 	kctrl = snd_ctl_new1(&playback_rate_controls, ainfo);
+ 	ret = snd_ctl_add(card, kctrl);
+@@ -817,6 +981,27 @@ int scu_dai_add_control(struct snd_card *card)
+ 		return ret;
+ 	}
+ 
++	kctrl = snd_ctl_new1(&playback_volume_controls, ainfo);
++	ret = snd_ctl_add(card, kctrl);
++	if (ret < 0) {
++		dev_err(dev, "failed to add playback volume err=%d\n", ret);
++		return ret;
++	}
++
++	kctrl = snd_ctl_new1(&capture_volume_controls, ainfo);
++	ret = snd_ctl_add(card, kctrl);
++	if (ret < 0) {
++		dev_err(dev, "failed to add capture volume err=%d\n", ret);
++		return ret;
++	}
++
++	kctrl = snd_ctl_new1(&playback_mute_controls, ainfo);
++	ret = snd_ctl_add(card, kctrl);
++	if (ret < 0) {
++		dev_err(dev, "failed to add playback mute err=%d\n", ret);
++		return ret;
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(scu_dai_add_control);
+-- 
+1.7.10.4
+

@@ -1,0 +1,175 @@
+From 47e27e5ffc182a8ede15922a9cae234f39a4fcc6 Mon Sep 17 00:00:00 2001
+From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+Date: Tue, 25 Jun 2013 17:59:41 +0900
+Subject: [PATCH 663/715] ARM: shmobile: r8a7790: Add SATA driver support
+
+Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+(cherry picked from commit 8901e1fc04736c9274c2177ee5b8c7f6365b6d0c)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig    |    6 ++++
+ arch/arm/mach-shmobile/clock-r8a7790.c |   18 +++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c |   54 ++++++++++++++++++++++++++++++++
+ 3 files changed, 78 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index bf9d2b9..1f73a35 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -192,3 +192,9 @@ CONFIG_NLS_ISO8859_1=y
+ # CONFIG_ENABLE_WARN_DEPRECATED is not set
+ # CONFIG_ENABLE_MUST_CHECK is not set
+ # CONFIG_ARM_UNWIND is not set
++CONFIG_ATA=y
++CONFIG_SFF=y
++CONFIG_ATA_BMDMA=y
++CONFIG_SATA_RCAR=y
++CONFIG_ISO9660_FS=y
++CONFIG_BLK_DEV_SR=y
+diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
+index 0f6bc2c..a9068d3 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7790.c
++++ b/arch/arm/mach-shmobile/clock-r8a7790.c
+@@ -53,6 +53,7 @@
+ #define SMSTPCR3	0xE615013C
+ #define SMSTPCR5	0xE6150144
+ #define SMSTPCR7	0xe615014c
++#define SMSTPCR8	0xE6150990
+ #define SMSTPCR9	0xE6150994
+ #define SMSTPCR10	0xE6150998
+ 
+@@ -116,6 +117,16 @@ SH_FIXED_RATIO_CLK_SET(zb3d2_clk,		pll3_clk,	1, 8);
+ SH_FIXED_RATIO_CLK_SET(ddr_clk,			pll3_clk,	1, 8);
+ SH_FIXED_RATIO_CLK_SET(mp_clk,			pll1_div2_clk,	1, 15);
+ 
++static struct clk sata0_clk = {
++	.rate		= 100000000,
++	.mapping	= &cpg_mapping,
++};
++
++static struct clk sata1_clk = {
++	.rate		= 100000000,
++	.mapping	= &cpg_mapping,
++};
++
+ static struct clk *main_clks[] = {
+ 	&extal_clk,
+ 	&extal_div2_clk,
+@@ -142,6 +153,8 @@ static struct clk *main_clks[] = {
+ 	&ddr_clk,
+ 	&mp_clk,
+ 	&cp_clk,
++	&sata0_clk,
++	&sata1_clk,
+ };
+ 
+ /* SDHI (DIV4) clock */
+@@ -193,6 +206,7 @@ enum {
+ 	MSTP219, MSTP218,
+ 	MSTP502, MSTP501,
+ 	MSTP704, MSTP703,
++	MSTP815, MSTP814,
+ 	MSTP917, MSTP931, MSTP930, MSTP929, MSTP928, MSTP922,
+ 	MSTP1031, MSTP1030, MSTP1019, MSTP1018, MSTP1017, MSTP1015, MSTP1014,
+ 	MSTP1005,
+@@ -229,6 +243,8 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP501] = SH_CLK_MSTP32(&hp_clk, SMSTPCR5, 1, 0),
+ 	[MSTP704] = SH_CLK_MSTP32(&mp_clk, SMSTPCR7, 04, 0),
+ 	[MSTP703] = SH_CLK_MSTP32(&mp_clk, SMSTPCR7, 03, 0),
++	[MSTP815] = SH_CLK_MSTP32(&sata0_clk, SMSTPCR8, 15, 0),
++	[MSTP814] = SH_CLK_MSTP32(&sata1_clk, SMSTPCR8, 14, 0),
+ 	[MSTP917] = SH_CLK_MSTP32(&qspi_clk, SMSTPCR9, 17, 0),
+ 	[MSTP931] = SH_CLK_MSTP32(&hp_clk, SMSTPCR9, 31, 0),
+ 	[MSTP930] = SH_CLK_MSTP32(&hp_clk, SMSTPCR9, 30, 0),
+@@ -331,6 +347,8 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("ssi0", &mstp_clks[MSTP1015]),
+ 	CLKDEV_CON_ID("ssi1", &mstp_clks[MSTP1014]),
+ 	CLKDEV_CON_ID("ssi", &mstp_clks[MSTP1005]),
++	CLKDEV_DEV_ID("sata_rcar.0", &mstp_clks[MSTP815]),
++	CLKDEV_DEV_ID("sata_rcar.1", &mstp_clks[MSTP814]),
+ };
+ 
+ static void __init r8a7790_rgx_control_init(void)
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index a88ca16..4820b61 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -45,6 +45,7 @@
+ #include <linux/mtd/partitions.h>
+ #include <linux/spi/spi.h>
+ #include <linux/spi/flash.h>
++#include <linux/dma-mapping.h>
+ #include <mach/common.h>
+ #include <mach/irqs.h>
+ #include <mach/r8a7790.h>
+@@ -1362,6 +1363,57 @@ static struct platform_device scu_device = {
+ 	.resource	= scu_resources,
+ };
+ 
++/* SATA0 */
++static struct resource sata0_resources[] = {
++	[0] = {
++		.name	= "sata0",
++		.start  = 0xee300000,
++		.end    = (0xee500000 - 1),
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start  = gic_spi(105),
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device sata0_device = {
++	.name		= "sata_rcar",
++	.id		= 0,
++	.resource	= sata0_resources,
++	.num_resources	= ARRAY_SIZE(sata0_resources),
++	.dev = {
++		.dma_mask	= &sata0_device.dev.coherent_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++
++/* SATA1 */
++static struct resource sata1_resources[] = {
++	[0] = {
++		.name	= "sata1",
++		.start  = 0xee500000,
++		.end    = (0xee700000 - 1),
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start  = gic_spi(106),
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device sata1_device = {
++	.name		= "sata_rcar",
++	.id		= 1,
++	.resource	= sata1_resources,
++	.num_resources	= ARRAY_SIZE(sata1_resources),
++	.dev = {
++		.dma_mask	= &sata1_device.dev.coherent_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
+ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&eth_device,
+ 	&powervr_device,
+@@ -1387,6 +1439,8 @@ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&sysdmau_device,
+ 	&alsa_soc_platform_device,
+ 	&scu_device,
++	&sata0_device,
++	&sata1_device,
+ };
+ 
+ static struct renesas_irqc_config irqc0_data = {
+-- 
+1.7.10.4
+

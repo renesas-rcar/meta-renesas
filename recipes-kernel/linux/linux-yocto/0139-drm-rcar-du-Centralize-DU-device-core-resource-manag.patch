@@ -1,7 +1,8 @@
 From f027dac71b361bf9927b5b80b8b861dc75f01146 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 10:30:17 +0100
-Subject: drm/rcar-du: Centralize DU device core resource management
+Subject: [PATCH 139/715] drm/rcar-du: Centralize DU device core resource
+ management
 
 Create reference-counted get/put handlers for the DU device. The get()
 operation enables the device clock and initializes core registers.
@@ -10,7 +11,6 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 72737f07538e138532050311873e1891f1976ef3)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c |   11 ++-----
  drivers/gpu/drm/rcar-du/rcar_du_drv.c  |   53 ++++++++++++++++++++++++++++++++

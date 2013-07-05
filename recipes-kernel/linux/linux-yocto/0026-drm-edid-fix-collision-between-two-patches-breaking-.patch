@@ -1,7 +1,8 @@
 From 1b19a681e627f5623e43e40fcc13cc942ef07132 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Mon, 30 Apr 2012 07:26:16 +0100
-Subject: drm/edid: fix collision between two patches breaking build
+Subject: [PATCH 026/715] drm/edid: fix collision between two patches breaking
+ build
 
 this fixes a report that the new load code needed to be updated for
 ajax's validity changes.
@@ -10,7 +11,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 2baf8377997cce10bb730f306392f29794dea217)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid_load.c |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

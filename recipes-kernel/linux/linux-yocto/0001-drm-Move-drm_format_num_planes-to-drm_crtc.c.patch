@@ -1,7 +1,7 @@
 From a8661d0d2bd736e87d34584a9a4afee6353c21e6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:15 +0300
-Subject: drm: Move drm_format_num_planes() to drm_crtc.c
+Subject: [PATCH 001/715] drm: Move drm_format_num_planes() to drm_crtc.c
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 141670e9b4356b59b5b39a99e10ac0118d12b16d)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c        |   32 ++++++++++++++++++++++++++++++++
  drivers/gpu/drm/drm_crtc_helper.c |   33 ---------------------------------

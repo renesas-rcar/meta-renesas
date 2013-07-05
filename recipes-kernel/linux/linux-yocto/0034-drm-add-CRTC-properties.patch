@@ -1,7 +1,7 @@
 From 1c2cecde8358f59af71224b609d6bf6a4ac2029d Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:05 -0300
-Subject: drm: add CRTC properties
+Subject: [PATCH 034/715] drm: add CRTC properties
 
 The i915 driver needs this for the rotation and overscan compensation
 properties. Other drivers might need this too.
@@ -13,7 +13,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit bffd9de0297702566e6aec0678c7ebc3806fe3db)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c |   20 ++++++++++++++++++++
  include/drm/drm_crtc.h     |    9 ++++++++-

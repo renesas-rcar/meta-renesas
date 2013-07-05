@@ -1,7 +1,8 @@
 From 11d0d2820f4994e69d4318a3e0a671dfd70573a4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:20 +0200
-Subject: drm: Miscellaneous typo fixes and documentation updates
+Subject: [PATCH 036/715] drm: Miscellaneous typo fixes and documentation
+ updates
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
@@ -9,7 +10,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 3b02ab8893d45f17ae104588e337188127068a92)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c    |    2 +-
  drivers/gpu/drm/drm_sysfs.c   |    8 ++++----

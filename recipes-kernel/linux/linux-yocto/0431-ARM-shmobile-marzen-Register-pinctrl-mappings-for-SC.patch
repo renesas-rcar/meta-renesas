@@ -1,0 +1,51 @@
+From 84c254e8ec90de0b6b830234c33f83180142b4c2 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 6 Mar 2013 14:22:11 +0100
+Subject: [PATCH 431/715] ARM: shmobile: marzen: Register pinctrl mappings for
+ SCIF
+
+Replace the GPIO-based SCIF pinmux configuration by pinctrl mappings.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit e9cd49faef0029efcffc22bba03baa638371f2f5)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/board-marzen.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index 2f444ec..42ed8c1 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -80,6 +80,12 @@ static struct platform_device *marzen_devices[] __initdata = {
+ };
+ 
+ static const struct pinctrl_map marzen_pinctrl_map[] = {
++	/* SCIF2 (CN18: DEBUG0) */
++	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.2", "pfc-r8a7779",
++				  "scif2_data_c", "scif2"),
++	/* SCIF4 (CN19: DEBUG1) */
++	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.4", "pfc-r8a7779",
++				  "scif4_data", "scif4"),
+ 	/* SDHI0 */
+ 	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.0", "pfc-r8a7779",
+ 				  "sdhi0_data4", "sdhi0"),
+@@ -100,14 +106,6 @@ static void __init marzen_init(void)
+ 	r8a7779_pinmux_init();
+ 	r8a7779_init_irq_extpin(1); /* IRQ1 as individual interrupt */
+ 
+-	/* SCIF2 (CN18: DEBUG0) */
+-	gpio_request(GPIO_FN_TX2_C, NULL);
+-	gpio_request(GPIO_FN_RX2_C, NULL);
+-
+-	/* SCIF4 (CN19: DEBUG1) */
+-	gpio_request(GPIO_FN_TX4, NULL);
+-	gpio_request(GPIO_FN_RX4, NULL);
+-
+ 	/* LAN89218 */
+ 	gpio_request(GPIO_FN_EX_CS0, NULL); /* nCS */
+ 	gpio_request(GPIO_FN_IRQ1_B, NULL); /* IRQ + PME */
+-- 
+1.7.10.4
+

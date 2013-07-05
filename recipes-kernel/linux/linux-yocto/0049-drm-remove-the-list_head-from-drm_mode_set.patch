@@ -1,7 +1,7 @@
 From 5836dee0955f6db2bfdcb56680f37851fcdf9326 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Wed, 11 Jul 2012 16:28:08 +0200
-Subject: drm: remove the list_head from drm_mode_set
+Subject: [PATCH 049/715] drm: remove the list_head from drm_mode_set
 
 It's unused. At it confused me quite a bit until I've discovered that.
 
@@ -11,7 +11,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 59fd415ded4aa9ac2f80ca3ac36e3a014c7e552e)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  include/drm/drm_crtc.h |    2 --
  1 file changed, 2 deletions(-)

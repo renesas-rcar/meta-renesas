@@ -1,7 +1,7 @@
 From 3343346cfa01dddbdabcca36a5e55f2fd1c17c48 Mon Sep 17 00:00:00 2001
 From: Jerome Glisse <jglisse@redhat.com>
 Date: Thu, 9 Aug 2012 11:25:51 -0400
-Subject: drm/edid: limit printk when facing bad edid
+Subject: [PATCH 064/715] drm/edid: limit printk when facing bad edid
 
 Limit printing bad edid information at one time per connector.
 Connector that are connected to a bad monitor/kvm will likely
@@ -14,7 +14,6 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 (cherry picked from commit 0b2443ed4e07d7973e4554a2cc166bc35447b59e)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_edid.c      |   22 ++++++++++++++--------
  drivers/gpu/drm/drm_edid_load.c |    6 ++++--

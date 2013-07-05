@@ -1,7 +1,7 @@
 From 9daa30ef87b255bcb99cf889260e0ed2a406a2fc Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 11 Oct 2012 20:50:56 -0500
-Subject: drm: remove legacy drm_connector_property fxns
+Subject: [PATCH 101/715] drm: remove legacy drm_connector_property fxns
 
 Replace references to and remove the connector property fxns, which
 have been superseded with the more general object property fxns:
@@ -14,7 +14,6 @@ Signed-off-by: Rob Clark <rob@ti.com>
 (cherry picked from commit 584955632841c069678833f3320b4f6d21a8215e)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
  drivers/gpu/drm/drm_crtc.c      |   31 +++++--------------------------
  drivers/gpu/drm/drm_fb_helper.c |    2 +-
