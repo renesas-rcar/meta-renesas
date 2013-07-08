@@ -7,14 +7,14 @@ DEPENDS = "virtual/kernel"
 
 inherit module
 
-PV = "9.0.0"
+PV = "9.0.1"
 PR = "r0"
 
-SRC_URI = "http://directfb.org/downloads/Core/linux-fusion/linux-fusion-${PV}.tar.gz \
+S = "${WORKDIR}/git"
+SRCREV = "0f3669626cb4307d92839184a94b60ccec0c3863"
+SRC_URI = "git://git.directfb.org/git/directfb/core/linux-fusion.git;protocol=git \
 	   file://linux-fusion-modules-replace-KERNELDIR-with-KERNEL_SRC.patch"
 
-SRC_URI[md5sum] = "4199617ed8ba205da52fedfb862e4507"
-SRC_URI[sha256sum] = "54b5da51a80d29a3b618d1ee504afd581b8fa1885a717ea925607d3547242f70"
 
 # inherit autotools pkgconfig
 
