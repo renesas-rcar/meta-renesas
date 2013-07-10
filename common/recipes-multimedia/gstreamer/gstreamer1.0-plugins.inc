@@ -42,10 +42,12 @@ python __anonymous () {
     pv = d.getVar("PV", True)
     branch = d.getVar("GSTREAMER_1_0_GIT_BRANCH", True)
 
+    """
     if pv == "git":
         d.setVar("SRC_URI", d.getVar("SRC_URI") + " git://anongit.freedesktop.org/gstreamer/%s;branch=%s;protocol=git" % (gstpkg_basename, branch))
     else:
         d.setVar("SRC_URI", d.getVar("SRC_URI") + " http://gstreamer.freedesktop.org/src/%s/%s-%s.tar.xz" % (gstpkg_basename, gstpkg_basename, pv))
+    """
 }
 
 delete_liblink_m4_file() {

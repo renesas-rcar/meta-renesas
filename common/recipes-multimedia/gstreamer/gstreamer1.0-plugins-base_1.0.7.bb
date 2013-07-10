@@ -9,3 +9,16 @@ SRC_URI[md5sum] = "b5b43cfbf82b413ce2e07a190d87e68f"
 SRC_URI[sha256sum] = "014805e50b696bc06c3862ea656df079fc0b5fef0c10f16e9f085f290545677a"
 
 S = "${WORKDIR}/gst-plugins-base-${PV}"
+PRINC := "${@int(PRINC) + 1}"
+  
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+SRC_URI = "http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.0.7.tar.xz \
+	file://0001-videodecoder-promote-the-access-level-of-frame-relea.patch"
+ 
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('x11', '')}"
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('ivorbis', '')}"
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('ogg', '')}"
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('theora', '')}"
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('vorbis', '')}"
+
+EXTRA_OECONF += "--disable-nls"

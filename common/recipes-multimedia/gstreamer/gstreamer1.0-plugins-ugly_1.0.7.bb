@@ -8,3 +8,17 @@ SRC_URI[sha256sum] = "b78b8cfabe322497da432a0f297dbb21862a033f95e8d4cd8f207eccb5
 
 S = "${WORKDIR}/gst-plugins-ugly-${PV}"
 
+PRINC := "${@int(PRINC) + 1}"
+
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('a52dec', '')}"
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('lame', '')}"
+PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('mpeg2dec', '')}"
+
+EXTRA_OECONF += "--disable-nls"
+
+SRC_URI = "http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.0.7.tar.xz \
+	file://0001-asfdemux-asfpacket-specify-the-offset-by-an-amount-o.patch \
+	file://0002-asfdemux-asfpacket-set-frame-start-code-to-VC-1-adva.patch \
+	"
