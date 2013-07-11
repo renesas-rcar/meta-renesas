@@ -126,3 +126,10 @@ SRC_URI += " \
     file://0002-dfb-video-example-clear-sigaction-structure-instance.patch \
     file://0003-dfb-video-example-drop-out-of-audio-pipeline-creatio.patch \
     "
+
+do_install_append () {
+        install -d ${D}${bindir}
+        install -m 0755 ${WORKDIR}/build/ext/directfb/dfb-video-example ${D}${bindir}
+}
+
+FILES_${PN} += "${bindir}"
