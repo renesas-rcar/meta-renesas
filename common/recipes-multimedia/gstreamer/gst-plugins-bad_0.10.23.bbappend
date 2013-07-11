@@ -122,4 +122,7 @@ SRC_URI += " \
     file://0008-ext-dfbvideosink-allocate-a-meram-region-at-the-init.patch \
     file://0009-Revert-ext-dfbvideosink-workaround-recreate-a-surfac.patch \
     file://0001-ext-dfbvideosink-separately-allocate-meram-memory-re.patch \
+    file://0001-ext-dfbvideosink-move-meram-set-up-function-in-order.patch \
+    file://0002-dfb-video-example-clear-sigaction-structure-instance.patch \
+    file://0003-dfb-video-example-drop-out-of-audio-pipeline-creatio.patch \
     "
