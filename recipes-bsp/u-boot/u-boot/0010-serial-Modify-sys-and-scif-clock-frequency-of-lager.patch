@@ -1,0 +1,41 @@
+From 5275991c2d56f87ce33326d76e829c997290bae8 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Thu, 16 May 2013 15:03:26 +0900
+Subject: [PATCH 10/14] serial: Modify sys and scif clock frequency of lager
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/serial/serial_sh.c |    2 +-
+ include/configs/lager.h    |    3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/serial/serial_sh.c b/drivers/serial/serial_sh.c
+index b33f714..5a5214f 100644
+--- a/drivers/serial/serial_sh.c
++++ b/drivers/serial/serial_sh.c
+@@ -62,7 +62,7 @@ static void sh_serial_setbrg(void)
+ {
+ 	DECLARE_GLOBAL_DATA_PTR;
+ #if defined(CONFIG_R8A7790)
+-	sci_out(&sh_sci, DL, DL_VALUE(gd->baudrate, CONFIG_SYS_CLK_FREQ));
++	sci_out(&sh_sci, DL, DL_VALUE(gd->baudrate, CONFIG_SCIF_CLK_FREQ));
+ 	udelay((1000000 * 2 * 16 / CONFIG_SYS_CLK_FREQ) * 1000 + 1);
+ #else
+ 	sci_out(&sh_sci, SCBRR, SCBRR_VALUE(gd->baudrate, CONFIG_SYS_CLK_FREQ));
+diff --git a/include/configs/lager.h b/include/configs/lager.h
+index f47d605..3529352 100644
+--- a/include/configs/lager.h
++++ b/include/configs/lager.h
+@@ -182,7 +182,8 @@
+ #define CONFIG_BITBANGMII_MULTI
+ 
+ /* Board Clock */
+-#define	CONFIG_SYS_CLK_FREQ	15728640
++#define	CONFIG_SYS_CLK_FREQ	10000000
++#define	CONFIG_SCIF_CLK_FREQ	14745600
+ #define CONFIG_SYS_TMU_CLK_DIV	4
+ #define CONFIG_SYS_HZ		1000
+ 
+-- 
+1.7.3.4
+

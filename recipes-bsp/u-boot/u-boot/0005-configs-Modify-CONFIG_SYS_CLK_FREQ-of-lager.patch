@@ -1,0 +1,26 @@
+From fc2ebe7d737c7be3923bf84183700ce57cf9c80a Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Thu, 16 May 2013 14:58:14 +0900
+Subject: [PATCH 05/14] configs: Modify CONFIG_SYS_CLK_FREQ of lager
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/configs/lager.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/configs/lager.h b/include/configs/lager.h
+index 95853c7..f47d605 100644
+--- a/include/configs/lager.h
++++ b/include/configs/lager.h
+@@ -182,7 +182,7 @@
+ #define CONFIG_BITBANGMII_MULTI
+ 
+ /* Board Clock */
+-#define	CONFIG_SYS_CLK_FREQ	14745600
++#define	CONFIG_SYS_CLK_FREQ	15728640
+ #define CONFIG_SYS_TMU_CLK_DIV	4
+ #define CONFIG_SYS_HZ		1000
+ 
+-- 
+1.7.3.4
+

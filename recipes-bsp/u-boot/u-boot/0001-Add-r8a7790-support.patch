@@ -1,7 +1,7 @@
-From e0087df3eee047c1a626ac14644e3bbc004f45dd Mon Sep 17 00:00:00 2001
+From f1fa1291eff0e406c9b203476296e7886d39d9ca Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 10 Apr 2013 17:34:39 +0900
-Subject: Add r8a7790 support
+Subject: [PATCH 01/14] Add r8a7790 support
 
 Signed-off-by: Kouei Abe <kouei.abe.cp@renesas.com>
 ---
@@ -1660,5 +1660,5 @@ index 0000000..95853c7
 +
 +#endif	/* __LAGER_H */
 -- 
-1.7.10.4
+1.7.3.4
 

@@ -1,0 +1,30 @@
+From 4c9598fd6a24405e78ae49337ab0bfad50be3054 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Thu, 16 May 2013 14:56:24 +0900
+Subject: [PATCH 03/14] board: lager: Modify scif0 module enable for SPI-Flash version
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ board/renesas/lager/lager.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/board/renesas/lager/lager.c b/board/renesas/lager/lager.c
+index 5e44c3a..71936ed 100644
+--- a/board/renesas/lager/lager.c
++++ b/board/renesas/lager/lager.c
+@@ -230,11 +230,11 @@ int board_early_init_f(void)
+ 	SetGuardREG(GPSR4, 0x34000000, 0x00000000);
+ 	SetGuardREG(IPSR14, 0x00000FC7, 0x00000481);
+ 	SetGuardREG(GPSR4,  0x00000000, 0x34000000);
++#endif
+ 
+ 	val = readl(MSTPSR7);
+ 	val &= ~SCIF0_MSTP721;
+ 	writel(val, SMSTPCR7);
+-#endif
+ 
+ 	/* ETHER */
+ 	val = readl(MSTPSR8);
+-- 
+1.7.3.4
+
