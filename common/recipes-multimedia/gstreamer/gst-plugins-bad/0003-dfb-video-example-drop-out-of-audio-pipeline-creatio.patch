@@ -1,0 +1,31 @@
+From 8075b7ef6d7c6bbbcd2ef6fae3f5db186067560e Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 11 Jul 2013 15:46:19 +0900
+Subject: [PATCH 3/3] dfb-video-example: drop out of audio pipeline creation
+ when alsasink can't be created rather than the termination with g_assert
+
+This change allows the video pipeline to perform alone when alsasink
+can't be created.
+---
+ ext/directfb/dfb-video-example.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfb-video-example.c b/ext/directfb/dfb-video-example.c
+index aaa6e7c..1cacf05 100644
+--- a/ext/directfb/dfb-video-example.c
++++ b/ext/directfb/dfb-video-example.c
+@@ -180,7 +180,10 @@ create_audio_pipeline (GstPad * pad)
+   queue = gst_element_factory_make ("queue", NULL);
+   g_assert (queue);
+   sink = gst_element_factory_make ("alsasink", NULL);
+-  g_assert (sink);
++  if (!sink) {
++    printf ("failed to create alsasink plugin\n");
++    return;
++  }
+ 
+   gst_bin_add_many (GST_BIN (pipeline), queue, decoder, sink, NULL);
+   sinkpad = gst_element_get_static_pad (queue, "sink");
+-- 
+1.8.1.2
+
