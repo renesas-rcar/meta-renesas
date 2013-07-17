@@ -1,7 +1,7 @@
 require directfb_git.inc
 
 RV = "1.7-0"
-PR = "r3"
+PR = "r4"
 S = "${WORKDIR}/git"
 
 DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion khronos-headers"
@@ -9,11 +9,9 @@ DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion khronos-headers
 SRC_URI += "file://fix-compilation-with-zlib.patch \
             file://fixsepbuild.patch \
             file://directfbrc \
-            file://0001-drmkms-in-drmkmsPlaneTestRegion-and-drmkmsPlayeSetRe.patch \
-            file://0002-drmkms-fix-framebuffer-allocation-size.patch \
-            file://0003-drmkms-replace-DLCONF_-with-CLRCF_-where-appropriate.patch"
+            "
 
-SRCREV = "522349046b437a7d03665cbc8cb42c97dca6c69d"
+SRCREV = "902016b20482f8918daa9f898780fefff35ee049"
 
 EXTRA_OECONF = "\
   --enable-freetype \
