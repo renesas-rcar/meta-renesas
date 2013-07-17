@@ -7,11 +7,11 @@ DEPENDS = "virtual/kernel"
 
 inherit module
 
-PV = "9.0.1"
+PV = "9.0.2"
 PR = "r0"
 
 S = "${WORKDIR}/git"
-SRCREV = "0f3669626cb4307d92839184a94b60ccec0c3863"
+SRCREV = "52f7ad63b4f98929fb15c2b73b9d40d39089f83e"
 SRC_URI = "git://git.directfb.org/git/directfb/core/linux-fusion.git;protocol=git \
 	   file://linux-fusion-modules-replace-KERNELDIR-with-KERNEL_SRC.patch"
 
