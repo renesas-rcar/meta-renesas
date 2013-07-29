@@ -1,7 +1,7 @@
 From d2177fa2a7b2491265a325ad74c683f437c113e9 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:30 -0400
-Subject: [PATCH 010/611] drm/edid: Rewrite drm_mode_find_dmt search loop
+Subject: [PATCH 010/675] drm/edid: Rewrite drm_mode_find_dmt search loop
 
 No functional change, but will make an upcoming change clearer.
 

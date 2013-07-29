@@ -1,7 +1,7 @@
 From b8d92bda47d4805b564a9805e3ceef8bd0a8ab1e Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 22 May 2013 20:17:04 -0700
-Subject: [PATCH 458/611] sh-pfc: r8a7778: add MMCIF pin groups
+Subject: [PATCH 458/675] sh-pfc: r8a7778: add MMCIF pin groups
 
 Add MMCIF CLK/CMD/DATA groups to R8A7778 PFC driver.
 

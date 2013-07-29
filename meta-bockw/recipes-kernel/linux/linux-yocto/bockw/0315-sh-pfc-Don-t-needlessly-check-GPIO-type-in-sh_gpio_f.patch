@@ -1,7 +1,7 @@
 From 9b3112717de36a41b00a78ac67a4ece45abe357d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 18:00:32 +0100
-Subject: [PATCH 315/611] sh-pfc: Don't needlessly check GPIO type in
+Subject: [PATCH 315/675] sh-pfc: Don't needlessly check GPIO type in
  sh_gpio_free()
 
 The GPIO type is always PINMUX_TYPE_FUNCTION when freeing a function

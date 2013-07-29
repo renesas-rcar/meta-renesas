@@ -1,7 +1,7 @@
 From db42750e2b0e7239a86abea3adf783733e5a6caa Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 11 Jun 2013 17:33:04 +0900
-Subject: [PATCH 583/611] ARM: shmobile: BOCK-W: enable DU and GP2D in
+Subject: [PATCH 583/675] ARM: shmobile: BOCK-W: enable DU and GP2D in
  defconfig
 
 ---

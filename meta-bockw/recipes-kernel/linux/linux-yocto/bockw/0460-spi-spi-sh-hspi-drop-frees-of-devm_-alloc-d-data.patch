@@ -1,7 +1,7 @@
 From e7148bd6c6b7c394c74cdc0cc979586d572eda84 Mon Sep 17 00:00:00 2001
 From: Julia Lawall <Julia.Lawall@lip6.fr>
 Date: Sat, 1 Sep 2012 18:33:08 +0200
-Subject: [PATCH 460/611] spi: spi-sh-hspi: drop frees of devm_ alloc'd data
+Subject: [PATCH 460/675] spi: spi-sh-hspi: drop frees of devm_ alloc'd data
 
 devm free functions should not have to be explicitly used.
 

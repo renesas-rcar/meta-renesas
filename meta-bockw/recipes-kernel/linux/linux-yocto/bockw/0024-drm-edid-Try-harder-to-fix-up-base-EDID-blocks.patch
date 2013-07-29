@@ -1,7 +1,7 @@
 From 9fe148382bbd8b4d53785d83283908d455b6013c Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Mon, 16 Apr 2012 10:40:08 -0400
-Subject: [PATCH 024/611] drm/edid: Try harder to fix up base EDID blocks
+Subject: [PATCH 024/675] drm/edid: Try harder to fix up base EDID blocks
 
 Requiring the first byte of the EDID base block header to be 0 means we
 don't fix up as many transfer errors as we could.  Instead have the

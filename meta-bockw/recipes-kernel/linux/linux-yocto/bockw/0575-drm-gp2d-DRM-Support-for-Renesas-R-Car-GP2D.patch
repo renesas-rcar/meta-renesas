@@ -1,7 +1,7 @@
 From 2890d4d3e05bed67cb66a693d8ef52f848ffce62 Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Thu, 7 Mar 2013 15:53:06 +0900
-Subject: [PATCH 575/611] drm: gp2d: DRM Support for Renesas R-Car GP2D
+Subject: [PATCH 575/675] drm: gp2d: DRM Support for Renesas R-Car GP2D
 
 ---
  drivers/gpu/drm/Kconfig              |    2 +

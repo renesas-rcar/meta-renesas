@@ -1,7 +1,7 @@
 From 7f8b4f36345ba56639af7b08f4d62c7062ed8214 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Fri, 13 Apr 2012 16:31:39 -0300
-Subject: [PATCH 008/611] drm: add DRM_MODE_FLAG_DBLCLK to CEA modes requiring
+Subject: [PATCH 008/675] drm: add DRM_MODE_FLAG_DBLCLK to CEA modes requiring
  it
 
 CEA modes 6, 7, 8, 9, 21, 22, 23, 24, 44, 45, 50, 51, 54, 55, 58 and 59

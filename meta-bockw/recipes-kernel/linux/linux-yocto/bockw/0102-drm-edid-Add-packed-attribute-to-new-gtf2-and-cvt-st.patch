@@ -1,7 +1,7 @@
 From 8565401f1322e8dfb575d81db8bb7e4e5667a888 Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Mon, 23 Apr 2012 17:40:49 +0100
-Subject: [PATCH 102/611] drm/edid: Add packed attribute to new gtf2 and cvt
+Subject: [PATCH 102/675] drm/edid: Add packed attribute to new gtf2 and cvt
  structs
 
 The new structs added in struct detailed_data_monitor_range must be

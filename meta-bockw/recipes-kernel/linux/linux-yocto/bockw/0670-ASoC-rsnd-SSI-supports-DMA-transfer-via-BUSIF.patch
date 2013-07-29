@@ -1,0 +1,343 @@
+From 0318a9077c9f77a81fbad0d27782314d2c2a1a5a Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 24 Jul 2013 11:37:37 +0900
+Subject: [PATCH 670/675] ASoC: rsnd: SSI supports DMA transfer via BUSIF
+
+This patch adds BUSIF support for R-Car sound DMAEngine transfer.
+The sound data will be transferred via FIFO which can cover blank time
+which will happen when DMA channel is switching.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ include/sound/rcar_snd.h |   6 ++
+ sound/soc/sh/rcar/gen.c  |  10 ++-
+ sound/soc/sh/rcar/rsnd.h |   9 +++
+ sound/soc/sh/rcar/scu.c  | 154 ++++++++++++++++++++++++++++++++++++++++++++++-
+ sound/soc/sh/rcar/ssi.c  |  18 +++++-
+ 5 files changed, 190 insertions(+), 7 deletions(-)
+
+diff --git a/include/sound/rcar_snd.h b/include/sound/rcar_snd.h
+index a72687d..d35412a 100644
+--- a/include/sound/rcar_snd.h
++++ b/include/sound/rcar_snd.h
+@@ -36,6 +36,7 @@
+ #define RSND_SSI_CLK_PIN_SHARE		(1 << 31)
+ #define RSND_SSI_CLK_FROM_ADG		(1 << 30) /* clock parent is master */
+ #define RSND_SSI_SYNC			(1 << 29) /* SSI34_sync etc */
++#define RSND_SSI_DEPENDENT		(1 << 28) /* SSI needs SRU/SCU */
+ 
+ #define RSND_SSI_PLAY			(1 << 24)
+ 
+@@ -51,6 +52,11 @@ struct rsnd_ssi_platform_info {
+ 	u32 flags;
+ };
+ 
++/*
++ * flags
++ */
++#define RSND_SCU_USB_HPBIF		(1 << 31) /* it needs RSND_SSI_DEPENDENT */
++
+ struct rsnd_scu_platform_info {
+ 	u32 flags;
+ };
+diff --git a/sound/soc/sh/rcar/gen.c b/sound/soc/sh/rcar/gen.c
+index a49db66..80ef4c8 100644
+--- a/sound/soc/sh/rcar/gen.c
++++ b/sound/soc/sh/rcar/gen.c
+@@ -34,9 +34,6 @@ struct rsnd_gen {
+ 
+ #define rsnd_priv_to_gen(p)	((struct rsnd_gen *)(p)->gen)
+ 
+-#define rsnd_is_gen1(s)		((s)->info->flags & RSND_GEN1)
+-#define rsnd_is_gen2(s)		((s)->info->flags & RSND_GEN2)
+-
+ /*
+  *		Gen2
+  *		will be filled in the future
+@@ -115,8 +112,15 @@ static struct rsnd_gen_ops rsnd_gen1_ops = {
+ 
+ static void rsnd_gen1_reg_map_init(struct rsnd_gen *gen)
+ {
++	RSND_GEN1_REG_MAP(gen, SRU,	SRC_ROUTE_SEL,	0x0,	0x00);
++	RSND_GEN1_REG_MAP(gen, SRU,	SRC_TMG_SEL0,	0x0,	0x08);
++	RSND_GEN1_REG_MAP(gen, SRU,	SRC_TMG_SEL1,	0x0,	0x0c);
++	RSND_GEN1_REG_MAP(gen, SRU,	SRC_TMG_SEL2,	0x0,	0x10);
++	RSND_GEN1_REG_MAP(gen, SRU,	SRC_CTRL,	0x0,	0xc0);
+ 	RSND_GEN1_REG_MAP(gen, SRU,	SSI_MODE0,	0x0,	0xD0);
+ 	RSND_GEN1_REG_MAP(gen, SRU,	SSI_MODE1,	0x0,	0xD4);
++	RSND_GEN1_REG_MAP(gen, SRU,	BUSIF_MODE,	0x4,	0x20);
++	RSND_GEN1_REG_MAP(gen, SRU,	BUSIF_ADINR,	0x40,	0x214);
+ 
+ 	RSND_GEN1_REG_MAP(gen, ADG,	BRRA,		0x0,	0x00);
+ 	RSND_GEN1_REG_MAP(gen, ADG,	BRRB,		0x0,	0x04);
+diff --git a/sound/soc/sh/rcar/rsnd.h b/sound/soc/sh/rcar/rsnd.h
+index 15dccd5..9cc6986 100644
+--- a/sound/soc/sh/rcar/rsnd.h
++++ b/sound/soc/sh/rcar/rsnd.h
+@@ -32,8 +32,15 @@
+  */
+ enum rsnd_reg {
+ 	/* SRU/SCU */
++	RSND_REG_SRC_ROUTE_SEL,
++	RSND_REG_SRC_TMG_SEL0,
++	RSND_REG_SRC_TMG_SEL1,
++	RSND_REG_SRC_TMG_SEL2,
++	RSND_REG_SRC_CTRL,
+ 	RSND_REG_SSI_MODE0,
+ 	RSND_REG_SSI_MODE1,
++	RSND_REG_BUSIF_MODE,
++	RSND_REG_BUSIF_ADINR,
+ 
+ 	/* ADG */
+ 	RSND_REG_BRRA,
+@@ -213,6 +220,8 @@ int rsnd_gen_path_exit(struct rsnd_priv *priv,
+ void __iomem *rsnd_gen_reg_get(struct rsnd_priv *priv,
+ 			       struct rsnd_mod *mod,
+ 			       enum rsnd_reg reg);
++#define rsnd_is_gen1(s)		((s)->info->flags & RSND_GEN1)
++#define rsnd_is_gen2(s)		((s)->info->flags & RSND_GEN2)
+ 
+ /*
+  *	R-Car ADG
+diff --git a/sound/soc/sh/rcar/scu.c b/sound/soc/sh/rcar/scu.c
+index c12e65f..29837e3 100644
+--- a/sound/soc/sh/rcar/scu.c
++++ b/sound/soc/sh/rcar/scu.c
+@@ -15,6 +15,18 @@ struct rsnd_scu {
+ 	struct rsnd_mod mod;
+ };
+ 
++#define rsnd_scu_mode_flags(p) ((p)->info->flags)
++
++/*
++ * ADINR
++ */
++#define OTBL_24		(0 << 16)
++#define OTBL_22		(2 << 16)
++#define OTBL_20		(4 << 16)
++#define OTBL_18		(6 << 16)
++#define OTBL_16		(8 << 16)
++
++
+ #define rsnd_mod_to_scu(_mod)	\
+ 	container_of((_mod), struct rsnd_scu, mod)
+ 
+@@ -24,6 +36,116 @@ struct rsnd_scu {
+ 		     ((pos) = (struct rsnd_scu *)(priv)->scu + i);	\
+ 	     i++)
+ 
++static int rsnd_scu_set_route(struct rsnd_priv *priv,
++			      struct rsnd_mod *mod,
++			      struct rsnd_dai *rdai,
++			      struct rsnd_dai_stream *io)
++{
++	struct scu_route_config {
++		u32 mask;
++		int shift;
++	} routes[] = {
++		{ 0xF,  0, }, /* 0 */
++		{ 0xF,  4, }, /* 1 */
++		{ 0xF,  8, }, /* 2 */
++		{ 0x7, 12, }, /* 3 */
++		{ 0x7, 16, }, /* 4 */
++		{ 0x7, 20, }, /* 5 */
++		{ 0x7, 24, }, /* 6 */
++		{ 0x3, 28, }, /* 7 */
++		{ 0x3, 30, }, /* 8 */
++	};
++
++	u32 mask;
++	u32 val;
++	int shift;
++	int id;
++
++	/*
++	 * Gen1 only
++	 */
++	if (!rsnd_is_gen1(priv))
++		return 0;
++
++	id = rsnd_mod_id(mod);
++	if (id < 0 || id > ARRAY_SIZE(routes))
++		return -EIO;
++
++	/*
++	 * SRC_ROUTE_SELECT
++	 */
++	val = rsnd_dai_is_play(rdai, io) ? 0x1 : 0x2;
++	val = val		<< routes[id].shift;
++	mask = routes[id].mask	<< routes[id].shift;
++
++	rsnd_mod_bset(mod, SRC_ROUTE_SEL, mask, val);
++
++	/*
++	 * SRC_TIMING_SELECT
++	 */
++	shift	= (id % 4) * 8;
++	mask	= 0x1F << shift;
++	if (8 == id) /* SRU8 is very special */
++		val = id << shift;
++	else
++		val = (id + 1) << shift;
++
++	switch (id / 4) {
++	case 0:
++		rsnd_mod_bset(mod, SRC_TMG_SEL0, mask, val);
++		break;
++	case 1:
++		rsnd_mod_bset(mod, SRC_TMG_SEL1, mask, val);
++		break;
++	case 2:
++		rsnd_mod_bset(mod, SRC_TMG_SEL2, mask, val);
++		break;
++	}
++
++	return 0;
++}
++
++static int rsnd_scu_set_mode(struct rsnd_priv *priv,
++			     struct rsnd_mod *mod,
++			     struct rsnd_dai *rdai,
++			     struct rsnd_dai_stream *io)
++{
++	int id = rsnd_mod_id(mod);
++	u32 val;
++
++	if (rsnd_is_gen1(priv)) {
++		val = (1 << id);
++		rsnd_mod_bset(mod, SRC_CTRL, val, val);
++	}
++
++	return 0;
++}
++
++static int rsnd_scu_set_hpbif(struct rsnd_priv *priv,
++			      struct rsnd_mod *mod,
++			      struct rsnd_dai *rdai,
++			      struct rsnd_dai_stream *io)
++{
++	struct snd_pcm_runtime *runtime = rsnd_io_to_runtime(io);
++	u32 adinr = runtime->channels;
++
++	switch (runtime->sample_bits) {
++	case 16:
++		adinr |= OTBL_16;
++		break;
++	case 32:
++		adinr |= OTBL_24;
++		break;
++	default:
++		return -EIO;
++	}
++
++	rsnd_mod_write(mod, BUSIF_MODE, 1);
++	rsnd_mod_write(mod, BUSIF_ADINR, adinr);
++
++	return 0;
++}
++
+ static int rsnd_scu_init(struct rsnd_mod *mod,
+ 			 struct rsnd_dai *rdai,
+ 			 struct rsnd_dai_stream *io)
+@@ -53,9 +175,36 @@ static int rsnd_scu_start(struct rsnd_mod *mod,
+ 			  struct rsnd_dai_stream *io)
+ {
+ 	struct rsnd_priv *priv = rsnd_mod_to_priv(mod);
++	struct rsnd_scu *scu = rsnd_mod_to_scu(mod);
+ 	struct device *dev = rsnd_priv_to_dev(priv);
++	u32 flags = rsnd_scu_mode_flags(scu);
++	int ret;
++
++	/*
++	 * SCU will be used if it has RSND_SCU_USB_HPBIF flags
++	 */
++	if (!(flags & RSND_SCU_USB_HPBIF)) {
++		/* it use PIO transter */
++		dev_dbg(dev, "%s%d is not used\n",
++			rsnd_mod_name(mod), rsnd_mod_id(mod));
++
++		return 0;
++	}
++
++	/* it use DMA transter */
++	ret = rsnd_scu_set_route(priv, mod, rdai, io);
++	if (ret < 0)
++		return ret;
++
++	ret = rsnd_scu_set_mode(priv, mod, rdai, io);
++	if (ret < 0)
++		return ret;
+ 
+-	dev_dbg(dev, "%s.%d start\n", rsnd_mod_name(mod), rsnd_mod_id(mod));
++	ret = rsnd_scu_set_hpbif(priv, mod, rdai, io);
++	if (ret < 0)
++		return ret;
++
++	dev_dbg(dev, "%s%d start\n", rsnd_mod_name(mod), rsnd_mod_id(mod));
+ 
+ 	return 0;
+ }
+@@ -112,8 +261,9 @@ int rsnd_scu_probe(struct platform_device *pdev,
+ 		rsnd_mod_init(priv, &scu->mod,
+ 			      &rsnd_scu_ops, i);
+ 		scu->info = &info->scu_info[i];
+-	}
+ 
++		dev_dbg(dev, "SCU%d probed\n", i);
++	}
+ 	dev_dbg(dev, "scu probed\n");
+ 
+ 	return 0;
+diff --git a/sound/soc/sh/rcar/ssi.c b/sound/soc/sh/rcar/ssi.c
+index 2079ccf..fae26d3 100644
+--- a/sound/soc/sh/rcar/ssi.c
++++ b/sound/soc/sh/rcar/ssi.c
+@@ -104,6 +104,7 @@ struct rsnd_ssiu {
+ static void rsnd_ssi_mode_init(struct rsnd_priv *priv,
+ 			       struct rsnd_ssiu *ssiu)
+ {
++	struct device *dev = rsnd_priv_to_dev(priv);
+ 	struct rsnd_ssi *ssi;
+ 	u32 flags;
+ 	u32 val;
+@@ -113,8 +114,17 @@ static void rsnd_ssi_mode_init(struct rsnd_priv *priv,
+ 	 * SSI_MODE0
+ 	 */
+ 	ssiu->ssi_mode0 = 0;
+-	for_each_rsnd_ssi(ssi, priv, i)
+-		ssiu->ssi_mode0 |= (1 << i);
++	for_each_rsnd_ssi(ssi, priv, i) {
++		flags = rsnd_ssi_mode_flags(ssi);
++
++		/* see also BUSIF_MODE */
++		if (!(flags & RSND_SSI_DEPENDENT)) {
++			ssiu->ssi_mode0 |= (1 << i);
++			dev_dbg(dev, "SSI%d uses INDEPENDENT mode\n", i);
++		} else {
++			dev_dbg(dev, "SSI%d uses DEPENDENT mode\n", i);
++		}
++	}
+ 
+ 	/*
+ 	 * SSI_MODE1
+@@ -670,6 +680,8 @@ int rsnd_ssi_probe(struct platform_device *pdev,
+ 				dev_info(dev, "SSI DMA failed. try PIO transter\n");
+ 			else
+ 				ops	= &rsnd_ssi_dma_ops;
++
++			dev_dbg(dev, "SSI%d use DMA transfer\n", i);
+ 		}
+ 
+ 		/*
+@@ -687,6 +699,8 @@ int rsnd_ssi_probe(struct platform_device *pdev,
+ 			}
+ 
+ 			ops	= &rsnd_ssi_pio_ops;
++
++			dev_dbg(dev, "SSI%d use PIO transfer\n", i);
+ 		}
+ 
+ 		rsnd_mod_init(priv, &ssi->mod, ops, i);
+-- 
+1.8.2
+

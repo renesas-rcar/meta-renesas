@@ -1,7 +1,7 @@
 From bf9a7402592514d405c54cd8f091feb6c964ca45 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:18 +0100
-Subject: [PATCH 265/611] sh-pfc: Remove unused resource and num_resources
+Subject: [PATCH 265/675] sh-pfc: Remove unused resource and num_resources
  platform data fields
 
 The fields are now unused, remove them.

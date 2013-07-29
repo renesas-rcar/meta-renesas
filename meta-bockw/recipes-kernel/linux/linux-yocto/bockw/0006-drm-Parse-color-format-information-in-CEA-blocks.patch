@@ -1,7 +1,7 @@
 From 5d22c9ba2bd49599b3e7221f2833669d641f28c9 Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Mon, 16 Apr 2012 15:16:19 +0200
-Subject: [PATCH 006/611] drm: Parse color format information in CEA blocks
+Subject: [PATCH 006/675] drm: Parse color format information in CEA blocks
 
 The CEA extension block has a field which describes which YCbCr modes are
 supported by the device, use it to fill the drm_display_info color_formats

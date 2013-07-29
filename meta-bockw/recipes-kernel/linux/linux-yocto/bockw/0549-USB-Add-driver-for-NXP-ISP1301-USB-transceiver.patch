@@ -1,7 +1,7 @@
 From 3d37e630fd6f9c07bb7d797e3cac5f9ef51c1cfd Mon Sep 17 00:00:00 2001
 From: Roland Stigge <stigge@antcom.de>
 Date: Sun, 29 Apr 2012 16:47:04 +0200
-Subject: [PATCH 549/611] USB: Add driver for NXP ISP1301 USB transceiver
+Subject: [PATCH 549/675] USB: Add driver for NXP ISP1301 USB transceiver
 
 This new driver registers the NXP ISP1301 chip via the I2C subsystem.  The chip
 is the USB transceiver shared by ohci-nxp, lpc32xx_udc (gadget) and

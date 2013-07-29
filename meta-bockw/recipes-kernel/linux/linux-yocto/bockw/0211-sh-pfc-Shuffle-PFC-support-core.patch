@@ -1,7 +1,7 @@
 From b4d3c3bce8044d775ce71f57f25228016db7c6ad Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 10 Jul 2012 11:49:30 +0900
-Subject: [PATCH 211/611] sh: pfc: Shuffle PFC support core.
+Subject: [PATCH 211/675] sh: pfc: Shuffle PFC support core.
 
 This follows the intc/clk changes and shuffles the PFC support code under
 its own directory. This will facilitate better code sharing, and allow us

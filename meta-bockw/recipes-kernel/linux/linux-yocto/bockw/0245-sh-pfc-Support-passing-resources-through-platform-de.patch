@@ -1,7 +1,7 @@
 From 78e848a89f1abb8769681524f21851fc509a682e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:55 +0100
-Subject: [PATCH 245/611] sh-pfc: Support passing resources through platform
+Subject: [PATCH 245/675] sh-pfc: Support passing resources through platform
  device
 
 Resources should be passed through the platform device, not through

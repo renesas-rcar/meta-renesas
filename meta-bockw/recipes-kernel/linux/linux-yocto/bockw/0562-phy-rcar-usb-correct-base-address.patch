@@ -1,7 +1,7 @@
 From a2ac87d217323f2680ef4960ac26fe8b9891760d Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Thu, 6 Jun 2013 12:11:25 +0900
-Subject: [PATCH 562/611] phy-rcar-usb: correct base address
+Subject: [PATCH 562/675] phy-rcar-usb: correct base address
 
 The memory region that is used by the driver overlaps EHCI and OHCI  register
 regions for absolutely no reason now  -- fix it  by adding offset of 0x800 to

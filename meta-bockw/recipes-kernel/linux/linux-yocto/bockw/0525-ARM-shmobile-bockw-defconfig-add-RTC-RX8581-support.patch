@@ -1,7 +1,7 @@
 From 387e1cfe7839fb5831c82173a14d8f9bcf71d55a Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 16 May 2013 14:08:17 +0900
-Subject: [PATCH 525/611] ARM: shmobile: bockw defconfig: add RTC RX8581
+Subject: [PATCH 525/675] ARM: shmobile: bockw defconfig: add RTC RX8581
  support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>

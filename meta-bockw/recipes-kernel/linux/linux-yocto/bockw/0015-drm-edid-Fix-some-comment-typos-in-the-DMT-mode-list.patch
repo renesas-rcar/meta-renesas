@@ -1,7 +1,7 @@
 From ae8f61c285593fbd9a27e9133149efef94f32499 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:35 -0400
-Subject: [PATCH 015/611] drm/edid: Fix some comment typos in the DMT mode list
+Subject: [PATCH 015/675] drm/edid: Fix some comment typos in the DMT mode list
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>
 Tested-by: Takashi Iwai <tiwai@suse.de>

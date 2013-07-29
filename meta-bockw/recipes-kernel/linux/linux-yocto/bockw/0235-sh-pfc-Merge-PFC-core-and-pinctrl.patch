@@ -1,7 +1,7 @@
 From cb3cfc1335b4f42e0ef7ff383b4c6c225d14ed57 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:45 +0100
-Subject: [PATCH 235/611] sh-pfc: Merge PFC core and pinctrl
+Subject: [PATCH 235/675] sh-pfc: Merge PFC core and pinctrl
 
 The PFC core is only used by the pinctrl and gpio modules. As the gpio
 module depends on the pinctrl module, the pinctrl module will always be

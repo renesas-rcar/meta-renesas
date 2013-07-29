@@ -1,7 +1,7 @@
 From 5078e566e3aecf4787cf5e127f764b4b8d8b8d7d Mon Sep 17 00:00:00 2001
 From: Marek Vasut <marex@denx.de>
 Date: Tue, 4 Sep 2012 05:31:36 +0200
-Subject: [PATCH 476/611] mtd: m25p80: Disable 4KiB erase for s25sl032p,
+Subject: [PATCH 476/675] mtd: m25p80: Disable 4KiB erase for s25sl032p,
  s25sl064p
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

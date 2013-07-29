@@ -1,7 +1,7 @@
 From ddc45dd974d955044aa9dac1e51a627d5f77f9c4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:31 +0100
-Subject: [PATCH 334/611] ARM: shmobile: armadillo800eva: Use gpio_set_value()
+Subject: [PATCH 334/675] ARM: shmobile: armadillo800eva: Use gpio_set_value()
  to set GPIO value
 
 The GPIO is already configured as an output, there's no reason to use

@@ -1,7 +1,7 @@
 From 2093c803a432bae8f9f145b46c2024ded514e54e Mon Sep 17 00:00:00 2001
 From: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
 Date: Mon, 14 Jan 2013 14:12:36 -0500
-Subject: [PATCH 446/611] mmc: sh_mmcif: add support for bundled MMCIF IRQs
+Subject: [PATCH 446/675] mmc: sh_mmcif: add support for bundled MMCIF IRQs
 
 On newer SoCs like R-Mobile U2, MMCIF interrupts are bundled.
 

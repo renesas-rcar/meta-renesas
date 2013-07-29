@@ -1,0 +1,126 @@
+From 664fa44ed35a4d7f390b3bc5c31fd9d50d22ad95 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Mon, 22 Jul 2013 19:26:08 +0900
+Subject: [PATCH 643/675] Add support SpeedPulse register and pin function
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c          |  4 ++++
+ arch/arm/mach-shmobile/include/mach/r8a7778.h |  1 +
+ arch/arm/mach-shmobile/setup-r8a7778.c        | 20 ++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7778.c          | 13 +++++++++++++
+ 4 files changed, 38 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 5a9797b..eaa19ec 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -535,6 +535,9 @@ static const struct pinctrl_map bockw_pinctrl_map[] = {
+ 	/* PWM6 */
+ 	PIN_MAP_MUX_GROUP_DEFAULT("rcar-pwm.6", "pfc-r8a7778",
+ 				  "pwm6", "pwm6"),
++	/* GYRO-ADC/Speed Pluse */
++	PIN_MAP_MUX_GROUP_DEFAULT("rcar-gyro-adc-speed-pulse", "pfc-r8a7778",
++				  "adc_sp", "adc_sp"),
+ };
+ 
+ static struct platform_device *bockw_devices[] __initdata = {
+@@ -563,6 +566,7 @@ static void __init bockw_init(void)
+ 	r8a7778_add_gp2d_device();
+ 	r8a7778_add_pwm_device();
+ 	r8a7778_add_wdt_device(&rcar_wdt_config);
++	r8a7778_add_adc_sp_device();
+ 	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 0,
+ 				      &iclink0_ml86v7667,
+ 				      sizeof(iclink0_ml86v7667));
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7778.h b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+index 388081a..2c04454 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7778.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7778.h
+@@ -47,6 +47,7 @@ extern void r8a7778_add_du_device(struct rcar_du_platform_data *info);
+ extern void r8a7778_add_gp2d_device(void);
+ extern void r8a7778_add_pwm_device(void);
+ extern void r8a7778_add_wdt_device(struct rcar_wdt_platform_config *config);
++extern void r8a7778_add_adc_sp_device(void);
+ 
+ extern void r8a7778_init_late(void);
+ extern void r8a7778_init_delay(void);
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index a7325d1..adc7ad4 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -718,6 +718,26 @@ void __init r8a7778_add_wdt_device(struct rcar_wdt_platform_config *config)
+ 	platform_device_register_full(&pdevinfo);
+ }
+ 
++/* GYRO-ADC/Speed Pluse */
++static struct resource adc_sp_resources[] __initdata = {
++	DEFINE_RES_MEM(0xffc5a000, 0x74),
++	DEFINE_RES_MEM(0xffc5b000, 0x11c),
++	DEFINE_RES_IRQ(gic_iid(0x8d)),
++};
++
++void __init r8a7778_add_adc_sp_device(void)
++{
++	struct platform_device_info pdevinfo = {
++		.parent		= &platform_bus,
++		.name		= "rcar-gyro-adc-speed-pulse",
++		.id		= -1,
++		.res		= adc_sp_resources,
++		.num_res	= ARRAY_SIZE(adc_sp_resources),
++	};
++
++	platform_device_register_full(&pdevinfo);
++}
++
+ void __init r8a7778_add_standard_devices(void)
+ {
+ 	int i;
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7778.c b/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
+index 02635cc..cf17cc6 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7778.c
+@@ -1784,6 +1784,13 @@ DU_PFC_DISP(du0_disp,		DU0_DISP);
+ PWM_PFC_PIN(pwm6,		RCAR_GP_PIN(4, 20));
+ PWM_PFC_MUX(pwm6,		PWM6);
+ 
++/* - GYRO-ADC/Speed Pluse macros ------------------------------------------- */
++#define ADC_SP_PFC_PIN(name, inputpin)		SH_PFC_PINS(name, inputpin)
++#define ADC_SP_PFC_MUX(name, inputpin)		SH_PFC_MUX1(name, inputpin)
++/* - PWM ------------------------------------------------------------------- */
++ADC_SP_PFC_PIN(adc_sp,		RCAR_GP_PIN(3, 23));
++ADC_SP_PFC_MUX(adc_sp,		SPEEDIN);
++
+ static const struct sh_pfc_pin_group pinmux_groups[] = {
+ 	SH_PFC_PIN_GROUP(audio_clk_a),
+ 	SH_PFC_PIN_GROUP(audio_clk_b),
+@@ -1911,6 +1918,7 @@ static const struct sh_pfc_pin_group pinmux_groups[] = {
+ 	SH_PFC_PIN_GROUP(du0_sync),
+ 	SH_PFC_PIN_GROUP(du0_disp),
+ 	SH_PFC_PIN_GROUP(pwm6),
++	SH_PFC_PIN_GROUP(adc_sp),
+ };
+ 
+ static const char * const audio_clk_groups[] = {
+@@ -2124,6 +2132,10 @@ static const char * const pwm6_groups[] = {
+ 	"pwm6",
+ };
+ 
++static const char * const adc_sp_groups[] = {
++	"adc_sp",
++};
++
+ static const struct sh_pfc_function pinmux_functions[] = {
+ 	SH_PFC_FUNCTION(audio_clk),
+ 	SH_PFC_FUNCTION(ether),
+@@ -2153,6 +2165,7 @@ static const struct sh_pfc_function pinmux_functions[] = {
+ 	SH_PFC_FUNCTION(vin1),
+ 	SH_PFC_FUNCTION(du0),
+ 	SH_PFC_FUNCTION(pwm6),
++	SH_PFC_FUNCTION(adc_sp),
+ };
+ 
+ static struct pinmux_cfg_reg pinmux_config_regs[] = {
+-- 
+1.8.2
+

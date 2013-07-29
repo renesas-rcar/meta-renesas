@@ -1,7 +1,7 @@
 From 6e3b0d4a7c39fd52f3a9315733adbe1368e6ffc9 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:33 -0400
-Subject: [PATCH 013/611] drm/edid:
+Subject: [PATCH 013/675] drm/edid:
  s/drm_gtf_modes_for_range/drm_dmt_modes_for_range/
 
 Slightly more honest naming.

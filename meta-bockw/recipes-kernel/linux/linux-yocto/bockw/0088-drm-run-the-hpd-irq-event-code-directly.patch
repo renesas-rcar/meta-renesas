@@ -1,7 +1,7 @@
 From 48633115422b1ec248fae3a61395edbd318bc251 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:34 +0000
-Subject: [PATCH 088/611] drm: run the hpd irq event code directly
+Subject: [PATCH 088/675] drm: run the hpd irq event code directly
 
 All drivers already have a work item to run the hpd code, so we don't
 need to launch a new one in the helper code. Dave Airlie mentioned

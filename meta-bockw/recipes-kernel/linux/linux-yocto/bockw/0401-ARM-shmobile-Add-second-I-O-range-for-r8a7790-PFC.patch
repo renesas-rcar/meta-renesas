@@ -1,7 +1,7 @@
 From 3fab502ac417e6e958d97c7b60f2b8355b5b1e30 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Mon, 8 Apr 2013 11:08:44 +0900
-Subject: [PATCH 401/611] ARM: shmobile: Add second I/O range for r8a7790 PFC
+Subject: [PATCH 401/675] ARM: shmobile: Add second I/O range for r8a7790 PFC
 
 Add the GPIO I/O memory range to the r8a7790 PFC device.
 

@@ -1,7 +1,7 @@
 From bb52f6b33a0c675b376d44142d9a3e623fb84e6a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:38 +0100
-Subject: [PATCH 282/611] sh-pfc: Add sh7785 pinmux support
+Subject: [PATCH 282/675] sh-pfc: Add sh7785 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>

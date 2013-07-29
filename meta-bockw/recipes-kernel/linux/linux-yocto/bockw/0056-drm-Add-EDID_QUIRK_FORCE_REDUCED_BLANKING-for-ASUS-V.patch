@@ -1,7 +1,7 @@
 From 8d172d8a543590052775dbb20b1f9cb1ca2b0abf Mon Sep 17 00:00:00 2001
 From: Paul Menzel <paulepanter@users.sourceforge.net>
 Date: Wed, 8 Aug 2012 23:12:19 +0200
-Subject: [PATCH 056/611] drm: Add EDID_QUIRK_FORCE_REDUCED_BLANKING for ASUS
+Subject: [PATCH 056/675] drm: Add EDID_QUIRK_FORCE_REDUCED_BLANKING for ASUS
  VW222S
 
 Connecting an ASUS VW222S [1] over VGA a garbled screen is shown with

@@ -1,7 +1,7 @@
 From a43e2bdcc1714e07669601389ea60ceedb12104e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:41 +0100
-Subject: [PATCH 232/611] sh: shx3: Fix last GPIO index
+Subject: [PATCH 232/675] sh: shx3: Fix last GPIO index
 
 A careless look at the code shows that the last entry in the
 pinmux_gpios seems to be GPIO_FN_IRQOUT. However, entries are ordered by

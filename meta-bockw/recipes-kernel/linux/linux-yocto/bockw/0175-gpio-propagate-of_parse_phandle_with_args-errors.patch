@@ -1,7 +1,7 @@
 From a39bdbf12f5b9a1b3de3f2879d15f10b84cccf78 Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Fri, 29 Jun 2012 13:57:59 +0900
-Subject: [PATCH 175/611] gpio: propagate of_parse_phandle_with_args errors
+Subject: [PATCH 175/675] gpio: propagate of_parse_phandle_with_args errors
 
 Make of_get_named_gpio_flags propagate any error it receives from
 of_parse_phandle_with_args instead of inconditionally returning -EINVAL.

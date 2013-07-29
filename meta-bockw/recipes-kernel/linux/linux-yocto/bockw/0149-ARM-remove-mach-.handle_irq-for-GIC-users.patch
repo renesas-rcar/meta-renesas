@@ -1,7 +1,7 @@
 From 770b2b411eb350c7c15f33fe9fbeafb6ba01f64a Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Tue, 20 Nov 2012 19:52:32 -0600
-Subject: [PATCH 149/611] ARM: remove mach .handle_irq for GIC users
+Subject: [PATCH 149/675] ARM: remove mach .handle_irq for GIC users
 
 Now that the GIC initialization sets up the handle_arch_irq pointer, we
 can remove it for all machines and make it static.

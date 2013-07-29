@@ -1,7 +1,7 @@
 From 2f87a25ddd92a811f383e8591c529da7cc9b2875 Mon Sep 17 00:00:00 2001
 From: Russell King <rmk+kernel@arm.linux.org.uk>
 Date: Wed, 30 Jan 2013 23:49:57 +0000
-Subject: [PATCH 110/611] ARM: GIC: fix GIC cpumask initialization
+Subject: [PATCH 110/675] ARM: GIC: fix GIC cpumask initialization
 
 Punit Agrawal reports:
 > I was trying to boot 3.8-rc5 on Realview EB 11MPCore using

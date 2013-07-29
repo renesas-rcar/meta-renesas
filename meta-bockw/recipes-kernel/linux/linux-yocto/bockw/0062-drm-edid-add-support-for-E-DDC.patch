@@ -1,7 +1,7 @@
 From 6d12feb9a6053e824bc47d2bf8add87ad3526982 Mon Sep 17 00:00:00 2001
 From: Shirish S <s.shirish@samsung.com>
 Date: Thu, 30 Aug 2012 07:04:06 +0000
-Subject: [PATCH 062/611] drm: edid: add support for E-DDC
+Subject: [PATCH 062/675] drm: edid: add support for E-DDC
 
 The current logic for probing ddc is limited to
 2 blocks (256 bytes), this patch adds support

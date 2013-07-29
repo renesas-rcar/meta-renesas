@@ -1,7 +1,7 @@
 From e11746a2de15d562b74f6a82e50777bf705a5567 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:17 +0100
-Subject: [PATCH 264/611] sh-pfc: Remove platform device registration
+Subject: [PATCH 264/675] sh-pfc: Remove platform device registration
 
 The PFC platform device is now registered by arch code, remove the
 legacy registration mechanism.

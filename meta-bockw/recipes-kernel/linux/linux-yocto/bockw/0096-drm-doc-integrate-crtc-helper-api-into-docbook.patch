@@ -1,7 +1,7 @@
 From ce9b1b3469ebcda213db306102942febdbb0b026 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:16 +0100
-Subject: [PATCH 096/611] drm/doc: integrate crtc helper api into docbook
+Subject: [PATCH 096/675] drm/doc: integrate crtc helper api into docbook
 
 - Add the missing doc for drm_helper_move_panel_connectors_to_head.
 - Fixup any outdated stuff in existing sections. I've only looked at

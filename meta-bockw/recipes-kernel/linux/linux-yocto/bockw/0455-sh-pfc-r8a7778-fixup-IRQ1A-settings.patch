@@ -1,7 +1,7 @@
 From a8f87aaae2689b50c86f5feea91aa20012fb232c Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 13 May 2013 21:10:17 -0700
-Subject: [PATCH 455/611] sh-pfc: r8a7778: fixup IRQ1A settings
+Subject: [PATCH 455/675] sh-pfc: r8a7778: fixup IRQ1A settings
 
 IP2[31] func2 is IRQ1A, not IRQ3A
 

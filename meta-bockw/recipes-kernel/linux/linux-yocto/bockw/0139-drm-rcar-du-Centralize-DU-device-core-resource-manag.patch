@@ -1,7 +1,7 @@
 From ac97ef7949384e16f177935e78acf388892d16e1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 10:30:17 +0100
-Subject: [PATCH 139/611] drm/rcar-du: Centralize DU device core resource
+Subject: [PATCH 139/675] drm/rcar-du: Centralize DU device core resource
  management
 
 Create reference-counted get/put handlers for the DU device. The get()

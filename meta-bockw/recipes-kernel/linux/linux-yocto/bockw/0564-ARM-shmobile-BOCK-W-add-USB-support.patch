@@ -1,7 +1,7 @@
 From b73324ba0b8e81d2fb72b1f51b491a2e7bfcb5ec Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Thu, 6 Jun 2013 10:18:37 +0900
-Subject: [PATCH 564/611] ARM: shmobile: BOCK-W: add USB support
+Subject: [PATCH 564/675] ARM: shmobile: BOCK-W: add USB support
 
 Register the USB PHY device from bockw_init(), passing the platform  data to it.
 Set machine's init_late() method to r8a7778_init_late() in order for [EO]HCI to

@@ -1,7 +1,7 @@
 From f88fed12df45295758ee56eda5c01bca12ef7a84 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:51 +0100
-Subject: [PATCH 241/611] sh-pfc: Remove check for impossible error condition
+Subject: [PATCH 241/675] sh-pfc: Remove check for impossible error condition
 
 The pfc pointer can't be NULL in the get and set value functions, remove
 the error check.

@@ -1,7 +1,7 @@
 From c5885195b5496165183a2d821b2d6ebda92718b2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 28 Nov 2012 19:22:18 +0100
-Subject: [PATCH 313/611] sh-pfc: Make struct pinmux_gpio enum_id field const
+Subject: [PATCH 313/675] sh-pfc: Make struct pinmux_gpio enum_id field const
 
 This ensures that the field is not modified, which is a prerequisite for
 the rest of the PFC refactoring work.

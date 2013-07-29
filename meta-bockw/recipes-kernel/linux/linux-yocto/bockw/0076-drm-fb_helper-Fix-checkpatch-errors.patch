@@ -1,7 +1,7 @@
 From 5e74f7b44947a1b619ad966b05690e85b73ac6c4 Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Thu, 15 Nov 2012 03:43:28 +0000
-Subject: [PATCH 076/611] drm/fb_helper: Fix checkpatch errors
+Subject: [PATCH 076/675] drm/fb_helper: Fix checkpatch errors
 
 Fixes the following checkpatch errors:
 ERROR: trailing statements should be on next line

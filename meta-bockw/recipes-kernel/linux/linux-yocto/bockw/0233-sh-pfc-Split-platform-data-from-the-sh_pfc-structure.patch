@@ -1,7 +1,7 @@
 From e64038175ef7b5c259db6640c8531aa3581c48ab Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:43 +0100
-Subject: [PATCH 233/611] sh-pfc: Split platform data from the sh_pfc structure
+Subject: [PATCH 233/675] sh-pfc: Split platform data from the sh_pfc structure
 
 Create a sh_pfc_platform_data structure to store platform data and
 reference it from the core sh_pfc structure.

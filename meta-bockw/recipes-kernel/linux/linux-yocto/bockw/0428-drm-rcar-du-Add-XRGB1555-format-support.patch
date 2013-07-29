@@ -1,7 +1,7 @@
 From 78d297b11f727cab161374801ff8251f8b3dbb5d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 28 Mar 2013 13:10:31 +0100
-Subject: [PATCH 428/611] drm/rcar-du: Add XRGB1555 format support
+Subject: [PATCH 428/675] drm/rcar-du: Add XRGB1555 format support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit ab636bbf14d93ba96002af8bf06cdace1e1f6531)

@@ -1,7 +1,7 @@
 From 3de41da05c886ecab35a1dc3965630e9b1645656 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:05 +0000
-Subject: [PATCH 073/611] drm: Constify some function arguments
+Subject: [PATCH 073/675] drm: Constify some function arguments
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

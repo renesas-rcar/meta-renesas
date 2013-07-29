@@ -1,7 +1,7 @@
 From 41388e869c6281a7a1e48d98f619428ff7945912 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:36 +0000
-Subject: [PATCH 090/611] drm: don't start the poll engine in
+Subject: [PATCH 090/675] drm: don't start the poll engine in
  probe_single_connector
 
 Actually there's a reason this stuff is there, and it's called

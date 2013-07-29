@@ -1,7 +1,7 @@
 From 93902e7ffabffe16a5d82244b811df10061c43f0 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 16 Apr 2013 22:17:42 -0700
-Subject: [PATCH 516/611] ARM: shmobile: bockw: define FPGA address and rename
+Subject: [PATCH 516/675] ARM: shmobile: bockw: define FPGA address and rename
  iomem variable
 
 Bock-W board will needs more board specific ioremap() method.

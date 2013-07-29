@@ -1,7 +1,7 @@
 From 835ead88a3e474f3c0bb09de21cb9333a4f1613c Mon Sep 17 00:00:00 2001
 From: Viresh Kumar <viresh.kumar@st.com>
 Date: Thu, 29 Mar 2012 11:03:27 +0530
-Subject: [PATCH 154/611] Documentation: pinctrl: add missing spi0_0 grp in
+Subject: [PATCH 154/675] Documentation: pinctrl: add missing spi0_0 grp in
  example
 
 Missed one group from the documentation when proofreading.

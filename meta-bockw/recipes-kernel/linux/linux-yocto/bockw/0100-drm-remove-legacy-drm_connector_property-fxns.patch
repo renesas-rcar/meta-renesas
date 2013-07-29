@@ -1,7 +1,7 @@
 From fa5d3fa0785c087ec8f0a5a4d7cf141bd21d6105 Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 11 Oct 2012 20:50:56 -0500
-Subject: [PATCH 100/611] drm: remove legacy drm_connector_property fxns
+Subject: [PATCH 100/675] drm: remove legacy drm_connector_property fxns
 
 Replace references to and remove the connector property fxns, which
 have been superseded with the more general object property fxns:

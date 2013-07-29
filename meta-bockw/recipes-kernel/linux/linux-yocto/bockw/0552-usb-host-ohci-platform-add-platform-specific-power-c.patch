@@ -1,7 +1,7 @@
 From 2da3a337010ad65e7233c418883c326ecd9e55bd Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 6 Aug 2012 18:09:10 -0700
-Subject: [PATCH 552/611] usb: host: ohci-platform: add platform specific power
+Subject: [PATCH 552/675] usb: host: ohci-platform: add platform specific power
  callback
 
 This patch enables to call platform specific power callback function.

@@ -1,7 +1,7 @@
 From 8cb8c0d625ee41cdf50bf17a4bfd3ee8a85e1bee Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:32 +0100
-Subject: [PATCH 276/611] sh-pfc: Add sh7720 pinmux support
+Subject: [PATCH 276/675] sh-pfc: Add sh7720 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>

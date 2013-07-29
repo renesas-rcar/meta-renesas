@@ -1,7 +1,7 @@
 From 2d3bcdf2c394d4bdacb85cdc656b4e44dfa85f61 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 10:25:07 +0100
-Subject: [PATCH 205/611] pinctrl: Declare operation structures as const
+Subject: [PATCH 205/675] pinctrl: Declare operation structures as const
 
 The pinconf, pinctrl and pinmux operation structures hold function
 pointers that are never modified. Declare them as const.

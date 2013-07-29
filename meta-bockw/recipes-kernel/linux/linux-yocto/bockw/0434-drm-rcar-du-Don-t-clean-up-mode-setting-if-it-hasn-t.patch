@@ -1,7 +1,7 @@
 From fe08fa4f6d82bebafe5f5e664964db4df17a4cfa Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 17 Apr 2013 10:58:09 +0200
-Subject: [PATCH 434/611] drm/rcar-du: Don't clean up mode setting if it hasn't
+Subject: [PATCH 434/675] drm/rcar-du: Don't clean up mode setting if it hasn't
  been initialized
 
 When no error cleanup is required return the error code directly. This

@@ -1,7 +1,7 @@
 From d7de420206eb7c12cbfb3c3a64d8286622428799 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 18 Oct 2012 10:15:23 +0200
-Subject: [PATCH 070/611] drm: rename drm_dp_i2c_helper.c to drm_dp_helper.c
+Subject: [PATCH 070/675] drm: rename drm_dp_i2c_helper.c to drm_dp_helper.c
 
 I want to move some dp link training helpers into this place, so in
 the future this won't be just about i2c any longer.

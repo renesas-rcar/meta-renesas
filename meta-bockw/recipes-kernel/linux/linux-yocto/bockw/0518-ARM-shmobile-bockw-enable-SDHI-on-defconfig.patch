@@ -1,7 +1,7 @@
 From 8f311c0fc5cbf38bd41c66bf025790661985f0d0 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 16 Apr 2013 22:18:11 -0700
-Subject: [PATCH 518/611] ARM: shmobile: bockw: enable SDHI on defconfig
+Subject: [PATCH 518/675] ARM: shmobile: bockw: enable SDHI on defconfig
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>

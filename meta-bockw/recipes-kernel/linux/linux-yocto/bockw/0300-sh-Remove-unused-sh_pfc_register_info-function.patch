@@ -1,7 +1,7 @@
 From f19b9aeb320508b35999b57b209fb7f4167f86ba Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:53 +0100
-Subject: [PATCH 300/611] sh: Remove unused sh_pfc_register_info() function
+Subject: [PATCH 300/675] sh: Remove unused sh_pfc_register_info() function
 
 All boards use sh_pfc_register() directly, remove the unused
 sh_pfc_register_info() function.

@@ -1,7 +1,7 @@
 From 478741fd6ee620c04d2c759009f91d9cb716c5cb Mon Sep 17 00:00:00 2001
 From: Teppei Kamijou <teppei.kamijou.yb@renesas.com>
 Date: Wed, 12 Dec 2012 15:38:05 +0100
-Subject: [PATCH 445/611] mmc: sh_mmcif: force to fail CMD52 immediately
+Subject: [PATCH 445/675] mmc: sh_mmcif: force to fail CMD52 immediately
 
 mmc_rescan() sends CMD52 (SD_IO_RW_DIRECT) to reset SDIO card during
 card detection. CMD52 should be ignored by SD/eMMC cards, but we can

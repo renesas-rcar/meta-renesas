@@ -1,7 +1,7 @@
 From 4c11b2ccdad06b179a1d054313dde2b1c1529884 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 25 Dec 2012 22:52:33 -0800
-Subject: [PATCH 531/611] ASoC: simple-card: use struct device pointer for
+Subject: [PATCH 531/675] ASoC: simple-card: use struct device pointer for
  dev_xxx()
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>

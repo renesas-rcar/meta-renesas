@@ -1,7 +1,7 @@
 From ad6401a5648f8c123d2ce7c1320ec18994054646 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 20 Mar 2013 13:14:55 +0100
-Subject: [PATCH 137/611] drm/rcar-du: Fix crash when disabling an already
+Subject: [PATCH 137/675] drm/rcar-du: Fix crash when disabling an already
  disabled plane
 
 The plane disable code tries to dereference a NULL pointer if the plane

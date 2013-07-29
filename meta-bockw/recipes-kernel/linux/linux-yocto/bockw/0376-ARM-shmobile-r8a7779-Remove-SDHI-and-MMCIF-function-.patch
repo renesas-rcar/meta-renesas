@@ -1,7 +1,7 @@
 From 9fcbd8cd540be7842ed8a229db09632a7d2ccb4f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:38:10 +0100
-Subject: [PATCH 376/611] ARM: shmobile: r8a7779: Remove SDHI and MMCIF
+Subject: [PATCH 376/675] ARM: shmobile: r8a7779: Remove SDHI and MMCIF
  function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and

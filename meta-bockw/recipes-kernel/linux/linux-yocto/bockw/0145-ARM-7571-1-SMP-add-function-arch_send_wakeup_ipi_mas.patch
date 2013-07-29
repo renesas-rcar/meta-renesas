@@ -1,7 +1,7 @@
 From 4d3d055b045a8285cfff10c470905fcd35a69a83 Mon Sep 17 00:00:00 2001
 From: Shawn Guo <shawn.guo@linaro.org>
 Date: Tue, 6 Nov 2012 03:48:40 +0100
-Subject: [PATCH 145/611] ARM: 7571/1: SMP: add function
+Subject: [PATCH 145/675] ARM: 7571/1: SMP: add function
  arch_send_wakeup_ipi_mask()
 
 Add function arch_send_wakeup_ipi_mask(), so that platform code can

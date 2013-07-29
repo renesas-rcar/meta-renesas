@@ -1,7 +1,7 @@
 From c83e12250d3a5716ef60597e501a87e43424ffba Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:37 -0400
-Subject: [PATCH 101/611] drm/edid: Update range descriptor struct for EDID 1.4
+Subject: [PATCH 101/675] drm/edid: Update range descriptor struct for EDID 1.4
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>
 Tested-by: Takashi Iwai <tiwai@suse.de>

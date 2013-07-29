@@ -1,7 +1,7 @@
 From 8336861a38bfa03ce56d59300e8d755458673e5d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:58:48 +0100
-Subject: [PATCH 374/611] sh-pfc: r8a7779: Remove INTC function GPIOS
+Subject: [PATCH 374/675] sh-pfc: r8a7779: Remove INTC function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the INTC pins,
 the corresponding function GPIOS are unused. Remove them.

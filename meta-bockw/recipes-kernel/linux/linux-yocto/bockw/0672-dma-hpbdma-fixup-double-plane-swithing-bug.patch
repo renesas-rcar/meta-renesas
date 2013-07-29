@@ -1,0 +1,29 @@
+From e6170b1a2656c0baaafcd44655d05ad06910caeb Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 22 Jul 2013 13:16:55 +0900
+Subject: [PATCH 672/675] dma: hpbdma: fixup double plane swithing bug
+
+double plane should be started from A plane
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ drivers/dma/sh/rcar-hpbdma.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/dma/sh/rcar-hpbdma.c b/drivers/dma/sh/rcar-hpbdma.c
+index bd38daa..55aa5b1 100644
+--- a/drivers/dma/sh/rcar-hpbdma.c
++++ b/drivers/dma/sh/rcar-hpbdma.c
+@@ -837,6 +837,9 @@ static int hpb_dmae_control(struct dma_chan *chan, enum dma_ctrl_cmd cmd,
+ 
+ 	dmae_halt(hpb_chan);
+ 
++	g_plane_cnt[hpb_chan->id] = PLANE_ON;
++	g_desc_flag[hpb_chan->id] = PLANE_ON;
++
+ 	spin_lock_bh(&hpb_chan->desc_lock);
+ 	if (!list_empty(&hpb_chan->ld_queue)) {
+ 		/* Record partial transfer */
+-- 
+1.8.2
+

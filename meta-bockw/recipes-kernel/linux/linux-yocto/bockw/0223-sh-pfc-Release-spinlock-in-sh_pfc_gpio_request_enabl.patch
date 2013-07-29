@@ -1,7 +1,7 @@
 From 56a85b92c42cdd0e58167347177bf04f4718af7a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 14 Sep 2012 20:25:48 +0200
-Subject: [PATCH 223/611] sh: pfc: Release spinlock in
+Subject: [PATCH 223/675] sh: pfc: Release spinlock in
  sh_pfc_gpio_request_enable() error path
 
 The sh_pfc_gpio_request_enable() function acquires a spinlock but fails

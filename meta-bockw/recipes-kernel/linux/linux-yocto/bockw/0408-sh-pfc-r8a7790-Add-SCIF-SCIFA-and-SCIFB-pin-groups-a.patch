@@ -1,7 +1,7 @@
 From 41c1f4b3f58ca20fce642ac78cad4cb8966dcb0f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:16 +0200
-Subject: [PATCH 408/611] sh-pfc: r8a7790: Add SCIF, SCIFA and SCIFB pin groups
+Subject: [PATCH 408/675] sh-pfc: r8a7790: Add SCIF, SCIFA and SCIFB pin groups
  and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>

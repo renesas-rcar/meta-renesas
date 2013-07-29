@@ -1,7 +1,7 @@
 From 50c5369fd82a2f9c9ec27a27b60c5ce8ceb60e3a Mon Sep 17 00:00:00 2001
 From: Krzysztof Mazur <krzysiek@podlesie.net>
 Date: Fri, 22 Feb 2013 15:51:05 +0100
-Subject: [PATCH 486/611] mtd: m25p80: introduce SST_WRITE flag for SST byte
+Subject: [PATCH 486/675] mtd: m25p80: introduce SST_WRITE flag for SST byte
  programming
 
 Not all SST devices implement the SST byte programming command.

@@ -1,7 +1,7 @@
 From a328d661c0694471ad031401a6065f99a6375431 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 28 Mar 2013 13:10:50 +0100
-Subject: [PATCH 429/611] drm/rcar-du: Add plane property to set global alpha
+Subject: [PATCH 429/675] drm/rcar-du: Add plane property to set global alpha
  value
 
 The global alpha value is only valid in the XRGB1555 format.

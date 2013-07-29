@@ -1,7 +1,7 @@
-From 64996eb1e05daa9589a78e3d2d6dcab8dba6ec5f Mon Sep 17 00:00:00 2001
+From cec95ed50a2f3977dfac429090c416a9b0cb3199 Mon Sep 17 00:00:00 2001
 From: Yusuke Goda <yusuke.goda.sx@renesas.com>
 Date: Tue, 11 Jun 2013 19:54:58 +0900
-Subject: [PATCH 591/611] ARM: shmobile: r8a7778: add MERAM clock support
+Subject: [PATCH 591/675] ARM: shmobile: r8a7778: add MERAM clock support
 
 Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
 ---

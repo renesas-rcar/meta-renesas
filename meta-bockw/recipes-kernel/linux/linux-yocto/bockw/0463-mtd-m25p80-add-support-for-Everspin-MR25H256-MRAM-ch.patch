@@ -1,7 +1,7 @@
 From 9722199c8a1fbcfcb08b8f23e85356076651fd14 Mon Sep 17 00:00:00 2001
 From: Marek Vasut <marex@denx.de>
 Date: Tue, 1 May 2012 04:04:00 +0200
-Subject: [PATCH 463/611] mtd: m25p80: add support for Everspin MR25H256 MRAM
+Subject: [PATCH 463/675] mtd: m25p80: add support for Everspin MR25H256 MRAM
  chip
 
 This chip isn't JEDEC-compatible.

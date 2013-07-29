@@ -1,7 +1,7 @@
 From bb19ed7580fa649dc943b773f253f8e529b7904b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:58:48 +0100
-Subject: [PATCH 373/611] sh-pfc: r8a7779: Remove LBSC function GPIOS
+Subject: [PATCH 373/675] sh-pfc: r8a7779: Remove LBSC function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the LBSC pins,
 the corresponding function GPIOS are unused. Remove them.

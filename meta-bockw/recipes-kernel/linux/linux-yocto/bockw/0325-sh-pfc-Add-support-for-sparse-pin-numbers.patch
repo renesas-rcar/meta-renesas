@@ -1,7 +1,7 @@
 From 0380edc0af358f83a5ea95d05d68870bfdeead75 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 15 Feb 2013 01:33:38 +0100
-Subject: [PATCH 325/611] sh-pfc: Add support for sparse pin numbers
+Subject: [PATCH 325/675] sh-pfc: Add support for sparse pin numbers
 
 The PFC driver assumes that the value of the GPIO_PORTxxx enumeration
 names are equal to the port number. This isn't true when the port number

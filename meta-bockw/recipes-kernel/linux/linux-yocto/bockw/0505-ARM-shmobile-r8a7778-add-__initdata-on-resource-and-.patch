@@ -1,7 +1,7 @@
 From a0d3301a9965cd9ff8a0fded334f585301acc172 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Sun, 26 May 2013 17:53:37 -0700
-Subject: [PATCH 505/611] ARM: shmobile: r8a7778: add __initdata on resource
+Subject: [PATCH 505/675] ARM: shmobile: r8a7778: add __initdata on resource
  and device data
 
 These data will be kmemdup()'ed on

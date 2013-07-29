@@ -1,7 +1,7 @@
 From 22b1bab382012d2b84bd5969b767129ee6103d41 Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Wed, 17 Apr 2013 01:35:09 +0400
-Subject: [PATCH 521/611] ARM: shmobile: BOCK-W: enable USB in defconfig
+Subject: [PATCH 521/675] ARM: shmobile: BOCK-W: enable USB in defconfig
 
 Enable USB platform EHCI/OHCI and common PHY drivers in 'bockw_defconfig'.
 Enable USB storage driver and SCSI disk driver that it needs as well...

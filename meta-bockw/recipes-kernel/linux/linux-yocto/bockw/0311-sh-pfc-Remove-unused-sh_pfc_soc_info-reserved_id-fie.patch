@@ -1,7 +1,7 @@
 From 8b92be75e7b2616e10c7c1b110e38db081fa422b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 16:18:24 +0100
-Subject: [PATCH 311/611] sh-pfc: Remove unused sh_pfc_soc_info reserved_id
+Subject: [PATCH 311/675] sh-pfc: Remove unused sh_pfc_soc_info reserved_id
  field
 
 The field is unused, remove it.

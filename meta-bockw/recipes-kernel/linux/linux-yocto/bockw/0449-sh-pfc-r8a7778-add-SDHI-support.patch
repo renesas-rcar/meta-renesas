@@ -1,7 +1,7 @@
 From c759d23d4e6507c5bb120bca30920dc1b78d234e Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 18 Apr 2013 20:08:23 -0700
-Subject: [PATCH 449/611] sh-pfc: r8a7778: add SDHI support
+Subject: [PATCH 449/675] sh-pfc: r8a7778: add SDHI support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>

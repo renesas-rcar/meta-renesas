@@ -1,7 +1,7 @@
 From 51567926d9c1f08713a432dc38826745ddc2dcf9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 13 Mar 2013 18:18:30 +0100
-Subject: [PATCH 355/611] sh-pfc: Return an error if a pin doesn't support the
+Subject: [PATCH 355/675] sh-pfc: Return an error if a pin doesn't support the
  requested direction
 
 When setting a pin direction verify that the requested direction is

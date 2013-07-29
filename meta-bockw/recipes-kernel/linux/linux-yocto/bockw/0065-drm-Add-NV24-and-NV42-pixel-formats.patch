@@ -1,7 +1,7 @@
 From 96422efbfbcb70f1580111700f08b979a81fc3b1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 18 May 2012 23:47:40 +0200
-Subject: [PATCH 065/611] drm: Add NV24 and NV42 pixel formats
+Subject: [PATCH 065/675] drm: Add NV24 and NV42 pixel formats
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 (cherry picked from commit ba623f6a5a419ac31806e77682da38a9f9b5b462)

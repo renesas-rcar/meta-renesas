@@ -1,0 +1,73 @@
+From 6fdb0c7c813007e45efb7a756f0a809ff1791520 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Mon, 22 Jul 2013 21:31:39 +0900
+Subject: [PATCH 598/675] ARM: shmobile: r8a7778: add VPU support
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7778.c | 37 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index e934112..7c9e57a 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -550,11 +550,47 @@ static struct platform_device vio_device = {
+ 	.num_resources	= ARRAY_SIZE(vio_resources),
+ };
+ 
++/* VPU5HD */
++static unsigned int vpu_regions[] = {
++	(105 << 20),
++};
++
++static struct uio_dmem_genirq_pdata vpu_platform_data = {
++	.uioinfo = {
++		.name		= "VPU5HD2",
++		.version	= "0",
++		.irq		= gic_iid(0x99),
++	},
++	.dynamic_region_sizes	= vpu_regions,
++	.num_dynamic_regions	= ARRAY_SIZE(vpu_regions),
++};
++
++static struct resource vpu_resources[] = {
++	[0] = {
++		.name	= "VPU_REG",
++		.start	= 0xFD000000,
++		.end	= 0xFD000157,
++		.flags	= IORESOURCE_MEM,
++	},
++};
++
++static struct platform_device vpu_device = {
++	.name		= "uio_dmem_genirq",
++	.id		= 1,
++	.dev		= {
++		.platform_data		= &vpu_platform_data,
++		.coherent_dma_mask	= ~0,
++	},
++	.resource	= vpu_resources,
++	.num_resources	= ARRAY_SIZE(vpu_resources),
++};
++
+ static struct platform_device *r8a7778_devices[] __initdata = {
+ 	&ipmmu_device,
+ 	&vpc_device,
+ 	&meram_device,
+ 	&vio_device,
++	&vpu_device,
+ };
+ 
+ void __init r8a7778_add_standard_devices(void)
+@@ -703,6 +739,7 @@ static struct platform_device *r8a7778_early_devices[] __initdata = {
+ void __init r8a7778_reserve_memory(void)
+ {
+ 	dma_declare_contiguous(&vio_device.dev, 8 << 20, 0, 0);
++	dma_declare_contiguous(&vpu_device.dev, 105 << 20, 0, 0);
+ }
+ 
+ void __init r8a7778_init_delay(void)
+-- 
+1.8.2
+

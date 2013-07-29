@@ -1,7 +1,7 @@
 From ffc35ef65e2975e917881f73a773b2b6fd35e87d Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 8 Apr 2013 23:54:16 -0700
-Subject: [PATCH 513/611] ARM: shmobile: bockw: add CN9 SCIF/RCAN selection
+Subject: [PATCH 513/675] ARM: shmobile: bockw: add CN9 SCIF/RCAN selection
  dipswitch explanation
 
 Debug serial (= SCIF0) is connected to CN9 upper side,

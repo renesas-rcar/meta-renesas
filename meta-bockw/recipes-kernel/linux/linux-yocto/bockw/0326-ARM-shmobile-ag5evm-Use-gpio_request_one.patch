@@ -1,7 +1,7 @@
 From 48c0f82681b62af133818f4d8a60e2a2e6aa750c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:28 +0100
-Subject: [PATCH 326/611] ARM: shmobile: ag5evm: Use gpio_request_one()
+Subject: [PATCH 326/675] ARM: shmobile: ag5evm: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().

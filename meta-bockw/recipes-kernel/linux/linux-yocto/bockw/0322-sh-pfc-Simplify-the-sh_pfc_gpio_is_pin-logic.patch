@@ -1,7 +1,7 @@
 From 88d0ac7594ab9d699912896825e5a951ee3eaa38 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 14 Feb 2013 22:12:11 +0100
-Subject: [PATCH 322/611] sh-pfc: Simplify the sh_pfc_gpio_is_pin() logic
+Subject: [PATCH 322/675] sh-pfc: Simplify the sh_pfc_gpio_is_pin() logic
 
 The function is guaranteed to be called with a gpio number smaller than
 nr_pins. The condition can the be simplified, and the function inlined.

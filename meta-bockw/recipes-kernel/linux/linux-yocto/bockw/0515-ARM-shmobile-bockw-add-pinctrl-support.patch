@@ -1,7 +1,7 @@
 From e376dc6c2b2b4c97d352e75d8c6b0186daf3d9c2 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 12 Apr 2013 05:38:03 +0000
-Subject: [PATCH 515/611] ARM: shmobile: bockw: add pinctrl support
+Subject: [PATCH 515/675] ARM: shmobile: bockw: add pinctrl support
 
 SCIF0 support as 1st step
 

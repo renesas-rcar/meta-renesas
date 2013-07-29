@@ -1,7 +1,7 @@
 From 90fe4c43bc53c67717e245775377f9c65450e971 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 14 Feb 2013 17:36:56 +0100
-Subject: [PATCH 321/611] sh-pfc: Use pinmux identifiers in the pin muxing API
+Subject: [PATCH 321/675] sh-pfc: Use pinmux identifiers in the pin muxing API
 
 The PFC core exposes a sh_pfc_config_gpio() function that configures
 pinmuxing for a given GPIO (either a real GPIO or a function GPIO).

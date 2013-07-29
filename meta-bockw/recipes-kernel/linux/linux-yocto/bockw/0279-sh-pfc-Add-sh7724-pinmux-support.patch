@@ -1,7 +1,7 @@
 From 50d3674c2e5523e013ed430cd1f5f24fad72907b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:35 +0100
-Subject: [PATCH 279/611] sh-pfc: Add sh7724 pinmux support
+Subject: [PATCH 279/675] sh-pfc: Add sh7724 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>

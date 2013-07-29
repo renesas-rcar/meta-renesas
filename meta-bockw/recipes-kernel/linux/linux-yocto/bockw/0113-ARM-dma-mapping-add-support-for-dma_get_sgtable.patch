@@ -1,7 +1,7 @@
 From 46485fc0de04e2f8484ea1bd7b8feb798983ee18 Mon Sep 17 00:00:00 2001
 From: Marek Szyprowski <m.szyprowski@samsung.com>
 Date: Wed, 13 Jun 2012 10:01:15 +0200
-Subject: [PATCH 113/611] ARM: dma-mapping: add support for dma_get_sgtable()
+Subject: [PATCH 113/675] ARM: dma-mapping: add support for dma_get_sgtable()
 
 This patch adds support for dma_get_sgtable() function which is required
 to let drivers to share the buffers allocated by DMA-mapping subsystem.

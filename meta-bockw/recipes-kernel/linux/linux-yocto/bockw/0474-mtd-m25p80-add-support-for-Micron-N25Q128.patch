@@ -1,7 +1,7 @@
 From 56734780b2f08688f85593d8ef741618f8071f73 Mon Sep 17 00:00:00 2001
 From: Jan Luebbe <jlu@pengutronix.de>
 Date: Fri, 24 Aug 2012 18:23:50 +0200
-Subject: [PATCH 474/611] mtd: m25p80: add support for Micron N25Q128
+Subject: [PATCH 474/675] mtd: m25p80: add support for Micron N25Q128
 
 Signed-off-by: Jan Luebbe <jlu@pengutronix.de>
 Signed-off-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>

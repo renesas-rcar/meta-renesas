@@ -1,7 +1,7 @@
 From e27230c8a055504d6c1004e78a18ca1580192f0a Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 17 May 2012 02:23:27 -0600
-Subject: [PATCH 040/611] drm: add plane properties
+Subject: [PATCH 040/675] drm: add plane properties
 
 The omapdrm driver uses this for setting per-overlay rotation.  It
 is likely also useful for setting YUV->RGB colorspace conversion

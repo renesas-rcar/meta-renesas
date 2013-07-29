@@ -1,7 +1,7 @@
 From c012e6ddd238289dae4b7aaa7fdaadc11c24801e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:59:26 +0100
-Subject: [PATCH 379/611] ARM: shmobile: r8a7779: Remove USB function GPIOs
+Subject: [PATCH 379/675] ARM: shmobile: r8a7779: Remove USB function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.

@@ -1,7 +1,7 @@
 From c743b5aa3fd7ecee7be31bad72fcc32dff3e5b2a Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Sun, 2 Jun 2013 01:42:26 +0400
-Subject: [PATCH 558/611] phy-rcar-usb: remove EHCI internal buffer setup
+Subject: [PATCH 558/675] phy-rcar-usb: remove EHCI internal buffer setup
 
 Now that the EHCI internal  buffer setup is done by the platform code,  we  can
 remove  such code from this driver as it  never  really belonged here.  We also

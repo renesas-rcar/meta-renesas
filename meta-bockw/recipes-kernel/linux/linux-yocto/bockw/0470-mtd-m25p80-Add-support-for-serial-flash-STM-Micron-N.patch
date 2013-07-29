@@ -1,7 +1,7 @@
 From 6e0a3049a36c23afdb28ad8d687ce916c6a1eae3 Mon Sep 17 00:00:00 2001
 From: Knut Wohlrab <knut.wohlrab@de.bosch.com>
 Date: Tue, 17 Jul 2012 15:45:53 +0200
-Subject: [PATCH 470/611] mtd: m25p80: Add support for serial flash STM/Micron
+Subject: [PATCH 470/675] mtd: m25p80: Add support for serial flash STM/Micron
  N25Q032
 
 Signed-off-by: Knut Wohlrab <knut.wohlrab@de.bosch.com>

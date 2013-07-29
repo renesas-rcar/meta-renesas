@@ -1,7 +1,7 @@
 From a6f72baf1a5610a88974b8eab2f1a108e3fe8eeb Mon Sep 17 00:00:00 2001
 From: Richard Genoud <richard.genoud@gmail.com>
 Date: Fri, 10 Aug 2012 16:53:49 +0200
-Subject: [PATCH 159/611] trivial: pinctrl core: remove extraneous code lines
+Subject: [PATCH 159/675] trivial: pinctrl core: remove extraneous code lines
 
 In function pinctrl_get_locked, pointer p is returned on
 error, and also return on no_error.

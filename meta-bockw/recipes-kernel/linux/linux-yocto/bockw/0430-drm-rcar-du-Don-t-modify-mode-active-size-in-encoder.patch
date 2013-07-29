@@ -1,7 +1,7 @@
 From 00ae9afdf359af82b39dd9da240c5c209f256e0b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 3 Apr 2013 14:45:39 +0200
-Subject: [PATCH 430/611] drm/rcar-du: Don't modify mode active size in encoder
+Subject: [PATCH 430/675] drm/rcar-du: Don't modify mode active size in encoder
  fixup
 
 The mode fixup operation isn't allowed to modify the mode active size.

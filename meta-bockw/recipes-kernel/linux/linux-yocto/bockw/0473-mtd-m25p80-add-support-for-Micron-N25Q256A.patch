@@ -1,7 +1,7 @@
 From feadeab4b73f2eb2799dcccad622aedc01156823 Mon Sep 17 00:00:00 2001
 From: Vivien Didelot <vivien.didelot@savoirfairelinux.com>
 Date: Tue, 14 Aug 2012 15:24:07 -0400
-Subject: [PATCH 473/611] mtd: m25p80: add support for Micron N25Q256A
+Subject: [PATCH 473/675] mtd: m25p80: add support for Micron N25Q256A
 
 The manufacturer datasheet can be found on the Micron website,
 under the name n25q_256mb_3v_65nm.pdf:

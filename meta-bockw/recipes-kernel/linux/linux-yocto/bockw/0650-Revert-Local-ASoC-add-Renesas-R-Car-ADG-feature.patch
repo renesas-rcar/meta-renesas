@@ -1,0 +1,418 @@
+From 40d0970fa6b69a0d71091ecf5237d115333a7786 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 19 Jul 2013 11:09:18 +0900
+Subject: [PATCH 650/675] Revert "Local: ASoC: add Renesas R-Car ADG feature"
+
+This reverts commit 8af2fda2b521a89b2f161f4252ba6d592a816e61.
+---
+ include/sound/rcar_snd.h   |   4 +-
+ sound/soc/sh/rcar/Makefile |   2 +-
+ sound/soc/sh/rcar/adg.c    | 234 ---------------------------------------------
+ sound/soc/sh/rcar/core.c   |   5 -
+ sound/soc/sh/rcar/gen.c    |  20 +---
+ sound/soc/sh/rcar/rsnd.h   |  27 ------
+ 6 files changed, 4 insertions(+), 288 deletions(-)
+ delete mode 100644 sound/soc/sh/rcar/adg.c
+
+diff --git a/include/sound/rcar_snd.h b/include/sound/rcar_snd.h
+index 6babd6f..01f2e45 100644
+--- a/include/sound/rcar_snd.h
++++ b/include/sound/rcar_snd.h
+@@ -15,12 +15,10 @@
+ #include <linux/sh_clk.h>
+ 
+ #define RSND_GEN1_SRU	0
+-#define RSND_GEN1_ADG	1
+ 
+ #define RSND_GEN2_SRU	0
+-#define RSND_GEN2_ADG	1
+ 
+-#define RSND_BASE_MAX	2
++#define RSND_BASE_MAX	1
+ 
+ struct rsnd_scu_platform_info {
+ 	u32 flags;
+diff --git a/sound/soc/sh/rcar/Makefile b/sound/soc/sh/rcar/Makefile
+index c11280c..112b2cf 100644
+--- a/sound/soc/sh/rcar/Makefile
++++ b/sound/soc/sh/rcar/Makefile
+@@ -1,2 +1,2 @@
+-snd-soc-rcar-objs	:= core.o gen.o scu.o adg.o
++snd-soc-rcar-objs	:= core.o gen.o scu.o
+ obj-$(CONFIG_SND_SOC_RCAR)	+= snd-soc-rcar.o
+\ No newline at end of file
+diff --git a/sound/soc/sh/rcar/adg.c b/sound/soc/sh/rcar/adg.c
+deleted file mode 100644
+index 8fcf990..0000000
+--- a/sound/soc/sh/rcar/adg.c
++++ /dev/null
+@@ -1,234 +0,0 @@
+-/*
+- * Helper routines for R-Car sound ADG.
+- *
+- *  Copyright (C) 2013  Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+- *
+- * This file is subject to the terms and conditions of the GNU General Public
+- * License.  See the file "COPYING" in the main directory of this archive
+- * for more details.
+- */
+-#include <linux/sh_clk.h>
+-#include <mach/clock.h>
+-#include "rsnd.h"
+-
+-#define CLKA	0
+-#define CLKB	1
+-#define CLKC	2
+-#define CLKI	3
+-#define CLKMAX	4
+-
+-struct rsnd_adg {
+-	struct clk *clk[CLKMAX];
+-
+-	int rate_of_441khz_div_6;
+-	int rate_of_48khz_div_6;
+-};
+-
+-#define for_each_rsnd_clk(pos, adg, i)		\
+-	for (i = 0, (pos) = adg->clk[i];	\
+-	     i < CLKMAX;			\
+-	     i++, (pos) = adg->clk[i])
+-#define rsnd_priv_to_adg(priv) (struct rsnd_adg *)priv->adg
+-
+-static enum rsnd_reg rsnd_adg_ssi_reg_get(int id)
+-{
+-	enum rsnd_reg reg;
+-
+-	/*
+-	 * SSI 8 is not connected to ADG.
+-	 * it works with SSI 7
+-	 */
+-	if (id == 8)
+-		return RSND_REG_MAX;
+-
+-	if (0 <= id && id <= 3)
+-		reg = RSND_REG_AUDIO_CLK_SEL0;
+-	else if (4 <= id && id <= 7)
+-		reg = RSND_REG_AUDIO_CLK_SEL1;
+-	else
+-		reg = RSND_REG_AUDIO_CLK_SEL2;
+-
+-	return reg;
+-}
+-
+-int rsnd_adg_ssi_clk_stop(struct rsnd_mod *mod)
+-{
+-	struct rsnd_priv *priv = rsnd_mod_to_priv(mod);
+-	enum rsnd_reg reg;
+-	int id;
+-
+-	/*
+-	 * "mod" = "ssi" here.
+-	 * we can get "ssi id" from mod
+-	 */
+-	id  = rsnd_mod_id(mod);
+-	reg = rsnd_adg_ssi_reg_get(id);
+-
+-	rsnd_write(priv, mod, reg, 0);
+-
+-	return 0;
+-}
+-
+-int rsnd_adg_ssi_clk_try_start(struct rsnd_mod *mod, unsigned int rate)
+-{
+-	struct rsnd_priv *priv = rsnd_mod_to_priv(mod);
+-	struct rsnd_adg *adg = rsnd_priv_to_adg(priv);
+-	struct device *dev = rsnd_priv_to_dev(priv);
+-	struct clk *clk;
+-	enum rsnd_reg reg;
+-	int id, shift, i;
+-	u32 data;
+-	int sel_table[] = {
+-		[CLKA] = 0x1,
+-		[CLKB] = 0x2,
+-		[CLKC] = 0x3,
+-		[CLKI] = 0x0,
+-	};
+-
+-	dev_dbg(dev, "request clock = %d\n", rate);
+-
+-	/*
+-	 * find suitable clock from
+-	 * AUDIO_CLKA/AUDIO_CLKB/AUDIO_CLKC/AUDIO_CLKI.
+-	 */
+-	data = 0;
+-	for_each_rsnd_clk(clk, adg, i) {
+-		if (rate == clk_get_rate(clk)) {
+-			data = sel_table[i];
+-			goto found_clock;
+-		}
+-	}
+-
+-	/*
+-	 * find 1/6 clock from BRGA/BRGB
+-	 */
+-	if (rate == adg->rate_of_441khz_div_6) {
+-		data = 0x10;
+-		goto found_clock;
+-	}
+-
+-	if (rate == adg->rate_of_48khz_div_6) {
+-		data = 0x20;
+-		goto found_clock;
+-	}
+-
+-	return -EIO;
+-
+-found_clock:
+-
+-	/*
+-	 * This "mod" = "ssi" here.
+-	 * we can get "ssi id" from mod
+-	 */
+-	id  = rsnd_mod_id(mod);
+-	reg = rsnd_adg_ssi_reg_get(id);
+-
+-	dev_dbg(dev, "ADG: ssi%d selects clk%d = %d", id, i, rate);
+-
+-	/*
+-	 * Enable SSIx clock
+-	 */
+-	shift = (id % 4) * 8;
+-
+-	rsnd_bset(priv, mod, reg,
+-		   0xFF << shift,
+-		   data << shift);
+-
+-	return 0;
+-}
+-
+-static void rsnd_adg_ssi_clk_init(struct rsnd_priv *priv, struct rsnd_adg *adg)
+-{
+-	struct clk *clk;
+-	unsigned long rate;
+-	u32 ckr;
+-	int i;
+-	int brg_table[] = {
+-		[CLKA] = 0x0,
+-		[CLKB] = 0x1,
+-		[CLKC] = 0x4,
+-		[CLKI] = 0x2,
+-	};
+-
+-	/*
+-	 * This driver is assuming that AUDIO_CLKA/AUDIO_CLKB/AUDIO_CLKC
+-	 * have 44.1kHz or 48kHz base clocks for now.
+-	 *
+-	 * SSI itself can divide parent clock by 1/1 - 1/16
+-	 * So,  BRGA outputs 44.1kHz base parent clock 1/32,
+-	 * and, BRGB outputs 48.0kHz base parent clock 1/32 here.
+-	 * see
+-	 *	rsnd_adg_ssi_clk_try_start()
+-	 */
+-	ckr = 0;
+-	adg->rate_of_441khz_div_6 = 0;
+-	adg->rate_of_48khz_div_6  = 0;
+-	for_each_rsnd_clk(clk, adg, i) {
+-		rate = clk_get_rate(clk);
+-
+-		if (0 == rate) /* not used */
+-			continue;
+-
+-		/* RBGA */
+-		if (!adg->rate_of_441khz_div_6 && (0 == rate % 44100)) {
+-			adg->rate_of_441khz_div_6 = rate / 6;
+-			ckr |= brg_table[i] << 20;
+-		}
+-
+-		/* RBGB */
+-		if (!adg->rate_of_48khz_div_6 && (0 == rate % 48000)) {
+-			adg->rate_of_48khz_div_6 = rate / 6;
+-			ckr |= brg_table[i] << 16;
+-		}
+-	}
+-
+-	rsnd_priv_bset(priv, SSICKR, 0x00FF0000, ckr);
+-	rsnd_priv_write(priv, BRRA,  0x00000002); /* 1/6 */
+-	rsnd_priv_write(priv, BRRB,  0x00000002); /* 1/6 */
+-}
+-
+-int rsnd_adg_probe(struct platform_device *pdev,
+-		   struct rcar_snd_info *info,
+-		   struct rsnd_priv *priv)
+-{
+-	struct rsnd_adg *adg;
+-	struct device *dev = rsnd_priv_to_dev(priv);
+-	struct clk *clk;
+-	int i;
+-
+-	adg = devm_kzalloc(dev, sizeof(*adg), GFP_KERNEL);
+-	if (!adg) {
+-		dev_err(dev, "ADG allocate failed\n");
+-		return -ENOMEM;
+-	}
+-
+-	adg->clk[CLKA] = clk_get(NULL, "audio_clk_a");
+-	adg->clk[CLKB] = clk_get(NULL, "audio_clk_b");
+-	adg->clk[CLKC] = clk_get(NULL, "audio_clk_c");
+-	adg->clk[CLKI] = clk_get(NULL, "audio_clk_internal");
+-	for_each_rsnd_clk(clk, adg, i) {
+-		if (IS_ERR(clk)) {
+-			dev_err(dev, "Audio clock failed\n");
+-			return -EIO;
+-		}
+-	}
+-
+-	rsnd_adg_ssi_clk_init(priv, adg);
+-
+-	priv->adg = adg;
+-
+-	dev_dbg(dev, "adg probed\n");
+-
+-	return 0;
+-}
+-
+-void rsnd_adg_remove(struct platform_device *pdev,
+-		     struct rsnd_priv *priv)
+-{
+-	struct rsnd_adg *adg = priv->adg;
+-	struct clk *clk;
+-	int i;
+-
+-	for_each_rsnd_clk(clk, adg, i)
+-		clk_put(clk);
+-}
+diff --git a/sound/soc/sh/rcar/core.c b/sound/soc/sh/rcar/core.c
+index 2dfd97f..b53fd0e 100644
+--- a/sound/soc/sh/rcar/core.c
++++ b/sound/soc/sh/rcar/core.c
+@@ -627,10 +627,6 @@ static int rsnd_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = rsnd_adg_probe(pdev, info, priv);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/*
+ 	 *	asoc register
+ 	 */
+@@ -669,7 +665,6 @@ static int rsnd_remove(struct platform_device *pdev)
+ 	/*
+ 	 *	remove each module
+ 	 */
+-	rsnd_adg_remove(pdev, priv);
+ 	rsnd_scu_remove(pdev, priv);
+ 	rsnd_dai_remove(pdev, priv);
+ 	rsnd_gen_remove(pdev, priv);
+diff --git a/sound/soc/sh/rcar/gen.c b/sound/soc/sh/rcar/gen.c
+index 22e30da..888ffc4 100644
+--- a/sound/soc/sh/rcar/gen.c
++++ b/sound/soc/sh/rcar/gen.c
+@@ -128,15 +128,6 @@ static void rsnd_gen1_reg_map_init(struct rsnd_gen *gen)
+ {
+ 	RSND_GEN1_REG_MAP(gen, SRU,	SSI_MODE0,	0x0,	0xD0);
+ 	RSND_GEN1_REG_MAP(gen, SRU,	SSI_MODE1,	0x0,	0xD4);
+-
+-	RSND_GEN1_REG_MAP(gen, ADG,	BRRA,		0x0,	0x00);
+-	RSND_GEN1_REG_MAP(gen, ADG,	BRRB,		0x0,	0x04);
+-	RSND_GEN1_REG_MAP(gen, ADG,	SSICKR,		0x0,	0x08);
+-	RSND_GEN1_REG_MAP(gen, ADG,	AUDIO_CLK_SEL0,	0x0,	0x0c);
+-	RSND_GEN1_REG_MAP(gen, ADG,	AUDIO_CLK_SEL1,	0x0,	0x10);
+-	RSND_GEN1_REG_MAP(gen, ADG,	AUDIO_CLK_SEL3,	0x0,	0x18);
+-	RSND_GEN1_REG_MAP(gen, ADG,	AUDIO_CLK_SEL4,	0x0,	0x1c);
+-	RSND_GEN1_REG_MAP(gen, ADG,	AUDIO_CLK_SEL5,	0x0,	0x20);
+ }
+ 
+ static int rsnd_gen1_probe(struct platform_device *pdev,
+@@ -146,15 +137,12 @@ static int rsnd_gen1_probe(struct platform_device *pdev,
+ 	struct device *dev = rsnd_priv_to_dev(priv);
+ 	struct rsnd_gen *gen = rsnd_priv_to_gen(priv);
+ 	struct resource *sru_res;
+-	struct resource *adg_res;
+ 
+ 	/*
+ 	 * map address
+ 	 */
+ 	sru_res	= platform_get_resource(pdev, IORESOURCE_MEM, RSND_GEN1_SRU);
+-	adg_res = platform_get_resource(pdev, IORESOURCE_MEM, RSND_GEN1_ADG);
+-	if (!sru_res ||
+-	    !adg_res) {
++	if (!sru_res) {
+ 		dev_err(dev, "Not enough SRU/SSI/ADG platform resources.\n");
+ 		return -ENODEV;
+ 	}
+@@ -162,9 +150,7 @@ static int rsnd_gen1_probe(struct platform_device *pdev,
+ 	gen->ops = &rsnd_gen1_ops;
+ 
+ 	gen->base[RSND_GEN1_SRU] = devm_ioremap_resource(dev, sru_res);
+-	gen->base[RSND_GEN1_ADG] = devm_ioremap_resource(dev, adg_res);
+-	if (!gen->base[RSND_GEN1_SRU] ||
+-	    !gen->base[RSND_GEN1_ADG]) {
++	if (!gen->base[RSND_GEN1_SRU]) {
+ 		dev_err(dev, "SRU/SSI/ADG ioremap failed\n");
+ 		return -ENODEV;
+ 	}
+@@ -174,8 +160,6 @@ static int rsnd_gen1_probe(struct platform_device *pdev,
+ 	dev_dbg(dev, "Gen1 device probed\n");
+ 	dev_dbg(dev, "SRU : %08x => %p\n",	sru_res->start,
+ 						gen->base[RSND_GEN1_SRU]);
+-	dev_dbg(dev, "ADG : %08x => %p\n",	adg_res->start,
+-						gen->base[RSND_GEN1_ADG]);
+ 
+ 	return 0;
+ }
+diff --git a/sound/soc/sh/rcar/rsnd.h b/sound/soc/sh/rcar/rsnd.h
+index 5edf445..67a161c 100644
+--- a/sound/soc/sh/rcar/rsnd.h
++++ b/sound/soc/sh/rcar/rsnd.h
+@@ -32,17 +32,6 @@ enum rsnd_reg {
+ 	RSND_REG_SSI_MODE0,
+ 	RSND_REG_SSI_MODE1,
+ 
+-	/* ADG */
+-	RSND_REG_BRRA,
+-	RSND_REG_BRRB,
+-	RSND_REG_SSICKR,
+-	RSND_REG_AUDIO_CLK_SEL0,
+-	RSND_REG_AUDIO_CLK_SEL1,
+-	RSND_REG_AUDIO_CLK_SEL2,
+-	RSND_REG_AUDIO_CLK_SEL3,
+-	RSND_REG_AUDIO_CLK_SEL4,
+-	RSND_REG_AUDIO_CLK_SEL5,
+-
+ 	RSND_REG_MAX,
+ };
+ 
+@@ -170,17 +159,6 @@ void __iomem* rsnd_gen_reg_get(struct rsnd_priv *priv,
+ 			       enum rsnd_reg reg);
+ 
+ /*
+- *	R-Car ADG
+- */
+-int rsnd_adg_ssi_clk_stop(struct rsnd_mod *mod);
+-int rsnd_adg_ssi_clk_try_start(struct rsnd_mod *mod, unsigned int rate);
+-int rsnd_adg_probe(struct platform_device *pdev,
+-		   struct rcar_snd_info *info,
+-		   struct rsnd_priv *priv);
+-void rsnd_adg_remove(struct platform_device *pdev,
+-		   struct rsnd_priv *priv);
+-
+-/*
+  *	R-Car sound priv
+  */
+ struct rsnd_priv {
+@@ -201,11 +179,6 @@ struct rsnd_priv {
+ 	int scu_nr;
+ 
+ 	/*
+-	 * below value will be filled on rsnd_adg_probe()
+-	 */
+-	void *adg;
+-
+-	/*
+ 	 * below value will be filled on rsnd_dai_probe()
+ 	 */
+ 	struct snd_soc_dai_driver *daidrv;
+-- 
+1.8.2
+

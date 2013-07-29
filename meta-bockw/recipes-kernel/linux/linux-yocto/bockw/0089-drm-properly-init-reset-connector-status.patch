@@ -1,7 +1,7 @@
 From 2d8209953377d6ec4c79d2f159343585382a48fb Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:35 +0000
-Subject: [PATCH 089/611] drm: properly init/reset connector status
+Subject: [PATCH 089/675] drm: properly init/reset connector status
 
 This can help drivers to make somewhat intelligent decisions in their
 ->detect callback: If the connector is hpd capable and in the unknown

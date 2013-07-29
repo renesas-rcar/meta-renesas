@@ -1,7 +1,7 @@
 From a8f1bd667b5cad5faa738876dbb17966a1eb24ff Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:39 +0100
-Subject: [PATCH 230/611] sh: sh7786: Fix port E, G and J GPIOs
+Subject: [PATCH 230/675] sh: sh7786: Fix port E, G and J GPIOs
 
 The port E, G and J GPIOs don't match the SoC datasheet (they seem to
 have been copied from the SH7785). Fix them.

@@ -1,7 +1,7 @@
 From 5cdbc4c2396b62c75b02a7a484aca25bc69a3e32 Mon Sep 17 00:00:00 2001
 From: Stephen Warren <swarren@nvidia.com>
 Date: Fri, 13 Apr 2012 10:49:06 -0600
-Subject: [PATCH 170/611] pinctrl: allow pctldevs to decode pin config in
+Subject: [PATCH 170/675] pinctrl: allow pctldevs to decode pin config in
  debugfs
 
 Add a pinconf op so that pin controller drivers can decode their pin

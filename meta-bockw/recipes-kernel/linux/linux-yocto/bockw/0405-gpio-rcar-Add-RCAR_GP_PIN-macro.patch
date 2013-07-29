@@ -1,7 +1,7 @@
 From c21da60ee4ca766fafdde5a18ee127559adbaaa2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:13 +0200
-Subject: [PATCH 405/611] gpio-rcar: Add RCAR_GP_PIN macro
+Subject: [PATCH 405/675] gpio-rcar: Add RCAR_GP_PIN macro
 
 Pins are numbered in the R-Car family documentation using a bank number
 and a pin number in the bank. As the Linux pin number space is linear,

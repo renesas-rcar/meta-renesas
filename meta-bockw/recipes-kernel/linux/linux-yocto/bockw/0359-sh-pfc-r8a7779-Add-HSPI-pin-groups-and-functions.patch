@@ -1,7 +1,7 @@
 From a84da16af92e14a3294ceeeaefa42cad2a77e9c4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 19:04:43 +0100
-Subject: [PATCH 359/611] sh-pfc: r8a7779: Add HSPI pin groups and functions
+Subject: [PATCH 359/675] sh-pfc: r8a7779: Add HSPI pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>

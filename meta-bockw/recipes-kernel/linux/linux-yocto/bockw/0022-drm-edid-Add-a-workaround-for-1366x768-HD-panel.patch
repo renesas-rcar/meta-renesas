@@ -1,7 +1,7 @@
 From eaaba3a41d88376b660b21977dfde2ccbb6f0df7 Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Mon, 23 Apr 2012 17:40:33 +0100
-Subject: [PATCH 022/611] drm/edid: Add a workaround for 1366x768 HD panel
+Subject: [PATCH 022/675] drm/edid: Add a workaround for 1366x768 HD panel
 
 HD panel (1366x768) found most commonly on laptops can't be represented
 exactly in CVT/DMT expression, which leads to 1368x768 instead, because

@@ -1,7 +1,7 @@
 From 8478d932b4265546649e7cd80e237f05f2041140 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 15:03:47 +0100
-Subject: [PATCH 187/611] gpiolib: remove duplicate pin range code
+Subject: [PATCH 187/675] gpiolib: remove duplicate pin range code
 
 Commit 69e1601bca88809dc118abd1becb02c15a02ec71
 "gpiolib: provide provision to register pin ranges"

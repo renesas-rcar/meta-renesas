@@ -1,7 +1,7 @@
 From 89181db18af968a22690934288dab951de4c30ed Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 25 Feb 2013 01:39:44 -0800
-Subject: [PATCH 386/611] ARM: shmobile: add gic_iid macro for ICCIAR /
+Subject: [PATCH 386/675] ARM: shmobile: add gic_iid macro for ICCIAR /
  interrupt ID
 
 R-Car H1 datasheet GIC number is indicating

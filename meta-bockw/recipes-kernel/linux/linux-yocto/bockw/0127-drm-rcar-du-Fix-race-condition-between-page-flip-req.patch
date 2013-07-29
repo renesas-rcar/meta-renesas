@@ -1,7 +1,7 @@
 From 88eeee6734eb826db590d8d1c4e73c0eeefcc831 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 26 Feb 2013 20:20:36 +0100
-Subject: [PATCH 127/611] drm/rcar-du: Fix race condition between page flip
+Subject: [PATCH 127/675] drm/rcar-du: Fix race condition between page flip
  request and handler
 
 The page flip handler stores the page flip event pointer and then calls

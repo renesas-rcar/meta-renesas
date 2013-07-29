@@ -1,7 +1,7 @@
 From 0b2543ced4208085172923edcc647d698ac4c0e1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 14 Feb 2013 22:35:09 +0100
-Subject: [PATCH 323/611] sh-pfc: Add function to retrieve a pin instance from
+Subject: [PATCH 323/675] sh-pfc: Add function to retrieve a pin instance from
  its pin number
 
 This prepares support for sparse pin numbering. The function currently

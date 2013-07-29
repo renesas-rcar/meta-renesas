@@ -1,7 +1,7 @@
 From c5effa8af60adb99fc5a4405c8104a6b1e52719b Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 16 May 2013 15:39:16 +0900
-Subject: [PATCH 524/611] ARM: shmobile: bockw: add MMCIF support
+Subject: [PATCH 524/675] ARM: shmobile: bockw: add MMCIF support
 
 This patch enables CN26 MMCIF
 

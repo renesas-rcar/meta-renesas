@@ -1,7 +1,7 @@
 From 4dd095acb8802cac660d288dff3af924bb51ffbf Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 15 Mar 2012 19:58:31 +0200
-Subject: [PATCH 023/611] drm: Unify and fix idr error handling
+Subject: [PATCH 023/675] drm: Unify and fix idr error handling
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

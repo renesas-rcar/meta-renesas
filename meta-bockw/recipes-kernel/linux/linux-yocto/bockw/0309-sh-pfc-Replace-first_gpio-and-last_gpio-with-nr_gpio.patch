@@ -1,7 +1,7 @@
 From f3ccd53af51cc6012d8410aa96bcf172b39d600b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 28 Nov 2012 17:51:00 +0100
-Subject: [PATCH 309/611] sh-pfc: Replace first_gpio and last_gpio with
+Subject: [PATCH 309/675] sh-pfc: Replace first_gpio and last_gpio with
  nr_gpios
 
 The SoC information first_gpio field is always equal to 0, and the

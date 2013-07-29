@@ -1,7 +1,7 @@
 From 984728ed8ae254451617c6867a5adbb1bc67377a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Tue, 14 Aug 2012 10:53:38 +0000
-Subject: [PATCH 054/611] drm: Initialize object type when using DRM_MODE()
+Subject: [PATCH 054/675] drm: Initialize object type when using DRM_MODE()
  macro
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

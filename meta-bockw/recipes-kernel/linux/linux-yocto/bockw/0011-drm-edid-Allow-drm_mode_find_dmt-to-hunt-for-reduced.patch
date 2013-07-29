@@ -1,7 +1,7 @@
 From 5aefeb6a111c6efc5128211e7f0d32841354dd07 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:31 -0400
-Subject: [PATCH 011/611] drm/edid: Allow drm_mode_find_dmt to hunt for
+Subject: [PATCH 011/675] drm/edid: Allow drm_mode_find_dmt to hunt for
  reduced-blanking modes
 
 It won't find any, yet.  Fix up callers to match: standard mode codes

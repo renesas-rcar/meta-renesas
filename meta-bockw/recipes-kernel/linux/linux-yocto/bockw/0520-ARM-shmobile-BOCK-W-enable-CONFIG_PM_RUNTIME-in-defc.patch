@@ -1,7 +1,7 @@
 From 1887bf445aaa24c7f0755ec3d11456c961129c72 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Wed, 17 Apr 2013 03:03:45 +0400
-Subject: [PATCH 520/611] ARM: shmobile: BOCK-W: enable CONFIG_PM_RUNTIME in
+Subject: [PATCH 520/675] ARM: shmobile: BOCK-W: enable CONFIG_PM_RUNTIME in
  defconfig
 
 Enable CONFIG_PM_RUNTIME in 'bockw_defconfig' -- it's already used by TMU, SCI,

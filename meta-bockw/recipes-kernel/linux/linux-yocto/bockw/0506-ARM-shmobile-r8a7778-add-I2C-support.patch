@@ -1,7 +1,7 @@
 From 9c3aaad0313732968e9e01f0ca6dd652aef17405 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 28 May 2013 12:04:21 +0900
-Subject: [PATCH 506/611] ARM: shmobile: r8a7778: add I2C support
+Subject: [PATCH 506/675] ARM: shmobile: r8a7778: add I2C support
 
 Add a platform device for the r8a7778 I2C.
 

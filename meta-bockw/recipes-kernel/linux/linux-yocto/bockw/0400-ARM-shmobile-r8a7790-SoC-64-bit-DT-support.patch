@@ -1,7 +1,7 @@
 From 4bef28256bfbcda1dc6519fbe5fee40ac7da41a4 Mon Sep 17 00:00:00 2001
 From: Takashi Yoshii <takashi.yoshii.zj@renesas.com>
 Date: Fri, 29 Mar 2013 16:49:17 +0900
-Subject: [PATCH 400/611] ARM: shmobile: r8a7790 SoC 64-bit DT support
+Subject: [PATCH 400/675] ARM: shmobile: r8a7790 SoC 64-bit DT support
 
 The r8a7790 SoC supports LPAE and has memory window up to
 0x2ffffffff. Convert to 64-bit addresses by enlarging

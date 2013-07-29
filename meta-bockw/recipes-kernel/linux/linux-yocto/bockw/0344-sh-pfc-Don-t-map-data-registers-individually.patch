@@ -1,7 +1,7 @@
 From 22fa036d49c6031bc458fd1e30f71461b12e27a0 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 00:26:33 +0100
-Subject: [PATCH 344/611] sh-pfc: Don't map data registers individually
+Subject: [PATCH 344/675] sh-pfc: Don't map data registers individually
 
 All data registers are located in the same memory resource. Locate the
 mapped resource at initializat time and use it directly instead of

@@ -1,7 +1,7 @@
 From b731efbfa106b1136068bb4499b0d49d29103db7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 5 Apr 2012 21:35:16 +0300
-Subject: [PATCH 002/611] drm: Add drm_format_plane_cpp() utility function
+Subject: [PATCH 002/675] drm: Add drm_format_plane_cpp() utility function
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

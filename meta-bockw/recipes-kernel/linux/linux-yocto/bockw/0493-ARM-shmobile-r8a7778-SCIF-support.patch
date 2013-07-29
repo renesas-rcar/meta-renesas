@@ -1,7 +1,7 @@
 From add068a8ee8f36c295b3e06414fb199815abf6f3 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 21 Mar 2013 03:02:38 -0700
-Subject: [PATCH 493/611] ARM: shmobile: r8a7778 SCIF support
+Subject: [PATCH 493/675] ARM: shmobile: r8a7778 SCIF support
 
 Add SCIF serial port support to the r8a7778 SoC by
 adding platform devices together with clock bindings.

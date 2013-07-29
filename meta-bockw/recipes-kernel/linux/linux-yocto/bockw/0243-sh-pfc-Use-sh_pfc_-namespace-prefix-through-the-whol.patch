@@ -1,7 +1,7 @@
 From d45c753c3ccb1b33885d987ffb158e14508f7e33 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:53 +0100
-Subject: [PATCH 243/611] sh-pfc: Use sh_pfc_ namespace prefix through the
+Subject: [PATCH 243/675] sh-pfc: Use sh_pfc_ namespace prefix through the
  whole driver
 
 Most of the function and structure names are prefixed by sh_pfc_. Fix

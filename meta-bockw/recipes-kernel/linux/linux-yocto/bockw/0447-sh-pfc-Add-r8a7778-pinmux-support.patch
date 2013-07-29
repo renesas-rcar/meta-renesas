@@ -1,7 +1,7 @@
 From d97010139be9f6afb8452feb283b6e11ba4199d3 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 12 Apr 2013 05:37:20 +0000
-Subject: [PATCH 447/611] sh-pfc: Add r8a7778 pinmux support
+Subject: [PATCH 447/675] sh-pfc: Add r8a7778 pinmux support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>

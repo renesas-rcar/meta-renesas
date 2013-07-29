@@ -1,7 +1,7 @@
 From 3c72aae46f70b6e91e905816138349996f747084 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:38 -0400
-Subject: [PATCH 017/611] drm/edid: Give the est3 mode struct a real name
+Subject: [PATCH 017/675] drm/edid: Give the est3 mode struct a real name
 
 We want the same type for extra modes inferred from ranges.
 

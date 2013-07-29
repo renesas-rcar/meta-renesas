@@ -1,7 +1,7 @@
 From 5ad4ce2233049521572c07391802c093f75882ee Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 31 May 2013 16:20:55 +0900
-Subject: [PATCH 441/611] LTSI: ARM: shmobile: r8a7779: fixup LTSI conflict
+Subject: [PATCH 441/675] LTSI: ARM: shmobile: r8a7779: fixup LTSI conflict
 
 10e8d4f6dddb0f9dc408c2f2bde8399b243a42ca
 (ARM: mach-shmobile: r8a7779: Minimal setup using DT)

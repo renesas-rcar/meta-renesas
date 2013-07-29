@@ -1,7 +1,7 @@
 From f9809cf0cb31822f67e7de89c9b962d964982dd8 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:38:10 +0100
-Subject: [PATCH 378/611] ARM: shmobile: r8a7779: Remove HSPI function GPIOs
+Subject: [PATCH 378/675] ARM: shmobile: r8a7779: Remove HSPI function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.

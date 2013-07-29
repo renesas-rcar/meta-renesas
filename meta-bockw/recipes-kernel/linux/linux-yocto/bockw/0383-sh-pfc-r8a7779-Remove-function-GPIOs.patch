@@ -1,7 +1,7 @@
 From 304e8942b8cadf041ad38150d30ed32cc195ba14 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 14:33:32 +0100
-Subject: [PATCH 383/611] sh-pfc: r8a7779: Remove function GPIOs
+Subject: [PATCH 383/675] sh-pfc: r8a7779: Remove function GPIOs
 
 All r8a7779 platforms use the pinctrl API to control functions. Function
 GPIOs are unused and unneeded, remove them.

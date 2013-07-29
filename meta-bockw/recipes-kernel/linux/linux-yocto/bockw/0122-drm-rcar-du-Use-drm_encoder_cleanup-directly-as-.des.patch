@@ -1,7 +1,7 @@
 From fca367d93fe4c599b77807d18fc6461c7108e293 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 19 Feb 2013 18:01:39 +0100
-Subject: [PATCH 122/611] drm/rcar-du: Use drm_encoder_cleanup() directly as
+Subject: [PATCH 122/675] drm/rcar-du: Use drm_encoder_cleanup() directly as
  .destroy handlers
 
 There's no need for a local static encoder .destroy handler that only

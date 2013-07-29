@@ -1,7 +1,7 @@
 From b9582e77e50e40d778372a84ba09ad45a779cf3e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 07:38:50 +0100
-Subject: [PATCH 337/611] ARM: shmobile: bonito: Replace GPIO_PORTx enum with
+Subject: [PATCH 337/675] ARM: shmobile: bonito: Replace GPIO_PORTx enum with
  GPIO port numbers
 
 The PFC GPIO API implementation moved to using port numbers. Replace all

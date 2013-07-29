@@ -1,7 +1,7 @@
 From 8e4a1b51110cf747c07e54439e405aefc76e4e03 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 23 Apr 2013 04:32:32 +0000
-Subject: [PATCH 451/611] sh-pfc: r8a7778: tidyup SDHI naming suffixes and sort
+Subject: [PATCH 451/675] sh-pfc: r8a7778: tidyup SDHI naming suffixes and sort
  it alphabetically
 
 SDHI 1/2 are the target

@@ -1,7 +1,7 @@
 From 695106f325bc83b101245a853ae139c4ffce78bc Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:26 +0100
-Subject: [PATCH 288/611] ARM: shmobile: r8a7779: Use driver-provided pinmux
+Subject: [PATCH 288/675] ARM: shmobile: r8a7779: Use driver-provided pinmux
  info
 
 Pinmux info for the r8a7779 is now provided by pinmux drivers. Remove

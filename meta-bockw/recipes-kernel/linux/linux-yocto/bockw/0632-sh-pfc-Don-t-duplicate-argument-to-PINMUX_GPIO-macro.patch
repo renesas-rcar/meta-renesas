@@ -1,0 +1,35 @@
+From 52033de5678fdd995e922c724b8b477caccd3a9d Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 16 Jul 2013 02:11:13 +0200
+Subject: [PATCH 632/675] sh-pfc: Don't duplicate argument to PINMUX_GPIO macro
+
+The PINMUX_GPIO macro takes a port name and a data mark, respectively of
+the form GPIO_name and name_DATA. Modify the macro to take the name as a
+single argument and derive the port name and data mark from it.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ drivers/pinctrl/sh-pfc/sh_pfc.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/sh_pfc.h b/drivers/pinctrl/sh-pfc/sh_pfc.h
+index 4220620b..559b011 100644
+--- a/drivers/pinctrl/sh-pfc/sh_pfc.h
++++ b/drivers/pinctrl/sh-pfc/sh_pfc.h
+@@ -249,10 +249,9 @@ struct sh_pfc_soc_info {
+ #define PORT_ALL(str)			CPU_ALL_PORT(_PORT_ALL, PORT, str)
+ 
+ /* PINMUX_GPIO - Expand to a sh_pfc_pin entry */
+-#define PINMUX_GPIO(gpio, data_or_mark)					\
+-	[gpio] = {							\
+-		.name = __stringify(gpio),				\
+-		.enum_id = data_or_mark,				\
++	[GPIO_##pin] = {						\
++		.name = __stringify(name),				\
++		.enum_id = pin##_DATA,					\
+ 	}
+ 
+ /* SH_PFC_PIN_CFG - Expand to a sh_pfc_pin entry (named PORT#) with config */
+-- 
+1.8.2
+

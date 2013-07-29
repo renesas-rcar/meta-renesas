@@ -1,7 +1,7 @@
 From aa2997996696ccb858dd43223bb2a493aa98950f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 12 Apr 2013 15:43:39 +0200
-Subject: [PATCH 414/611] sh-pfc: r8a7790: Rename DU1_DOTCLKIN to DU_DOTCLKIN1
+Subject: [PATCH 414/675] sh-pfc: r8a7790: Rename DU1_DOTCLKIN to DU_DOTCLKIN1
 
 Name the DU clock input 1 consistently with clock inputs 0 and 2.
 

@@ -1,7 +1,7 @@
 From d9039f1ee5fd57bca4cdc1a3e0625638b231d97e Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Thu, 6 Jun 2013 10:13:25 +0900
-Subject: [PATCH 561/611] phy-rcar-usb: add R8A7778 support
+Subject: [PATCH 561/675] phy-rcar-usb: add R8A7778 support
 
 The driver currently only supports R8A7779 SoC. Compared to it, R8A7778 USB-PHY
 has extra register range containing two high-speed signal quality characteristic

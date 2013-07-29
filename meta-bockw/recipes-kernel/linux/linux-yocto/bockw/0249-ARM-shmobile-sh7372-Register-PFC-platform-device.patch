@@ -1,7 +1,7 @@
 From 65d70eda244e42cb31878818000306c93474ea0a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:59 +0100
-Subject: [PATCH 249/611] ARM: shmobile: sh7372: Register PFC platform device
+Subject: [PATCH 249/675] ARM: shmobile: sh7372: Register PFC platform device
 
 Add arch code to register the PFC platform device instead of calling the
 driver directly. Platform device registration in the sh-pfc driver will

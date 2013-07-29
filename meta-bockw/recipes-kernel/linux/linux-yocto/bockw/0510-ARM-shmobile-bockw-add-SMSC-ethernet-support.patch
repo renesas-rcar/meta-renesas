@@ -1,7 +1,7 @@
 From 980ed4e8bbde416965b4a322cab74888e5db03b9 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 1 Apr 2013 21:20:02 -0700
-Subject: [PATCH 510/611] ARM: shmobile: bockw: add SMSC ethernet support
+Subject: [PATCH 510/675] ARM: shmobile: bockw: add SMSC ethernet support
 
 This patch adds SMSC ethernet support on Bock-W
 

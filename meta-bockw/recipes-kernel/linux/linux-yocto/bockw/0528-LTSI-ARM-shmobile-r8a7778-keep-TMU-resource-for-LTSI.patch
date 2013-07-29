@@ -1,7 +1,7 @@
 From 932d0f05720df89eacae00ec06984d2286cb4258 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 31 May 2013 12:02:14 +0900
-Subject: [PATCH 528/611] LTSI: ARM: shmobile: r8a7778: keep TMU resource for
+Subject: [PATCH 528/675] LTSI: ARM: shmobile: r8a7778: keep TMU resource for
  LTSI
 
 LTSI TMU on r8a7778 should keep its resource (= non __initdata)

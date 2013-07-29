@@ -1,7 +1,7 @@
 From 2fdd82634b65c422658b0d0fa3101cfa61fea1a5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:04 +0000
-Subject: [PATCH 072/611] drm: Be more paranoid with integer overflows
+Subject: [PATCH 072/675] drm: Be more paranoid with integer overflows
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

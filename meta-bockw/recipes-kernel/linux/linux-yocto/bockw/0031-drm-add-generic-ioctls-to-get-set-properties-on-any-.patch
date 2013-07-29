@@ -1,7 +1,7 @@
 From 0522be83bb67219074965e94914f2241de858589 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:02 -0300
-Subject: [PATCH 031/611] drm: add generic ioctls to get/set properties on any
+Subject: [PATCH 031/675] drm: add generic ioctls to get/set properties on any
  object
 
 Useless for connector properties (since they already have their own

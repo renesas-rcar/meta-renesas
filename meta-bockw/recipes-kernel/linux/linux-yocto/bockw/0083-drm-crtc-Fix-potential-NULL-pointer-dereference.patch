@@ -1,7 +1,7 @@
 From 09cf1bc6fa3c82fb26930fc39d60066c085276e8 Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Mon, 19 Nov 2012 09:44:57 +0000
-Subject: [PATCH 083/611] drm/crtc: Fix potential NULL pointer dereference
+Subject: [PATCH 083/675] drm/crtc: Fix potential NULL pointer dereference
 
 drm_property_create_blob() could return NULL in which case NULL pointer
 dereference error (on connector->edid_blob_ptr) is possible. Return if

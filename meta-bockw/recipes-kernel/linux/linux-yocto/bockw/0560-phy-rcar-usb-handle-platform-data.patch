@@ -1,7 +1,7 @@
 From 44092a8fcc368e8added94137b21ed07e645490b Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Sun, 2 Jun 2013 01:57:18 +0400
-Subject: [PATCH 560/611] phy-rcar-usb: handle platform data
+Subject: [PATCH 560/675] phy-rcar-usb: handle platform data
 
 Set the USBPCTRL0 register from the passed platform data in rcar_usb_phy_init();
 don't reset it to 0 in  rcar_usb_phy_shutdown()  anymore as that does not make

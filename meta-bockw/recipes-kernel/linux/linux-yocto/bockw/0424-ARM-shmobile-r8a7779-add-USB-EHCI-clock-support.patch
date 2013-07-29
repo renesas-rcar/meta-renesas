@@ -1,7 +1,7 @@
 From 665fba7d8b57fa4abd0435bd47a2760fc60170d0 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 29 Oct 2012 01:15:00 -0700
-Subject: [PATCH 424/611] ARM: shmobile: r8a7779: add USB EHCI clock support
+Subject: [PATCH 424/675] ARM: shmobile: r8a7779: add USB EHCI clock support
 
 ehci-platform driver require these clocks
 

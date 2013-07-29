@@ -1,7 +1,7 @@
 From ef3077dbe4052f99b1782d8796846cf4b5765de5 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 6 Jun 2013 13:17:10 +0900
-Subject: [PATCH 565/611] LTSI: ARM: shmobile: r8a7778: tidyup generation
+Subject: [PATCH 565/675] LTSI: ARM: shmobile: r8a7778: tidyup generation
  conflict
 
 LTSI 3.4.46 still doesn't have usb_put_phy()

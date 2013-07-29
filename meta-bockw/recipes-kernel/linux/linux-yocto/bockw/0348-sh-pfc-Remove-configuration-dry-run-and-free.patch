@@ -1,7 +1,7 @@
 From 4a399e4646036a78c9237368675a160542f28ff7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 15:29:14 +0100
-Subject: [PATCH 348/611] sh-pfc: Remove configuration dry-run and free
+Subject: [PATCH 348/675] sh-pfc: Remove configuration dry-run and free
 
 The purpose of the dry-run is to ensure that a pin about to be
 configured isn't in use. However, the current implementation is a no-op.

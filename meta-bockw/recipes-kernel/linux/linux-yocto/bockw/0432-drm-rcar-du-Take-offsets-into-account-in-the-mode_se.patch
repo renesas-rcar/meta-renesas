@@ -1,7 +1,7 @@
 From 28109b9699dccc8199d116df15e0120b16ff5551 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 4 Apr 2013 00:14:09 +0200
-Subject: [PATCH 432/611] drm/rcar-du: Take offsets into account in the
+Subject: [PATCH 432/675] drm/rcar-du: Take offsets into account in the
  mode_set_base handler
 
 Store the x and y offsets passed to the mode_set_base handler in the

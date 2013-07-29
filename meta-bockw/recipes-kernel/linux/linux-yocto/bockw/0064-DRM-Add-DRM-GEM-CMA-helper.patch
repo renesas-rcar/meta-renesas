@@ -1,7 +1,7 @@
 From 9af98c47684b8b187aaed9e4240706815362430f Mon Sep 17 00:00:00 2001
 From: Sascha Hauer <s.hauer@pengutronix.de>
 Date: Wed, 27 Jun 2012 15:30:18 +0200
-Subject: [PATCH 064/611] DRM: Add DRM GEM CMA helper
+Subject: [PATCH 064/675] DRM: Add DRM GEM CMA helper
 
 Many embedded drm devices do not have a IOMMU and no dedicated
 memory for graphics. These devices use CMA (Contiguous Memory

@@ -1,7 +1,7 @@
 From d0b0904602c62e0190ea39033469fa34862f2deb Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Thu, 4 Apr 2013 18:55:46 +0000
-Subject: [PATCH 497/611] ARM: shmobile: R8A7778: add Ether support
+Subject: [PATCH 497/675] ARM: shmobile: R8A7778: add Ether support
 
 Add Ether clock and platform device for R8A7778 SoC; add a function to register
 this device with board-specific platform data.

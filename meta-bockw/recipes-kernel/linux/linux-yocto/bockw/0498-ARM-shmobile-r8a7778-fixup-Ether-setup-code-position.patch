@@ -1,7 +1,7 @@
 From 9922578db81f5bdf16ba6a2c59dc39249624839a Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 8 Apr 2013 22:33:44 -0700
-Subject: [PATCH 498/611] ARM: shmobile: r8a7778: fixup Ether setup code
+Subject: [PATCH 498/675] ARM: shmobile: r8a7778: fixup Ether setup code
  position
 
 Ether setup code position was scattering.

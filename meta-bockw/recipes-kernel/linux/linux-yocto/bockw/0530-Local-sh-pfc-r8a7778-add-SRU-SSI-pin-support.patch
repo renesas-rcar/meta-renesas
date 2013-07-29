@@ -1,7 +1,7 @@
 From 6e5d29723530eff4f6982e2b8dd4683837007aaf Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 27 May 2013 11:15:26 +0900
-Subject: [PATCH 530/611] Local: sh-pfc: r8a7778: add SRU/SSI pin support
+Subject: [PATCH 530/675] Local: sh-pfc: r8a7778: add SRU/SSI pin support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 ---

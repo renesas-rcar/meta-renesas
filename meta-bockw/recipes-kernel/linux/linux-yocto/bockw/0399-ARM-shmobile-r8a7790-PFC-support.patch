@@ -1,7 +1,7 @@
 From bdbe740ae7eee74df5ed5a4e96b88195035d6456 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Thu, 28 Mar 2013 00:50:03 +0900
-Subject: [PATCH 399/611] ARM: shmobile: r8a7790 PFC support
+Subject: [PATCH 399/675] ARM: shmobile: r8a7790 PFC support
 
 Add a platform device for the r8a7790 PFC.
 

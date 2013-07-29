@@ -1,7 +1,7 @@
 From df9ce70db4a2ed177f6984019ff7ba965e80925f Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Fri, 7 Jun 2013 12:15:25 +0900
-Subject: [PATCH 572/611] ARM: shmobile: r8a7778: add VIN support
+Subject: [PATCH 572/675] ARM: shmobile: r8a7778: add VIN support
 
 Add VIN clocks and platform devices on R8A7778 SoC; add function to register
 the VIN platform devices.

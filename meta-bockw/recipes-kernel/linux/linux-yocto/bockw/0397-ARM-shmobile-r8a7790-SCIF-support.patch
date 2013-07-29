@@ -1,7 +1,7 @@
 From f938d3e051fc405832859085c8ac45b30d6f18e8 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Thu, 28 Mar 2013 00:49:44 +0900
-Subject: [PATCH 397/611] ARM: shmobile: r8a7790 SCIF support
+Subject: [PATCH 397/675] ARM: shmobile: r8a7790 SCIF support
 
 Add SCIF serial port support to the r8a7790 SoC by
 adding platform devices for SCIFA0 -> SCIFA2 as well

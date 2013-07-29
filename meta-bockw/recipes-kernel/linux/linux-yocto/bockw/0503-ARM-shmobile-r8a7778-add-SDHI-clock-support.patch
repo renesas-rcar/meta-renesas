@@ -1,7 +1,7 @@
 From bf5f8b9e6238107a002ebcd2c071630b03b99933 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 16 Apr 2013 22:17:04 -0700
-Subject: [PATCH 503/611] ARM: shmobile: r8a7778: add SDHI clock support
+Subject: [PATCH 503/675] ARM: shmobile: r8a7778: add SDHI clock support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>

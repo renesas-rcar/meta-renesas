@@ -1,7 +1,7 @@
 From 1d9a560ede609ec770e577d4ad2bd3f2c73d9c20 Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Tue, 3 Jul 2012 11:22:11 +0200
-Subject: [PATCH 045/611] drm: edid: Don't add inferred modes with higher
+Subject: [PATCH 045/675] drm: edid: Don't add inferred modes with higher
  resolution
 
 When a monitor EDID doesn't give the preferred bit, driver assumes

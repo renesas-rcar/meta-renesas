@@ -1,7 +1,7 @@
 From ff5ff29f8f4e0f2e45443f9e6816b43aa950700a Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Mon, 10 Sep 2012 17:22:00 +0200
-Subject: [PATCH 160/611] pinctrl: document semantics vs GPIO
+Subject: [PATCH 160/675] pinctrl: document semantics vs GPIO
 
 The semantics of the interactions between GPIO and pinctrl may be
 unclear, e.g. which one do you request first? This amends the

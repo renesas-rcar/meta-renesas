@@ -1,7 +1,7 @@
 From 638d6d1d72372e5bb84ca908c4727b8e5418b330 Mon Sep 17 00:00:00 2001
 From: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
 Date: Tue, 12 Jun 2012 16:42:40 -0300
-Subject: [PATCH 467/611] mtd: m25p80: Add support for m25pe20
+Subject: [PATCH 467/675] mtd: m25p80: Add support for m25pe20
 
 Signed-off-by: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
 Signed-off-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>

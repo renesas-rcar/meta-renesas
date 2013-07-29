@@ -1,7 +1,7 @@
 From dc6247682dd6e4c1dea72112f75504b4b1ec3a5f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 16 Aug 2012 14:55:04 +0000
-Subject: [PATCH 059/611] drm: edid: Add some bounds checking
+Subject: [PATCH 059/675] drm: edid: Add some bounds checking
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

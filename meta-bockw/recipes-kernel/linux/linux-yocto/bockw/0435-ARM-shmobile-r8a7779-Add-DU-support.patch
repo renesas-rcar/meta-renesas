@@ -1,7 +1,7 @@
 From d738f6908dbdc18594aa6bb3acd1b5931929f0d4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Mar 2013 11:55:35 +0100
-Subject: [PATCH 435/611] ARM: shmobile: r8a7779: Add DU support
+Subject: [PATCH 435/675] ARM: shmobile: r8a7779: Add DU support
 
 Add a function to register the DU device with board-specific platform
 data. The DU device is named rcar-du, fix the clock entry accordingly.

@@ -1,7 +1,7 @@
 From 20a52c4e869e96b4bf2365a6423a3fd6d34fa9b3 Mon Sep 17 00:00:00 2001
 From: Marek Szyprowski <m.szyprowski@samsung.com>
 Date: Wed, 13 Jun 2012 10:05:52 +0200
-Subject: [PATCH 107/611] common: dma-mapping: introduce dma_get_sgtable()
+Subject: [PATCH 107/675] common: dma-mapping: introduce dma_get_sgtable()
  function
 
 This patch adds dma_get_sgtable() function which is required to let

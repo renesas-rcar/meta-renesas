@@ -1,7 +1,7 @@
 From 45cc7e2a0974698420df3d002c5c83ef7bba0faf Mon Sep 17 00:00:00 2001
 From: Jerome Glisse <jglisse@redhat.com>
 Date: Thu, 9 Aug 2012 11:25:51 -0400
-Subject: [PATCH 063/611] drm/edid: limit printk when facing bad edid
+Subject: [PATCH 063/675] drm/edid: limit printk when facing bad edid
 
 Limit printing bad edid information at one time per connector.
 Connector that are connected to a bad monitor/kvm will likely

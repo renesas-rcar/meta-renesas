@@ -1,7 +1,7 @@
 From 87055d76f35749d0394f8f089f48884359bda7dd Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 20 Jun 2012 17:29:04 +0900
-Subject: [PATCH 207/611] sh: pfc: Split out gpio chip support.
+Subject: [PATCH 207/675] sh: pfc: Split out gpio chip support.
 
 This implements a bit of rework for the PFC code, making the core itself
 slightly more pluggable and moving out the gpio chip handling completely.

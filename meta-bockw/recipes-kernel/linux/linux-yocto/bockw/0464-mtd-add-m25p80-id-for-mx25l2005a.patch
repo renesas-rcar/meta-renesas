@@ -1,7 +1,7 @@
 From 3f360e58b2312eba67d42873314229682bf32806 Mon Sep 17 00:00:00 2001
 From: John Crispin <blogic@openwrt.org>
 Date: Mon, 30 Apr 2012 19:30:45 +0200
-Subject: [PATCH 464/611] mtd: add m25p80 id for mx25l2005a
+Subject: [PATCH 464/675] mtd: add m25p80 id for mx25l2005a
 
 Add the id and sector mappings for mx25l2005a flash chips.
 

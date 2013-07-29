@@ -1,7 +1,7 @@
 From 21e39e98927cac4802b8cef9598cc0f213b7f4a2 Mon Sep 17 00:00:00 2001
 From: Michel Stempin <michel.stempin@wanadoo.fr>
 Date: Sun, 6 Jan 2013 00:39:36 +0100
-Subject: [PATCH 482/611] mtd: chips: Add support for GigaDevice
+Subject: [PATCH 482/675] mtd: chips: Add support for GigaDevice
  GD25Q32/GD25Q64 SPI Flash in m25p80.c
 
 Add support for GigaDevice GD25Q32 32 Mbit (4 MB) SPI Flash (see datasheet:

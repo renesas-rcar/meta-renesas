@@ -1,7 +1,7 @@
 From a1323506b1af3768c46d6580282e2afca0de0c9f Mon Sep 17 00:00:00 2001
 From: "ing. Federico Fuga" <fuga@studiofuga.com>
 Date: Tue, 5 Jun 2012 17:37:01 +0200
-Subject: [PATCH 466/611] mtd: add JEDEC ID for w25q32dw to chip table
+Subject: [PATCH 466/675] mtd: add JEDEC ID for w25q32dw to chip table
 
 Adds JEDEC ID for the 1.8V version of WinBond w25q32.
 

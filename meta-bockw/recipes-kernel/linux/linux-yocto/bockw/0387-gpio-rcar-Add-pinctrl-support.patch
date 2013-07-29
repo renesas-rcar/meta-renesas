@@ -1,7 +1,7 @@
 From dd5db6bea65c51cefc453358e6dffe1eab66fa9b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 03:27:00 +0100
-Subject: [PATCH 387/611] gpio-rcar: Add pinctrl support
+Subject: [PATCH 387/675] gpio-rcar: Add pinctrl support
 
 Register the GPIO pin range, and request and free GPIO pins using the
 pinctrl API.

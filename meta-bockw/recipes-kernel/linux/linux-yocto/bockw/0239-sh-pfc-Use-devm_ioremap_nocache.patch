@@ -1,7 +1,7 @@
 From 71ca0529411a73efae45d7781ffb79410a85d426 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:49 +0100
-Subject: [PATCH 239/611] sh-pfc: Use devm_ioremap_nocache()
+Subject: [PATCH 239/675] sh-pfc: Use devm_ioremap_nocache()
 
 Replace probe-time ioremap_nocache() call with devm_ioremap_nocache()
 and get rid of the corresponding iounmap() call.

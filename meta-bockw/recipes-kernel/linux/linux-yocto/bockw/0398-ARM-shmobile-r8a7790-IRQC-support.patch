@@ -1,7 +1,7 @@
 From 95884dea36437a459c671c457b70ba39a72001fd Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Thu, 28 Mar 2013 00:49:54 +0900
-Subject: [PATCH 398/611] ARM: shmobile: r8a7790 IRQC support
+Subject: [PATCH 398/675] ARM: shmobile: r8a7790 IRQC support
 
 Add IRQC interrupt controller support to r8a7790 by
 hooking up a single IRQC instances to handle 4 external

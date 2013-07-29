@@ -1,7 +1,7 @@
 From a6479a66fc000ff443ff65cd9750eface31a2182 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 01:25:56 +0100
-Subject: [PATCH 130/611] drm/rcar-du: Update plane format after releasing
+Subject: [PATCH 130/675] drm/rcar-du: Update plane format after releasing
  hardware planes
 
 Hardware planes were released after updating the plane format, which

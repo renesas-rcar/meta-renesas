@@ -1,7 +1,7 @@
 From 95434c96ea8068a2c0574521ccadc4cf0213d838 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Wed, 30 May 2012 16:42:39 -0400
-Subject: [PATCH 043/611] drm/edid: Make the header fixup threshold tunable
+Subject: [PATCH 043/675] drm/edid: Make the header fixup threshold tunable
 
 6 bytes seems to be a reasonable default so far, but for the desperate
 it's worth exposing this.

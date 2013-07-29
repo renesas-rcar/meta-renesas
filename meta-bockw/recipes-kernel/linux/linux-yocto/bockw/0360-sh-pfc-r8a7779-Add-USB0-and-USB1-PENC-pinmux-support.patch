@@ -1,7 +1,7 @@
 From 84e3571a547d56cf9e319ed795510d10246b5746 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:36:36 +0100
-Subject: [PATCH 360/611] sh-pfc: r8a7779: Add USB0 and USB1 PENC pinmux
+Subject: [PATCH 360/675] sh-pfc: r8a7779: Add USB0 and USB1 PENC pinmux
  support
 
 The USB0 and USB1 PENC functions were missing. Add them.

@@ -1,7 +1,7 @@
 From 660b57a4b029a946530281279194da5a20dfb617 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:20 +0100
-Subject: [PATCH 267/611] sh-pfc: Support pinmux info in driver data instead of
+Subject: [PATCH 267/675] sh-pfc: Support pinmux info in driver data instead of
  platform data
 
 Pinmux information should be provided by the pinmux driver, not arch

@@ -1,7 +1,7 @@
 From 6ffea377ea96f8e8513ca6712f4e72925f1e5533 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 25 Jul 2012 13:10:11 +0900
-Subject: [PATCH 221/611] sh: pfc: Build fix for pinctrl_remove_gpio_range()
+Subject: [PATCH 221/675] sh: pfc: Build fix for pinctrl_remove_gpio_range()
  changes.
 
 pinctrl_remove_gpio_range() is now handled by the pinctrl core in the

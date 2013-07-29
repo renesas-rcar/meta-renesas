@@ -1,7 +1,7 @@
 From e655c5a425eccfac2117f259688d70797baa34d9 Mon Sep 17 00:00:00 2001
 From: Ryan Mallon <rmallon@gmail.com>
 Date: Mon, 22 Oct 2012 11:39:12 +1100
-Subject: [PATCH 181/611] gpiolib: Refactor gpio_export
+Subject: [PATCH 181/675] gpiolib: Refactor gpio_export
 
 The gpio_export function uses nested if statements and the status
 variable to handle the failure cases. This makes the function logic

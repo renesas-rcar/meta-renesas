@@ -1,7 +1,7 @@
 From f04cfe74b8ff0d3ab1f84b690fafd502a2b49b9c Mon Sep 17 00:00:00 2001
 From: Alexey Khoroshilov <khoroshilov@ispras.ru>
 Date: Tue, 7 Aug 2012 12:23:06 +0000
-Subject: [PATCH 049/611] drm/edid: Fix potential memory leak in edid_load()
+Subject: [PATCH 049/675] drm/edid: Fix potential memory leak in edid_load()
 
 Do not leak memory by updating pointer with potentially
 NULL realloc return value.

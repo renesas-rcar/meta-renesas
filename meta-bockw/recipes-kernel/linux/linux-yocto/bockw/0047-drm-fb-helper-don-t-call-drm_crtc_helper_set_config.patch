@@ -1,7 +1,7 @@
 From cbf7d965bf197414d320e290bb9e900442b4970f Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Wed, 11 Jul 2012 16:28:07 +0200
-Subject: [PATCH 047/611] drm/fb helper: don't call drm_crtc_helper_set_config
+Subject: [PATCH 047/675] drm/fb helper: don't call drm_crtc_helper_set_config
 
 Go through the interface vtable instead, because not everyone might be
 using the crtc helper code.

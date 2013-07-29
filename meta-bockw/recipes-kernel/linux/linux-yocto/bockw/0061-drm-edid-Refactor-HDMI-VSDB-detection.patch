@@ -1,7 +1,7 @@
 From c8f3e2db742dea107f9c88a668a2e93db3a7a33e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 16 Aug 2012 14:55:06 +0000
-Subject: [PATCH 061/611] drm: edid: Refactor HDMI VSDB detection
+Subject: [PATCH 061/675] drm: edid: Refactor HDMI VSDB detection
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,7 +1,7 @@
 From 3827ba267b26fb47f0bb8a7944d8543d98b7e351 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:33 +0000
-Subject: [PATCH 087/611] drm: handle HPD and polled connectors separately
+Subject: [PATCH 087/675] drm: handle HPD and polled connectors separately
 
 Instead of reusing the polling code for hpd handling, split them up.
 This has a few consequences:

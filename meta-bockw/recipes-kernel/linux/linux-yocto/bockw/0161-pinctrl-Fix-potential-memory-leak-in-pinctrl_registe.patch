@@ -1,7 +1,7 @@
 From fd4a6d16b579a199df126b85289275013624f245 Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Tue, 25 Sep 2012 12:41:40 +0530
-Subject: [PATCH 161/611] pinctrl: Fix potential memory leak in
+Subject: [PATCH 161/675] pinctrl: Fix potential memory leak in
  pinctrl_register_one_pin()
 
 'pindesc' was not freed when returning from an error induced

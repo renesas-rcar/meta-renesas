@@ -1,7 +1,7 @@
 From 2b699ec0c3b5205433d3f7e337e40f5406738224 Mon Sep 17 00:00:00 2001
 From: Alex Deucher <alexander.deucher@amd.com>
 Date: Fri, 9 Nov 2012 17:26:32 +0000
-Subject: [PATCH 080/611] drm: fix documentation for drm_crtc_set_mode()
+Subject: [PATCH 080/675] drm: fix documentation for drm_crtc_set_mode()
 
 x and y parameters are offsets, not width/height
 

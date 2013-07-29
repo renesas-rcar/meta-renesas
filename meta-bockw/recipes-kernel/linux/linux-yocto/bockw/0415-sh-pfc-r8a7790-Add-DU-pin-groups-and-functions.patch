@@ -1,7 +1,7 @@
 From 7207f5c337f2c9464df41be2dbe710f9d717b483 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 12 Apr 2013 15:44:32 +0200
-Subject: [PATCH 415/611] sh-pfc: r8a7790: Add DU pin groups and functions
+Subject: [PATCH 415/675] sh-pfc: r8a7790: Add DU pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit fa1c81e0a0db3681a0d131d383ccea976b172f46)

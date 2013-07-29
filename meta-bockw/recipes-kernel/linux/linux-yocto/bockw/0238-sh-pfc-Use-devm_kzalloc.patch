@@ -1,7 +1,7 @@
 From 13f8e0a671b6ffe3843424fca286b4b0d6964220 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:48 +0100
-Subject: [PATCH 238/611] sh-pfc: Use devm_kzalloc()
+Subject: [PATCH 238/675] sh-pfc: Use devm_kzalloc()
 
 Replace probe-time kmalloc()/kzalloc() calls with devm_kzalloc() and get
 rid of the corresponding kfree() calls.

@@ -1,7 +1,7 @@
 From a67f65fabb824cdca4e8c417d894ebfcdc6caf7a Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 4 Jun 2013 10:58:50 +0900
-Subject: [PATCH 540/611] Local: ARM: shmobile: r8a7778: add rcar_sound driver
+Subject: [PATCH 540/675] Local: ARM: shmobile: r8a7778: add rcar_sound driver
  support
 
 Add a platform device for the r8a7778 SRU/SSI sound

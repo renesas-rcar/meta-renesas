@@ -1,7 +1,7 @@
 From 644ac1011d4e9d999447a666e9468a88f6a2aa44 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 9 Jan 2013 22:32:25 +0100
-Subject: [PATCH 368/611] sh-pfc: r8a7779: Remove DU1_DOTCLKOUT1 GPIO
+Subject: [PATCH 368/675] sh-pfc: r8a7779: Remove DU1_DOTCLKOUT1 GPIO
 
 The function is not documented in the r8a7779 datasheet. Remove it.
 

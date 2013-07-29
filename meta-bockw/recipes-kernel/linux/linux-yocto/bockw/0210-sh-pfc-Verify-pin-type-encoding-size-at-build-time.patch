@@ -1,7 +1,7 @@
 From e7e4786b8a9810fd148fa625ae77b5e0eeca0627 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Thu, 21 Jun 2012 00:03:41 +0900
-Subject: [PATCH 210/611] sh: pfc: Verify pin type encoding size at build time.
+Subject: [PATCH 210/675] sh: pfc: Verify pin type encoding size at build time.
 
 The encoding is tightly packed, and future changes (such as
 pinconf-generic support) can easily lead to a situation where we violate

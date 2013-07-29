@@ -1,7 +1,7 @@
 From 7d67a63efc385ba15f0e93da6faaf05e3c4c5c50 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 20 Nov 2012 14:56:25 +0100
-Subject: [PATCH 193/611] gpiolib: return any error code from range creation
+Subject: [PATCH 193/675] gpiolib: return any error code from range creation
 
 If we try to create a range for a certain GPIO chip and the
 target pin controller is not yet available it may return

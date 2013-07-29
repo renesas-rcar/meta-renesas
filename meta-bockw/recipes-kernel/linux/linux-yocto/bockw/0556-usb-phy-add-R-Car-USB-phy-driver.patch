@@ -1,7 +1,7 @@
 From 8f6b2e7fc01077818dd847368b9d5dec711fae68 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 31 Oct 2012 19:03:11 -0700
-Subject: [PATCH 556/611] usb: phy: add R-Car USB phy driver
+Subject: [PATCH 556/675] usb: phy: add R-Car USB phy driver
 
 This patch adds Renesas R-Car USB phy driver.
 It supports R8A7779 chip at this point.

@@ -1,7 +1,7 @@
 From 02de2876d230bbf6e9f8c5ce9d1ea27028a58c78 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 3 Jan 2013 14:12:14 +0100
-Subject: [PATCH 319/611] sh-pfc: Look up IRQ table entries by GPIO number
+Subject: [PATCH 319/675] sh-pfc: Look up IRQ table entries by GPIO number
 
 Instead of converting the GPIO number to an enum_id and looking up IRQ
 table entries by enum_id, replace the pinmux_irq enum_ids field with a

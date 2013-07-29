@@ -1,7 +1,7 @@
 From 88789269fa62ab57a12775501e19fecf8c340e3c Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 1 Apr 2013 21:20:49 -0700
-Subject: [PATCH 511/611] ARM: shmobile: bockw: enable SMSC ethernet on
+Subject: [PATCH 511/675] ARM: shmobile: bockw: enable SMSC ethernet on
  defconfig
 
 This patch adds SMSC ethernet support on Bock-W defconfig

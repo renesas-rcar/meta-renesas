@@ -1,7 +1,7 @@
 From beab4224bec30d8e7228bf4cabf7641a3b814065 Mon Sep 17 00:00:00 2001
 From: Shawn Guo <shawn.guo@linaro.org>
 Date: Fri, 18 Jan 2013 15:57:46 +0800
-Subject: [PATCH 198/611] gpio: devm_gpio_* support should not depend on
+Subject: [PATCH 198/675] gpio: devm_gpio_* support should not depend on
  GPIOLIB
 
 Some architectures (e.g. blackfin) provide gpio API without requiring

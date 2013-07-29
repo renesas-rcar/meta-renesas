@@ -1,7 +1,7 @@
 From 65f2c21ac15fac98ab3b50dd0f1496629556e1a6 Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Tue, 16 Apr 2013 12:34:42 +0900
-Subject: [PATCH 586/611] ARM: shmobile: r8a7778: add ICB clock support
+Subject: [PATCH 586/675] ARM: shmobile: r8a7778: add ICB clock support
 
 The clock is registered with CLKDEV_CON_ID() since there is no driver
 for the ICB.

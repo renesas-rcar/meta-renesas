@@ -1,0 +1,230 @@
+From 9ee6d01444162c38432c87e5461bdcaabf276d29 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Sun, 31 Mar 2013 18:34:43 -0700
+Subject: [PATCH 619/675] usb: renesas_usbhs: fixup sparse errors for common.c
+
+This patch fixup below sparse errors
+
+CHECK   ${RENESAS_USB}/common.c
+${RENESAS_USB}/common.c:313:17: error: incompatible types in conditional expression (different base types)
+${RENESAS_USB}/common.c:322:17: error: incompatible types in conditional expression (different base types)
+${RENESAS_USB}/common.c:384:17: error: incompatible types in conditional expression (different base types)
+${RENESAS_USB}/common.c:524:9: error: incompatible types in conditional expression (different base types)
+${RENESAS_USB}/common.c:545:9: error: incompatible types in conditional expression (different base types)
+${RENESAS_USB}/common.c:574:9: error: incompatible types in conditional expression (different base types)
+${RENESAS_USB}/common.c:606:9: error: incompatible types in conditional expression (different base types)
+${RENESAS_USB}/mod_gadget.c:233:28: warning: symbol 'req_clear_feature' was not declared. Should it be static?
+${RENESAS_USB}/mod_gadget.c:274:28: warning: symbol 'req_set_feature' was not declared. Should it be static?
+${RENESAS_USB}/mod_gadget.c:375:28: warning: symbol 'req_get_status' was not declared. Should it be static?
+
+[ balbi@ti.com : added three sparse fixes to mod_gadget.c ]
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+(cherry picked from commit 225da3e3cb1f0db9e4cb7fa2a7dc3a360d1cf788)
+
+Conflicts:
+	arch/sh/boards/mach-ecovec24/setup.c
+---
+ arch/arm/mach-shmobile/board-armadillo800eva.c |  8 ++++++--
+ arch/arm/mach-shmobile/board-kzm9g.c           |  8 ++++++--
+ arch/arm/mach-shmobile/board-mackerel.c        | 12 +++++++++---
+ drivers/usb/renesas_usbhs/mod_gadget.c         |  6 +++---
+ include/linux/usb/renesas_usbhs.h              |  6 +++---
+ 5 files changed, 27 insertions(+), 13 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index f51a8ae..529e43e 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -161,7 +161,7 @@ static int usbhsf_get_id(struct platform_device *pdev)
+ 	return USBHS_GADGET;
+ }
+ 
+-static void usbhsf_power_ctrl(struct platform_device *pdev,
++static int usbhsf_power_ctrl(struct platform_device *pdev,
+ 			      void __iomem *base, int enable)
+ {
+ 	struct usbhsf_private *priv = usbhsf_get_priv(pdev);
+@@ -215,6 +215,8 @@ static void usbhsf_power_ctrl(struct platform_device *pdev,
+ 		clk_disable(priv->pci);		/* usb work around */
+ 		clk_disable(priv->usb24);	/* usb work around */
+ 	}
++
++	return 0;
+ }
+ 
+ static int usbhsf_get_vbus(struct platform_device *pdev)
+@@ -231,7 +233,7 @@ static irqreturn_t usbhsf_interrupt(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void usbhsf_hardware_exit(struct platform_device *pdev)
++static int usbhsf_hardware_exit(struct platform_device *pdev)
+ {
+ 	struct usbhsf_private *priv = usbhsf_get_priv(pdev);
+ 
+@@ -256,6 +258,8 @@ static void usbhsf_hardware_exit(struct platform_device *pdev)
+ 	priv->usbh_base	= NULL;
+ 
+ 	free_irq(IRQ7, pdev);
++
++	return 0;
+ }
+ 
+ static int usbhsf_hardware_init(struct platform_device *pdev)
+diff --git a/arch/arm/mach-shmobile/board-kzm9g.c b/arch/arm/mach-shmobile/board-kzm9g.c
+index 9082695..67daafd 100644
+--- a/arch/arm/mach-shmobile/board-kzm9g.c
++++ b/arch/arm/mach-shmobile/board-kzm9g.c
+@@ -147,12 +147,14 @@ static int usbhs_get_vbus(struct platform_device *pdev)
+ 	return !((1 << 7) & __raw_readw(priv->cr2));
+ }
+ 
+-static void usbhs_phy_reset(struct platform_device *pdev)
++static int usbhs_phy_reset(struct platform_device *pdev)
+ {
+ 	struct usbhs_private *priv = usbhs_get_priv(pdev);
+ 
+ 	/* init phy */
+ 	__raw_writew(0x8a0a, priv->cr2);
++
++	return 0;
+ }
+ 
+ static int usbhs_get_id(struct platform_device *pdev)
+@@ -194,7 +196,7 @@ static int usbhs_hardware_init(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static void usbhs_hardware_exit(struct platform_device *pdev)
++static int usbhs_hardware_exit(struct platform_device *pdev)
+ {
+ 	struct usbhs_private *priv = usbhs_get_priv(pdev);
+ 
+@@ -202,6 +204,8 @@ static void usbhs_hardware_exit(struct platform_device *pdev)
+ 	__raw_writew(USB_PHY_MODE | USB_PHY_INT_CLR, priv->phy);
+ 
+ 	free_irq(IRQ15, pdev);
++
++	return 0;
+ }
+ 
+ static u32 usbhs_pipe_cfg[] = {
+diff --git a/arch/arm/mach-shmobile/board-mackerel.c b/arch/arm/mach-shmobile/board-mackerel.c
+index fb9be17..71aa059 100644
+--- a/arch/arm/mach-shmobile/board-mackerel.c
++++ b/arch/arm/mach-shmobile/board-mackerel.c
+@@ -575,12 +575,14 @@ static int usbhs_get_vbus(struct platform_device *pdev)
+ 	return usbhs_is_connected(usbhs_get_priv(pdev));
+ }
+ 
+-static void usbhs_phy_reset(struct platform_device *pdev)
++static int usbhs_phy_reset(struct platform_device *pdev)
+ {
+ 	struct usbhs_private *priv = usbhs_get_priv(pdev);
+ 
+ 	/* init phy */
+ 	__raw_writew(0x8a0a, priv->usbcrcaddr);
++
++	return 0;
+ }
+ 
+ static int usbhs0_get_id(struct platform_device *pdev)
+@@ -607,11 +609,13 @@ static int usbhs0_hardware_init(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static void usbhs0_hardware_exit(struct platform_device *pdev)
++static int usbhs0_hardware_exit(struct platform_device *pdev)
+ {
+ 	struct usbhs_private *priv = usbhs_get_priv(pdev);
+ 
+ 	cancel_delayed_work_sync(&priv->work);
++
++	return 0;
+ }
+ 
+ static struct usbhs_private usbhs0_private = {
+@@ -713,7 +717,7 @@ static int usbhs1_hardware_init(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static void usbhs1_hardware_exit(struct platform_device *pdev)
++static int usbhs1_hardware_exit(struct platform_device *pdev)
+ {
+ 	struct usbhs_private *priv = usbhs_get_priv(pdev);
+ 
+@@ -721,6 +725,8 @@ static void usbhs1_hardware_exit(struct platform_device *pdev)
+ 	__raw_writew(USB_PHY_MODE | USB_PHY_INT_CLR, priv->usbphyaddr);
+ 
+ 	free_irq(IRQ8, pdev);
++
++	return 0;
+ }
+ 
+ static int usbhs1_get_id(struct platform_device *pdev)
+diff --git a/drivers/usb/renesas_usbhs/mod_gadget.c b/drivers/usb/renesas_usbhs/mod_gadget.c
+index beefff1..76589dc 100644
+--- a/drivers/usb/renesas_usbhs/mod_gadget.c
++++ b/drivers/usb/renesas_usbhs/mod_gadget.c
+@@ -229,7 +229,7 @@ static int usbhsg_recip_handler_std_clear_endpoint(struct usbhs_priv *priv,
+ 	return 0;
+ }
+ 
+-struct usbhsg_recip_handle req_clear_feature = {
++static struct usbhsg_recip_handle req_clear_feature = {
+ 	.name		= "clear feature",
+ 	.device		= usbhsg_recip_handler_std_control_done,
+ 	.interface	= usbhsg_recip_handler_std_control_done,
+@@ -270,7 +270,7 @@ static int usbhsg_recip_handler_std_set_endpoint(struct usbhs_priv *priv,
+ 	return 0;
+ }
+ 
+-struct usbhsg_recip_handle req_set_feature = {
++static struct usbhsg_recip_handle req_set_feature = {
+ 	.name		= "set feature",
+ 	.device		= usbhsg_recip_handler_std_set_device,
+ 	.interface	= usbhsg_recip_handler_std_control_done,
+@@ -368,7 +368,7 @@ static int usbhsg_recip_handler_std_get_endpoint(struct usbhs_priv *priv,
+ 	return 0;
+ }
+ 
+-struct usbhsg_recip_handle req_get_status = {
++static struct usbhsg_recip_handle req_get_status = {
+ 	.name		= "get status",
+ 	.device		= usbhsg_recip_handler_std_get_device,
+ 	.interface	= usbhsg_recip_handler_std_get_interface,
+diff --git a/include/linux/usb/renesas_usbhs.h b/include/linux/usb/renesas_usbhs.h
+index 547e59c..2fb5743 100644
+--- a/include/linux/usb/renesas_usbhs.h
++++ b/include/linux/usb/renesas_usbhs.h
+@@ -62,14 +62,14 @@ struct renesas_usbhs_platform_callback {
+ 	 * Hardware exit function for platform.
+ 	 * it is called when driver was removed
+ 	 */
+-	void (*hardware_exit)(struct platform_device *pdev);
++	int (*hardware_exit)(struct platform_device *pdev);
+ 
+ 	/*
+ 	 * option:
+ 	 *
+ 	 * for board specific clock control
+ 	 */
+-	void (*power_ctrl)(struct platform_device *pdev,
++	int (*power_ctrl)(struct platform_device *pdev,
+ 			   void __iomem *base, int enable);
+ 
+ 	/*
+@@ -77,7 +77,7 @@ struct renesas_usbhs_platform_callback {
+ 	 *
+ 	 * Phy reset for platform
+ 	 */
+-	void (*phy_reset)(struct platform_device *pdev);
++	int (*phy_reset)(struct platform_device *pdev);
+ 
+ 	/*
+ 	 * get USB ID function
+-- 
+1.8.2
+

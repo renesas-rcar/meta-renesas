@@ -1,7 +1,7 @@
 From a3cff38f3c318cbfa5715622a1d2b5ed90cb3cf2 Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Tue, 16 Oct 2012 22:48:40 +0000
-Subject: [PATCH 085/611] drm: add drm_send_vblank_event() helper (v5)
+Subject: [PATCH 085/675] drm: add drm_send_vblank_event() helper (v5)
 
 A helper that drivers can use to send vblank event after a pageflip.
 If the driver doesn't support proper vblank irq based time/seqn then

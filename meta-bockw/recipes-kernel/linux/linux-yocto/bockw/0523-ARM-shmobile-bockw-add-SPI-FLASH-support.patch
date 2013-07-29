@@ -1,7 +1,7 @@
 From d259714001a5135ec7cd3bd59eb7cf3b706fdf96 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 16 May 2013 14:34:49 +0900
-Subject: [PATCH 523/611] ARM: shmobile: bockw: add SPI FLASH support
+Subject: [PATCH 523/675] ARM: shmobile: bockw: add SPI FLASH support
 
 This patch enables Spansion S25FL008K chip on HSPI0
 

@@ -1,7 +1,7 @@
 From 820b539778c9fd1d08d89f083f53afba8dbf3354 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:38:51 +0100
-Subject: [PATCH 362/611] sh-pfc: r8a7779: Add LBSC pin groups and functions
+Subject: [PATCH 362/675] sh-pfc: r8a7779: Add LBSC pin groups and functions
 
 Only the CS pins and functions are currently handled.
 

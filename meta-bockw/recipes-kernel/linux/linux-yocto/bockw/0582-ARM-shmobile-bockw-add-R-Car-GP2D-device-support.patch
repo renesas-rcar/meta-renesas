@@ -1,7 +1,7 @@
 From 2589932a64c096655edcf53bb61f29a4bdd96b15 Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Thu, 7 Mar 2013 16:07:55 +0900
-Subject: [PATCH 582/611] ARM: shmobile: bockw: add R-Car GP2D device support
+Subject: [PATCH 582/675] ARM: shmobile: bockw: add R-Car GP2D device support
 
 ---
  arch/arm/mach-shmobile/board-bockw.c          |  1 +

@@ -1,7 +1,7 @@
 From 897dab1c258b408ccb555e23765f21e287fa606b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:25 +0100
-Subject: [PATCH 287/611] ARM: shmobile: r8a7740: Use driver-provided pinmux
+Subject: [PATCH 287/675] ARM: shmobile: r8a7740: Use driver-provided pinmux
  info
 
 Pinmux info for the r8a7740 is now provided by pinmux drivers. Remove

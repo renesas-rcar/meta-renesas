@@ -1,7 +1,7 @@
 From cc52e18063af13518df7ec0d603fc101dd2c5746 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Thu, 9 May 2013 03:14:35 +0400
-Subject: [PATCH 453/611] sh-pfc: r8a7778: add VIN pin groups
+Subject: [PATCH 453/675] sh-pfc: r8a7778: add VIN pin groups
 
 Add VIN DATA[0:8]/CLK/HSYNC/VSYNC pin groups to R8A7778 PFC driver.
 While at it, add SH_PFC_MUX8() macro for 8-bit data busses.

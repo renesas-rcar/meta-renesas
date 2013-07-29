@@ -1,7 +1,7 @@
 From b939b14c6e7dc71d8b7d657a017e1d6f2f4c49b8 Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Fri, 17 Aug 2012 14:20:02 +0000
-Subject: [PATCH 051/611] drm: Remove two unused fields from struct
+Subject: [PATCH 051/675] drm: Remove two unused fields from struct
  drm_display_mode
 
 Signed-off-by: Damien Lespiau <damien.lespiau@intel.com>

@@ -1,7 +1,7 @@
 From 4852cd2245e84426d8d8f6be6d3c5c1a7fbdfc39 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:44 +0100
-Subject: [PATCH 234/611] sh-pfc: Move private definitions and declarations to
+Subject: [PATCH 234/675] sh-pfc: Move private definitions and declarations to
  private header
 
 Move all private structure definitions and function declarations from

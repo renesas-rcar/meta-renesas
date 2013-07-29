@@ -1,7 +1,7 @@
 From 52814365c72a84648cb8db5f51d8be5d403f5839 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 03:19:44 +0100
-Subject: [PATCH 390/611] sh-pfc: Skip gpiochip registration when no GPIO
+Subject: [PATCH 390/675] sh-pfc: Skip gpiochip registration when no GPIO
  resource is found
 
 Boards/platforms that register dedicated GPIO devices will not supply a

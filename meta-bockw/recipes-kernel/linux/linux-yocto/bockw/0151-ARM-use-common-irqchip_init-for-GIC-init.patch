@@ -1,7 +1,7 @@
 From 7720109c8c29150813702d77a541bd6d891232c3 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Mon, 5 Nov 2012 16:18:28 -0600
-Subject: [PATCH 151/611] ARM: use common irqchip_init for GIC init
+Subject: [PATCH 151/675] ARM: use common irqchip_init for GIC init
 
 Convert all GIC DT initialization over to use common irqchip_init
 function.

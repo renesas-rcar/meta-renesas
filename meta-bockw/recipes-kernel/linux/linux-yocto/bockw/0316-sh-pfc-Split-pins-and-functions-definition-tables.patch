@@ -1,7 +1,7 @@
 From bdd2da15d5b1d72c87f71957d3bd0d0e8f27f177 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 13:24:07 +0100
-Subject: [PATCH 316/611] sh-pfc: Split pins and functions definition tables
+Subject: [PATCH 316/675] sh-pfc: Split pins and functions definition tables
 
 Split the GPIOs table into a pins table for real GPIOs and a functions
 table for function GPIOs.

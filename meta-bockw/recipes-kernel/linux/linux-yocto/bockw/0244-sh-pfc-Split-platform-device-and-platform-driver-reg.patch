@@ -1,7 +1,7 @@
 From c0d9ccd53dc6d382b589c7f241560b14557faa8a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:54 +0100
-Subject: [PATCH 244/611] sh-pfc: Split platform device and platform driver
+Subject: [PATCH 244/675] sh-pfc: Split platform device and platform driver
  registration
 
 Move platform driver registration to a static postcore initcall. This

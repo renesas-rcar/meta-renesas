@@ -1,7 +1,7 @@
 From 88e740dd35bf9b3970599c076343d188ceac35c1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:37 +0100
-Subject: [PATCH 228/611] sh: sh7723: Rename GPIO_FN_SIUOSPD to
+Subject: [PATCH 228/675] sh: sh7723: Rename GPIO_FN_SIUOSPD to
  GPIO_FN_SIUAOSPD
 
 The GPIO was incorrectly named. As it has no user in the whole kernel

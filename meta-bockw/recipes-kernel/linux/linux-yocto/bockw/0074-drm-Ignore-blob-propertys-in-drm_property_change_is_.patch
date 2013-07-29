@@ -1,7 +1,7 @@
 From 13d10d83a5f846e089a0a7ed75b427c19d12191e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:06 +0000
-Subject: [PATCH 074/611] drm: Ignore blob propertys in
+Subject: [PATCH 074/675] drm: Ignore blob propertys in
  drm_property_change_is_valid()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

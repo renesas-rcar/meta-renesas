@@ -1,7 +1,7 @@
 From 65795d480e84404d6412b169723bf17a62e5d2f6 Mon Sep 17 00:00:00 2001
 From: Phil Edworthy <phil.edworthy@renesas.com>
 Date: Mon, 6 Aug 2012 13:31:04 +0100
-Subject: [PATCH 420/611] r8a7779: add SDHI clock support
+Subject: [PATCH 420/675] r8a7779: add SDHI clock support
 
 Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 Tested-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>

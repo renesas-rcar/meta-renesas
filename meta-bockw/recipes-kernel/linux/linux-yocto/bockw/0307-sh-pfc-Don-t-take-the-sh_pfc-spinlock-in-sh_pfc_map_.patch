@@ -1,7 +1,7 @@
 From ab72b1ef4d97b02fa29dc07a015abaf6560625ed Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 28 Nov 2012 20:56:48 +0100
-Subject: [PATCH 307/611] sh-pfc: Don't take the sh_pfc spinlock in
+Subject: [PATCH 307/675] sh-pfc: Don't take the sh_pfc spinlock in
  sh_pfc_map_gpios()
 
 The sh_pfc_map_gpios() function is only called at initialization time

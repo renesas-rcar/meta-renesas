@@ -1,7 +1,7 @@
 From bf0f7f2409f9429d3a235ca9b3fdebce1738531f Mon Sep 17 00:00:00 2001
 From: Marek Vasut <marex@denx.de>
 Date: Fri, 6 Jul 2012 08:10:25 +0200
-Subject: [PATCH 471/611] mtd: m25p80: add support for Spansion s25sl064p chip
+Subject: [PATCH 471/675] mtd: m25p80: add support for Spansion s25sl064p chip
 
 Signed-off-by: Marek Vasut <marex@denx.de>
 Signed-off-by: Artem Bityutskiy <Artem.Bityutskiy@linux.intel.com>

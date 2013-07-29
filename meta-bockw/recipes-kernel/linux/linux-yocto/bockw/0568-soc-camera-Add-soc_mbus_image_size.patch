@@ -1,7 +1,7 @@
 From 7565132f6289d73a547bdc6bfab61612bf6f7bef Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Wed, 21 Mar 2012 08:03:25 -0300
-Subject: [PATCH 568/611] soc-camera: Add soc_mbus_image_size
+Subject: [PATCH 568/675] soc-camera: Add soc_mbus_image_size
 
 The function returns the minimum size of an image for a given number of
 bytes per line (as per the V4L2 specification), width and format.

@@ -1,7 +1,7 @@
 From 160289967a4c896c67b5b88fe24c0fb18c3c6d8a Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Tue, 12 Feb 2013 16:50:02 +0100
-Subject: [PATCH 329/611] ARM: shmobile: sh73a0: Support sparse GPIO numbers
+Subject: [PATCH 329/675] ARM: shmobile: sh73a0: Support sparse GPIO numbers
 
 The SH73A0 SoC has sparse GPIO numbers. Declare the pin numbers ranges
 in the PFC SoC data and use the pin numbers in the GPIO API.

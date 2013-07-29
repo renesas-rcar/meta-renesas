@@ -1,7 +1,7 @@
 From bbcc9cb064deac345ac02882a71e7f2506fbe7a3 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:17 +0200
-Subject: [PATCH 412/611] ARM: shmobile: r8a7790: Register GPIO devices
+Subject: [PATCH 412/675] ARM: shmobile: r8a7790: Register GPIO devices
 
 Move GPIOs handling from the PFC device to separate GPIO devices.
 

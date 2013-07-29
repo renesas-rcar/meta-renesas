@@ -1,7 +1,7 @@
 From b6d1a661642b3ee362a1602d22f463186d3ef2b6 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Wed, 11 Jul 2012 16:28:08 +0200
-Subject: [PATCH 048/611] drm: remove the list_head from drm_mode_set
+Subject: [PATCH 048/675] drm: remove the list_head from drm_mode_set
 
 It's unused. At it confused me quite a bit until I've discovered that.
 

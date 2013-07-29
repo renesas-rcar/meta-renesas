@@ -1,7 +1,7 @@
 From 99bea411233a6180b770e48dc37e81b9bf0d867d Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Mon, 2 Jul 2012 16:37:47 +0200
-Subject: [PATCH 103/611] DRM: Add DRM KMS/FB CMA helper
+Subject: [PATCH 103/675] DRM: Add DRM KMS/FB CMA helper
 
 This patchset introduces a set of helper function for implementing the KMS
 framebuffer layer for drivers which use the DRM GEM CMA helper function.

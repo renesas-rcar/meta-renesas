@@ -1,0 +1,29 @@
+From e9d75ef236c5f443c413ce67c94d966b3bc3ed15 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 16 Jul 2013 02:11:05 +0200
+Subject: [PATCH 625/675] sh-pfc: Remove unused GPIO_PORT_ALL macro
+
+The macro isn't used, remove it.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ drivers/pinctrl/sh-pfc/sh_pfc.h | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/sh_pfc.h b/drivers/pinctrl/sh-pfc/sh_pfc.h
+index 67e0fd8..fe0ae03 100644
+--- a/drivers/pinctrl/sh-pfc/sh_pfc.h
++++ b/drivers/pinctrl/sh-pfc/sh_pfc.h
+@@ -194,9 +194,7 @@ struct sh_pfc_soc_info {
+ 	PORT_10(fn, pfx##9, sfx)
+ 
+ #define _PORT_ALL(pfx, sfx) pfx##_##sfx
+-#define _GPIO_PORT(pfx, sfx) PINMUX_GPIO(GPIO_PORT##pfx, PORT##pfx##_DATA)
+ #define PORT_ALL(str)	CPU_ALL_PORT(_PORT_ALL, PORT, str)
+-#define GPIO_PORT_ALL()	CPU_ALL_PORT(_GPIO_PORT, , unused)
+ #define GPIO_FN(str) PINMUX_GPIO_FN(GPIO_FN_##str, PINMUX_FN_BASE, str##_MARK)
+ 
+ /* helper macro for pinmux_enum_t */
+-- 
+1.8.2
+

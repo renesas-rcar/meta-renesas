@@ -1,7 +1,7 @@
 From 55c869a9436f62cec812ae66b0b95d8b5d54d11e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Feb 2013 04:18:22 +0100
-Subject: [PATCH 129/611] drm/rcar-du: Support configurable color keying for
+Subject: [PATCH 129/675] drm/rcar-du: Support configurable color keying for
  planes
 
 The color key is expressed as an RGB888 triplet stored in a 32-bit

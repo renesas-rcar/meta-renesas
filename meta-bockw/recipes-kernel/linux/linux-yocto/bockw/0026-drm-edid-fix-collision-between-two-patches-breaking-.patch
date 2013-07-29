@@ -1,7 +1,7 @@
 From 8949c7b68b831cdf969a6f9f12bbbd1ae8570b66 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Mon, 30 Apr 2012 07:26:16 +0100
-Subject: [PATCH 026/611] drm/edid: fix collision between two patches breaking
+Subject: [PATCH 026/675] drm/edid: fix collision between two patches breaking
  build
 
 this fixes a report that the new load code needed to be updated for

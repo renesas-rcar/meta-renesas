@@ -1,7 +1,7 @@
 From f2e95ea0a0f1d1d5bd06e2d9cf05d973cadc5e48 Mon Sep 17 00:00:00 2001
 From: Thomas Abraham <thomas.abraham@linaro.org>
 Date: Wed, 9 May 2012 04:04:54 +0530
-Subject: [PATCH 465/611] mtd: m25p80: Add support for Winbond W25Q80BW
+Subject: [PATCH 465/675] mtd: m25p80: Add support for Winbond W25Q80BW
 
 Winbond W25Q80BW is a 8Mbit serial flash memory device.
 

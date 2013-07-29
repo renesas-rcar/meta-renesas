@@ -1,7 +1,7 @@
 From 2a47680073d7158e22d3a120941b44fca16c906c Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Thu, 14 Mar 2013 13:17:45 +0900
-Subject: [PATCH 578/611] gp2d: add some supports for R-GP2D acceleration
+Subject: [PATCH 578/675] gp2d: add some supports for R-GP2D acceleration
 
 This change is temporary on debugging.
 ---

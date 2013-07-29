@@ -1,7 +1,7 @@
 From 9f102e18972b4b4d59d208d7679698b399d870c3 Mon Sep 17 00:00:00 2001
 From: Austin Boyle <Austin.Boyle@aviatnet.com>
 Date: Fri, 4 Jan 2013 13:02:28 +1300
-Subject: [PATCH 481/611] mtd: m25p80: Flash protection support for STmicro
+Subject: [PATCH 481/675] mtd: m25p80: Flash protection support for STmicro
  chips
 
 This patch adds generic support for flash protection on STmicro chips.

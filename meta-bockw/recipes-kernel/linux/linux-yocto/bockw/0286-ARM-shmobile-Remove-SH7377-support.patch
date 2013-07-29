@@ -1,7 +1,7 @@
 From e62ca8c23b5bde7823e6c7d4deb20a324ea57e90 Mon Sep 17 00:00:00 2001
 From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 Date: Mon, 29 Oct 2012 15:06:00 +0900
-Subject: [PATCH 286/611] ARM: shmobile: Remove SH7377 support
+Subject: [PATCH 286/675] ARM: shmobile: Remove SH7377 support
 
 This is old CPU of shmobile, and the machine by which this CPU is
 used cannot be obtained.

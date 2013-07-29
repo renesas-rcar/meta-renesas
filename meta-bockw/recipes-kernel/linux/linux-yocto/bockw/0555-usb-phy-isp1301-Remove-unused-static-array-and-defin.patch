@@ -1,7 +1,7 @@
 From a3a4eb2fef8324421298f29a954341369b3dddbb Mon Sep 17 00:00:00 2001
 From: Roland Stigge <stigge@antcom.de>
 Date: Sun, 19 Aug 2012 13:04:29 +0200
-Subject: [PATCH 555/611] usb: phy: isp1301: Remove unused static array and
+Subject: [PATCH 555/675] usb: phy: isp1301: Remove unused static array and
  define
 
 This patch removes an unused statically defined array and an associated

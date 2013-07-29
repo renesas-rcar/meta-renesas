@@ -1,7 +1,7 @@
 From 030e49ec42e483d5b5fd758d9db0329a7f462f6d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 15 Feb 2013 02:04:55 +0100
-Subject: [PATCH 343/611] sh-pfc: Move GPIO registers access functions to
+Subject: [PATCH 343/675] sh-pfc: Move GPIO registers access functions to
  gpio.c
 
 Move the sh_pfc_setup_data_regs(), sh_pfc_setup_data_reg(),

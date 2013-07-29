@@ -1,7 +1,7 @@
 From 90fb7070dea6267f4c523718701da6696cb65883 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:23 +0100
-Subject: [PATCH 271/611] sh-pfc: Add sh7372 pinmux support
+Subject: [PATCH 271/675] sh-pfc: Add sh7372 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>

@@ -1,0 +1,33 @@
+From efd345e6d47979852dc5a3c491a47e5d233807a1 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Tue, 16 Jul 2013 11:06:58 +0900
+Subject: [PATCH 620/675] tidyup original for_each_rsnd_clk macro
+
+Based on
+ http://www.spinics.net/lists/linux-usb/msg89323.html
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ sound/soc/sh/rcar/adg.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/sound/soc/sh/rcar/adg.c b/sound/soc/sh/rcar/adg.c
+index 8fcf990..2dd7dff 100644
+--- a/sound/soc/sh/rcar/adg.c
++++ b/sound/soc/sh/rcar/adg.c
+@@ -25,9 +25,9 @@ struct rsnd_adg {
+ };
+ 
+ #define for_each_rsnd_clk(pos, adg, i)		\
+-	for (i = 0, (pos) = adg->clk[i];	\
+-	     i < CLKMAX;			\
+-	     i++, (pos) = adg->clk[i])
++	for ((i) = 0;					\
++	     ((i) < CLKMAX) && ((pos) = adg->clk[(i)]);	\
++	     (i)++)
+ #define rsnd_priv_to_adg(priv) (struct rsnd_adg *)priv->adg
+ 
+ static enum rsnd_reg rsnd_adg_ssi_reg_get(int id)
+-- 
+1.8.2
+

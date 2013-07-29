@@ -1,7 +1,7 @@
 From ec562275a95bdf11e3359d19b03e9bf7b8043342 Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Sat, 2 Feb 2013 23:44:06 +0900
-Subject: [PATCH 199/611] gpiolib: remove gpiochip_reserve()
+Subject: [PATCH 199/675] gpiolib: remove gpiochip_reserve()
 
 gpiochip_reserve() has no user and stands in the way of the removal of
 the static gpio_desc[] array. Remove this function as well as the now

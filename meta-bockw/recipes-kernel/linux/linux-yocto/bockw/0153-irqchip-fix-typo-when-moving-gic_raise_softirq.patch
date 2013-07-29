@@ -1,7 +1,7 @@
 From a6305cb480dccf3a57990e769554eb940b356422 Mon Sep 17 00:00:00 2001
 From: Javi Merino <javi.merino@arm.com>
 Date: Tue, 19 Feb 2013 13:52:22 +0000
-Subject: [PATCH 153/611] irqchip: fix typo when moving gic_raise_softirq()
+Subject: [PATCH 153/675] irqchip: fix typo when moving gic_raise_softirq()
 
 In b1cffebf (ARM: GIC: remove direct use of gic_raise_softirq)
 gic_raise_softirq() was moved inside arch/arm/common/gic.c but in the

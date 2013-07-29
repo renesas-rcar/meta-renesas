@@ -1,7 +1,7 @@
 From bbf4f42c99d7b1f7a15840e33ae4e51ce6fc81f9 Mon Sep 17 00:00:00 2001
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Date: Fri, 21 Dec 2012 15:14:44 -0800
-Subject: [PATCH 227/611] Drivers: misc: remove __dev* attributes.
+Subject: [PATCH 227/675] Drivers: misc: remove __dev* attributes.
 
 CONFIG_HOTPLUG is going away as an option.  As a result, the __dev*
 markings need to be removed.

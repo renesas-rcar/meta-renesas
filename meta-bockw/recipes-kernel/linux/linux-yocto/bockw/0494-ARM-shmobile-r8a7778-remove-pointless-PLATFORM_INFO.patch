@@ -1,7 +1,7 @@
 From 972d960be642e71066ffeaa30bbf58757866d30d Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 1 Apr 2013 21:19:17 -0700
-Subject: [PATCH 494/611] ARM: shmobile: r8a7778: remove pointless
+Subject: [PATCH 494/675] ARM: shmobile: r8a7778: remove pointless
  PLATFORM_INFO()
 
 remove pointless PLATFORM_INFO() macro from setup-r8a7778,

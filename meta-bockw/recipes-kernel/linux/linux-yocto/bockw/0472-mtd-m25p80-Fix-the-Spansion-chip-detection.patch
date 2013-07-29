@@ -1,7 +1,7 @@
 From bc5def80c0bac7d9c477f55288a9fb1adeb5d34b Mon Sep 17 00:00:00 2001
 From: Marek Vasut <marex@denx.de>
 Date: Fri, 6 Jul 2012 08:10:26 +0200
-Subject: [PATCH 472/611] mtd: m25p80: Fix the Spansion chip detection
+Subject: [PATCH 472/675] mtd: m25p80: Fix the Spansion chip detection
 
 Due to the implementation of the following loop at the end
 of jedec_probe():

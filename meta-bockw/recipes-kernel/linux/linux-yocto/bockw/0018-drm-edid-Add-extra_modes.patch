@@ -1,7 +1,7 @@
 From e73cb0305cff6b6e3f5e6f07fdbcd2cda8be7927 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:39 -0400
-Subject: [PATCH 018/611] drm/edid: Add extra_modes
+Subject: [PATCH 018/675] drm/edid: Add extra_modes
 
 Some common sizes that don't show up in DMT.
 

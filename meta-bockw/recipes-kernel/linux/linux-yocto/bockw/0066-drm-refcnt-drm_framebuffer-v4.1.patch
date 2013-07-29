@@ -1,7 +1,7 @@
 From 34e0eb41bcd86b56121d677e34c0790a00c3807c Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Wed, 5 Sep 2012 21:48:38 +0000
-Subject: [PATCH 066/611] drm: refcnt drm_framebuffer (v4.1)
+Subject: [PATCH 066/675] drm: refcnt drm_framebuffer (v4.1)
 
 This simplifies drm fb lifetime, and if the crtc/plane needs to hold
 a ref to the fb when disabling a pipe until the next vblank, this

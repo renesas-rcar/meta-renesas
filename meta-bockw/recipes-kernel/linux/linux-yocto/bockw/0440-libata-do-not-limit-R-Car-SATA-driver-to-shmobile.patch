@@ -1,7 +1,7 @@
 From e206a1bc71f586e5050e67002493380ec84db539 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Fri, 24 May 2013 10:30:46 +0900
-Subject: [PATCH 440/611] libata: do not limit R-Car SATA driver to shmobile
+Subject: [PATCH 440/675] libata: do not limit R-Car SATA driver to shmobile
 
 The motivation for this is to allow the driver to be
 used with the r8a7790 SoC.

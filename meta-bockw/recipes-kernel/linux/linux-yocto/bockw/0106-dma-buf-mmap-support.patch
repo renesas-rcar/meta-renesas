@@ -1,7 +1,7 @@
 From 597aba28d687ccd704d6fb1e12f891cf27ae81a3 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 24 Apr 2012 14:38:52 +0530
-Subject: [PATCH 106/611] dma-buf: mmap support
+Subject: [PATCH 106/675] dma-buf: mmap support
 
 Compared to Rob Clark's RFC I've ditched the prepare/finish hooks
 and corresponding ioctls on the dma_buf file. The major reason for

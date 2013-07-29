@@ -1,7 +1,7 @@
 From 54721b2dea5f5dc66f131838196a47e08b028791 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 12 Jun 2013 11:32:01 +0900
-Subject: [PATCH 495/611] LTSI: ARM: shmobile: r8a7778: setup early timer
+Subject: [PATCH 495/675] LTSI: ARM: shmobile: r8a7778: setup early timer
 
 LTSI v3.4 ARM kernel doesn't support .init_time on DT_MACHINE_START,
 but, upstream base r8a7778 SoC support is using it.

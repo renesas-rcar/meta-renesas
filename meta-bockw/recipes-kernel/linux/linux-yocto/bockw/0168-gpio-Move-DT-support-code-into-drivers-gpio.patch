@@ -1,7 +1,7 @@
 From f31f9374517e9c9ccd40c63284440e6f85f4d786 Mon Sep 17 00:00:00 2001
 From: Grant Likely <grant.likely@secretlab.ca>
 Date: Sat, 7 Apr 2012 14:31:33 -0600
-Subject: [PATCH 168/611] gpio: Move DT support code into drivers/gpio
+Subject: [PATCH 168/675] gpio: Move DT support code into drivers/gpio
 
 The code in drivers/of/gpio.c isn't shared by any other subsystem since it
 is all gpiolib specific.  drivers/gpio is a better place to maintain these

@@ -1,7 +1,7 @@
 From 62309ea4eb4c16ea8fb2d17eb594b17839366e4d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:22 +0100
-Subject: [PATCH 270/611] sh-pfc: Add r8a7779 pinmux support
+Subject: [PATCH 270/675] sh-pfc: Add r8a7779 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>

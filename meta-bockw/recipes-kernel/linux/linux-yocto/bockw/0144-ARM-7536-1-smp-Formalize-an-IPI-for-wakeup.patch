@@ -1,7 +1,7 @@
 From ad07d5edd1eaed5fc2da01b06c7db157cd0e2945 Mon Sep 17 00:00:00 2001
 From: Stephen Boyd <sboyd@codeaurora.org>
 Date: Wed, 19 Sep 2012 08:16:07 +0100
-Subject: [PATCH 144/611] ARM: 7536/1: smp: Formalize an IPI for wakeup
+Subject: [PATCH 144/675] ARM: 7536/1: smp: Formalize an IPI for wakeup
 
 Remove the offset from ipi_msg_type and assume that SGI0 is the
 wakeup interrupt now that all WFI hotplug users call

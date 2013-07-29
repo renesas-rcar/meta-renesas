@@ -1,7 +1,7 @@
 From c994fd7d0b11870988249a3d02486e96a6734767 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Sun, 20 May 2012 12:33:56 +0530
-Subject: [PATCH 108/611] dma-buf: add vmap interface
+Subject: [PATCH 108/675] dma-buf: add vmap interface
 
 The main requirement I have for this interface is for scanning out
 using the USB gpu devices. Since these devices have to read the

@@ -1,7 +1,7 @@
 From 5f6d56440201e3909e6faffedc1b85d0697a8569 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 03:43:32 +0100
-Subject: [PATCH 394/611] ARM: shmobile: marzen: Add GPIO LEDs
+Subject: [PATCH 394/675] ARM: shmobile: marzen: Add GPIO LEDs
 
 The board has 3 LEDs connected to GPIOs. Add a led-gpio device to
 support them.

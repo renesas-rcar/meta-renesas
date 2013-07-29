@@ -1,7 +1,7 @@
 From 008dbb73822a4609cf6a5c103bc2f30af1ca6709 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 22 Jan 2013 10:56:14 -0700
-Subject: [PATCH 166/611] drivers/pinctrl: grab default handles from device
+Subject: [PATCH 166/675] drivers/pinctrl: grab default handles from device
  core
 
 This makes the device core auto-grab the pinctrl handle and set

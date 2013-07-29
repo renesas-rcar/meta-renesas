@@ -1,7 +1,7 @@
 From d151dcaeb3708264568bd7638d2a2a4535aae8b0 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 14:49:39 +0100
-Subject: [PATCH 185/611] gpiolib: fix up function prototypes etc
+Subject: [PATCH 185/675] gpiolib: fix up function prototypes etc
 
 Commit 69e1601bca88809dc118abd1becb02c15a02ec71
 "gpiolib: provide provision to register pin ranges"

@@ -1,7 +1,7 @@
 From df899dc7b4c2b0e280b8523e155b93ee3e773e4a Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 12 Apr 2013 01:13:14 -0700
-Subject: [PATCH 502/611] ARM: shmobile: r8a7778: use fixed ratio clock
+Subject: [PATCH 502/675] ARM: shmobile: r8a7778: use fixed ratio clock
 
 R-Car M1 has many clocks, and it is possible to
 read/use clock ratio of these clocks from FRQMRx.

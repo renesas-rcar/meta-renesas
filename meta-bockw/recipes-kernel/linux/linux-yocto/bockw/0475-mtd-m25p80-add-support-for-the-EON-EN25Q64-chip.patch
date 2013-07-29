@@ -1,7 +1,7 @@
 From 5022aa4884195533c39f020f9a4a4380c4cfb865 Mon Sep 17 00:00:00 2001
 From: Gabor Juhos <juhosg@openwrt.org>
 Date: Sun, 26 Aug 2012 10:37:31 +0200
-Subject: [PATCH 475/611] mtd: m25p80: add support for the EON EN25Q64 chip
+Subject: [PATCH 475/675] mtd: m25p80: add support for the EON EN25Q64 chip
 
 Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 Signed-off-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>

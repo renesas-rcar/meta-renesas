@@ -1,7 +1,7 @@
 From de93ac15cd1d76d207874789757a299c81be74b1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 23:47:18 +0100
-Subject: [PATCH 384/611] sh-pfc: r8a7779: Don't use GPIO enum entries
+Subject: [PATCH 384/675] sh-pfc: r8a7779: Don't use GPIO enum entries
 
 Refactor the GPIO macro magic to use GPIO numbers directly instead of
 the GPIO_GP_x_y enum entries. This will allow removing the GPIO enum

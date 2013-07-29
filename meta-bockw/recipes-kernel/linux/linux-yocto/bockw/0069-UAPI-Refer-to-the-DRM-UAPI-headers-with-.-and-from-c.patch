@@ -1,7 +1,7 @@
 From b6e7b922a14c7736aa6520ae8868ea8feed33718 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 2 Oct 2012 18:01:03 +0100
-Subject: [PATCH 069/611] UAPI: Refer to the DRM UAPI headers with <...> and
+Subject: [PATCH 069/675] UAPI: Refer to the DRM UAPI headers with <...> and
  from certain headers only
 
 Only refer to the DRM UAPI headers (drm.h, drm_mode.h and drm_sarea.h) from

@@ -1,7 +1,7 @@
 From 8ecd53ced2f2e86ff437e5e5bd872d04f5ca1449 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Feb 2013 04:18:22 +0100
-Subject: [PATCH 128/611] drm/rcar-du: Add configurable z-order support for
+Subject: [PATCH 128/675] drm/rcar-du: Add configurable z-order support for
  planes
 
 Create a new zpos property and instantiate it for each plane with an

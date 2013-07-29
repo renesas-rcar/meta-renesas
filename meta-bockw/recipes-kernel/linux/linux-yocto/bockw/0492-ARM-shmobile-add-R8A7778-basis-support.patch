@@ -1,7 +1,7 @@
 From 7953634f600f31f8857857d6fd533d5179b1e6bb Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 21 Mar 2013 03:01:36 -0700
-Subject: [PATCH 492/611] ARM: shmobile: add R8A7778 basis support
+Subject: [PATCH 492/675] ARM: shmobile: add R8A7778 basis support
 
 Add initial support for the R8A7778 R-Car M1A SoC.
 No static virtual mappings are used, all the components

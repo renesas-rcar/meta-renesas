@@ -1,7 +1,7 @@
 From e057d449be13eac5aef6c2fff985f9ebe12252d9 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 15 May 2013 16:58:24 +0900
-Subject: [PATCH 512/611] LTSI: ARM: shmobile: bockw: fixup early timer dtb
+Subject: [PATCH 512/675] LTSI: ARM: shmobile: bockw: fixup early timer dtb
  compile
 
 LTSI v3.4 ARM kernel doesn't support .init_time on DT_MACHINE_START,

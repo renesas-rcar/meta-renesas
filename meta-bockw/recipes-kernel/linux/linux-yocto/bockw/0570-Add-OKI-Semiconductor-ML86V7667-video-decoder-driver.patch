@@ -1,7 +1,7 @@
 From 41d09108dc7c0fe82554975a095ab1bafca3a5ef Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Fri, 7 Jun 2013 11:42:08 +0900
-Subject: [PATCH 570/611] Add OKI Semiconductor ML86V7667 video decoder driver.
+Subject: [PATCH 570/675] Add OKI Semiconductor ML86V7667 video decoder driver.
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 [Sergei: added v4l2_device_unregister_subdev() call to the error cleanup path of

@@ -1,7 +1,7 @@
 From e2d0afa2785b94152e5a5e706ba213d0b9011f5b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:38:51 +0100
-Subject: [PATCH 361/611] sh-pfc: r8a7779: Add USB pin groups and functions
+Subject: [PATCH 361/675] sh-pfc: r8a7779: Add USB pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>

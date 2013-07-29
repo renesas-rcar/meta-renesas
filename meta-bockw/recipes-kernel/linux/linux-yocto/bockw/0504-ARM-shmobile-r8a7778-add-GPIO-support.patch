@@ -1,7 +1,7 @@
 From 471b90ac96d083fbbda22282f01c26b5071c30be Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 17 Apr 2013 23:41:50 -0700
-Subject: [PATCH 504/611] ARM: shmobile: r8a7778: add GPIO support
+Subject: [PATCH 504/675] ARM: shmobile: r8a7778: add GPIO support
 
 This patch was tested on Bock-W board
 

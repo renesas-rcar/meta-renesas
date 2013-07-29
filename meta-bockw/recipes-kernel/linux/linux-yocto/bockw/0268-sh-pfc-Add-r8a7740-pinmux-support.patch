@@ -1,7 +1,7 @@
 From c70eef3f4d7de3d5d624dd20e09a96f1a172eec7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:21 +0100
-Subject: [PATCH 268/611] sh-pfc: Add r8a7740 pinmux support
+Subject: [PATCH 268/675] sh-pfc: Add r8a7740 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>

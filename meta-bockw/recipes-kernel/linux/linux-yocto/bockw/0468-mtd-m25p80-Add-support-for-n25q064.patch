@@ -1,7 +1,7 @@
 From 2bcf32a0e8328322000f8da92bbb10f03b02bd16 Mon Sep 17 00:00:00 2001
 From: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
 Date: Tue, 12 Jun 2012 16:55:15 -0300
-Subject: [PATCH 468/611] mtd: m25p80: Add support for n25q064
+Subject: [PATCH 468/675] mtd: m25p80: Add support for n25q064
 
 Signed-off-by: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
 Signed-off-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
