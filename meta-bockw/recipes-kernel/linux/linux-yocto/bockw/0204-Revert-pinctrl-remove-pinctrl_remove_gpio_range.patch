@@ -1,7 +1,7 @@
 From 01caef29e3af6f39b2f78a8153870f67e0196464 Mon Sep 17 00:00:00 2001
 From: Viresh Kumar <viresh.kumar@linaro.org>
 Date: Sat, 27 Oct 2012 15:21:35 +0530
-Subject: [PATCH 204/611] Revert "pinctrl: remove pinctrl_remove_gpio_range"
+Subject: [PATCH 204/675] Revert "pinctrl: remove pinctrl_remove_gpio_range"
 
 This reverts earlier commit which removed
 pinctrl_remove_gpio_range(), because at that time there

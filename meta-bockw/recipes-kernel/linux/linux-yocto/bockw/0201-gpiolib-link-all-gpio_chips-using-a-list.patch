@@ -1,7 +1,7 @@
 From fcc7d2e3a1d1cf2e43f2811979e130bbe1658c7c Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Sun, 3 Feb 2013 01:29:24 +0900
-Subject: [PATCH 201/611] gpiolib: link all gpio_chips using a list
+Subject: [PATCH 201/675] gpiolib: link all gpio_chips using a list
 
 Add a list member to gpio_chip that allows all chips to be parsed
 quickly. The current method requires parsing the entire GPIO integer

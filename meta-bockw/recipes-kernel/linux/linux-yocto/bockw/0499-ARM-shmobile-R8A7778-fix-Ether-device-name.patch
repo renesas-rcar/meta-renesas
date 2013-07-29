@@ -1,7 +1,7 @@
 From 95a2913d02d8216121f624f5607dbcfab3ec17fc Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Tue, 9 Apr 2013 21:47:51 +0400
-Subject: [PATCH 499/611] ARM: shmobile: R8A7778: fix Ether device name
+Subject: [PATCH 499/675] ARM: shmobile: R8A7778: fix Ether device name
 
 While recasting the commit "ARM: shmobile: R8A7778: add Ether support", I made a
 typo in the platform device's name: used underscore instead of hyphen.

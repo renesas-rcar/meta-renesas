@@ -1,7 +1,7 @@
 From 7d4fe4b5135e2dbe1ab42a6278ece253e20c28cc Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:46 +0100
-Subject: [PATCH 236/611] sh-pfc: Merge PFC core and gpio
+Subject: [PATCH 236/675] sh-pfc: Merge PFC core and gpio
 
 The PFC core calls the gpio module gpiochip registration in its
 register_sh_pfc() function, itself called at arch initialization time.

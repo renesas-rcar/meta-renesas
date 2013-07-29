@@ -1,7 +1,7 @@
 From 21d54bc4ff1bb140fe06f181974d79f2a73da6a0 Mon Sep 17 00:00:00 2001
 From: Wolfram Sang <w.sang@pengutronix.de>
 Date: Tue, 13 Dec 2011 18:34:01 +0100
-Subject: [PATCH 167/611] gpio: add flags to export GPIOs when requesting
+Subject: [PATCH 167/675] gpio: add flags to export GPIOs when requesting
 
 Introduce new flags to automatically export GPIOs when using the convenience
 functions gpio_request_one() or gpio_request_array(). This eases support for

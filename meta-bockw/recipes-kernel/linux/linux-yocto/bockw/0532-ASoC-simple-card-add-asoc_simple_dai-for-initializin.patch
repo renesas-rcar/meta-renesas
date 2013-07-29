@@ -1,7 +1,7 @@
 From d59461c1ca7f2641a909fdabc09b4a2fd74dedb2 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 4 Jun 2013 11:14:53 +0900
-Subject: [PATCH 532/611] ASoC: simple-card: add asoc_simple_dai for
+Subject: [PATCH 532/675] ASoC: simple-card: add asoc_simple_dai for
  initializing
 
 Current simple-card driver calls asoc_simple_card_dai_init()

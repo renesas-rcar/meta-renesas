@@ -1,7 +1,7 @@
 From c424d8ee5b201c7706bfd89bdf8e7ca4c8caa888 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 01:57:30 +0100
-Subject: [PATCH 120/611] drm: GEM CMA: Add DRM PRIME support
+Subject: [PATCH 120/675] drm: GEM CMA: Add DRM PRIME support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 02dd747643f45f1d96d4a96054f67e6ba4bfbe6e)

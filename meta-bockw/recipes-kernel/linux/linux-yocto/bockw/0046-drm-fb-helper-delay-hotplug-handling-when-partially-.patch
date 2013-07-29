@@ -1,7 +1,7 @@
 From fc7a173a5d997f99c0efd2e579e33dc6570bd68e Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Fri, 15 Jun 2012 11:01:22 +0200
-Subject: [PATCH 046/611] drm/fb-helper: delay hotplug handling when partially
+Subject: [PATCH 046/675] drm/fb-helper: delay hotplug handling when partially
  bound
 
 Ok, this requires quite a dance to actually hit:

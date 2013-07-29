@@ -1,7 +1,7 @@
 From c878a783da94b1062a7045ad91ba3f0e72fa7268 Mon Sep 17 00:00:00 2001
 From: Shiraz Hashim <shiraz.hashim@st.com>
 Date: Sat, 27 Oct 2012 15:21:36 +0530
-Subject: [PATCH 184/611] gpiolib: provide provision to register pin ranges
+Subject: [PATCH 184/675] gpiolib: provide provision to register pin ranges
 
 pinctrl subsystem needs gpio chip base to prepare set of gpio
 pin ranges, which a given pinctrl driver can handle. This is

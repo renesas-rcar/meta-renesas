@@ -1,7 +1,7 @@
 From 42ffe1d03380c34425369af3935235ff22f7f610 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 18:47:05 +0100
-Subject: [PATCH 349/611] sh-pfc: Constify all SoC data
+Subject: [PATCH 349/675] sh-pfc: Constify all SoC data
 
 None of the SoC data need to be modified. Constify it.
 

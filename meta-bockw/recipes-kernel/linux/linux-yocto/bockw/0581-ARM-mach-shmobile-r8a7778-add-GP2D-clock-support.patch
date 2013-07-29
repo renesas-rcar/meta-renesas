@@ -1,7 +1,7 @@
 From 4c1895564220a770ca86c00b68b7205a865fe61c Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Thu, 7 Mar 2013 15:59:43 +0900
-Subject: [PATCH 581/611] ARM: mach-shmobile: r8a7778: add GP2D clock support
+Subject: [PATCH 581/675] ARM: mach-shmobile: r8a7778: add GP2D clock support
 
 ---
  arch/arm/mach-shmobile/clock-r8a7778.c | 4 +++-

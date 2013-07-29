@@ -1,7 +1,7 @@
 From 58187195670aed948c41a2d38ad58b8b588d5e38 Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Wed, 8 May 2013 23:15:50 +0000
-Subject: [PATCH 454/611] sh-pfc: r8a7778: add Ether pin groups
+Subject: [PATCH 454/675] sh-pfc: r8a7778: add Ether pin groups
 
 Add Ether RMII/LINK/MAGIC pin groups to R8A7778 PFC driver.
 

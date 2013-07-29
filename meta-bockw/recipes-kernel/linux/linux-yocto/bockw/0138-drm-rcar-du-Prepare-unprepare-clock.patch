@@ -1,7 +1,7 @@
 From e6410a10a109d1f14d60e15c7591016ba3d0a11c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Mar 2013 22:41:36 +0100
-Subject: [PATCH 138/611] drm/rcar-du: Prepare/unprepare clock
+Subject: [PATCH 138/675] drm/rcar-du: Prepare/unprepare clock
 
 Use clk_prepare_enable() and clk_disable_unprepare() to prepare/enable
 and disable/unprepare the DU clock.

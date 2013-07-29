@@ -1,7 +1,7 @@
 From 3981645c9a6c0a1d28b0864caa22735bc1104d09 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 17:16:39 +0100
-Subject: [PATCH 190/611] gpiolib: iron out include ladder mistakes
+Subject: [PATCH 190/675] gpiolib: iron out include ladder mistakes
 
 The <*/gpio.h> includes are updated again: now we need to account
 for the problem introduced by commit:

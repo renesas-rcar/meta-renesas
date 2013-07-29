@@ -1,7 +1,7 @@
 From 9c18003e0eabb853a5c451200b18b56df28c87a6 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 23:39:07 +0100
-Subject: [PATCH 345/611] sh-pfc: Drop unused support for 1:1 physical to
+Subject: [PATCH 345/675] sh-pfc: Drop unused support for 1:1 physical to
  virtual memory mappings
 
 Now that all PFC platform devices provide memory resources support for

@@ -1,7 +1,7 @@
 From df2a8a52ed223160869d7c6f2a0b11b68fc92617 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Fri, 13 Apr 2012 16:31:38 -0300
-Subject: [PATCH 007/611] drm: add the VIC number to the CEA EDID modes
+Subject: [PATCH 007/675] drm: add the VIC number to the CEA EDID modes
 
 The specification defines a VIC (Video Identification Code) for each
 mode. When we're browsing drm_edid_modes.h, it really helps to have the

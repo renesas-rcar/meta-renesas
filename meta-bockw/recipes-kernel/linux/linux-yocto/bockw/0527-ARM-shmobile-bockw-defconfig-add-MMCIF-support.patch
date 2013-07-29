@@ -1,7 +1,7 @@
 From fdfe2b062c16b481e461aebc38ba05da5bdc4255 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 16 May 2013 15:08:23 +0900
-Subject: [PATCH 527/611] ARM: shmobile: bockw defconfig: add MMCIF support
+Subject: [PATCH 527/675] ARM: shmobile: bockw defconfig: add MMCIF support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 ---

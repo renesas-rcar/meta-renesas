@@ -1,7 +1,7 @@
 From dbe0d2223dfb84e367db468cc95a4a29b3c8f858 Mon Sep 17 00:00:00 2001
 From: Ian Pilcher <arequipeno@gmail.com>
 Date: Sun, 22 Apr 2012 11:40:26 -0500
-Subject: [PATCH 025/611] drm: Store vendor IDs directly in the EDID quirk
+Subject: [PATCH 025/675] drm: Store vendor IDs directly in the EDID quirk
  structure
 
 EDID vendor IDs are always 3 characters long (4 with the terminating

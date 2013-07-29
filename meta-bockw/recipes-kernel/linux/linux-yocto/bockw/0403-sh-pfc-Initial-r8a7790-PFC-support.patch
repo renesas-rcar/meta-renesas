@@ -1,7 +1,7 @@
 From 6f3abf3be37be1133a9221dabf6480a008c892aa Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@rms.renesas.com>
 Date: Mon, 8 Apr 2013 11:08:53 +0900
-Subject: [PATCH 403/611] sh-pfc: Initial r8a7790 PFC support
+Subject: [PATCH 403/675] sh-pfc: Initial r8a7790 PFC support
 
 Add initial PFC support for the r8a7790 SoC.
 

@@ -1,7 +1,7 @@
 From d3e9dccaa548547994f2ac64ab3613470098e99a Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 17 Jul 2012 15:18:37 +0900
-Subject: [PATCH 225/611] sh: pfc: Error out on pinctrl init resolution
+Subject: [PATCH 225/675] sh: pfc: Error out on pinctrl init resolution
  failure.
 
 pinctrl support is required for correct operation, failure to locate

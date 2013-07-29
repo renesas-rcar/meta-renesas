@@ -1,7 +1,7 @@
 From 0f484196bf7201bd4e1e31d79fa1e9dc1d7fbdbd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 14:31:57 +0100
-Subject: [PATCH 388/611] sh-pfc: Make function GPIOs support optional
+Subject: [PATCH 388/675] sh-pfc: Make function GPIOs support optional
 
 The target is to get rid of function GPIOs completely. To reach this,
 make function GPIOs support optional by skipping the function GPIO chip

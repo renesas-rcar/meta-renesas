@@ -1,7 +1,7 @@
 From d196dcb5b92c3ba6bee77f2c3aaa7952bda707a2 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 11 Dec 2012 13:12:35 +0100
-Subject: [PATCH 163/611] pinctrl: fix comment mistake
+Subject: [PATCH 163/675] pinctrl: fix comment mistake
 
 This variable pertains to pinctrl handles not muxes
 specifically.

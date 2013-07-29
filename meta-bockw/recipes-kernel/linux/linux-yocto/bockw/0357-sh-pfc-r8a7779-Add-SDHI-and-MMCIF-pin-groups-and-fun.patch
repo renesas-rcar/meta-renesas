@@ -1,7 +1,7 @@
 From 9320c81d21bb863f35a501b171692aa7b152bab1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 19:04:43 +0100
-Subject: [PATCH 357/611] sh-pfc: r8a7779: Add SDHI and MMCIF pin groups and
+Subject: [PATCH 357/675] sh-pfc: r8a7779: Add SDHI and MMCIF pin groups and
  functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>

@@ -1,7 +1,7 @@
 From 36b8ee72cee313041004d511c1d72344471eda7a Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:40 -0400
-Subject: [PATCH 019/611] drm/edid: Generate modes from extra_modes for range
+Subject: [PATCH 019/675] drm/edid: Generate modes from extra_modes for range
  descriptors
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>

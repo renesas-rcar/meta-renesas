@@ -1,7 +1,7 @@
 From fc8cf91a147b9a557c11766df1d11a219232e50a Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Mon, 25 Mar 2013 14:46:05 +0900
-Subject: [PATCH 585/611] drm: gp2d: suppress debug logs output
+Subject: [PATCH 585/675] drm: gp2d: suppress debug logs output
 
 This change disables debug logs by default.
 ---

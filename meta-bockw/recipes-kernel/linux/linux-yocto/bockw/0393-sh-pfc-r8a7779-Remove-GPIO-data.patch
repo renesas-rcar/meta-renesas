@@ -1,7 +1,7 @@
 From 1e5d18879cffe511487f0457eb0534fa5c27dc32 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 04:02:15 +0100
-Subject: [PATCH 393/611] sh-pfc: r8a7779: Remove GPIO data
+Subject: [PATCH 393/675] sh-pfc: r8a7779: Remove GPIO data
 
 GPIOs are now handled by a separate driver, remove GPIO data from the
 SoC information structure.

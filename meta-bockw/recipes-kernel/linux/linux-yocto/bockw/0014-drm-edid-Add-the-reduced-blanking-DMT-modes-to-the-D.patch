@@ -1,7 +1,7 @@
 From c1de587cc6a22c58c688cfd01309593c32002591 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:34 -0400
-Subject: [PATCH 014/611] drm/edid: Add the reduced blanking DMT modes to the
+Subject: [PATCH 014/675] drm/edid: Add the reduced blanking DMT modes to the
  DMT list
 
 Copied from the list in xserver.

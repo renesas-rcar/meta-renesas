@@ -1,7 +1,7 @@
 From 66deed59b21df14f7b76d26c85df4cbc877988fe Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 25 Jun 2012 03:41:36 -0700
-Subject: [PATCH 339/611] ARM: shmobile: use common extra gpio functions on
+Subject: [PATCH 339/675] ARM: shmobile: use common extra gpio functions on
  Mackerel
 
 This patch switch over to use common extra gpio method,

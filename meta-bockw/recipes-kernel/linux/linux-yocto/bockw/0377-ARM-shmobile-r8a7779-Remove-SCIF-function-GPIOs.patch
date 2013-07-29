@@ -1,7 +1,7 @@
 From 9ee49f55fd9402486b703c73fdc4ab44d4f6078e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:38:10 +0100
-Subject: [PATCH 377/611] ARM: shmobile: r8a7779: Remove SCIF function GPIOs
+Subject: [PATCH 377/675] ARM: shmobile: r8a7779: Remove SCIF function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.

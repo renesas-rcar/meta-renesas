@@ -1,7 +1,7 @@
 From 4b4c7668d63f009137a82c393eb79a4af26f0b8e Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski at>
 Date: Thu, 25 Apr 2013 14:15:50 +0000
-Subject: [PATCH 569/611] V4L2: soc-camera: move generic functions into a
+Subject: [PATCH 569/675] V4L2: soc-camera: move generic functions into a
  separate file
 
 The sh_mobile_ceu_camera driver implements a generic algorithm for setting

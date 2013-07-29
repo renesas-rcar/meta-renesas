@@ -1,7 +1,7 @@
 From c85992a99348ea0d913e83c60159a1d612202397 Mon Sep 17 00:00:00 2001
 From: Stephane Marchesin <marcheu@chromium.org>
 Date: Fri, 9 Nov 2012 16:21:05 +0000
-Subject: [PATCH 079/611] drm: get cea video id code for a given display mode
+Subject: [PATCH 079/675] drm: get cea video id code for a given display mode
 
 This patch adds support for getting CEA Video ID Code for a given
 display mode after matching with edid_cea_modes list. Its index in

@@ -1,7 +1,7 @@
 From 4d6e55575f32151461e8dbe6cd03afdf636d767c Mon Sep 17 00:00:00 2001
 From: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
 Date: Sun, 10 Feb 2013 19:53:44 +0100
-Subject: [PATCH 483/611] mtd: m25p80: add support for Macronix MX66L51235L
+Subject: [PATCH 483/675] mtd: m25p80: add support for Macronix MX66L51235L
 
 Signed-off-by: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
 Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>

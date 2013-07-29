@@ -1,7 +1,7 @@
 From 10f0f06ac0e2a43e339cace9d387e60300870037 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Fri, 23 Nov 2012 12:09:26 -0200
-Subject: [PATCH 099/611] drm: add drm_mode_cea_vic
+Subject: [PATCH 099/675] drm: add drm_mode_cea_vic
 
 This function returns the VIC of the mode. This value can be used when
 creating AVI InfoFrames.

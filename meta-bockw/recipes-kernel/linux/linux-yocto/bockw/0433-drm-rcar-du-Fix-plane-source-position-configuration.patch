@@ -1,7 +1,7 @@
 From d5f8ad7ae01c3ed6c5479b534b6a3ae46b049023 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 4 Apr 2013 01:56:59 +0200
-Subject: [PATCH 433/611] drm/rcar-du: Fix plane source position configuration
+Subject: [PATCH 433/675] drm/rcar-du: Fix plane source position configuration
 
 According to the datasheet the Y position is expressed in raster line
 units. However, this doesn't seem to be the case in practice for 32bpp

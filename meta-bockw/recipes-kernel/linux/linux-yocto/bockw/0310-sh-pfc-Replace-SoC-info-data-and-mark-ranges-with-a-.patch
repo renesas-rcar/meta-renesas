@@ -1,7 +1,7 @@
 From 1dd89117edf07eae3cfa58cab244aa02ffa41450 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 12:24:51 +0100
-Subject: [PATCH 310/611] sh-pfc: Replace SoC info data and mark ranges with a
+Subject: [PATCH 310/675] sh-pfc: Replace SoC info data and mark ranges with a
  number of pins
 
 The data and mark ranges are only used to check whether a GPIO

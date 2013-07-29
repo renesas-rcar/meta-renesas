@@ -1,7 +1,7 @@
 From 89b936e004439f04960b4e704e87913a0b6ef3c6 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 31 May 2013 09:40:31 +0900
-Subject: [PATCH 536/611] Local: ASoC: add Renesas R-Car Generation feature
+Subject: [PATCH 536/675] Local: ASoC: add Renesas R-Car Generation feature
 
 Renesas R-Car series sound circuit consists of SSI and its peripheral.
 But this peripheral circuit is different between

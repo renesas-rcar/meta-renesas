@@ -1,7 +1,7 @@
 From d225d914ae91acaa4be749164f308c6c98c949e8 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:36:28 +0100
-Subject: [PATCH 371/611] sh-pfc: r8a7779: Remove HSPI function GPIOS
+Subject: [PATCH 371/675] sh-pfc: r8a7779: Remove HSPI function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the HSPI pins,
 the corresponding function GPIOS are unused. Remove them.

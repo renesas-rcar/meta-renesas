@@ -1,7 +1,7 @@
 From caa31f67045647f2954a7a1b5cd5e14372788577 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 28 May 2013 12:07:22 +0900
-Subject: [PATCH 507/611] ARM: shmobile: r8a7778: add HSPI support
+Subject: [PATCH 507/675] ARM: shmobile: r8a7778: add HSPI support
 
 Add a platform device for the r8a7778 HSPI.
 

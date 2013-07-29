@@ -1,7 +1,7 @@
 From acb3d63b03d95dbb0b465b7fa447fb4ce4ce4f55 Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Sun, 3 Feb 2013 01:29:25 +0900
-Subject: [PATCH 202/611] gpiolib: use gpio_chips list in gpiolib_sysfs_init
+Subject: [PATCH 202/675] gpiolib: use gpio_chips list in gpiolib_sysfs_init
 
 Use the small list of GPIO chips instead of parsing the whole GPIO
 number space.

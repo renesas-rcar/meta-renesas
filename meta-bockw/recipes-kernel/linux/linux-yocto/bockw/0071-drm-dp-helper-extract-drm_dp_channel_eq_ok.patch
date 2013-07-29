@@ -1,7 +1,7 @@
 From 0cfd92c3234161acaa725bd301b7a85c63c06cb7 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 18 Oct 2012 10:15:24 +0200
-Subject: [PATCH 071/611] drm: dp helper: extract drm_dp_channel_eq_ok
+Subject: [PATCH 071/675] drm: dp helper: extract drm_dp_channel_eq_ok
 
 radeon and intel use the exact same definition.
 

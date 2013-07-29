@@ -1,7 +1,7 @@
 From 0b58ed223a94e62d0c28821c1cd1c1bdc2959727 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 15:15:44 +0100
-Subject: [PATCH 188/611] gpiolib: call pin removal in chip removal function
+Subject: [PATCH 188/675] gpiolib: call pin removal in chip removal function
 
 This makes us call gpiochio_remove_pin_ranges() in the
 gpiochip_remove() function, so we get rid of ranges when

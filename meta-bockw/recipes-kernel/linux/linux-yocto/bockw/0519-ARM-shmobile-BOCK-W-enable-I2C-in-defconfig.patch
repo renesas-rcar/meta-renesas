@@ -1,7 +1,7 @@
 From 6d4e851c4654f1be62f074509c115b3f07e51bdb Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Wed, 17 Apr 2013 22:47:27 +0400
-Subject: [PATCH 519/611] ARM: shmobile: BOCK-W: enable I2C in defconfig
+Subject: [PATCH 519/675] ARM: shmobile: BOCK-W: enable I2C in defconfig
 
 Enable I2C driver in 'bockw_defconfig'.
 

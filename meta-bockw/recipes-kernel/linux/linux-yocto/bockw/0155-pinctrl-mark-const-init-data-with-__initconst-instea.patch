@@ -1,7 +1,7 @@
 From 464e8a60b24d22a0cdcab9c1d706eeaffa0358f6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
 Date: Fri, 30 Mar 2012 22:04:51 +0200
-Subject: [PATCH 155/611] pinctrl: mark const init data with __initconst
+Subject: [PATCH 155/675] pinctrl: mark const init data with __initconst
  instead of __initdata
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

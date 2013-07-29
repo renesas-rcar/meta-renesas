@@ -1,7 +1,7 @@
 From 13c70f1341ff4f149edc1c8cd52159085190e9c9 Mon Sep 17 00:00:00 2001
 From: Stephen Boyd <sboyd@codeaurora.org>
 Date: Wed, 22 Aug 2012 20:05:34 +0100
-Subject: [PATCH 115/611] ARM: 7498/1: mach-shmobile: Use SGI0 to wake
+Subject: [PATCH 115/675] ARM: 7498/1: mach-shmobile: Use SGI0 to wake
  secondary CPUs
 
 Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>

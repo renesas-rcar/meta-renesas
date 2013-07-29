@@ -1,7 +1,7 @@
 From 5b5785d2314a291972d072217b863d56b3f8f55c Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 14:58:55 +0100
-Subject: [PATCH 186/611] gpiolib-of: staticize the pin range calls
+Subject: [PATCH 186/675] gpiolib-of: staticize the pin range calls
 
 Commit 69e1601bca88809dc118abd1becb02c15a02ec71
 "gpiolib: provide provision to register pin ranges"

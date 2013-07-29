@@ -1,7 +1,7 @@
 From 0202894ffa4d9939412ea27589dfe3494c3cb8d3 Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Mon, 4 Feb 2013 17:42:04 +0900
-Subject: [PATCH 200/611] gpiolib: add missing braces in gpio_direction_show
+Subject: [PATCH 200/675] gpiolib: add missing braces in gpio_direction_show
 
 Add missing braces in an if..else condition.
 

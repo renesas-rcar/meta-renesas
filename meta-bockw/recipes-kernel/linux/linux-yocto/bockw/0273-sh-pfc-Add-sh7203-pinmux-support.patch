@@ -1,7 +1,7 @@
 From ce025bf7375b016d577ddab8aecf7e7710a394b1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:29 +0100
-Subject: [PATCH 273/611] sh-pfc: Add sh7203 pinmux support
+Subject: [PATCH 273/675] sh-pfc: Add sh7203 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>

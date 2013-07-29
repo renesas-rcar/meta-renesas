@@ -1,7 +1,7 @@
 From 14ee2ad4d027ec44cde18b701e34f3d6e20f020d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 17:30:25 +0100
-Subject: [PATCH 391/611] sh-pfc: Configure pins as GPIOs at request time when
+Subject: [PATCH 391/675] sh-pfc: Configure pins as GPIOs at request time when
  handled externally
 
 When a GPIO is handled by a separate driver the pinmux

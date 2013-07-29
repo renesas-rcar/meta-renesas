@@ -1,7 +1,7 @@
 From 2f49d529f59e87c31b0c5a9ea7be3e0824617e6c Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 10 Oct 2012 19:56:42 -0700
-Subject: [PATCH 423/611] ARM: shmobile: r8a7779: add I2C clock support
+Subject: [PATCH 423/675] ARM: shmobile: r8a7779: add I2C clock support
 
 This patch is required from R-Car I2C driver
 

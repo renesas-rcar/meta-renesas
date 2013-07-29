@@ -1,7 +1,7 @@
 From 5de9ca1cd1667a125bf2faf3a30aded1adcda4a3 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 8 Mar 2013 17:43:54 +0100
-Subject: [PATCH 347/611] sh-pfc: Don't modify sh_pfc_pin SoC data
+Subject: [PATCH 347/675] sh-pfc: Don't modify sh_pfc_pin SoC data
 
 The sh_pfc_pin structure supplied in SoC data contains information about
 pin configuration and name. It's abused to store GPIO data registers

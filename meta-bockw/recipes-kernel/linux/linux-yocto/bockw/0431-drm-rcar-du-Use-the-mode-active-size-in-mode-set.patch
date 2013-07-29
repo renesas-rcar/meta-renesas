@@ -1,7 +1,7 @@
 From ff24127c2f87764605ae25db1734f42ff0e178b1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 3 Apr 2013 14:47:10 +0200
-Subject: [PATCH 431/611] drm/rcar-du: Use the mode active size in mode set
+Subject: [PATCH 431/675] drm/rcar-du: Use the mode active size in mode set
 
 The driver currently configures the dislay to the frame buffer size
 while it should use the requested mode active size. Fix it.

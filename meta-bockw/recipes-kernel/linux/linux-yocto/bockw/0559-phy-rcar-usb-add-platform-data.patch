@@ -1,7 +1,7 @@
 From 3c0269fb29c898409d43e90aae167f99719504e5 Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Sun, 2 Jun 2013 01:52:28 +0400
-Subject: [PATCH 559/611] phy-rcar-usb: add platform data
+Subject: [PATCH 559/675] phy-rcar-usb: add platform data
 
 Currently the driver hard-codes  USBPCTRL0 register to 0. It is wrong since this
 register contains board-specific USB ports configuration and so its value should

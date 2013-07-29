@@ -1,7 +1,7 @@
 From a22466ec901da893658a1ddb979d56e533c53541 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 13:03:53 +0100
-Subject: [PATCH 314/611] sh-pfc: Shrink the pinctrl GPIO range to include real
+Subject: [PATCH 314/675] sh-pfc: Shrink the pinctrl GPIO range to include real
  GPIOs only
 
 As a step towards GPIO function removal, shorten the GPIO range

@@ -1,0 +1,53 @@
+From 3d967047c972404b94d0e6090f37b8f2e5348d95 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 15 Apr 2013 17:23:41 +0900
+Subject: [PATCH 599/675] ARM: shmobile: r8a7778: add SSB workaround
+
+The SSB0_SWAP initial value is incorrect and it adversely
+affects the video processing function.
+This register won't be accessed by any device drivers,
+so the workaround must be invoked from board specific code.
+---
+ arch/arm/mach-shmobile/include/mach/common.h |  1 +
+ arch/arm/mach-shmobile/setup-r8a7778.c       | 16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/common.h b/arch/arm/mach-shmobile/include/mach/common.h
+index 2ef69cd..1b2f805 100644
+--- a/arch/arm/mach-shmobile/include/mach/common.h
++++ b/arch/arm/mach-shmobile/include/mach/common.h
+@@ -50,6 +50,7 @@ extern void r8a7740_pinmux_init(void);
+ 
+ extern void r8a7778_meram_workaround(void);
+ extern void r8a7778_reserve_memory(void);
++extern void r8a7778_ssb_workaround(void);
+ 
+ extern void r8a7779_init_irq(void);
+ extern void r8a7779_init_irq_extpin(int irlm);
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index 7c9e57a..3b02ab4 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -799,3 +799,19 @@ void r8a7778_meram_workaround(void)
+ 		iounmap(reg);
+ 	}
+ }
++
++/*
++ * This register must be fixed since the initial value
++ * has a problem.
++ */
++#define SSB0_SWAP	0xfffe1004
++void r8a7778_ssb_workaround(void)
++{
++	void __iomem *reg;
++
++	reg = ioremap_nocache(SSB0_SWAP, 4);
++	if (reg) {
++		iowrite32(0x00000001, reg);
++		iounmap(reg);
++	}
++}
+-- 
+1.8.2
+

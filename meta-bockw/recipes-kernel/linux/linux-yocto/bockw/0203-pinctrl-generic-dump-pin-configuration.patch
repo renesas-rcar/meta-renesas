@@ -1,7 +1,7 @@
 From 5570d24245b3c2d7d9197248de2d27954dbc4dd3 Mon Sep 17 00:00:00 2001
 From: Haojian Zhuang <haojian.zhuang@linaro.org>
 Date: Sun, 17 Feb 2013 19:42:53 +0800
-Subject: [PATCH 203/611] pinctrl: generic: dump pin configuration
+Subject: [PATCH 203/675] pinctrl: generic: dump pin configuration
 
 Add the support of dumping pin configuration.
 

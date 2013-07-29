@@ -1,7 +1,7 @@
 From 14c83984b174dad29df22d80dc2f5aa88aa97e92 Mon Sep 17 00:00:00 2001
 From: Phil Edworthy <phil.edworthy@renesas.com>
 Date: Thu, 31 Jan 2013 02:45:01 +0100
-Subject: [PATCH 426/611] r8a7779: Add Display Unit clock support
+Subject: [PATCH 426/675] r8a7779: Add Display Unit clock support
 
 Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 [Rename device from to rcarfb to rcar-du]

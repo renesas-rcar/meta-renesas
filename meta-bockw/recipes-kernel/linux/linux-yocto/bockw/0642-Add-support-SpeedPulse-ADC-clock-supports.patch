@@ -1,0 +1,47 @@
+From faab86d49f725b933096a4f1461144d7989c135e Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Tue, 16 Jul 2013 20:07:12 +0900
+Subject: [PATCH 642/675] Add support SpeedPulse/ADC clock supports
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7778.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7778.c b/arch/arm/mach-shmobile/clock-r8a7778.c
+index 5d3a70a..d52155c 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7778.c
++++ b/arch/arm/mach-shmobile/clock-r8a7778.c
+@@ -121,7 +121,7 @@ enum {
+ 	MSTP408,
+ 	MSTP331,
+ 	MSTP323, MSTP322, MSTP321, MSTP320,
+-	MSTP311, MSTP310, MSTP309, MSTP308, MSTP307,
++	MSTP319, MSTP318, MSTP311, MSTP310, MSTP309, MSTP308, MSTP307,
+ 	MSTP114, MSTP110, MSTP109, MSTP107, MSTP105, MSTP103, MSTP100,
+ 	MSTP030,
+ 	MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023, MSTP022, MSTP021,
+@@ -140,6 +140,8 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP322] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 22, 0), /* SDHI1 */
+ 	[MSTP321] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 21, 0), /* SDHI2 */
+ 	[MSTP320] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 20, 0), /* SCR */
++	[MSTP319] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 19, 0), /* Speed Pluse */
++	[MSTP318] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 18, 0), /* GYRO-ADC */
+ 	[MSTP311] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 11, 0), /* SSI4 */
+ 	[MSTP310] = SH_CLK_MSTP32(&p_clk, MSTPCR3, 10, 0), /* SSI5 */
+ 	[MSTP309] = SH_CLK_MSTP32(&p_clk, MSTPCR3,  9, 0), /* SSI6 */
+@@ -193,6 +195,10 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.1", &mstp_clks[MSTP322]), /* SDHI1 */
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.2", &mstp_clks[MSTP321]), /* SDHI2 */
+ 	CLKDEV_CON_ID("scr",		&mstp_clks[MSTP320]), /* SCR */
++	CLKDEV_ICK_ID("speed-pulse", "rcar-gyro-adc-speed-pulse",
++			&mstp_clks[MSTP319]), /* Speed-pulse I/F */
++	CLKDEV_ICK_ID("gyro-adc", "rcar-gyro-adc-speed-pulse",
++			&mstp_clks[MSTP318]), /* Gyro-ADC I/F */
+ 	CLKDEV_DEV_ID("sh-eth",	&mstp_clks[MSTP114]), /* Ether */
+ 	CLKDEV_DEV_ID("r8a7778-vin.0", &mstp_clks[MSTP110]), /* VIN0 */
+ 	CLKDEV_DEV_ID("r8a7778-vin.1", &mstp_clks[MSTP109]), /* VIN1 */
+-- 
+1.8.2
+

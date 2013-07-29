@@ -1,7 +1,7 @@
 From 7b907097a8bd51fe79ff3461c38ed1b72f82387e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Feb 2013 22:29:48 +0100
-Subject: [PATCH 124/611] drm/rcar-du: Don't re-reserve hardware plane at each
+Subject: [PATCH 124/675] drm/rcar-du: Don't re-reserve hardware plane at each
  update
 
 Hardware planes only need to be reserved if not already reserved, or if

@@ -1,7 +1,7 @@
 From d1fb8369bc6215df20001cbcf69d916565eed26d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 16:38:23 +0100
-Subject: [PATCH 350/611] sh-pfc: Use proper error codes
+Subject: [PATCH 350/675] sh-pfc: Use proper error codes
 
 Return proper error codes instead of -1, and propagate the error codes.
 

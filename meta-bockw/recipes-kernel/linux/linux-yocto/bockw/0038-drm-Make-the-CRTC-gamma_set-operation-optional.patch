@@ -1,7 +1,7 @@
 From 8b907e8d9455d68f09afc71ad8336d512e155c6d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:24 +0200
-Subject: [PATCH 038/611] drm: Make the CRTC gamma_set operation optional
+Subject: [PATCH 038/675] drm: Make the CRTC gamma_set operation optional
 
 Drivers for hardware without gamma support should not be forced to
 implement a no-op gamma set operation.

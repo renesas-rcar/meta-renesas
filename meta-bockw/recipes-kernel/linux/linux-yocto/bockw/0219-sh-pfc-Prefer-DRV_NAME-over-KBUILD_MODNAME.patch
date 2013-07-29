@@ -1,7 +1,7 @@
 From f26032d0222f38eb28d3d41ee94b995f1515de5a Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Fri, 20 Jul 2012 16:18:21 +0900
-Subject: [PATCH 219/611] sh: pfc: Prefer DRV_NAME over KBUILD_MODNAME.
+Subject: [PATCH 219/675] sh: pfc: Prefer DRV_NAME over KBUILD_MODNAME.
 
 While this code is still being shuffled around the KBUILD_MODNAME value
 isn't particularly useful, switch to something a bit more useful.

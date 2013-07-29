@@ -1,7 +1,7 @@
 From cc92c6eb31b303eb0a9a0179f54db0d27a423311 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 30 May 2013 12:12:18 +0900
-Subject: [PATCH 533/611] Local: ASoC: add ak4554 driver
+Subject: [PATCH 533/675] Local: ASoC: add ak4554 driver
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 ---

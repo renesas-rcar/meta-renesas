@@ -1,7 +1,7 @@
 From bdd8ca2053356619e6c20d31edd294362e333047 Mon Sep 17 00:00:00 2001
 From: Grant Likely <grant.likely@secretlab.ca>
 Date: Fri, 18 May 2012 23:01:05 -0600
-Subject: [PATCH 173/611] gpiolib: Remove 'const' from data argument of
+Subject: [PATCH 173/675] gpiolib: Remove 'const' from data argument of
  gpiochip_find()
 
 Commit 3d0f7cf0 "gpio: Adjust of_xlate API to support multiple GPIO

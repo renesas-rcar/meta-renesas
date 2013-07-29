@@ -1,7 +1,7 @@
 From ae4399d1d22ece5d0a9145e66a13f62e14b02568 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 4 Jun 2013 11:25:56 +0900
-Subject: [PATCH 541/611] LTSI: ASoC: rcar: tidyup framework mismatch
+Subject: [PATCH 541/675] LTSI: ASoC: rcar: tidyup framework mismatch
 
 Original Kernel is based on latest framework,
 but it was not back-ported yet.

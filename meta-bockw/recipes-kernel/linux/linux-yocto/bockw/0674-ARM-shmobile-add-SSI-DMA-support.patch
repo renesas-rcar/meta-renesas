@@ -1,0 +1,221 @@
+From ac69fcabc350cdc996fbf8ba29a56163e799f6d7 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 24 Jul 2013 12:05:38 +0900
+Subject: [PATCH 674/675] ARM: shmobile: add SSI DMA support
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/mach-shmobile/hpb-dmae.c              | 118 ++++++++++++++++++-------
+ arch/arm/mach-shmobile/include/mach/hpb-dmae.h |  44 +++++++--
+ 2 files changed, 123 insertions(+), 39 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/hpb-dmae.c b/arch/arm/mach-shmobile/hpb-dmae.c
+index d2e729b..0b3dfab 100644
+--- a/arch/arm/mach-shmobile/hpb-dmae.c
++++ b/arch/arm/mach-shmobile/hpb-dmae.c
+@@ -46,6 +46,40 @@ enum {
+ 	[XMIT_SZ_32BIT]		= 2,	\
+ }
+ 
++#define HPBDMA_HPBIF(_id)					\
++{								\
++	.id	= HPBDMA_SLAVE_HPBIF## _id ##_TX,		\
++	.addr   = 0xffda0000 + (_id * 0x1000),			\
++	.dcr	= CT | DIP | SPDS_32BIT | DMDL | DPDS_32BIT,	\
++	.port	= 0x1111,					\
++	.flags	= 0,						\
++	.dma_ch	= (28 + _id),					\
++}, {								\
++	.id	= HPBDMA_SLAVE_HPBIF## _id ##_RX,		\
++	.addr   = 0xffda0000 + (_id * 0x1000),			\
++	.dcr	= CT | DIP | SMDL | SPDS_32BIT | DPDS_32BIT,	\
++	.port	= 0x1111,					\
++	.flags	= 0,						\
++	.dma_ch	= (28 + _id),					\
++}
++/*
++#define HPBDMA_SSI(_id)						\
++{								\
++	.id	= HPBDMA_SLAVE_SSI## _id ##_TX,			\
++	.addr   = 0xffd91008 + (_id * 0x40),			\
++	.dcr	= CT | DIP | SPDS_32BIT | DMDL | DPDS_32BIT,	\
++	.port	= (0x100 * _id) + _id,				\
++	.flags	= 0,						\
++	.dma_ch	= (28 + _id),					\
++}, {								\
++	.id	= HPBDMA_SLAVE_SSI## _id ##_RX,			\
++	.addr   = 0xffd9100c + (_id * 0x40),			\
++	.dcr	= CT | DIP | SMDL | SPDS_32BIT | DPDS_32BIT,	\
++	.port	= (0x100 * _id) + _id,				\
++	.flags	= 0,						\
++	.dma_ch	= (28 + _id),					\
++}
++*/
+ static const struct hpb_dmae_slave_config rcar_dmae_slaves[] = {
+ 	{
+ 		.id	= HPBDMA_SLAVE_SDHI0_TX,
+@@ -65,35 +99,28 @@ static const struct hpb_dmae_slave_config rcar_dmae_slaves[] = {
+ 		.port	= 0x0D0C,
+ 		.flags	= HPB_DMAE_SET_ASYNC_RESET | HPB_DMAE_SET_ASYNC_MODE,
+ 		.dma_ch	= 22,
+-	}, {
+-		.id	= HPBDMA_SLAVE_SSI0_TX_ST,
+-		.addr	= 0xffd90000 + 0x1008,
+-		.dcr	= CT | DIP | SPDS_32BIT | DMDL | DPDS_32BIT,
+-		.port	= 0x0000,
+-		.flags	= 0,
+-		.dma_ch	= 28,
+-	}, {
+-		.id	= HPBDMA_SLAVE_SSI0_TX_MN,
+-		.addr	= 0xffd90000 + 0x1008,
+-		.dcr	= CT | DIP | SPDS_16BIT | DMDL | DPDS_16BIT,
+-		.port	= 0x0000,
+-		.flags	= 0,
+-		.dma_ch	= 28,
+-	}, {
+-		.id	= HPBDMA_SLAVE_SSI1_RX_ST,
+-		.addr	= 0xffd90000 + 0x104c,
+-		.dcr	= CT | DIP | SMDL | SPDS_32BIT | DPDAM | DPDS_32BIT,
+-		.port	= 0x0101,
+-		.flags	= 0,
+-		.dma_ch	= 29,
+-	}, {
+-		.id	= HPBDMA_SLAVE_SSI1_RX_MN,
+-		.addr	= 0xffd90000 + 0x104c,
+-		.dcr	= CT | DIP | SMDL | SPDS_16BIT | DPDAM | DPDS_16BIT,
+-		.port	= 0x0101,
+-		.flags	= 0,
+-		.dma_ch	= 29,
+ 	},
++
++	HPBDMA_HPBIF(0),
++	HPBDMA_HPBIF(1),
++	HPBDMA_HPBIF(2),
++	HPBDMA_HPBIF(3),
++	HPBDMA_HPBIF(4),
++	HPBDMA_HPBIF(5),
++	HPBDMA_HPBIF(6),
++	HPBDMA_HPBIF(7),
++	HPBDMA_HPBIF(8),
++/*
++	HPBDMA_SSI(0),
++	HPBDMA_SSI(1),
++	HPBDMA_SSI(2),
++	HPBDMA_SSI(3),
++	HPBDMA_SSI(4),
++	HPBDMA_SSI(5),
++	HPBDMA_SSI(6),
++	HPBDMA_SSI(7),
++	HPBDMA_SSI(8),
++*/
+ };
+ 
+ #define DMAE_CHANNEL(_offset, _irq, _s_id)	\
+@@ -103,18 +130,41 @@ static const struct hpb_dmae_slave_config rcar_dmae_slaves[] = {
+ 		.s_id		= _s_id,			\
+ 	}
+ 
++#define DMAE_CHANNEL_HPBIF(id) \
++	DMAE_CHANNEL(0x700 + (id * 0x40), IRQ_DMAC_H(28 + id), HPBDMA_SLAVE_HPBIF## id ##_TX), \
++	DMAE_CHANNEL(0x700 + (id * 0x40), IRQ_DMAC_H(28 + id), HPBDMA_SLAVE_HPBIF## id ##_RX)
++
++#define DMAE_CHANNEL_SSI(id)						\
++	DMAE_CHANNEL(0x700 + (id * 0x40), IRQ_DMAC_H(28 + id), HPBDMA_SLAVE_SSI## id ##_TX), \
++	DMAE_CHANNEL(0x700 + (id * 0x40), IRQ_DMAC_H(28 + id), HPBDMA_SLAVE_SSI## id ##_RX)
++
+ /* comment out for not using Ch */
+ static const struct hpb_dmae_channel rcar_dmae_channels[] = {
+ 	/* ch.21 SD0 */
+ 	DMAE_CHANNEL(0x540, IRQ_DMAC_H(21), HPBDMA_SLAVE_SDHI0_TX),
+ 	/* ch.22 SD0 */
+ 	DMAE_CHANNEL(0x580, IRQ_DMAC_H(22), HPBDMA_SLAVE_SDHI0_RX),
+-	/* ch.28 SSI0 */
+-	DMAE_CHANNEL(0x700, IRQ_DMAC_H(28), HPBDMA_SLAVE_SSI0_TX_ST),
+-	DMAE_CHANNEL(0x700, IRQ_DMAC_H(28), HPBDMA_SLAVE_SSI0_TX_MN),
+-	/* ch.29 SSI1 */
+-	DMAE_CHANNEL(0x740, IRQ_DMAC_H(29), HPBDMA_SLAVE_SSI1_RX_ST),
+-	DMAE_CHANNEL(0x740, IRQ_DMAC_H(29), HPBDMA_SLAVE_SSI1_RX_MN),
++
++	DMAE_CHANNEL_HPBIF(0),
++	DMAE_CHANNEL_HPBIF(1),
++	DMAE_CHANNEL_HPBIF(2),
++	DMAE_CHANNEL_HPBIF(3),
++	DMAE_CHANNEL_HPBIF(4),
++	DMAE_CHANNEL_HPBIF(5),
++	DMAE_CHANNEL_HPBIF(6),
++	DMAE_CHANNEL_HPBIF(7),
++	DMAE_CHANNEL_HPBIF(8),
++/*
++	DMAE_CHANNEL_SSI(0),
++	DMAE_CHANNEL_SSI(1),
++	DMAE_CHANNEL_SSI(2),
++	DMAE_CHANNEL_SSI(3),
++	DMAE_CHANNEL_SSI(4),
++	DMAE_CHANNEL_SSI(5),
++	DMAE_CHANNEL_SSI(6),
++	DMAE_CHANNEL_SSI(7),
++	DMAE_CHANNEL_SSI(8),
++*/
+ };
+ 
+ static const unsigned int ts_shift[] = TS_SHIFT;
+diff --git a/arch/arm/mach-shmobile/include/mach/hpb-dmae.h b/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
+index df71727..9419c50 100644
+--- a/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
++++ b/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
+@@ -24,13 +24,47 @@ extern struct platform_device rcar_dma_device;
+ 
+ /* DMA slave IDs */
+ enum {
+-	HPBDMA_DUMMY,
+ 	HPBDMA_SLAVE_SDHI0_TX,		/*Ch.21*/
+ 	HPBDMA_SLAVE_SDHI0_RX,		/*Ch.22*/
+-	HPBDMA_SLAVE_SSI0_TX_ST,	/*Ch.28*/
+-	HPBDMA_SLAVE_SSI0_TX_MN,	/*Ch.28*/
+-	HPBDMA_SLAVE_SSI1_RX_ST,	/*Ch.29*/
+-	HPBDMA_SLAVE_SSI1_RX_MN,	/*Ch.29*/
++
++	HPBDMA_SLAVE_HPBIF0_TX,
++	HPBDMA_SLAVE_HPBIF0_RX,
++	HPBDMA_SLAVE_HPBIF1_TX,
++	HPBDMA_SLAVE_HPBIF1_RX,
++	HPBDMA_SLAVE_HPBIF2_TX,
++	HPBDMA_SLAVE_HPBIF2_RX,
++	HPBDMA_SLAVE_HPBIF3_TX,
++	HPBDMA_SLAVE_HPBIF3_RX,
++	HPBDMA_SLAVE_HPBIF4_TX,
++	HPBDMA_SLAVE_HPBIF4_RX,
++	HPBDMA_SLAVE_HPBIF5_TX,
++	HPBDMA_SLAVE_HPBIF5_RX,
++	HPBDMA_SLAVE_HPBIF6_TX,
++	HPBDMA_SLAVE_HPBIF6_RX,
++	HPBDMA_SLAVE_HPBIF7_TX,
++	HPBDMA_SLAVE_HPBIF7_RX,
++	HPBDMA_SLAVE_HPBIF8_TX,
++	HPBDMA_SLAVE_HPBIF8_RX,
++/*
++	HPBDMA_SLAVE_SSI0_TX,
++	HPBDMA_SLAVE_SSI0_RX,
++	HPBDMA_SLAVE_SSI1_TX,
++	HPBDMA_SLAVE_SSI1_RX,
++	HPBDMA_SLAVE_SSI2_TX,
++	HPBDMA_SLAVE_SSI2_RX,
++	HPBDMA_SLAVE_SSI3_TX,
++	HPBDMA_SLAVE_SSI3_RX,
++	HPBDMA_SLAVE_SSI4_TX,
++	HPBDMA_SLAVE_SSI4_RX,
++	HPBDMA_SLAVE_SSI5_TX,
++	HPBDMA_SLAVE_SSI5_RX,
++	HPBDMA_SLAVE_SSI6_TX,
++	HPBDMA_SLAVE_SSI6_RX,
++	HPBDMA_SLAVE_SSI7_TX,
++	HPBDMA_SLAVE_SSI7_RX,
++	HPBDMA_SLAVE_SSI8_TX,
++	HPBDMA_SLAVE_SSI8_RX,
++*/
+ };
+ 
+ #endif /* __ARCH_MACH_HPBDMAE_H */
+-- 
+1.8.2
+

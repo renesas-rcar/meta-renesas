@@ -1,7 +1,7 @@
 From e6d931ad74ea5e7ee20434cf7f3272de9a8343c8 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 16 May 2013 15:48:09 +0900
-Subject: [PATCH 522/611] ARM: shmobile: bockw: add I2C device support
+Subject: [PATCH 522/675] ARM: shmobile: bockw: add I2C device support
 
 This patch enables rx8581 on I2C0
 

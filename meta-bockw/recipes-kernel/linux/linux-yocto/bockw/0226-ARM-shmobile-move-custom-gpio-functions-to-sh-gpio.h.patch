@@ -1,7 +1,7 @@
 From 056f99e3d5dc595fc5695fa6851c487f5425d1cd Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Tue, 28 Aug 2012 12:54:42 -0500
-Subject: [PATCH 226/611] ARM: shmobile: move custom gpio functions to
+Subject: [PATCH 226/675] ARM: shmobile: move custom gpio functions to
  sh-gpio.h
 
 Move custom shmobile gpio code to a sh-gpio.h to remove the dependency

@@ -1,7 +1,7 @@
 From 190a94b74e4fc22b929b2752c55c2ca1609b68e9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 9 Apr 2013 14:06:01 +0000
-Subject: [PATCH 404/611] sh-pfc: Remove dependency on GPIOLIB
+Subject: [PATCH 404/675] sh-pfc: Remove dependency on GPIOLIB
 
 Make GPIO support optional for platforms that don't support GPIOLIB.
 

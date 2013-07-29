@@ -1,7 +1,7 @@
 From 0d3147a7d6e629c8cfecdf58f36b4aed12ca094e Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Sun, 26 May 2013 17:59:20 -0700
-Subject: [PATCH 459/611] spi: hspi: fixup long delay time
+Subject: [PATCH 459/675] spi: hspi: fixup long delay time
 
 Current HSPI driver is using msleep(20) on hspi_status_check_timeout(),
 but it was too long delay for SPI device.

@@ -1,7 +1,7 @@
 From cbdadeefb6f29260a80f3c58dbc7ca433c902f86 Mon Sep 17 00:00:00 2001
 From: Mark Brown <broonie@opensource.wolfsonmicro.com>
 Date: Wed, 2 May 2012 12:46:46 +0100
-Subject: [PATCH 169/611] gpiolib: Implement devm_gpio_request_one()
+Subject: [PATCH 169/675] gpiolib: Implement devm_gpio_request_one()
 
 Allow drivers to use the modern request and configure idiom together
 with devres.

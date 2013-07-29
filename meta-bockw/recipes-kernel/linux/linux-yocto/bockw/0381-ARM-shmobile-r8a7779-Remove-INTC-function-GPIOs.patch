@@ -1,7 +1,7 @@
 From a2ba7c248a9ed4b65f9e881c7d0e7888cf9dc3fc Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:59:26 +0100
-Subject: [PATCH 381/611] ARM: shmobile: r8a7779: Remove INTC function GPIOs
+Subject: [PATCH 381/675] ARM: shmobile: r8a7779: Remove INTC function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.

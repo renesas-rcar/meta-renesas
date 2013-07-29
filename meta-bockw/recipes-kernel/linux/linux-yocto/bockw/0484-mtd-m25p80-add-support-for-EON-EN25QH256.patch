@@ -1,7 +1,7 @@
 From 1263aa3bb8d19945a05073053f1bdcb861083005 Mon Sep 17 00:00:00 2001
 From: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
 Date: Sun, 10 Feb 2013 19:54:07 +0100
-Subject: [PATCH 484/611] mtd: m25p80: add support for EON EN25QH256
+Subject: [PATCH 484/675] mtd: m25p80: add support for EON EN25QH256
 
 Signed-off-by: Daniel Schwierzeck <daniel.schwierzeck@gmail.com>
 Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>

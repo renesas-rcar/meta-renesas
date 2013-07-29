@@ -1,7 +1,7 @@
 From 21af49dccf6470b4a8174af409905af35ecad29c Mon Sep 17 00:00:00 2001
 From: Nicolas Pitre <nicolas.pitre@linaro.org>
 Date: Wed, 11 Apr 2012 18:55:48 -0400
-Subject: [PATCH 109/611] ARM: gic: use a private mapping for CPU target
+Subject: [PATCH 109/675] ARM: gic: use a private mapping for CPU target
  interfaces
 
 The GIC interface numbering does not necessarily follow the logical

@@ -1,7 +1,7 @@
 From e02d208e0a4ddd674c9697dcd392104dad1a5719 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 14 Mar 2013 22:45:22 +0100
-Subject: [PATCH 143/611] drm/rcar-du: Add FBDEV emulation support
+Subject: [PATCH 143/675] drm/rcar-du: Add FBDEV emulation support
 
 Use the FB CMA helpers to implement FBDEV emulation support. The VGA
 connector status must be reported as connector_status_connected instead

@@ -1,7 +1,7 @@
 From a5ee7478304a3c7e954b01c8e59b63881543ab68 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 10 Jul 2012 11:59:29 +0900
-Subject: [PATCH 212/611] sh: pfc: Dumb GPIO stringification.
+Subject: [PATCH 212/675] sh: pfc: Dumb GPIO stringification.
 
 This implements fairly simplistic stringification of existing pinmux
 GPIOs for easy enum id -> string mapping, which will subsequently be used

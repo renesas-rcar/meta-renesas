@@ -1,7 +1,7 @@
 From 923210fdd956daba09f5fc4933c24162d62db07d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:36:28 +0100
-Subject: [PATCH 370/611] sh-pfc: r8a7779: Remove SCIF function GPIOS
+Subject: [PATCH 370/675] sh-pfc: r8a7779: Remove SCIF function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the SCIF pins,
 the corresponding function GPIOS are unused. Remove them.

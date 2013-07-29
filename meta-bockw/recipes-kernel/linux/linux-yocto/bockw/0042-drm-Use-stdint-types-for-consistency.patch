@@ -1,7 +1,7 @@
 From 4e35a44b790bb6d57546fbe73e5739a64f8765bd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 24 May 2012 20:53:58 +0300
-Subject: [PATCH 042/611] drm: Use stdint types for consistency
+Subject: [PATCH 042/675] drm: Use stdint types for consistency
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

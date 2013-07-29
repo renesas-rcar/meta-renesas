@@ -1,7 +1,7 @@
 From 2b7ccab77e29db8771694d16f2cb1d7d6ff91b21 Mon Sep 17 00:00:00 2001
 From: Jani Nikula <jani.nikula@intel.com>
 Date: Wed, 15 Aug 2012 09:32:39 +0000
-Subject: [PATCH 053/611] drm: remove the raw_edid field from struct
+Subject: [PATCH 053/675] drm: remove the raw_edid field from struct
  drm_display_info
 
 Neither the drm core nor any of the drivers really need the raw_edid field

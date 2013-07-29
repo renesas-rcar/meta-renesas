@@ -1,7 +1,7 @@
 From 062d0c5a5959fc7d164eb12274d587593745fafd Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@googlemail.com>
 Date: Tue, 11 Sep 2012 18:35:11 +0000
-Subject: [PATCH 416/611] drm: make buffer management work without DRM_MASTER
+Subject: [PATCH 416/675] drm: make buffer management work without DRM_MASTER
 
 DRM users should be able to create/destroy/manage dumb- and frame-buffers
 without DRM_MASTER. These ioctls do not affect modesetting so there is no

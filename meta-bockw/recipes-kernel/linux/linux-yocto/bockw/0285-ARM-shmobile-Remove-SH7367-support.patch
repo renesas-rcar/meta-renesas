@@ -1,7 +1,7 @@
 From c86cdcfd9509ab43a05402b0363fef6d0f73989e Mon Sep 17 00:00:00 2001
 From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 Date: Tue, 6 Nov 2012 12:23:43 +0900
-Subject: [PATCH 285/611] ARM: shmobile: Remove SH7367 support
+Subject: [PATCH 285/675] ARM: shmobile: Remove SH7367 support
 
 This is old CPU of shmobile, and the machine by which this CPU is
 used cannot be obtained.

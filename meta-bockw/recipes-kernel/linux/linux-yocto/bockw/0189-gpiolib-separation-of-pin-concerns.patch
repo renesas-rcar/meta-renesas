@@ -1,7 +1,7 @@
 From d265daca48d965c9a5b32204193fb0647063c5b2 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 16:03:35 +0100
-Subject: [PATCH 189/611] gpiolib: separation of pin concerns
+Subject: [PATCH 189/675] gpiolib: separation of pin concerns
 
 The fact that of_gpiochip_add_pin_range() and
 gpiochip_add_pin_range() share too much code is fragile and

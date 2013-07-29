@@ -1,0 +1,29 @@
+From f8ef1c9dd900b59647bc4648b023c0f4df2caa41 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Thu, 20 Jun 2013 19:20:24 +0900
+Subject: [PATCH 612/675] ARM: mach-shmobile: r8a7778: Don't use SCSCR_CKE1
+
+SCSCR_CKE1(external clock) can't change scif baud rate.
+So this patch changes to use internal clock.
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7778.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index 86cc6e0..4f9b13a 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -52,7 +52,7 @@
+ {								\
+ 	.mapbase	= baseaddr,				\
+ 	.flags		= UPF_BOOT_AUTOCONF | UPF_IOREMAP,	\
+-	.scscr		= SCSCR_RE | SCSCR_TE | SCSCR_CKE1,	\
++	.scscr		= SCSCR_RE | SCSCR_TE,			\
+ 	.scbrr_algo_id	= SCBRR_ALGO_2,				\
+ 	.type		= PORT_SCIF,				\
+ 	.irqs		= SCIx_IRQ_MUXED(irq),			\
+-- 
+1.8.2
+

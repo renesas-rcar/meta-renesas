@@ -1,7 +1,7 @@
 From 5e9f4f0d89b4bb9d0a178dd83538588bc2be7e86 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:04 -0300
-Subject: [PATCH 033/611] drm: add 'count' to struct drm_object_properties
+Subject: [PATCH 033/675] drm: add 'count' to struct drm_object_properties
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

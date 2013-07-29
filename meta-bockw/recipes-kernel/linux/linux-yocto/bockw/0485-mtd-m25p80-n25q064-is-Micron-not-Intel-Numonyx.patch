@@ -1,7 +1,7 @@
 From 23930471d526425cf9f9a62c0d7e2589ecbd9c58 Mon Sep 17 00:00:00 2001
 From: Brian Norris <computersforpeace@gmail.com>
 Date: Fri, 22 Feb 2013 14:07:22 -0800
-Subject: [PATCH 485/611] mtd: m25p80: n25q064 is Micron, not Intel/Numonyx
+Subject: [PATCH 485/675] mtd: m25p80: n25q064 is Micron, not Intel/Numonyx
 
 Signed-off-by: Brian Norris <computersforpeace@gmail.com>
 Acked-by: Peter Korsgaard <jacmet@sunsite.dk>

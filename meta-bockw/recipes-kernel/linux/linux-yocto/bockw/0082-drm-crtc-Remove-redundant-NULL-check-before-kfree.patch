@@ -1,7 +1,7 @@
 From cb53170f9c3674b4f7d3277fc93c258481cd28c6 Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Mon, 19 Nov 2012 09:44:56 +0000
-Subject: [PATCH 082/611] drm/crtc: Remove redundant NULL check before kfree
+Subject: [PATCH 082/675] drm/crtc: Remove redundant NULL check before kfree
 
 kfree() on a NULL input is a no-op. Hence remove the check.
 

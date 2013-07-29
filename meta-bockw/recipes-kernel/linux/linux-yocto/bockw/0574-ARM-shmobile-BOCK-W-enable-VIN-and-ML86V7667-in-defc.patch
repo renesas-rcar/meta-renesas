@@ -1,7 +1,7 @@
 From 074b9086aa1d513f8f0c8a6f48b2252544a31ef9 Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Thu, 6 Jun 2013 13:41:18 +0900
-Subject: [PATCH 574/611] ARM: shmobile: BOCK-W: enable VIN and ML86V7667 in
+Subject: [PATCH 574/675] ARM: shmobile: BOCK-W: enable VIN and ML86V7667 in
  defconfig
 
 Add the VIN and ML86V7667 drivers to 'bockw_defconfig'.

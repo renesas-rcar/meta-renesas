@@ -1,7 +1,7 @@
 From df423c0117e854f9c6fae9531c530666607c9962 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:36 -0400
-Subject: [PATCH 016/611] drm/edid: Do drm_dmt_modes_for_range() for all range
+Subject: [PATCH 016/675] drm/edid: Do drm_dmt_modes_for_range() for all range
  descriptor types
 
 EDID 1.4 retcons the meaning of the "GTF feature" bit to mean "is

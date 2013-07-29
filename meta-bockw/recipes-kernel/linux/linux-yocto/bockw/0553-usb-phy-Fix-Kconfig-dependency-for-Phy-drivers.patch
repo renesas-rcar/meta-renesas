@@ -1,7 +1,7 @@
 From d9aea5ee29709fa40cc21e18178b78df90b70b9d Mon Sep 17 00:00:00 2001
 From: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
 Date: Tue, 26 Jun 2012 11:56:48 -0300
-Subject: [PATCH 553/611] usb: phy: Fix Kconfig dependency for Phy drivers
+Subject: [PATCH 553/675] usb: phy: Fix Kconfig dependency for Phy drivers
 
 USB phy layer driver are only built if usb host is selected, but they
 are used too by USB_GADGET drivers

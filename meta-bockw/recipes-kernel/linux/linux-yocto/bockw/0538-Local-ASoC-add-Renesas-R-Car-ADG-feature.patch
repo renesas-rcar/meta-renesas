@@ -1,7 +1,7 @@
 From 8af2fda2b521a89b2f161f4252ba6d592a816e61 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 27 May 2013 15:34:00 +0900
-Subject: [PATCH 538/611] Local: ASoC: add Renesas R-Car ADG feature
+Subject: [PATCH 538/675] Local: ASoC: add Renesas R-Car ADG feature
 
 Renesas R-Car series sound circuit consists of SSI and its peripheral.
 But this peripheral circuit is different between

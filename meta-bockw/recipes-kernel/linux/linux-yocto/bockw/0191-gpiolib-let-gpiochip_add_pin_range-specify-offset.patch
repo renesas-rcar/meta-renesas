@@ -1,7 +1,7 @@
 From ded9960ad8045f8c1fa0c79f51b277a76df0856d Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 20 Nov 2012 12:40:15 +0100
-Subject: [PATCH 191/611] gpiolib: let gpiochip_add_pin_range() specify offset
+Subject: [PATCH 191/675] gpiolib: let gpiochip_add_pin_range() specify offset
 
 Like with commit 3c739ad0df5eb41cd7adad879eda6aa09879eb76
 it is not always enough to specify all the pins of a gpio_chip

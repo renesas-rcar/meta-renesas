@@ -1,7 +1,7 @@
 From 9bc9674d3a9063819679c59752d74212b19283ed Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 01:57:45 +0100
-Subject: [PATCH 126/611] drm/rcar-du: Add DRM PRIME support
+Subject: [PATCH 126/675] drm/rcar-du: Add DRM PRIME support
 
 Just use the GEM CMA DRM PRIME helpers.
 

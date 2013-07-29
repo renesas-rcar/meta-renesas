@@ -1,7 +1,7 @@
 From 834a1c85f43a0bcd2dda7e2a2b958a86c43aeaaf Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 17 Jul 2012 15:48:18 +0900
-Subject: [PATCH 218/611] sh: pfc: pinctrl legacy group support.
+Subject: [PATCH 218/675] sh: pfc: pinctrl legacy group support.
 
 This follows the function support by simply doing 1 pin per group
 encapsulation in order to keep with legacy behaviour. This will be

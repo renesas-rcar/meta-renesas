@@ -1,7 +1,7 @@
 From 1344ca4d70ca08d6b602d4b861adda6dcabe1be2 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Wed, 27 Feb 2013 23:40:34 +0300
-Subject: [PATCH 443/611] ARM: mach-shmobile: marzen: add SATA support
+Subject: [PATCH 443/675] ARM: mach-shmobile: marzen: add SATA support
 
 Add SATA support to marzen_defconfig.
 

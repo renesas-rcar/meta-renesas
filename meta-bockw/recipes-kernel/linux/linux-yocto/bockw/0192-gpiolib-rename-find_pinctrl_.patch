@@ -1,7 +1,7 @@
 From 4198b38ee375749d9ceeb4ff4adbd05d19cc8873 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 20 Nov 2012 14:03:37 +0100
-Subject: [PATCH 192/611] gpiolib: rename find_pinctrl_*
+Subject: [PATCH 192/675] gpiolib: rename find_pinctrl_*
 
 Rename the function find_pinctrl_and_add_gpio_range()
 to pinctrl_find_and_add_gpio_range() so as to be consistent

@@ -1,7 +1,7 @@
 From 3e01e9843b0dd6e8ee9694c898db33b45fa4f144 Mon Sep 17 00:00:00 2001
 From: Liming Wang <walimisdev@gmail.com>
 Date: Thu, 22 Nov 2012 14:58:09 +0800
-Subject: [PATCH 480/611] mtd: m25p80: modify info for Micron N25Q128
+Subject: [PATCH 480/675] mtd: m25p80: modify info for Micron N25Q128
 
 Micron N25Q128 has two types of flash:
 

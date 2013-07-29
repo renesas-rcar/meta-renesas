@@ -1,7 +1,7 @@
 From 0912c9a8019c85029e73d4c3b1bcb6449e12e34d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:57 +0100
-Subject: [PATCH 247/611] ARM: shmobile: r8a7740: Register PFC platform device
+Subject: [PATCH 247/675] ARM: shmobile: r8a7740: Register PFC platform device
 
 Add arch code to register the PFC platform device instead of calling the
 driver directly. Platform device registration in the sh-pfc driver will

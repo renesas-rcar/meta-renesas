@@ -1,7 +1,7 @@
 From 4d6ca61e054049467f6baf70478aecbf810cc378 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 11 Jul 2012 17:17:10 +0900
-Subject: [PATCH 214/611] sh: pfc: pinctrl legacy function support.
+Subject: [PATCH 214/675] sh: pfc: pinctrl legacy function support.
 
 This maps out all of the function types to pinctrl function groups.
 Presently this is restricted to one pin per function to maintain

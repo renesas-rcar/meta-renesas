@@ -1,7 +1,7 @@
 From 8efe73d023259249a430c03061e6849faeddddbe Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:58:48 +0100
-Subject: [PATCH 372/611] sh-pfc: r8a7779: Remove USB function GPIOS
+Subject: [PATCH 372/675] sh-pfc: r8a7779: Remove USB function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the USB pins,
 the corresponding function GPIOS are unused. Remove them.

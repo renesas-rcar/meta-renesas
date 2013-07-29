@@ -1,7 +1,7 @@
 From a6aab4d849d84b9939abe752cffa71fa0fc7d4ea Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 1 Apr 2013 21:19:37 -0700
-Subject: [PATCH 496/611] ARM: shmobile: r8a7778: add r8a7778_init_irq_extpin()
+Subject: [PATCH 496/675] ARM: shmobile: r8a7778: add r8a7778_init_irq_extpin()
 
 This patch adds r8a7778_init_irq_extpin() for IRQ0 - IRQ3.
 But this patch doesn't enable DT settings on r8a7778.dts,

@@ -1,7 +1,7 @@
 From ed5c2b26c3f386ebc3457c4143d50d0429222c47 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 11 Jun 2013 14:42:43 +0900
-Subject: [PATCH 542/611] ASoC: rsnd: remove platform dai and add dai_id on
+Subject: [PATCH 542/675] ASoC: rsnd: remove platform dai and add dai_id on
  platform setting
 
 Current rsnd driver is using struct rsnd_dai_platform_info

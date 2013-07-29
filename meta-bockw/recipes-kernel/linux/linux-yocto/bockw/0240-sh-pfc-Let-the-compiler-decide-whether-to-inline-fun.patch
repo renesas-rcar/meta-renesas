@@ -1,7 +1,7 @@
 From 74dc351ada580f0731fbcc80645a4643702c5d07 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:50 +0100
-Subject: [PATCH 240/611] sh-pfc: Let the compiler decide whether to inline
+Subject: [PATCH 240/675] sh-pfc: Let the compiler decide whether to inline
  functions
 
 The compiler should be smart enough to automatically inline static

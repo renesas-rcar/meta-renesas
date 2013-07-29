@@ -1,7 +1,7 @@
 From 950fdbaaf91bcc254fc0b755e35cd1c49d573b9c Mon Sep 17 00:00:00 2001
 From: Roland Stigge <stigge@antcom.de>
 Date: Tue, 25 Sep 2012 09:56:14 +0200
-Subject: [PATCH 180/611] gpio: Document device_node's det_debounce
+Subject: [PATCH 180/675] gpio: Document device_node's det_debounce
 
 This patch adds documentation for set_debounce in struct device_node.
 

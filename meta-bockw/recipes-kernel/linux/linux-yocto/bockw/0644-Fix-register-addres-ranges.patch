@@ -1,0 +1,44 @@
+From 7690d041153f7a81603bbc0b1a3e0688ed995f32 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Tue, 23 Jul 2013 10:29:00 +0900
+Subject: [PATCH 644/675] Fix register addres ranges
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7778.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index adc7ad4..1d85192 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -478,7 +478,7 @@ void __init r8a7778_add_du_device(struct rcar_du_platform_data *info)
+ 
+ /* GP2D */
+ static struct resource gp2d_resources[] __initdata = {
+-	DEFINE_RES_MEM(0xffe80000, 0x2ffff),
++	DEFINE_RES_MEM(0xffe80000, 0x30000),
+ 	DEFINE_RES_IRQ(gic_iid(0x5c)),
+ };
+ 
+@@ -593,7 +593,7 @@ static struct resource vio_resources[] = {
+ 	[0] = {
+ 		.name	= "VIO6C",
+ 		.start	= 0xfd020000,
+-		.end	= 0xfd022a30 -1,
++		.end	= 0xfd022a34 -1,
+ 		.flags	= IORESOURCE_MEM,
+ 	},
+ };
+@@ -681,7 +681,7 @@ static struct platform_device *r8a7778_devices[] __initdata = {
+ 
+ /* PWM */
+ static struct resource pwm_resources[] __initdata = {
+-	DEFINE_RES_MEM(0xffe56000, 0xff),
++	DEFINE_RES_MEM(0xffe56000, 0x100),
+ };
+ 
+ void __init r8a7778_add_pwm_device(void)
+-- 
+1.8.2
+

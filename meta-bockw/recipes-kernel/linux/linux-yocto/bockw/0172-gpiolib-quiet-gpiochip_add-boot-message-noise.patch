@@ -1,7 +1,7 @@
 From 9eb28619d52584e2dbdb075e5331a2d2cd63a6c9 Mon Sep 17 00:00:00 2001
 From: H Hartley Sweeten <hartleys@visionengravers.com>
 Date: Fri, 11 May 2012 16:58:33 -0700
-Subject: [PATCH 172/611] gpiolib: quiet gpiochip_add boot message noise
+Subject: [PATCH 172/675] gpiolib: quiet gpiochip_add boot message noise
 
 The pr_info message in gpiochip_add gets displayed for every
 gpiochip registered. When first bringing up a system this

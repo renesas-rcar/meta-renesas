@@ -1,7 +1,7 @@
 From bbcd5210a35473a08c72b79f82398fa8e64d9b49 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 17 Apr 2013 23:40:57 -0700
-Subject: [PATCH 546/611] gpio-rcar: R-Car GPIO IRQ share interrupt
+Subject: [PATCH 546/675] gpio-rcar: R-Car GPIO IRQ share interrupt
 
 R-Car H1 or Gen2 GPIO interrupts are assigned per each GPIO domain,
 but, Gen1 E1/M1 GPIO interrupts are shared for all GPIO domain.

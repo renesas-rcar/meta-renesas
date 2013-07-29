@@ -1,7 +1,7 @@
 From 0824867538f957a2cf66861bc7fc7df9f92e55a6 Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Tue, 4 Sep 2012 16:35:56 +0000
-Subject: [PATCH 067/611] drm: support for rotated scanout
+Subject: [PATCH 067/675] drm: support for rotated scanout
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,7 +1,7 @@
 From d4f64e149d0d972ceabd9137b34427b0e937088e Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:17 +0100
-Subject: [PATCH 097/611] drm/doc: integrate fb helper reference into docs
+Subject: [PATCH 097/675] drm/doc: integrate fb helper reference into docs
 
 Again only minimal changes to make kerneldoc no longer shout. Plus a
 little introduction in the form of a inline DOC: section to quickly

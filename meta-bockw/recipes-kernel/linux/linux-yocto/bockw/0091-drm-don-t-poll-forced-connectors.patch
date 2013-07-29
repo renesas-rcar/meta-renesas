@@ -1,7 +1,7 @@
 From c19540cb807722bef5ff29e86b593a67ac56c7c9 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:38 +0000
-Subject: [PATCH 091/611] drm: don't poll forced connectors
+Subject: [PATCH 091/675] drm: don't poll forced connectors
 
 Otherwise if the detect callback reports a different state than what
 the user forced (rather likely), we continously annoy userspace about

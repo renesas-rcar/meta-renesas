@@ -1,7 +1,7 @@
 From 1bdde2ffbac776bb6f6cfaf630e65e2d27162445 Mon Sep 17 00:00:00 2001
 From: Thierry Reding <thierry.reding@avionic-design.de>
 Date: Thu, 9 Aug 2012 08:38:43 +0200
-Subject: [PATCH 178/611] gpio: Fix debug message in of_get_named_gpio_flags()
+Subject: [PATCH 178/675] gpio: Fix debug message in of_get_named_gpio_flags()
 
 This was probably missed in the conversion done in commit 3d0f7cf
 ("gpio: Adjust of_xlate API to support multiple GPIO chips").

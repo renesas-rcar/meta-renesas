@@ -1,7 +1,7 @@
 From 7b67ede5c6768694448b6f37cb22f9d6d0013f63 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:47 +0100
-Subject: [PATCH 237/611] sh-pfc: Move platform device and driver to the core
+Subject: [PATCH 237/675] sh-pfc: Move platform device and driver to the core
 
 The pinctrl module registers both a platform device and a platform
 driver. The only purpose of this awkward construction is to have a

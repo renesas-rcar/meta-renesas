@@ -1,7 +1,7 @@
 From f497afd16237487f015088564d99089df1b6e7e5 Mon Sep 17 00:00:00 2001
 From: Marek Vasut <marex@denx.de>
 Date: Mon, 24 Sep 2012 03:39:39 +0200
-Subject: [PATCH 477/611] mtd: m25p80: Make fast read configurable via DT
+Subject: [PATCH 477/675] mtd: m25p80: Make fast read configurable via DT
 
 Add DT property "m25p,fast-read" that signalises the particular
 chip supports "fast read" opcode.

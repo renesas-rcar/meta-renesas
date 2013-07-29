@@ -1,7 +1,7 @@
 From 254221ad3aaa9fff87c5e69dfe80d3bc84c132e4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 14:37:15 +0100
-Subject: [PATCH 142/611] drm/rcar-du: Add support for cloned mode on DU1
+Subject: [PATCH 142/675] drm/rcar-du: Add support for cloned mode on DU1
 
 The DU1 output can be driven by the superposition processor (CRTC) 0 in
 cloned mode. Support this.

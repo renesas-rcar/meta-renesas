@@ -1,7 +1,7 @@
 From 92f5819359d0e75433addee8f32a38efa745dda0 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 12 Apr 2013 05:37:50 +0000
-Subject: [PATCH 500/611] ARM: shmobile: r8a7778: Register PFC device
+Subject: [PATCH 500/675] ARM: shmobile: r8a7778: Register PFC device
 
 Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>

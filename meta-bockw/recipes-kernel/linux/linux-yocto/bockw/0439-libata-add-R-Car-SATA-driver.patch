@@ -1,7 +1,7 @@
 From 93cdf23c90fc4a0025ffcb5dc12b13f86551aa57 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Wed, 20 Feb 2013 23:10:29 +0300
-Subject: [PATCH 439/611] libata: add R-Car SATA driver
+Subject: [PATCH 439/675] libata: add R-Car SATA driver
 
 Add Renesas R-Car on-chip 3Gbps SATA controller driver.
 

@@ -1,7 +1,7 @@
-From 279097a569e216e2b23fb7604e2174595673ebc5 Mon Sep 17 00:00:00 2001
+From aa264184a1c36f953a8d7d4136e076b674048d78 Mon Sep 17 00:00:00 2001
 From: Yusuke Goda <yusuke.goda.sx@renesas.com>
 Date: Tue, 11 Jun 2013 19:36:19 +0900
-Subject: [PATCH 589/611] ARM: shmobile: r8a7778: add VPC clock support
+Subject: [PATCH 589/675] ARM: shmobile: r8a7778: add VPC clock support
 
 Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
 ---

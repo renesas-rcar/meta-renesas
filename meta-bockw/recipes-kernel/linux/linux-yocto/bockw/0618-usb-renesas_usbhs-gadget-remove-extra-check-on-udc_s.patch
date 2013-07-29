@@ -1,0 +1,37 @@
+From d4aa18487a9848e680870aaca2ba76f225a43556 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 9 Jul 2013 02:02:36 -0700
+Subject: [PATCH 618/675] usb: renesas_usbhs: gadget: remove extra check on
+ udc_stop
+
+usb_gadget_ops :: udc_stop might be called with driver = NULL since
+511f3c5326eabe1ece35202a404c24c0aeacc246
+(usb: gadget: udc-core: fix a regression during gadget driver unbinding)
+
+Because of that, 2nd times insmod goes fail.
+This patch fixes it up.
+
+Reported-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ drivers/usb/renesas_usbhs/mod_gadget.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/usb/renesas_usbhs/mod_gadget.c b/drivers/usb/renesas_usbhs/mod_gadget.c
+index 00bd2a5..beefff1 100644
+--- a/drivers/usb/renesas_usbhs/mod_gadget.c
++++ b/drivers/usb/renesas_usbhs/mod_gadget.c
+@@ -857,10 +857,6 @@ static int usbhsg_gadget_stop(struct usb_gadget *gadget,
+ 	struct usbhsg_gpriv *gpriv = usbhsg_gadget_to_gpriv(gadget);
+ 	struct usbhs_priv *priv = usbhsg_gpriv_to_priv(gpriv);
+ 
+-	if (!driver		||
+-	    !driver->unbind)
+-		return -EINVAL;
+-
+ 	usbhsg_try_stop(priv, USBHSG_STATUS_REGISTERD);
+ 	gpriv->gadget.dev.driver = NULL;
+ 	gpriv->driver = NULL;
+-- 
+1.8.2
+

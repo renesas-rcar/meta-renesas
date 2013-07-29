@@ -1,7 +1,7 @@
 From ed2cf7c49c15b1b91dc8c5bfb34ba547be9e387f Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 11 Dec 2012 14:14:32 +0100
-Subject: [PATCH 164/611] pinctrl: skip deferral of hogs
+Subject: [PATCH 164/675] pinctrl: skip deferral of hogs
 
 Up until now, as hogs were always taken at the end of the
 pin control device registration, it didn't cause any problem.

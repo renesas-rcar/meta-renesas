@@ -1,7 +1,7 @@
 From e0ba33d871995fc268e3d72653a673a4e9bfe11a Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:32 +0000
-Subject: [PATCH 086/611] drm: extract drm_kms_helper_hotplug_event
+Subject: [PATCH 086/675] drm: extract drm_kms_helper_hotplug_event
 
 Useful if drivers want to be slightly more clever about hotplug
 handling.

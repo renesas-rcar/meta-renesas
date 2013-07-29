@@ -1,7 +1,7 @@
 From 7bad48a392b7e972a00f140c2d5b096530eba670 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:55 +0100
-Subject: [PATCH 302/611] sh-pfc: Move sh_pfc.h from include/linux/ to driver
+Subject: [PATCH 302/675] sh-pfc: Move sh_pfc.h from include/linux/ to driver
  directory
 
 The header file isn't used by arch code anymore. Make it private to the

@@ -1,7 +1,7 @@
 From a1db2b041f9194e07d14faebe897a7c2fc07be4d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:33 +0100
-Subject: [PATCH 327/611] ARM: shmobile: kota2: Use gpio_request_one()
+Subject: [PATCH 327/675] ARM: shmobile: kota2: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().

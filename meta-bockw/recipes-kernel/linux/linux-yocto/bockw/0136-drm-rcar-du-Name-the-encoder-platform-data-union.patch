@@ -1,7 +1,7 @@
 From 63c35b4ff6a4fade0f1200f34f9fad06ab70b756 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 00:40:00 +0100
-Subject: [PATCH 136/611] drm/rcar-du: Name the encoder platform data union
+Subject: [PATCH 136/675] drm/rcar-du: Name the encoder platform data union
 
 Unnamed unions can't be statically initialized with gcc < 4.6.
 

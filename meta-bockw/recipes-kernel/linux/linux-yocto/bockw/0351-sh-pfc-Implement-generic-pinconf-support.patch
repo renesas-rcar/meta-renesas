@@ -1,7 +1,7 @@
 From a0eccfe4c0b6c7132430c04bccf3477bc323385b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 16:44:02 +0100
-Subject: [PATCH 351/611] sh-pfc: Implement generic pinconf support
+Subject: [PATCH 351/675] sh-pfc: Implement generic pinconf support
 
 The existing PFC pinconf implementation, tied to the PFC-specific pin
 types, isn't used by drivers or boards. Replace it with the generic

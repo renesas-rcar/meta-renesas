@@ -1,7 +1,7 @@
 From b67c9998b5dcdaff4d7419ea7f22fd5d8936fc35 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:19 +0100
-Subject: [PATCH 266/611] sh-pfc: Move driver from drivers/sh/ to
+Subject: [PATCH 266/675] sh-pfc: Move driver from drivers/sh/ to
  drivers/pinctrl/
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>

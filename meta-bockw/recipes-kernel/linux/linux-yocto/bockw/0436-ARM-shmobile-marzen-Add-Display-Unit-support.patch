@@ -1,7 +1,7 @@
 From f9dd5ed5d953955ba3a3dac22c4b01d3b3ecfccb Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 31 Jan 2013 01:23:35 +0100
-Subject: [PATCH 436/611] ARM: shmobile: marzen: Add Display Unit support
+Subject: [PATCH 436/675] ARM: shmobile: marzen: Add Display Unit support
 
 Support the DU0 VGA and DU1 LVDS outputs. DU1 is connected to a
 Mitsubishi AA104XD12 panel (10.4" XGA).

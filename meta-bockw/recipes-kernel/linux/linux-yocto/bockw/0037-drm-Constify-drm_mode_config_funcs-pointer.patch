@@ -1,7 +1,7 @@
 From 69f0aa38ccd2bb561f7e7ddc8c538d6b05358cf2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:23 +0200
-Subject: [PATCH 037/611] drm: Constify drm_mode_config_funcs pointer
+Subject: [PATCH 037/675] drm: Constify drm_mode_config_funcs pointer
 
 The DRM mode config functions structure declared by drivers and pointed
 to by the drm_mode_config funcs field is never modified. Make it a const

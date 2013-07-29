@@ -1,7 +1,7 @@
 From 339fe65a03b1309a8869a928edb6a474b038dd34 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:59:26 +0100
-Subject: [PATCH 380/611] ARM: shmobile: r8a7779: Remove LBSC function GPIOs
+Subject: [PATCH 380/675] ARM: shmobile: r8a7779: Remove LBSC function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.

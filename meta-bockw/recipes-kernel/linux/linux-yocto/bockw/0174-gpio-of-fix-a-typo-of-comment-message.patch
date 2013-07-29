@@ -1,7 +1,7 @@
 From e31ffe25786bd20b90b4dd4f544277f3e06211ff Mon Sep 17 00:00:00 2001
 From: Dong Aisheng <dong.aisheng@linaro.org>
 Date: Fri, 25 May 2012 21:36:15 +0800
-Subject: [PATCH 174/611] gpio/of: fix a typo of comment message
+Subject: [PATCH 174/675] gpio/of: fix a typo of comment message
 
 Signed-off-by: Dong Aisheng <dong.aisheng@linaro.org>
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>

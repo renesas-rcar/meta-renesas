@@ -1,7 +1,7 @@
 From f07f17003d56a47baba69942f8c1512091db44fe Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 29 Oct 2012 01:14:31 -0700
-Subject: [PATCH 269/611] ARM: shmobile: r8a7779: PFC rename PENCx -> USB_PENCx
+Subject: [PATCH 269/675] ARM: shmobile: r8a7779: PFC rename PENCx -> USB_PENCx
 
 PENCx is Power Enable Control pin for USB.
 

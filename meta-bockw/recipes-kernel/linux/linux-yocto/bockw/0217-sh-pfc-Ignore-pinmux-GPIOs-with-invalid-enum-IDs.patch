@@ -1,7 +1,7 @@
 From 0d1ca7d09cf052b73135cfd70b05af2b268d4d26 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 17 Jul 2012 15:23:11 +0900
-Subject: [PATCH 217/611] sh: pfc: Ignore pinmux GPIOs with invalid enum IDs.
+Subject: [PATCH 217/675] sh: pfc: Ignore pinmux GPIOs with invalid enum IDs.
 
 If we encounter invalid entries in the pinmux GPIO range, make sure we've
 still got a dummy pin definition but don't otherwise map it.

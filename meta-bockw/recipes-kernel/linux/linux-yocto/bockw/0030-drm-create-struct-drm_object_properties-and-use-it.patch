@@ -1,7 +1,7 @@
 From 7e995c000e9bab120cc0ce6b9854dd7b49e900fa Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:01 -0300
-Subject: [PATCH 030/611] drm: create struct drm_object_properties and use it
+Subject: [PATCH 030/675] drm: create struct drm_object_properties and use it
 
 For now, only connectors have it. In the future, all objects that need
 properties should use it. Since the structure is referenced inside

@@ -1,7 +1,7 @@
 From 29b00295f06d9fba8959564c26b06b2530352185 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 6 Jun 2013 13:18:33 +0900
-Subject: [PATCH 566/611] LTSI: usb: fixup generation conflict
+Subject: [PATCH 566/675] LTSI: usb: fixup generation conflict
 
 LTSI 3.4.46 doesn't have devm_ioremap_resource(),
 and usb_xxx_phy().

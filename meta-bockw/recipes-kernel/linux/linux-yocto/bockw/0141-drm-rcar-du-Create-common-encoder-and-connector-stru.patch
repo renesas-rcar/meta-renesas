@@ -1,7 +1,7 @@
 From 379209fafb4f6c1910c82eddd4e2648c0556ea4a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 13:43:20 +0100
-Subject: [PATCH 141/611] drm/rcar-du: Create common encoder and connector
+Subject: [PATCH 141/675] drm/rcar-du: Create common encoder and connector
  structures
 
 Create rcar_du_encoder and rcar_du_connector structures to store fields

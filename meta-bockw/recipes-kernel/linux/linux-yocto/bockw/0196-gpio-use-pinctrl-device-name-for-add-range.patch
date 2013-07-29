@@ -1,7 +1,7 @@
 From cc4b0efc6bbb0d2751f02825082830f97c4d593c Mon Sep 17 00:00:00 2001
 From: Haojian Zhuang <haojian.zhuang@linaro.org>
 Date: Fri, 18 Jan 2013 15:31:07 +0800
-Subject: [PATCH 196/611] gpio: use pinctrl device name for add range
+Subject: [PATCH 196/675] gpio: use pinctrl device name for add range
 
 gpiochip_add_pin_range() needs pinctrl device name as parameter.
 Currently the parameter is pinctrl description name. So fix it.

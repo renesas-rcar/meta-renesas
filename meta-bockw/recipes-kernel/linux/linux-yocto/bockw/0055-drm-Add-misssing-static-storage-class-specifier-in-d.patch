@@ -1,7 +1,7 @@
 From 5ea6dc2b40e3b115a513c2c4afe32795d7544ff3 Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Wed, 1 Aug 2012 17:15:32 +0530
-Subject: [PATCH 055/611] drm: Add misssing static storage class specifier in
+Subject: [PATCH 055/675] drm: Add misssing static storage class specifier in
  drm_fb_helper.c file
 
 Fixes the following sparse warning:

@@ -1,7 +1,7 @@
 From 1b574399fb7562dcc402d777fd251d95dae75eee Mon Sep 17 00:00:00 2001
 From: Grant Likely <grant.likely@secretlab.ca>
 Date: Thu, 17 May 2012 13:54:40 -0600
-Subject: [PATCH 171/611] gpio: Adjust of_xlate API to support multiple GPIO
+Subject: [PATCH 171/675] gpio: Adjust of_xlate API to support multiple GPIO
  chips
 
 This patch changes the of_xlate API to make it possible for multiple

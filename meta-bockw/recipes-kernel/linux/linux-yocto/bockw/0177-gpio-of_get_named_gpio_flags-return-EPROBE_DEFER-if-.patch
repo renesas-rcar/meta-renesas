@@ -1,7 +1,7 @@
 From 2cc02b67324942057903c82f6f124bed31d15bdc Mon Sep 17 00:00:00 2001
 From: Roland Stigge <stigge@antcom.de>
 Date: Thu, 28 Jun 2012 00:32:14 +0200
-Subject: [PATCH 177/611] gpio: of_get_named_gpio_flags() return -EPROBE_DEFER
+Subject: [PATCH 177/675] gpio: of_get_named_gpio_flags() return -EPROBE_DEFER
  if GPIO not yet available
 
 of_get_named_gpio_flags() and of_get_named_gpio() return -EPROBE_DEFER if the

@@ -1,7 +1,7 @@
 From be1e22d437b0867a03f6aa86e3c7424d4e2a925b Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Mon, 19 Nov 2012 09:44:58 +0000
-Subject: [PATCH 084/611] drm/fb_helper: Fix potential NULL pointer dereference
+Subject: [PATCH 084/675] drm/fb_helper: Fix potential NULL pointer dereference
 
 kcalloc returns NULL on failure. Hence check for the return value
 and exit on error to avoid NULL pointer dereference.

@@ -1,7 +1,7 @@
 From df0a8b3835ef1e4f0c9ad68e4296caddbd0abf85 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 17:25:29 +0100
-Subject: [PATCH 353/611] sh-pfc: Clean up pin configuration type handling
+Subject: [PATCH 353/675] sh-pfc: Clean up pin configuration type handling
 
 Set pin configuration type to
 

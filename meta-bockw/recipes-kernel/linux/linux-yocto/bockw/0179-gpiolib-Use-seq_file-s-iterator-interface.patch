@@ -1,7 +1,7 @@
 From ccbe02e9da3487e5440c0327a54c762114ad41a5 Mon Sep 17 00:00:00 2001
 From: Thierry Reding <thierry.reding@avionic-design.de>
 Date: Thu, 12 Apr 2012 13:26:01 +0200
-Subject: [PATCH 179/611] gpiolib: Use seq_file's iterator interface
+Subject: [PATCH 179/675] gpiolib: Use seq_file's iterator interface
 
 When dumping a collection of items via seq_file, it is recommended to
 use the iterator interface. For the gpiolib debugfs interface this can

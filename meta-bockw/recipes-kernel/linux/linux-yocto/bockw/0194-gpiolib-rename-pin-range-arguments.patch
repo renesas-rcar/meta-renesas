@@ -1,7 +1,7 @@
 From 6ad8ba58ab6ac4e9673c8af610ec7cc12f1603b3 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Wed, 21 Nov 2012 08:48:09 +0100
-Subject: [PATCH 194/611] gpiolib: rename pin range arguments
+Subject: [PATCH 194/675] gpiolib: rename pin range arguments
 
 To be crystal clear on what the arguments mean in this
 funtion dealing with both GPIO and PIN ranges with confusing

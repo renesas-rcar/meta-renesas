@@ -1,7 +1,7 @@
 From f8f67a6a4e62cc46dfc2557b33eeb25adff08670 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 01:54:26 +0100
-Subject: [PATCH 119/611] drm: GEM CMA: Split object creation into object alloc
+Subject: [PATCH 119/675] drm: GEM CMA: Split object creation into object alloc
  and DMA memory alloc
 
 This allows creating a GEM CMA object without an associated DMA memory

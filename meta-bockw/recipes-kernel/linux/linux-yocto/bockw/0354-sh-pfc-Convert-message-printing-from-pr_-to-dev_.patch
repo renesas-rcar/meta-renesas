@@ -1,7 +1,7 @@
 From 197b488d307e7199b012775ab82a3032778a7e8e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 18:00:02 +0100
-Subject: [PATCH 354/611] sh-pfc: Convert message printing from pr_* to dev_*
+Subject: [PATCH 354/675] sh-pfc: Convert message printing from pr_* to dev_*
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>

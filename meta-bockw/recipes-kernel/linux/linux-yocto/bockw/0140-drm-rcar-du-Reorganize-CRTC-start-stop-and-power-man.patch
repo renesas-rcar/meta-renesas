@@ -1,7 +1,7 @@
 From e60f076be48477909a4282ad0a0af5ca027e2678 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 13:16:08 +0100
-Subject: [PATCH 140/611] drm/rcar-du: Reorganize CRTC start/stop and power
+Subject: [PATCH 140/675] drm/rcar-du: Reorganize CRTC start/stop and power
  management code
 
 The DU is acquired in the CRTC start handler and released in its stop

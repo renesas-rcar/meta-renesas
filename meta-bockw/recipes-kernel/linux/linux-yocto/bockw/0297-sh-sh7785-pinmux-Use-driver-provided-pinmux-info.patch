@@ -1,7 +1,7 @@
 From c7e05490e620d7ee6aea380d52dcea2356c2a2de Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:50 +0100
-Subject: [PATCH 297/611] sh: sh7785: pinmux: Use driver-provided pinmux info
+Subject: [PATCH 297/675] sh: sh7785: pinmux: Use driver-provided pinmux info
 
 Pinmux info for the sh machines is now provided by pinmux drivers.
 Remove the duplicate copy in arch code.

@@ -1,7 +1,7 @@
 From 6f25ff17f3bd3a77e2364ca2a809521acf93f985 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:36:28 +0100
-Subject: [PATCH 369/611] sh-pfc: r8a7779: Remove SDHI and MMCIF function GPIOS
+Subject: [PATCH 369/675] sh-pfc: r8a7779: Remove SDHI and MMCIF function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the SDHI and
 MMCIF pins, the corresponding function GPIOS are unused. Remove them.

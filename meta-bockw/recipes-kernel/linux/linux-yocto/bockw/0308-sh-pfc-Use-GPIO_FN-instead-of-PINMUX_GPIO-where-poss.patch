@@ -1,7 +1,7 @@
 From f563bbcb42ffe0de7a3043c62e8105b963c904b7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 28 Nov 2012 22:05:49 +0100
-Subject: [PATCH 308/611] sh-pfc: Use GPIO_FN instead of PINMUX_GPIO where
+Subject: [PATCH 308/675] sh-pfc: Use GPIO_FN instead of PINMUX_GPIO where
  possible
 
 The GPIO_FN macro expands to the PINMUX_GPIO macro. The regular

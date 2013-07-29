@@ -1,7 +1,7 @@
 From fcfe4ca2dd4e9bde4e496e8d14ffca37ff749381 Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Wed, 28 Nov 2012 10:24:27 +0100
-Subject: [PATCH 444/611] mmc: sh_mmcif: remove unneeded clock connection ID
+Subject: [PATCH 444/675] mmc: sh_mmcif: remove unneeded clock connection ID
 
 MMCIF only uses one clock, all ARM and SuperH platforms register MMCIF
 clock lookup entries with no connection ID, hence it can be dropped in

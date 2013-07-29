@@ -1,7 +1,7 @@
 From 23973a110d53f1823c389b8432e007effecb82bf Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Thu, 6 Jun 2013 10:17:08 +0900
-Subject: [PATCH 563/611] ARM: shmobile: r8a7778: add USB support
+Subject: [PATCH 563/675] ARM: shmobile: r8a7778: add USB support
 
 Add USB clock and EHCI, OHCI, and USB PHY platform devices for R8A7778 SoC;  add
 a function to register PHY device with board-specific platform data and register

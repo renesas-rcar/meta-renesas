@@ -1,7 +1,7 @@
 From df26f2424a022d55512816ebb460c91a425c7ec5 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 12 Jun 2013 10:41:33 +0900
-Subject: [PATCH 584/611] sh-pfc: r8a7778: tidyup MMC_D1 pin
+Subject: [PATCH 584/675] sh-pfc: r8a7778: tidyup MMC_D1 pin
 
 MMC_D1 is RCAR_GP_PIN(1, 8), not RCAR_GP_PIN(2, 8)
 

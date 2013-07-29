@@ -1,7 +1,7 @@
 From 5e9b653f72eb951340dabbfb4c348add798308e8 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:02 +0100
-Subject: [PATCH 252/611] ARM: shmobile: sh7372: Add pin control resources
+Subject: [PATCH 252/675] ARM: shmobile: sh7372: Add pin control resources
 
 Add memory resources for the pin control platform device to let the
 sh-pfc driver ioremap() registers properly instead of evily casting

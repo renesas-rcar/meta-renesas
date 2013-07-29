@@ -1,0 +1,53 @@
+From 7186365e3a3df951721bd4d281b203e9cfe64632 Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Mon, 22 Jul 2013 21:14:08 +0900
+Subject: [PATCH 590/675] ARM: shmobile: r8a7778: add VPC support
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7778.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7778.c b/arch/arm/mach-shmobile/setup-r8a7778.c
+index 151fb98..ddd2638 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7778.c
++++ b/arch/arm/mach-shmobile/setup-r8a7778.c
+@@ -455,8 +455,35 @@ static struct platform_device ipmmu_device = {
+ 	.num_resources	= ARRAY_SIZE(ipmmu_resources),
+ };
+ 
++/* VPC */
++static struct uio_info vpc_platform_data = {
++	.name		= "VPC",
++	.version	= "0",
++	.irq		= -1,
++};
++
++static struct resource vpc_resources[] = {
++	[0] = {
++		.name	= "VPC",
++		.start	= 0xfd0d0000,
++		.end	= 0xfd0d008f,
++		.flags	= IORESOURCE_MEM,
++	},
++};
++
++static struct platform_device vpc_device = {
++	.name		= "uio_pdrv_genirq",
++	.id		= 1,
++	.dev = {
++		.platform_data = &vpc_platform_data,
++	},
++	.resource	= vpc_resources,
++	.num_resources	= ARRAY_SIZE(vpc_resources),
++};
++
+ static struct platform_device *r8a7778_devices[] __initdata = {
+ 	&ipmmu_device,
++	&vpc_device,
+ };
+ 
+ void __init r8a7778_add_standard_devices(void)
+-- 
+1.8.2
+

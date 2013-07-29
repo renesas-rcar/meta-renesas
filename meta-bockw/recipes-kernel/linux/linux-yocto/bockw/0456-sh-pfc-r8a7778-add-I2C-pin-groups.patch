@@ -1,7 +1,7 @@
 From f807426ef21362e9f26ea56c3a14bdada0d9aadf Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 22 May 2013 20:15:53 -0700
-Subject: [PATCH 456/611] sh-pfc: r8a7778: add I2C pin groups
+Subject: [PATCH 456/675] sh-pfc: r8a7778: add I2C pin groups
 
 Add I2C SDA/SCL pin groups to R8A7778 PFC driver.
 

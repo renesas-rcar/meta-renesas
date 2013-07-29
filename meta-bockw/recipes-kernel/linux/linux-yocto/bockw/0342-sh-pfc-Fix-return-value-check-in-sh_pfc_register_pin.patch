@@ -1,7 +1,7 @@
 From 6f30e52337fd171b252934b8a5c83adc62190212 Mon Sep 17 00:00:00 2001
 From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 Date: Mon, 11 Mar 2013 22:08:12 +0800
-Subject: [PATCH 342/611] sh-pfc: Fix return value check in
+Subject: [PATCH 342/675] sh-pfc: Fix return value check in
  sh_pfc_register_pinctrl()
 
 In case of error, the function pinctrl_register() returns NULL not

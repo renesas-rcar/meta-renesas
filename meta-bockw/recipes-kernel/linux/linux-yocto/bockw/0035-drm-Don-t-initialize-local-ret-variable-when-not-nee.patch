@@ -1,7 +1,7 @@
 From a53c6e6096d05d60f77bb71c8c73b13b2fc65b9d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:21 +0200
-Subject: [PATCH 035/611] drm: Don't initialize local ret variable when not
+Subject: [PATCH 035/675] drm: Don't initialize local ret variable when not
  needed
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>

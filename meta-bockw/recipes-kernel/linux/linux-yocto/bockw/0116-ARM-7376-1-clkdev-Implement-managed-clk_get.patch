@@ -1,7 +1,7 @@
 From 56b2709ad99e9300f85bd13a4dc523280a9d25d7 Mon Sep 17 00:00:00 2001
 From: Mark Brown <broonie@sirena.org.uk>
 Date: Thu, 5 Apr 2012 11:42:09 +0100
-Subject: [PATCH 116/611] ARM: 7376/1: clkdev: Implement managed clk_get()
+Subject: [PATCH 116/675] ARM: 7376/1: clkdev: Implement managed clk_get()
 
 Allow clk API users to simplify their cleanup paths by providing a
 managed version of clk_get() and clk_put().

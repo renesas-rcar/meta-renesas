@@ -1,7 +1,7 @@
 From 87641df049c987e12ae625429ac472daf77163e6 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 00:48:56 +0100
-Subject: [PATCH 132/611] drm/rcar-du: Fix plane index wrap-around for
+Subject: [PATCH 132/675] drm/rcar-du: Fix plane index wrap-around for
  multi-planar overlays
 
 If the first hardware plane of a multi-planar overlay is plane 7 the

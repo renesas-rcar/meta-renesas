@@ -1,7 +1,7 @@
 From 43031325de926a68abb21aa55318addcac4d086f Mon Sep 17 00:00:00 2001
 From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 Date: Mon, 22 Oct 2012 12:58:09 +0800
-Subject: [PATCH 162/611] pinctrl: fix missing unlock on error in
+Subject: [PATCH 162/675] pinctrl: fix missing unlock on error in
  pinctrl_groups_show()
 
 Add the missing unlock on the error handle path in function

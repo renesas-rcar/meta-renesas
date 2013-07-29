@@ -1,7 +1,7 @@
 From 1289620a0c783163d574ace015c1b337d4afd540 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Mon, 26 Nov 2012 15:05:48 -0600
-Subject: [PATCH 146/611] ARM: GIC: remove direct use of gic_raise_softirq
+Subject: [PATCH 146/675] ARM: GIC: remove direct use of gic_raise_softirq
 
 In preparation of moving gic code to drivers/irqchip, remove the direct
 platform dependencies on gic_raise_softirq. Move the setup of

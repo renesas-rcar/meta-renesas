@@ -1,7 +1,7 @@
 From 1b5a3514a69479a663104e445ee0d41abcce5bdd Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 11 Jun 2013 17:26:14 +0900
-Subject: [PATCH 579/611] sh-pfc: r8a7778: add DU pin support
+Subject: [PATCH 579/675] sh-pfc: r8a7778: add DU pin support
 
 ---
  drivers/pinctrl/sh-pfc/pfc-r8a7778.c | 54 ++++++++++++++++++++++++++++++++++++

@@ -1,7 +1,7 @@
 From 463ab6e7d8210486310153b77bdd0b6134899500 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:22 +0200
-Subject: [PATCH 105/611] drm: Constify gem_vm_ops pointer
+Subject: [PATCH 105/675] drm: Constify gem_vm_ops pointer
 
 The GEM vm operations structure is passed to the VM core that stores it
 in a const field. There vm operations structures can thus be const in

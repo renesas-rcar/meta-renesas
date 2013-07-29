@@ -1,0 +1,72 @@
+From a31d9f076eb29580d28f87dae22f9882d8ecaa80 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 19 Jul 2013 10:57:59 +0900
+Subject: [PATCH 647/675] Revert "LTSI: ASoC: rcar: tidyup framework mismatch"
+
+This reverts commit ae4399d1d22ece5d0a9145e66a13f62e14b02568.
+---
+ sound/soc/sh/rcar/core.c | 11 ++++++++---
+ sound/soc/sh/rcar/gen.c  |  6 +++---
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/sound/soc/sh/rcar/core.c b/sound/soc/sh/rcar/core.c
+index 4817eda..400d272 100644
+--- a/sound/soc/sh/rcar/core.c
++++ b/sound/soc/sh/rcar/core.c
+@@ -579,6 +579,10 @@ static struct snd_soc_platform_driver rsnd_soc_platform = {
+ 	.pcm_free	= rsnd_pcm_free,
+ };
+ 
++static const struct snd_soc_component_driver rsnd_soc_component = {
++	.name		= "rsnd",
++};
++
+ /*
+  *	rsnd probe
+  */
+@@ -631,8 +635,6 @@ static int rsnd_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	dev_set_drvdata(dev, priv);
+-
+ 	/*
+ 	 *	asoc register
+ 	 */
+@@ -642,12 +644,15 @@ static int rsnd_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	ret = snd_soc_register_dais(dev, priv->daidrv, rsnd_dai_nr(priv));
++	ret = snd_soc_register_component(dev, &rsnd_soc_component,
++					 priv->daidrv, rsnd_dai_nr(priv));
+ 	if (ret < 0) {
+ 		dev_err(dev, "cannot snd dai register\n");
+ 		goto exit_snd_soc;
+ 	}
+ 
++	dev_set_drvdata(dev, priv);
++
+ 	pm_runtime_enable(dev);
+ 
+ 	dev_info(dev, "probed\n");
+diff --git a/sound/soc/sh/rcar/gen.c b/sound/soc/sh/rcar/gen.c
+index 3d1fcc0..8339474 100644
+--- a/sound/soc/sh/rcar/gen.c
++++ b/sound/soc/sh/rcar/gen.c
+@@ -176,9 +176,9 @@ static int rsnd_gen1_probe(struct platform_device *pdev,
+ 
+ 	gen->ops = &rsnd_gen1_ops;
+ 
+-	gen->base[RSND_GEN1_SRU] = ioremap_nocache(sru_res->start, resource_size(sru_res));
+-	gen->base[RSND_GEN1_ADG] = ioremap_nocache(adg_res->start, resource_size(adg_res));
+-	gen->base[RSND_GEN1_SSI] = ioremap_nocache(ssi_res->start, resource_size(ssi_res));
++	gen->base[RSND_GEN1_SRU] = devm_ioremap_resource(dev, sru_res);
++	gen->base[RSND_GEN1_ADG] = devm_ioremap_resource(dev, adg_res);
++	gen->base[RSND_GEN1_SSI] = devm_ioremap_resource(dev, ssi_res);
+ 	if (!gen->base[RSND_GEN1_SRU] ||
+ 	    !gen->base[RSND_GEN1_ADG] ||
+ 	    !gen->base[RSND_GEN1_SSI]) {
+-- 
+1.8.2
+

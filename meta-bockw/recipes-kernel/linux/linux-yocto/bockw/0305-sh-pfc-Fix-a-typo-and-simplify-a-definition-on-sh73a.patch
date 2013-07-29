@@ -1,7 +1,7 @@
 From 251961a01d31fa179c536ae3ad319badc55aae08 Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Tue, 12 Feb 2013 16:34:31 +0100
-Subject: [PATCH 305/611] sh-pfc: Fix a typo and simplify a definition on
+Subject: [PATCH 305/675] sh-pfc: Fix a typo and simplify a definition on
  sh73a0
 
 Fix definition of the SDHIWP0 function and simplify the CPU_ALL_PORT

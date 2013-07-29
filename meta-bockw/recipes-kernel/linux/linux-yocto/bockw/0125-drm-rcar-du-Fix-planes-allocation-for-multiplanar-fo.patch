@@ -1,7 +1,7 @@
 From 97e15b23a781c38e4b3c622d5cc5c819cba47bc7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 19 Feb 2013 18:14:29 +0100
-Subject: [PATCH 125/611] drm/rcar-du: Fix planes allocation for multiplanar
+Subject: [PATCH 125/675] drm/rcar-du: Fix planes allocation for multiplanar
  formats
 
 When more than one hardware plane need to be reserved an extraneous

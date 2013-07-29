@@ -1,7 +1,7 @@
 From 9441243d99f51378128086f2b27a1714b7ce4510 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 6 Dec 2012 14:49:25 +0100
-Subject: [PATCH 317/611] sh-pfc: Split pins and functions into separate
+Subject: [PATCH 317/675] sh-pfc: Split pins and functions into separate
  gpio_chip instances
 
 Register two GPIO chips, one for the real GPIOs and one for the function

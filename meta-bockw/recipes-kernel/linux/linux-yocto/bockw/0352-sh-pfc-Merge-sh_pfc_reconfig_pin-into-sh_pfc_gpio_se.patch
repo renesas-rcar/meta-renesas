@@ -1,7 +1,7 @@
 From 5ec8e0c507f65a87d84146cbe3afc3809105c2d4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 16:55:19 +0100
-Subject: [PATCH 352/611] sh-pfc: Merge sh_pfc_reconfig_pin() into
+Subject: [PATCH 352/675] sh-pfc: Merge sh_pfc_reconfig_pin() into
  sh_pfc_gpio_set_direction()
 
 The sh_pfc_reconfig_pin() is only called from a single location. Merge

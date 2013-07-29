@@ -1,7 +1,7 @@
 From 0e49c9f57a67c54228522a7fdfd98d46829b9d61 Mon Sep 17 00:00:00 2001
 From: Yu Xu <yuxu@marvell.com>
 Date: Thu, 9 Aug 2012 22:29:31 +0800
-Subject: [PATCH 554/611] usb: phy: mv_u3d: Add usb phy driver for mv_u3d
+Subject: [PATCH 554/675] usb: phy: mv_u3d: Add usb phy driver for mv_u3d
 
 The driver supports phy_init and phy_shutdown functions to
 enable and disable phy for Marvell USB 3.0 controller.

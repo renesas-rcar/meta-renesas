@@ -1,7 +1,7 @@
 From 8dc582ac470cdfdd8223e016a866262e5f1329dd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 16 Apr 2013 14:32:34 +0200
-Subject: [PATCH 427/611] drm: GEM CMA: Split object mapping into GEM mapping
+Subject: [PATCH 427/675] drm: GEM CMA: Split object mapping into GEM mapping
  and CMA mapping
 
 The CMA-specific mapping code will be used to implement dma-buf mmap

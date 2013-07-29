@@ -1,7 +1,7 @@
 From 29485ee28f1a18aa0489942703072353654d7e78 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 16 Aug 2012 14:55:05 +0000
-Subject: [PATCH 060/611] drm: edid: Add bounds checking to HDMI VSDB parsing
+Subject: [PATCH 060/675] drm: edid: Add bounds checking to HDMI VSDB parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

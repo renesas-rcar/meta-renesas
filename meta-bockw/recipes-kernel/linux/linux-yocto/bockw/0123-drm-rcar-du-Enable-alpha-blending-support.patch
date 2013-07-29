@@ -1,7 +1,7 @@
 From aeaea3c6563e2049111309369b1b215637742f96 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 8 Feb 2013 17:22:58 +0100
-Subject: [PATCH 123/611] drm/rcar-du: Enable alpha blending support
+Subject: [PATCH 123/675] drm/rcar-du: Enable alpha blending support
 
 Alpha-blending is unconditinally disabled, treating alpha-aware formats
 as corresponding opaque formats. Fix this.

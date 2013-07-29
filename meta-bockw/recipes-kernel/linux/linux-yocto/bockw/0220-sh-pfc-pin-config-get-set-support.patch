@@ -1,7 +1,7 @@
 From f3e937a0de9859d102a5e1e004bd9fb2009e2c92 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Fri, 20 Jul 2012 16:39:09 +0900
-Subject: [PATCH 220/611] sh: pfc: pin config get/set support.
+Subject: [PATCH 220/675] sh: pfc: pin config get/set support.
 
 This implements simple support for adjusting the pin config value via the
 pinctrl API. The pinconf-generic code is abandoned for now until we've

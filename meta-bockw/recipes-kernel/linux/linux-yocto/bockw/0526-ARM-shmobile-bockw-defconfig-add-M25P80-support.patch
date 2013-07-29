@@ -1,7 +1,7 @@
 From 2117b1ce07b004d27a362a55b97390022416b674 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 16 May 2013 14:29:18 +0900
-Subject: [PATCH 526/611] ARM: shmobile: bockw defconfig: add M25P80 support
+Subject: [PATCH 526/675] ARM: shmobile: bockw defconfig: add M25P80 support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 ---

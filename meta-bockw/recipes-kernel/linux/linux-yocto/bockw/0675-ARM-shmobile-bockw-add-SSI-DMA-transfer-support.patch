@@ -1,0 +1,130 @@
+From 60fc8a4b246e710fc6dbfcae72ccccbdc1042671 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 24 Jul 2013 12:05:14 +0900
+Subject: [PATCH 675/675] ARM: shmobile: bockw: add SSI DMA transfer support
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c | 53 ++++++++++++++++++++----------------
+ 1 file changed, 29 insertions(+), 24 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index eaa19ec..8eee0c0 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -37,6 +37,7 @@
+ #include <mach/irqs.h>
+ #include <mach/r8a7778.h>
+ #include <media/soc_camera.h>
++#include <mach/hpb-dmae.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ 
+@@ -232,16 +233,24 @@ static struct rsnd_ssi_platform_info rsnd_ssi[] = {
+ 	RSND_SSI_UNUSED, /* SSI 0 */
+ 	RSND_SSI_UNUSED, /* SSI 1 */
+ 	RSND_SSI_UNUSED, /* SSI 2 */
+-	RSND_SSI_SET(1, gic_iid(0x85), RSND_SSI_PLAY),
+-	RSND_SSI_SET(2, gic_iid(0x85), RSND_SSI_CLK_PIN_SHARE | RSND_SSI_CLK_FROM_ADG),
+-	RSND_SSI_SET(0, gic_iid(0x86), RSND_SSI_PLAY),
+-	RSND_SSI_SET(0, gic_iid(0x86), 0),
+-	RSND_SSI_SET(3, gic_iid(0x86), RSND_SSI_PLAY),
+-	RSND_SSI_SET(4, gic_iid(0x86), RSND_SSI_CLK_PIN_SHARE | RSND_SSI_CLK_FROM_ADG),
++	RSND_SSI_SET(1, HPBDMA_SLAVE_HPBIF3_TX, gic_iid(0x85), RSND_SSI_DEPENDENT | RSND_SSI_PLAY),
++	RSND_SSI_SET(2, HPBDMA_SLAVE_HPBIF4_RX, gic_iid(0x85), RSND_SSI_DEPENDENT | RSND_SSI_CLK_PIN_SHARE | RSND_SSI_CLK_FROM_ADG),
++	RSND_SSI_SET(0, HPBDMA_SLAVE_HPBIF5_TX, gic_iid(0x86), RSND_SSI_DEPENDENT | RSND_SSI_PLAY),
++	RSND_SSI_SET(0, HPBDMA_SLAVE_HPBIF6_RX, gic_iid(0x86), RSND_SSI_DEPENDENT),
++	RSND_SSI_SET(3, HPBDMA_SLAVE_HPBIF7_TX, gic_iid(0x86), RSND_SSI_DEPENDENT | RSND_SSI_PLAY),
++	RSND_SSI_SET(4, HPBDMA_SLAVE_HPBIF8_RX, gic_iid(0x86), RSND_SSI_DEPENDENT | RSND_SSI_CLK_PIN_SHARE | RSND_SSI_CLK_FROM_ADG),
+ };
+ 
+-static struct rsnd_scu_platform_info rsnd_scu[9] = {
+-	/* no member at this point */
++static struct rsnd_scu_platform_info rsnd_scu[] = {
++	{ .flags = 0, }, /* SRU 0 */
++	{ .flags = 0, }, /* SRU 1 */
++	{ .flags = 0, }, /* SRU 2 */
++	{ .flags = RSND_SCU_USB_HPBIF, },
++	{ .flags = RSND_SCU_USB_HPBIF, },
++	{ .flags = RSND_SCU_USB_HPBIF, },
++	{ .flags = RSND_SCU_USB_HPBIF, },
++	{ .flags = RSND_SCU_USB_HPBIF, },
++	{ .flags = RSND_SCU_USB_HPBIF, },
+ };
+ 
+ enum {
+@@ -346,14 +355,13 @@ static struct asoc_simple_card_info rsnd_card_info[] = {
+ 		.card		= "SSI3-AK4554(playback)",
+ 		.codec		= "ak4554-adc-dac.0",
+ 		.platform	= "rcar_sound",
+-		.daifmt		= SND_SOC_DAIFMT_RIGHT_J,
+ 		.cpu_dai = {
+ 			.name	= "rsnd-dai.1",
+-			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM |
++				  SND_SOC_DAIFMT_RIGHT_J,
+ 		},
+ 		.codec_dai = {
+-			.name	= "ak4554-hifi-playback",
+-			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++			.name	= "ak4554-hifi",
+ 		},
+ 	},
+ 	/* SSI4 */
+@@ -362,14 +370,13 @@ static struct asoc_simple_card_info rsnd_card_info[] = {
+ 		.card		= "SSI4-AK4554(capture)",
+ 		.codec		= "ak4554-adc-dac.0",
+ 		.platform	= "rcar_sound",
+-		.daifmt		= SND_SOC_DAIFMT_LEFT_J,
+ 		.cpu_dai = {
+ 			.name	= "rsnd-dai.2",
+-			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM |
++				  SND_SOC_DAIFMT_LEFT_J,
+ 		},
+ 		.codec_dai = {
+-			.name	= "ak4554-hifi-capture",
+-			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++			.name	= "ak4554-hifi",
+ 		},
+ 	},
+ 	/* SSI7 */
+@@ -378,14 +385,13 @@ static struct asoc_simple_card_info rsnd_card_info[] = {
+ 		.card		= "SSI7-AK4554(playback)",
+ 		.codec		= "ak4554-adc-dac.1",
+ 		.platform	= "rcar_sound",
+-		.daifmt		= SND_SOC_DAIFMT_RIGHT_J,
+ 		.cpu_dai = {
+ 			.name	= "rsnd-dai.3",
+-			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM |
++				  SND_SOC_DAIFMT_RIGHT_J,
+ 		},
+ 		.codec_dai = {
+-			.name	= "ak4554-hifi-playback",
+-			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++			.name	= "ak4554-hifi",
+ 		},
+ 	},
+ 	/* SSI8 */
+@@ -394,14 +400,13 @@ static struct asoc_simple_card_info rsnd_card_info[] = {
+ 		.card		= "SSI8-AK4554(capture)",
+ 		.codec		= "ak4554-adc-dac.1",
+ 		.platform	= "rcar_sound",
+-		.daifmt		= SND_SOC_DAIFMT_LEFT_J,
+ 		.cpu_dai = {
+ 			.name	= "rsnd-dai.4",
+-			.fmt	= SND_SOC_DAIFMT_CBM_CFM,
++			.fmt	= SND_SOC_DAIFMT_CBM_CFM |
++				  SND_SOC_DAIFMT_LEFT_J,
+ 		},
+ 		.codec_dai = {
+-			.name	= "ak4554-hifi-capture",
+-			.fmt	= SND_SOC_DAIFMT_CBS_CFS,
++			.name	= "ak4554-hifi",
+ 		},
+ 	}
+ };
+-- 
+1.8.2
+

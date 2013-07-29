@@ -1,7 +1,7 @@
 From a042c2ed23ffe00c8fa9ad16d81ce5b20116f20f Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Wed, 8 May 2013 23:12:47 +0000
-Subject: [PATCH 452/611] sh-pfc: r8a7778: add USB pin groups
+Subject: [PATCH 452/675] sh-pfc: r8a7778: add USB pin groups
 
 Add USB0/1 PENC/USB_OVC pin groups to R8A7778 PFC driver.
 

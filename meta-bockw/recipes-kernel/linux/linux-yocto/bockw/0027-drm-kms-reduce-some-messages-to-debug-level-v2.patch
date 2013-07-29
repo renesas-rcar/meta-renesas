@@ -1,7 +1,7 @@
 From 9eac0675d3586acb032413c54925d95c6b0f3fd6 Mon Sep 17 00:00:00 2001
 From: Dave Airlie <airlied@redhat.com>
 Date: Tue, 1 May 2012 17:38:35 +0100
-Subject: [PATCH 027/611] drm/kms: reduce some messages to debug level (v2)
+Subject: [PATCH 027/675] drm/kms: reduce some messages to debug level (v2)
 
 These can all be trigged from userspace if you pass the right values.
 

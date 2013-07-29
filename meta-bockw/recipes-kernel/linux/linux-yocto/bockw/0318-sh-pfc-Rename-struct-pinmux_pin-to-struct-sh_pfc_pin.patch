@@ -1,7 +1,7 @@
 From baa5947284e0f617dbeaf1ea4fce7cd8d75bde7e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 2 Jan 2013 14:53:37 +0100
-Subject: [PATCH 318/611] sh-pfc: Rename struct pinmux_pin to struct sh_pfc_pin
+Subject: [PATCH 318/675] sh-pfc: Rename struct pinmux_pin to struct sh_pfc_pin
 
 And drop the pinmux_flag_t typedef.
 

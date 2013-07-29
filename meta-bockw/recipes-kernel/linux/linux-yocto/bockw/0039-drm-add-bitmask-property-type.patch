@@ -1,7 +1,7 @@
 From 0a52d39f4c985776983f3140e7c4d026f2a3f8ba Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 17 May 2012 02:23:26 -0600
-Subject: [PATCH 039/611] drm: add bitmask property type
+Subject: [PATCH 039/675] drm: add bitmask property type
 
 A bitmask property is similar to an enum.  The enum value is a bit
 position (0-63), and valid property values consist of a mask of

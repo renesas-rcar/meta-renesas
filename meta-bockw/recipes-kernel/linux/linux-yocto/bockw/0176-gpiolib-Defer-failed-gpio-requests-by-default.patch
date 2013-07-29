@@ -1,7 +1,7 @@
 From 087d8c885aabe3599ed84e99b89493a73eb32bfc Mon Sep 17 00:00:00 2001
 From: Mark Brown <broonie@opensource.wolfsonmicro.com>
 Date: Mon, 9 Jul 2012 12:22:56 +0100
-Subject: [PATCH 176/611] gpiolib: Defer failed gpio requests by default
+Subject: [PATCH 176/675] gpiolib: Defer failed gpio requests by default
 
 Since users must be explicitly provided with a GPIO number in order to
 request one the overwhelmingly common case for failing to request will

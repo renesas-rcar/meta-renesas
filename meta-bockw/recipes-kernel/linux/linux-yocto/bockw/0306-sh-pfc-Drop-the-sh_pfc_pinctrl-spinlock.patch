@@ -1,7 +1,7 @@
 From 75f4776e1b5941046410e02b45a3de4d139c617b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 28 Nov 2012 20:52:53 +0100
-Subject: [PATCH 306/611] sh-pfc: Drop the sh_pfc_pinctrl spinlock
+Subject: [PATCH 306/675] sh-pfc: Drop the sh_pfc_pinctrl spinlock
 
 The spinlock is used to protect data that is only accessed sequentially
 during initialization. Remove it.

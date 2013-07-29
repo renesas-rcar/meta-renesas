@@ -1,7 +1,7 @@
 From bfebdfdd2e43cec769f3c61475d6b4a0eb5a9a25 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 28 May 2013 12:08:15 +0900
-Subject: [PATCH 508/611] ARM: shmobile: r8a7778: add MMCIF support
+Subject: [PATCH 508/675] ARM: shmobile: r8a7778: add MMCIF support
 
 Add a platform device for the r8a7778 MMCIF.
 

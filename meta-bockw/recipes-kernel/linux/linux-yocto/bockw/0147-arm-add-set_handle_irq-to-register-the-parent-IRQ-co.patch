@@ -1,7 +1,7 @@
 From e88ca0f48cdd2f60134f2034e18067fe157ccf2a Mon Sep 17 00:00:00 2001
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Date: Tue, 20 Nov 2012 23:00:53 +0100
-Subject: [PATCH 147/611] arm: add set_handle_irq() to register the parent IRQ
+Subject: [PATCH 147/675] arm: add set_handle_irq() to register the parent IRQ
  controller handler function
 
 In order to allow irqchip drivers to register their IRQ handling

@@ -1,7 +1,7 @@
 From 4a525ba79298f92fc103a7d6fae883f613c46342 Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Thu, 6 Jun 2013 13:32:19 +0900
-Subject: [PATCH 573/611] ARM: shmobile: BOCK-W: add VIN and ML86V7667 support
+Subject: [PATCH 573/675] ARM: shmobile: BOCK-W: add VIN and ML86V7667 support
 
 Add ML86V7667 platform devices on BOCK-W board, configure VIN0/1 pins, and
 register VIN0/1 devices with the ML86V7667 specific platform data.

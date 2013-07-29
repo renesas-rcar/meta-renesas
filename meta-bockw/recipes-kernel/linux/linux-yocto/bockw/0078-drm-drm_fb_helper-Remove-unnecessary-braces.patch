@@ -1,7 +1,7 @@
 From 89463c11bf3181de9622a7c92e640b77f7eba9c0 Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Thu, 15 Nov 2012 03:43:30 +0000
-Subject: [PATCH 078/611] drm/drm_fb_helper: Remove unnecessary braces
+Subject: [PATCH 078/675] drm/drm_fb_helper: Remove unnecessary braces
 
 Remove unnecessary braces to silence the following type of
 checkpatch warnings:

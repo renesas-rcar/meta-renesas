@@ -1,7 +1,7 @@
 From d19464ff25cd59db657061b901f97d2cf9fff800 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 4 Jun 2013 10:50:27 +0900
-Subject: [PATCH 529/611] LTSI: ARM: shmobile: bockw: enable
+Subject: [PATCH 529/675] LTSI: ARM: shmobile: bockw: enable
  CONFIG_EXPERIMENTAL
 
 It is required for MTD_M25P80 and ARM_APPENDED_DTB

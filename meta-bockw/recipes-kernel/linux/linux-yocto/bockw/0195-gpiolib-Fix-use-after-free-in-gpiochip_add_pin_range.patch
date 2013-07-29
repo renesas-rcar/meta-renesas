@@ -1,7 +1,7 @@
 From e359bb33d854eabd179df7bf6cb6b2f47a562b79 Mon Sep 17 00:00:00 2001
 From: Axel Lin <axel.lin@ingics.com>
 Date: Wed, 21 Nov 2012 14:33:56 +0800
-Subject: [PATCH 195/611] gpiolib: Fix use after free in gpiochip_add_pin_range
+Subject: [PATCH 195/675] gpiolib: Fix use after free in gpiochip_add_pin_range
 
 This is introduced by commit 9ab6e988
 "gpiolib: return any error code from range creation".

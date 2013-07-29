@@ -1,7 +1,7 @@
 From d2cab16b9c0e9af9bc8e3d8940aaafcd6564da44 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 07:38:50 +0100
-Subject: [PATCH 332/611] ARM: shmobile: ap4-evb: Replace GPIO_PORTx enum with
+Subject: [PATCH 332/675] ARM: shmobile: ap4-evb: Replace GPIO_PORTx enum with
  GPIO port numbers
 
 The PFC GPIO API implementation moved to using port numbers. Replace all

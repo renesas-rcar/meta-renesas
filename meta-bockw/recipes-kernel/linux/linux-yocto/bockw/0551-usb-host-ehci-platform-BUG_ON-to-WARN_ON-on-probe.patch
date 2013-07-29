@@ -1,7 +1,7 @@
 From 91a5e1a8c9f75e670a41c96bc916f4fb79df1a0c Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 6 Aug 2012 18:06:53 -0700
-Subject: [PATCH 551/611] usb: host: ehci-platform: BUG_ON() to WARN_ON() on
+Subject: [PATCH 551/675] usb: host: ehci-platform: BUG_ON() to WARN_ON() on
  probe
 
 usb_ehci_pdata is certainly required in ehci-platform driver.

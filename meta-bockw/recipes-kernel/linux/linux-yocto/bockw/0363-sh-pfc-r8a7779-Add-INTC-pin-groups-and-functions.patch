@@ -1,7 +1,7 @@
 From cbb24168ab7e5916ee7dd3ffdb4c26669798ddb7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:38:51 +0100
-Subject: [PATCH 363/611] sh-pfc: r8a7779: Add INTC pin groups and functions
+Subject: [PATCH 363/675] sh-pfc: r8a7779: Add INTC pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>

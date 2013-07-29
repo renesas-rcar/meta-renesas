@@ -1,7 +1,7 @@
 From ae8e3b2bf9dc32f4789b473897c64ff7a26dfec3 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 9 Apr 2013 02:37:15 -0700
-Subject: [PATCH 514/611] ARM: shmobile: bockw: add dummy regulators for SMSC
+Subject: [PATCH 514/675] ARM: shmobile: bockw: add dummy regulators for SMSC
 
 SMSC driver will try to get regulator if .config had CONFIG_REGULATOR,
 and, shmobile_defconfig has it.

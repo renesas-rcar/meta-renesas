@@ -1,7 +1,7 @@
 From 5e8744df452c23683e1ba305a1581d418ecda5cd Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 31 May 2013 16:01:54 +0900
-Subject: [PATCH 442/611] ARM: mach-shmobile: r8a7779: add SATA support
+Subject: [PATCH 442/675] ARM: mach-shmobile: r8a7779: add SATA support
 
 Add SATA clock for r8a7779 SoC (for both device tree and usual cases).
 Register SATA controller as a "late" platform device on r8a7779 SoC.

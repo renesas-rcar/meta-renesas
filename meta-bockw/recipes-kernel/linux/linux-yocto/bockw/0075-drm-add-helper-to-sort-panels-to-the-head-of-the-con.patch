@@ -1,7 +1,7 @@
 From 4a86d0211f61593084b992bc89f78cad09d4a852 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Sat, 27 Oct 2012 15:52:04 +0200
-Subject: [PATCH 075/611] drm: add helper to sort panels to the head of the
+Subject: [PATCH 075/675] drm: add helper to sort panels to the head of the
  connector list
 
 Userspace seems to like this, see

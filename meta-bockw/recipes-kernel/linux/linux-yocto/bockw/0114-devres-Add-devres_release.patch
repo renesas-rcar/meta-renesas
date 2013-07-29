@@ -1,7 +1,7 @@
 From 9c89c7323155314abc8c286539c70af05480e93f Mon Sep 17 00:00:00 2001
 From: Mark Brown <broonie@opensource.wolfsonmicro.com>
 Date: Thu, 3 May 2012 18:15:13 +0100
-Subject: [PATCH 114/611] devres: Add devres_release()
+Subject: [PATCH 114/675] devres: Add devres_release()
 
 APIs using devres frequently want to implement a "remove and free the
 resource" operation so it seems sensible that they should be able to

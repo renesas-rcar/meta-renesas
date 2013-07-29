@@ -1,7 +1,7 @@
 From 209df616332c9c590fcc5f5109e435dbe9959d7b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 28 Feb 2013 22:19:05 +0100
-Subject: [PATCH 134/611] drm/rcar-du: Split hardware and KMS planes
+Subject: [PATCH 134/675] drm/rcar-du: Split hardware and KMS planes
 
 Hardware planes and KMS planes are distinct objects, separate them. This
 prepares the driver for multiple CRTCs support.

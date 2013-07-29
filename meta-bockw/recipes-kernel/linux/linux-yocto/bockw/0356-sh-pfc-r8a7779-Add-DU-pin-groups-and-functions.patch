@@ -1,7 +1,7 @@
 From 60ab39982ecf73108a676611b8c8db23d638221f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 3 Jan 2013 13:07:05 +0100
-Subject: [PATCH 356/611] sh-pfc: r8a7779: Add DU pin groups and functions
+Subject: [PATCH 356/675] sh-pfc: r8a7779: Add DU pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>

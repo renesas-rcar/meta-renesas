@@ -1,7 +1,7 @@
 From 492de9737ab6a0db2a9f4d149fdd6289ad9230fd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:30 +0100
-Subject: [PATCH 333/611] ARM: shmobile: armadillo800eva: Use
+Subject: [PATCH 333/675] ARM: shmobile: armadillo800eva: Use
  gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to

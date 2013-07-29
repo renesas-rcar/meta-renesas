@@ -1,7 +1,7 @@
 From 4fa116af55c61dd993d59a37468fc36b9b048324 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 3 Jan 2013 16:30:34 +0100
-Subject: [PATCH 375/611] ARM: shmobile: r8a7779: Remove DU function GPIOs
+Subject: [PATCH 375/675] ARM: shmobile: r8a7779: Remove DU function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.

@@ -1,7 +1,7 @@
 From 93bb98c280d9f62066d76cba162e7b31455470a6 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 00:50:45 +0100
-Subject: [PATCH 133/611] drm/rcar-du: Enable the DE signal
+Subject: [PATCH 133/675] drm/rcar-du: Enable the DE signal
 
 Output the DE signal on the DISP pin by default and configure it to
 cover the whole horizontal active period. When new use cases requiring a

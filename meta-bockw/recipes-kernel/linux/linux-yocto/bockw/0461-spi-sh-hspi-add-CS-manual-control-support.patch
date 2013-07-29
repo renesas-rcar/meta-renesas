@@ -1,7 +1,7 @@
 From 00feff01c8aabe7964509205d51e99b040aab719 Mon Sep 17 00:00:00 2001
 From: Phil Edworthy <phil.edworthy@renesas.com>
 Date: Thu, 22 Nov 2012 14:37:27 +0000
-Subject: [PATCH 461/611] spi/sh-hspi: add CS manual control support
+Subject: [PATCH 461/675] spi/sh-hspi: add CS manual control support
 
 The current HSPI driver used automatic CS control, leading to CS
 active for each byte transmitted. This patch changes the driver

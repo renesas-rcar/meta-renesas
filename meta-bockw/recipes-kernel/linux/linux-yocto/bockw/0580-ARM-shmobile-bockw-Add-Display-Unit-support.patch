@@ -1,7 +1,7 @@
 From 5203a8225c3e431d15b621d3efe77b4d3ed64d65 Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Tue, 11 Jun 2013 17:26:58 +0900
-Subject: [PATCH 580/611] ARM: shmobile: bockw: Add Display Unit support
+Subject: [PATCH 580/675] ARM: shmobile: bockw: Add Display Unit support
 
 Only the DU0 VGA output is currently supported. Support for the DU0 LVDS
 and DU1 LVDS outputs will require information about the panels that will

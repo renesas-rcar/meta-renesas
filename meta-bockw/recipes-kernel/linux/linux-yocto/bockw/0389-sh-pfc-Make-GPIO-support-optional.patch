@@ -1,7 +1,7 @@
 From 97d266ec9cf59b8243d08e1b7fccf821b0ed22dd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 03:19:44 +0100
-Subject: [PATCH 389/611] sh-pfc: Make GPIO support optional
+Subject: [PATCH 389/675] sh-pfc: Make GPIO support optional
 
 When implemented as a separate IP block, GPIOs should be handled by a
 separate driver. To make this possible GPIO support needs to be optional

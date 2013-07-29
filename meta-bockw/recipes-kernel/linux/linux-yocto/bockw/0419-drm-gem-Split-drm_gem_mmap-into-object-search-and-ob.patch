@@ -1,7 +1,7 @@
 From 420454035a6a3c085a10778e352683718f43b4dc Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 16 Apr 2013 14:14:52 +0200
-Subject: [PATCH 419/611] drm/gem: Split drm_gem_mmap() into object search and
+Subject: [PATCH 419/675] drm/gem: Split drm_gem_mmap() into object search and
  object mapping
 
 The drm_gem_mmap() function first finds the GEM object to be mapped

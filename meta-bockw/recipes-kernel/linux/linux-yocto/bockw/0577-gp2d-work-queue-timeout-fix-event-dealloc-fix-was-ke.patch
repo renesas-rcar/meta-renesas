@@ -1,7 +1,7 @@
 From df32070ff28e693b3ec61ed54e1f9c724e5f19c6 Mon Sep 17 00:00:00 2001
 From: Denis Oliver Kropp <dok@directfb.org>
 Date: Thu, 28 Feb 2013 06:14:22 +0100
-Subject: [PATCH 577/611] gp2d work queue, timeout fix, event dealloc fix (was
+Subject: [PATCH 577/675] gp2d work queue, timeout fix, event dealloc fix (was
  kernel oops), extensions for 32bit and matrix
 
 ---

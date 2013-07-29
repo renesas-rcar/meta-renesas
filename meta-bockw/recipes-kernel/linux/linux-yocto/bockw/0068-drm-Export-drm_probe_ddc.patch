@@ -1,7 +1,7 @@
 From a510158d85f21672737e3f85e9ab8e63e10d3ad6 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Tue, 18 Sep 2012 10:58:47 -0400
-Subject: [PATCH 068/611] drm: Export drm_probe_ddc()
+Subject: [PATCH 068/675] drm: Export drm_probe_ddc()
 
 Tested-by: Takashi Iwai <tiwai@suse.de>
 Signed-off-by: Adam Jackson <ajax@redhat.com>

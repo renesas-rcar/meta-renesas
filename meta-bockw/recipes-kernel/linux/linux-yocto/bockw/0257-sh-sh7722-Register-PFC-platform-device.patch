@@ -1,7 +1,7 @@
 From b942009c7d4af5699a33ca936259c7f11a67c7fc Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:09 +0100
-Subject: [PATCH 257/611] sh: sh7722: Register PFC platform device
+Subject: [PATCH 257/675] sh: sh7722: Register PFC platform device
 
 Add arch code to register the PFC platform device instead of calling the
 driver directly. Platform device registration in the sh-pfc driver will

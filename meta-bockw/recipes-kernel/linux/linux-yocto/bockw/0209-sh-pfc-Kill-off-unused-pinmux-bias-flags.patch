@@ -1,7 +1,7 @@
 From 22c4365c9fa09fe032f24b223ef9bdd0812644ff Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 20 Jun 2012 22:29:14 +0900
-Subject: [PATCH 209/611] sh: pfc: Kill off unused pinmux bias flags.
+Subject: [PATCH 209/675] sh: pfc: Kill off unused pinmux bias flags.
 
 WANT_PULLUP/DOWN were never interfaced with anything, so just kill them
 off.

@@ -1,7 +1,7 @@
 From 934f374a7cffc3cc9d092878e790b605f78867dd Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Mon, 16 Apr 2012 15:16:18 +0200
-Subject: [PATCH 005/611] drm: Fix EDID color format parsing
+Subject: [PATCH 005/675] drm: Fix EDID color format parsing
 
 The code should obviously check the EDID feature field for EDID feature flags
 and not the color_formats field of the drm_display_info struct. Also update the

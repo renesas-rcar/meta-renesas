@@ -1,7 +1,7 @@
 From 2c6ab60a6365e8aea821c44a7139230319449c1d Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 15 Oct 2012 01:10:28 -0700
-Subject: [PATCH 421/611] ARM: shmobile: r8a7779: use __iomem pointers for MMIO
+Subject: [PATCH 421/675] ARM: shmobile: r8a7779: use __iomem pointers for MMIO
 
 0a4b04dc299dfb691827a4001b3d8d7e443b71c9
 (ARM: shmobile: use __iomem pointers for MMIO)

@@ -1,7 +1,7 @@
 From 10c8a3218dd1a2d0e88504235dcc1151f862f71d Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 31 May 2013 09:46:29 +0900
-Subject: [PATCH 539/611] Local: ASoC: add Renesas R-Car SSI feature
+Subject: [PATCH 539/675] Local: ASoC: add Renesas R-Car SSI feature
 
 Renesas R-Car series sound circuit consists of SSI and its peripheral.
 But this peripheral circuit is different between

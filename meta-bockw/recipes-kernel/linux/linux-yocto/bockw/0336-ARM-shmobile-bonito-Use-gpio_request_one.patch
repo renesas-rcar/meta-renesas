@@ -1,7 +1,7 @@
 From 3091f02d40de23d18b67b6386fecac6b97087317 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:32 +0100
-Subject: [PATCH 336/611] ARM: shmobile: bonito: Use gpio_request_one()
+Subject: [PATCH 336/675] ARM: shmobile: bonito: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().

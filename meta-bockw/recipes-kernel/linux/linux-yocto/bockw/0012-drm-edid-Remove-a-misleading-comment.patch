@@ -1,7 +1,7 @@
 From e7a8a3753565d8b678a16a46997083dbc99c30a4 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:32 -0400
-Subject: [PATCH 012/611] drm/edid: Remove a misleading comment
+Subject: [PATCH 012/675] drm/edid: Remove a misleading comment
 
 mode_in_range() handles what this was warning about.
 

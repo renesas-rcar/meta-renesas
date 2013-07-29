@@ -1,7 +1,7 @@
 From 0749112b88803a3d11e8c916bb2317790bd208ed Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Mar 2013 09:23:01 +0900
-Subject: [PATCH 382/611] gpio: Renesas R-Car GPIO driver V3
+Subject: [PATCH 382/675] gpio: Renesas R-Car GPIO driver V3
 
 This patch is V3 of a GPIO driver for the R-Car series of
 SoCs from Renesas. This driver is designed to be reusable

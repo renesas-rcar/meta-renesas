@@ -1,7 +1,7 @@
 From 46cb546e15ca8c8f2dda64dc076ae35626292e4c Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Tue, 20 Nov 2012 21:21:40 -0600
-Subject: [PATCH 150/611] irqchip: Move ARM GIC to drivers/irqchip
+Subject: [PATCH 150/675] irqchip: Move ARM GIC to drivers/irqchip
 
 Now that we have drivers/irqchip, move GIC irqchip to drivers/irqchip. This
 is necessary to share the GIC with arm and arm64.

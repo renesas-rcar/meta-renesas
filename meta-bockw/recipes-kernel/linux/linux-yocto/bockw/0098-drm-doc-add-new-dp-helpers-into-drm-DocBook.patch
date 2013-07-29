@@ -1,7 +1,7 @@
 From 616842c2eaf0ef9f73fcc4d8e3df34ad810f2ad6 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:18 +0100
-Subject: [PATCH 098/611] drm/doc: add new dp helpers into drm DocBook
+Subject: [PATCH 098/675] drm/doc: add new dp helpers into drm DocBook
 
 I didn't bother with documenting the really trivial new "extract
 something from dpcd" helpers, but the i2c over aux ch is now

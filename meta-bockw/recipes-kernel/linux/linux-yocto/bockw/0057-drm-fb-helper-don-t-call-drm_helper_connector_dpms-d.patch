@@ -1,7 +1,7 @@
 From d2d2b41225e7ddaff29698e338d1ea8b2d8967fa Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Fri, 7 Sep 2012 10:14:52 +0200
-Subject: [PATCH 057/611] drm/fb helper: don't call drm_helper_connector_dpms
+Subject: [PATCH 057/675] drm/fb helper: don't call drm_helper_connector_dpms
  directly
 
 Yet again a case where the fb helper is too intimate with the crtc

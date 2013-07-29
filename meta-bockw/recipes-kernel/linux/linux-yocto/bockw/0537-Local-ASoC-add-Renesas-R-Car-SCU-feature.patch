@@ -1,7 +1,7 @@
 From dae348fb3003b6e7ce2279b1d91790618c840f7f Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 27 May 2013 15:32:49 +0900
-Subject: [PATCH 537/611] Local: ASoC: add Renesas R-Car SCU feature
+Subject: [PATCH 537/675] Local: ASoC: add Renesas R-Car SCU feature
 
 Renesas R-Car series sound circuit consists of SSI and its peripheral.
 But this peripheral circuit is different between

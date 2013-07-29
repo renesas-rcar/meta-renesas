@@ -1,7 +1,7 @@
 From 479589464f6b4e8ac3519ddc7f8d18c2e1f56246 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:34 +0100
-Subject: [PATCH 328/611] ARM: shmobile: kzm9g: Use gpio_request_one()
+Subject: [PATCH 328/675] ARM: shmobile: kzm9g: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().

@@ -1,7 +1,7 @@
 From a445b8a26ab1d66b3283bbfaf4ae31f8063d60ba Mon Sep 17 00:00:00 2001
 From: Russell King - ARM Linux <linux@arm.linux.org.uk>
 Date: Fri, 10 Aug 2012 22:52:18 +0000
-Subject: [PATCH 058/611] drm: consistently name interlaced modes
+Subject: [PATCH 058/675] drm: consistently name interlaced modes
 
 At the moment, there is an inconsistency in the way modes are named.
 Modes with timings parsed from the EDID information will call

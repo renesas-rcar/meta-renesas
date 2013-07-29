@@ -1,7 +1,7 @@
 From 9fa17ef226e04457f042a2b4b3047bfca25796c4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:38 +0100
-Subject: [PATCH 229/611] sh: sh7757: Fix GPIO_FN_ET0_MDIO and GPIO_FN_ET1_MDIO
+Subject: [PATCH 229/675] sh: sh7757: Fix GPIO_FN_ET0_MDIO and GPIO_FN_ET1_MDIO
  GPIO entries
 
 The GPIO_FN_ET0_MDIO and GPIO_FN_ET1_MDIO GPIO entries incorrectly

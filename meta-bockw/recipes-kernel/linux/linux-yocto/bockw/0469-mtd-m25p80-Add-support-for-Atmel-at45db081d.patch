@@ -1,7 +1,7 @@
 From ebd3256866166f77e84063f50cd9b0a6ef084add Mon Sep 17 00:00:00 2001
 From: Chunhe Lan <Chunhe.Lan@freescale.com>
 Date: Tue, 19 Jun 2012 10:55:08 +0800
-Subject: [PATCH 469/611] mtd: m25p80: Add support for Atmel at45db081d
+Subject: [PATCH 469/675] mtd: m25p80: Add support for Atmel at45db081d
 
 Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
 Signed-off-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>

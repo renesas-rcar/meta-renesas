@@ -1,7 +1,7 @@
 From d4d2e57d124255b42201c6c7304ee5a6e05b1a08 Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 13 Sep 2012 03:34:08 +0000
-Subject: [PATCH 417/611] drm: change ioctl permissions
+Subject: [PATCH 417/675] drm: change ioctl permissions
 
 Previously read-only KMS ioctls had some somewhat inconsistent settings
 regarding whether mastership was required.  For example, GETRESOURCES

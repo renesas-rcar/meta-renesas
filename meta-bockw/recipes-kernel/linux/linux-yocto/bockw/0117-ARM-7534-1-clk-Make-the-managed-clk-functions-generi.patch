@@ -1,7 +1,7 @@
 From e09755af2307ecdb34987801529683914be052c6 Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Tue, 11 Sep 2012 19:56:23 +0100
-Subject: [PATCH 117/611] ARM: 7534/1: clk: Make the managed clk functions
+Subject: [PATCH 117/675] ARM: 7534/1: clk: Make the managed clk functions
  generically available
 
 The managed clk functions are currently only available when the generic clk

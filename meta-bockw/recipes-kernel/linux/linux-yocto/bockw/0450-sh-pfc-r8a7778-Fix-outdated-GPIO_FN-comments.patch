@@ -1,7 +1,7 @@
 From e1c8730ba7d009661ac8fb54eb028f52dd97f047 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 23 Apr 2013 11:08:05 +0000
-Subject: [PATCH 450/611] sh-pfc: r8a7778: Fix outdated GPIO_FN comments
+Subject: [PATCH 450/675] sh-pfc: r8a7778: Fix outdated GPIO_FN comments
 
 Function GPIOs have been removed, remove comments that refer to them.
 

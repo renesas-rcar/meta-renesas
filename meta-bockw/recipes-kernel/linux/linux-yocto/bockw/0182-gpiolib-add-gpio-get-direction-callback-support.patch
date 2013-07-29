@@ -1,7 +1,7 @@
 From 53530e63cdc4de508b2f5550766107a284ccc76b Mon Sep 17 00:00:00 2001
 From: Mathias Nyman <mathias.nyman@linux.intel.com>
 Date: Wed, 24 Oct 2012 17:25:27 +0300
-Subject: [PATCH 182/611] gpiolib: add gpio get direction callback support
+Subject: [PATCH 182/675] gpiolib: add gpio get direction callback support
 
 Add .get_direction callback to gpio_chip. This allows gpiolib
 to check the current direction of a gpio.

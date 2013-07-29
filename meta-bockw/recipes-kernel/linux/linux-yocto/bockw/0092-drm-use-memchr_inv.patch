@@ -1,7 +1,7 @@
 From 6fe182a0b44f6298a5b11f575152bc146fb89b74 Mon Sep 17 00:00:00 2001
 From: Akinobu Mita <akinobu.mita@gmail.com>
 Date: Fri, 9 Nov 2012 12:10:42 +0000
-Subject: [PATCH 092/611] drm: use memchr_inv()
+Subject: [PATCH 092/675] drm: use memchr_inv()
 
 Use memchr_inv() to check the specified memory region is filled with zero.
 

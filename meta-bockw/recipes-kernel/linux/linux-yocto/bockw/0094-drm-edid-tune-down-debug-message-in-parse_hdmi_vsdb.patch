@@ -1,7 +1,7 @@
 From 9ca267723253ba8bd86f2f1b4e111307fbc1798f Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 22 Nov 2012 09:53:55 +0100
-Subject: [PATCH 094/611] drm/edid: tune down debug message in parse_hdmi_vsdb
+Subject: [PATCH 094/675] drm/edid: tune down debug message in parse_hdmi_vsdb
 
 Those tend to be totally not interesting for end-users, and for
 debugging we tend to dump the entire noise anyway by enabling all

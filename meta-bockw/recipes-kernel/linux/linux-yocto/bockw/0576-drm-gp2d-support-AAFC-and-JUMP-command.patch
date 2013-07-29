@@ -1,7 +1,7 @@
 From 34665ae9ff02b02191d2ef786341411739f8466e Mon Sep 17 00:00:00 2001
 From: Kazunori Kobayashi <kkobayas@igel.co.jp>
 Date: Thu, 7 Mar 2013 17:18:57 +0900
-Subject: [PATCH 576/611] drm: gp2d: support AAFC and JUMP command
+Subject: [PATCH 576/675] drm: gp2d: support AAFC and JUMP command
 
 AAFC is for alpha map rendering, JUMP is to get over the alpha map
 blob in command buffer.

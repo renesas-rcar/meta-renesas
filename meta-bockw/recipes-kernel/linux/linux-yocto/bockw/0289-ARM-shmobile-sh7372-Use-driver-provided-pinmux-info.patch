@@ -1,7 +1,7 @@
 From 7c8ec1210b7adaad7649797ebd5a8a3229b8afb0 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:27 +0100
-Subject: [PATCH 289/611] ARM: shmobile: sh7372: Use driver-provided pinmux
+Subject: [PATCH 289/675] ARM: shmobile: sh7372: Use driver-provided pinmux
  info
 
 Pinmux info for the sh7372 is now provided by pinmux drivers. Remove the

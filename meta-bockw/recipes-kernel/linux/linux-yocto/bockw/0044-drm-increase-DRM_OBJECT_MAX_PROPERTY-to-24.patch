@@ -1,7 +1,7 @@
 From c2e640b68e76f18d16b4219ebc7ff0aac26f0fe7 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 12 Jun 2012 11:27:01 -0300
-Subject: [PATCH 044/611] drm: increase DRM_OBJECT_MAX_PROPERTY to 24
+Subject: [PATCH 044/675] drm: increase DRM_OBJECT_MAX_PROPERTY to 24
 
 Before Kernel 3.5, no one was checking for the return value of
 drm_connector_attach_property, so we never noticed that we were unable

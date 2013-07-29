@@ -1,7 +1,7 @@
 From 878bdd831463f5ac51d31b318d4bfbc1b389f768 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Fri, 7 Jun 2013 11:42:27 +0900
-Subject: [PATCH 571/611] Add Renesas R-Car VIN (Video In) V4L2 driver.
+Subject: [PATCH 571/675] Add Renesas R-Car VIN (Video In) V4L2 driver.
 
 Based on the patch by Phil Edworthy <phil.edworthy@renesas.com>.
 

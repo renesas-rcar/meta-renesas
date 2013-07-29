@@ -1,7 +1,7 @@
 From 33e0c93653cb766e598833dbd38b6a2a4c7aebd0 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 18 Apr 2013 20:09:32 -0700
-Subject: [PATCH 517/611] ARM: shmobile: bockw: add SDHI0 support
+Subject: [PATCH 517/675] ARM: shmobile: bockw: add SDHI0 support
 
 This patch is directly accessing to PUPR4 register which can
 control SDHI0 CD/WP pin pull-up setting.

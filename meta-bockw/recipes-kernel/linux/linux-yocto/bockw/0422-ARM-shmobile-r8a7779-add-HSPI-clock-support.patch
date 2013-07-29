@@ -1,7 +1,7 @@
 From ec81602fcdd90a4cd0e8ec3e6dc51149e0b15817 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 10 Oct 2012 19:56:33 -0700
-Subject: [PATCH 422/611] ARM: shmobile: r8a7779: add HSPI clock support
+Subject: [PATCH 422/675] ARM: shmobile: r8a7779: add HSPI clock support
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Signed-off-by: Simon Horman <horms@verge.net.au>

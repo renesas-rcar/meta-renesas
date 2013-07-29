@@ -1,7 +1,7 @@
 From 19bffabc0b83b754da56e43dcda8d34800e5c6f8 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 10 Jun 2013 10:32:28 +0900
-Subject: [PATCH 545/611] LTSI: ARM: shmobile: r8a7778: tidyup sound card
+Subject: [PATCH 545/675] LTSI: ARM: shmobile: r8a7778: tidyup sound card
  detection order
 
 Latest ASoC framework has many patches, and some of these are

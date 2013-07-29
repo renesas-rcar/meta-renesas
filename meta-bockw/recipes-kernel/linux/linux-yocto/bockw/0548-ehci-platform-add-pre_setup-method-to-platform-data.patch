@@ -1,7 +1,7 @@
 From f153da3e7c74236c360321a3ae8857cefb81d088 Mon Sep 17 00:00:00 2001
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Date: Sun, 2 Jun 2013 01:33:56 +0400
-Subject: [PATCH 548/611] ehci-platform: add pre_setup() method to platform
+Subject: [PATCH 548/675] ehci-platform: add pre_setup() method to platform
  data
 
 Sometimes there is a need  to initialize some non-standard registers mapped to

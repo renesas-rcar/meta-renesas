@@ -1,7 +1,7 @@
 From 181b2cd22844d34ded0d57bd548dc704c665c31f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:54 +0100
-Subject: [PATCH 301/611] sh-pfc: Remove pinmux_info definition
+Subject: [PATCH 301/675] sh-pfc: Remove pinmux_info definition
 
 The pinmux_info alias to sh_pfc_soc_info isn't needed anymore, remove
 it.

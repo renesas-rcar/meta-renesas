@@ -1,7 +1,7 @@
 From e12728f4d2eb0f41d09ddccc5c345a004256faaf Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 02:23:26 +0100
-Subject: [PATCH 312/611] sh-pfc: Initialize pinmux_gpio flags statically
+Subject: [PATCH 312/675] sh-pfc: Initialize pinmux_gpio flags statically
 
 All function GPIO entries are initialized with the GPIO_FN macro that
 expands to the PINMUX_GPIO macro, used to initialize real GPIOs. Create

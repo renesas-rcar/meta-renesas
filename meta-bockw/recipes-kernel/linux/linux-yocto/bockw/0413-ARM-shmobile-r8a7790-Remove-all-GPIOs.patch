@@ -1,7 +1,7 @@
 From 2dbc53f9178418013141ffea8b5c5289a7bcf285 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:21 +0200
-Subject: [PATCH 413/611] ARM: shmobile: r8a7790: Remove all GPIOs
+Subject: [PATCH 413/675] ARM: shmobile: r8a7790: Remove all GPIOs
 
 Function GPIOs are not used anymore, and all code use the GPIO numbers
 directly. Remove the GPIOs enumeration.

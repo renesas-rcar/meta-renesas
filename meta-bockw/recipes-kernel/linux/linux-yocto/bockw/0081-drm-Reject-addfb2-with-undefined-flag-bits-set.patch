@@ -1,7 +1,7 @@
 From aa9bea04926bbac6bbe17196d4a7c31e81577575 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 8 Nov 2012 09:09:42 +0000
-Subject: [PATCH 081/611] drm: Reject addfb2 with undefined flag bits set
+Subject: [PATCH 081/675] drm: Reject addfb2 with undefined flag bits set
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

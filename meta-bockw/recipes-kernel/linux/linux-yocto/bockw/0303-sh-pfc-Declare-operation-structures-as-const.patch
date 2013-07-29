@@ -1,7 +1,7 @@
 From 19f6811dd5fe01462949575d21e397cd3c033406 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 15 Feb 2013 16:04:47 +0100
-Subject: [PATCH 303/611] sh-pfc: Declare operation structures as const
+Subject: [PATCH 303/675] sh-pfc: Declare operation structures as const
 
 The pinconf, pinctrl and pinmux operation structures hold function
 pointers that are never modified. Declare them as const.

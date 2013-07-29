@@ -1,7 +1,7 @@
 From 95283e4a945650b293691968bbd93a237c2e4af3 Mon Sep 17 00:00:00 2001
 From: Matthieu CASTET <matthieu.castet@parrot.com>
 Date: Tue, 25 Sep 2012 11:05:27 +0200
-Subject: [PATCH 478/611] mtd: m25p80: add support for the windbond w25q256
+Subject: [PATCH 478/675] mtd: m25p80: add support for the windbond w25q256
  chip
 
 Signed-off-by: Matthieu CASTET <matthieu.castet@parrot.com>

@@ -1,7 +1,7 @@
 From 32f21037c3be7cb4ff8254b41d26b7f7d0217410 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Mar 2013 11:06:37 +0100
-Subject: [PATCH 395/611] sh-pfc: r8a7779: Split DU input and output pixel
+Subject: [PATCH 395/675] sh-pfc: r8a7779: Split DU input and output pixel
  clocks
 
 The output pixel clocks can be used without the input pixel clocks.

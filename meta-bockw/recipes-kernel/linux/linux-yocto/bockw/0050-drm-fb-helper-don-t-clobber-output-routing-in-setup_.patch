@@ -1,7 +1,7 @@
 From 4fb402aa02d83ff12ca2b3975a74ef5ca0c33f81 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Sun, 12 Aug 2012 18:15:48 +0200
-Subject: [PATCH 050/611] drm/fb-helper: don't clobber output routing in
+Subject: [PATCH 050/675] drm/fb-helper: don't clobber output routing in
  setup_crtcs
 
 Yet again the too close relationship between the fb helper and the

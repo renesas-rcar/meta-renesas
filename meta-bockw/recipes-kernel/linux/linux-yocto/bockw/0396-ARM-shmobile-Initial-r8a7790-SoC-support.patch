@@ -1,7 +1,7 @@
 From 7c00a1de126da9c20fd7f3d34b53175c9b3912ab Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Thu, 28 Mar 2013 00:49:34 +0900
-Subject: [PATCH 396/611] ARM: shmobile: Initial r8a7790 SoC support
+Subject: [PATCH 396/675] ARM: shmobile: Initial r8a7790 SoC support
 
 Add initial support for the r8a7790 SoC including:
  - Single Cortex-A15 CPU Core

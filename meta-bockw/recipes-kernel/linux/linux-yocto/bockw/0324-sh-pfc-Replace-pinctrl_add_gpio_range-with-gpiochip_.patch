@@ -1,7 +1,7 @@
 From eb3262c64b36e399fea5ecfd9383018fe428470c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 8 Mar 2013 00:45:12 +0100
-Subject: [PATCH 324/611] sh-pfc: Replace pinctrl_add_gpio_range() with
+Subject: [PATCH 324/675] sh-pfc: Replace pinctrl_add_gpio_range() with
  gpiochip_add_pin_range()
 
 Adding a GPIO range to a pinctrl device logically belongs to the GPIO

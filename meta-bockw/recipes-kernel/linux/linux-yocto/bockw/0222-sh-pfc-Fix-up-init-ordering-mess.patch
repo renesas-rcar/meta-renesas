@@ -1,7 +1,7 @@
 From b9f2d2aa952238564efc6a3b178af9340050fb07 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 1 Aug 2012 16:27:38 +0900
-Subject: [PATCH 222/611] sh: pfc: Fix up init ordering mess.
+Subject: [PATCH 222/675] sh: pfc: Fix up init ordering mess.
 
 Commit ca5481c68e9fbcea62bb3c78ae6cccf99ca8fb73 ("sh: pfc: Rudimentary
 pinctrl-backed GPIO support.") introduced a regression for platforms that

@@ -1,7 +1,7 @@
 From 2a128f5f68eafbf64c0419fbf5f061ff95f5c427 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:22:11 +0100
-Subject: [PATCH 364/611] ARM: shmobile: marzen: Register pinctrl mappings for
+Subject: [PATCH 364/675] ARM: shmobile: marzen: Register pinctrl mappings for
  SDHI and MMCIF
 
 Replace the GPIO-based SDHI and MMCIF pinmux configuration by pinctrl

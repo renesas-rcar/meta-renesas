@@ -1,7 +1,7 @@
 From a45da23adf9ac5f647298db3876658b4107f6709 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Tue, 16 Apr 2013 22:17:25 -0700
-Subject: [PATCH 501/611] ARM: shmobile: r8a7778: Register SDHI device
+Subject: [PATCH 501/675] ARM: shmobile: r8a7778: Register SDHI device
 
 This patch adds SDHI register function which needs id number (= 0/1/2)
 

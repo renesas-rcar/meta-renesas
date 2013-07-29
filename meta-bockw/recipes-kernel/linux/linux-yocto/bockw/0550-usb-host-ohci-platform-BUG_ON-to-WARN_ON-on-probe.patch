@@ -1,7 +1,7 @@
 From 2da94ad0b4c45a1df60ccb48ac4a85153bd5378d Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 6 Aug 2012 18:07:30 -0700
-Subject: [PATCH 550/611] usb: host: ohci-platform: BUG_ON() to WARN_ON() on
+Subject: [PATCH 550/675] usb: host: ohci-platform: BUG_ON() to WARN_ON() on
  probe
 
 usb_ohci_pdata is certainly required in ohci-platform driver.
