@@ -1,7 +1,7 @@
 require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 FILESEXTRAPATHS_prepend := "${THISDIR}/../linux/linux-yocto/:"
 
-PR = "r1"
+PR = "r2"
 
 LINUX_VERSION = "3.4.46"
 PROVIDES = "linux-libc-headers"
@@ -604,30 +604,91 @@ SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.
 	file://0587-ARM-shmobile-bockw-enable-ICB-clock.patch \
 	file://0588-ARM-shmobile-r8a7778-add-IPMMU-support.patch \
 	file://0589-ARM-shmobile-r8a7778-add-VPC-clock-support.patch \
-	file://0590-RM-shmobile-r8a7778-add-VPC-support.patch \
+	file://0590-ARM-shmobile-r8a7778-add-VPC-support.patch \
 	file://0591-ARM-shmobile-r8a7778-add-MERAM-clock-support.patch \
 	file://0592-ARM-shmobile-r8a7778-add-MERAM-support.patch \
-	file://0593-ARM-shmobile-r8a7778-add-MERAM-support.patch \
-	file://0594-ARM-shmobile-r8a7778-add-ICB-MERAM-work-around.patch \
-	file://0595-ARM-shmobile-bockw-invoke-ICB-MERAM-workaround.patch \
-	file://0596-ARM-shmobile-r8a7778-add-VIO-clock-support.patch \
-	file://0597-ARM-shmobile-r8a7778-add-VIO-support.patch \
-	file://0598-ARM-shmobile-r8a7778-add-VPU-clock-support.patch \
-	file://0599-ARM-shmobile-r8a7778-add-VPU-support.patch \
-	file://0600-ARM-shmobile-r8a7778-add-SSB-workaround.patch \
-	file://0601-ARM-shmobile-bockw-invoke-SSB-workaround.patch \
-	file://0602-ARM-shmobile-r8a7778-add-a-register-region-for-an-IC.patch \
-	file://0603-ARM-shmobile-r8a7778-add-PWM-clock-support.patch \
-	file://0604-mach-shmobile-add-R-Car-PWM-driver.patch \
-	file://0605-arm-mach-shmobile-bockw-add-platform_device-for-PWM6.patch \
-	file://0606-watchdog-add-R-Car-WDT-driver.patch \
-	file://0607-ARM-shmobile-r8a7778-add-WDT-support.patch \
-	file://0608-workqueue-reorder-queueing-functions-so-that-_on-var.patch \
-	file://0609-workqueue-make-queueing-functions-return-bool.patch \
-	file://0610-workqueue-disable-irq-while-manipulating-PENDING.patch \
-	file://0611-ARM-shmobile-bockw-Add-suport-mtd-info.patch \
-	file://0612-r8a7778-Add-Clocks-for-SGX.patch \
-	file://0613-ARM-mach-shmobile-r8a7778-Don-t-use-SCSCR_CKE1.patch \
-	file://0614-ARM-shmobile-bockw-Change-MMC-Card-detect.patch \
+	file://0593-ARM-shmobile-r8a7778-add-ICB-MERAM-work-around.patch \
+	file://0594-ARM-shmobile-bockw-invoke-ICB-MERAM-workaround.patch \
+	file://0595-ARM-shmobile-r8a7778-add-VIO-clock-support.patch \
+	file://0596-ARM-shmobile-r8a7778-add-VIO-support.patch \
+	file://0597-ARM-shmobile-r8a7778-add-VPU-clock-support.patch \
+	file://0598-ARM-shmobile-r8a7778-add-VPU-support.patch \
+	file://0599-ARM-shmobile-r8a7778-add-SSB-workaround.patch \
+	file://0600-ARM-shmobile-bockw-invoke-SSB-workaround.patch \
+	file://0601-ARM-shmobile-r8a7778-add-a-register-region-for-an-IC.patch \
+	file://0602-ARM-shmobile-r8a7778-add-PWM-clock-support.patch \
+	file://0603-mach-shmobile-add-R-Car-PWM-driver.patch \
+	file://0604-arm-mach-shmobile-bockw-add-platform_device-for-PWM6.patch \
+	file://0605-watchdog-add-R-Car-WDT-driver.patch \
+	file://0606-ARM-shmobile-r8a7778-add-WDT-support.patch \
+	file://0607-workqueue-reorder-queueing-functions-so-that-_on-var.patch \
+	file://0608-workqueue-make-queueing-functions-return-bool.patch \
+	file://0609-workqueue-disable-irq-while-manipulating-PENDING.patch \
+	file://0610-ARM-shmobile-bockw-Add-suport-mtd-info.patch \
+	file://0611-r8a7778-Add-Clocks-for-SGX.patch \
+	file://0612-ARM-mach-shmobile-r8a7778-Don-t-use-SCSCR_CKE1.patch \
+	file://0613-ARM-shmobile-bockw-Change-MMC-Card-detect.patch \
+	file://0614-ARM-shmobile-r8a7778-add-usb-phy-power-control-funct.patch \
+	file://0615-ARM-shmobile-r8a7778-add-r8a7778_add_usb_host_device.patch \
+	file://0616-ARM-shmobile-r8a7778-add-USB-Func-support.patch \
+	file://0617-ARM-shmobile-bockw-add-USB-Function-support.patch \
+	file://0618-usb-renesas_usbhs-gadget-remove-extra-check-on-udc_s.patch \
+	file://0619-usb-renesas_usbhs-fixup-sparse-errors-for-common.c.patch \
+	file://0620-tidyup-original-for_each_rsnd_clk-macro.patch \
+	file://0621-sh-pfc-Remove-unused-input_pd-and-input_pu-ranges.patch \
+	file://0622-sh-pfc-Remove-unused-PORT_DATA_-macros.patch \
+	file://0623-sh-pfc-Remove-unused-macro-and-enum-entries.patch \
+	file://0624-sh-pfc-Remove-unneeded-const-keywords.patch \
+	file://0625-sh-pfc-Remove-unused-GPIO_PORT_ALL-macro.patch \
+	file://0626-sh-pfc-Don-t-overallocate-memory-for-the-GPIO-chip-p.patch \
+	file://0627-sh-pfc-Replace-pinmux_enum_id-typedef-with-u16.patch \
+	file://0628-sh-pfc-Rename-gpio-arguments-to-be-consistent-with-t.patch \
+	file://0629-sh-pfc-Consolidate-PFC-SoC-data-macros.patch \
+	file://0630-sh-pfc-Consolidate-pin-definition-macros.patch \
+	file://0631-sh-pfc-sh7734-Use-the-common-GP-port-style-macros.patch \
+	file://0632-sh-pfc-Don-t-duplicate-argument-to-PINMUX_GPIO-macro.patch \
+	file://0633-sh-pfc-Add-port-numbers-to-the-CPU_ALL_PORT-macro.patch \
+	file://0634-sh-pfc-Pass-the-pin-number-down-to-the-port-function.patch \
+	file://0635-sh-pfc-Add-pin-number-to-struct-sh_pfc_pin.patch \
+	file://0636-sh-pfc-Rename-struct-sh_pfc-nr_pins-field-to-nr_gpio.patch \
+	file://0637-sh-pfc-Compute-pin-ranges-automatically.patch \
+	file://0638-sh-pfc-Support-pins-not-associated-with-a-GPIO-port.patch \
+	file://0639-From-Vladimir-Barinov-vladimir.barinov-cogentembedde.patch \
+	file://0640-misc-add-driver-for-Renesas-R-Car-Gyro-ADC-speed-pul.patch \
+	file://0641-ARM-shmobile-r8a7778-fix-SCR-clock.patch \
+	file://0642-Add-support-SpeedPulse-ADC-clock-supports.patch \
+	file://0643-Add-support-SpeedPulse-register-and-pin-function.patch \
+	file://0644-Fix-register-addres-ranges.patch \
+	file://0645-Revert-Local-ASoC-add-ak4554-driver.patch \
+	file://0646-Revert-ASoC-rsnd-remove-platform-dai-and-add-dai_id-.patch \
+	file://0647-Revert-LTSI-ASoC-rcar-tidyup-framework-mismatch.patch \
+	file://0648-Revert-Local-ASoC-add-Renesas-R-Car-SSI-feature.patch \
+	file://0649-Revert-tidyup-original-for_each_rsnd_clk-macro.patch \
+	file://0650-Revert-Local-ASoC-add-Renesas-R-Car-ADG-feature.patch \
+	file://0651-Revert-Local-ASoC-add-Renesas-R-Car-SCU-feature.patch \
+	file://0652-Revert-Local-ASoC-add-Renesas-R-Car-Generation-featu.patch \
+	file://0653-Revert-Local-ASoC-add-Renesas-R-Car-module-feature.patch \
+	file://0654-Revert-Local-ASoC-add-Renesas-R-Car-core-feature.patch \
+	file://0655-dma-sh-add-Kconfig.patch \
+	file://0656-dma-hpb-dmae-Add-DMA-Engine-driver-for-R-Car-HPB-DMA.patch \
+	file://0657-dma-hpb-dmae-Add-DMA-Engine-driver-for-R-Car-HPB-DMA.patch \
+	file://0658-dma-hpb-dmae-use-shared-interrupt.patch \
+	file://0659-dma-hpb-dmae-use-shdma_slave-instead-of-hpb_dmae_sla.patch \
+	file://0660-ASoC-add-ak4554-driver.patch \
+	file://0661-ASoC-add-Renesas-R-Car-core-feature.patch \
+	file://0662-ASoC-add-Renesas-R-Car-module-feature.patch \
+	file://0663-ASoC-add-Renesas-R-Car-Generation-feature.patch \
+	file://0664-ASoC-add-Renesas-R-Car-SCU-feature.patch \
+	file://0665-ASoC-add-Renesas-R-Car-ADG-feature.patch \
+	file://0666-ASoC-add-Renesas-R-Car-SSI-feature.patch \
+	file://0667-ASoC-rsnd-remove-platform-dai-and-add-dai_id-on-plat.patch \
+	file://0668-ASoC-rsnd-add-common-DMAEngine-method.patch \
+	file://0669-ASoC-rsnd-SSI-supports-DMA-transfer.patch \
+	file://0670-ASoC-rsnd-SSI-supports-DMA-transfer-via-BUSIF.patch \
+	file://0671-LTSI-ASoC-rcar-tidyup-framework-mismatch.patch \
+	file://0672-dma-hpbdma-fixup-double-plane-swithing-bug.patch \
+	file://0673-ARM-shmobile-r8a7778-fixup-sound-register-function.patch \
+	file://0674-ARM-shmobile-add-SSI-DMA-support.patch \
+	file://0675-ARM-shmobile-bockw-add-SSI-DMA-transfer-support.patch \
 	file://add_gp2d_drm_kbuild.patch \
 	"
