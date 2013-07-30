@@ -14,4 +14,5 @@ IMAGE_INSTALL += " \
 	gst-plugins-ugly-asf \
 	gst-openmax \
 	libdrm-kms \
+	alsa-utils alsa-tools \
 "
