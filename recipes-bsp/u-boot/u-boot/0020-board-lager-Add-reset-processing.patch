@@ -1,0 +1,45 @@
+From d766d4462489f743e9dd8e048b6e78de87cc7b78 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Mon, 29 Jul 2013 11:35:52 +0900
+Subject: [PATCH 20/28] board: lager: Add reset processing
+
+Lager reset proccesing uses DA9063. DA9063 is Power Management IC
+and connected in I2C3.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ board/renesas/lager/lager.c | 6 ++++++
+ include/configs/lager.h     | 4 ++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/board/renesas/lager/lager.c b/board/renesas/lager/lager.c
+index 8472f86..eab0a51 100644
+--- a/board/renesas/lager/lager.c
++++ b/board/renesas/lager/lager.c
+@@ -333,4 +333,10 @@ int board_late_init(void)
+ 
+ void reset_cpu(ulong addr)
+ {
++	u8 val;
++
++	i2c_init(0, 0);
++	i2c_read(0x58, 0x13, 1, &val, 1);
++	val |= 0x02;
++	i2c_write(0x58, 0x13, 1, &val, 1);
+ }
+diff --git a/include/configs/lager.h b/include/configs/lager.h
+index 550bce4..3799330 100644
+--- a/include/configs/lager.h
++++ b/include/configs/lager.h
+@@ -188,4 +188,8 @@
+ #define CONFIG_SYS_TMU_CLK_DIV	4
+ #define CONFIG_SYS_HZ		1000
+ 
++/* i2c */
++#define CONFIG_RCAR_I2C
++#define CONFIG_RCAR_I2C_BASE	0xE6540000
++
+ #endif	/* __LAGER_H */
+-- 
+1.8.3.2
+

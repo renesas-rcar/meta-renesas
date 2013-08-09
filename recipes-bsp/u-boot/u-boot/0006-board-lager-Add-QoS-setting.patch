@@ -1,11 +1,11 @@
 From c8344a4304c4336dd40f77541202c89cf1788147 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Thu, 16 May 2013 14:59:32 +0900
-Subject: [PATCH 06/14] board: lager: Add QoS setting
+Subject: [PATCH 06/28] board: lager: Add QoS setting
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/include/asm/arch-rmobile/r8a7790.h |  409 ++++++++++-
+ arch/arm/include/asm/arch-rmobile/r8a7790.h |  409 +++++++++-
  board/renesas/lager/Makefile                |    2 +-
  board/renesas/lager/lager.c                 |    3 +
  board/renesas/lager/qos.c                   | 1101 +++++++++++++++++++++++++++
@@ -1574,5 +1574,5 @@ index 0000000..ca337ea
 +	writel(0x0000F700, CCI_AXI_AX2ADDRMASK);
 +}
 -- 
-1.7.3.4
+1.8.3.2
 

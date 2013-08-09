@@ -1,7 +1,7 @@
 From 8a44f3ed0bcf940b866996c71e2de6151d9e0397 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Thu, 16 May 2013 14:55:02 +0900
-Subject: [PATCH 02/14] arm: rmobile: Modify pin setting to rmobile style
+Subject: [PATCH 02/28] arm: rmobile: Modify pin setting to rmobile style
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
@@ -3816,5 +3816,5 @@ index fd0e325..5e44c3a 100644
  	return 0;
  }
 -- 
-1.7.3.4
+1.8.3.2
 

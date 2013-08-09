@@ -1,12 +1,12 @@
 From e67c0cb18eaff1f0e2f842e9c3b0fdcc73cc2458 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Fri, 21 Jun 2013 10:08:54 +0900
-Subject: [PATCH 14/14] Fix QoS setting
+Subject: [PATCH 14/28] Fix QoS setting
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 ---
- arch/arm/include/asm/arch-rmobile/r8a7790.h |    5 +
- board/renesas/lager/qos.c                   |  863 ++++++++++++++-------------
+ arch/arm/include/asm/arch-rmobile/r8a7790.h |   5 +
+ board/renesas/lager/qos.c                   | 863 ++++++++++++++--------------
  2 files changed, 439 insertions(+), 429 deletions(-)
 
 diff --git a/arch/arm/include/asm/arch-rmobile/r8a7790.h b/arch/arm/include/asm/arch-rmobile/r8a7790.h
@@ -1456,5 +1456,5 @@ index ca337ea..a12d5db 100644
  	/* CCI-AXI Function Register */
  	writel(0x00000011, CCI_AXI_IPMMUIDVMCR);
 -- 
-1.7.3.4
+1.8.3.2
 

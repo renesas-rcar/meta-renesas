@@ -1,13 +1,13 @@
 From eb9bf3a00cac594bbfb47f09a8f6640aa366adce Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Tue, 18 Jun 2013 10:21:01 +0900
-Subject: [PATCH 11/14] net: sh_eth: Add data cache support
+Subject: [PATCH 11/28] net: sh_eth: Add data cache support
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 ---
- drivers/net/sh_eth.c    |   49 ++++++++++++++++++++++++++++++++++++++++++----
- drivers/net/sh_eth.h    |   19 ++++++++++++++++++
- include/configs/lager.h |    2 +-
+ drivers/net/sh_eth.c    | 49 ++++++++++++++++++++++++++++++++++++++++++++-----
+ drivers/net/sh_eth.h    | 19 +++++++++++++++++++
+ include/configs/lager.h |  2 +-
  3 files changed, 64 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/sh_eth.c b/drivers/net/sh_eth.c
@@ -221,5 +221,5 @@ index 3529352..566284e 100644
  #define CONFIG_PHY_MICREL
  #define CONFIG_BITBANGMII
 -- 
-1.7.3.4
+1.8.3.2
 

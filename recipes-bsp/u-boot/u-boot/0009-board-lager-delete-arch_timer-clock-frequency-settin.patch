@@ -1,12 +1,12 @@
 From 4a12d6e1bf35ec9db2732c6226c7dc4804374db2 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Thu, 16 May 2013 15:02:06 +0900
-Subject: [PATCH 09/14] board: lager: delete arch_timer clock frequency setting
+Subject: [PATCH 09/28] board: lager: delete arch_timer clock frequency setting
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- board/renesas/lager/lowlevel_init.S |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+ board/renesas/lager/lowlevel_init.S | 6 ------
+ 1 file changed, 6 deletions(-)
 
 diff --git a/board/renesas/lager/lowlevel_init.S b/board/renesas/lager/lowlevel_init.S
 index c526b3c..cde8da6 100644
@@ -26,5 +26,5 @@ index c526b3c..cde8da6 100644
  	tst	r4, #4
  	ldreq	r1, =0xf0194000		/* ca15 snoop ctl */
 -- 
-1.7.3.4
+1.8.3.2
 

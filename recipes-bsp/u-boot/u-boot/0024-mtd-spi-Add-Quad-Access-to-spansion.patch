@@ -1,0 +1,280 @@
+From a2f9caebd3be4666bd1f985e83e795120f5fa012 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Mon, 29 Jul 2013 15:20:25 +0900
+Subject: [PATCH 24/28] mtd: spi: Add Quad Access to spansion
+
+SPI Quad Access is added to spansion spi flash implementation.
+Read Quad Out and Quad Page Program command is used
+by this implementation.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ drivers/mtd/spi/spansion.c           | 49 +++++++++++++++++++
+ drivers/mtd/spi/spi_flash.c          | 94 ++++++++++++++++++++++++++++++++++++
+ drivers/mtd/spi/spi_flash_internal.h | 10 ++++
+ 3 files changed, 153 insertions(+)
+
+diff --git a/drivers/mtd/spi/spansion.c b/drivers/mtd/spi/spansion.c
+index a62ffa9..f7d5c6e 100644
+--- a/drivers/mtd/spi/spansion.c
++++ b/drivers/mtd/spi/spansion.c
+@@ -113,12 +113,42 @@ static const struct spansion_spi_flash_params spansion_spi_flash_table[] = {
+ 	},
+ };
+ 
++static int spi_flash_cmd_write_status_config(struct spi_flash *flash, u8 *srcr)
++{
++	u8 cmd;
++	int ret;
++
++	ret = spi_flash_cmd_write_enable(flash);
++	if (ret < 0) {
++		debug("SF: enabling write failed\n");
++		return ret;
++	}
++
++	cmd = CMD_WRITE_STATUS;
++	ret = spi_flash_cmd_write(flash->spi, &cmd, 1, srcr, 2);
++	if (ret) {
++		debug("SF: fail to write status and config register\n");
++		return ret;
++	}
++
++	ret = spi_flash_cmd_wait_ready(flash, SPI_FLASH_PROG_TIMEOUT);
++	if (ret < 0) {
++		debug("SF: write status register timed out\n");
++		return ret;
++	}
++
++	return 0;
++}
++
+ struct spi_flash *spi_flash_probe_spansion(struct spi_slave *spi, u8 *idcode)
+ {
+ 	const struct spansion_spi_flash_params *params;
+ 	struct spi_flash *flash;
+ 	unsigned int i;
+ 	unsigned short jedec, ext_jedec;
++#ifdef CONFIG_SPI_FLASH_QUAD
++	u8 cr, sr, srcr[2];
++#endif
+ 
+ 	jedec = idcode[1] << 8 | idcode[2];
+ 	ext_jedec = idcode[3] << 8 | idcode[4];
+@@ -145,12 +175,31 @@ struct spi_flash *spi_flash_probe_spansion(struct spi_slave *spi, u8 *idcode)
+ 	flash->spi = spi;
+ 	flash->name = params->name;
+ 
++#ifdef CONFIG_SPI_FLASH_QUAD
++	flash->write = spi_flash_cmd_write_quad;
++#else
+ 	flash->write = spi_flash_cmd_write_multi;
++#endif
+ 	flash->erase = spi_flash_cmd_erase;
++#ifdef CONFIG_SPI_FLASH_QUAD
++	flash->read = spi_flash_cmd_read_quad;
++#else
+ 	flash->read = spi_flash_cmd_read_fast;
++#endif
+ 	flash->page_size = 256;
+ 	flash->sector_size = 256 * params->pages_per_sector;
+ 	flash->size = flash->sector_size * params->nr_sectors;
+ 
++#ifdef CONFIG_SPI_FLASH_QUAD
++	/* enable quad transfer */
++	spi_flash_cmd(spi, CMD_READ_STATUS, &sr, 1);
++	spi_flash_cmd(spi, CMD_READ_CONFIG, &cr, 1);
++	cr |= 0x02;
++	srcr[0] = sr;
++	srcr[1] = cr;
++	if (spi_flash_cmd_write_status_config(flash, srcr) < 0)
++		return NULL;
++#endif
++
+ 	return flash;
+ }
+diff --git a/drivers/mtd/spi/spi_flash.c b/drivers/mtd/spi/spi_flash.c
+index 00aece9..ac793e4 100644
+--- a/drivers/mtd/spi/spi_flash.c
++++ b/drivers/mtd/spi/spi_flash.c
+@@ -1,6 +1,7 @@
+ /*
+  * SPI flash interface
+  *
++ * Copyright (C) 2013 Renesas Electronics Corporation
+  * Copyright (C) 2008 Atmel Corporation
+  * Copyright (C) 2010 Reinhard Meyer, EMK Elektronik
+  *
+@@ -23,6 +24,15 @@ static void spi_flash_addr(u32 addr, u8 *cmd)
+ 	cmd[3] = addr >> 0;
+ }
+ 
++static void spi_flash_addr4(u32 addr, u8 *cmd)
++{
++	/* cmd[0] is actual command */
++	cmd[1] = addr >> 24;
++	cmd[2] = addr >> 16;
++	cmd[3] = addr >> 8;
++	cmd[4] = addr >> 0;
++}
++
+ static int spi_flash_read_write(struct spi_slave *spi,
+ 				const u8 *cmd, size_t cmd_len,
+ 				const u8 *data_out, u8 *data_in,
+@@ -31,6 +41,23 @@ static int spi_flash_read_write(struct spi_slave *spi,
+ 	unsigned long flags = SPI_XFER_BEGIN;
+ 	int ret;
+ 
++#ifdef CONFIG_SPI_FLASH_QUAD
++	switch (cmd[0]) {
++	case CMD_READ_ARRAY_QUAD:
++		ret = spi_xfer_quad(
++			spi, cmd_len * 8, cmd, data_len * 8, NULL, data_in,
++			(SPI_XFER_BEGIN | SPI_XFER_END));
++		return ret;
++	case CMD_QUAD4_PAGE_PROGRAM:
++		ret = spi_xfer_quad(
++			spi, cmd_len * 8, cmd, data_len * 8, data_out, NULL,
++			(SPI_XFER_BEGIN | SPI_XFER_END));
++		return ret;
++	default:
++		break;
++	}
++#endif
++
+ 	if (data_len == 0)
+ 		flags |= SPI_XFER_END;
+ 
+@@ -122,6 +149,61 @@ int spi_flash_cmd_write_multi(struct spi_flash *flash, u32 offset,
+ 	return ret;
+ }
+ 
++int spi_flash_cmd_write_quad(struct spi_flash *flash, u32 offset,
++		size_t len, const void *buf)
++{
++	unsigned long page_size, byte_addr;
++	size_t chunk_len, actual;
++	int ret;
++	u8 cmd[5];
++
++	page_size = flash->page_size;
++	byte_addr = offset % page_size;
++
++	ret = spi_claim_bus(flash->spi);
++	if (ret) {
++		debug("SF: unable to claim SPI bus\n");
++		return ret;
++	}
++
++	cmd[0] = CMD_QUAD4_PAGE_PROGRAM;
++	for (actual = 0; actual < len; actual += chunk_len) {
++		chunk_len = min(len - actual, page_size - byte_addr);
++
++		spi_flash_addr4(offset + actual, cmd);
++
++		debug("Q4PP: 0x%p => cmd = { 0x%02x 0x%02x%02x%02x%02x } " \
++		      "len = %zu\n",
++		      buf + actual, cmd[0], cmd[1], cmd[2], cmd[3], cmd[4],
++		      chunk_len);
++
++		ret = spi_flash_cmd_write_enable(flash);
++		if (ret < 0) {
++			debug("SF: enabling write failed\n");
++			break;
++		}
++
++		ret = spi_flash_cmd_write(
++			flash->spi, cmd, 5, buf + actual, chunk_len);
++		if (ret < 0) {
++			debug("SF: write failed\n");
++			break;
++		}
++
++		ret = spi_flash_cmd_wait_ready(flash, SPI_FLASH_PROG_TIMEOUT);
++		if (ret)
++			break;
++
++		byte_addr = 0;
++	}
++
++	debug("SF: program %s %zu bytes @ %#x\n",
++	      ret ? "failure" : "success", len, offset);
++
++	spi_release_bus(flash->spi);
++	return ret;
++}
++
+ int spi_flash_read_common(struct spi_flash *flash, const u8 *cmd,
+ 		size_t cmd_len, void *data, size_t data_len)
+ {
+@@ -147,6 +229,18 @@ int spi_flash_cmd_read_fast(struct spi_flash *flash, u32 offset,
+ 	return spi_flash_read_common(flash, cmd, sizeof(cmd), data, len);
+ }
+ 
++int spi_flash_cmd_read_quad(struct spi_flash *flash, u32 offset,
++		size_t len, void *data)
++{
++	u8 cmd[5];
++
++	cmd[0] = CMD_READ_ARRAY_QUAD;
++	spi_flash_addr(offset, cmd);
++	cmd[4] = 0x00;
++
++	return spi_flash_read_common(flash, cmd, sizeof(cmd), data, len);
++}
++
+ int spi_flash_cmd_poll_bit(struct spi_flash *flash, unsigned long timeout,
+ 			   u8 cmd, u8 poll_bit)
+ {
+diff --git a/drivers/mtd/spi/spi_flash_internal.h b/drivers/mtd/spi/spi_flash_internal.h
+index 141cfa8..eac9dbf 100644
+--- a/drivers/mtd/spi/spi_flash_internal.h
++++ b/drivers/mtd/spi/spi_flash_internal.h
+@@ -1,6 +1,7 @@
+ /*
+  * SPI flash internal definitions
+  *
++ * Copyright (C) 2013 Renesas Electronics Corporation
+  * Copyright (C) 2008 Atmel Corporation
+  */
+ 
+@@ -17,6 +18,7 @@
+ 
+ #define CMD_READ_ARRAY_SLOW		0x03
+ #define CMD_READ_ARRAY_FAST		0x0b
++#define CMD_READ_ARRAY_QUAD		0x6b
+ 
+ #define CMD_WRITE_STATUS		0x01
+ #define CMD_PAGE_PROGRAM		0x02
+@@ -24,6 +26,8 @@
+ #define CMD_READ_STATUS			0x05
+ #define CMD_WRITE_ENABLE		0x06
+ #define CMD_ERASE_4K			0x20
++#define CMD_QUAD4_PAGE_PROGRAM		0x34
++#define CMD_READ_CONFIG			0x35
+ #define CMD_ERASE_32K			0x52
+ #define CMD_ERASE_64K			0xd8
+ #define CMD_ERASE_CHIP			0xc7
+@@ -44,6 +48,9 @@ int spi_flash_cmd_read(struct spi_slave *spi, const u8 *cmd,
+ int spi_flash_cmd_read_fast(struct spi_flash *flash, u32 offset,
+ 		size_t len, void *data);
+ 
++int spi_flash_cmd_read_quad(struct spi_flash *flash, u32 offset,
++		size_t len, void *data);
++
+ /*
+  * Send a multi-byte command to the device followed by (optional)
+  * data. Used for programming the flash array, etc.
+@@ -58,6 +65,9 @@ int spi_flash_cmd_write(struct spi_slave *spi, const u8 *cmd, size_t cmd_len,
+ int spi_flash_cmd_write_multi(struct spi_flash *flash, u32 offset,
+ 		size_t len, const void *buf);
+ 
++int spi_flash_cmd_write_quad(struct spi_flash *flash, u32 offset,
++		size_t len, const void *buf);
++
+ /*
+  * Enable writing on the SPI flash.
+  */
+-- 
+1.8.3.2
+

@@ -1,0 +1,67 @@
+From 5534c453e100b3dbb86ce83debae1b1d1e4e96c0 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Wed, 17 Jul 2013 12:00:29 +0900
+Subject: [PATCH 15/28] serial: Add r8a7791 support
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ drivers/serial/serial_sh.c | 2 +-
+ drivers/serial/serial_sh.h | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/serial/serial_sh.c b/drivers/serial/serial_sh.c
+index 5a5214f..4864967 100644
+--- a/drivers/serial/serial_sh.c
++++ b/drivers/serial/serial_sh.c
+@@ -61,7 +61,7 @@ static struct uart_port sh_sci = {
+ static void sh_serial_setbrg(void)
+ {
+ 	DECLARE_GLOBAL_DATA_PTR;
+-#if defined(CONFIG_R8A7790)
++#if defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791)
+ 	sci_out(&sh_sci, DL, DL_VALUE(gd->baudrate, CONFIG_SCIF_CLK_FREQ));
+ 	udelay((1000000 * 2 * 16 / CONFIG_SYS_CLK_FREQ) * 1000 + 1);
+ #else
+diff --git a/drivers/serial/serial_sh.h b/drivers/serial/serial_sh.h
+index a815876..2c6baef 100644
+--- a/drivers/serial/serial_sh.h
++++ b/drivers/serial/serial_sh.h
+@@ -224,7 +224,7 @@ struct uart_port {
+ # define SCSPTR3 0xffc60020		/* 16 bit SCIF */
+ # define SCIF_ORER 0x0001		/* Overrun error bit */
+ # define SCSCR_INIT(port)	0x38	/* TIE=0,RIE=0,TE=1,RE=1,REIE=1 */
+-#elif defined(CONFIG_R8A7790)
++#elif defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791)
+ # define SCIF_ORER	0x0001
+ # define SCSCR_INIT(port)	0x32	/* TIE=0,RIE=0,TE=1,RE=1,REIE=0, */
+ #else
+@@ -301,7 +301,7 @@ struct uart_port {
+ /* SH7763 SCIF2 support */
+ # define SCIF2_RFDC_MASK 0x001f
+ # define SCIF2_TXROOM_MAX 16
+-#elif defined(CONFIG_R8A7790)
++#elif defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791)
+ # define SCIF_ERRORS (SCIF_PER | SCIF_FER | SCIF_ER | SCIF_BRK)
+ # define SCIF_RFDC_MASK	0x003f
+ #else
+@@ -585,7 +585,7 @@ SCIF_FNS(SCSPTR,                        0,  0, 0, 0)
+ #else
+ SCIF_FNS(SCSPTR,                        0,  0, 0x20, 16)
+ #endif
+-#if defined(CONFIG_R8A7790)
++#if defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791)
+ SCIF_FNS(DL,				0,  0, 0x30, 16)
+ SCIF_FNS(CKS,				0,  0, 0x34, 16)
+ #endif
+@@ -730,7 +730,7 @@ static inline int scbrr_calc(struct uart_port port, int bps, int clk)
+ #define SCBRR_VALUE(bps, clk) scbrr_calc(sh_sci, bps, clk)
+ #elif defined(__H8300H__) || defined(__H8300S__)
+ #define SCBRR_VALUE(bps, clk) (((clk*1000/32)/bps)-1)
+-#elif defined(CONFIG_R8A7790)
++#elif defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791)
+ #define DL_VALUE(bps, clk)	(clk / bps / 16)
+ #else /* Generic SH */
+ #define SCBRR_VALUE(bps, clk) ((clk+16*bps)/(32*bps)-1)
+-- 
+1.8.3.2
+

@@ -1,12 +1,12 @@
 From a8b5b22798e58a4ce2ba93e37898ab5f7335fc79 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Fri, 21 Jun 2013 09:13:49 +0900
-Subject: [PATCH 12/14] board: lager: Fix to display board memory size
+Subject: [PATCH 12/28] board: lager: Fix to display board memory size
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 ---
- board/renesas/lager/lager.c |    6 ++++++
- include/configs/lager.h     |    5 +++--
+ board/renesas/lager/lager.c | 6 ++++++
+ include/configs/lager.h     | 5 +++--
  2 files changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/board/renesas/lager/lager.c b/board/renesas/lager/lager.c
@@ -50,5 +50,5 @@ index 566284e..550bce4 100644
  #define CONFIG_NR_DRAM_BANKS		1
  
 -- 
-1.7.3.4
+1.8.3.2
 

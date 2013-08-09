@@ -1,12 +1,13 @@
 From 4c9598fd6a24405e78ae49337ab0bfad50be3054 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Thu, 16 May 2013 14:56:24 +0900
-Subject: [PATCH 03/14] board: lager: Modify scif0 module enable for SPI-Flash version
+Subject: [PATCH 03/28] board: lager: Modify scif0 module enable for SPI-Flash
+ version
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- board/renesas/lager/lager.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ board/renesas/lager/lager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/board/renesas/lager/lager.c b/board/renesas/lager/lager.c
 index 5e44c3a..71936ed 100644
@@ -26,5 +27,5 @@ index 5e44c3a..71936ed 100644
  	/* ETHER */
  	val = readl(MSTPSR8);
 -- 
-1.7.3.4
+1.8.3.2
 

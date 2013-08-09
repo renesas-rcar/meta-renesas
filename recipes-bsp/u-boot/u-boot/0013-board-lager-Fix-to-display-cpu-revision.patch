@@ -1,12 +1,12 @@
 From 4867cf129244efe693b1903c8cf2920723633820 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Thu, 20 Jun 2013 10:17:41 +0900
-Subject: [PATCH 13/14] board: lager: Fix to display cpu revision
+Subject: [PATCH 13/28] board: lager: Fix to display cpu revision
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 ---
- arch/arm/cpu/armv7/rmobile/cpu_info-r8a7790.c |   16 +++++++++++++---
- arch/arm/cpu/armv7/rmobile/cpu_info.c         |    5 +++++
+ arch/arm/cpu/armv7/rmobile/cpu_info-r8a7790.c | 16 +++++++++++++---
+ arch/arm/cpu/armv7/rmobile/cpu_info.c         |  5 +++++
  2 files changed, 18 insertions(+), 3 deletions(-)
 
 diff --git a/arch/arm/cpu/armv7/rmobile/cpu_info-r8a7790.c b/arch/arm/cpu/armv7/rmobile/cpu_info-r8a7790.c
@@ -56,5 +56,5 @@ index 0e2b82e..c46262b 100644
  		printf("CPU: Renesas Electronics CPU rev %d.%d\n",
  		       rmobile_get_cpu_rev_integer(),
 -- 
-1.7.3.4
+1.8.3.2
 

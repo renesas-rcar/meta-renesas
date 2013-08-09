@@ -1,32 +1,32 @@
 From f1fa1291eff0e406c9b203476296e7886d39d9ca Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 10 Apr 2013 17:34:39 +0900
-Subject: [PATCH 01/14] Add r8a7790 support
+Subject: [PATCH 01/28] Add r8a7790 support
 
 Signed-off-by: Kouei Abe <kouei.abe.cp@renesas.com>
 ---
- arch/arm/cpu/armv7/rmobile/Makefile           |    6 +-
- arch/arm/cpu/armv7/rmobile/cpu_info-r8a7790.c |   31 +++
- arch/arm/cpu/armv7/rmobile/pfc-r8a7790.c      |   23 ++
- arch/arm/include/asm/arch-rmobile/r8a7790.h   |  209 +++++++++++++++
- arch/arm/include/asm/arch-rmobile/rmobile.h   |    2 +
- arch/arm/include/asm/mach-types.h             |   13 +
- arch/arm/lib/bootm.c                          |   13 +
- arch/sh/lib/time.c                            |    4 +-
- board/renesas/lager/Makefile                  |   47 ++++
- board/renesas/lager/board.h                   |   25 ++
- board/renesas/lager/lager.c                   |  340 +++++++++++++++++++++++++
- board/renesas/lager/lowlevel_init.S           |  103 ++++++++
- boards.cfg                                    |    2 +
- drivers/mtd/spi/spansion.c                    |    8 +
- drivers/net/sh_eth.c                          |   11 +-
- drivers/net/sh_eth.h                          |    6 +
- drivers/serial/serial_sh.c                    |    6 +
- drivers/serial/serial_sh.h                    |   12 +
- drivers/spi/Makefile                          |    1 +
- drivers/spi/sh_qspi.c                         |  223 ++++++++++++++++
- drivers/spi/sh_qspi.h                         |   67 +++++
- include/configs/lager.h                       |  189 ++++++++++++++
+ arch/arm/cpu/armv7/rmobile/Makefile           |   6 +-
+ arch/arm/cpu/armv7/rmobile/cpu_info-r8a7790.c |  31 +++
+ arch/arm/cpu/armv7/rmobile/pfc-r8a7790.c      |  23 ++
+ arch/arm/include/asm/arch-rmobile/r8a7790.h   | 209 ++++++++++++++++
+ arch/arm/include/asm/arch-rmobile/rmobile.h   |   2 +
+ arch/arm/include/asm/mach-types.h             |  13 +
+ arch/arm/lib/bootm.c                          |  13 +
+ arch/sh/lib/time.c                            |   4 +-
+ board/renesas/lager/Makefile                  |  47 ++++
+ board/renesas/lager/board.h                   |  25 ++
+ board/renesas/lager/lager.c                   | 340 ++++++++++++++++++++++++++
+ board/renesas/lager/lowlevel_init.S           | 103 ++++++++
+ boards.cfg                                    |   2 +
+ drivers/mtd/spi/spansion.c                    |   8 +
+ drivers/net/sh_eth.c                          |  11 +-
+ drivers/net/sh_eth.h                          |   6 +
+ drivers/serial/serial_sh.c                    |   6 +
+ drivers/serial/serial_sh.h                    |  12 +
+ drivers/spi/Makefile                          |   1 +
+ drivers/spi/sh_qspi.c                         | 223 +++++++++++++++++
+ drivers/spi/sh_qspi.h                         |  67 +++++
+ include/configs/lager.h                       | 189 ++++++++++++++
  22 files changed, 1338 insertions(+), 3 deletions(-)
  create mode 100644 arch/arm/cpu/armv7/rmobile/cpu_info-r8a7790.c
  create mode 100644 arch/arm/cpu/armv7/rmobile/pfc-r8a7790.c
@@ -1660,5 +1660,5 @@ index 0000000..95853c7
 +
 +#endif	/* __LAGER_H */
 -- 
-1.7.3.4
+1.8.3.2
 

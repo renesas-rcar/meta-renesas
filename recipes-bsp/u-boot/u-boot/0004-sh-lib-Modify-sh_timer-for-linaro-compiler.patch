@@ -1,13 +1,13 @@
 From e016d3796f4b6ba3128ebeb80a461eddd5c5ba83 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Thu, 16 May 2013 14:57:10 +0900
-Subject: [PATCH 04/14] sh: lib: Modify sh_timer for linaro compiler
+Subject: [PATCH 04/28] sh: lib: Modify sh_timer for linaro compiler
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/sh/lib/time.c          |   71 +++++++++++++++++++++++++++++++++++++++++++
- board/renesas/lager/lager.c |    2 +-
- 2 files changed, 72 insertions(+), 1 deletions(-)
+ arch/sh/lib/time.c          | 71 +++++++++++++++++++++++++++++++++++++++++++++
+ board/renesas/lager/lager.c |  2 +-
+ 2 files changed, 72 insertions(+), 1 deletion(-)
 
 diff --git a/arch/sh/lib/time.c b/arch/sh/lib/time.c
 index 1b69531..f3937fc 100644
@@ -137,5 +137,5 @@ index 71936ed..7b5d10d 100644
  	gpio_request(GPIO_GP_5_31, NULL);	/* PHY_RST */
  	gpio_direction_output(GPIO_GP_5_31, 0);
 -- 
-1.7.3.4
+1.8.3.2
 
