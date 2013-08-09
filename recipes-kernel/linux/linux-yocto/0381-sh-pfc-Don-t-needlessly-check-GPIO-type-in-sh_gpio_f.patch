@@ -1,7 +1,7 @@
 From 7a0ac5cde4ea156a1fb8e32dedf14f54f2a87b6f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 18:00:32 +0100
-Subject: [PATCH 381/715] sh-pfc: Don't needlessly check GPIO type in
+Subject: [PATCH 0381/1083] sh-pfc: Don't needlessly check GPIO type in
  sh_gpio_free()
 
 The GPIO type is always PINMUX_TYPE_FUNCTION when freeing a function
@@ -13,7 +13,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/gpio.c |    5 +----
+ drivers/pinctrl/sh-pfc/gpio.c | 5 +----
  1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/gpio.c b/drivers/pinctrl/sh-pfc/gpio.c
@@ -39,5 +39,5 @@ index 80a50d8..8f01113 100644
  	spin_unlock_irqrestore(&pfc->lock, flags);
  }
 -- 
-1.7.10.4
+1.8.3.2
 

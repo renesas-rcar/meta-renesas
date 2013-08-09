@@ -1,7 +1,7 @@
 From 33951757b3fafd9ddd3ad8db7f7f2307db467725 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 20 Jun 2012 18:17:56 +0900
-Subject: [PATCH 274/715] sh: pfc: Make gpio chip support optional where
+Subject: [PATCH 0274/1083] sh: pfc: Make gpio chip support optional where
  possible.
 
 This implements some Kconfig knobs for ensuring that the PFC gpio chip
@@ -13,8 +13,8 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/Kconfig  |   15 +++++++++++++++
- drivers/sh/Makefile |    3 ++-
+ drivers/sh/Kconfig  | 15 +++++++++++++++
+ drivers/sh/Makefile |  3 ++-
  2 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/sh/Kconfig b/drivers/sh/Kconfig
@@ -54,5 +54,5 @@ index be5b293..f5d93e8 100644
 +obj-$(CONFIG_GPIO_SH_PFC)	+= pfc-gpio.o
  obj-y				+= pm_runtime.o
 -- 
-1.7.10.4
+1.8.3.2
 

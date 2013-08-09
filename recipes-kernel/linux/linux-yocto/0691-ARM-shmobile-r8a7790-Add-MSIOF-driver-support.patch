@@ -1,7 +1,7 @@
 From 721ba0a0e6f018ded81b683f0623f081733e4356 Mon Sep 17 00:00:00 2001
 From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
 Date: Fri, 28 Jun 2013 09:37:19 +0900
-Subject: [PATCH 691/715] ARM: shmobile: r8a7790: Add MSIOF driver support
+Subject: [PATCH 0691/1083] ARM: shmobile: r8a7790: Add MSIOF driver support
 
 Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
 (cherry picked from commit 4aea14288128eb258aa0f003156ae09f16577611)
@@ -12,9 +12,9 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig    |    3 +
- arch/arm/mach-shmobile/clock-r8a7790.c |    4 +-
- arch/arm/mach-shmobile/setup-r8a7790.c |  113 ++++++++++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig    |   3 +
+ arch/arm/mach-shmobile/clock-r8a7790.c |   4 +-
+ arch/arm/mach-shmobile/setup-r8a7790.c | 113 +++++++++++++++++++++++++++++++++
  3 files changed, 119 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -206,5 +206,5 @@ index 526afef..ca5e85b 100644
  
  void __init r8a7790_timer_init(void)
 -- 
-1.7.10.4
+1.8.3.2
 

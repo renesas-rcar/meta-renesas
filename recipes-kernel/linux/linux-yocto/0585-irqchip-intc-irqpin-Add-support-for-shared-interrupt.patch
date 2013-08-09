@@ -1,7 +1,7 @@
 From 708f9358550c98816bce0546de7efeeb6f0c3b14 Mon Sep 17 00:00:00 2001
 From: Bastian Hecht <hechtb@gmail.com>
 Date: Wed, 27 Mar 2013 14:54:03 +0100
-Subject: [PATCH 585/715] irqchip: intc-irqpin: Add support for shared
+Subject: [PATCH 0585/1083] irqchip: intc-irqpin: Add support for shared
  interrupt lines
 
 On some hardware we don't have a 1-1 mapping from the external
@@ -28,7 +28,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/irqchip/irq-renesas-intc-irqpin.c |   90 ++++++++++++++++++++++++++---
+ drivers/irqchip/irq-renesas-intc-irqpin.c | 90 ++++++++++++++++++++++++++++---
  1 file changed, 83 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/irqchip/irq-renesas-intc-irqpin.c b/drivers/irqchip/irq-renesas-intc-irqpin.c
@@ -180,5 +180,5 @@ index fd5dabc..5a68e5a 100644
  
  	/* warn in case of mismatch if irq base is specified */
 -- 
-1.7.10.4
+1.8.3.2
 

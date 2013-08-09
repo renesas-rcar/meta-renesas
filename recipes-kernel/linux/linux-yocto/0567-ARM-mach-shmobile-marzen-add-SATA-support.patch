@@ -1,7 +1,7 @@
 From 6d30b9a3b56628321d0d4956720b2731fbd8bff5 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Sun, 12 May 2013 01:26:55 +0400
-Subject: [PATCH 567/715] ARM: mach-shmobile: marzen: add SATA support
+Subject: [PATCH 0567/1083] ARM: mach-shmobile: marzen: add SATA support
 
 Add SATA support to marzen_defconfig.
 
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/marzen_defconfig |    4 ++++
+ arch/arm/configs/marzen_defconfig | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
@@ -32,5 +32,5 @@ index 86f583a..3930015 100644
  # CONFIG_NET_VENDOR_BROADCOM is not set
  # CONFIG_NET_VENDOR_FARADAY is not set
 -- 
-1.7.10.4
+1.8.3.2
 

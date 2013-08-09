@@ -1,7 +1,7 @@
 From 7b1af8038348df86f81bab6cd07a9c4778325020 Mon Sep 17 00:00:00 2001
 From: Javi Merino <javi.merino@arm.com>
 Date: Tue, 19 Feb 2013 13:52:22 +0000
-Subject: [PATCH 206/715] irqchip: fix typo when moving gic_raise_softirq()
+Subject: [PATCH 0206/1083] irqchip: fix typo when moving gic_raise_softirq()
 
 In b1cffebf (ARM: GIC: remove direct use of gic_raise_softirq)
 gic_raise_softirq() was moved inside arch/arm/common/gic.c but in the
@@ -18,7 +18,7 @@ Signed-off-by: Olof Johansson <olof@lixom.net>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/irq-gic.c |    2 +-
+ drivers/irqchip/irq-gic.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
@@ -35,5 +35,5 @@ index 644d724..a32e0d5 100644
  	/*
  	 * Ensure that stores to Normal memory are visible to the
 -- 
-1.7.10.4
+1.8.3.2
 

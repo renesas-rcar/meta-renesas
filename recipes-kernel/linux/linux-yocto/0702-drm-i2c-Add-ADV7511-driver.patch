@@ -1,15 +1,15 @@
 From 9b1f79117d15d0e0e2810a8a6bae16efb55b301d Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Thu, 27 Jun 2013 16:58:20 +0900
-Subject: [PATCH 702/715] drm: i2c: Add ADV7511 driver
+Subject: [PATCH 0702/1083] drm: i2c: Add ADV7511 driver
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit b6a9278da3569796ac3d6747953b0ed7bb966586)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/i2c/adv7511.h      |  455 +++++++++++++++++
- drivers/gpu/drm/i2c/adv7511_core.c |  980 ++++++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/i2c/adv7511.h      | 455 +++++++++++++++++
+ drivers/gpu/drm/i2c/adv7511_core.c | 980 +++++++++++++++++++++++++++++++++++++
  2 files changed, 1435 insertions(+)
  create mode 100644 drivers/gpu/drm/i2c/adv7511.h
  create mode 100644 drivers/gpu/drm/i2c/adv7511_core.c
@@ -1462,5 +1462,5 @@ index 0000000..e687d9c
 +MODULE_LICENSE("GPL");
 +
 -- 
-1.7.10.4
+1.8.3.2
 

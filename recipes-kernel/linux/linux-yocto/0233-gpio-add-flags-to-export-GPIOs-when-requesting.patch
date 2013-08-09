@@ -1,7 +1,7 @@
 From 7a2f29957869929701196438fffc1ab4147bf494 Mon Sep 17 00:00:00 2001
 From: Wolfram Sang <w.sang@pengutronix.de>
 Date: Tue, 13 Dec 2011 18:34:01 +0100
-Subject: [PATCH 233/715] gpio: add flags to export GPIOs when requesting
+Subject: [PATCH 0233/1083] gpio: add flags to export GPIOs when requesting
 
 Introduce new flags to automatically export GPIOs when using the convenience
 functions gpio_request_one() or gpio_request_array(). This eases support for
@@ -14,9 +14,9 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/gpio.txt |    3 +++
- drivers/gpio/gpiolib.c |   12 +++++++++++-
- include/linux/gpio.h   |    5 +++++
+ Documentation/gpio.txt |  3 +++
+ drivers/gpio/gpiolib.c | 12 +++++++++++-
+ include/linux/gpio.h   |  5 +++++
  3 files changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/Documentation/gpio.txt b/Documentation/gpio.txt
@@ -74,5 +74,5 @@ index 6155ecf..af511a6 100644
   * struct gpio - a structure describing a GPIO with configuration
   * @gpio:	the GPIO number
 -- 
-1.7.10.4
+1.8.3.2
 

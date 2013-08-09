@@ -1,7 +1,7 @@
 From bc526da94194b4d5b2099cbd46d7baf4fa9ee177 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Mon, 4 Feb 2013 10:42:27 +0900
-Subject: [PATCH 167/715] ARM: kernel: smp_setup_processor_id() updates
+Subject: [PATCH 0167/1083] ARM: kernel: smp_setup_processor_id() updates
 
 This patch applies some basic changes to the smp_setup_processor_id()
 ARM implementation to make the code that builds cpu_logical_map more
@@ -17,7 +17,7 @@ Acked-by: Will Deacon <will.deacon@arm.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/setup.c |    7 ++++---
+ arch/arm/kernel/setup.c | 7 ++++---
  1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
@@ -43,5 +43,5 @@ index e15d83b..f05d9fd 100644
  
  static void __init setup_processor(void)
 -- 
-1.7.10.4
+1.8.3.2
 

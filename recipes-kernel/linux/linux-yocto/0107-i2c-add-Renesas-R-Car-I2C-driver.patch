@@ -1,7 +1,7 @@
 From bba39a8fdda3ec37b16de37686dd7cc1adb9bbc8 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Thu, 27 Sep 2012 23:44:25 -0700
-Subject: [PATCH 107/715] i2c: add Renesas R-Car I2C driver
+Subject: [PATCH 0107/1083] i2c: add Renesas R-Car I2C driver
 
 R-Car I2C is similar with SH7760 I2C.
 But the SH7760 I2C driver had many workaround operations, since H/W had bugs.
@@ -14,10 +14,10 @@ Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/i2c/busses/Kconfig    |   10 +
- drivers/i2c/busses/Makefile   |    1 +
- drivers/i2c/busses/i2c-rcar.c |  709 +++++++++++++++++++++++++++++++++++++++++
- include/linux/i2c/i2c-rcar.h  |   10 +
+ drivers/i2c/busses/Kconfig    |  10 +
+ drivers/i2c/busses/Makefile   |   1 +
+ drivers/i2c/busses/i2c-rcar.c | 709 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/i2c/i2c-rcar.h  |  10 +
  4 files changed, 730 insertions(+)
  create mode 100644 drivers/i2c/busses/i2c-rcar.c
  create mode 100644 include/linux/i2c/i2c-rcar.h
@@ -787,5 +787,5 @@ index 0000000..496f5c2
 +
 +#endif /* __I2C_R_CAR_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

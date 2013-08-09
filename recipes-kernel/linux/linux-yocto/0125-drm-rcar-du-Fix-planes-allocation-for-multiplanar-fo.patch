@@ -1,7 +1,7 @@
 From 90864406694083d5b77505204d8f8a33f0713a7a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 19 Feb 2013 18:14:29 +0100
-Subject: [PATCH 125/715] drm/rcar-du: Fix planes allocation for multiplanar
+Subject: [PATCH 0125/1083] drm/rcar-du: Fix planes allocation for multiplanar
  formats
 
 When more than one hardware plane need to be reserved an extraneous
@@ -13,7 +13,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |    2 --
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 2 --
  1 file changed, 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
@@ -30,5 +30,5 @@ index 220ca00..94bd0e2 100644
  
  	if (i == ARRAY_SIZE(rcdu->planes.planes))
 -- 
-1.7.10.4
+1.8.3.2
 

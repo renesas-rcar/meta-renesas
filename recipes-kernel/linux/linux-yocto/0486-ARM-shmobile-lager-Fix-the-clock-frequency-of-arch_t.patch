@@ -1,7 +1,7 @@
 From 9c19df9787b765fadf9d35004f18526edcaa5a9e Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 12 Jun 2013 15:41:45 +0900
-Subject: [PATCH 486/715] ARM: shmobile: lager: Fix the clock frequency of
+Subject: [PATCH 0486/1083] ARM: shmobile: lager: Fix the clock frequency of
  arch_timer in DTS
 
 The frequency of the arch_timer is changed from 13MHz to 10MHz.
@@ -11,8 +11,8 @@ Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/boot/dts/r8a7790.dtsi      |    1 +
- arch/arm/configs/shmobile_defconfig |    2 ++
+ arch/arm/boot/dts/r8a7790.dtsi      | 1 +
+ arch/arm/configs/shmobile_defconfig | 2 ++
  2 files changed, 3 insertions(+)
 
 diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
@@ -42,5 +42,5 @@ index 8dc551f..13010ef 100644
  CONFIG_ARM_ERRATA_430973=y
  CONFIG_ARM_ERRATA_458693=y
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 4c3a69157820bd26285ae00f58cb54c27615dbf9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 00:11:05 +0200
-Subject: [PATCH 624/715] drm/rcar-du: Move output routing configuration to
+Subject: [PATCH 0624/1083] drm/rcar-du: Move output routing configuration to
  group
 
 Output routing is configured in group registers, move the corresponding
@@ -15,9 +15,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |   21 +--------------------
- drivers/gpu/drm/rcar-du/rcar_du_group.c |   19 +++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_group.h |    2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  | 21 +--------------------
+ drivers/gpu/drm/rcar-du/rcar_du_group.c | 19 +++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_group.h |  2 +-
  3 files changed, 21 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -99,5 +99,5 @@ index 748331b..180c739 100644
  
  #endif /* __RCAR_DU_GROUP_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

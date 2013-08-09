@@ -1,7 +1,7 @@
 From 043e0236ab64f65a71e79c561c32bd5f109703c6 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Feb 2013 12:00:59 +0900
-Subject: [PATCH 178/715] ARM: shmobile: irq_pin() for static IRQ pin
+Subject: [PATCH 0178/1083] ARM: shmobile: irq_pin() for static IRQ pin
  assignment
 
 Add the macro irq_pin() to let board-specific code using
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/irqs.h |    4 ++++
+ arch/arm/mach-shmobile/include/mach/irqs.h | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/irqs.h b/arch/arm/mach-shmobile/include/mach/irqs.h
@@ -30,5 +30,5 @@ index 06a5da3..3b1e8f2 100644
 +
  #endif /* __ASM_MACH_IRQS_H */
 -- 
-1.7.10.4
+1.8.3.2
 

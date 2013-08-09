@@ -1,7 +1,7 @@
 From 4ce335c7097d5c77df6192cac37c6af1d30c5d50 Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Sun, 3 Feb 2013 01:29:25 +0900
-Subject: [PATCH 268/715] gpiolib: use gpio_chips list in gpiolib_sysfs_init
+Subject: [PATCH 0268/1083] gpiolib: use gpio_chips list in gpiolib_sysfs_init
 
 Use the small list of GPIO chips instead of parsing the whole GPIO
 number space.
@@ -13,7 +13,7 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c |    7 ++-----
+ drivers/gpio/gpiolib.c | 7 ++-----
  1 file changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -42,5 +42,5 @@ index 453ac77..c1d8f7b 100644
  			continue;
  
 -- 
-1.7.10.4
+1.8.3.2
 

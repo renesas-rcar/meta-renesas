@@ -1,7 +1,7 @@
 From 8d1994bd88d8570d03723b929efe0fbfcc31f914 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 00:29:25 +0200
-Subject: [PATCH 627/715] drm/rcar-du: Add support for multiple groups
+Subject: [PATCH 0627/1083] drm/rcar-du: Add support for multiple groups
 
 The R8A7790 DU has 3 CRTCs, split in two groups. Support them.
 
@@ -17,14 +17,14 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |   25 ++++++++++--------
- drivers/gpu/drm/rcar-du/rcar_du_drv.c   |    2 ++
- drivers/gpu/drm/rcar-du/rcar_du_drv.h   |    6 +++--
- drivers/gpu/drm/rcar-du/rcar_du_group.c |    4 +--
- drivers/gpu/drm/rcar-du/rcar_du_group.h |    3 +++
- drivers/gpu/drm/rcar-du/rcar_du_kms.c   |   43 ++++++++++++++++++++++---------
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |    6 +++--
- drivers/gpu/drm/rcar-du/rcar_du_regs.h  |    4 ++-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  | 25 ++++++++++---------
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c   |  2 ++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   |  6 +++--
+ drivers/gpu/drm/rcar-du/rcar_du_group.c |  4 +--
+ drivers/gpu/drm/rcar-du/rcar_du_group.h |  3 +++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   | 43 ++++++++++++++++++++++++---------
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c |  6 +++--
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  |  4 ++-
  8 files changed, 63 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -312,5 +312,5 @@ index 7d835c9..0dff14e 100644
  /* -----------------------------------------------------------------------------
   * Display Control Registers
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 6507c72d85c77e97f731702743bc076591a92a62 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Sun, 12 May 2013 01:25:50 +0400
-Subject: [PATCH 566/715] ARM: mach-shmobile: r8a7779: add SATA support
+Subject: [PATCH 0566/1083] ARM: mach-shmobile: r8a7779: add SATA support
 
 Add SATA clock for r8a7779 SoC (for both device tree and usual cases).
 Register SATA controller as a "late" platform device on r8a7779 SoC.
@@ -16,8 +16,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7779.c |    4 ++++
- arch/arm/mach-shmobile/setup-r8a7779.c |   32 +++++++++++++++++++++++++++++---
+ arch/arm/mach-shmobile/clock-r8a7779.c |  4 ++++
+ arch/arm/mach-shmobile/setup-r8a7779.c | 32 +++++++++++++++++++++++++++++---
  2 files changed, 33 insertions(+), 3 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
@@ -111,5 +111,5 @@ index 99948a5..76a4fba 100644
  
  void __init r8a7779_add_standard_devices(void)
 -- 
-1.7.10.4
+1.8.3.2
 

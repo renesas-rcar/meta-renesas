@@ -1,7 +1,7 @@
 From 8f1499df5a703a765ab8bf2b8b83809d12eb3426 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 13:43:20 +0100
-Subject: [PATCH 141/715] drm/rcar-du: Create common encoder and connector
+Subject: [PATCH 0141/1083] drm/rcar-du: Create common encoder and connector
  structures
 
 Create rcar_du_encoder and rcar_du_connector structures to store fields
@@ -13,10 +13,10 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_kms.c  |   26 ++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_kms.h  |   25 +++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_lvds.c |   62 +++++++---------------------
- drivers/gpu/drm/rcar-du/rcar_du_vga.c  |   71 ++++++++------------------------
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c  | 26 +++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h  | 25 ++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c | 62 ++++++++---------------------
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c  | 71 ++++++++--------------------------
  4 files changed, 84 insertions(+), 100 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
@@ -395,5 +395,5 @@ index ac90da8..6b286b2 100644
 +	return rcar_du_vga_connector_init(rcdu, renc);
  }
 -- 
-1.7.10.4
+1.8.3.2
 

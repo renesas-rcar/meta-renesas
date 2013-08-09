@@ -1,7 +1,7 @@
 From 87e8d96f3ec13e2ecd69d94ed6045c239531de01 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 28 Feb 2013 22:19:05 +0100
-Subject: [PATCH 134/715] drm/rcar-du: Split hardware and KMS planes
+Subject: [PATCH 0134/1083] drm/rcar-du: Split hardware and KMS planes
 
 Hardware planes and KMS planes are distinct objects, separate them. This
 prepares the driver for multiple CRTCs support.
@@ -11,10 +11,10 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |   11 ++++-----
- drivers/gpu/drm/rcar-du/rcar_du_kms.c   |    4 ++++
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |   39 +++++++++++++++++++++++++------
- drivers/gpu/drm/rcar-du/rcar_du_plane.h |    9 ++-----
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  | 11 +++++-----
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   |  4 ++++
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 39 +++++++++++++++++++++++++++------
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |  9 ++------
  4 files changed, 43 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -170,5 +170,5 @@ index e8d2a26..2044d60 100644
  void rcar_du_plane_update_base(struct rcar_du_plane *plane);
  void rcar_du_plane_compute_base(struct rcar_du_plane *plane,
 -- 
-1.7.10.4
+1.8.3.2
 

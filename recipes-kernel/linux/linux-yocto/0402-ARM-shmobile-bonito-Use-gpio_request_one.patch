@@ -1,7 +1,7 @@
 From beef5ae9681f6966be57acc0efa3490b3bc7c439 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:32 +0100
-Subject: [PATCH 402/715] ARM: shmobile: bonito: Use gpio_request_one()
+Subject: [PATCH 0402/1083] ARM: shmobile: bonito: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-bonito.c |    7 +++----
+ arch/arm/mach-shmobile/board-bonito.c | 7 +++----
  1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-bonito.c b/arch/arm/mach-shmobile/board-bonito.c
@@ -42,5 +42,5 @@ index e6b1fd3..5f2e56b 100644
  			/* backlight on */
  			bonito_fpga_write(LCDCR, 1);
 -- 
-1.7.10.4
+1.8.3.2
 

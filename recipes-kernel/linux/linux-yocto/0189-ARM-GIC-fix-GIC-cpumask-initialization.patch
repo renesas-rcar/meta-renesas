@@ -1,7 +1,7 @@
 From d9a8c0991e9ec3c632503b7011d0ecd3b7d18498 Mon Sep 17 00:00:00 2001
 From: Russell King <rmk+kernel@arm.linux.org.uk>
 Date: Wed, 30 Jan 2013 23:49:57 +0000
-Subject: [PATCH 189/715] ARM: GIC: fix GIC cpumask initialization
+Subject: [PATCH 0189/1083] ARM: GIC: fix GIC cpumask initialization
 
 Punit Agrawal reports:
 > I was trying to boot 3.8-rc5 on Realview EB 11MPCore using
@@ -31,7 +31,7 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/common/gic.c |   25 +++++++++++++++++++++++--
+ arch/arm/common/gic.c | 25 +++++++++++++++++++++++--
  1 file changed, 23 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
@@ -85,5 +85,5 @@ index 36ae03a..87dfa90 100644
  
  	/*
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 2b582b9d2ad9e16424540e9c838797080509517f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 16:18:24 +0100
-Subject: [PATCH 377/715] sh-pfc: Remove unused sh_pfc_soc_info reserved_id
+Subject: [PATCH 0377/1083] sh-pfc: Remove unused sh_pfc_soc_info reserved_id
  field
 
 The field is unused, remove it.
@@ -12,23 +12,23 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7740.c |    1 -
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7203.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7264.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7269.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7372.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh73a0.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7720.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7722.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7723.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7724.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7734.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7757.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7785.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-sh7786.c  |    1 -
- drivers/pinctrl/sh-pfc/pfc-shx3.c    |    1 -
- drivers/pinctrl/sh-pfc/sh_pfc.h      |    1 -
+ drivers/pinctrl/sh-pfc/pfc-r8a7740.c | 1 -
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7203.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7264.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7269.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7372.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh73a0.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7720.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7722.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7723.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7724.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7734.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7757.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7785.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-sh7786.c  | 1 -
+ drivers/pinctrl/sh-pfc/pfc-shx3.c    | 1 -
+ drivers/pinctrl/sh-pfc/sh_pfc.h      | 1 -
  17 files changed, 17 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7740.c b/drivers/pinctrl/sh-pfc/pfc-r8a7740.c
@@ -236,5 +236,5 @@ index c50fb51..2627a89 100644
  	struct pinmux_range input_pd;
  	struct pinmux_range input_pu;
 -- 
-1.7.10.4
+1.8.3.2
 

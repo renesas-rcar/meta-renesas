@@ -1,7 +1,7 @@
 From c8ec71922a350537bd1e01cd8c1220ac527de228 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Thu, 27 Jun 2013 17:59:20 +0900
-Subject: [PATCH 707/715] drm: adv7511: Add rcar-du support
+Subject: [PATCH 0707/1083] drm: adv7511: Add rcar-du support
 
 Parameter of link_config is not used in the DRM driver
 of R-Car series.
@@ -11,7 +11,7 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/i2c/adv7511_core.c |   15 ++++++++++++---
+ drivers/gpu/drm/i2c/adv7511_core.c | 15 ++++++++++++---
  1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/i2c/adv7511_core.c b/drivers/gpu/drm/i2c/adv7511_core.c
@@ -101,5 +101,5 @@ index 6e26ffc..f0b15ca 100644
  
  err_i2c_unregister_device:
 -- 
-1.7.10.4
+1.8.3.2
 

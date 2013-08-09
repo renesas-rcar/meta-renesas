@@ -1,7 +1,7 @@
 From b489c1c5a16a93480861482dfebf2c53d13ff092 Mon Sep 17 00:00:00 2001
 From: Nicolas Pitre <nicolas.pitre@linaro.org>
 Date: Wed, 11 Apr 2012 18:55:48 -0400
-Subject: [PATCH 188/715] ARM: gic: use a private mapping for CPU target
+Subject: [PATCH 0188/1083] ARM: gic: use a private mapping for CPU target
  interfaces
 
 The GIC interface numbering does not necessarily follow the logical
@@ -20,7 +20,7 @@ actual mapping is.
 Signed-off-by: Nicolas Pitre <nico@linaro.org>
 Acked-by: Will Deacon <will.deacon@arm.com>
 ---
- arch/arm/common/gic.c |   45 ++++++++++++++++++++++++++++++++++++---------
+ arch/arm/common/gic.c | 45 ++++++++++++++++++++++++++++++++++++---------
  1 file changed, 36 insertions(+), 9 deletions(-)
 
 diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
@@ -135,5 +135,5 @@ index aa52699..36ae03a 100644
  	/*
  	 * Ensure that stores to Normal memory are visible to the
 -- 
-1.7.10.4
+1.8.3.2
 

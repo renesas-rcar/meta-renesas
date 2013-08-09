@@ -1,7 +1,7 @@
 From 46d6299af427f6c95b6d4689ea3121ee02013b6a Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:38 -0400
-Subject: [PATCH 017/715] drm/edid: Give the est3 mode struct a real name
+Subject: [PATCH 0017/1083] drm/edid: Give the est3 mode struct a real name
 
 We want the same type for extra modes inferred from ranges.
 
@@ -13,7 +13,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_modes.h |    6 ++++--
+ drivers/gpu/drm/drm_edid_modes.h | 6 ++++--
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
@@ -38,5 +38,5 @@ index 8bf8235..c212133 100644
  	{ 640, 350, 85, 0 },
  	{ 640, 400, 85, 0 },
 -- 
-1.7.10.4
+1.8.3.2
 

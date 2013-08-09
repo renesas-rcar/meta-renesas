@@ -1,0 +1,104 @@
+From 366e3ff86bda819def21bfa7729131014d30b788 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 30 Jul 2013 15:47:16 +0900
+Subject: [PATCH 0793/1083] ARM: shmobile: lager: Add restart function
+
+Lager restart function uses DA9063.
+DA9063 is Power Management IC that connected with I2C.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ arch/arm/configs/lager_defconfig     |  1 +
+ arch/arm/mach-shmobile/board-lager.c | 41 +++++++++++++++++++++++++++++++++---
+ 2 files changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/configs/lager_defconfig b/arch/arm/configs/lager_defconfig
+index 36b5df4..44a6eeb 100644
+--- a/arch/arm/configs/lager_defconfig
++++ b/arch/arm/configs/lager_defconfig
+@@ -140,6 +140,7 @@ CONFIG_I2C_RCAR=y
+ CONFIG_GPIO_EM=y
+ CONFIG_GPIO_RCAR=y
+ CONFIG_GPIO_SYSFS=y
++CONFIG_MFD_DA9063=y
+ CONFIG_DRM=y
+ CONFIG_DRM_RCAR_DU=y
+ CONFIG_DRM_RCAR_LVDS=y
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index 3cc4882..21f3cfb 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -40,10 +40,14 @@
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ 
+-static struct i2c_board_info lager_i2c_devices[] = {
++static struct i2c_board_info lager_i2c2_devices[] = {
+ 	{ I2C_BOARD_INFO("ak4642", 0x12), },
+ };
+ 
++static struct i2c_board_info lager_i2c3_devices[] = {
++	{ I2C_BOARD_INFO("da9063", 0x58), },
++};
++
+ /* DU */
+ static struct rcar_du_encoder_data lager_du_encoders[] = {
+ #if defined(CONFIG_DRM_ADV7511)
+@@ -251,6 +255,36 @@ static const struct pinctrl_map lager_pinctrl_map[] = {
+ 				  "vin1_clk", "vin1"),
+ };
+ 
++static void lager_restart(char mode, const char *cmd)
++{
++	struct i2c_adapter *adap;
++	struct i2c_client *client;
++	u8 val;
++	int busnum = 3;
++
++	adap = i2c_get_adapter(busnum);
++	if (!adap) {
++		pr_err("failed to get adapter i2c%d\n", busnum);
++		return;
++	}
++
++	client = i2c_new_device(adap, &lager_i2c3_devices[0]);
++	if (!client)
++		pr_err("failed to register %s to i2c%d\n",
++		       lager_i2c3_devices[0].type, busnum);
++
++	i2c_put_adapter(adap);
++
++	val = i2c_smbus_read_byte_data(client, 0x13);
++
++	if (val < 0)
++		pr_err("couldn't access da9063\n");
++
++	val |= 0x02;
++
++	i2c_smbus_write_byte_data(client, 0x13, val);
++}
++
+ static void __init lager_add_standard_devices(void)
+ {
+ 	r8a7790_clock_init();
+@@ -261,8 +295,8 @@ static void __init lager_add_standard_devices(void)
+ 
+ 	r8a7790_add_standard_devices();
+ 
+-	i2c_register_board_info(2, lager_i2c_devices,
+-				ARRAY_SIZE(lager_i2c_devices));
++	i2c_register_board_info(2, lager_i2c2_devices,
++				ARRAY_SIZE(lager_i2c2_devices));
+ 
+ 	r8a7790_add_du_device(&lager_du_pdata);
+ 
+@@ -290,5 +324,6 @@ DT_MACHINE_START(LAGER_DT, "lager")
+ 	.init_irq	= r8a7790_init_irq,
+ 	.timer		= &r8a7790_timer,
+ 	.init_machine	= lager_add_standard_devices,
++	.restart	= lager_restart,
+ 	.dt_compat	= lager_boards_compat_dt,
+ MACHINE_END
+-- 
+1.8.3.2
+

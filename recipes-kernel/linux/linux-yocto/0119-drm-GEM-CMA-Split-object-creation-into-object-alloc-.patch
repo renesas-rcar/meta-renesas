@@ -1,7 +1,7 @@
 From 14e3508aa6ac1be8b99f1a1a11aee6421a46c4a9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 01:54:26 +0100
-Subject: [PATCH 119/715] drm: GEM CMA: Split object creation into object
+Subject: [PATCH 0119/1083] drm: GEM CMA: Split object creation into object
  alloc and DMA memory alloc
 
 This allows creating a GEM CMA object without an associated DMA memory
@@ -12,7 +12,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_gem_cma_helper.c |   83 ++++++++++++++++++++--------------
+ drivers/gpu/drm/drm_gem_cma_helper.c | 83 +++++++++++++++++++++---------------
  1 file changed, 48 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_gem_cma_helper.c b/drivers/gpu/drm/drm_gem_cma_helper.c
@@ -143,5 +143,5 @@ index 1aa8fee..b1d9b2f 100644
  	kfree(cma_obj);
  }
 -- 
-1.7.10.4
+1.8.3.2
 

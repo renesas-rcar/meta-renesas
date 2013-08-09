@@ -1,7 +1,7 @@
 From b0b2cd5f07732d184f31216089f22acaf4d3a723 Mon Sep 17 00:00:00 2001
 From: Arnd Bergmann <arnd@arndb.de>
 Date: Thu, 14 Feb 2013 17:45:25 +0100
-Subject: [PATCH 582/715] ARM: arch_timer: include linux/errno.h
+Subject: [PATCH 0582/1083] ARM: arch_timer: include linux/errno.h
 
 Patch 8a4da6e "arm: arch_timer: move core to drivers/clocksource"
 moved a lot of code out of arch_timer.c, but ended up deleting
@@ -27,7 +27,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/kernel/arch_timer.c |    1 +
+ arch/arm/kernel/arch_timer.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
@@ -43,5 +43,5 @@ index 36ebcf4..d957a51 100644
  #include <asm/delay.h>
  #include <asm/sched_clock.h>
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From ae8a763a0ef58b58a36fe3b0dc1fa4c3ba205375 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 12:05:25 +0900
-Subject: [PATCH 510/715] mmc: tmio: Add CTL_CLK_AND_WAIT_CTL register access
+Subject: [PATCH 0510/1083] mmc: tmio: Add CTL_CLK_AND_WAIT_CTL register access
  pass option
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
@@ -9,8 +9,8 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/tmio_mmc_pio.c |    8 ++++++--
- include/linux/mfd/tmio.h        |    3 +++
+ drivers/mmc/host/tmio_mmc_pio.c | 8 ++++++--
+ include/linux/mfd/tmio.h        | 3 +++
  2 files changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
@@ -62,5 +62,5 @@ index c19c5fc..79d8a56 100644
  int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
  void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
 -- 
-1.7.10.4
+1.8.3.2
 

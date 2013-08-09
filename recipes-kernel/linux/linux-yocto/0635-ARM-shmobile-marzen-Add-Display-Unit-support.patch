@@ -1,7 +1,7 @@
 From 19f066fbc59cb4acf4a6b138f804d830e6746fcf Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 31 Jan 2013 01:23:35 +0100
-Subject: [PATCH 635/715] ARM: shmobile: marzen: Add Display Unit support
+Subject: [PATCH 0635/1083] ARM: shmobile: marzen: Add Display Unit support
 
 Support the DU0 VGA and DU1 LVDS outputs. DU1 is connected to a
 Mitsubishi AA104XD12 panel (10.4" XGA).
@@ -18,8 +18,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/marzen_defconfig     |    2 ++
- arch/arm/mach-shmobile/board-marzen.c |   51 +++++++++++++++++++++++++++++++++
+ arch/arm/configs/marzen_defconfig     |  2 ++
+ arch/arm/mach-shmobile/board-marzen.c | 51 +++++++++++++++++++++++++++++++++++
  2 files changed, 53 insertions(+)
 
 diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
@@ -119,5 +119,5 @@ index be692cd..b89e0ea 100644
  
  MACHINE_START(MARZEN, "marzen")
 -- 
-1.7.10.4
+1.8.3.2
 

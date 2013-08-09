@@ -1,7 +1,7 @@
 From fd48f97f4ca6ce5845f1b3fc0f37baff573febd6 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:26 +0100
-Subject: [PATCH 354/715] ARM: shmobile: r8a7779: Use driver-provided pinmux
+Subject: [PATCH 0354/1083] ARM: shmobile: r8a7779: Use driver-provided pinmux
  info
 
 Pinmux info for the r8a7779 is now provided by pinmux drivers. Remove
@@ -2728,5 +2728,5 @@ index e98e46f..4255ba2 100644
  	.mapbase	= 0xffe40000,
  	.flags		= UPF_BOOT_AUTOCONF | UPF_IOREMAP,
 -- 
-1.7.10.4
+1.8.3.2
 

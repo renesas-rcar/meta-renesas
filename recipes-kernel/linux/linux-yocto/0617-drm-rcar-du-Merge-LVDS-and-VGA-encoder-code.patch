@@ -1,7 +1,7 @@
 From 09e6912087215359aec51a3ed4e5b6f05a8f69fc Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Jun 2013 15:02:12 +0200
-Subject: [PATCH 617/715] drm/rcar-du: Merge LVDS and VGA encoder code
+Subject: [PATCH 0617/1083] drm/rcar-du: Merge LVDS and VGA encoder code
 
 Create a single rcar_du_encoder structure that implements a KMS encoder.
 The current implementation is straightforward and only configures CRTC
@@ -15,18 +15,18 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/Makefile          |    3 +-
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |    2 -
- drivers/gpu/drm/rcar-du/rcar_du_encoder.c |  148 +++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_encoder.h |   45 +++++++++
- drivers/gpu/drm/rcar-du/rcar_du_kms.c     |   49 ++--------
- drivers/gpu/drm/rcar-du/rcar_du_kms.h     |   29 +-----
- drivers/gpu/drm/rcar-du/rcar_du_lvds.c    |  100 -------------------
- drivers/gpu/drm/rcar-du/rcar_du_lvds.h    |   24 -----
- drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_vga.c     |   67 -------------
- drivers/gpu/drm/rcar-du/rcar_du_vga.h     |   24 -----
- drivers/gpu/drm/rcar-du/rcar_du_vgacon.c  |    1 +
+ drivers/gpu/drm/rcar-du/Makefile          |   3 +-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |   2 -
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c | 148 ++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h |  45 +++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     |  49 ++--------
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h     |  29 +-----
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c    | 100 --------------------
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.h    |  24 -----
+ drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c     |  67 --------------
+ drivers/gpu/drm/rcar-du/rcar_du_vga.h     |  24 -----
+ drivers/gpu/drm/rcar-du/rcar_du_vgacon.c  |   1 +
  12 files changed, 205 insertions(+), 288 deletions(-)
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_encoder.c
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_encoder.h
@@ -667,5 +667,5 @@ index b799b68..72312f7 100644
  #include "rcar_du_vgacon.h"
  
 -- 
-1.7.10.4
+1.8.3.2
 

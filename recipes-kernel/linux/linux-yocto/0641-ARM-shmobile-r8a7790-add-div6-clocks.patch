@@ -1,7 +1,7 @@
 From fe74050ac69c00227754ec07637a27259ad225d4 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 12 Apr 2013 00:43:09 -0700
-Subject: [PATCH 641/715] ARM: shmobile: r8a7790: add div6 clocks
+Subject: [PATCH 0641/1083] ARM: shmobile: r8a7790: add div6 clocks
 
 DIV6 clocks control SD*/MMC* core clocks.
 
@@ -17,7 +17,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c |   81 ++++++++++++++------------------
+ arch/arm/mach-shmobile/clock-r8a7790.c | 81 ++++++++++++++--------------------
  1 file changed, 34 insertions(+), 47 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -161,5 +161,5 @@ index ecc8f12..4e940fb 100644
  	if (!ret)
  		ret = sh_clk_mstp_register(mstp_clks, MSTP_NR);
 -- 
-1.7.10.4
+1.8.3.2
 

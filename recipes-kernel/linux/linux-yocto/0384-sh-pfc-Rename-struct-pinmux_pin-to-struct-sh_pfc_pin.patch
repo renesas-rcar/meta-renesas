@@ -1,7 +1,7 @@
 From 43ed907db0653a4d30fd9a8eb78bf2eae1e47807 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 2 Jan 2013 14:53:37 +0100
-Subject: [PATCH 384/715] sh-pfc: Rename struct pinmux_pin to struct
+Subject: [PATCH 0384/1083] sh-pfc: Rename struct pinmux_pin to struct
  sh_pfc_pin
 
 And drop the pinmux_flag_t typedef.
@@ -12,25 +12,25 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c        |    4 ++--
- drivers/pinctrl/sh-pfc/pfc-r8a7740.c |    2 +-
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7203.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7264.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7269.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7372.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh73a0.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7720.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7722.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7723.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7724.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7734.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7757.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7785.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh7786.c  |    2 +-
- drivers/pinctrl/sh-pfc/pfc-shx3.c    |    2 +-
- drivers/pinctrl/sh-pfc/pinctrl.c     |    2 +-
- drivers/pinctrl/sh-pfc/sh_pfc.h      |    7 +++----
+ drivers/pinctrl/sh-pfc/core.c        | 4 ++--
+ drivers/pinctrl/sh-pfc/pfc-r8a7740.c | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7203.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7264.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7269.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7372.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh73a0.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7720.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7722.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7723.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7724.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7734.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7757.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7785.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7786.c  | 2 +-
+ drivers/pinctrl/sh-pfc/pfc-shx3.c    | 2 +-
+ drivers/pinctrl/sh-pfc/pinctrl.c     | 2 +-
+ drivers/pinctrl/sh-pfc/sh_pfc.h      | 7 +++----
  19 files changed, 22 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -310,5 +310,5 @@ index 940170a..dae9e15 100644
  	struct pinmux_func *func_gpios;
  	unsigned int nr_func_gpios;
 -- 
-1.7.10.4
+1.8.3.2
 

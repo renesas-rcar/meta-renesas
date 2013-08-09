@@ -1,7 +1,7 @@
 From e0027dc6f72a14211a89ce40ec439265680a41fe Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 22 Jan 2013 10:56:14 -0700
-Subject: [PATCH 232/715] drivers/pinctrl: grab default handles from device
+Subject: [PATCH 0232/1083] drivers/pinctrl: grab default handles from device
  core
 
 This makes the device core auto-grab the pinctrl handle and set
@@ -97,14 +97,14 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/pinctrl.txt       |   18 ++++++++--
- drivers/base/Makefile           |    1 +
- drivers/base/dd.c               |    7 ++++
- drivers/base/pinctrl.c          |   69 +++++++++++++++++++++++++++++++++++++++
- drivers/pinctrl/core.c          |   30 ++++++++++++++---
- drivers/pinctrl/core.h          |    3 ++
- include/linux/device.h          |    7 ++++
- include/linux/pinctrl/devinfo.h |   45 +++++++++++++++++++++++++
+ Documentation/pinctrl.txt       | 18 +++++++++--
+ drivers/base/Makefile           |  1 +
+ drivers/base/dd.c               |  7 +++++
+ drivers/base/pinctrl.c          | 69 +++++++++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/core.c          | 30 +++++++++++++++---
+ drivers/pinctrl/core.h          |  3 ++
+ include/linux/device.h          |  7 +++++
+ include/linux/pinctrl/devinfo.h | 45 +++++++++++++++++++++++++++
  8 files changed, 173 insertions(+), 7 deletions(-)
  create mode 100644 drivers/base/pinctrl.c
  create mode 100644 include/linux/pinctrl/devinfo.h
@@ -437,5 +437,5 @@ index 0000000..6e5f8a9
 +#endif /* CONFIG_PINCTRL */
 +#endif /* PINCTRL_DEVINFO_H */
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 2ba29ad85a6eb145d8c596bb9218fab862edf066 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:15 +0100
-Subject: [PATCH 096/715] drm/doc: Helpers are not a Midlayer!
+Subject: [PATCH 0096/1083] drm/doc: Helpers are not a Midlayer!
 
 I'm devoting all my wrath to that fight, so don't misname it ;-)
 
@@ -14,7 +14,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/DocBook/drm.tmpl |    4 ++--
+ Documentation/DocBook/drm.tmpl | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Documentation/DocBook/drm.tmpl b/Documentation/DocBook/drm.tmpl
@@ -35,5 +35,5 @@ index c9cbb3f..9a4c06d 100644
        The CRTC, encoder and connector functions provided by the drivers
        implement the DRM API. They're called by the DRM core and ioctl handlers
 -- 
-1.7.10.4
+1.8.3.2
 

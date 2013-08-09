@@ -1,7 +1,8 @@
 From 5c5142f911b58f0f38154686dadf736b92b1e5a3 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Fri, 16 Nov 2012 15:24:06 +0000
-Subject: [PATCH 159/715] ARM: kernel: update topology to use new MPIDR macros
+Subject: [PATCH 0159/1083] ARM: kernel: update topology to use new MPIDR
+ macros
 
 This patch updates the topology initialization code to use the newly
 defined accessors to retrieve the MPIDR affinity levels.
@@ -13,7 +14,7 @@ Acked-by: Nicolas Pitre <nico@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/topology.c |   15 +++++----------
+ arch/arm/kernel/topology.c | 15 +++++----------
  1 file changed, 5 insertions(+), 10 deletions(-)
 
 diff --git a/arch/arm/kernel/topology.c b/arch/arm/kernel/topology.c
@@ -46,5 +47,5 @@ index 198b084..ec0aae0 100644
  	} else {
  		/*
 -- 
-1.7.10.4
+1.8.3.2
 

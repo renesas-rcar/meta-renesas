@@ -1,7 +1,7 @@
 From 2924f3aec721dd916dcec08fe82a952bb7f81f91 Mon Sep 17 00:00:00 2001
 From: Shawn Guo <shawn.guo@linaro.org>
 Date: Thu, 17 Jan 2013 22:03:22 +0800
-Subject: [PATCH 263/715] gpio: fix warning of 'struct gpio_chip' declaration
+Subject: [PATCH 0263/1083] gpio: fix warning of 'struct gpio_chip' declaration
 
 The struct gpio_chip is only defined inside #ifdef CONFIG_GPIOLIB,
 but it's referenced by gpiochip_add_pin_range() and
@@ -26,7 +26,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/asm-generic/gpio.h |   74 ++++++++++++++++++++++----------------------
+ include/asm-generic/gpio.h | 74 +++++++++++++++++++++++-----------------------
  1 file changed, 37 insertions(+), 37 deletions(-)
 
 diff --git a/include/asm-generic/gpio.h b/include/asm-generic/gpio.h
@@ -120,5 +120,5 @@ index 20ca766..2341014 100644
 -
  #endif /* _ASM_GENERIC_GPIO_H */
 -- 
-1.7.10.4
+1.8.3.2
 

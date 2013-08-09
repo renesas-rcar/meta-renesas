@@ -1,7 +1,7 @@
 From 6944e3eafa4e69c84ca8d071a5ab5a4182399e0f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Jun 2013 14:21:51 +0200
-Subject: [PATCH 616/715] drm/rcar-du: Split VGA encoder and connector
+Subject: [PATCH 0616/1083] drm/rcar-du: Split VGA encoder and connector
 
 This prepares for the encoders rework.
 
@@ -18,11 +18,11 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/Makefile         |    3 +-
- drivers/gpu/drm/rcar-du/rcar_du_vga.c    |   86 +--------------------------
- drivers/gpu/drm/rcar-du/rcar_du_vga.h    |    2 +-
- drivers/gpu/drm/rcar-du/rcar_du_vgacon.c |   95 ++++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_vgacon.h |   23 ++++++++
+ drivers/gpu/drm/rcar-du/Makefile         |  3 +-
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c    | 86 +----------------------------
+ drivers/gpu/drm/rcar-du/rcar_du_vga.h    |  2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_vgacon.c | 95 ++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vgacon.h | 23 ++++++++
  5 files changed, 123 insertions(+), 86 deletions(-)
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_vgacon.c
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_vgacon.h
@@ -284,5 +284,5 @@ index 0000000..b12b0cf
 +
 +#endif /* __RCAR_DU_VGACON_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

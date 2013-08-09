@@ -1,7 +1,7 @@
 From 007f0ace06ee2e3fd513380207bf3e5bdf438fb5 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 14 Jun 2013 14:12:25 +0200
-Subject: [PATCH 611/715] drm/rcar-du: Don't ignore rcar_du_crtc_create()
+Subject: [PATCH 0611/1083] drm/rcar-du: Don't ignore rcar_du_crtc_create()
  return value
 
 Handle error cases correctly.
@@ -14,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_kms.c |    7 +++++--
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c | 7 +++++--
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
@@ -36,5 +36,5 @@ index 9481dfe..b86e831 100644
  	rcdu->used_crtcs = 0;
  	rcdu->num_crtcs = i;
 -- 
-1.7.10.4
+1.8.3.2
 

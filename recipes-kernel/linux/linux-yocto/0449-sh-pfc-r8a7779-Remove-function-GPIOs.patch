@@ -1,7 +1,7 @@
 From cd31d15b3862bfe3ab54967c659829b78491e96e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 14:33:32 +0100
-Subject: [PATCH 449/715] sh-pfc: r8a7779: Remove function GPIOs
+Subject: [PATCH 0449/1083] sh-pfc: r8a7779: Remove function GPIOs
 
 All r8a7779 platforms use the pinctrl API to control functions. Function
 GPIOs are unused and unneeded, remove them.
@@ -12,7 +12,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  271 ----------------------------------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 271 -----------------------------------
  1 file changed, 271 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -305,5 +305,5 @@ index 1d7b0df..4db9944 100644
  	.data_regs = pinmux_data_regs,
  
 -- 
-1.7.10.4
+1.8.3.2
 

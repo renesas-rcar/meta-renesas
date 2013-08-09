@@ -1,7 +1,7 @@
 From c7767f31733349bd1807816159ddc895d62b15cf Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 10 May 2013 16:48:36 +0200
-Subject: [PATCH 536/715] gpio-rcar: Make the platform data gpio_base field
+Subject: [PATCH 0536/1083] gpio-rcar: Make the platform data gpio_base field
  signed
 
 The gpio_base field is used to specify the desired GPIO base for the
@@ -19,7 +19,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- include/linux/platform_data/gpio-rcar.h |    2 +-
+ include/linux/platform_data/gpio-rcar.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/include/linux/platform_data/gpio-rcar.h b/include/linux/platform_data/gpio-rcar.h
@@ -36,5 +36,5 @@ index cc472f6..fb2c718 100644
  	unsigned int number_of_pins;
  	const char *pctl_name;
 -- 
-1.7.10.4
+1.8.3.2
 

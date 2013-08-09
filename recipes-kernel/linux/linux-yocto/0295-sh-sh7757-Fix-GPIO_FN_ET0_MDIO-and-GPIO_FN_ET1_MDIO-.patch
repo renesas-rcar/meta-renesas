@@ -1,7 +1,7 @@
 From 99033257a0ed190a0b01ca09efef23d84e65e95c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:38 +0100
-Subject: [PATCH 295/715] sh: sh7757: Fix GPIO_FN_ET0_MDIO and
+Subject: [PATCH 0295/1083] sh: sh7757: Fix GPIO_FN_ET0_MDIO and
  GPIO_FN_ET1_MDIO GPIO entries
 
 The GPIO_FN_ET0_MDIO and GPIO_FN_ET1_MDIO GPIO entries incorrectly
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/kernel/cpu/sh4a/pinmux-sh7757.c |    4 ++--
+ arch/sh/kernel/cpu/sh4a/pinmux-sh7757.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/arch/sh/kernel/cpu/sh4a/pinmux-sh7757.c b/arch/sh/kernel/cpu/sh4a/pinmux-sh7757.c
@@ -35,5 +35,5 @@ index 4c74bd0..4a2736d 100644
  	/* PTB (mobule: INTC, ONFI, TMU) */
  	PINMUX_GPIO(GPIO_FN_IRQ15, IRQ15_MARK),
 -- 
-1.7.10.4
+1.8.3.2
 

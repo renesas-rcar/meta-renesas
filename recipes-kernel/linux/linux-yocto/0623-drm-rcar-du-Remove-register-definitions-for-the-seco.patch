@@ -1,7 +1,7 @@
 From 2ff62eb26ee837860614015810ec8a7831ea72c6 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 16 Jun 2013 23:48:10 +0200
-Subject: [PATCH 623/715] drm/rcar-du: Remove register definitions for the
+Subject: [PATCH 0623/1083] drm/rcar-du: Remove register definitions for the
  second channel
 
 Channels are accessed through a global channel memory offset, there's no
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_regs.h |    9 ---------
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h | 9 ---------
  1 file changed, 9 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
@@ -92,5 +92,5 @@ index 0b4a6e6..6a583cc 100644
  #define DEFR4_LRUO		(1 << 5)
  #define DEFR4_SPCE		(1 << 4)
 -- 
-1.7.10.4
+1.8.3.2
 

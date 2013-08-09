@@ -1,7 +1,7 @@
 From 77550c42ffffb116710c4ff5dec68acc2532e512 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Thu, 27 Dec 2012 13:10:24 -0600
-Subject: [PATCH 205/715] irqchip: Move ARM gic.h to
+Subject: [PATCH 0205/1083] irqchip: Move ARM gic.h to
  include/linux/irqchip/arm-gic.h
 
 Now that we have GIC moved to drivers/irqchip and all GIC DT init for
@@ -58,53 +58,53 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/hardware/gic.h          |   48 --------------------------
- arch/arm/mach-cns3xxx/core.c                 |    2 +-
- arch/arm/mach-exynos/common.c                |    2 +-
- arch/arm/mach-exynos/include/mach/regs-irq.h |    2 +-
- arch/arm/mach-exynos/platsmp.c               |    2 +-
- arch/arm/mach-highbank/platsmp.c             |    2 +-
- arch/arm/mach-imx/gpc.c                      |    2 +-
- arch/arm/mach-imx/platsmp.c                  |    2 +-
- arch/arm/mach-msm/board-msm8960.c            |    2 +-
- arch/arm/mach-msm/board-msm8x60.c            |    2 +-
- arch/arm/mach-msm/platsmp.c                  |    2 +-
- arch/arm/mach-omap2/board-4430sdp.c          |    2 +-
- arch/arm/mach-omap2/board-omap4panda.c       |    2 +-
- arch/arm/mach-omap2/omap-smp.c               |    2 +-
- arch/arm/mach-omap2/omap-wakeupgen.c         |    3 +-
- arch/arm/mach-omap2/omap4-common.c           |    2 +-
- arch/arm/mach-realview/realview_eb.c         |    2 +-
- arch/arm/mach-realview/realview_pb1176.c     |    2 +-
- arch/arm/mach-realview/realview_pb11mp.c     |    2 +-
- arch/arm/mach-realview/realview_pba8.c       |    2 +-
- arch/arm/mach-realview/realview_pbx.c        |    2 +-
- arch/arm/mach-shmobile/board-ag5evm.c        |    2 +-
- arch/arm/mach-shmobile/board-kota2.c         |    2 +-
- arch/arm/mach-shmobile/board-kzm9g.c         |    2 +-
- arch/arm/mach-shmobile/intc-r8a7779.c        |    2 +-
- arch/arm/mach-shmobile/intc-sh73a0.c         |    2 +-
- arch/arm/mach-shmobile/setup-emev2.c         |    2 +-
- arch/arm/mach-shmobile/smp-emev2.c           |    2 +-
- arch/arm/mach-shmobile/smp-r8a7779.c         |    2 +-
- arch/arm/mach-shmobile/smp-sh73a0.c          |    2 +-
- arch/arm/mach-tegra/board-dt-tegra20.c       |    2 +-
- arch/arm/mach-tegra/board-harmony.c          |    2 +-
- arch/arm/mach-tegra/board-paz00.c            |    2 +-
- arch/arm/mach-tegra/board-seaboard.c         |    2 +-
- arch/arm/mach-tegra/board-trimslice.c        |    2 +-
- arch/arm/mach-tegra/irq.c                    |    3 +-
- arch/arm/mach-tegra/platsmp.c                |    2 +-
- arch/arm/mach-ux500/board-u5500.c            |    2 +-
- arch/arm/mach-ux500/cpu.c                    |    2 +-
- arch/arm/mach-ux500/platsmp.c                |    2 +-
- arch/arm/mach-vexpress/ct-ca9x4.c            |    2 +-
- arch/arm/mach-vexpress/v2m.c                 |    2 +-
- arch/arm/mach-zynq/common.c                  |    2 +-
- arch/arm/plat-versatile/platsmp.c            |    2 +-
- drivers/irqchip/irq-gic.c                    |    2 +-
- drivers/mfd/db8500-prcmu.c                   |    2 +-
- include/linux/irqchip/arm-gic.h              |   48 ++++++++++++++++++++++++++
+ arch/arm/include/asm/hardware/gic.h          | 48 ----------------------------
+ arch/arm/mach-cns3xxx/core.c                 |  2 +-
+ arch/arm/mach-exynos/common.c                |  2 +-
+ arch/arm/mach-exynos/include/mach/regs-irq.h |  2 +-
+ arch/arm/mach-exynos/platsmp.c               |  2 +-
+ arch/arm/mach-highbank/platsmp.c             |  2 +-
+ arch/arm/mach-imx/gpc.c                      |  2 +-
+ arch/arm/mach-imx/platsmp.c                  |  2 +-
+ arch/arm/mach-msm/board-msm8960.c            |  2 +-
+ arch/arm/mach-msm/board-msm8x60.c            |  2 +-
+ arch/arm/mach-msm/platsmp.c                  |  2 +-
+ arch/arm/mach-omap2/board-4430sdp.c          |  2 +-
+ arch/arm/mach-omap2/board-omap4panda.c       |  2 +-
+ arch/arm/mach-omap2/omap-smp.c               |  2 +-
+ arch/arm/mach-omap2/omap-wakeupgen.c         |  3 +-
+ arch/arm/mach-omap2/omap4-common.c           |  2 +-
+ arch/arm/mach-realview/realview_eb.c         |  2 +-
+ arch/arm/mach-realview/realview_pb1176.c     |  2 +-
+ arch/arm/mach-realview/realview_pb11mp.c     |  2 +-
+ arch/arm/mach-realview/realview_pba8.c       |  2 +-
+ arch/arm/mach-realview/realview_pbx.c        |  2 +-
+ arch/arm/mach-shmobile/board-ag5evm.c        |  2 +-
+ arch/arm/mach-shmobile/board-kota2.c         |  2 +-
+ arch/arm/mach-shmobile/board-kzm9g.c         |  2 +-
+ arch/arm/mach-shmobile/intc-r8a7779.c        |  2 +-
+ arch/arm/mach-shmobile/intc-sh73a0.c         |  2 +-
+ arch/arm/mach-shmobile/setup-emev2.c         |  2 +-
+ arch/arm/mach-shmobile/smp-emev2.c           |  2 +-
+ arch/arm/mach-shmobile/smp-r8a7779.c         |  2 +-
+ arch/arm/mach-shmobile/smp-sh73a0.c          |  2 +-
+ arch/arm/mach-tegra/board-dt-tegra20.c       |  2 +-
+ arch/arm/mach-tegra/board-harmony.c          |  2 +-
+ arch/arm/mach-tegra/board-paz00.c            |  2 +-
+ arch/arm/mach-tegra/board-seaboard.c         |  2 +-
+ arch/arm/mach-tegra/board-trimslice.c        |  2 +-
+ arch/arm/mach-tegra/irq.c                    |  3 +-
+ arch/arm/mach-tegra/platsmp.c                |  2 +-
+ arch/arm/mach-ux500/board-u5500.c            |  2 +-
+ arch/arm/mach-ux500/cpu.c                    |  2 +-
+ arch/arm/mach-ux500/platsmp.c                |  2 +-
+ arch/arm/mach-vexpress/ct-ca9x4.c            |  2 +-
+ arch/arm/mach-vexpress/v2m.c                 |  2 +-
+ arch/arm/mach-zynq/common.c                  |  2 +-
+ arch/arm/plat-versatile/platsmp.c            |  2 +-
+ drivers/irqchip/irq-gic.c                    |  2 +-
+ drivers/mfd/db8500-prcmu.c                   |  2 +-
+ include/linux/irqchip/arm-gic.h              | 48 ++++++++++++++++++++++++++++
  47 files changed, 93 insertions(+), 95 deletions(-)
  delete mode 100644 arch/arm/include/asm/hardware/gic.h
  create mode 100644 include/linux/irqchip/arm-gic.h
@@ -986,5 +986,5 @@ index 0000000..a67ca55
 +
 +#endif
 -- 
-1.7.10.4
+1.8.3.2
 

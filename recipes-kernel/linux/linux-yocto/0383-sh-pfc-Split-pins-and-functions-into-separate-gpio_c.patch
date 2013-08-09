@@ -1,7 +1,7 @@
 From 39b6c810320c57231779e7da291427ae049fa7fc Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 6 Dec 2012 14:49:25 +0100
-Subject: [PATCH 383/715] sh-pfc: Split pins and functions into separate
+Subject: [PATCH 0383/1083] sh-pfc: Split pins and functions into separate
  gpio_chip instances
 
 Register two GPIO chips, one for the real GPIOs and one for the function
@@ -13,9 +13,9 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c |    2 +-
- drivers/pinctrl/sh-pfc/core.h |    3 +-
- drivers/pinctrl/sh-pfc/gpio.c |  227 +++++++++++++++++++++++------------------
+ drivers/pinctrl/sh-pfc/core.c |   2 +-
+ drivers/pinctrl/sh-pfc/core.h |   3 +-
+ drivers/pinctrl/sh-pfc/gpio.c | 227 ++++++++++++++++++++++++------------------
  3 files changed, 132 insertions(+), 100 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -360,5 +360,5 @@ index 2a99bef..82fcb5f 100644
 +	return ret < 0 ? ret : err;
  }
 -- 
-1.7.10.4
+1.8.3.2
 

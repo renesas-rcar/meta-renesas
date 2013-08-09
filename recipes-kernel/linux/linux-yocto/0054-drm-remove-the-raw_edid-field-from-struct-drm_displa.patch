@@ -1,7 +1,7 @@
 From f9921dbf3f1a66d9084f6eac2dfedb487d8bb3f8 Mon Sep 17 00:00:00 2001
 From: Jani Nikula <jani.nikula@intel.com>
 Date: Wed, 15 Aug 2012 09:32:39 +0000
-Subject: [PATCH 054/715] drm: remove the raw_edid field from struct
+Subject: [PATCH 0054/1083] drm: remove the raw_edid field from struct
  drm_display_info
 
 Neither the drm core nor any of the drivers really need the raw_edid field
@@ -23,20 +23,20 @@ Conflicts:
 	drivers/gpu/drm/i915/intel_modes.c
 	drivers/gpu/drm/mgag200/mgag200_mode.c
 ---
- drivers/gpu/drm/drm_edid.c                    |    3 ---
- drivers/gpu/drm/drm_edid_load.c               |   23 +++++++++++++----------
- drivers/gpu/drm/exynos/exynos_drm_connector.c |    4 +---
- drivers/gpu/drm/exynos/exynos_drm_vidi.c      |   13 -------------
- drivers/gpu/drm/gma500/cdv_intel_hdmi.c       |    2 --
- drivers/gpu/drm/gma500/oaktrail_hdmi.c        |    1 -
- drivers/gpu/drm/gma500/psb_intel_sdvo.c       |    3 ---
- drivers/gpu/drm/i915/intel_dp.c               |    4 +---
- drivers/gpu/drm/i915/intel_hdmi.c             |    3 ---
- drivers/gpu/drm/i915/intel_modes.c            |    1 -
- drivers/gpu/drm/i915/intel_sdvo.c             |    3 ---
- drivers/gpu/drm/udl/udl_connector.c           |    3 ---
- drivers/staging/omapdrm/omap_connector.c      |    5 +----
- include/drm/drm_crtc.h                        |    2 --
+ drivers/gpu/drm/drm_edid.c                    |  3 ---
+ drivers/gpu/drm/drm_edid_load.c               | 23 +++++++++++++----------
+ drivers/gpu/drm/exynos/exynos_drm_connector.c |  4 +---
+ drivers/gpu/drm/exynos/exynos_drm_vidi.c      | 13 -------------
+ drivers/gpu/drm/gma500/cdv_intel_hdmi.c       |  2 --
+ drivers/gpu/drm/gma500/oaktrail_hdmi.c        |  1 -
+ drivers/gpu/drm/gma500/psb_intel_sdvo.c       |  3 ---
+ drivers/gpu/drm/i915/intel_dp.c               |  4 +---
+ drivers/gpu/drm/i915/intel_hdmi.c             |  3 ---
+ drivers/gpu/drm/i915/intel_modes.c            |  1 -
+ drivers/gpu/drm/i915/intel_sdvo.c             |  3 ---
+ drivers/gpu/drm/udl/udl_connector.c           |  3 ---
+ drivers/staging/omapdrm/omap_connector.c      |  5 +----
+ include/drm/drm_crtc.h                        |  2 --
  14 files changed, 16 insertions(+), 54 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -356,5 +356,5 @@ index ced3625..617d87a 100644
  
  struct drm_framebuffer_funcs {
 -- 
-1.7.10.4
+1.8.3.2
 

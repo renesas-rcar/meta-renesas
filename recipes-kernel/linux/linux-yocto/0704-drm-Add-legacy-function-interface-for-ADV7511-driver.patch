@@ -1,7 +1,7 @@
 From bfd8a732eb0f0c29bfdcc23cb973ff57d9a9536d Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Wed, 26 Jun 2013 14:46:35 +0900
-Subject: [PATCH 704/715] drm: Add legacy function interface for ADV7511
+Subject: [PATCH 0704/1083] drm: Add legacy function interface for ADV7511
  driver
 
 The legacy drm_do_get_edid function interface was added.
@@ -12,8 +12,8 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/drm_edid.c |   44 ++++++++++++++++++++++++++++++++++++++++----
- include/drm/drm_crtc.h     |    4 ++++
+ drivers/gpu/drm/drm_edid.c | 44 ++++++++++++++++++++++++++++++++++++++++----
+ include/drm/drm_crtc.h     |  4 ++++
  2 files changed, 44 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -147,5 +147,5 @@ index 00d78b5..afcdbe7 100644
  extern bool drm_edid_is_valid(struct edid *edid);
  struct drm_display_mode *drm_mode_find_dmt(struct drm_device *dev,
 -- 
-1.7.10.4
+1.8.3.2
 

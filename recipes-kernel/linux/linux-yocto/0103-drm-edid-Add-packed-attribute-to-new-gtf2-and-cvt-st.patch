@@ -1,7 +1,7 @@
 From 41b00f2efb9f048d82be63a90ac8bb375ff65942 Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Mon, 23 Apr 2012 17:40:49 +0100
-Subject: [PATCH 103/715] drm/edid: Add packed attribute to new gtf2 and cvt
+Subject: [PATCH 0103/1083] drm/edid: Add packed attribute to new gtf2 and cvt
  structs
 
 The new structs added in struct detailed_data_monitor_range must be
@@ -16,7 +16,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/drm/drm_edid.h |    4 ++--
+ include/drm/drm_edid.h | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/include/drm/drm_edid.h b/include/drm/drm_edid.h
@@ -42,5 +42,5 @@ index 8cefbbe..0cac551 100644
  } __attribute__((packed));
  
 -- 
-1.7.10.4
+1.8.3.2
 

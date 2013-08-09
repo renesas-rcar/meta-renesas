@@ -1,7 +1,7 @@
 From c2dd0a78f97e48fe10283f1dcf3ab8b6f2f4beca Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 13:46:55 +0200
-Subject: [PATCH 650/715] ARM: shmobile: r8a7790: Add LVDS clocks
+Subject: [PATCH 0650/1083] ARM: shmobile: r8a7790: Add LVDS clocks
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 2a4760d6ece8ee420c8fc761e4345516f1a9fd98)
@@ -17,7 +17,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c |    2 ++
+ arch/arm/mach-shmobile/clock-r8a7790.c | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -34,5 +34,5 @@ index ea6bd46..b64648a 100644
  	CLKDEV_ICK_ID("du.1", "rcar-du-r8a7790", &mstp_clks[MSTP723]),
  	CLKDEV_ICK_ID("du.2", "rcar-du-r8a7790", &mstp_clks[MSTP722]),
 -- 
-1.7.10.4
+1.8.3.2
 

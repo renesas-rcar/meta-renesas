@@ -1,7 +1,7 @@
 From 39409fd1c35ff3f774b05c4186f169aa1af91239 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:47 +0100
-Subject: [PATCH 303/715] sh-pfc: Move platform device and driver to the core
+Subject: [PATCH 0303/1083] sh-pfc: Move platform device and driver to the core
 
 The pinctrl module registers both a platform device and a platform
 driver. The only purpose of this awkward construction is to have a
@@ -19,10 +19,10 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c    |  101 +++++++++++++++++++++++++++++++++++++---------
- drivers/sh/pfc/core.h    |    4 ++
- drivers/sh/pfc/gpio.c    |    3 +-
- drivers/sh/pfc/pinctrl.c |  100 ++++++++++++---------------------------------
+ drivers/sh/pfc/core.c    | 101 ++++++++++++++++++++++++++++++++++++++---------
+ drivers/sh/pfc/core.h    |   4 ++
+ drivers/sh/pfc/gpio.c    |   3 +-
+ drivers/sh/pfc/pinctrl.c | 100 ++++++++++++----------------------------------
  4 files changed, 114 insertions(+), 94 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -400,5 +400,5 @@ index 6f0f58b..2fc8731 100644
 -}
 -module_exit(sh_pfc_pinctrl_exit);
 -- 
-1.7.10.4
+1.8.3.2
 

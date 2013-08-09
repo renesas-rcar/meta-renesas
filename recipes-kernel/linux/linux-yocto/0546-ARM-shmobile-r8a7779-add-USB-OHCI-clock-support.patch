@@ -1,7 +1,7 @@
 From 2a37434a3443632dfb667c53cbb8038b9af3c5b2 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 29 Oct 2012 01:15:11 -0700
-Subject: [PATCH 546/715] ARM: shmobile: r8a7779: add USB OHCI clock support
+Subject: [PATCH 0546/1083] ARM: shmobile: r8a7779: add USB OHCI clock support
 
 ohci-platform driver require these clocks
 
@@ -14,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7779.c |    2 ++
+ arch/arm/mach-shmobile/clock-r8a7779.c | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
@@ -32,5 +32,5 @@ index 8dea307..c019609 100644
  	CLKDEV_DEV_ID("sh_tmu.1", &mstp_clks[MSTP016]), /* TMU01 */
  	CLKDEV_DEV_ID("i2c-rcar.0", &mstp_clks[MSTP030]), /* I2C0 */
 -- 
-1.7.10.4
+1.8.3.2
 

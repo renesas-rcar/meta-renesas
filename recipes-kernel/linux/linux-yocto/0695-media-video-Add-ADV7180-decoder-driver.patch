@@ -1,7 +1,7 @@
 From 793f4d6928ee734116ca68573b326514b05d7ae4 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Thu, 27 Jun 2013 19:40:41 +0900
-Subject: [PATCH 695/715] media: video: Add ADV7180 decoder driver
+Subject: [PATCH 0695/1083] media: video: Add ADV7180 decoder driver
 
 The controls of contrast, brightness, hue and saturation are added.
 
@@ -10,7 +10,7 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/media/video/adv7180.c |  699 +++++++++++++++++++++++++++++++++++++----
+ drivers/media/video/adv7180.c | 699 ++++++++++++++++++++++++++++++++++++++----
  1 file changed, 641 insertions(+), 58 deletions(-)
 
 diff --git a/drivers/media/video/adv7180.c b/drivers/media/video/adv7180.c
@@ -878,5 +878,5 @@ index b8b6c4b..2d2b2a7 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

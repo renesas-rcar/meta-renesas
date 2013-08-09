@@ -1,7 +1,7 @@
 From c186685ec7c6eb16e362f0abba62b8cedde75830 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:58:48 +0100
-Subject: [PATCH 439/715] sh-pfc: r8a7779: Remove LBSC function GPIOS
+Subject: [PATCH 0439/1083] sh-pfc: r8a7779: Remove LBSC function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the LBSC pins,
 the corresponding function GPIOS are unused. Remove them.
@@ -12,7 +12,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |   14 ++++++--------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 14 ++++++--------
  1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -49,5 +49,5 @@ index 6f8cc53..5d65499 100644
  	GPIO_FN(HRX1), GPIO_FN(SSI_WS9),
  	GPIO_FN(MLB_CLK), GPIO_FN(PWM2), GPIO_FN(MLB_SIG),
 -- 
-1.7.10.4
+1.8.3.2
 

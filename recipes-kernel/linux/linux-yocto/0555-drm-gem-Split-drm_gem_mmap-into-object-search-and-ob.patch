@@ -1,8 +1,8 @@
 From 94861e73c82398921c761b7e800c25d30b36a93b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 16 Apr 2013 14:14:52 +0200
-Subject: [PATCH 555/715] drm/gem: Split drm_gem_mmap() into object search and
- object mapping
+Subject: [PATCH 0555/1083] drm/gem: Split drm_gem_mmap() into object search
+ and object mapping
 
 The drm_gem_mmap() function first finds the GEM object to be mapped
 based on the fake mmap offset and then maps the object. Split the object
@@ -20,8 +20,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/drm_gem.c |   57 ++++++++++++++++++++++++---------------------
- include/drm/drmP.h        |    2 ++
+ drivers/gpu/drm/drm_gem.c | 57 +++++++++++++++++++++++++----------------------
+ include/drm/drmP.h        |  2 ++
  2 files changed, 32 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_gem.c b/drivers/gpu/drm/drm_gem.c
@@ -120,5 +120,5 @@ index a0a6131..1920936 100644
  
  #include "drm_global.h"
 -- 
-1.7.10.4
+1.8.3.2
 

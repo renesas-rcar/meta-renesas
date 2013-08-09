@@ -1,16 +1,16 @@
 From 28b886f413819122856f094b8cc0bc41b26f9744 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Wed, 26 Jun 2013 13:39:41 +0900
-Subject: [PATCH 673/715] ASoC: sh: scu: Add DVC support
+Subject: [PATCH 0673/1083] ASoC: sh: scu: Add DVC support
 
 Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 (cherry picked from commit 157ecdb8107084f17b036e92abbad6d027143d94)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- include/sound/sh_scu.h |   51 ++++++++++++++--
- sound/soc/sh/scu_dai.c |  153 ++++++++++++++++++++++++++++++++++++++++++++----
- sound/soc/sh/scu_pcm.c |  101 ++++++++++++++++++++++++++++----
+ include/sound/sh_scu.h |  51 +++++++++++++++--
+ sound/soc/sh/scu_dai.c | 153 +++++++++++++++++++++++++++++++++++++++++++++----
+ sound/soc/sh/scu_pcm.c | 101 ++++++++++++++++++++++++++++----
  3 files changed, 278 insertions(+), 27 deletions(-)
 
 diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
@@ -506,5 +506,5 @@ index d9c2eb8..fab7ad4 100644
  
  	FNC_EXIT
 -- 
-1.7.10.4
+1.8.3.2
 

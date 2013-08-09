@@ -1,7 +1,7 @@
 From 530d11a4826ffb4cc8fd8337c8aca16ea149bedd Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 11 Jul 2012 17:17:10 +0900
-Subject: [PATCH 280/715] sh: pfc: pinctrl legacy function support.
+Subject: [PATCH 0280/1083] sh: pfc: pinctrl legacy function support.
 
 This maps out all of the function types to pinctrl function groups.
 Presently this is restricted to one pin per function to maintain
@@ -13,7 +13,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |  165 ++++++++++++++++++++++++++++++++++++----------
+ drivers/sh/pfc/pinctrl.c | 165 +++++++++++++++++++++++++++++++++++++----------
  1 file changed, 132 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -323,5 +323,5 @@ index 6008328..f62659a 100644
  	kfree(sh_pfc_pmx);
  
 -- 
-1.7.10.4
+1.8.3.2
 

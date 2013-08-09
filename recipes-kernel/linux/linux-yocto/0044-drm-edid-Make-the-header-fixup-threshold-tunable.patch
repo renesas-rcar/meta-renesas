@@ -1,7 +1,7 @@
 From 8872b653dc066d009afd0acd0723ccc1bc3e151f Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Wed, 30 May 2012 16:42:39 -0400
-Subject: [PATCH 044/715] drm/edid: Make the header fixup threshold tunable
+Subject: [PATCH 0044/1083] drm/edid: Make the header fixup threshold tunable
 
 6 bytes seems to be a reasonable default so far, but for the desperate
 it's worth exposing this.
@@ -15,7 +15,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   11 +++++++++--
+ drivers/gpu/drm/drm_edid.c | 11 +++++++++--
  1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -58,5 +58,5 @@ index 77a436f..5873e48 100644
  			memcpy(raw_edid, edid_header, sizeof(edid_header));
  		} else {
 -- 
-1.7.10.4
+1.8.3.2
 

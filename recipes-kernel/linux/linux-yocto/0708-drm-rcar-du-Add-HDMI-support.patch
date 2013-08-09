@@ -1,27 +1,27 @@
 From ebb3a14bbe70fc008d6005e579210f40b76c7799 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Wed, 26 Jun 2013 14:47:48 +0900
-Subject: [PATCH 708/715] drm: rcar-du: Add HDMI support
+Subject: [PATCH 0708/1083] drm: rcar-du: Add HDMI support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit 5aefc05a73def148b5f5b8bd3ee30b7a0e6d22db)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/Makefile          |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |   12 ++-
- drivers/gpu/drm/rcar-du/rcar_du_drv.h     |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_encoder.c |   95 ++++++++++++++++++++---
- drivers/gpu/drm/rcar-du/rcar_du_encoder.h |   24 +++++-
- drivers/gpu/drm/rcar-du/rcar_du_group.c   |    6 ++
- drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c |  116 +++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h |   27 +++++++
- drivers/gpu/drm/rcar-du/rcar_du_kms.c     |    4 +-
- drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c |    5 +-
- drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_plane.h   |    4 +
- drivers/gpu/drm/rcar-du/rcar_du_vgacon.c  |    5 +-
- include/linux/platform_data/rcar-du.h     |    7 ++
+ drivers/gpu/drm/rcar-du/Makefile          |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |  12 +++-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h     |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c |  95 +++++++++++++++++++++---
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h |  24 ++++++-
+ drivers/gpu/drm/rcar-du/rcar_du_group.c   |   6 ++
+ drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c | 116 ++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h |  27 +++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     |   4 +-
+ drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c |   5 +-
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h   |   4 ++
+ drivers/gpu/drm/rcar-du/rcar_du_vgacon.c  |   5 +-
+ include/linux/platform_data/rcar-du.h     |   7 ++
  14 files changed, 287 insertions(+), 21 deletions(-)
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h
@@ -661,5 +661,5 @@ index 1a2e990..091ace0 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

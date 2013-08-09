@@ -1,7 +1,7 @@
 From e675876d0ece8b23728955614035d7a2738cc00f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 24 Apr 2013 13:20:17 +0200
-Subject: [PATCH 598/715] sh-pfc: r8a7790: Add TPU pin groups and functions
+Subject: [PATCH 0598/1083] sh-pfc: r8a7790: Add TPU pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
@@ -15,7 +15,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |   41 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 41 ++++++++++++++++++++++++++++++++++++
  1 file changed, 41 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -92,5 +92,5 @@ index be8658d..5a633f4 100644
  	SH_PFC_FUNCTION(sdhi1),
  	SH_PFC_FUNCTION(sdhi2),
 -- 
-1.7.10.4
+1.8.3.2
 

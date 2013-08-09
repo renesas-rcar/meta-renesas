@@ -1,7 +1,7 @@
 From 887053765c953ad6339762def3b0b2e7bb0435bd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 02:23:26 +0100
-Subject: [PATCH 378/715] sh-pfc: Initialize pinmux_gpio flags statically
+Subject: [PATCH 0378/1083] sh-pfc: Initialize pinmux_gpio flags statically
 
 All function GPIO entries are initialized with the GPIO_FN macro that
 expands to the PINMUX_GPIO macro, used to initialize real GPIOs. Create
@@ -18,8 +18,8 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pinctrl.c |   19 ++-----------------
- drivers/pinctrl/sh-pfc/sh_pfc.h  |   16 +++++++++++++---
+ drivers/pinctrl/sh-pfc/pinctrl.c | 19 ++-----------------
+ drivers/pinctrl/sh-pfc/sh_pfc.h  | 16 +++++++++++++---
  2 files changed, 15 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pinctrl.c b/drivers/pinctrl/sh-pfc/pinctrl.c
@@ -94,5 +94,5 @@ index 2627a89..e150395 100644
  /* helper macro for pinmux_enum_t */
  #define PORT_DATA_I(nr)	\
 -- 
-1.7.10.4
+1.8.3.2
 

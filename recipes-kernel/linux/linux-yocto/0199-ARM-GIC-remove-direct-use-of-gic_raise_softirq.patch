@@ -1,7 +1,7 @@
 From 9e72eadc8d4e59facda88c7e4721838843a343f5 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Mon, 26 Nov 2012 15:05:48 -0600
-Subject: [PATCH 199/715] ARM: GIC: remove direct use of gic_raise_softirq
+Subject: [PATCH 0199/1083] ARM: GIC: remove direct use of gic_raise_softirq
 
 In preparation of moving gic code to drivers/irqchip, remove the direct
 platform dependencies on gic_raise_softirq. Move the setup of
@@ -35,22 +35,22 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/common/gic.c               |   45 +++++++++++++++++++----------------
- arch/arm/include/asm/hardware/gic.h |    1 -
- arch/arm/kernel/smp.c               |    3 ++-
- arch/arm/mach-exynos/platsmp.c      |    4 +---
- arch/arm/mach-highbank/platsmp.c    |    4 +---
- arch/arm/mach-imx/platsmp.c         |    2 --
- arch/arm/mach-msm/platsmp.c         |    4 +---
- arch/arm/mach-omap2/omap-smp.c      |    4 +---
- arch/arm/mach-realview/platsmp.c    |    3 ---
- arch/arm/mach-shmobile/platsmp.c    |    2 --
- arch/arm/mach-shmobile/smp-emev2.c  |    2 +-
- arch/arm/mach-tegra/platsmp.c       |    2 --
- arch/arm/mach-ux500/platsmp.c       |    4 +---
- arch/arm/mach-vexpress/ct-ca9x4.c   |    2 --
- arch/arm/mach-vexpress/platsmp.c    |    2 --
- arch/arm/plat-versatile/platsmp.c   |    2 +-
+ arch/arm/common/gic.c               | 45 ++++++++++++++++++++-----------------
+ arch/arm/include/asm/hardware/gic.h |  1 -
+ arch/arm/kernel/smp.c               |  3 ++-
+ arch/arm/mach-exynos/platsmp.c      |  4 +---
+ arch/arm/mach-highbank/platsmp.c    |  4 +---
+ arch/arm/mach-imx/platsmp.c         |  2 --
+ arch/arm/mach-msm/platsmp.c         |  4 +---
+ arch/arm/mach-omap2/omap-smp.c      |  4 +---
+ arch/arm/mach-realview/platsmp.c    |  3 ---
+ arch/arm/mach-shmobile/platsmp.c    |  2 --
+ arch/arm/mach-shmobile/smp-emev2.c  |  2 +-
+ arch/arm/mach-tegra/platsmp.c       |  2 --
+ arch/arm/mach-ux500/platsmp.c       |  4 +---
+ arch/arm/mach-vexpress/ct-ca9x4.c   |  2 --
+ arch/arm/mach-vexpress/platsmp.c    |  2 --
+ arch/arm/plat-versatile/platsmp.c   |  2 +-
  16 files changed, 33 insertions(+), 53 deletions(-)
 
 diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
@@ -370,5 +370,5 @@ index d7c5c17..8235455 100644
  	timeout = jiffies + (1 * HZ);
  	while (time_before(jiffies, timeout)) {
 -- 
-1.7.10.4
+1.8.3.2
 

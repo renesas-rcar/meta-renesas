@@ -1,7 +1,7 @@
 From 2e6e1d5efbbbc6c3e81a56e90b793cbef0157589 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Thu, 27 Dec 2012 13:10:24 -0600
-Subject: [PATCH 550/715] irqchip: Move ARM gic.h to
+Subject: [PATCH 0550/1083] irqchip: Move ARM gic.h to
  include/linux/irqchip/arm-gic.h
 
 Now that we have GIC moved to drivers/irqchip and all GIC DT init for
@@ -61,7 +61,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/irqchip/irq-gic.c |    2 --
+ drivers/irqchip/irq-gic.c | 2 --
  1 file changed, 2 deletions(-)
 
 diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
@@ -78,5 +78,5 @@ index 4978a44..3507a60 100644
  	void __iomem *common_base;
  	void __percpu __iomem **percpu_base;
 -- 
-1.7.10.4
+1.8.3.2
 

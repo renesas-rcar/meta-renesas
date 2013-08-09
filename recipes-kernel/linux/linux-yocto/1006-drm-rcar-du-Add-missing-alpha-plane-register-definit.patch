@@ -1,0 +1,52 @@
+From ea5937c41006d2a9e441c6c864a5862acad4d934 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 3 Jun 2013 10:53:48 +0200
+Subject: [PATCH 1006/1083] drm/rcar-du: Add missing alpha plane register
+ definitions
+
+Several alpha plane register definitions are missing, add them.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 29af338aa35e142356a19003d192b93f8b281757)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 8b45bd288e83fbf9b16b9a7663909034f2793249)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+index 69f21f1..3aba27f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_regs.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -349,10 +349,25 @@
+ #define APnMR_BM_AD		(2 << 4)	/* Auto Display Change Mode */
+ 
+ #define APnMWR			0x0a104
++
++#define APnDSXR			0x0a110
++#define APnDSYR			0x0a114
++#define APnDPXR			0x0a118
++#define APnDPYR			0x0a11c
++
+ #define APnDSA0R		0x0a120
+ #define APnDSA1R		0x0a124
+ #define APnDSA2R		0x0a128
++
++#define APnSPXR			0x0a130
++#define APnSPYR			0x0a134
++#define APnWASPR		0x0a138
++#define APnWAMWR		0x0a13c
++
++#define APnBTR			0x0a140
++
+ #define APnMLR			0x0a150
++#define APnSWAPR		0x0a180
+ 
+ /* -----------------------------------------------------------------------------
+  * Display Capture Registers
+-- 
+1.8.3.2
+

@@ -1,7 +1,7 @@
 From 10e37bfabbaea36a65bd474c6c80aebd3d00e39c Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 15:36:02 +0900
-Subject: [PATCH 518/715] mmc: sh_mobile_sdhi: Add write protection notify
+Subject: [PATCH 0518/1083] mmc: sh_mobile_sdhi: Add write protection notify
  interface
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
@@ -9,10 +9,10 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/sh_mobile_sdhi.c  |   10 ++++++++++
- drivers/mmc/host/tmio_mmc_pio.c    |    2 ++
- include/linux/mfd/tmio.h           |    1 +
- include/linux/mmc/sh_mobile_sdhi.h |    1 +
+ drivers/mmc/host/sh_mobile_sdhi.c  | 10 ++++++++++
+ drivers/mmc/host/tmio_mmc_pio.c    |  2 ++
+ include/linux/mfd/tmio.h           |  1 +
+ include/linux/mmc/sh_mobile_sdhi.h |  1 +
  4 files changed, 14 insertions(+)
 
 diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
@@ -81,5 +81,5 @@ index b65679f..8c89212 100644
  	/* callbacks for board specific setup code */
  	int (*init)(struct platform_device *pdev,
 -- 
-1.7.10.4
+1.8.3.2
 

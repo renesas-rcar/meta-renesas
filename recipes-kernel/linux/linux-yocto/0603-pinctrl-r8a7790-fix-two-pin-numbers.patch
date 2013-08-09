@@ -1,7 +1,7 @@
 From 24386acfff9473d68f09061a2d40f2c9a0d8cfcd Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Tue, 11 Jun 2013 11:42:17 +0000
-Subject: [PATCH 603/715] pinctrl: r8a7790: fix two pin numbers
+Subject: [PATCH 0603/1083] pinctrl: r8a7790: fix two pin numbers
 
 Fix two erroneous MMCIF1 pin numbers on r8a7790.
 
@@ -18,7 +18,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |   15 +++++++--------
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 15 +++++++--------
  1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -90,5 +90,5 @@ index 37d9a50..008b2f7 100644
  	/* D0 */
  	RCAR_GP_PIN(3, 26),
 -- 
-1.7.10.4
+1.8.3.2
 

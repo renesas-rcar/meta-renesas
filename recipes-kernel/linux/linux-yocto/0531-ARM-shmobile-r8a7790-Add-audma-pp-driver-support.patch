@@ -1,16 +1,16 @@
 From 683195cf956fa657aac236e2e5aef6963f06f6d6 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Thu, 13 Jun 2013 14:23:28 +0900
-Subject: [PATCH 531/715] ARM: shmobile: r8a7790: Add audma-pp driver support
+Subject: [PATCH 0531/1083] ARM: shmobile: r8a7790: Add audma-pp driver support
 
 Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 (cherry picked from commit 2894be4665405d171ad5822dc0e59a958473c1f2)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig           |    2 +
- arch/arm/mach-shmobile/include/mach/r8a7790.h |    4 ++
- arch/arm/mach-shmobile/setup-r8a7790.c        |   80 +++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig           |  2 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  4 ++
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 80 +++++++++++++++++++++++++++
  3 files changed, 86 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -192,5 +192,5 @@ index caa21a1..624e595 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

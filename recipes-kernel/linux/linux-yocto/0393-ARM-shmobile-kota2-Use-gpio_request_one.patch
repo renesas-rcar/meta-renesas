@@ -1,7 +1,7 @@
 From 7d71bf0d77f13055a2e0ae27e9a4eff505d57a2c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:33 +0100
-Subject: [PATCH 393/715] ARM: shmobile: kota2: Use gpio_request_one()
+Subject: [PATCH 0393/1083] ARM: shmobile: kota2: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-kota2.c |    9 +++------
+ arch/arm/mach-shmobile/board-kota2.c | 9 +++------
  1 file changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-kota2.c b/arch/arm/mach-shmobile/board-kota2.c
@@ -44,5 +44,5 @@ index 02fe85d..9df0899 100644
  	/* SDHI0 (microSD) */
  	gpio_request(GPIO_FN_SDHICD0_PU, NULL);
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 10fdb0b4ca1d4a2c8773db502bd901b36481f20f Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Wed, 15 May 2013 10:46:54 +0000
-Subject: [PATCH 600/715] pinctrl: sh-pfc: fix a typo in pfc-r8a7790
+Subject: [PATCH 0600/1083] pinctrl: sh-pfc: fix a typo in pfc-r8a7790
 
 Fix multiple occurrences of the "RESEVED" typo.
 
@@ -16,7 +16,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |   18 +++++++++---------
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 18 +++++++++---------
  1 file changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -74,5 +74,5 @@ index 7d39902..71518fc 100644
  		/* SEL_IIC2 [3] */
  		FN_SEL_IIC2_0, FN_SEL_IIC2_1, FN_SEL_IIC2_2, FN_SEL_IIC2_3,
 -- 
-1.7.10.4
+1.8.3.2
 

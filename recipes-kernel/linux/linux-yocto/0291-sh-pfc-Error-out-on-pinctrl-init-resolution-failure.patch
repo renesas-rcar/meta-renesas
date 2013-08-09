@@ -1,7 +1,7 @@
 From 32305db7a0ee394d99ec1f1d9baeb8ecb488d74b Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 17 Jul 2012 15:18:37 +0900
-Subject: [PATCH 291/715] sh: pfc: Error out on pinctrl init resolution
+Subject: [PATCH 0291/1083] sh: pfc: Error out on pinctrl init resolution
  failure.
 
 pinctrl support is required for correct operation, failure to locate
@@ -12,7 +12,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c |    3 +++
+ drivers/sh/pfc/core.c | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -30,5 +30,5 @@ index b81d335..6816937 100644
  
  	/*
 -- 
-1.7.10.4
+1.8.3.2
 

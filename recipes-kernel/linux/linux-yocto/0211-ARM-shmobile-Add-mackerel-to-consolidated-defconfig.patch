@@ -1,7 +1,7 @@
 From fac42c5306a00489f72a8a25075785e7cee0866f Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Thu, 4 Apr 2013 11:57:12 +0900
-Subject: [PATCH 211/715] ARM: shmobile: Add mackerel to consolidated
+Subject: [PATCH 0211/1083] ARM: shmobile: Add mackerel to consolidated
  defconfig
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
@@ -9,7 +9,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/configs/shmobile_defconfig |   12 ++++++++++++
+ arch/arm/configs/shmobile_defconfig | 12 ++++++++++++
  1 file changed, 12 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -53,5 +53,5 @@ index 8228e09..9b6219a 100644
  CONFIG_USB_RENESAS_USBHS_UDC=y
  CONFIG_USB_ETH=y
 -- 
-1.7.10.4
+1.8.3.2
 

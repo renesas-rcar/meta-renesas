@@ -1,7 +1,7 @@
 From 8e2ffadf4ecda3be48cae74aaf183c8d69fa0037 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:29 +0100
-Subject: [PATCH 396/715] ARM: shmobile: ap4evb: Use gpio_request_one()
+Subject: [PATCH 0396/1083] ARM: shmobile: ap4evb: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-ap4evb.c |   33 +++++++++------------------------
+ arch/arm/mach-shmobile/board-ap4evb.c | 33 +++++++++------------------------
  1 file changed, 9 insertions(+), 24 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-ap4evb.c b/arch/arm/mach-shmobile/board-ap4evb.c
@@ -89,5 +89,5 @@ index 59b3044..7f54423 100644
  	lcdc_info.clock_source			= LCDC_CLK_BUS;
  	lcdc_info.ch[0].interface_type		= RGB18;
 -- 
-1.7.10.4
+1.8.3.2
 

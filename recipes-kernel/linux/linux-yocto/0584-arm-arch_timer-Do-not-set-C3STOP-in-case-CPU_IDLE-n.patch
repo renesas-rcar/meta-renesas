@@ -1,7 +1,7 @@
 From 75484fbe504332bd1700afcab9d9fc209413c02b Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 18 Jun 2013 17:16:22 +0900
-Subject: [PATCH 584/715] arm: arch_timer: Do not set C3STOP in case
+Subject: [PATCH 0584/1083] arm: arch_timer: Do not set C3STOP in case
  CPU_IDLE=n
 
 Modify the ARM architected timer driver to not set C3STOP
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/clocksource/arm_arch_timer.c |   18 +++++++++++++++++-
+ drivers/clocksource/arm_arch_timer.c | 18 +++++++++++++++++-
  1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/clocksource/arm_arch_timer.c b/drivers/clocksource/arm_arch_timer.c
@@ -48,5 +48,5 @@ index 3e4739d..b2dbf76 100644
  	clk->rating = 450;
  	if (arch_timer_use_virtual) {
 -- 
-1.7.10.4
+1.8.3.2
 

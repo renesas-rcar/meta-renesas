@@ -1,7 +1,7 @@
 From 8b6408cf16ed6e6602955c80871f39a6ece926e3 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Mon, 11 Mar 2013 16:23:46 -0500
-Subject: [PATCH 583/715] ARM: arch_timer: use full 64-bit counter for
+Subject: [PATCH 0583/1083] ARM: arch_timer: use full 64-bit counter for
  sched_clock
 
 Only 32-bits of the arch timer were being used and wrapping was needlessly
@@ -17,7 +17,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/kernel/arch_timer.c |   18 +++++++++++++-----
+ arch/arm/kernel/arch_timer.c | 18 +++++++++++++-----
  1 file changed, 13 insertions(+), 5 deletions(-)
 
 diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
@@ -59,5 +59,5 @@ index d957a51..80c458f 100644
  	return 0;
  }
 -- 
-1.7.10.4
+1.8.3.2
 

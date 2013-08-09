@@ -1,7 +1,7 @@
 From 20a227753153c91339a47835bd027366aef7f35d Mon Sep 17 00:00:00 2001
 From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 Date: Tue, 25 Jun 2013 13:35:50 +0900
-Subject: [PATCH 653/715] sh-pfc: r8a7790: Fix some pins definition
+Subject: [PATCH 0653/1083] sh-pfc: r8a7790: Fix some pins definition
 
 - Rename I2C SDA/SCL ports
 	Did the following machinery:
@@ -24,7 +24,7 @@ Subject: [PATCH 653/715] sh-pfc: r8a7790: Fix some pins definition
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |  605 ++++++++++++++++------------------
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 605 ++++++++++++++++-------------------
  1 file changed, 278 insertions(+), 327 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -1549,5 +1549,5 @@ index 008b2f7..27a593d 100644
  		FN_SEL_SIM_0, FN_SEL_SIM_1, FN_SEL_SIM_2, 0,
  		/* SEL_SSI8 [2] */
 -- 
-1.7.10.4
+1.8.3.2
 

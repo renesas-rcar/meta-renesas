@@ -1,7 +1,7 @@
 From b2981d952198197203ae6589913cacd8fdc8312d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Thu, 17 May 2012 13:27:23 +0200
-Subject: [PATCH 037/715] drm: Constify drm_mode_config_funcs pointer
+Subject: [PATCH 0037/1083] drm: Constify drm_mode_config_funcs pointer
 
 The DRM mode config functions structure declared by drivers and pointed
 to by the drm_mode_config funcs field is never modified. Make it a const
@@ -20,15 +20,15 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/exynos/exynos_drm_fb.c    |    2 +-
- drivers/gpu/drm/gma500/framebuffer.c      |    2 +-
- drivers/gpu/drm/i915/intel_display.c      |    2 +-
- drivers/gpu/drm/nouveau/nouveau_display.c |    2 +-
- drivers/gpu/drm/radeon/radeon_display.c   |    2 +-
- drivers/gpu/drm/udl/udl_modeset.c         |    2 +-
- drivers/gpu/drm/vmwgfx/vmwgfx_kms.c       |    2 +-
- drivers/staging/omapdrm/omap_drv.c        |    2 +-
- include/drm/drm_crtc.h                    |    2 +-
+ drivers/gpu/drm/exynos/exynos_drm_fb.c    | 2 +-
+ drivers/gpu/drm/gma500/framebuffer.c      | 2 +-
+ drivers/gpu/drm/i915/intel_display.c      | 2 +-
+ drivers/gpu/drm/nouveau/nouveau_display.c | 2 +-
+ drivers/gpu/drm/radeon/radeon_display.c   | 2 +-
+ drivers/gpu/drm/udl/udl_modeset.c         | 2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_kms.c       | 2 +-
+ drivers/staging/omapdrm/omap_drv.c        | 2 +-
+ include/drm/drm_crtc.h                    | 2 +-
  9 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/gpu/drm/exynos/exynos_drm_fb.c b/drivers/gpu/drm/exynos/exynos_drm_fb.c
@@ -149,5 +149,5 @@ index 3ecee19..b88b28f 100644
  
  	/* output poll support */
 -- 
-1.7.10.4
+1.8.3.2
 

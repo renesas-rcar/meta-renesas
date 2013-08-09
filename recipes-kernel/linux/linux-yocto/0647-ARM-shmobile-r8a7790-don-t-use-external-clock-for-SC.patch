@@ -1,8 +1,8 @@
 From cdbadde0bb68d3abfc4d6288c18c3fc91160bd0c Mon Sep 17 00:00:00 2001
 From: Ulrich Hecht <ulrich.hecht@gmail.com>
 Date: Fri, 31 May 2013 17:57:04 +0200
-Subject: [PATCH 647/715] ARM: shmobile: r8a7790: don't use external clock for
- SCIFs
+Subject: [PATCH 0647/1083] ARM: shmobile: r8a7790: don't use external clock
+ for SCIFs
 
 This is an external component and may or may not be there, while the
 internal clock always works.
@@ -16,7 +16,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c |    2 +-
+ arch/arm/mach-shmobile/setup-r8a7790.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
@@ -33,5 +33,5 @@ index 3250af2..18e6fb8 100644
  
  #define HSCIF_DATA(index, baseaddr, irq)		\
 -- 
-1.7.10.4
+1.8.3.2
 

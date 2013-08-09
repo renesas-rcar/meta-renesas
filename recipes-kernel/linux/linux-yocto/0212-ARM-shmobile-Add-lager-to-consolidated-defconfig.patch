@@ -1,14 +1,14 @@
 From 802170d3df8d3526d117b5540fd694a5e29a2950 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Thu, 4 Apr 2013 16:31:21 +0900
-Subject: [PATCH 212/715] ARM: shmobile: Add lager to consolidated defconfig
+Subject: [PATCH 0212/1083] ARM: shmobile: Add lager to consolidated defconfig
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 (cherry picked from commit 7e2f34d3e39001bc6ada6709c599b7de13db700d)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/configs/shmobile_defconfig |    2 ++
+ arch/arm/configs/shmobile_defconfig | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -28,5 +28,5 @@ index 9b6219a..7dba53f 100644
  # CONFIG_SH_TIMER_TMU is not set
  # CONFIG_SWP_EMULATE is not set
 -- 
-1.7.10.4
+1.8.3.2
 

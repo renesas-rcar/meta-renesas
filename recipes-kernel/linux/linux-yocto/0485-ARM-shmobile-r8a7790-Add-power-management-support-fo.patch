@@ -1,17 +1,17 @@
 From c93b960ae7be5492f699d7420721b6d9975cab69 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 12 Jun 2013 15:09:02 +0900
-Subject: [PATCH 485/715] ARM: shmobile: r8a7790: Add power management support
- for RGX
+Subject: [PATCH 0485/1083] ARM: shmobile: r8a7790: Add power management
+ support for RGX
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 (cherry picked from commit 61f4bf69cb7f46508d01e884359b424af8bc6165)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7790.h |    2 ++
- arch/arm/mach-shmobile/pm-r8a7790.c           |    7 +++++++
- arch/arm/mach-shmobile/setup-r8a7790.c        |    4 ++++
+ arch/arm/mach-shmobile/include/mach/r8a7790.h | 2 ++
+ arch/arm/mach-shmobile/pm-r8a7790.c           | 7 +++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 4 ++++
  3 files changed, 13 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
@@ -68,5 +68,5 @@ index b84aff2..6df55ef 100644
  
  void __init r8a7790_timer_init(void)
 -- 
-1.7.10.4
+1.8.3.2
 

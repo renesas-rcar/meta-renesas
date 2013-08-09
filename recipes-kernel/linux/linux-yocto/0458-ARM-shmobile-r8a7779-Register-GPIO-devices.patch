@@ -1,7 +1,7 @@
 From 7a3930f5f2e4143c97fe2c16fb6bd5aea2de563a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 03:31:51 +0100
-Subject: [PATCH 458/715] ARM: shmobile: r8a7779: Register GPIO devices
+Subject: [PATCH 0458/1083] ARM: shmobile: r8a7779: Register GPIO devices
 
 Move GPIOs handling from the PFC device to separate GPIO devices.
 
@@ -10,7 +10,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/setup-r8a7779.c |   58 ++++++++++++++++++++++++++++----
+ arch/arm/mach-shmobile/setup-r8a7779.c | 58 ++++++++++++++++++++++++++++++----
  1 file changed, 52 insertions(+), 6 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7779.c b/arch/arm/mach-shmobile/setup-r8a7779.c
@@ -99,5 +99,5 @@ index 4255ba2..1a7f7bc 100644
  
  static struct plat_sci_port scif0_platform_data = {
 -- 
-1.7.10.4
+1.8.3.2
 

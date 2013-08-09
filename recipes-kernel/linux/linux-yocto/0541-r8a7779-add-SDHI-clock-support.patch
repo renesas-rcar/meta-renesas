@@ -1,7 +1,7 @@
 From 65f9afd3ab9f5f62ad99f3e82539254daf44978f Mon Sep 17 00:00:00 2001
 From: Phil Edworthy <phil.edworthy@renesas.com>
 Date: Mon, 6 Aug 2012 13:31:04 +0100
-Subject: [PATCH 541/715] r8a7779: add SDHI clock support
+Subject: [PATCH 0541/1083] r8a7779: add SDHI clock support
 
 Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 Tested-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7779.c |   11 ++++++++++-
+ arch/arm/mach-shmobile/clock-r8a7779.c | 11 ++++++++++-
  1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
@@ -50,5 +50,5 @@ index 339c62c..3cafb6a 100644
  
  void __init r8a7779_clock_init(void)
 -- 
-1.7.10.4
+1.8.3.2
 

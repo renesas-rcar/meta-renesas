@@ -1,8 +1,8 @@
 From e79e986c032687fdd7c1b58530a9c8e5044e3cf3 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Fri, 15 Jun 2012 11:01:22 +0200
-Subject: [PATCH 047/715] drm/fb-helper: delay hotplug handling when partially
- bound
+Subject: [PATCH 0047/1083] drm/fb-helper: delay hotplug handling when
+ partially bound
 
 Ok, this requires quite a dance to actually hit:
 1) We plug in a 2nd screen, enable it in both X and (by vt-switching)
@@ -42,7 +42,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_fb_helper.c |    8 ++++----
+ drivers/gpu/drm/drm_fb_helper.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
@@ -75,5 +75,5 @@ index 5683b7f..d3f15b9 100644
  		mutex_unlock(&dev->mode_config.mutex);
  		return 0;
 -- 
-1.7.10.4
+1.8.3.2
 

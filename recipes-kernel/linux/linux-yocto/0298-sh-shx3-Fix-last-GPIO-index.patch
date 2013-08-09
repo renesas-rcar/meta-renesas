@@ -1,7 +1,7 @@
 From 72f103b29fcb1dd550e713dc5b32e69cadf7108a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:41 +0100
-Subject: [PATCH 298/715] sh: shx3: Fix last GPIO index
+Subject: [PATCH 0298/1083] sh: shx3: Fix last GPIO index
 
 A careless look at the code shows that the last entry in the
 pinmux_gpios seems to be GPIO_FN_IRQOUT. However, entries are ordered by
@@ -16,7 +16,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/kernel/cpu/sh4a/pinmux-shx3.c |    2 +-
+ arch/sh/kernel/cpu/sh4a/pinmux-shx3.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/sh/kernel/cpu/sh4a/pinmux-shx3.c b/arch/sh/kernel/cpu/sh4a/pinmux-shx3.c
@@ -33,5 +33,5 @@ index aaa5338..2ebb983 100644
  	.gpio_data	= shx3_pinmux_data,
  	.gpio_data_size	= ARRAY_SIZE(shx3_pinmux_data),
 -- 
-1.7.10.4
+1.8.3.2
 

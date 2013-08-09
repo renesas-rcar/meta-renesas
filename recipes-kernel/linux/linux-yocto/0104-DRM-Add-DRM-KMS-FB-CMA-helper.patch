@@ -1,7 +1,7 @@
 From d4fbf9e40d8d1409db0da77af7dac8e5c08c073b Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Mon, 2 Jul 2012 16:37:47 +0200
-Subject: [PATCH 104/715] DRM: Add DRM KMS/FB CMA helper
+Subject: [PATCH 0104/1083] DRM: Add DRM KMS/FB CMA helper
 
 This patchset introduces a set of helper function for implementing the KMS
 framebuffer layer for drivers which use the DRM GEM CMA helper function.
@@ -15,10 +15,10 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/Kconfig             |    9 +
- drivers/gpu/drm/Makefile            |    1 +
- drivers/gpu/drm/drm_fb_cma_helper.c |  406 +++++++++++++++++++++++++++++++++++
- include/drm/drm_fb_cma_helper.h     |   27 +++
+ drivers/gpu/drm/Kconfig             |   9 +
+ drivers/gpu/drm/Makefile            |   1 +
+ drivers/gpu/drm/drm_fb_cma_helper.c | 406 ++++++++++++++++++++++++++++++++++++
+ include/drm/drm_fb_cma_helper.h     |  27 +++
  4 files changed, 443 insertions(+)
  create mode 100644 drivers/gpu/drm/drm_fb_cma_helper.c
  create mode 100644 include/drm/drm_fb_cma_helper.h
@@ -501,5 +501,5 @@ index 0000000..76c7098
 +#endif
 +
 -- 
-1.7.10.4
+1.8.3.2
 

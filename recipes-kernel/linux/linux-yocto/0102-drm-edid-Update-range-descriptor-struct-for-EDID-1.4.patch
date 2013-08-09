@@ -1,7 +1,7 @@
 From 037394e16ea4bfa576a41b17747092aa4fa8e988 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:37 -0400
-Subject: [PATCH 102/715] drm/edid: Update range descriptor struct for EDID
+Subject: [PATCH 0102/1083] drm/edid: Update range descriptor struct for EDID
  1.4
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>
@@ -12,7 +12,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/drm/drm_edid.h |   26 ++++++++++++++++++++------
+ include/drm/drm_edid.h | 26 ++++++++++++++++++++------
  1 file changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/include/drm/drm_edid.h b/include/drm/drm_edid.h
@@ -53,5 +53,5 @@ index bcb9a66..8cefbbe 100644
  
  struct detailed_data_wpindex {
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,8 @@
 From b7954d7281aa390dd07cf5d4e82c10d4bbcd7bfb Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Wed, 11 Jul 2012 16:28:07 +0200
-Subject: [PATCH 048/715] drm/fb helper: don't call drm_crtc_helper_set_config
+Subject: [PATCH 0048/1083] drm/fb helper: don't call
+ drm_crtc_helper_set_config
 
 Go through the interface vtable instead, because not everyone might be
 using the crtc helper code.
@@ -13,7 +14,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_fb_helper.c |    2 +-
+ drivers/gpu/drm/drm_fb_helper.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
@@ -30,5 +31,5 @@ index d3f15b9..f546d1e 100644
  			error = true;
  	}
 -- 
-1.7.10.4
+1.8.3.2
 

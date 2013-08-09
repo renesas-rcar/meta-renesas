@@ -1,0 +1,37 @@
+From 4c19f43ab8210962ebf1bf8688a7c234a39202fd Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:16 +0900
+Subject: [PATCH 0932/1083] Revert "drm/rcar-du: Clarify comment regarding
+ plane Y source coordinate"
+
+This reverts commit 3f5877198984eed8764ad888a45f8f9e188cd79c.
+(cherry picked from commit 3afffe4a33dda7810143ba500da18d142446127a)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index f6647b2..13a9c87 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -103,12 +103,9 @@ void rcar_du_plane_update_base(struct rcar_du_plane *plane)
+ 	struct rcar_du_device *rcdu = plane->dev;
+ 	unsigned int index = plane->hwindex;
+ 
+-	/* The Y position is expressed in raster line units and must be doubled
+-	 * for 32bpp formats, according to the R8A7790 datasheet. No mention of
+-	 * doubling the Y position is found in the R8A7779 datasheet, but the
+-	 * rule seems to apply there as well.
+-	 *
+-	 * Similarly, for the second plane, NV12 and NV21 formats seem to
++	/* According to the datasheet the Y position is expressed in raster line
++	 * units. However, 32bpp formats seem to require a doubled Y position
++	 * value. Similarly, for the second plane, NV12 and NV21 formats seem to
+ 	 * require a halved Y position value.
+ 	 */
+ 	rcar_du_plane_write(rcdu, index, PnSPXR, plane->src_x);
+-- 
+1.8.3.2
+

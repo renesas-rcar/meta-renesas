@@ -1,7 +1,7 @@
 From caf0d6b07430aa006ba8967ba5e00f752af135b6 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Fri, 24 May 2013 10:30:46 +0900
-Subject: [PATCH 565/715] libata: do not limit R-Car SATA driver to shmobile
+Subject: [PATCH 0565/1083] libata: do not limit R-Car SATA driver to shmobile
 
 The motivation for this is to allow the driver to be
 used with the r8a7790 SoC.
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/ata/Kconfig |    1 -
+ drivers/ata/Kconfig | 1 -
  1 file changed, 1 deletion(-)
 
 diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
@@ -31,5 +31,5 @@ index 3532d67..314c06f 100644
  	  This option enables support for Renesas R-Car Serial ATA.
  
 -- 
-1.7.10.4
+1.8.3.2
 

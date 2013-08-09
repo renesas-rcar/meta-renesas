@@ -1,7 +1,7 @@
 From 5edae56d08f92dedbb4efb01f347a062e25d09cd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:36 +0100
-Subject: [PATCH 346/715] sh-pfc: Add sh7734 pinmux support
+Subject: [PATCH 0346/1083] sh-pfc: Add sh7734 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -2549,5 +2549,5 @@ index 0000000..cbb5f4c
 +	.gpio_data_size = ARRAY_SIZE(pinmux_data),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 632ee28d3d1464955fbbdd04f77eac53f6fe47bb Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Fri, 20 Apr 2012 12:59:33 +0100
-Subject: [PATCH 020/715] drm/edid: add missing NULL checks.
+Subject: [PATCH 0020/1083] drm/edid: add missing NULL checks.
 
 Reviewed-by: Dave Airlie <airlied@redhat.com>
 Signed-off-by: Dave Airlie <airlied@redhat.com>
@@ -9,7 +9,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    6 ++++++
+ drivers/gpu/drm/drm_edid.c | 6 ++++++
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -44,5 +44,5 @@ index f0b18b54..e8ef017 100644
  		if (!mode_in_range(newmode, edid, timing)) {
  			drm_mode_destroy(dev, newmode);
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From d969234ab7b08e237dcae62b3581b7751268be6b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 00:26:33 +0100
-Subject: [PATCH 410/715] sh-pfc: Don't map data registers individually
+Subject: [PATCH 0410/1083] sh-pfc: Don't map data registers individually
 
 All data registers are located in the same memory resource. Locate the
 mapped resource at initializat time and use it directly instead of
@@ -14,10 +14,10 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c   |    3 +-
- drivers/pinctrl/sh-pfc/core.h   |    1 -
- drivers/pinctrl/sh-pfc/gpio.c   |  130 ++++++++++++++++++++++++---------------
- drivers/pinctrl/sh-pfc/sh_pfc.h |    1 -
+ drivers/pinctrl/sh-pfc/core.c   |   3 +-
+ drivers/pinctrl/sh-pfc/core.h   |   1 -
+ drivers/pinctrl/sh-pfc/gpio.c   | 130 ++++++++++++++++++++++++----------------
+ drivers/pinctrl/sh-pfc/sh_pfc.h |   1 -
  4 files changed, 82 insertions(+), 53 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -320,5 +320,5 @@ index 028e29a..ba3697d 100644
  
  #define PINMUX_DATA_REG(name, r, r_width) \
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,8 @@
 From 8461580eda24324ef1f55f6cb3425344e63037f3 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Mon, 8 Apr 2013 10:23:37 +0900
-Subject: [PATCH 474/715] ARM: shmobile: use r8a7790 timer setup code on Lager
+Subject: [PATCH 0474/1083] ARM: shmobile: use r8a7790 timer setup code on
+ Lager
 
 Use the r8a7790 timer init function on Lager
 to make sure the architected timer is started
@@ -17,7 +18,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-lager.c |    2 +-
+ arch/arm/mach-shmobile/board-lager.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -34,5 +35,5 @@ index 7a09b0e..7013934 100644
  	.dt_compat	= lager_boards_compat_dt,
  MACHINE_END
 -- 
-1.7.10.4
+1.8.3.2
 

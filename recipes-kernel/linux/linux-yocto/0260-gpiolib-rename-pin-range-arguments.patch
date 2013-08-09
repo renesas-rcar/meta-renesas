@@ -1,7 +1,7 @@
 From 01e6650efd6f38deb424c85923ca9ae81f90386c Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Wed, 21 Nov 2012 08:48:09 +0100
-Subject: [PATCH 260/715] gpiolib: rename pin range arguments
+Subject: [PATCH 0260/1083] gpiolib: rename pin range arguments
 
 To be crystal clear on what the arguments mean in this
 funtion dealing with both GPIO and PIN ranges with confusing
@@ -17,9 +17,9 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c     |   19 ++++++++++---------
- include/asm-generic/gpio.h |    4 ++--
- include/linux/gpio.h       |    2 +-
+ drivers/gpio/gpiolib.c     | 19 ++++++++++---------
+ include/asm-generic/gpio.h |  4 ++--
+ include/linux/gpio.h       |  2 +-
  3 files changed, 13 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -108,5 +108,5 @@ index a7eb740..3221142 100644
  {
  	WARN_ON(1);
 -- 
-1.7.10.4
+1.8.3.2
 

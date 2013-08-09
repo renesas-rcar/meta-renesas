@@ -1,7 +1,7 @@
 From 57ed73648500af00dae67cd15f8389f294aa7fea Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 03:20:08 +0200
-Subject: [PATCH 630/715] drm/rcar-du: Configure RGB output routing to DPAD0
+Subject: [PATCH 0630/1083] drm/rcar-du: Configure RGB output routing to DPAD0
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit bcbb781a587c8a92b13f23a2de037697b6e3fcc6)
@@ -11,10 +11,10 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |    5 +++++
- drivers/gpu/drm/rcar-du/rcar_du_drv.h   |    2 ++
- drivers/gpu/drm/rcar-du/rcar_du_group.c |   37 ++++++++++++++++++++++++++++---
- drivers/gpu/drm/rcar-du/rcar_du_group.h |    2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |  5 +++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   |  2 ++
+ drivers/gpu/drm/rcar-du/rcar_du_group.c | 37 ++++++++++++++++++++++++++++++---
+ drivers/gpu/drm/rcar-du/rcar_du_group.h |  2 +-
  4 files changed, 42 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -136,5 +136,5 @@ index 4487e83..5025930 100644
  
  #endif /* __RCAR_DU_GROUP_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

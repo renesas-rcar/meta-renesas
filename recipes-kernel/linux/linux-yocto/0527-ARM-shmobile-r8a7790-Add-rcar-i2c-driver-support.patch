@@ -1,7 +1,7 @@
 From 7de330da82d22df8999d76852f94148c1de1cc0a Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Thu, 13 Jun 2013 13:58:24 +0900
-Subject: [PATCH 527/715] ARM: shmobile: r8a7790: Add rcar-i2c driver support
+Subject: [PATCH 0527/1083] ARM: shmobile: r8a7790: Add rcar-i2c driver support
 
 Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 (cherry picked from commit 2921fd96d8421633d4ac24402f42b908984f8105)
@@ -12,9 +12,9 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig    |    2 +
- arch/arm/mach-shmobile/clock-r8a7790.c |    8 ++-
- arch/arm/mach-shmobile/setup-r8a7790.c |   95 ++++++++++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig    |  2 +
+ arch/arm/mach-shmobile/clock-r8a7790.c |  8 ++-
+ arch/arm/mach-shmobile/setup-r8a7790.c | 95 ++++++++++++++++++++++++++++++++++
  3 files changed, 104 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -188,5 +188,5 @@ index 5f30e9c..cb16dec 100644
  
  static struct renesas_irqc_config irqc0_data = {
 -- 
-1.7.10.4
+1.8.3.2
 

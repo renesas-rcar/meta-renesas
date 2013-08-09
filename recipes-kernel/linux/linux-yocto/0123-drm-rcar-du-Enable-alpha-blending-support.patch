@@ -1,7 +1,7 @@
 From cbd6eb04f21c0d07d3c4ff1ca6a42f32b12fb75c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 8 Feb 2013 17:22:58 +0100
-Subject: [PATCH 123/715] drm/rcar-du: Enable alpha blending support
+Subject: [PATCH 0123/1083] drm/rcar-du: Enable alpha blending support
 
 Alpha-blending is unconditinally disabled, treating alpha-aware formats
 as corresponding opaque formats. Fix this.
@@ -11,11 +11,11 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_kms.c   |   18 +++++++++---------
- drivers/gpu/drm/rcar-du/rcar_du_kms.h   |    2 +-
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |   11 +++++++----
- drivers/gpu/drm/rcar-du/rcar_du_plane.h |    1 -
- drivers/gpu/drm/rcar-du/rcar_du_regs.h  |   15 +++++++++------
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   | 18 +++++++++---------
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h   |  2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 11 +++++++----
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |  1 -
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  | 15 +++++++++------
  5 files changed, 26 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
@@ -184,5 +184,5 @@ index a2786d9..7ad54ca 100644
  #define PnDSYR			0x00114
  #define PnDPXR			0x00118
 -- 
-1.7.10.4
+1.8.3.2
 

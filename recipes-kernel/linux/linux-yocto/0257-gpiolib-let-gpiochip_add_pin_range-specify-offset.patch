@@ -1,7 +1,8 @@
 From 0bdd3e620e709a4604c00d618f233762aae30afb Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 20 Nov 2012 12:40:15 +0100
-Subject: [PATCH 257/715] gpiolib: let gpiochip_add_pin_range() specify offset
+Subject: [PATCH 0257/1083] gpiolib: let gpiochip_add_pin_range() specify
+ offset
 
 Like with commit 3c739ad0df5eb41cd7adad879eda6aa09879eb76
 it is not always enough to specify all the pins of a gpio_chip
@@ -22,10 +23,10 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib-of.c  |   12 ++++++++++++
- drivers/gpio/gpiolib.c     |   32 +++++++++++++++++++++++++++++---
- include/asm-generic/gpio.h |    6 ++++--
- include/linux/gpio.h       |    3 ++-
+ drivers/gpio/gpiolib-of.c  | 12 ++++++++++++
+ drivers/gpio/gpiolib.c     | 32 +++++++++++++++++++++++++++++---
+ include/asm-generic/gpio.h |  6 ++++--
+ include/linux/gpio.h       |  3 ++-
  4 files changed, 47 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
@@ -163,5 +164,5 @@ index 9bf6ee7..a7eb740 100644
  	WARN_ON(1);
  	return -EINVAL;
 -- 
-1.7.10.4
+1.8.3.2
 

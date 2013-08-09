@@ -1,8 +1,8 @@
 From 63109619a10b32d36f3146a921149a6c45f16f8d Mon Sep 17 00:00:00 2001
 From: Roland Stigge <stigge@antcom.de>
 Date: Thu, 28 Jun 2012 00:32:14 +0200
-Subject: [PATCH 243/715] gpio: of_get_named_gpio_flags() return -EPROBE_DEFER
- if GPIO not yet available
+Subject: [PATCH 0243/1083] gpio: of_get_named_gpio_flags() return
+ -EPROBE_DEFER if GPIO not yet available
 
 of_get_named_gpio_flags() and of_get_named_gpio() return -EPROBE_DEFER if the
 respective GPIO is not (yet) available. This is useful if driver's probe()
@@ -20,7 +20,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib-of.c |    5 ++++-
+ drivers/gpio/gpiolib-of.c | 5 ++++-
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
@@ -40,5 +40,5 @@ index a71aeca..a18c4aa 100644
  
  	/* .of_xlate might decide to not fill in the flags, so clear it. */
 -- 
-1.7.10.4
+1.8.3.2
 

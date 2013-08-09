@@ -1,0 +1,805 @@
+From 3f1f63cd4b8993c97e4327281cc49e2242cdab7a Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Fri, 26 Jul 2013 11:39:13 +0900
+Subject: [PATCH 0805/1083] ASoC: sh: scu: Add channel parameter to DAPM
+ callbacks
+
+The DAPM callback function names are modified regardless of
+the SSI/SRC/DVC channel number.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ include/sound/sh_scu.h |  84 +++++++-------
+ sound/soc/sh/lager.c   |  44 +++----
+ sound/soc/sh/scu_dai.c | 307 ++++++++++++++++++++-----------------------------
+ sound/soc/sh/scu_pcm.c |  64 +++++------
+ 4 files changed, 216 insertions(+), 283 deletions(-)
+
+diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
+index 9a7f382..bb24c63 100644
+--- a/include/sound/sh_scu.h
++++ b/include/sound/sh_scu.h
+@@ -65,6 +65,10 @@
+ #define	MAXCH_SSI	10
+ #define	MAXCH_SSIDATA	22	/* SSI0,1,2,9=4ch, SSI3-8=1ch */
+ 
++/* use channel */
++#define	PCH	0	/* playback SSI0/SRC0/DVC0 */
++#define	CCH	1	/* capture  SSI1/SRC1/DVC1 */
++
+ /* DAI Control */
+ #define CTRL_PLAYBACK	0
+ #define CTRL_CAPTURE	1
+@@ -2056,31 +2060,31 @@ struct scu_reg_info {
+ };
+ 
+ struct scu_playback_callback {
+-	void (*init_ssi)(void);
+-	void (*init_ssi_src)(void);
+-	void (*init_ssi_dvc)(void);
+-	void (*init_src)(unsigned int);
+-	void (*init_dvc)(void);
+-	void (*deinit_ssi)(void);
+-	void (*deinit_ssi_src)(void);
+-	void (*deinit_ssi_dvc)(void);
+-	void (*deinit_src)(void);
+-	void (*deinit_dvc)(void);
++	void (*init_ssi)(int, int);
++	void (*init_ssi_src)(int, int);
++	void (*init_ssi_dvc)(int, int);
++	void (*init_src)(int, unsigned int, unsigned int);
++	void (*init_dvc)(int);
++	void (*deinit_ssi)(int);
++	void (*deinit_ssi_src)(int);
++	void (*deinit_ssi_dvc)(int);
++	void (*deinit_src)(int);
++	void (*deinit_dvc)(int);
+ };
+ 
+ struct scu_capture_callback {
+-	void (*init_ssi)(void);
+-	void (*init_ssi_src)(void);
+-	void (*init_ssi_dvc)(void);
+-	void (*init_src)(unsigned int);
+-	void (*init_src_dvc)(unsigned int);
+-	void (*init_dvc)(void);
+-	void (*deinit_ssi)(void);
+-	void (*deinit_ssi_src)(void);
+-	void (*deinit_ssi_dvc)(void);
+-	void (*deinit_src)(void);
+-	void (*deinit_src_dvc)(void);
+-	void (*deinit_dvc)(void);
++	void (*init_ssi)(int, int);
++	void (*init_ssi_src)(int, int);
++	void (*init_ssi_dvc)(int, int);
++	void (*init_src)(int, unsigned int, unsigned int);
++	void (*init_src_dvc)(int, unsigned int, unsigned int);
++	void (*init_dvc)(int);
++	void (*deinit_ssi)(int);
++	void (*deinit_ssi_src)(int);
++	void (*deinit_ssi_dvc)(int);
++	void (*deinit_src)(int);
++	void (*deinit_src_dvc)(int);
++	void (*deinit_dvc)(int);
+ };
+ 
+ struct scu_route_info {
+@@ -2143,29 +2147,19 @@ extern struct snd_soc_platform_driver scu_platform;
+ 
+ extern struct scu_route_info *scu_get_route_info(void);
+ 
+-extern void scu_init_ssi0(void);
+-extern void scu_init_ssi0_src0(void);
+-extern void scu_init_ssi0_dvc0(void);
+-extern void scu_init_src0(unsigned int);
+-extern void scu_init_dvc0(void);
+-extern void scu_deinit_ssi0(void);
+-extern void scu_deinit_ssi0_src0(void);
+-extern void scu_deinit_ssi0_dvc0(void);
+-extern void scu_deinit_src0(void);
+-extern void scu_deinit_dvc0(void);
+-
+-extern void scu_init_ssi1(void);
+-extern void scu_init_ssi1_src1(void);
+-extern void scu_init_ssi1_dvc1(void);
+-extern void scu_init_src1(unsigned int);
+-extern void scu_init_src1_dvc1(unsigned int);
+-extern void scu_init_dvc1(void);
+-extern void scu_deinit_ssi1(void);
+-extern void scu_deinit_ssi1_src1(void);
+-extern void scu_deinit_ssi1_dvc1(void);
+-extern void scu_deinit_src1(void);
+-extern void scu_deinit_src1_dvc1(void);
+-extern void scu_deinit_dvc1(void);
++extern void scu_init_ssi_ind_master(int, int);
++extern void scu_init_ssi_ind_slave(int, int);
++extern void scu_init_ssi_master(int, int);
++extern void scu_init_ssi_slave(int, int);
++extern void scu_init_src(int, unsigned int, unsigned int);
++extern void scu_init_dvc(int);
++
++extern void scu_deinit_ssi_ind_master(int);
++extern void scu_deinit_ssi_ind_slave(int);
++extern void scu_deinit_ssi_master(int);
++extern void scu_deinit_ssi_slave(int);
++extern void scu_deinit_src(int);
++extern void scu_deinit_dvc(int);
+ 
+ extern int scu_check_route(int dir, struct scu_route_info *routeinfo);
+ extern int scu_dai_add_control(struct snd_card *card);
+diff --git a/sound/soc/sh/lager.c b/sound/soc/sh/lager.c
+index 3c71447..2daf2df 100644
+--- a/sound/soc/sh/lager.c
++++ b/sound/soc/sh/lager.c
+@@ -95,8 +95,8 @@ static int event_ssi0(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "ssi0");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->pcb.init_ssi = scu_init_ssi0;
+-		routeinfo->pcb.deinit_ssi = scu_deinit_ssi0;
++		routeinfo->pcb.init_ssi = scu_init_ssi_ind_master;
++		routeinfo->pcb.deinit_ssi = scu_deinit_ssi_ind_master;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->pcb.init_ssi = NULL;
+ 		routeinfo->pcb.deinit_ssi = NULL;
+@@ -109,8 +109,8 @@ static int event_ssi0_src0(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "ssi0_src0");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->pcb.init_ssi_src = scu_init_ssi0_src0;
+-		routeinfo->pcb.deinit_ssi_src = scu_deinit_ssi0_src0;
++		routeinfo->pcb.init_ssi_src = scu_init_ssi_master;
++		routeinfo->pcb.deinit_ssi_src = scu_deinit_ssi_master;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->pcb.init_ssi_src = NULL;
+ 		routeinfo->pcb.deinit_ssi_src = NULL;
+@@ -123,8 +123,8 @@ static int event_ssi0_dvc0(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "ssi0_dvc0");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->pcb.init_ssi_dvc = scu_init_ssi0_dvc0;
+-		routeinfo->pcb.deinit_ssi_dvc = scu_deinit_ssi0_dvc0;
++		routeinfo->pcb.init_ssi_dvc = scu_init_ssi_master;
++		routeinfo->pcb.deinit_ssi_dvc = scu_deinit_ssi_master;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->pcb.init_ssi_dvc = NULL;
+ 		routeinfo->pcb.deinit_ssi_dvc = NULL;
+@@ -137,8 +137,8 @@ static int event_src0(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "src0");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->pcb.init_src = scu_init_src0;
+-		routeinfo->pcb.deinit_src = scu_deinit_src0;
++		routeinfo->pcb.init_src = scu_init_src;
++		routeinfo->pcb.deinit_src = scu_deinit_src;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->pcb.init_src = NULL;
+ 		routeinfo->pcb.deinit_src = NULL;
+@@ -151,8 +151,8 @@ static int event_dvc0(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "dvc0");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->pcb.init_dvc = scu_init_dvc0;
+-		routeinfo->pcb.deinit_dvc = scu_deinit_dvc0;
++		routeinfo->pcb.init_dvc = scu_init_dvc;
++		routeinfo->pcb.deinit_dvc = scu_deinit_dvc;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->pcb.init_dvc = NULL;
+ 		routeinfo->pcb.deinit_dvc = NULL;
+@@ -165,8 +165,8 @@ static int event_ssi1(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "ssi1");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->ccb.init_ssi = scu_init_ssi1;
+-		routeinfo->ccb.deinit_ssi = scu_deinit_ssi1;
++		routeinfo->ccb.init_ssi = scu_init_ssi_ind_slave;
++		routeinfo->ccb.deinit_ssi = scu_deinit_ssi_ind_slave;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->ccb.init_ssi = NULL;
+ 		routeinfo->ccb.deinit_ssi = NULL;
+@@ -179,8 +179,8 @@ static int event_ssi1_src1(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "ssi1_src1");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->ccb.init_ssi_src = scu_init_ssi1_src1;
+-		routeinfo->ccb.deinit_ssi_src = scu_deinit_ssi1_src1;
++		routeinfo->ccb.init_ssi_src = scu_init_ssi_slave;
++		routeinfo->ccb.deinit_ssi_src = scu_deinit_ssi_slave;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->ccb.init_ssi_src = NULL;
+ 		routeinfo->ccb.deinit_ssi_src = NULL;
+@@ -193,8 +193,8 @@ static int event_ssi1_dvc1(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "ssi1_dvc1");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->ccb.init_ssi_dvc = scu_init_ssi1_dvc1;
+-		routeinfo->ccb.deinit_ssi_dvc = scu_deinit_ssi1_dvc1;
++		routeinfo->ccb.init_ssi_dvc = scu_init_ssi_slave;
++		routeinfo->ccb.deinit_ssi_dvc = scu_deinit_ssi_slave;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->ccb.init_ssi_dvc = NULL;
+ 		routeinfo->ccb.deinit_ssi_dvc = NULL;
+@@ -207,8 +207,8 @@ static int event_src1(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "src1");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->ccb.init_src = scu_init_src1;
+-		routeinfo->ccb.deinit_src = scu_deinit_src1;
++		routeinfo->ccb.init_src = scu_init_src;
++		routeinfo->ccb.deinit_src = scu_deinit_src;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->ccb.init_src = NULL;
+ 		routeinfo->ccb.deinit_src = NULL;
+@@ -221,8 +221,8 @@ static int event_src1_dvc1(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "src1_dvc1");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->ccb.init_src_dvc = scu_init_src1_dvc1;
+-		routeinfo->ccb.deinit_src_dvc = scu_deinit_src1_dvc1;
++		routeinfo->ccb.init_src_dvc = scu_init_src;
++		routeinfo->ccb.deinit_src_dvc = scu_deinit_src;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->ccb.init_src_dvc = NULL;
+ 		routeinfo->ccb.deinit_src_dvc = NULL;
+@@ -235,8 +235,8 @@ static int event_dvc1(struct snd_soc_dapm_widget *w,
+ {
+ 	event_print(event, "dvc1");
+ 	if (event == SND_SOC_DAPM_POST_PMU) {
+-		routeinfo->ccb.init_dvc = scu_init_dvc1;
+-		routeinfo->ccb.deinit_dvc = scu_deinit_dvc1;
++		routeinfo->ccb.init_dvc = scu_init_dvc;
++		routeinfo->ccb.deinit_dvc = scu_deinit_dvc;
+ 	} else if (event == SND_SOC_DAPM_PRE_PMD) {
+ 		routeinfo->ccb.init_dvc = NULL;
+ 		routeinfo->ccb.deinit_dvc = NULL;
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index 9cdfbf7..79c2b73 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -450,252 +450,191 @@ static void scu_dvc_stop(int dvc_ch)
+ 	DAPM callback function
+ 
+ ************************************************************************/
+-static void scu_ssi_control(int master_ch, int slave_ch);
+-static void scu_ssi_start(int ssi_ch);
+-static void scu_ssi_stop(int ssi_ch);
+-
+-void scu_init_ssi0(void)
+-{
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+-			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
+-	/* SSI_MODE0 (SSI independant) */
+-	scu_or_writel(SSI_MODE0_IND0, (u32 *)(rinfo->ssiureg + SSI_MODE0));
+-	/* SSI init */
+-	scu_ssi_control(0, 1);
+-	/* SSI start */
+-	scu_ssi_start(0);
+-}
+-EXPORT_SYMBOL(scu_init_ssi0);
+-
+-void scu_deinit_ssi0(void)
+-{
+-	/* SSI stop */
+-	scu_ssi_stop(0);
+-	/* SSI_MODE0 (SSI independant) */
+-	scu_and_writel(~SSI_MODE0_IND0, (u32 *)(rinfo->ssiureg + SSI_MODE0));
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+-			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
+-}
+-EXPORT_SYMBOL(scu_deinit_ssi0);
+-
+-void scu_init_ssi0_src0(void)
++void scu_init_ssi_ind_master(int master_ch, int slave_ch)
+ {
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++	if (master_ch == 0) {
++		/* SSI0_0_BUSIF_ADINR */
++		scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+ 			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
+-	/* SSI init */
+-	scu_ssi_control(0, 1);
+-	/* SSI start */
+-	scu_ssi_start(0);
+-}
+-EXPORT_SYMBOL(scu_init_ssi0_src0);
+-
+-void scu_deinit_ssi0_src0(void)
+-{
+-	/* SSI stop */
+-	scu_ssi_stop(0);
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+-			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
+-}
+-EXPORT_SYMBOL(scu_deinit_ssi0_src0);
++		/* SSI_MODE0 (SSI independant) */
++		scu_or_writel(SSI_MODE0_IND0,
++			(u32 *)(rinfo->ssiureg + SSI_MODE0));
++	} else {
++		pr_info("%s ssi master channel error", __func__);
++		return;
++	}
+ 
+-void scu_init_ssi0_dvc0(void)
+-{
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+-			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
+ 	/* SSI init */
+-	scu_ssi_control(0, 1);
++	scu_ssi_control(master_ch, slave_ch);
+ 	/* SSI start */
+-	scu_ssi_start(0);
++	scu_ssi_start(master_ch);
+ }
+-EXPORT_SYMBOL(scu_init_ssi0_dvc0);
++EXPORT_SYMBOL(scu_init_ssi_ind_master);
+ 
+-void scu_deinit_ssi0_dvc0(void)
++void scu_deinit_ssi_ind_master(int master_ch)
+ {
+ 	/* SSI stop */
+-	scu_ssi_stop(0);
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++	scu_ssi_stop(master_ch);
++
++	if (master_ch == 0) {
++		/* SSI_MODE0 (SSI independant) */
++		scu_and_writel(~SSI_MODE0_IND0,
++			(u32 *)(rinfo->ssiureg + SSI_MODE0));
++		/* SSI0_0_BUSIF_ADINR */
++		scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+ 			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++	} else
++		pr_info("%s ssi master channel error", __func__);
+ }
+-EXPORT_SYMBOL(scu_deinit_ssi0_dvc0);
+-
+-void scu_init_src0(unsigned int rate)
+-{
+-	scu_src_init(0, 1);
+-	scu_src_control(0, rate, 1);
+-	/* start src */
+-	scu_src_start(0, SRC_INOUT);
+-}
+-EXPORT_SYMBOL(scu_init_src0);
+-
+-void scu_deinit_src0(void)
+-{
+-	/* stop src */
+-	scu_src_stop(0, SRC_INOUT);
+-	scu_src_deinit(0);
+-}
+-EXPORT_SYMBOL(scu_deinit_src0);
++EXPORT_SYMBOL(scu_deinit_ssi_ind_master);
+ 
+-void scu_init_dvc0(void)
++void scu_init_ssi_ind_slave(int slave_ch, int master_ch)
+ {
+-	scu_dvc_init(0);
+-	scu_dvc_control(0);
+-	/* start dvc */
+-	scu_dvc_start(0);
+-}
+-EXPORT_SYMBOL(scu_init_dvc0);
+-
+-void scu_deinit_dvc0(void)
+-{
+-	/* stop dvc */
+-	scu_dvc_stop(0);
+-	scu_dvc_deinit(0);
+-}
+-EXPORT_SYMBOL(scu_deinit_dvc0);
+-
+-void scu_init_ssi1(void)
+-{
+-	/* SSI1_0_BUSIF_ADINR */
+-	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++	if (slave_ch == 1) {
++		/* SSI1_0_BUSIF_ADINR */
++		scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+ 			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
+-	/* SSI_MODE0 (SSI independant) */
+-	scu_or_writel(SSI_MODE0_IND1, (u32 *)(rinfo->ssiureg + SSI_MODE0));
+-	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
+-	scu_or_writel(SSI_MODE1_SSI1_MASTER,
++		/* SSI_MODE0 (SSI independant) */
++		scu_or_writel(SSI_MODE0_IND1,
++			(u32 *)(rinfo->ssiureg + SSI_MODE0));
++		/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++		scu_or_writel(SSI_MODE1_SSI1_MASTER,
+ 			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	} else {
++		pr_info("%s ssi slave channel error", __func__);
++		return;
++	}
++
+ 	/* SSI init */
+-	scu_ssi_control(0, 1);
++	scu_ssi_control(master_ch, slave_ch);
+ 	/* SSI start */
+-	scu_ssi_start(1);
++	scu_ssi_start(slave_ch);
+ }
+-EXPORT_SYMBOL(scu_init_ssi1);
++EXPORT_SYMBOL(scu_init_ssi_ind_slave);
+ 
+-void scu_deinit_ssi1(void)
++void scu_deinit_ssi_ind_slave(int slave_ch)
+ {
+ 	/* SSI stop */
+-	scu_ssi_stop(1);
+-	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
+-	scu_and_writel(~SSI_MODE1_SSI1_MASTER,
++	scu_ssi_stop(slave_ch);
++
++	if (slave_ch == 1) {
++		/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++		scu_and_writel(~SSI_MODE1_SSI1_MASTER,
+ 			(u32 *)(rinfo->ssiureg + SSI_MODE1));
+-	/* SSI_MODE0 (SSI independant) */
+-	scu_and_writel(~SSI_MODE0_IND1, (u32 *)(rinfo->ssiureg + SSI_MODE0));
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++		/* SSI_MODE0 (SSI independant) */
++		scu_and_writel(~SSI_MODE0_IND1,
++			(u32 *)(rinfo->ssiureg + SSI_MODE0));
++		/* SSI0_0_BUSIF_ADINR */
++		scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+ 			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++	} else
++		pr_info("%s ssi slave channel error", __func__);
+ }
+-EXPORT_SYMBOL(scu_deinit_ssi1);
++EXPORT_SYMBOL(scu_deinit_ssi_ind_slave);
+ 
+-void scu_init_ssi1_src1(void)
++void scu_init_ssi_master(int master_ch, int slave_ch)
+ {
+-	/* SSI1_0_BUSIF_ADINR */
+-	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+-			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
+-	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
+-	scu_or_writel(SSI_MODE1_SSI1_MASTER,
+-			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	if (master_ch == 0) {
++		/* SSI0_0_BUSIF_ADINR */
++		scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++	} else {
++		pr_info("%s ssi master channel error", __func__);
++		return;
++	}
++
+ 	/* SSI init */
+-	scu_ssi_control(0, 1);
++	scu_ssi_control(master_ch, slave_ch);
+ 	/* SSI start */
+-	scu_ssi_start(1);
++	scu_ssi_start(master_ch);
+ }
+-EXPORT_SYMBOL(scu_init_ssi1_src1);
++EXPORT_SYMBOL(scu_init_ssi_master);
+ 
+-void scu_deinit_ssi1_src1(void)
++void scu_deinit_ssi_master(int master_ch)
+ {
+ 	/* SSI stop */
+-	scu_ssi_stop(1);
+-	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
+-	scu_and_writel(~SSI_MODE1_SSI1_MASTER,
+-			(u32 *)(rinfo->ssiureg + SSI_MODE1));
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+-			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++	scu_ssi_stop(master_ch);
++
++	if (master_ch == 0) {
++		/* SSI0_0_BUSIF_ADINR */
++		scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++	} else
++		pr_info("%s ssi master channel error", __func__);
+ }
+-EXPORT_SYMBOL(scu_deinit_ssi1_src1);
++EXPORT_SYMBOL(scu_deinit_ssi_master);
+ 
+-void scu_init_ssi1_dvc1(void)
++void scu_init_ssi_slave(int slave_ch, int master_ch)
+ {
+-	/* SSI1_0_BUSIF_ADINR */
+-	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++	if (slave_ch == 1) {
++		/* SSI1_0_BUSIF_ADINR */
++		scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+ 			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
+-	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
+-	scu_or_writel(SSI_MODE1_SSI1_MASTER,
++		/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++		scu_or_writel(SSI_MODE1_SSI1_MASTER,
+ 			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	} else {
++		pr_info("%s ssi slave channel error", __func__);
++		return;
++	}
++
+ 	/* SSI init */
+-	scu_ssi_control(0, 1);
++	scu_ssi_control(master_ch, slave_ch);
+ 	/* SSI start */
+-	scu_ssi_start(1);
++	scu_ssi_start(slave_ch);
+ }
+-EXPORT_SYMBOL(scu_init_ssi1_dvc1);
++EXPORT_SYMBOL(scu_init_ssi_slave);
+ 
+-void scu_deinit_ssi1_dvc1(void)
++void scu_deinit_ssi_slave(int slave_ch)
+ {
+ 	/* SSI stop */
+-	scu_ssi_stop(1);
+-	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
+-	scu_and_writel(~SSI_MODE1_SSI1_MASTER,
++	scu_ssi_stop(slave_ch);
++
++	if (slave_ch == 1) {
++		/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++		scu_and_writel(~SSI_MODE1_SSI1_MASTER,
+ 			(u32 *)(rinfo->ssiureg + SSI_MODE1));
+-	/* SSI0_0_BUSIF_ADINR */
+-	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++		/* SSI0_0_BUSIF_ADINR */
++		scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
+ 			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++	} else
++		pr_info("%s ssi slave channel error", __func__);
+ }
+-EXPORT_SYMBOL(scu_deinit_ssi1_dvc1);
+-
+-void scu_init_src1(unsigned int rate)
+-{
+-	scu_src_init(1, 1);
+-	scu_src_control(1, rate, 1);
+-	/* start src */
+-	scu_src_start(1, SRC_INOUT);
+-}
+-EXPORT_SYMBOL(scu_init_src1);
+-
+-void scu_deinit_src1(void)
+-{
+-	/* stop src */
+-	scu_src_stop(1, SRC_INOUT);
+-	scu_src_deinit(1);
+-}
+-EXPORT_SYMBOL(scu_deinit_src1);
++EXPORT_SYMBOL(scu_deinit_ssi_slave);
+ 
+-void scu_init_src1_dvc1(unsigned int rate)
++void scu_init_src(int src_ch, unsigned int rate, unsigned int sync_sw)
+ {
+-	scu_src_init(1, 0);
+-	scu_src_control(1, rate, 0);
++	scu_src_init(src_ch, sync_sw);
++	scu_src_control(src_ch, rate, sync_sw);
+ 	/* start src */
+-	scu_src_start(1, SRC_INOUT);
++	scu_src_start(src_ch, SRC_INOUT);
+ }
+-EXPORT_SYMBOL(scu_init_src1_dvc1);
++EXPORT_SYMBOL(scu_init_src);
+ 
+-void scu_deinit_src1_dvc1(void)
++void scu_deinit_src(int src_ch)
+ {
+ 	/* stop src */
+-	scu_src_stop(1, SRC_INOUT);
+-	scu_src_deinit(1);
++	scu_src_stop(src_ch, SRC_INOUT);
++	scu_src_deinit(src_ch);
+ }
+-EXPORT_SYMBOL(scu_deinit_src1_dvc1);
++EXPORT_SYMBOL(scu_deinit_src);
+ 
+-void scu_init_dvc1(void)
++void scu_init_dvc(int dvc_ch)
+ {
+-	scu_dvc_init(1);
+-	scu_dvc_control(1);
++	scu_dvc_init(dvc_ch);
++	scu_dvc_control(dvc_ch);
+ 	/* start dvc */
+-	scu_dvc_start(1);
++	scu_dvc_start(dvc_ch);
+ }
+-EXPORT_SYMBOL(scu_init_dvc1);
++EXPORT_SYMBOL(scu_init_dvc);
+ 
+-void scu_deinit_dvc1(void)
++void scu_deinit_dvc(int dvc_ch)
+ {
+ 	/* stop dvc */
+-	scu_dvc_stop(1);
+-	scu_dvc_deinit(1);
++	scu_dvc_stop(dvc_ch);
++	scu_dvc_deinit(dvc_ch);
+ }
+-EXPORT_SYMBOL(scu_deinit_dvc1);
++EXPORT_SYMBOL(scu_deinit_dvc);
+ 
+ /************************************************************************
+ 
+diff --git a/sound/soc/sh/scu_pcm.c b/sound/soc/sh/scu_pcm.c
+index 49c4473..22597e9 100644
+--- a/sound/soc/sh/scu_pcm.c
++++ b/sound/soc/sh/scu_pcm.c
+@@ -383,7 +383,7 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 				scu_audma_start(SHDMA_SLAVE_PCM_MEM_SSI0, ss);
+ 
+ 				/* start ssi */
+-				pcminfo->routeinfo->pcb.init_ssi();
++				pcminfo->routeinfo->pcb.init_ssi(PCH, CCH);
+ 			}
+ 		}
+ 
+@@ -398,11 +398,11 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 				scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 
+ 				/* start ssi */
+-				pcminfo->routeinfo->pcb.init_ssi_src();
++				pcminfo->routeinfo->pcb.init_ssi_src(PCH, CCH);
+ 
+ 				/* start src */
+-				pcminfo->routeinfo->pcb.init_src(
+-					ss->runtime->rate);
++				pcminfo->routeinfo->pcb.init_src(PCH,
++					ss->runtime->rate, SRC_CR_SYNC);
+ 			}
+ 		}
+ 
+@@ -418,14 +418,14 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 				scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 
+ 				/* start ssi */
+-				pcminfo->routeinfo->pcb.init_ssi_dvc();
++				pcminfo->routeinfo->pcb.init_ssi_dvc(PCH, CCH);
+ 
+ 				/* start dvc */
+-				pcminfo->routeinfo->pcb.init_dvc();
++				pcminfo->routeinfo->pcb.init_dvc(PCH);
+ 
+ 				/* start src */
+-				pcminfo->routeinfo->pcb.init_src(
+-					ss->runtime->rate);
++				pcminfo->routeinfo->pcb.init_src(PCH,
++					ss->runtime->rate, SRC_CR_SYNC);
+ 			}
+ 		}
+ 	} else { /* capture */
+@@ -439,7 +439,7 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 				scu_audma_start(SHDMA_SLAVE_PCM_SSI1_MEM, ss);
+ 
+ 				/* start ssi */
+-				pcminfo->routeinfo->ccb.init_ssi();
++				pcminfo->routeinfo->ccb.init_ssi(CCH, PCH);
+ 			}
+ 		}
+ 
+@@ -454,11 +454,11 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 				scu_audma_start(SHDMA_SLAVE_PCM_SRC1_MEM, ss);
+ 
+ 				/* start ssi */
+-				pcminfo->routeinfo->ccb.init_ssi_src();
++				pcminfo->routeinfo->ccb.init_ssi_src(CCH, PCH);
+ 
+ 				/* start src */
+-				pcminfo->routeinfo->ccb.init_src(
+-					ss->runtime->rate);
++				pcminfo->routeinfo->ccb.init_src(CCH,
++					ss->runtime->rate, SRC_CR_SYNC);
+ 			}
+ 		}
+ 
+@@ -474,14 +474,14 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 				scu_audma_start(SHDMA_SLAVE_PCM_CMD1_MEM, ss);
+ 
+ 				/* start ssi */
+-				pcminfo->routeinfo->ccb.init_ssi_dvc();
++				pcminfo->routeinfo->ccb.init_ssi_dvc(CCH, PCH);
+ 
+ 				/* start dvc */
+-				pcminfo->routeinfo->ccb.init_dvc();
++				pcminfo->routeinfo->ccb.init_dvc(CCH);
+ 
+ 				/* start src */
+-				pcminfo->routeinfo->ccb.init_src_dvc(
+-					ss->runtime->rate);
++				pcminfo->routeinfo->ccb.init_src_dvc(CCH,
++					ss->runtime->rate, SRC_CR_ASYNC);
+ 			}
+ 		}
+ 	}
+@@ -501,7 +501,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		if (pcminfo->routeinfo->pcb.deinit_ssi) {
+ 			DBG_MSG("post:ssi\n");
+ 			/* stop ssi */
+-			pcminfo->routeinfo->pcb.deinit_ssi();
++			pcminfo->routeinfo->pcb.deinit_ssi(PCH);
+ 			/* stop dma */
+ 			scu_audma_stop(SHDMA_SLAVE_PCM_MEM_SSI0, ss);
+ 		}
+@@ -511,9 +511,9 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		    pcminfo->routeinfo->pcb.deinit_src) {
+ 			DBG_MSG("post:src->ssi\n");
+ 			/* stop src */
+-			pcminfo->routeinfo->pcb.deinit_src();
++			pcminfo->routeinfo->pcb.deinit_src(PCH);
+ 			/* stop ssi */
+-			pcminfo->routeinfo->pcb.deinit_ssi_src();
++			pcminfo->routeinfo->pcb.deinit_ssi_src(PCH);
+ 			/* stop dma */
+ 			scu_audma_stop(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 		}
+@@ -523,11 +523,11 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		    pcminfo->routeinfo->pcb.deinit_src &&
+ 		    pcminfo->routeinfo->pcb.deinit_dvc) {
+ 			/* stop src */
+-			pcminfo->routeinfo->pcb.deinit_src();
++			pcminfo->routeinfo->pcb.deinit_src(PCH);
+ 			/* stop dvc */
+-			pcminfo->routeinfo->pcb.deinit_dvc();
++			pcminfo->routeinfo->pcb.deinit_dvc(PCH);
+ 			/* stop ssi */
+-			pcminfo->routeinfo->pcb.deinit_ssi_dvc();
++			pcminfo->routeinfo->pcb.deinit_ssi_dvc(PCH);
+ 			/* stop dma */
+ 			scu_audma_stop(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
+ 		}
+@@ -536,7 +536,7 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		if (pcminfo->routeinfo->ccb.deinit_ssi) {
+ 			DBG_MSG("post:ssi\n");
+ 			/* stop ssi */
+-			pcminfo->routeinfo->ccb.deinit_ssi();
++			pcminfo->routeinfo->ccb.deinit_ssi(CCH);
+ 			/* stop dma */
+ 			scu_audma_stop(SHDMA_SLAVE_PCM_SSI1_MEM, ss);
+ 		}
+@@ -546,9 +546,9 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		    pcminfo->routeinfo->ccb.deinit_src) {
+ 			DBG_MSG("post:src->ssi\n");
+ 			/* stop src */
+-			pcminfo->routeinfo->ccb.deinit_src();
++			pcminfo->routeinfo->ccb.deinit_src(CCH);
+ 			/* stop ssi */
+-			pcminfo->routeinfo->ccb.deinit_ssi_src();
++			pcminfo->routeinfo->ccb.deinit_ssi_src(CCH);
+ 			/* stop dma */
+ 			scu_audma_stop(SHDMA_SLAVE_PCM_SRC1_MEM, ss);
+ 		}
+@@ -557,13 +557,13 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		if (pcminfo->routeinfo->ccb.deinit_ssi_dvc &&
+ 		    pcminfo->routeinfo->ccb.deinit_src_dvc &&
+ 		    pcminfo->routeinfo->ccb.deinit_dvc) {
+-			/* start src */
+-			pcminfo->routeinfo->ccb.deinit_src_dvc();
+-			/* start dvc */
+-			pcminfo->routeinfo->ccb.deinit_dvc();
+-			/* start ssi */
+-			pcminfo->routeinfo->ccb.deinit_ssi_dvc();
+-			/* start dma */
++			/* stop src */
++			pcminfo->routeinfo->ccb.deinit_src_dvc(CCH);
++			/* stop dvc */
++			pcminfo->routeinfo->ccb.deinit_dvc(CCH);
++			/* stop ssi */
++			pcminfo->routeinfo->ccb.deinit_ssi_dvc(CCH);
++			/* stop dma */
+ 			scu_audma_stop(SHDMA_SLAVE_PCM_CMD1_MEM, ss);
+ 		}
+ 	}
+-- 
+1.8.3.2
+

@@ -1,7 +1,7 @@
 From 6210f3dca2ff0b8bdb581d1382887c4f6a8acc7d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 02:29:07 +0200
-Subject: [PATCH 609/715] drm/rcar-du: Use devm_ioremap_resource()
+Subject: [PATCH 0609/1083] drm/rcar-du: Use devm_ioremap_resource()
 
 Replace the devm_request_mem_region() and devm_ioremap_nocache() calls
 with devm_ioremap_resource().
@@ -17,7 +17,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_drv.c |   11 +----------
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 11 +----------
  1 file changed, 1 insertion(+), 10 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
@@ -50,5 +50,5 @@ index 982f7d4..4f54a7a 100644
  		dev_err(&pdev->dev, "failed to remap memory resource\n");
  		return -ENOMEM;
 -- 
-1.7.10.4
+1.8.3.2
 

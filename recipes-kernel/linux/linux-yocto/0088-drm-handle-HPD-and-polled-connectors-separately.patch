@@ -1,7 +1,7 @@
 From c5ffe29b5a8ca18a83dff1674fa448ba18264481 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:33 +0000
-Subject: [PATCH 088/715] drm: handle HPD and polled connectors separately
+Subject: [PATCH 0088/1083] drm: handle HPD and polled connectors separately
 
 Instead of reusing the polling code for hpd handling, split them up.
 This has a few consequences:
@@ -38,8 +38,8 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc_helper.c |   51 ++++++++++++++++++++++++++++++-------
- include/drm/drm_crtc.h            |    1 +
+ drivers/gpu/drm/drm_crtc_helper.c | 51 ++++++++++++++++++++++++++++++++-------
+ include/drm/drm_crtc.h            |  1 +
  2 files changed, 43 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
@@ -145,5 +145,5 @@ index 1f5f1d6..ccff8c9 100644
  	/* pointers to standard properties */
  	struct list_head property_blob_list;
 -- 
-1.7.10.4
+1.8.3.2
 

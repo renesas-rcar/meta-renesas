@@ -1,7 +1,7 @@
 From c7f004fa35c0114dfe6106bb5b4e3088fee099d1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 15 Feb 2013 16:04:47 +0100
-Subject: [PATCH 369/715] sh-pfc: Declare operation structures as const
+Subject: [PATCH 0369/1083] sh-pfc: Declare operation structures as const
 
 The pinconf, pinctrl and pinmux operation structures hold function
 pointers that are never modified. Declare them as const.
@@ -12,7 +12,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pinctrl.c |    6 +++---
+ drivers/pinctrl/sh-pfc/pinctrl.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pinctrl.c b/drivers/pinctrl/sh-pfc/pinctrl.c
@@ -47,5 +47,5 @@ index 11e0e13..887930e 100644
  	.pin_config_set		= sh_pfc_pinconf_set,
  	.pin_config_dbg_show	= sh_pfc_pinconf_dbg_show,
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From dd230add3b7062fb7dbef0ccf31c0e0e28d91957 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 23:47:18 +0100
-Subject: [PATCH 450/715] sh-pfc: r8a7779: Don't use GPIO enum entries
+Subject: [PATCH 0450/1083] sh-pfc: r8a7779: Don't use GPIO enum entries
 
 Refactor the GPIO macro magic to use GPIO numbers directly instead of
 the GPIO_GP_x_y enum entries. This will allow removing the GPIO enum
@@ -13,7 +13,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  104 ++++++++++++++++++++++++----------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 104 +++++++++++++++++++++++++----------
  1 file changed, 74 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -135,5 +135,5 @@ index 4db9944..41d8bda 100644
  #define PINMUX_IPSR_DATA(ipsr, fn) PINMUX_DATA(fn##_MARK, FN_##ipsr, FN_##fn)
  #define PINMUX_IPSR_MODSEL_DATA(ipsr, fn, ms) PINMUX_DATA(fn##_MARK, FN_##ms, \
 -- 
-1.7.10.4
+1.8.3.2
 

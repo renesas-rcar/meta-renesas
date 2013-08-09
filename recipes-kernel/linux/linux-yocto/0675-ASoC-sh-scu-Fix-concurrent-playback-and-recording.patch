@@ -1,7 +1,8 @@
 From b1b19ee0a3200f7da5dc98cdda3511beed215553 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Wed, 26 Jun 2013 13:45:11 +0900
-Subject: [PATCH 675/715] ASoC: sh: scu: Fix concurrent playback and recording
+Subject: [PATCH 0675/1083] ASoC: sh: scu: Fix concurrent playback and
+ recording
 
 If you playback the sound during capture, playback becoms error.
 Modify SSI setting and DMA channel release sequence.
@@ -11,8 +12,8 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- sound/soc/sh/scu_dai.c |    9 ++++---
- sound/soc/sh/scu_pcm.c |   66 ++++++++++++++++++++----------------------------
+ sound/soc/sh/scu_dai.c |  9 ++++---
+ sound/soc/sh/scu_pcm.c | 66 +++++++++++++++++++++-----------------------------
  2 files changed, 33 insertions(+), 42 deletions(-)
 
 diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
@@ -221,5 +222,5 @@ index fab7ad4..0da0266 100644
  	}
  
 -- 
-1.7.10.4
+1.8.3.2
 

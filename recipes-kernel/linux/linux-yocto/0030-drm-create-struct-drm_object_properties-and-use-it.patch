@@ -1,7 +1,7 @@
 From e764488f1776c64f4669a547dbf40da4ad740294 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:01 -0300
-Subject: [PATCH 030/715] drm: create struct drm_object_properties and use it
+Subject: [PATCH 0030/1083] drm: create struct drm_object_properties and use it
 
 For now, only connectors have it. In the future, all objects that need
 properties should use it. Since the structure is referenced inside
@@ -17,8 +17,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   45 ++++++++++++++++++++++----------------------
- include/drm/drm_crtc.h     |   15 ++++++++++-----
+ drivers/gpu/drm/drm_crtc.c | 45 +++++++++++++++++++++++----------------------
+ include/drm/drm_crtc.h     | 15 ++++++++++-----
  2 files changed, 33 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -195,5 +195,5 @@ index 036faec..7760679 100644
  	uint8_t polled; /* DRM_CONNECTOR_POLL_* */
  
 -- 
-1.7.10.4
+1.8.3.2
 

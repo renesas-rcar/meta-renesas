@@ -1,7 +1,7 @@
 From fbf7aec399e3044c6b2bc778a79143ffb283427d Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Wed, 26 Jun 2013 14:22:47 +0900
-Subject: [PATCH 679/715] ASoC: sh: scu: Fix work queue using private worker
+Subject: [PATCH 0679/1083] ASoC: sh: scu: Fix work queue using private worker
  thread
 
 Modify the work queue schedule from the shared queue to the private queue.
@@ -11,8 +11,8 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- include/sound/sh_scu.h |    3 ++-
- sound/soc/sh/scu_pcm.c |    6 ++++--
+ include/sound/sh_scu.h | 3 ++-
+ sound/soc/sh/scu_pcm.c | 6 ++++--
  2 files changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
@@ -68,5 +68,5 @@ index 53a8328..49c4473 100644
  
  	FNC_EXIT
 -- 
-1.7.10.4
+1.8.3.2
 

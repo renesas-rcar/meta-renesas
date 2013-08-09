@@ -1,14 +1,14 @@
 From d1dd47bcf963d1be0a75b9deb41b3922f24868f1 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Wed, 26 Jun 2013 14:23:34 +0900
-Subject: [PATCH 680/715] ASoC: sh: scu: Fix SSICR register mask
+Subject: [PATCH 0680/1083] ASoC: sh: scu: Fix SSICR register mask
 
 Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 (cherry picked from commit 3157c93363fc48dea03b8194896f3adcf4242755)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- sound/soc/sh/scu_dai.c |    2 +-
+ sound/soc/sh/scu_dai.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
@@ -25,5 +25,5 @@ index af3f601..bb60176 100644
  	FNC_EXIT
  
 -- 
-1.7.10.4
+1.8.3.2
 

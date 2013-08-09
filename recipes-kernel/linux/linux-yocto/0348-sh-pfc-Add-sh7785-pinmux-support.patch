@@ -1,7 +1,7 @@
 From 8d21a729897c15479fa39aae74a364b1a89865ec Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:38 +0100
-Subject: [PATCH 348/715] sh-pfc: Add sh7785 pinmux support
+Subject: [PATCH 0348/1083] sh-pfc: Add sh7785 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -1378,5 +1378,5 @@ index 0000000..23f2c31
 +	.gpio_data_size = ARRAY_SIZE(pinmux_data),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

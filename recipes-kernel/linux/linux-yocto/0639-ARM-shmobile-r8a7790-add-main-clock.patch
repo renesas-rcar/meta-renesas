@@ -1,7 +1,7 @@
 From 979cca1345e51d5e61519054475dc87fa2018804 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Fri, 12 Apr 2013 00:42:22 -0700
-Subject: [PATCH 639/715] ARM: shmobile: r8a7790: add main clock
+Subject: [PATCH 0639/1083] ARM: shmobile: r8a7790: add main clock
 
 Almost all clock needs main clock which is basis clock on r8a7790.
 This patch adds it, and, set its parent/ratio via MD pin.
@@ -19,7 +19,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c |  301 +++++++++++++++++++-------------
+ arch/arm/mach-shmobile/clock-r8a7790.c | 301 ++++++++++++++++++++-------------
  1 file changed, 184 insertions(+), 117 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -436,5 +436,5 @@ index 8235a17..a442ebb 100644
  		ret = clk_register(main_clks[k]);
  
 -- 
-1.7.10.4
+1.8.3.2
 

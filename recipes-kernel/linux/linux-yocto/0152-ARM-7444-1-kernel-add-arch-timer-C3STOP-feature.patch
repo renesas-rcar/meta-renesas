@@ -1,7 +1,7 @@
 From de95bdbaba10dc93907490af9ce6420fec4e757f Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
 Date: Fri, 6 Jul 2012 11:06:49 +0100
-Subject: [PATCH 152/715] ARM: 7444/1: kernel: add arch-timer C3STOP feature
+Subject: [PATCH 0152/1083] ARM: 7444/1: kernel: add arch-timer C3STOP feature
 
 When a CPU is shutdown its architected timer comparators registers are
 lost. Within CPU idle, before processors enter shutdown they enter
@@ -26,7 +26,7 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/arch_timer.c |    2 +-
+ arch/arm/kernel/arch_timer.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
@@ -43,5 +43,5 @@ index 675cee0..cf25880 100644
  	clk->rating = 450;
  	clk->set_mode = arch_timer_set_mode;
 -- 
-1.7.10.4
+1.8.3.2
 

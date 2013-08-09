@@ -1,7 +1,7 @@
 From 4a3b9429196208559bc4939b595517f33db96f22 Mon Sep 17 00:00:00 2001
 From: Mark Brown <broonie@opensource.wolfsonmicro.com>
 Date: Thu, 3 May 2012 18:15:13 +0100
-Subject: [PATCH 115/715] devres: Add devres_release()
+Subject: [PATCH 0115/1083] devres: Add devres_release()
 
 APIs using devres frequently want to implement a "remove and free the
 resource" operation so it seems sensible that they should be able to
@@ -14,8 +14,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/base/devres.c  |   31 +++++++++++++++++++++++++++++++
- include/linux/device.h |    2 ++
+ drivers/base/devres.c  | 31 +++++++++++++++++++++++++++++++
+ include/linux/device.h |  2 ++
  2 files changed, 33 insertions(+)
 
 diff --git a/drivers/base/devres.c b/drivers/base/devres.c
@@ -74,5 +74,5 @@ index e339929..5c7fdbd 100644
  /* devres group */
  extern void * __must_check devres_open_group(struct device *dev, void *id,
 -- 
-1.7.10.4
+1.8.3.2
 

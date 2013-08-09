@@ -1,7 +1,7 @@
 From 66f80e1947b240e3f7c5d12285f497267a50a65b Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Tue, 25 Sep 2012 12:41:40 +0530
-Subject: [PATCH 227/715] pinctrl: Fix potential memory leak in
+Subject: [PATCH 0227/1083] pinctrl: Fix potential memory leak in
  pinctrl_register_one_pin()
 
 'pindesc' was not freed when returning from an error induced
@@ -13,7 +13,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/core.c |    4 +++-
+ drivers/pinctrl/core.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
@@ -33,5 +33,5 @@ index f7faf80..3fa50fe 100644
  	}
  
 -- 
-1.7.10.4
+1.8.3.2
 

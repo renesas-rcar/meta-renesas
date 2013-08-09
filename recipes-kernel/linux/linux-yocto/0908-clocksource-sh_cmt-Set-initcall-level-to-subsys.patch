@@ -1,0 +1,42 @@
+From 90455af774df9a489a8228aee57109810e7022aa Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Tue, 5 Mar 2013 15:40:42 +0900
+Subject: [PATCH 0908/1083] clocksource: sh_cmt: Set initcall level to subsys
+
+The reason for this is to ensure that CMT is probed earlier
+than with its previous initcall level, module init.
+
+This came up as a problem with using kzm9g-reference which does
+not make use of early timers or devices. In that scenario initialisation
+of SDHI and MMCIF both stall on msleep() calls due to the absence
+of a initialised clock source.
+
+Boot tested on: armadillo800eva, mackerel and kzm9g
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit e903a031402c8dccc675b2f0cf8af40ac89163b0)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 9c9b5cc26a08f14853cd3ee92567825c39764ab8)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/clocksource/sh_cmt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clocksource/sh_cmt.c b/drivers/clocksource/sh_cmt.c
+index 68624c3..5e5d80b 100644
+--- a/drivers/clocksource/sh_cmt.c
++++ b/drivers/clocksource/sh_cmt.c
+@@ -784,7 +784,7 @@ static void __exit sh_cmt_exit(void)
+ }
+ 
+ early_platform_init("earlytimer", &sh_cmt_device_driver);
+-module_init(sh_cmt_init);
++subsys_initcall(sh_cmt_init);
+ module_exit(sh_cmt_exit);
+ 
+ MODULE_AUTHOR("Magnus Damm");
+-- 
+1.8.3.2
+

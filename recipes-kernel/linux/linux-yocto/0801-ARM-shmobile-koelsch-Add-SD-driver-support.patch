@@ -1,0 +1,187 @@
+From c4ab37805b7a24caea2c4e5c5276c90236cc55fe Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Tue, 30 Jul 2013 19:51:02 +0900
+Subject: [PATCH 0801/1083] ARM: shmobile: koelsch: Add SD driver support
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+---
+ arch/arm/mach-shmobile/board-koelsch.c | 143 +++++++++++++++++++++++++++++++++
+ 1 file changed, 143 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-koelsch.c b/arch/arm/mach-shmobile/board-koelsch.c
+index 0d2a1a6..c7b8531 100644
+--- a/arch/arm/mach-shmobile/board-koelsch.c
++++ b/arch/arm/mach-shmobile/board-koelsch.c
+@@ -33,9 +33,12 @@
+ #include <linux/mtd/partitions.h>
+ #include <linux/spi/spi.h>
+ #include <linux/spi/flash.h>
++#include <linux/mfd/tmio.h>
++#include <linux/mmc/sh_mobile_sdhi.h>
+ #include <mach/common.h>
+ #include <media/vin.h>
+ #include <mach/r8a7791.h>
++#include <mach/irqs.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ 
+@@ -137,6 +140,34 @@ static const struct pinctrl_map koelsch_pinctrl_map[] = {
+ 				  "vin1_data", "vin1"),
+ 	PIN_MAP_MUX_GROUP_DEFAULT("vin.1", "pfc-r8a7791",
+ 				  "vin1_clk", "vin1"),
++
++	/* SDHI0 */
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.0", "pfc-r8a7791",
++				  "sdhi0_data4", "sdhi0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.0", "pfc-r8a7791",
++				  "sdhi0_ctrl", "sdhi0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.0", "pfc-r8a7791",
++				  "sdhi0_cd", "sdhi0"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.0", "pfc-r8a7791",
++				  "sdhi0_wp", "sdhi0"),
++	/* SDHI1 */
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.1", "pfc-r8a7791",
++				  "sdhi1_data4", "sdhi1"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.1", "pfc-r8a7791",
++				  "sdhi1_ctrl", "sdhi1"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.1", "pfc-r8a7791",
++				  "sdhi1_cd", "sdhi1"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.1", "pfc-r8a7791",
++				  "sdhi1_wp", "sdhi1"),
++	/* SDHI2 */
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.2", "pfc-r8a7791",
++				  "sdhi2_data4", "sdhi2"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.2", "pfc-r8a7791",
++				  "sdhi2_ctrl", "sdhi2"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.2", "pfc-r8a7791",
++				  "sdhi2_cd", "sdhi2"),
++	PIN_MAP_MUX_GROUP_DEFAULT("sh_mobile_sdhi.2", "pfc-r8a7791",
++				  "sdhi2_wp", "sdhi2"),
+ };
+ 
+ 
+@@ -208,9 +239,121 @@ static struct platform_device soc_camera_device[] = {
+ 	},
+ };
+ 
++static struct resource sdhi0_resources[] = {
++	[0] = {
++		.name	= "sdhi0",
++		.start	= 0xee100000,
++		.end	= 0xee1003ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(165),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct sh_mobile_sdhi_info sdhi0_platform_data = {
++	.dma_slave_tx	= SHDMA_SLAVE_SDHI0_TX,
++	.dma_slave_rx	= SHDMA_SLAVE_SDHI0_RX,
++	.tmio_caps	= MMC_CAP_SD_HIGHSPEED | MMC_CAP_SDIO_IRQ,
++	.tmio_caps2	= MMC_CAP2_NO_2BLKS_READ,
++	.tmio_flags	= TMIO_MMC_BUFF_16BITACC_ACTIVE_HIGH
++				| TMIO_MMC_CLK_NO_SLEEP
++				| TMIO_MMC_HAS_IDLE_WAIT
++				| TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL
++				| TMIO_MMC_NO_CTL_RESET_SDIO
++				| TMIO_MMC_SDIO_STATUS_QUIRK,
++};
++
++static struct platform_device sdhi0_device = {
++	.name = "sh_mobile_sdhi",
++	.num_resources = ARRAY_SIZE(sdhi0_resources),
++	.resource = sdhi0_resources,
++	.id = 0,
++	.dev = {
++		.platform_data = &sdhi0_platform_data,
++	}
++};
++
++static struct resource sdhi1_resources[] = {
++	[0] = {
++		.name	= "sdhi1",
++		.start	= 0xee140000,
++		.end	= 0xee1400ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(167),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct sh_mobile_sdhi_info sdhi1_platform_data = {
++	.dma_slave_tx	= SHDMA_SLAVE_SDHI1_TX,
++	.dma_slave_rx	= SHDMA_SLAVE_SDHI1_RX,
++	.tmio_caps	= MMC_CAP_SD_HIGHSPEED | MMC_CAP_SDIO_IRQ,
++	.tmio_caps2	= MMC_CAP2_NO_2BLKS_READ,
++	.tmio_flags	= TMIO_MMC_CHECK_ILL_FUNC
++				| TMIO_MMC_CLK_NO_SLEEP
++				| TMIO_MMC_HAS_IDLE_WAIT
++				| TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL
++				| TMIO_MMC_NO_CTL_RESET_SDIO
++				| TMIO_MMC_SDIO_STATUS_QUIRK,
++};
++
++static struct platform_device sdhi1_device = {
++	.name = "sh_mobile_sdhi",
++	.num_resources = ARRAY_SIZE(sdhi1_resources),
++	.resource = sdhi1_resources,
++	.id = 1,
++	.dev = {
++		.platform_data = &sdhi1_platform_data,
++	}
++};
++
++static struct resource sdhi2_resources[] = {
++	[0] = {
++		.name	= "sdhi2",
++		.start	= 0xee160000,
++		.end	= 0xee1600ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(168),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct sh_mobile_sdhi_info sdhi2_platform_data = {
++	.dma_slave_tx	= SHDMA_SLAVE_SDHI2_TX,
++	.dma_slave_rx	= SHDMA_SLAVE_SDHI2_RX,
++	.tmio_caps	= MMC_CAP_SD_HIGHSPEED | MMC_CAP_SDIO_IRQ,
++	.tmio_caps2	= MMC_CAP2_NO_2BLKS_READ,
++	.tmio_flags	= TMIO_MMC_CHECK_ILL_FUNC
++				| TMIO_MMC_CLK_NO_SLEEP
++				| TMIO_MMC_HAS_IDLE_WAIT
++				| TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL
++				| TMIO_MMC_NO_CTL_RESET_SDIO
++				| TMIO_MMC_SDIO_STATUS_QUIRK
++				| TMIO_MMC_WRPROTECT_DISABLE,
++};
++
++static struct platform_device sdhi2_device = {
++	.name = "sh_mobile_sdhi",
++	.num_resources = ARRAY_SIZE(sdhi2_resources),
++	.resource = sdhi2_resources,
++	.id = 2,
++	.dev = {
++		.platform_data = &sdhi2_platform_data,
++	}
++};
++
+ static struct platform_device *koelsch_devices[] __initdata = {
+ 	&soc_camera_device[0],
+ 	&soc_camera_device[1],
++	&sdhi0_device,
++	&sdhi1_device,
++	&sdhi2_device,
+ };
+ 
+ static void __init koelsch_add_standard_devices(void)
+-- 
+1.8.3.2
+

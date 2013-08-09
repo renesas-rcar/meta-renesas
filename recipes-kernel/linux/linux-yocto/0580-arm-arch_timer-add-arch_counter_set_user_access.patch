@@ -1,7 +1,7 @@
 From 974070b30526c88b43e6ecfc18409ceea6c9438e Mon Sep 17 00:00:00 2001
 From: Mark Rutland <mark.rutland@arm.com>
 Date: Wed, 14 Nov 2012 10:32:24 +0000
-Subject: [PATCH 580/715] arm: arch_timer: add arch_counter_set_user_access
+Subject: [PATCH 0580/1083] arm: arch_timer: add arch_counter_set_user_access
 
 Several bits in CNTKCTL reset to 0, including PL0VTEN. For architectures
 using the generic timer which wish to have a fast gettimeofday vDSO
@@ -27,8 +27,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/include/asm/arch_timer.h |   12 ++++++++++++
- arch/arm/kernel/arch_timer.c      |    2 ++
+ arch/arm/include/asm/arch_timer.h | 12 ++++++++++++
+ arch/arm/kernel/arch_timer.c      |  2 ++
  2 files changed, 14 insertions(+)
 
 diff --git a/arch/arm/include/asm/arch_timer.h b/arch/arm/include/asm/arch_timer.h
@@ -68,5 +68,5 @@ index c8dfec0..94f5033 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

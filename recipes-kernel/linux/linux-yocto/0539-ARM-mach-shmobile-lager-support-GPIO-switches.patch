@@ -1,7 +1,7 @@
 From 0906893919ec7257212a2a489d4ae4fd6adf68a1 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Mon, 13 May 2013 16:04:31 +0900
-Subject: [PATCH 539/715] ARM: mach-shmobile: lager: support GPIO switches
+Subject: [PATCH 0539/1083] ARM: mach-shmobile: lager: support GPIO switches
 
 The lager board has pins 1 - 4 of SW2 wired up to GPIO pins.
 This patch allows access to those pins as KEYS 1 - 4 using
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/board-lager.c |   24 +++++++++++++++++++++++-
+ arch/arm/mach-shmobile/board-lager.c | 24 +++++++++++++++++++++++-
  1 file changed, 23 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -72,5 +72,5 @@ index 986fe39..45b7d71 100644
  
  static const char *lager_boards_compat_dt[] __initdata = {
 -- 
-1.7.10.4
+1.8.3.2
 

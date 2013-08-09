@@ -1,7 +1,7 @@
 From 689c4611a221305248080859dea1ff36410d2c79 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 24 Apr 2012 14:38:52 +0530
-Subject: [PATCH 111/715] dma-buf: mmap support
+Subject: [PATCH 0111/1083] dma-buf: mmap support
 
 Compared to Rob Clark's RFC I've ditched the prepare/finish hooks
 and corresponding ioctls on the dma_buf file. The major reason for
@@ -87,9 +87,9 @@ Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/dma-buf-sharing.txt |   98 ++++++++++++++++++++++++++++++++++---
- drivers/base/dma-buf.c            |   64 +++++++++++++++++++++++-
- include/linux/dma-buf.h           |   16 ++++++
+ Documentation/dma-buf-sharing.txt | 98 ++++++++++++++++++++++++++++++++++++---
+ drivers/base/dma-buf.c            | 64 ++++++++++++++++++++++++-
+ include/linux/dma-buf.h           | 16 +++++++
  3 files changed, 170 insertions(+), 8 deletions(-)
 
 diff --git a/Documentation/dma-buf-sharing.txt b/Documentation/dma-buf-sharing.txt
@@ -352,5 +352,5 @@ index 3efbfc2..1f78d15 100644
  
  #endif /* __DMA_BUF_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

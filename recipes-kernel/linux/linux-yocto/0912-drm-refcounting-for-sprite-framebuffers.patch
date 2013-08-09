@@ -1,0 +1,140 @@
+From b87ae505121dcf2471ca5e98b14839f8431e51e0 Mon Sep 17 00:00:00 2001
+From: Daniel Vetter <daniel.vetter@ffwll.ch>
+Date: Tue, 11 Dec 2012 00:59:24 +0100
+Subject: [PATCH 0912/1083] drm: refcounting for sprite framebuffers
+
+Now plane->fb holds a reference onto it's framebuffer. Nothing too
+fancy going on here:
+- Extract __drm_framebuffer_unreference to be called when we know
+  we're not dropping the last reference, e.g. useful in the fb cleanup
+  code.
+- Reduce the locked sections in the set_plane ioctl to only protect
+  plane->fb/plane->crtc and the driver callback (i.e. hw state).
+  Everything either doesn't disappear (crtc, plane) or is refcounted
+  (fb), and all the data we check is invariant over the respective
+  object's lifetimes.
+
+Reviewed-by: Rob Clark <rob@ti.com>
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+(cherry picked from commit 6c2a75325c800de286166c693e0cd33c3a1c5ec8)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit bd996db61f3a698ece4ef968aba43bef7a580930)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_crtc.c | 30 +++++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 7595595..2020b05 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -442,6 +442,12 @@ static void drm_framebuffer_free_bug(struct kref *kref)
+ 	BUG();
+ }
+ 
++static void __drm_framebuffer_unreference(struct drm_framebuffer *fb)
++{
++	DRM_DEBUG("FB ID: %d\n", fb->base.id);
++	kref_put(&fb->refcount, drm_framebuffer_free_bug);
++}
++
+ /* dev->mode_config.fb_lock must be held! */
+ static void __drm_framebuffer_unregister(struct drm_device *dev,
+ 					 struct drm_framebuffer *fb)
+@@ -452,7 +458,7 @@ static void __drm_framebuffer_unregister(struct drm_device *dev,
+ 
+ 	fb->base.id = 0;
+ 
+-	kref_put(&fb->refcount, drm_framebuffer_free_bug);
++	__drm_framebuffer_unreference(fb);
+ }
+ 
+ /**
+@@ -541,6 +547,7 @@ void drm_framebuffer_remove(struct drm_framebuffer *fb)
+ 			if (ret)
+ 				DRM_ERROR("failed to disable plane with busy fb\n");
+ 			/* disconnect the plane from the fb and crtc: */
++			__drm_framebuffer_unreference(plane->fb);
+ 			plane->fb = NULL;
+ 			plane->crtc = NULL;
+ 		}
+@@ -1850,7 +1857,7 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 	struct drm_mode_object *obj;
+ 	struct drm_plane *plane;
+ 	struct drm_crtc *crtc;
+-	struct drm_framebuffer *fb;
++	struct drm_framebuffer *fb = NULL, *old_fb = NULL;
+ 	int ret = 0;
+ 	unsigned int fb_width, fb_height;
+ 	int i;
+@@ -1858,8 +1865,6 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 	if (!drm_core_check_feature(dev, DRIVER_MODESET))
+ 		return -EINVAL;
+ 
+-	drm_modeset_lock_all(dev);
+-
+ 	/*
+ 	 * First, find the plane, crtc, and fb objects.  If not available,
+ 	 * we don't bother to call the driver.
+@@ -1869,16 +1874,18 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 	if (!obj) {
+ 		DRM_DEBUG_KMS("Unknown plane ID %d\n",
+ 			      plane_req->plane_id);
+-		ret = -ENOENT;
+-		goto out;
++		return -ENOENT;
+ 	}
+ 	plane = obj_to_plane(obj);
+ 
+ 	/* No fb means shut it down */
+ 	if (!plane_req->fb_id) {
++		drm_modeset_lock_all(dev);
++		old_fb = plane->fb;
+ 		plane->funcs->disable_plane(plane);
+ 		plane->crtc = NULL;
+ 		plane->fb = NULL;
++		drm_modeset_unlock_all(dev);
+ 		goto out;
+ 	}
+ 
+@@ -1899,8 +1906,6 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 		ret = -ENOENT;
+ 		goto out;
+ 	}
+-	/* fb is protect by the mode_config lock, so drop the ref immediately */
+-	drm_framebuffer_unreference(fb);
+ 
+ 	/* Check whether this plane supports the fb pixel format. */
+ 	for (i = 0; i < plane->format_count; i++)
+@@ -1946,18 +1951,25 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 		goto out;
+ 	}
+ 
++	drm_modeset_lock_all(dev);
+ 	ret = plane->funcs->update_plane(plane, crtc, fb,
+ 					 plane_req->crtc_x, plane_req->crtc_y,
+ 					 plane_req->crtc_w, plane_req->crtc_h,
+ 					 plane_req->src_x, plane_req->src_y,
+ 					 plane_req->src_w, plane_req->src_h);
+ 	if (!ret) {
++		old_fb = plane->fb;
++		fb = NULL;
+ 		plane->crtc = crtc;
+ 		plane->fb = fb;
+ 	}
++	drm_modeset_unlock_all(dev);
+ 
+ out:
+-	drm_modeset_unlock_all(dev);
++	if (fb)
++		drm_framebuffer_unreference(fb);
++	if (old_fb)
++		drm_framebuffer_unreference(old_fb);
+ 
+ 	return ret;
+ }
+-- 
+1.8.3.2
+

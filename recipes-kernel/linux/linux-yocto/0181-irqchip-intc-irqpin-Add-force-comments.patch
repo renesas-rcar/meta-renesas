@@ -1,7 +1,7 @@
 From f4cfd63bcea23a3aaf9061b818b3a25d7aeb0126 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Feb 2013 20:59:04 +0900
-Subject: [PATCH 181/715] irqchip: intc-irqpin: Add force comments
+Subject: [PATCH 0181/1083] irqchip: intc-irqpin: Add force comments
 
 Add comments to describe the special case for
 "force" versions of enable and disable functions.
@@ -11,7 +11,7 @@ Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
 Tested-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/irq-renesas-intc-irqpin.c |    9 +++++++++
+ drivers/irqchip/irq-renesas-intc-irqpin.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/irqchip/irq-renesas-intc-irqpin.c b/drivers/irqchip/irq-renesas-intc-irqpin.c
@@ -42,5 +42,5 @@ index 0ac2bf6..59c0cbc 100644
  	intc_irqpin_irq_disable(d);
  }
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From ff711e43d0056c00a98a00fcd36d1703c80e5baf Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Feb 2013 20:58:44 +0900
-Subject: [PATCH 180/715] irqchip: intc-irqpin: Whitespace fixes
+Subject: [PATCH 0180/1083] irqchip: intc-irqpin: Whitespace fixes
 
 Remove whitespace damage and add newline
 between variables and code.
@@ -11,7 +11,7 @@ Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
 Tested-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/irq-renesas-intc-irqpin.c |    8 +++++---
+ drivers/irqchip/irq-renesas-intc-irqpin.c | 8 +++++---
  1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/irqchip/irq-renesas-intc-irqpin.c b/drivers/irqchip/irq-renesas-intc-irqpin.c
@@ -61,5 +61,5 @@ index 3295366..0ac2bf6 100644
  
  err3:
 -- 
-1.7.10.4
+1.8.3.2
 

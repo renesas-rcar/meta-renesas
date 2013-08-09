@@ -1,0 +1,144 @@
+From 7e23fa681a9b739297b358b957d42096db23bde6 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Tue, 30 Jul 2013 14:11:38 +0900
+Subject: [PATCH 0789/1083] ARM: shmobile: r8a7790: Fix USB ioremap error
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7790.c | 56 ++++++++++++++++++++++++++--------
+ 1 file changed, 43 insertions(+), 13 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index b9457af..4701819 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -407,11 +407,19 @@ struct platform_device xhci0_device = {
+ static void __init usbh_internal_pci_bridge_init(int ch)
+ {
+ 	u32 data;
+-	void __iomem *ahbpci_base =
++	void __iomem *ahbpci_base;
++	void __iomem *pci_conf_ahbpci_bas;
++
++	ahbpci_base =
+ 		ioremap_nocache((AHBPCI_BASE + (ch * 0x20000)), 0x400);
+-	void __iomem *pci_conf_ahbpci_bas =
++	if (!ahbpci_base)
++		return;
++
++	pci_conf_ahbpci_bas =
+ 		ioremap_nocache((PCI_CONF_AHBPCI_BAS + (ch * 0x20000)),
+ 								0x100);
++	if (!pci_conf_ahbpci_bas)
++		goto err_iounmap_ahbpci;
+ 
+ 	/* Clock & Reset & Direct Power Down */
+ 	data = ioread32(ahbpci_base + USBCTR);
+@@ -423,7 +431,7 @@ static void __init usbh_internal_pci_bridge_init(int ch)
+ 
+ 	data = ioread32((ahbpci_base + AHB_BUS_CTR));
+ 	if (data == AHB_BUS_CTR_SET)
+-		return;
++		goto err_iounmap_pci_conf;
+ 
+ 	/****** AHB-PCI Bridge Communication Registers ******/
+ 	/* AHB_BUS_CTR */
+@@ -463,8 +471,11 @@ static void __init usbh_internal_pci_bridge_init(int ch)
+ 	iowrite32(PCIWIN1_PCICMD | AHB_CFG_HOST,
+ 			(ahbpci_base + AHBPCI_WIN1_CTR));
+ 
+-	iounmap(ahbpci_base);
++err_iounmap_pci_conf:
+ 	iounmap(pci_conf_ahbpci_bas);
++err_iounmap_ahbpci:
++	iounmap(ahbpci_base);
++
+ }
+ 
+ static int __init usbh_ohci_init(int ch)
+@@ -476,6 +487,9 @@ static int __init usbh_ohci_init(int ch)
+ 		= ioremap_nocache((PCI_CONF_OHCI_BASE + (ch * 0x20000)),
+ 								0x100);
+ 
++	if (!pci_conf_ohci_base)
++		return -ENOMEM;
++
+ 	val = ioread32((pci_conf_ohci_base + OHCI_VID_DID));
+ 
+ 	if (val == OHCI_ID) {
+@@ -507,6 +521,9 @@ static int __init usbh_ehci_init(int ch)
+ 		= ioremap_nocache((PCI_CONF_EHCI_BASE + (ch * 0x20000)),
+ 								 0x100);
+ 
++	if (!pci_conf_ehci_base)
++		return -ENOMEM;
++
+ 	val = ioread32((pci_conf_ehci_base + EHCI_VID_DID));
+ 	if (val == EHCI_ID) {
+ 		/* EHCI_BASEAD */
+@@ -534,6 +551,9 @@ static void __init usbh_pci_int_enable(int ch)
+ 		ioremap_nocache((AHBPCI_BASE + (ch * 0x20000)), 0x400);
+ 	u32 data;
+ 
++	if (!ahbpci_base)
++		return;
++
+ 	/* PCI_INT_ENABLE */
+ 	data = ioread32((ahbpci_base + PCI_INT_ENABLE));
+ 	data |= USBH_PMEEN | USBH_INTBEN | USBH_INTAEN;
+@@ -550,23 +570,32 @@ static int __init usbh_init(void)
+ #endif /* CONFIG_USB_XHCI_HCD */
+ 	void __iomem *hs_usb = ioremap_nocache(0xE6590000, 0x1ff);
+ 	unsigned int ch;
++	int ret = 0;
+ 
+-	clk_hs = clk_get(NULL, "hs_usb");
+-	if (IS_ERR(clk_hs))
+-		return PTR_ERR(clk_hs);
++	if (!hs_usb)
++		return -ENOMEM;
+ 
+-	clk_enable(clk_hs);
++	clk_hs = clk_get(NULL, "hs_usb");
++	if (IS_ERR(clk_hs)) {
++		ret = PTR_ERR(clk_hs);
++		goto err_iounmap;
++	}
+ 
+ 	clk_ehci = clk_get(NULL, "usb_fck");
+-	if (IS_ERR(clk_ehci))
+-		return PTR_ERR(clk_ehci);
++	if (IS_ERR(clk_ehci)) {
++		ret = PTR_ERR(clk_ehci);
++		goto err_iounmap;
++	}
+ 
++	clk_enable(clk_hs);
+ 	clk_enable(clk_ehci);
+ 
+ #if defined(CONFIG_USB_XHCI_HCD)
+ 	clk_xhci = clk_get(NULL, "ss_usb");
+-	if (IS_ERR(clk_xhci))
+-		return PTR_ERR(clk_xhci);
++	if (IS_ERR(clk_xhci)) {
++		ret = PTR_ERR(clk_xhci);
++		goto err_iounmap;
++	}
+ 
+ 	clk_enable(clk_xhci);
+ 
+@@ -590,9 +619,10 @@ static int __init usbh_init(void)
+ 		/* pci int enable */
+ 		usbh_pci_int_enable(ch);
+ 	}
++err_iounmap:
+ 	iounmap(hs_usb);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ /* Fixed 3.3V regulator to be used by SDHI0/1/2/3 */
+-- 
+1.8.3.2
+

@@ -1,7 +1,7 @@
 From b9ceaf581aadf725dbedc7f2269495f1791c52d1 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Tue, 11 Jun 2013 13:46:34 +0900
-Subject: [PATCH 476/715] ARM: shmobile: lager: Change bootargs in DTS
+Subject: [PATCH 0476/1083] ARM: shmobile: lager: Change bootargs in DTS
 
 The console baud rate is made to match mini monitor,
 and NFS root filesystem is added.
@@ -11,7 +11,7 @@ Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/boot/dts/r8a7790-lager.dts |    3 ++-
+ arch/arm/boot/dts/r8a7790-lager.dts | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/boot/dts/r8a7790-lager.dts b/arch/arm/boot/dts/r8a7790-lager.dts
@@ -36,5 +36,5 @@ index 09a84fc..646ef5a 100644
  
  	memory@40000000 {
 -- 
-1.7.10.4
+1.8.3.2
 

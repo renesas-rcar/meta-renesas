@@ -1,7 +1,7 @@
 From 49ffdc8cd60180a8e741c9c40d6178cf6244fe3c Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Tue, 18 Jun 2013 17:58:46 +0900
-Subject: [PATCH 632/715] Revert "ARM: shmobile: r8a7779: Add DU support"
+Subject: [PATCH 0632/1083] Revert "ARM: shmobile: r8a7779: Add DU support"
 
 This reverts commit fb5b892d806e9f4e265a41224afe3707ae0881ec.
 
@@ -11,9 +11,9 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7779.c        |    2 +-
- arch/arm/mach-shmobile/include/mach/r8a7779.h |    2 --
- arch/arm/mach-shmobile/setup-r8a7779.c        |   23 -----------------------
+ arch/arm/mach-shmobile/clock-r8a7779.c        |  2 +-
+ arch/arm/mach-shmobile/include/mach/r8a7779.h |  2 --
+ arch/arm/mach-shmobile/setup-r8a7779.c        | 23 -----------------------
  3 files changed, 1 insertion(+), 26 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
@@ -100,5 +100,5 @@ index 76a4fba..96bd203 100644
  void __init __weak r8a7779_register_twd(void) { }
  
 -- 
-1.7.10.4
+1.8.3.2
 

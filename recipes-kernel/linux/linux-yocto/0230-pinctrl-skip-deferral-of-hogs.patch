@@ -1,7 +1,7 @@
 From 4f83c3aa16c55d16d0292c74ae0616b2bb1a34dc Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 11 Dec 2012 14:14:32 +0100
-Subject: [PATCH 230/715] pinctrl: skip deferral of hogs
+Subject: [PATCH 0230/1083] pinctrl: skip deferral of hogs
 
 Up until now, as hogs were always taken at the end of the
 pin control device registration, it didn't cause any problem.
@@ -20,7 +20,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/core.c |   27 ++++++++++++++++++++++++---
+ drivers/pinctrl/core.c | 27 ++++++++++++++++++++++++---
  1 file changed, 24 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
@@ -78,5 +78,5 @@ index e8e393a..341884f 100644
  	/* Add the pinctrl handle to the global list */
  	list_add_tail(&p->node, &pinctrl_list);
 -- 
-1.7.10.4
+1.8.3.2
 

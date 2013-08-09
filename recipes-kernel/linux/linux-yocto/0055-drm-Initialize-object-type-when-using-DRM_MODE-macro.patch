@@ -1,7 +1,7 @@
 From f8cf5f5bbbb048641eed8ddbd7b1c72de4b57e6b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Tue, 14 Aug 2012 10:53:38 +0000
-Subject: [PATCH 055/715] drm: Initialize object type when using DRM_MODE()
+Subject: [PATCH 0055/1083] drm: Initialize object type when using DRM_MODE()
  macro
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -18,7 +18,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/drm/drm_crtc.h |    3 ++-
+ include/drm/drm_crtc.h | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
@@ -36,5 +36,5 @@ index 617d87a..31d24c5 100644
  #define CRTC_INTERLACE_HALVE_V 0x1 /* halve V values for interlacing */
  
 -- 
-1.7.10.4
+1.8.3.2
 

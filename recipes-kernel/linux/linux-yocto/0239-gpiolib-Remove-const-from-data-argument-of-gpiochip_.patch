@@ -1,7 +1,7 @@
 From d291794bf2a07a5bfc674e95cf82798502231031 Mon Sep 17 00:00:00 2001
 From: Grant Likely <grant.likely@secretlab.ca>
 Date: Fri, 18 May 2012 23:01:05 -0600
-Subject: [PATCH 239/715] gpiolib: Remove 'const' from data argument of
+Subject: [PATCH 0239/1083] gpiolib: Remove 'const' from data argument of
  gpiochip_find()
 
 Commit 3d0f7cf0 "gpio: Adjust of_xlate API to support multiple GPIO
@@ -14,8 +14,8 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c     |    2 +-
- include/asm-generic/gpio.h |    2 +-
+ drivers/gpio/gpiolib.c     | 2 +-
+ include/asm-generic/gpio.h | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -45,5 +45,5 @@ index 1ba08f0..365ea09 100644
  						     void *data));
  
 -- 
-1.7.10.4
+1.8.3.2
 

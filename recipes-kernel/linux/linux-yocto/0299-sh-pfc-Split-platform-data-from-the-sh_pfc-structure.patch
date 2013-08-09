@@ -1,7 +1,7 @@
 From 8c720ab280c127261dbb3d110f6ff281de3bbc30 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:43 +0100
-Subject: [PATCH 299/715] sh-pfc: Split platform data from the sh_pfc
+Subject: [PATCH 0299/1083] sh-pfc: Split platform data from the sh_pfc
  structure
 
 Create a sh_pfc_platform_data structure to store platform data and
@@ -15,10 +15,10 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c    |   89 ++++++++++++++++++++++------------------------
- drivers/sh/pfc/gpio.c    |   19 +++++-----
- drivers/sh/pfc/pinctrl.c |   27 +++++++-------
- include/linux/sh_pfc.h   |   20 ++++++-----
+ drivers/sh/pfc/core.c    | 89 +++++++++++++++++++++++-------------------------
+ drivers/sh/pfc/gpio.c    | 19 ++++++-----
+ drivers/sh/pfc/pinctrl.c | 27 ++++++++-------
+ include/linux/sh_pfc.h   | 20 ++++++-----
  4 files changed, 79 insertions(+), 76 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -491,5 +491,5 @@ index c19a092..58587f9 100644
  
  enum { GPIO_CFG_DRYRUN, GPIO_CFG_REQ, GPIO_CFG_FREE };
 -- 
-1.7.10.4
+1.8.3.2
 

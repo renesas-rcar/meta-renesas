@@ -1,7 +1,7 @@
 From 0b57eab67dfa6560d0d614071c578e34c82d8f42 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 1 Aug 2012 16:27:38 +0900
-Subject: [PATCH 288/715] sh: pfc: Fix up init ordering mess.
+Subject: [PATCH 0288/1083] sh: pfc: Fix up init ordering mess.
 
 Commit ca5481c68e9fbcea62bb3c78ae6cccf99ca8fb73 ("sh: pfc: Rudimentary
 pinctrl-backed GPIO support.") introduced a regression for platforms that
@@ -25,7 +25,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |   32 +++++++++++++++-----------------
+ drivers/sh/pfc/pinctrl.c | 32 +++++++++++++++-----------------
  1 file changed, 15 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -88,5 +88,5 @@ index 814b292..2804eaa 100644
 -subsys_initcall(sh_pfc_pinctrl_init);
  module_exit(sh_pfc_pinctrl_exit);
 -- 
-1.7.10.4
+1.8.3.2
 

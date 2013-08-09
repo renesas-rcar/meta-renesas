@@ -1,7 +1,7 @@
 From c4c5f9bfb59f35f8a53ae2a1ec94c6562a94d0e4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 14 Feb 2013 22:12:11 +0100
-Subject: [PATCH 388/715] sh-pfc: Simplify the sh_pfc_gpio_is_pin() logic
+Subject: [PATCH 0388/1083] sh-pfc: Simplify the sh_pfc_gpio_is_pin() logic
 
 The function is guaranteed to be called with a gpio number smaller than
 nr_pins. The condition can the be simplified, and the function inlined.
@@ -12,9 +12,9 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c |   29 +++++++++--------------------
- drivers/pinctrl/sh-pfc/core.h |    4 ++--
- drivers/pinctrl/sh-pfc/gpio.c |   21 +++++++++++----------
+ drivers/pinctrl/sh-pfc/core.c | 29 +++++++++--------------------
+ drivers/pinctrl/sh-pfc/core.h |  4 ++--
+ drivers/pinctrl/sh-pfc/gpio.c | 21 +++++++++++----------
  3 files changed, 22 insertions(+), 32 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -169,5 +169,5 @@ index 3ad938f..db9af4e 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

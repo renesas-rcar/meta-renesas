@@ -1,7 +1,7 @@
 From 0aafda86844df11a59f8071aa508a64777da13ad Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Mon, 16 Apr 2012 10:40:08 -0400
-Subject: [PATCH 024/715] drm/edid: Try harder to fix up base EDID blocks
+Subject: [PATCH 0024/1083] drm/edid: Try harder to fix up base EDID blocks
 
 Requiring the first byte of the EDID base block header to be 0 means we
 don't fix up as many transfer errors as we could.  Instead have the
@@ -17,8 +17,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   10 +++++-----
- include/drm/drm_crtc.h     |    2 +-
+ drivers/gpu/drm/drm_edid.c | 10 +++++-----
+ include/drm/drm_crtc.h     |  2 +-
  2 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -82,5 +82,5 @@ index 6f5faf6..f35e7ed 100644
  struct drm_display_mode *drm_mode_find_dmt(struct drm_device *dev,
  					   int hsize, int vsize, int fresh,
 -- 
-1.7.10.4
+1.8.3.2
 

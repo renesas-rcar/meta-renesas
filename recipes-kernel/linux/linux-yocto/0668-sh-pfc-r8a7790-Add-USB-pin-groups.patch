@@ -1,14 +1,14 @@
 From 80de200a775210edd0bb1f44b81155006c212244 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Wed, 26 Jun 2013 09:39:34 +0900
-Subject: [PATCH 668/715] sh-pfc: r8a7790: Add USB pin groups
+Subject: [PATCH 0668/1083] sh-pfc: r8a7790: Add USB pin groups
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit c6379094ddc73ccd7088584a887a4699a0233c49)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |   43 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 43 ++++++++++++++++++++++++++++++++++++
  1 file changed, 43 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -87,5 +87,5 @@ index 27a593d..73d8bae 100644
  
  static struct pinmux_cfg_reg pinmux_config_regs[] = {
 -- 
-1.7.10.4
+1.8.3.2
 

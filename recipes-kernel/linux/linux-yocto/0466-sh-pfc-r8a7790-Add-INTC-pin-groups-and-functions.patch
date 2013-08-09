@@ -1,7 +1,7 @@
 From 1f239214ce5f42f1922b4d43fe9ad3a6745c9143 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:15 +0200
-Subject: [PATCH 466/715] sh-pfc: r8a7790: Add INTC pin groups and functions
+Subject: [PATCH 0466/1083] sh-pfc: r8a7790: Add INTC pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
@@ -9,7 +9,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |   40 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 40 ++++++++++++++++++++++++++++++++++++
  1 file changed, 40 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -79,5 +79,5 @@ index 3774242..a92b204 100644
  
  #define PINMUX_FN_BASE	ARRAY_SIZE(pinmux_pins)
 -- 
-1.7.10.4
+1.8.3.2
 

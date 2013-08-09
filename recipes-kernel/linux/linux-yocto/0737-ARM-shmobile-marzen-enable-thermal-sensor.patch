@@ -1,0 +1,69 @@
+From 3b2737db380b5693d302e8f4e226488c9ad3967a Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 27 Aug 2012 19:00:15 -0700
+Subject: [PATCH 0737/1083] ARM: shmobile: marzen: enable thermal sensor
+
+Marzen board can measure its thermal by this patch.
+	cat /sys/class/thermal/thermal_zoneX/temp
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms@verge.net.au>
+(cherry picked from commit eb8ca943bae2b84c3fc14dfd7a908cb334465fef)
+
+Conflicts:
+	arch/arm/mach-shmobile/board-marzen.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 43e857979586251017a03eeab169cfccf5559220)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/marzen_defconfig     |  2 ++
+ arch/arm/mach-shmobile/board-marzen.c | 16 ++++++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
+index 3cbb103..5c157c3 100644
+--- a/arch/arm/configs/marzen_defconfig
++++ b/arch/arm/configs/marzen_defconfig
+@@ -79,6 +79,8 @@ CONFIG_I2C=y
+ CONFIG_I2C_RCAR=y
+ CONFIG_GPIO_SYSFS=y
+ # CONFIG_HWMON is not set
++CONFIG_THERMAL=y
++CONFIG_RCAR_THERMAL=y
+ CONFIG_SSB=y
+ # CONFIG_USB_SUPPORT is not set
+ CONFIG_DRM=y
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index b89e0ea..e5bab2f 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -142,8 +142,24 @@ static struct platform_device leds_device = {
+ 	},
+ };
+ 
++/* Thermal */
++static struct resource thermal_resources[] = {
++	[0] = {
++		.start		= 0xFFC48000,
++		.end		= 0xFFC48038 - 1,
++		.flags		= IORESOURCE_MEM,
++	},
++};
++
++static struct platform_device thermal_device = {
++	.name		= "rcar_thermal",
++	.resource	= thermal_resources,
++	.num_resources	= ARRAY_SIZE(thermal_resources),
++};
++
+ static struct platform_device *marzen_devices[] __initdata = {
+ 	&eth_device,
++	&thermal_device,
+ 	&leds_device,
+ };
+ 
+-- 
+1.8.3.2
+

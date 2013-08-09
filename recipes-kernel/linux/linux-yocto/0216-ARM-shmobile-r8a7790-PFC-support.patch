@@ -1,7 +1,7 @@
 From f607359b91e9fee9ad2aa86d40e4dc6f03a24018 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Thu, 28 Mar 2013 00:50:03 +0900
-Subject: [PATCH 216/715] ARM: shmobile: r8a7790 PFC support
+Subject: [PATCH 0216/1083] ARM: shmobile: r8a7790 PFC support
 
 Add a platform device for the r8a7790 PFC.
 
@@ -11,9 +11,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/Kconfig                |    1 +
- arch/arm/mach-shmobile/include/mach/r8a7790.h |    1 +
- arch/arm/mach-shmobile/setup-r8a7790.c        |   10 ++++++++++
+ arch/arm/mach-shmobile/Kconfig                |  1 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  1 +
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 10 ++++++++++
  3 files changed, 12 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
@@ -61,5 +61,5 @@ index e310c4b..a24328f 100644
  	.type		= scif_type,				\
  	.mapbase	= baseaddr,				\
 -- 
-1.7.10.4
+1.8.3.2
 

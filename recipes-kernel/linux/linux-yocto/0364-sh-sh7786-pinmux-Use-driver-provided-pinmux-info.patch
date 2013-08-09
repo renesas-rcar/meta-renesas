@@ -1,7 +1,7 @@
 From 1cd5de386e1243f63bb932003da88a082b8cbfe3 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:51 +0100
-Subject: [PATCH 364/715] sh: sh7786: pinmux: Use driver-provided pinmux info
+Subject: [PATCH 0364/1083] sh: sh7786: pinmux: Use driver-provided pinmux info
 
 Pinmux info for the sh machines is now provided by pinmux drivers.
 Remove the duplicate copy in arch code.
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c |  821 +------------------------------
+ arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c | 821 +-------------------------------
  1 file changed, 1 insertion(+), 820 deletions(-)
 
 diff --git a/arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c b/arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c
@@ -853,5 +853,5 @@ index be876b0..3061778 100644
  
  arch_initcall(plat_pinmux_setup);
 -- 
-1.7.10.4
+1.8.3.2
 

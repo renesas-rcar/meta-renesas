@@ -1,7 +1,7 @@
 From 7057785ab6a3a26935898a4cbceb5adc5e479455 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 10 Jul 2012 11:49:30 +0900
-Subject: [PATCH 277/715] sh: pfc: Shuffle PFC support core.
+Subject: [PATCH 0277/1083] sh: pfc: Shuffle PFC support core.
 
 This follows the intc/clk changes and shuffles the PFC support code under
 its own directory. This will facilitate better code sharing, and allow us
@@ -12,15 +12,15 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/Kconfig      |   16 +-
- drivers/sh/Makefile     |    4 +-
- drivers/sh/pfc-gpio.c   |  309 -------------------------
- drivers/sh/pfc.c        |  578 -----------------------------------------------
- drivers/sh/pfc/Kconfig  |   14 ++
- drivers/sh/pfc/Makefile |    2 +
- drivers/sh/pfc/core.c   |  578 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/sh/pfc/gpio.c   |  309 +++++++++++++++++++++++++
- include/linux/sh_pfc.h  |    4 +-
+ drivers/sh/Kconfig      |  16 +-
+ drivers/sh/Makefile     |   4 +-
+ drivers/sh/pfc-gpio.c   | 309 --------------------------
+ drivers/sh/pfc.c        | 578 ------------------------------------------------
+ drivers/sh/pfc/Kconfig  |  14 ++
+ drivers/sh/pfc/Makefile |   2 +
+ drivers/sh/pfc/core.c   | 578 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/sh/pfc/gpio.c   | 309 ++++++++++++++++++++++++++
+ include/linux/sh_pfc.h  |   4 +-
  9 files changed, 908 insertions(+), 906 deletions(-)
  delete mode 100644 drivers/sh/pfc-gpio.c
  delete mode 100644 drivers/sh/pfc.c
@@ -1913,5 +1913,5 @@ index ed1d823..f522550 100644
  
  int sh_pfc_read_bit(struct pinmux_data_reg *dr, unsigned long in_pos);
 -- 
-1.7.10.4
+1.8.3.2
 

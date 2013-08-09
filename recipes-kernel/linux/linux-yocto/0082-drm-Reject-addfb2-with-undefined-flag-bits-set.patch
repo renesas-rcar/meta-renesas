@@ -1,7 +1,7 @@
 From f006e2cfe84bcac9bd24a6dd52bb2228310bfda0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 8 Nov 2012 09:09:42 +0000
-Subject: [PATCH 082/715] drm: Reject addfb2 with undefined flag bits set
+Subject: [PATCH 0082/1083] drm: Reject addfb2 with undefined flag bits set
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -12,7 +12,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |    5 +++++
+ drivers/gpu/drm/drm_crtc.c | 5 +++++
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -32,5 +32,5 @@ index 54eca93..f6d484f 100644
  		DRM_DEBUG_KMS("bad framebuffer width %d, should be >= %d && <= %d\n",
  			  r->width, config->min_width, config->max_width);
 -- 
-1.7.10.4
+1.8.3.2
 

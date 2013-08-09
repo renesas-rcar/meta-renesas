@@ -1,14 +1,14 @@
 From b529e8dcc5570589472a0fc6d1d9bf59988c285f Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Wed, 26 Jun 2013 14:49:28 +0900
-Subject: [PATCH 699/715] drivers: Fix gpu order for i2c codec support
+Subject: [PATCH 0699/1083] drivers: Fix gpu order for i2c codec support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit 95534f20c889db33306e01cb8860883664c195b9)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/Makefile |    5 ++---
+ drivers/Makefile | 5 ++---
  1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/Makefile b/drivers/Makefile
@@ -35,5 +35,5 @@ index 1480802..05c451e 100644
  obj-$(CONFIG_PTP_1588_CLOCK)	+= ptp/
  obj-$(CONFIG_W1)		+= w1/
 -- 
-1.7.10.4
+1.8.3.2
 

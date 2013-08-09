@@ -1,7 +1,7 @@
 From 072839f2e33519d9de3f757c482b7c8e80132295 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Tue, 18 Jun 2013 20:18:04 +0900
-Subject: [PATCH 633/715] Revert "ARM: shmobile: marzen: Add Display Unit
+Subject: [PATCH 0633/1083] Revert "ARM: shmobile: marzen: Add Display Unit
  support"
 
 This reverts commit 1c476d6b154515109cca3ce51ff99144e20408a3.
@@ -9,8 +9,8 @@ This reverts commit 1c476d6b154515109cca3ce51ff99144e20408a3.
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/marzen_defconfig     |    2 --
- arch/arm/mach-shmobile/board-marzen.c |   51 ---------------------------------
+ arch/arm/configs/marzen_defconfig     |  2 --
+ arch/arm/mach-shmobile/board-marzen.c | 51 -----------------------------------
  2 files changed, 53 deletions(-)
 
 diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
@@ -110,5 +110,5 @@ index 95f9611..be692cd 100644
  
  MACHINE_START(MARZEN, "marzen")
 -- 
-1.7.10.4
+1.8.3.2
 

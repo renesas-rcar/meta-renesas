@@ -1,7 +1,7 @@
 From 8b64f868ffa83acd78d0ae5bad3397d2e9370aff Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Wed, 24 Oct 2012 13:35:50 +0000
-Subject: [PATCH 094/715] drm: don't unnecessarily enable the polling work
+Subject: [PATCH 0094/1083] drm: don't unnecessarily enable the polling work
 
 ... by properly checking connector->polled. This doesn't matter too
 much because the polling work itself gets this slightly more right and
@@ -17,7 +17,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc_helper.c |    6 +++---
+ drivers/gpu/drm/drm_crtc_helper.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
@@ -45,5 +45,5 @@ index 47ace7c..12b615a 100644
  	}
  
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From ec637d930fe20cb0bc22c59f53a005cff50f2038 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:37 +0100
-Subject: [PATCH 294/715] sh: sh7723: Rename GPIO_FN_SIUOSPD to
+Subject: [PATCH 0294/1083] sh: sh7723: Rename GPIO_FN_SIUOSPD to
  GPIO_FN_SIUAOSPD
 
 The GPIO was incorrectly named. As it has no user in the whole kernel
@@ -14,8 +14,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/include/cpu-sh4/cpu/sh7723.h    |    2 +-
- arch/sh/kernel/cpu/sh4a/pinmux-sh7723.c |    2 +-
+ arch/sh/include/cpu-sh4/cpu/sh7723.h    | 2 +-
+ arch/sh/kernel/cpu/sh4a/pinmux-sh7723.c | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/arch/sh/include/cpu-sh4/cpu/sh7723.h b/arch/sh/include/cpu-sh4/cpu/sh7723.h
@@ -45,5 +45,5 @@ index 88bf5ec..2037915 100644
  	/* SIUB */
  	PINMUX_GPIO(GPIO_FN_SIUBFCK, SIUBFCK_MARK),
 -- 
-1.7.10.4
+1.8.3.2
 

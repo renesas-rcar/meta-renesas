@@ -1,0 +1,79 @@
+From 2d5661bc93bcea15ce0633ffb968b6fbc81f54e9 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Tue, 30 Jul 2013 18:05:23 +0900
+Subject: [PATCH 0806/1083] ASoC: sh: scu: Fix inverted stereo in case of SRC
+ path
+
+Since the stereo data formats of the audio main bus and the audio local
+bus differ, the data swap is added when the data passes through SRC.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ include/sound/sh_scu.h |  4 ++++
+ sound/soc/sh/scu_dai.c | 22 +++++++++++-----------
+ 2 files changed, 15 insertions(+), 11 deletions(-)
+
+diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
+index bb24c63..03821b6 100644
+--- a/include/sound/sh_scu.h
++++ b/include/sound/sh_scu.h
+@@ -168,6 +168,10 @@
+ #define	SRC_IN			1
+ #define	SRC_OUT			2
+ 
++/* SRCm_BUSIF_DALIGN */
++#define	SRC_DALIGN_STEREO	0x76543210
++#define	SRC_DALIGN_STEREO_R	0x76543201
++
+ /* SRC_MODE */
+ #define	SRC_MODE_OUT_SYNC	(1<<25)
+ #define	SRC_MODE_IN_SYNC	(1<<24)
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index 79c2b73..166313d 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -194,18 +194,18 @@ static void scu_ssi_stop(int ssi_ch)
+ 
+ static void scu_src_init(int src_ch, unsigned int sync_sw)
+ {
+-	u32 val;
++	u32 val = SRC_MODE_SRCUSE;
+ 
+ 	FNC_ENTRY
+-	if (sync_sw == 1) { /* Synchronous SRC */
+-		if (src_ch == 0) /* playback */
+-			val = (SRC_MODE_IN_SYNC | SRC_MODE_SRCUSE);
+-		else /* capture */
+-			val = (SRC_MODE_OUT_SYNC | SRC_MODE_SRCUSE);
+-	} else /* Asynchronous SRC */
+-		val = SRC_MODE_SRCUSE;
++	/* SCU SRC0_BUSIF_DALIGN */
++	writel(SRC_DALIGN_STEREO_R,
++		(u32 *)&rinfo->scusrcreg[src_ch]->dalign);
+ 
+ 	/* SCU SRC_MODE */
++	if (src_ch == 0 && sync_sw == 1)
++		val |= SRC_MODE_IN_SYNC;
++	else if (src_ch == 1 && sync_sw == 1)
++		val |= SRC_MODE_OUT_SYNC;
+ 	writel(val, (u32 *)&rinfo->scusrcreg[src_ch]->mode);
+ 	FNC_EXIT
+ 	return;
+@@ -787,11 +787,11 @@ static int scu_dai_put_volume(struct snd_kcontrol *kctrl,
+ 		if (change) {
+ 			ainfo->volume[0][0] = ucontrol->value.integer.value[0];
+ 			ainfo->volume[0][1] = ucontrol->value.integer.value[1];
+-			/* DVC0 L:vol1r R:vol0r */
++			/* DVC0 L:vol0r R:vol1r */
+ 			writel(ainfo->volume[0][0],
+-				(u32 *)&rinfo->dvcreg[0]->vol1r);
+-			writel(ainfo->volume[0][1],
+ 				(u32 *)&rinfo->dvcreg[0]->vol0r);
++			writel(ainfo->volume[0][1],
++				(u32 *)&rinfo->dvcreg[0]->vol1r);
+ 		}
+ 		break;
+ 	case CTRL_CAPTURE:
+-- 
+1.8.3.2
+

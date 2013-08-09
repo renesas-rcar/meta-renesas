@@ -1,7 +1,7 @@
 From af187ec5155b5d6b026db5e3fd004cb64167a834 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Tue, 23 Apr 2013 02:37:05 +0000
-Subject: [PATCH 538/715] ARM: shmobile: lager: Add GPIO LEDs
+Subject: [PATCH 0538/1083] ARM: shmobile: lager: Add GPIO LEDs
 
 The board has 3 LEDs connected to GPIOs. Add a led-gpio device to
 support them.
@@ -20,7 +20,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/board-lager.c |   29 +++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/board-lager.c | 29 +++++++++++++++++++++++++++++
  1 file changed, 29 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -81,5 +81,5 @@ index 69139ed..986fe39 100644
  
  static const char *lager_boards_compat_dt[] __initdata = {
 -- 
-1.7.10.4
+1.8.3.2
 

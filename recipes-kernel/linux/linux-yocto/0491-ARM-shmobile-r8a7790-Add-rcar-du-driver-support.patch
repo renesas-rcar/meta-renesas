@@ -1,7 +1,7 @@
 From 5c445b7a3a48959d693675638f9862164916bad4 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:35:15 +0900
-Subject: [PATCH 491/715] ARM: shmobile: r8a7790: Add rcar-du driver support
+Subject: [PATCH 0491/1083] ARM: shmobile: r8a7790: Add rcar-du driver support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit dbc5c7f30f21a86ec9424e96dc3fe40cb3cfd393)
@@ -11,8 +11,8 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig    |    2 +
- arch/arm/mach-shmobile/setup-r8a7790.c |   67 ++++++++++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig    |  2 +
+ arch/arm/mach-shmobile/setup-r8a7790.c | 67 ++++++++++++++++++++++++++++++++++
  2 files changed, 69 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -117,5 +117,5 @@ index 73d4b8f..6b196fa 100644
  
  static struct renesas_irqc_config irqc0_data = {
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 40e78038ca435054d4c53d690499d317a691a53f Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:16 +0100
-Subject: [PATCH 097/715] drm/doc: integrate crtc helper api into docbook
+Subject: [PATCH 0097/1083] drm/doc: integrate crtc helper api into docbook
 
 - Add the missing doc for drm_helper_move_panel_connectors_to_head.
 - Fixup any outdated stuff in existing sections. I've only looked at
@@ -22,8 +22,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/DocBook/drm.tmpl    |    4 +++
- drivers/gpu/drm/drm_crtc_helper.c |   66 +++++++++++++++++++++++--------------
+ Documentation/DocBook/drm.tmpl    |  4 +++
+ drivers/gpu/drm/drm_crtc_helper.c | 66 +++++++++++++++++++++++++--------------
  2 files changed, 46 insertions(+), 24 deletions(-)
 
 diff --git a/Documentation/DocBook/drm.tmpl b/Documentation/DocBook/drm.tmpl
@@ -170,5 +170,5 @@ index 12b615a..3023ca6 100644
  void drm_helper_connector_dpms(struct drm_connector *connector, int mode)
  {
 -- 
-1.7.10.4
+1.8.3.2
 

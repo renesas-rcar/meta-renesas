@@ -1,0 +1,37 @@
+From 3ad0e80983f5a57d859cfc84cf00d2faf8c9c9de Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 14 Jun 2013 12:07:33 +0200
+Subject: [PATCH 1003/1083] drm/rcar-du: Don't add default modes to VGA
+ connector
+
+The VGA connector state can't be detected and the list of modes can't be
+probed, due to missing DDC support. Don't try to be too clever, let
+userspace add modes manually.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit cd780ed0afd205d8a56df4e6047a4be534b8bcba)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit bb3fcb93828d69aab0108ee7f78c5d2f4d7785ce)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.c b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+index 2e488dd..327289e 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vga.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+@@ -25,7 +25,7 @@
+ 
+ static int rcar_du_vga_connector_get_modes(struct drm_connector *connector)
+ {
+-	return drm_add_modes_noedid(connector, 1280, 768);
++	return 0;
+ }
+ 
+ static int rcar_du_vga_connector_mode_valid(struct drm_connector *connector,
+-- 
+1.8.3.2
+

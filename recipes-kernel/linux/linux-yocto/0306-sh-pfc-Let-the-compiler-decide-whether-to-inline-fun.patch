@@ -1,7 +1,7 @@
 From e4780d996e36eff38203da7aa93d348a6748c717 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:50 +0100
-Subject: [PATCH 306/715] sh-pfc: Let the compiler decide whether to inline
+Subject: [PATCH 0306/1083] sh-pfc: Let the compiler decide whether to inline
  functions
 
 The compiler should be smart enough to automatically inline static
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |    8 +++-----
+ drivers/sh/pfc/pinctrl.c | 8 +++-----
  1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -45,5 +45,5 @@ index b3dbefd..47dbd02 100644
  	struct pinmux_data_reg *dummy;
  	unsigned long flags;
 -- 
-1.7.10.4
+1.8.3.2
 

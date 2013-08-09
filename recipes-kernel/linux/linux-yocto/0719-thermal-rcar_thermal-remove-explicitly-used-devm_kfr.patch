@@ -1,0 +1,81 @@
+From edb343ac64a2a4bf2a94df958ad8b7c2da6a28d0 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 2 Oct 2012 23:51:09 -0700
+Subject: [PATCH 0719/1083] thermal: rcar_thermal: remove explicitly used
+ devm_kfree/iounap()
+
+devm_kfree and devm_iounmap should not have to be explicitly used
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+(cherry picked from commit 4e8e2f644e11a7d65381967a916ae7cac76a735b)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 17a53645df73e022e031108e869afaed46171336)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/thermal/rcar_thermal.c | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/thermal/rcar_thermal.c b/drivers/thermal/rcar_thermal.c
+index 2496b4f..86af817 100644
+--- a/drivers/thermal/rcar_thermal.c
++++ b/drivers/thermal/rcar_thermal.c
+@@ -185,7 +185,6 @@ static int rcar_thermal_probe(struct platform_device *pdev)
+ 	struct thermal_zone_device *zone;
+ 	struct rcar_thermal_priv *priv;
+ 	struct resource *res;
+-	int ret;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (!res) {
+@@ -206,16 +205,14 @@ static int rcar_thermal_probe(struct platform_device *pdev)
+ 					  res->start, resource_size(res));
+ 	if (!priv->base) {
+ 		dev_err(&pdev->dev, "Unable to ioremap thermal register\n");
+-		ret = -ENOMEM;
+-		goto error_free_priv;
++		return -ENOMEM;
+ 	}
+ 
+ 	zone = thermal_zone_device_register("rcar_thermal", 0, priv,
+ 					    &rcar_thermal_zone_ops, 0, 0, 0, 0);
+ 	if (IS_ERR(zone)) {
+ 		dev_err(&pdev->dev, "thermal zone device is NULL\n");
+-		ret = PTR_ERR(zone);
+-		goto error_iounmap;
++		return PTR_ERR(zone);
+ 	}
+ 
+ 	platform_set_drvdata(pdev, zone);
+@@ -223,26 +220,15 @@ static int rcar_thermal_probe(struct platform_device *pdev)
+ 	dev_info(&pdev->dev, "proved\n");
+ 
+ 	return 0;
+-
+-error_iounmap:
+-	devm_iounmap(&pdev->dev, priv->base);
+-error_free_priv:
+-	devm_kfree(&pdev->dev, priv);
+-
+-	return ret;
+ }
+ 
+ static int rcar_thermal_remove(struct platform_device *pdev)
+ {
+ 	struct thermal_zone_device *zone = platform_get_drvdata(pdev);
+-	struct rcar_thermal_priv *priv = zone->devdata;
+ 
+ 	thermal_zone_device_unregister(zone);
+ 	platform_set_drvdata(pdev, NULL);
+ 
+-	devm_iounmap(&pdev->dev, priv->base);
+-	devm_kfree(&pdev->dev, priv);
+-
+ 	return 0;
+ }
+ 
+-- 
+1.8.3.2
+

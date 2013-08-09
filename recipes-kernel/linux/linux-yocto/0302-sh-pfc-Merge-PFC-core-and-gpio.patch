@@ -1,7 +1,7 @@
 From e8b0780e8764ec9db1ed7d535cae6fbcbbd5bbe9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:46 +0100
-Subject: [PATCH 302/715] sh-pfc: Merge PFC core and gpio
+Subject: [PATCH 0302/1083] sh-pfc: Merge PFC core and gpio
 
 The PFC core calls the gpio module gpiochip registration in its
 register_sh_pfc() function, itself called at arch initialization time.
@@ -21,11 +21,11 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/Kconfig  |    2 +-
- drivers/sh/pfc/Makefile |    4 ++-
- drivers/sh/pfc/core.c   |   23 ++++++--------
- drivers/sh/pfc/core.h   |    4 +++
- drivers/sh/pfc/gpio.c   |   79 +++++------------------------------------------
+ drivers/sh/pfc/Kconfig  |  2 +-
+ drivers/sh/pfc/Makefile |  4 ++-
+ drivers/sh/pfc/core.c   | 23 ++++++--------
+ drivers/sh/pfc/core.h   |  4 +++
+ drivers/sh/pfc/gpio.c   | 79 +++++--------------------------------------------
  5 files changed, 25 insertions(+), 87 deletions(-)
 
 diff --git a/drivers/sh/pfc/Kconfig b/drivers/sh/pfc/Kconfig
@@ -271,5 +271,5 @@ index 565b366..d8b0c74 100644
 -MODULE_LICENSE("GPL v2");
 -MODULE_ALIAS("platform:pfc-gpio");
 -- 
-1.7.10.4
+1.8.3.2
 

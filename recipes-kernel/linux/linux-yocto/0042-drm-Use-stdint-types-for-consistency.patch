@@ -1,7 +1,7 @@
 From c3d9275a91ca85b3e8f10b5fe8adbe02c81f5bca Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 24 May 2012 20:53:58 +0300
-Subject: [PATCH 042/715] drm: Use stdint types for consistency
+Subject: [PATCH 0042/1083] drm: Use stdint types for consistency
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,7 +16,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |    4 ++--
+ drivers/gpu/drm/drm_crtc.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -42,5 +42,5 @@ index cca03f6..af81f77 100644
  			valid_mask |= (1ULL << property->values[i]);
  		return !(value & ~valid_mask);
 -- 
-1.7.10.4
+1.8.3.2
 

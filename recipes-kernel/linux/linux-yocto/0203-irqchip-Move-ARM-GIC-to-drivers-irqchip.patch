@@ -1,7 +1,7 @@
 From d961c4ffe7289ce1fe4c27d6eab158defebe5603 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Tue, 20 Nov 2012 21:21:40 -0600
-Subject: [PATCH 203/715] irqchip: Move ARM GIC to drivers/irqchip
+Subject: [PATCH 0203/1083] irqchip: Move ARM GIC to drivers/irqchip
 
 Now that we have drivers/irqchip, move GIC irqchip to drivers/irqchip. This
 is necessary to share the GIC with arm and arm64.
@@ -18,12 +18,12 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/common/Kconfig   |    8 -
- arch/arm/common/Makefile  |    1 -
- arch/arm/common/gic.c     |  838 --------------------------------------------
- drivers/irqchip/Kconfig   |    8 +
- drivers/irqchip/Makefile  |    1 +
- drivers/irqchip/irq-gic.c |  845 +++++++++++++++++++++++++++++++++++++++++++++
+ arch/arm/common/Kconfig   |   8 -
+ arch/arm/common/Makefile  |   1 -
+ arch/arm/common/gic.c     | 838 ---------------------------------------------
+ drivers/irqchip/Kconfig   |   8 +
+ drivers/irqchip/Makefile  |   1 +
+ drivers/irqchip/irq-gic.c | 845 ++++++++++++++++++++++++++++++++++++++++++++++
  6 files changed, 854 insertions(+), 847 deletions(-)
  delete mode 100644 arch/arm/common/gic.c
  create mode 100644 drivers/irqchip/irq-gic.c
@@ -1781,5 +1781,5 @@ index 0000000..792b472
 +
 +#endif
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 875a483690bd82d44f769958523d6079df54218b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:53 +0100
-Subject: [PATCH 366/715] sh: Remove unused sh_pfc_register_info() function
+Subject: [PATCH 0366/1083] sh: Remove unused sh_pfc_register_info() function
 
 All boards use sh_pfc_register() directly, remove the unused
 sh_pfc_register_info() function.
@@ -16,9 +16,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/include/asm/gpio.h           |    2 +-
- arch/sh/include/cpu-common/cpu/pfc.h |    4 ----
- arch/sh/kernel/cpu/pfc.c             |   13 +------------
+ arch/sh/include/asm/gpio.h           |  2 +-
+ arch/sh/include/cpu-common/cpu/pfc.h |  4 ----
+ arch/sh/kernel/cpu/pfc.c             | 13 +------------
  3 files changed, 2 insertions(+), 17 deletions(-)
 
 diff --git a/arch/sh/include/asm/gpio.h b/arch/sh/include/asm/gpio.h
@@ -85,5 +85,5 @@ index d045d75..d766564 100644
 -	return sh_pfc_register(name, resource, num_resources);
 -}
 -- 
-1.7.10.4
+1.8.3.2
 

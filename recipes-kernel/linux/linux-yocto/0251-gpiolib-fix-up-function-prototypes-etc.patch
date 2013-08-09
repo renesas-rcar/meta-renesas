@@ -1,7 +1,7 @@
 From 01c3895703d18808c91c5875e53a7a160b68618b Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 14:49:39 +0100
-Subject: [PATCH 251/715] gpiolib: fix up function prototypes etc
+Subject: [PATCH 0251/1083] gpiolib: fix up function prototypes etc
 
 Commit 69e1601bca88809dc118abd1becb02c15a02ec71
 "gpiolib: provide provision to register pin ranges"
@@ -31,9 +31,9 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c     |   10 +++++-----
- include/asm-generic/gpio.h |    6 ++++++
- include/linux/gpio.h       |   22 +++++++++++++++++-----
+ drivers/gpio/gpiolib.c     | 10 +++++-----
+ include/asm-generic/gpio.h |  6 ++++++
+ include/linux/gpio.h       | 22 +++++++++++++++++-----
  3 files changed, 28 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -135,5 +135,5 @@ index 533049a..ad32f87 100644
  
  #endif /* __LINUX_GPIO_H */
 -- 
-1.7.10.4
+1.8.3.2
 

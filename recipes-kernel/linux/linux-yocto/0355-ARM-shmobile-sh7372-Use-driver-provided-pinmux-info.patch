@@ -1,7 +1,7 @@
 From c91ad46057d1297fa72c214695ee2483710261e5 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:27 +0100
-Subject: [PATCH 355/715] ARM: shmobile: sh7372: Use driver-provided pinmux
+Subject: [PATCH 0355/1083] ARM: shmobile: sh7372: Use driver-provided pinmux
  info
 
 Pinmux info for the sh7372 is now provided by pinmux drivers. Remove the
@@ -1765,5 +1765,5 @@ index 2fe8f83..395d3fb 100644
  static struct plat_sci_port scif0_platform_data = {
  	.mapbase	= 0xe6c40000,
 -- 
-1.7.10.4
+1.8.3.2
 

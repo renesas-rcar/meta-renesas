@@ -1,0 +1,38 @@
+From 06c09e1b014323952c56dd8e9d6a5ec1bb5cadc7 Mon Sep 17 00:00:00 2001
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 14 Feb 2013 23:26:58 +0100
+Subject: [PATCH 0731/1083] thermal: rcar: remove __devinitconst
+
+commit 76cc18874 "thermal: rcar: add Device Tree support"
+added device tree support for this driver, but also added
+an instance of __devinitconst, which is no longer defined
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Cc: Zhang Rui <rui.zhang@intel.com>
+(cherry picked from commit f5b6d45f8cf688f51140fd21f1da3b90562762a9)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 153211cce6488bd4f121882e94c0c3f67bdff9a0)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/thermal/rcar_thermal.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/thermal/rcar_thermal.c b/drivers/thermal/rcar_thermal.c
+index b0e82d6..df3647b23 100644
+--- a/drivers/thermal/rcar_thermal.c
++++ b/drivers/thermal/rcar_thermal.c
+@@ -477,7 +477,7 @@ static int rcar_thermal_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static const struct of_device_id rcar_thermal_dt_ids[] __devinitconst = {
++static const struct of_device_id rcar_thermal_dt_ids[] = {
+ 	{ .compatible = "renesas,rcar-thermal", },
+ 	{},
+ };
+-- 
+1.8.3.2
+

@@ -1,14 +1,14 @@
 From 2d1d962b3d1c56a6f6b32be576ccee3f246b9cfa Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Wed, 26 Jun 2013 09:40:46 +0900
-Subject: [PATCH 669/715] ARM: shmobile: lager: Enable USB pin groups
+Subject: [PATCH 0669/1083] ARM: shmobile: lager: Enable USB pin groups
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit 8bc10acf2280c54e909e38d486ebb80e12e7ebe1)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/board-lager.c |    9 +++++++++
+ arch/arm/mach-shmobile/board-lager.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -32,5 +32,5 @@ index aabf760..4734008 100644
  
  static void __init lager_add_standard_devices(void)
 -- 
-1.7.10.4
+1.8.3.2
 

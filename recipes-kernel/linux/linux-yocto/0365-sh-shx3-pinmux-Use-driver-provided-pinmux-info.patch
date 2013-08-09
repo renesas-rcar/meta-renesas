@@ -1,7 +1,7 @@
 From f07e17d6be84063246da40479ba6bb031312b27d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:52 +0100
-Subject: [PATCH 365/715] sh: shx3: pinmux: Use driver-provided pinmux info
+Subject: [PATCH 0365/1083] sh: shx3: pinmux: Use driver-provided pinmux info
 
 Pinmux info for the sh machines is now provided by pinmux drivers.
 Remove the duplicate copy in arch code.
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/kernel/cpu/sh4a/pinmux-shx3.c |  572 +--------------------------------
+ arch/sh/kernel/cpu/sh4a/pinmux-shx3.c | 572 +---------------------------------
  1 file changed, 1 insertion(+), 571 deletions(-)
 
 diff --git a/arch/sh/kernel/cpu/sh4a/pinmux-shx3.c b/arch/sh/kernel/cpu/sh4a/pinmux-shx3.c
@@ -603,5 +603,5 @@ index eef1b8f..ace84ac 100644
  }
  arch_initcall(shx3_pinmux_setup);
 -- 
-1.7.10.4
+1.8.3.2
 

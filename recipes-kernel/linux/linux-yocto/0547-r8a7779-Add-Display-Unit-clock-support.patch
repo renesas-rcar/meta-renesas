@@ -1,7 +1,7 @@
 From d1445cf0db4127a31a15a1ed19c85f00ab2f5892 Mon Sep 17 00:00:00 2001
 From: Phil Edworthy <phil.edworthy@renesas.com>
 Date: Thu, 31 Jan 2013 02:45:01 +0100
-Subject: [PATCH 547/715] r8a7779: Add Display Unit clock support
+Subject: [PATCH 0547/1083] r8a7779: Add Display Unit clock support
 
 Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 [Rename device from to rcarfb to rcar-du]
@@ -14,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7779.c |    4 +++-
+ arch/arm/mach-shmobile/clock-r8a7779.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
@@ -47,5 +47,5 @@ index c019609..8cc9bce 100644
  
  void __init r8a7779_clock_init(void)
 -- 
-1.7.10.4
+1.8.3.2
 

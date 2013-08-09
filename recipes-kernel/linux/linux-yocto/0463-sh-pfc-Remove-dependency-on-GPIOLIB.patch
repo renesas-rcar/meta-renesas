@@ -1,7 +1,7 @@
 From 926c4b8e27d4289fa8e16b8f205ce92ad80d0604 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 9 Apr 2013 14:06:01 +0000
-Subject: [PATCH 463/715] sh-pfc: Remove dependency on GPIOLIB
+Subject: [PATCH 0463/1083] sh-pfc: Remove dependency on GPIOLIB
 
 Make GPIO support optional for platforms that don't support GPIOLIB.
 
@@ -12,9 +12,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/Kconfig  |    2 --
- drivers/pinctrl/sh-pfc/core.h   |    1 +
- drivers/pinctrl/sh-pfc/sh_pfc.h |    2 +-
+ drivers/pinctrl/sh-pfc/Kconfig  | 2 --
+ drivers/pinctrl/sh-pfc/core.h   | 1 +
+ drivers/pinctrl/sh-pfc/sh_pfc.h | 2 +-
  3 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/Kconfig b/drivers/pinctrl/sh-pfc/Kconfig
@@ -57,5 +57,5 @@ index 3b785fc..b170761 100644
  typedef unsigned short pinmux_enum_t;
  
 -- 
-1.7.10.4
+1.8.3.2
 

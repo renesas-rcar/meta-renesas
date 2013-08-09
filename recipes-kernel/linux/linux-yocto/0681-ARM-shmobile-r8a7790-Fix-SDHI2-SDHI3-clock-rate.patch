@@ -1,7 +1,7 @@
 From 2982b8a62b033811411dacadb254ba840792b4bd Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Tue, 25 Jun 2013 20:19:19 +0900
-Subject: [PATCH 681/715] ARM: shmobile: r8a7790: Fix SDHI2/SDHI3 clock rate
+Subject: [PATCH 0681/1083] ARM: shmobile: r8a7790: Fix SDHI2/SDHI3 clock rate
 
 Clock rate is set to 97.5MHz.
 
@@ -10,7 +10,7 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c |   22 ++++++++++++++++++++++
+ arch/arm/mach-shmobile/clock-r8a7790.c | 22 ++++++++++++++++++++++
  1 file changed, 22 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -59,5 +59,5 @@ index 33b9a5e..f4728f3 100644
 +	r8a7790_sdhi_clock_init();
  }
 -- 
-1.7.10.4
+1.8.3.2
 

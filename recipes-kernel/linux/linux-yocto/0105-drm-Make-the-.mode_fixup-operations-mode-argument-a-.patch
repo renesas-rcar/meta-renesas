@@ -1,8 +1,8 @@
 From 3c9c525226dcd22afc188f4015a59cec0d9237b2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Tue, 17 Jul 2012 17:56:50 +0200
-Subject: [PATCH 105/715] drm: Make the .mode_fixup() operations mode argument
- a const pointer
+Subject: [PATCH 0105/1083] drm: Make the .mode_fixup() operations mode
+ argument a const pointer
 
 The passed mode must not be modified by the operation, make it const.
 
@@ -19,58 +19,58 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/exynos/exynos_drm_crtc.c        |    2 +-
- drivers/gpu/drm/exynos/exynos_drm_drv.h         |    2 +-
- drivers/gpu/drm/exynos/exynos_drm_encoder.c     |    2 +-
- drivers/gpu/drm/exynos/exynos_drm_hdmi.c        |    2 +-
- drivers/gpu/drm/exynos/exynos_drm_hdmi.h        |    2 +-
- drivers/gpu/drm/exynos/exynos_hdmi.c            |    2 +-
- drivers/gpu/drm/gma500/cdv_intel_crt.c          |    2 +-
- drivers/gpu/drm/gma500/cdv_intel_display.c      |    2 +-
- drivers/gpu/drm/gma500/cdv_intel_hdmi.c         |    2 +-
- drivers/gpu/drm/gma500/cdv_intel_lvds.c         |    2 +-
- drivers/gpu/drm/gma500/mdfld_dsi_dpi.c          |    2 +-
- drivers/gpu/drm/gma500/mdfld_dsi_dpi.h          |    2 +-
- drivers/gpu/drm/gma500/mdfld_intel_display.c    |    2 +-
- drivers/gpu/drm/gma500/oaktrail_crtc.c          |    2 +-
- drivers/gpu/drm/gma500/oaktrail_hdmi.c          |    2 +-
- drivers/gpu/drm/gma500/psb_intel_display.c      |    2 +-
- drivers/gpu/drm/gma500/psb_intel_drv.h          |    2 +-
- drivers/gpu/drm/gma500/psb_intel_lvds.c         |    2 +-
- drivers/gpu/drm/gma500/psb_intel_sdvo.c         |    6 +++---
- drivers/gpu/drm/i2c/ch7006_drv.c                |    2 +-
- drivers/gpu/drm/i2c/ch7006_mode.c               |    2 +-
- drivers/gpu/drm/i2c/ch7006_priv.h               |    2 +-
- drivers/gpu/drm/i2c/sil164_drv.c                |    2 +-
- drivers/gpu/drm/i915/dvo.h                      |    2 +-
- drivers/gpu/drm/i915/intel_crt.c                |    2 +-
- drivers/gpu/drm/i915/intel_dp.c                 |    3 ++-
- drivers/gpu/drm/i915/intel_dvo.c                |    2 +-
- drivers/gpu/drm/i915/intel_hdmi.c               |    2 +-
- drivers/gpu/drm/i915/intel_lvds.c               |    2 +-
- drivers/gpu/drm/i915/intel_sdvo.c               |    4 ++--
- drivers/gpu/drm/i915/intel_tv.c                 |    3 ++-
- drivers/gpu/drm/nouveau/nv04_crtc.c             |    2 +-
- drivers/gpu/drm/nouveau/nv04_dac.c              |    2 +-
- drivers/gpu/drm/nouveau/nv04_dfp.c              |    2 +-
- drivers/gpu/drm/nouveau/nv17_tv.c               |    2 +-
- drivers/gpu/drm/nouveau/nv50_crtc.c             |    2 +-
- drivers/gpu/drm/nouveau/nv50_dac.c              |    3 ++-
- drivers/gpu/drm/nouveau/nv50_sor.c              |    3 ++-
- drivers/gpu/drm/nouveau/nvd0_display.c          |    8 +++++---
- drivers/gpu/drm/radeon/atombios_crtc.c          |    2 +-
- drivers/gpu/drm/radeon/atombios_dp.c            |    2 +-
- drivers/gpu/drm/radeon/atombios_encoders.c      |    4 ++--
- drivers/gpu/drm/radeon/radeon_display.c         |    4 ++--
- drivers/gpu/drm/radeon/radeon_legacy_crtc.c     |    2 +-
- drivers/gpu/drm/radeon/radeon_legacy_encoders.c |    2 +-
- drivers/gpu/drm/radeon/radeon_mode.h            |    4 ++--
- drivers/gpu/drm/udl/udl_encoder.c               |    2 +-
- drivers/gpu/drm/udl/udl_modeset.c               |    2 +-
- drivers/staging/omapdrm/omap_crtc.c             |    2 +-
- drivers/staging/omapdrm/omap_encoder.c          |    2 +-
- include/drm/drm_crtc_helper.h                   |    4 ++--
- include/drm/drm_encoder_slave.h                 |    2 +-
+ drivers/gpu/drm/exynos/exynos_drm_crtc.c        | 2 +-
+ drivers/gpu/drm/exynos/exynos_drm_drv.h         | 2 +-
+ drivers/gpu/drm/exynos/exynos_drm_encoder.c     | 2 +-
+ drivers/gpu/drm/exynos/exynos_drm_hdmi.c        | 2 +-
+ drivers/gpu/drm/exynos/exynos_drm_hdmi.h        | 2 +-
+ drivers/gpu/drm/exynos/exynos_hdmi.c            | 2 +-
+ drivers/gpu/drm/gma500/cdv_intel_crt.c          | 2 +-
+ drivers/gpu/drm/gma500/cdv_intel_display.c      | 2 +-
+ drivers/gpu/drm/gma500/cdv_intel_hdmi.c         | 2 +-
+ drivers/gpu/drm/gma500/cdv_intel_lvds.c         | 2 +-
+ drivers/gpu/drm/gma500/mdfld_dsi_dpi.c          | 2 +-
+ drivers/gpu/drm/gma500/mdfld_dsi_dpi.h          | 2 +-
+ drivers/gpu/drm/gma500/mdfld_intel_display.c    | 2 +-
+ drivers/gpu/drm/gma500/oaktrail_crtc.c          | 2 +-
+ drivers/gpu/drm/gma500/oaktrail_hdmi.c          | 2 +-
+ drivers/gpu/drm/gma500/psb_intel_display.c      | 2 +-
+ drivers/gpu/drm/gma500/psb_intel_drv.h          | 2 +-
+ drivers/gpu/drm/gma500/psb_intel_lvds.c         | 2 +-
+ drivers/gpu/drm/gma500/psb_intel_sdvo.c         | 6 +++---
+ drivers/gpu/drm/i2c/ch7006_drv.c                | 2 +-
+ drivers/gpu/drm/i2c/ch7006_mode.c               | 2 +-
+ drivers/gpu/drm/i2c/ch7006_priv.h               | 2 +-
+ drivers/gpu/drm/i2c/sil164_drv.c                | 2 +-
+ drivers/gpu/drm/i915/dvo.h                      | 2 +-
+ drivers/gpu/drm/i915/intel_crt.c                | 2 +-
+ drivers/gpu/drm/i915/intel_dp.c                 | 3 ++-
+ drivers/gpu/drm/i915/intel_dvo.c                | 2 +-
+ drivers/gpu/drm/i915/intel_hdmi.c               | 2 +-
+ drivers/gpu/drm/i915/intel_lvds.c               | 2 +-
+ drivers/gpu/drm/i915/intel_sdvo.c               | 4 ++--
+ drivers/gpu/drm/i915/intel_tv.c                 | 3 ++-
+ drivers/gpu/drm/nouveau/nv04_crtc.c             | 2 +-
+ drivers/gpu/drm/nouveau/nv04_dac.c              | 2 +-
+ drivers/gpu/drm/nouveau/nv04_dfp.c              | 2 +-
+ drivers/gpu/drm/nouveau/nv17_tv.c               | 2 +-
+ drivers/gpu/drm/nouveau/nv50_crtc.c             | 2 +-
+ drivers/gpu/drm/nouveau/nv50_dac.c              | 3 ++-
+ drivers/gpu/drm/nouveau/nv50_sor.c              | 3 ++-
+ drivers/gpu/drm/nouveau/nvd0_display.c          | 8 +++++---
+ drivers/gpu/drm/radeon/atombios_crtc.c          | 2 +-
+ drivers/gpu/drm/radeon/atombios_dp.c            | 2 +-
+ drivers/gpu/drm/radeon/atombios_encoders.c      | 4 ++--
+ drivers/gpu/drm/radeon/radeon_display.c         | 4 ++--
+ drivers/gpu/drm/radeon/radeon_legacy_crtc.c     | 2 +-
+ drivers/gpu/drm/radeon/radeon_legacy_encoders.c | 2 +-
+ drivers/gpu/drm/radeon/radeon_mode.h            | 4 ++--
+ drivers/gpu/drm/udl/udl_encoder.c               | 2 +-
+ drivers/gpu/drm/udl/udl_modeset.c               | 2 +-
+ drivers/staging/omapdrm/omap_crtc.c             | 2 +-
+ drivers/staging/omapdrm/omap_encoder.c          | 2 +-
+ include/drm/drm_crtc_helper.h                   | 4 ++--
+ include/drm/drm_encoder_slave.h                 | 2 +-
  52 files changed, 67 insertions(+), 61 deletions(-)
 
 diff --git a/drivers/gpu/drm/exynos/exynos_drm_crtc.c b/drivers/gpu/drm/exynos/exynos_drm_crtc.c
@@ -837,5 +837,5 @@ index 2f65633..7dc3852 100644
  	int (*mode_valid)(struct drm_encoder *encoder,
  			  struct drm_display_mode *mode);
 -- 
-1.7.10.4
+1.8.3.2
 

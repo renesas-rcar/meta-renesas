@@ -1,14 +1,14 @@
 From 6feefa2f2954d5379a86f219c80274a12b5cdaf7 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 15:46:13 +0900
-Subject: [PATCH 520/715] mmc: tmio: Fix PIO fall back
+Subject: [PATCH 0520/1083] mmc: tmio: Fix PIO fall back
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit f0eba3d33405017cdeb9b353a5a1d28331a9ea1d)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/tmio_mmc_dma.c |   10 ++++++----
+ drivers/mmc/host/tmio_mmc_dma.c | 10 ++++++----
  1 file changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/mmc/host/tmio_mmc_dma.c b/drivers/mmc/host/tmio_mmc_dma.c
@@ -68,5 +68,5 @@ index 97a4404..b49d79c 100644
  
  	dev_dbg(&host->pdev->dev, "%s(): desc %p, cookie %d\n", __func__,
 -- 
-1.7.10.4
+1.8.3.2
 

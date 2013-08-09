@@ -1,7 +1,7 @@
 From ebbd9c64ac282d672fc1b270f73be3ad567d4094 Mon Sep 17 00:00:00 2001
 From: Axel Lin <axel.lin@ingics.com>
 Date: Wed, 21 Nov 2012 14:33:56 +0800
-Subject: [PATCH 261/715] gpiolib: Fix use after free in
+Subject: [PATCH 0261/1083] gpiolib: Fix use after free in
  gpiochip_add_pin_range
 
 This is introduced by commit 9ab6e988
@@ -13,7 +13,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c |    4 +++-
+ drivers/gpio/gpiolib.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -42,5 +42,5 @@ index 71e14ad..199fca1 100644
  	pr_debug("GPIO chip %s: created GPIO range %d->%d ==> %s PIN %d->%d\n",
  		 chip->label, gpio_offset, gpio_offset + npins - 1,
 -- 
-1.7.10.4
+1.8.3.2
 

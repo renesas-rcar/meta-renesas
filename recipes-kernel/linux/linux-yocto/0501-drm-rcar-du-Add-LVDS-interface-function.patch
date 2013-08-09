@@ -1,17 +1,17 @@
 From 497c2bb5aaa145b2426528506091af5c2400552d Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:45:13 +0900
-Subject: [PATCH 501/715] drm: rcar-du: Add LVDS interface function
+Subject: [PATCH 0501/1083] drm: rcar-du: Add LVDS interface function
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit 691db996030ad6f3f5392dd697a58df0ef4b74f5)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c |  116 ++++++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_drv.c  |   89 ++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_drv.h  |    5 ++
- drivers/gpu/drm/rcar-du/rcar_du_regs.h |   19 ++++++
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 116 +++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c  |  89 +++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h  |   5 ++
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h |  19 ++++++
  4 files changed, 229 insertions(+)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -342,5 +342,5 @@ index 69f21f1..5703744 100644
 +
  #endif /* __RCAR_DU_REGS_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

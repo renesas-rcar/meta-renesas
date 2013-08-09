@@ -1,7 +1,7 @@
 From c1b40c31ee49a6e6766e842d917f5afb081afccd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 20 Mar 2013 13:14:55 +0100
-Subject: [PATCH 137/715] drm/rcar-du: Fix crash when disabling an already
+Subject: [PATCH 0137/1083] drm/rcar-du: Fix crash when disabling an already
  disabled plane
 
 The plane disable code tries to dereference a NULL pointer if the plane
@@ -12,7 +12,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |    3 +++
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
@@ -30,5 +30,5 @@ index 5055c9c..8cbd293 100644
  	rplane->enabled = false;
  	rcar_du_crtc_update_planes(rplane->crtc);
 -- 
-1.7.10.4
+1.8.3.2
 

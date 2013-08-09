@@ -1,7 +1,8 @@
 From c3c54935aa05f7e2b4b120dae52cee75b40a6efa Mon Sep 17 00:00:00 2001
 From: Teppei Kamijou <teppei.kamijou.yb@renesas.com>
 Date: Fri, 16 Nov 2012 10:51:55 +0900
-Subject: [PATCH 590/715] serial: sh-sci: console runtime PM support (revisit)
+Subject: [PATCH 0590/1083] serial: sh-sci: console runtime PM support
+ (revisit)
 
 The commit 1ba7622094 (serial: sh-sci: console Runtime PM support,
 from Magnus Damm <damm@opensource.se>, 2011-08-03), tried to support
@@ -36,7 +37,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/tty/serial/sh-sci.c |   27 ++++++++++++++++-----------
+ drivers/tty/serial/sh-sci.c | 27 ++++++++++++++++-----------
  1 file changed, 16 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
@@ -122,5 +123,5 @@ index e9e8883..e65e546 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

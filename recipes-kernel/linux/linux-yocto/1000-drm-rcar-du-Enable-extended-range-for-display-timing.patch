@@ -1,0 +1,35 @@
+From 59b6999332ca0cf698392bc76a9572fd1c8c24d9 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Thu, 16 May 2013 14:26:10 +0200
+Subject: [PATCH 1000/1083] drm/rcar-du: Enable extended range for display
+ timings
+
+Set the DEFE5 bit in the DEFR5 register to increase the range of the
+display timing values by one bit.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit e736ac1a6c9dcca2305aa94322c24a05de06963d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit b27aa077fa20da56a25f359c839144cfb76e2c77)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 8423d49..003b34e 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -59,6 +59,7 @@ int rcar_du_get(struct rcar_du_device *rcdu)
+ 	rcar_du_write(rcdu, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
+ 	rcar_du_write(rcdu, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
+ 	rcar_du_write(rcdu, DEFR4, DEFR4_CODE);
++	rcar_du_write(rcdu, DEFR5, DEFR5_CODE | DEFR5_DEFE5);
+ 
+ 	/* Use DS1PR and DS2PR to configure planes priorities and connects the
+ 	 * superposition 0 to DU0 pins. DU1 pins will be configured dynamically.
+-- 
+1.8.3.2
+

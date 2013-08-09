@@ -1,7 +1,7 @@
 From eb893676cd4cf4ff0bfdebde30346f468ccf63fc Mon Sep 17 00:00:00 2001
 From: Takashi Yoshii <takashi.yoshii.zj@renesas.com>
 Date: Fri, 16 Nov 2012 10:52:49 +0900
-Subject: [PATCH 592/715] serial: sh-sci: support lower baud rate
+Subject: [PATCH 0592/1083] serial: sh-sci: support lower baud rate
 
 Support prescaler 1/16 and 1/64, in addition to current 1 and 1/4.
 
@@ -23,7 +23,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/tty/serial/sh-sci.c |   19 ++++++++-----------
+ drivers/tty/serial/sh-sci.c | 19 ++++++++-----------
  1 file changed, 8 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
@@ -69,5 +69,5 @@ index ffeca65..3021912 100644
  	sci_init_pins(port, termios->c_cflag);
  
 -- 
-1.7.10.4
+1.8.3.2
 

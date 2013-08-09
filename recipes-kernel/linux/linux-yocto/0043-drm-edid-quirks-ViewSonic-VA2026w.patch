@@ -1,7 +1,7 @@
 From 645e86a8ba577ab82b15016c8e56aa49f976fabc Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Wed, 23 May 2012 16:26:54 -0400
-Subject: [PATCH 043/715] drm/edid/quirks: ViewSonic VA2026w
+Subject: [PATCH 0043/1083] drm/edid/quirks: ViewSonic VA2026w
 
 Entirely new class of fail for this one.  The detailed timings are for
 normal CVT but the monitor really wanted CVT-R.
@@ -13,7 +13,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   22 ++++++++++++++++++----
+ drivers/gpu/drm/drm_edid.c | 22 ++++++++++++++++++----
  1 file changed, 18 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -89,5 +89,5 @@ index 03353b3..77a436f 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

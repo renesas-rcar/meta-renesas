@@ -1,7 +1,7 @@
 From 22c67997490cc81e0758618c98e40b0e4f86b39d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:03 +0100
-Subject: [PATCH 319/715] ARM: shmobile: sh73a0: Add pin control resources
+Subject: [PATCH 0319/1083] ARM: shmobile: sh73a0: Add pin control resources
 
 Add memory resources for the pin control platform device to let the
 sh-pfc driver ioremap() registers properly instead of evily casting
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/pfc-sh73a0.c |   17 +++++++++++++++++
+ arch/arm/mach-shmobile/pfc-sh73a0.c | 17 +++++++++++++++++
  1 file changed, 17 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/pfc-sh73a0.c b/arch/arm/mach-shmobile/pfc-sh73a0.c
@@ -58,5 +58,5 @@ index c83c582..342683e 100644
  		.platform_data = &sh73a0_pinmux_info,
  	},
 -- 
-1.7.10.4
+1.8.3.2
 

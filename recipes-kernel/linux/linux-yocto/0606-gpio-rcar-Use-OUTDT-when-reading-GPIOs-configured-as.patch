@@ -1,7 +1,7 @@
 From 214c32084791c1b26d3dee2de172a14f6ff1a307 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Mon, 17 Jun 2013 08:41:52 +0900
-Subject: [PATCH 606/715] gpio-rcar: Use OUTDT when reading GPIOs configured
+Subject: [PATCH 0606/1083] gpio-rcar: Use OUTDT when reading GPIOs configured
  as output
 
 Testing on r8a7790 shows that INDT does not indicate the correct
@@ -17,7 +17,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpio/gpio-rcar.c |    9 ++++++++-
+ drivers/gpio/gpio-rcar.c | 9 ++++++++-
  1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
@@ -41,5 +41,5 @@ index 5a693dd..d591ea6 100644
  
  static void gpio_rcar_set(struct gpio_chip *chip, unsigned offset, int value)
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From a7ace76d8705c4d2c9e7e700e7703db0fcb9f053 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Feb 2013 20:59:13 +0900
-Subject: [PATCH 182/715] irqchip: intc-irqpin: Make use of devm functions
+Subject: [PATCH 0182/1083] irqchip: intc-irqpin: Make use of devm functions
 
 Use devm_kzalloc(), devm_ioremap_nocache()
 and devm_request_irq() to simplify error
@@ -12,7 +12,7 @@ Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
 Tested-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/irq-renesas-intc-irqpin.c |   41 +++++++++--------------------
+ drivers/irqchip/irq-renesas-intc-irqpin.c | 41 ++++++++++---------------------
  1 file changed, 13 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/irqchip/irq-renesas-intc-irqpin.c b/drivers/irqchip/irq-renesas-intc-irqpin.c
@@ -125,5 +125,5 @@ index 59c0cbc..21f4602 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From cd9e02578e5514f6cac5dc880696e92110fe50e1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:51 +0100
-Subject: [PATCH 307/715] sh-pfc: Remove check for impossible error condition
+Subject: [PATCH 0307/1083] sh-pfc: Remove check for impossible error condition
 
 The pfc pointer can't be NULL in the get and set value functions, remove
 the error check.
@@ -14,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/gpio.c |    4 ++--
+ drivers/sh/pfc/gpio.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/sh/pfc/gpio.c b/drivers/sh/pfc/gpio.c
@@ -40,5 +40,5 @@ index 37493e5..c11c1bb 100644
  
  	return sh_pfc_read_bit(dr, bit);
 -- 
-1.7.10.4
+1.8.3.2
 

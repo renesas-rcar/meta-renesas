@@ -1,7 +1,7 @@
 From aeab8ae1314ad37c5a04bf000f8171188a34ce54 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Fri, 20 Jul 2012 16:18:21 +0900
-Subject: [PATCH 285/715] sh: pfc: Prefer DRV_NAME over KBUILD_MODNAME.
+Subject: [PATCH 0285/1083] sh: pfc: Prefer DRV_NAME over KBUILD_MODNAME.
 
 While this code is still being shuffled around the KBUILD_MODNAME value
 isn't particularly useful, switch to something a bit more useful.
@@ -11,7 +11,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |   12 +++++++-----
+ drivers/sh/pfc/pinctrl.c | 12 +++++++-----
  1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -61,5 +61,5 @@ index 45e80ee..900afa5 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

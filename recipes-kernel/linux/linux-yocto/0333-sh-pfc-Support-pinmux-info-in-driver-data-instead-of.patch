@@ -1,7 +1,7 @@
 From 640fbe6a1eb9054dc2bd618003570308e6ca2624 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:20 +0100
-Subject: [PATCH 333/715] sh-pfc: Support pinmux info in driver data instead
+Subject: [PATCH 0333/1083] sh-pfc: Support pinmux info in driver data instead
  of platform data
 
 Pinmux information should be provided by the pinmux driver, not arch
@@ -17,11 +17,11 @@ Acked-by: Paul Mundt <lethal@linux-sh.org>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c    |   52 ++++++++++++++++++++------------------
- drivers/pinctrl/sh-pfc/core.h    |    2 +-
- drivers/pinctrl/sh-pfc/gpio.c    |   18 ++++++-------
- drivers/pinctrl/sh-pfc/pinctrl.c |   28 ++++++++++----------
- include/linux/sh_pfc.h           |    4 +--
+ drivers/pinctrl/sh-pfc/core.c    | 52 +++++++++++++++++++++-------------------
+ drivers/pinctrl/sh-pfc/core.h    |  2 +-
+ drivers/pinctrl/sh-pfc/gpio.c    | 18 +++++++-------
+ drivers/pinctrl/sh-pfc/pinctrl.c | 28 +++++++++++-----------
+ include/linux/sh_pfc.h           |  4 ++--
  5 files changed, 53 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -378,5 +378,5 @@ index 4f94233..9fd6228 100644
  enum { GPIO_CFG_DRYRUN, GPIO_CFG_REQ, GPIO_CFG_FREE };
  
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 6403139a02543fe76a7417389ac118459f5980f5 Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Tue, 12 Feb 2013 16:34:31 +0100
-Subject: [PATCH 371/715] sh-pfc: Fix a typo and simplify a definition on
+Subject: [PATCH 0371/1083] sh-pfc: Fix a typo and simplify a definition on
  sh73a0
 
 Fix definition of the SDHIWP0 function and simplify the CPU_ALL_PORT
@@ -14,7 +14,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-sh73a0.c |    8 ++------
+ drivers/pinctrl/sh-pfc/pfc-sh73a0.c | 8 ++------
  1 file changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-sh73a0.c b/drivers/pinctrl/sh-pfc/pfc-sh73a0.c
@@ -44,5 +44,5 @@ index 709008e..232731b 100644
  	PINMUX_DATA(SDHID1_1_PU_MARK, PORT260_FN1, PORT260_IN_PU),
  	PINMUX_DATA(SDHID1_2_PU_MARK, PORT261_FN1, PORT261_IN_PU),
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 8f8b4044857c4ff49815edd21a750cfcdfe61a82 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 19:04:43 +0100
-Subject: [PATCH 424/715] sh-pfc: r8a7779: Add SCIF pin groups and functions
+Subject: [PATCH 0424/1083] sh-pfc: r8a7779: Add SCIF pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
@@ -9,7 +9,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  490 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 490 +++++++++++++++++++++++++++++++++++
  1 file changed, 490 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -535,5 +535,5 @@ index ca16b04..a01adea 100644
  
  #define PINMUX_FN_BASE	ARRAY_SIZE(pinmux_pins)
 -- 
-1.7.10.4
+1.8.3.2
 

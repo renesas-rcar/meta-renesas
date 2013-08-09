@@ -1,7 +1,7 @@
 From dec7266fb60daef8abda2c26f99f997d18842faf Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Sun, 3 Feb 2013 01:29:24 +0900
-Subject: [PATCH 267/715] gpiolib: link all gpio_chips using a list
+Subject: [PATCH 0267/1083] gpiolib: link all gpio_chips using a list
 
 Add a list member to gpio_chip that allows all chips to be parsed
 quickly. The current method requires parsing the entire GPIO integer
@@ -19,8 +19,8 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c     |   51 ++++++++++++++++++++++++++++++++++++++------
- include/asm-generic/gpio.h |    2 ++
+ drivers/gpio/gpiolib.c     | 51 +++++++++++++++++++++++++++++++++++++++-------
+ include/asm-generic/gpio.h |  2 ++
  2 files changed, 46 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -134,5 +134,5 @@ index 2034e69..b562f95 100644
  	int			(*request)(struct gpio_chip *chip,
  						unsigned offset);
 -- 
-1.7.10.4
+1.8.3.2
 

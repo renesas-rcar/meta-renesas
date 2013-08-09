@@ -1,0 +1,172 @@
+From c090aac7ea7f7f8e108bd1bb2025a627a8cb9f1f Mon Sep 17 00:00:00 2001
+From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+Date: Mon, 29 Jul 2013 13:11:30 +0900
+Subject: [PATCH 0766/1083] ARM: shmobile: lager: Move QSPI spi_board_info to
+ board dependence part
+
+Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c   | 49 ++++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c | 49 ----------------------------------
+ 2 files changed, 49 insertions(+), 49 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index 6706a01..3cc4882 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -31,7 +31,10 @@
+ #include <linux/platform_data/rcar-du.h>
+ #include <linux/platform_device.h>
+ #include <linux/i2c.h>
++#include <linux/mtd/mtd.h>
++#include <linux/mtd/partitions.h>
+ #include <linux/spi/spi.h>
++#include <linux/spi/flash.h>
+ #include <mach/common.h>
+ #include <mach/r8a7790.h>
+ #include <asm/mach-types.h>
+@@ -101,6 +104,49 @@ static __initdata struct gpio_led_platform_data lager_leds_pdata = {
+ 	.num_leds	= ARRAY_SIZE(lager_leds),
+ };
+ 
++/* SPI Flash memory (Spansion S25FL512SAGMFIG11) */
++static struct mtd_partition spiflash_part[] = {
++	/* Reserved for user loader program, read-only */
++	[0] = {
++		.name = "loader_prg",
++		.offset = 0,
++		.size = SZ_256K,
++		.mask_flags = MTD_WRITEABLE,    /* read only */
++	},
++	/* Reserved for user program, read-only */
++	[1] = {
++		.name = "user_prg",
++		.offset = MTDPART_OFS_APPEND,
++		.size = SZ_4M,
++		.mask_flags = MTD_WRITEABLE,    /* read only */
++	},
++	/* All else is writable (e.g. JFFS2) */
++	[2] = {
++		.name = "flash_fs",
++		.offset = MTDPART_OFS_APPEND,
++		.size = MTDPART_SIZ_FULL,
++		.mask_flags = 0,
++	},
++};
++
++static struct flash_platform_data spiflash_data = {
++	.name		= "m25p80",
++	.parts		= spiflash_part,
++	.nr_parts	= ARRAY_SIZE(spiflash_part),
++	.type		= "s25fl512s",
++};
++
++static struct spi_board_info spi_info[] __initdata = {
++	{
++		.modalias	= "m25p80",
++		.platform_data	= &spiflash_data,
++		.mode		= SPI_MODE_0,
++		.max_speed_hz	= 30000000,
++		.bus_num	= 0,
++		.chip_select	= 0,
++	},
++};
++
+ /* spidev for MSIOF */
+ static struct spi_board_info spi_bus[] __initdata = {
+ 	{
+@@ -227,6 +273,9 @@ static void __init lager_add_standard_devices(void)
+ 				      &lager_keys_pdata,
+ 				      sizeof(lager_keys_pdata));
+ 
++	/* QSPI flash memory */
++	spi_register_board_info(spi_info, ARRAY_SIZE(spi_info));
++
+ 	/* spidev for MSIOF */
+ 	spi_register_board_info(spi_bus, ARRAY_SIZE(spi_bus));
+ }
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 3c7c1b6..9aca575 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -43,10 +43,7 @@
+ #include <linux/mmc/sh_mmcif.h>
+ #include <linux/regulator/fixed.h>
+ #include <linux/regulator/machine.h>
+-#include <linux/mtd/mtd.h>
+-#include <linux/mtd/partitions.h>
+ #include <linux/spi/spi.h>
+-#include <linux/spi/flash.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/spi/sh_msiof.h>
+ #include <media/vin.h>
+@@ -805,38 +802,6 @@ static struct resource qspi_resources[] = {
+ 	},
+ };
+ 
+-/* SPI Flash memory (Spansion S25FL512SAGMFIG11) */
+-static struct mtd_partition spiflash_part[] = {
+-	/* Reserved for user loader program, read-only */
+-	[0] = {
+-		.name = "loader_prg",
+-		.offset = 0,
+-		.size = SZ_256K,
+-		.mask_flags = MTD_WRITEABLE,	/* read only */
+-	},
+-	/* Reserved for user program, read-only */
+-	[1] = {
+-		.name = "user_prg",
+-		.offset = MTDPART_OFS_APPEND,
+-		.size = SZ_4M,
+-		.mask_flags = MTD_WRITEABLE,	/* read only */
+-	},
+-	/* All else is writable (e.g. JFFS2) */
+-	[2] = {
+-		.name = "flash_fs",
+-		.offset = MTDPART_OFS_APPEND,
+-		.size = MTDPART_SIZ_FULL,
+-		.mask_flags = 0,
+-	},
+-};
+-
+-static struct flash_platform_data spiflash_data = {
+-	.name		= "m25p80",
+-	.parts		= spiflash_part,
+-	.nr_parts	= ARRAY_SIZE(spiflash_part),
+-	.type		= "s25fl512s",
+-};
+-
+ static struct platform_device qspi_device = {
+ 	.name = "qspi",
+ 	.id = 0,
+@@ -844,17 +809,6 @@ static struct platform_device qspi_device = {
+ 	.resource	= qspi_resources,
+ };
+ 
+-static struct spi_board_info spi_info[] __initdata = {
+-	{
+-		.modalias		= "m25p80",
+-		.platform_data		= &spiflash_data,
+-		.mode			= SPI_MODE_0,
+-		.max_speed_hz		= 30000000,
+-		.bus_num		= 0,
+-		.chip_select		= 0,
+-	},
+-};
+-
+ /* MSIOF */
+ static struct sh_msiof_spi_info sh_msiof_info = {
+ 	.rx_fifo_override	= 256,
+@@ -1958,9 +1912,6 @@ void __init r8a7790_add_standard_devices(void)
+ 
+ 	r8a7790_add_device_to_domain(&r8a7790_rgx, &powervr_device);
+ 
+-	/* QSPI flash memory */
+-	spi_register_board_info(spi_info, ARRAY_SIZE(spi_info));
+-
+ 	r8a7790_register_thermal();
+ }
+ 
+-- 
+1.8.3.2
+

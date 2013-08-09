@@ -1,7 +1,7 @@
 From e1ee4dfd45b89f54f076ab983170487fa3ff0bca Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 10:37:37 +0900
-Subject: [PATCH 493/715] drm: rcar-du: Use the mode active size in mode set
+Subject: [PATCH 0493/1083] drm: rcar-du: Use the mode active size in mode set
 
 The driver currently configures the dislay to the frame buffer size
 while it should use the requested mode active size. Fix it.
@@ -11,7 +11,7 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    4 ++--
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -30,5 +30,5 @@ index 1b49b54..08a69db 100644
  	rcar_du_plane_compute_base(rcrtc->plane, crtc->fb);
  
 -- 
-1.7.10.4
+1.8.3.2
 

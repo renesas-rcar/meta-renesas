@@ -1,7 +1,7 @@
 From b6b300bef55211a9588e025674997ea19a07f053 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:32 +0000
-Subject: [PATCH 087/715] drm: extract drm_kms_helper_hotplug_event
+Subject: [PATCH 0087/1083] drm: extract drm_kms_helper_hotplug_event
 
 Useful if drivers want to be slightly more clever about hotplug
 handling.
@@ -13,8 +13,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc_helper.c |   17 +++++++++++------
- include/drm/drm_crtc_helper.h     |    1 +
+ drivers/gpu/drm/drm_crtc_helper.c | 17 +++++++++++------
+ include/drm/drm_crtc_helper.h     |  1 +
  2 files changed, 12 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
@@ -65,5 +65,5 @@ index b1be770..94fa637 100644
  extern void drm_kms_helper_poll_disable(struct drm_device *dev);
  extern void drm_kms_helper_poll_enable(struct drm_device *dev);
 -- 
-1.7.10.4
+1.8.3.2
 

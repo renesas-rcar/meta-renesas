@@ -1,7 +1,7 @@
 From 38232bb910a3e75aee4671059abc008d5f908d53 Mon Sep 17 00:00:00 2001
 From: Takashi Yoshii <takashi.yoshii.zj@renesas.com>
 Date: Fri, 16 Nov 2012 10:53:11 +0900
-Subject: [PATCH 593/715] serial: sh-sci: mask SCTFDR/RFDR according to
+Subject: [PATCH 0593/1083] serial: sh-sci: mask SCTFDR/RFDR according to
  fifosize
 
 Current mask 0xff to SCTFDR/RFDR damages SCIFB, because the
@@ -21,7 +21,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/tty/serial/sh-sci.c |    4 ++--
+ drivers/tty/serial/sh-sci.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
@@ -47,5 +47,5 @@ index 3021912..63a3bd0 100644
  	reg = sci_getreg(port, SCFDR);
  	if (reg->size)
 -- 
-1.7.10.4
+1.8.3.2
 

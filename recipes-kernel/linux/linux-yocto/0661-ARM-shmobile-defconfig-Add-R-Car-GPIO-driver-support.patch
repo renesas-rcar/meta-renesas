@@ -1,7 +1,7 @@
 From e7d756401260f883e29f29a9b8d654606da771e4 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Wed, 26 Jun 2013 18:04:40 +0900
-Subject: [PATCH 661/715] ARM: shmobile: defconfig: Add R-Car GPIO driver
+Subject: [PATCH 0661/1083] ARM: shmobile: defconfig: Add R-Car GPIO driver
  support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
@@ -9,7 +9,7 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig |    2 ++
+ arch/arm/configs/shmobile_defconfig | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -26,5 +26,5 @@ index be0978d..bf9d2b9 100644
  CONFIG_DRM_RCAR_DU=y
  CONFIG_SPI=y
 -- 
-1.7.10.4
+1.8.3.2
 

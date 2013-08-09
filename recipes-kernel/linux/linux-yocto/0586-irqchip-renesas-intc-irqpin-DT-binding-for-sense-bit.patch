@@ -1,7 +1,7 @@
 From 2d35e86f16ccaec11128a5699d35ed5c86ffe876 Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Thu, 13 Jun 2013 11:23:38 +0200
-Subject: [PATCH 586/715] irqchip: renesas-intc-irqpin: DT binding for sense
+Subject: [PATCH 0586/1083] irqchip: renesas-intc-irqpin: DT binding for sense
  bitfield width
 
 Most Renesas irqpin controllers have 4-bit sense fields, however, some
@@ -18,8 +18,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- .../interrupt-controller/renesas,intc-irqpin.txt         |   14 ++++++++++++++
- drivers/irqchip/irq-renesas-intc-irqpin.c                |    4 ++++
+ .../bindings/interrupt-controller/renesas,intc-irqpin.txt  | 14 ++++++++++++++
+ drivers/irqchip/irq-renesas-intc-irqpin.c                  |  4 ++++
  2 files changed, 18 insertions(+)
  create mode 100644 Documentation/devicetree/bindings/interrupt-controller/renesas,intc-irqpin.txt
 
@@ -66,5 +66,5 @@ index 5a68e5a..4aca1b2 100644
  		p->config.sense_bitfield_width = 4; /* default to 4 bits */
  
 -- 
-1.7.10.4
+1.8.3.2
 

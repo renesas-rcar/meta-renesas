@@ -1,7 +1,7 @@
 From e69a6556c48e3e1526903fbb6a3e5026b7cbf7f2 Mon Sep 17 00:00:00 2001
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Date: Fri, 21 Dec 2012 15:14:44 -0800
-Subject: [PATCH 293/715] Drivers: misc: remove __dev* attributes.
+Subject: [PATCH 0293/1083] Drivers: misc: remove __dev* attributes.
 
 CONFIG_HOTPLUG is going away as an option.  As a result, the __dev*
 markings need to be removed.
@@ -47,8 +47,8 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/gpio.c    |    6 +++---
- drivers/sh/pfc/pinctrl.c |   20 +++++++++-----------
+ drivers/sh/pfc/gpio.c    |  6 +++---
+ drivers/sh/pfc/pinctrl.c | 20 +++++++++-----------
  2 files changed, 12 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/sh/pfc/gpio.c b/drivers/sh/pfc/gpio.c
@@ -149,5 +149,5 @@ index 0646bf6..4109b76 100644
  		.name	= DRV_NAME,
  		.owner	= THIS_MODULE,
 -- 
-1.7.10.4
+1.8.3.2
 

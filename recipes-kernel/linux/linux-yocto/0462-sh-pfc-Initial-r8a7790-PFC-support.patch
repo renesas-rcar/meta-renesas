@@ -1,7 +1,7 @@
 From 4f2b3921a91ed309fba7f8e62309ce9720782988 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@rms.renesas.com>
 Date: Mon, 8 Apr 2013 11:08:53 +0900
-Subject: [PATCH 462/715] sh-pfc: Initial r8a7790 PFC support
+Subject: [PATCH 0462/1083] sh-pfc: Initial r8a7790 PFC support
 
 Add initial PFC support for the r8a7790 SoC.
 
@@ -3725,5 +3725,5 @@ index 0000000..42b0c55
 +	.gpio_data_size = ARRAY_SIZE(pinmux_data),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From b1aab9d035ae16b92ef8cde39b036be92d1766b9 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Wed, 27 Feb 2013 17:15:01 +0900
-Subject: [PATCH 184/715] irqchip: Renesas IRQC driver
+Subject: [PATCH 0184/1083] irqchip: Renesas IRQC driver
 
 This patch adds a driver for external IRQ pins connected
 to the IRQC hardware block on recent SoCs from Renesas.
@@ -37,10 +37,10 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/Kconfig                        |    4 +
- drivers/irqchip/Makefile                       |    1 +
- drivers/irqchip/irq-renesas-irqc.c             |  298 ++++++++++++++++++++++++
- include/linux/platform_data/irq-renesas-irqc.h |   27 +++
+ drivers/irqchip/Kconfig                        |   4 +
+ drivers/irqchip/Makefile                       |   1 +
+ drivers/irqchip/irq-renesas-irqc.c             | 298 +++++++++++++++++++++++++
+ include/linux/platform_data/irq-renesas-irqc.h |  27 +++
  4 files changed, 330 insertions(+)
  create mode 100644 drivers/irqchip/irq-renesas-irqc.c
  create mode 100644 include/linux/platform_data/irq-renesas-irqc.h
@@ -404,5 +404,5 @@ index 0000000..3ae17b3
 +
 +#endif /* __IRQ_RENESAS_IRQC_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

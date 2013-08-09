@@ -1,7 +1,7 @@
 From b3e32e8011dcd7ad5227884c5b73b2cbebfe7806 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:38:51 +0100
-Subject: [PATCH 428/715] sh-pfc: r8a7779: Add LBSC pin groups and functions
+Subject: [PATCH 0428/1083] sh-pfc: r8a7779: Add LBSC pin groups and functions
 
 Only the CS pins and functions are currently handled.
 
@@ -11,7 +11,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |   77 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 77 ++++++++++++++++++++++++++++++++++++
  1 file changed, 77 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -124,5 +124,5 @@ index 6043d2c..3f67143 100644
  	SH_PFC_FUNCTION(mmc1),
  	SH_PFC_FUNCTION(sdhi0),
 -- 
-1.7.10.4
+1.8.3.2
 

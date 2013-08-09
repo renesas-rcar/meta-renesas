@@ -1,7 +1,7 @@
 From e30737122f0f1d81fbbf5b7ed9edf7405c805554 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Mon, 4 Feb 2013 10:42:23 +0900
-Subject: [PATCH 166/715] ARM: 7542/1: mm: fix cache LoUIS API for xscale and
+Subject: [PATCH 0166/1083] ARM: 7542/1: mm: fix cache LoUIS API for xscale and
  feroceon
 
 Some architectures like xscale and feroceon have cache API variants that
@@ -15,8 +15,8 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mm/proc-feroceon.S |    1 +
- arch/arm/mm/proc-xscale.S   |    1 +
+ arch/arm/mm/proc-feroceon.S | 1 +
+ arch/arm/mm/proc-xscale.S   | 1 +
  2 files changed, 2 insertions(+)
 
 diff --git a/arch/arm/mm/proc-feroceon.S b/arch/arm/mm/proc-feroceon.S
@@ -44,5 +44,5 @@ index b5ea31d..2551036 100644
  	a0_alias coherent_kern_range
  	a0_alias coherent_user_range
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,8 +1,8 @@
 From 509dfb41a3554f4a501a443fb0b232c44ed9c2f9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:44 +0100
-Subject: [PATCH 300/715] sh-pfc: Move private definitions and declarations to
- private header
+Subject: [PATCH 0300/1083] sh-pfc: Move private definitions and declarations
+ to private header
 
 Move all private structure definitions and function declarations from
 include/linux/sh_pfc.h to drivers/sh/pfc/core.h.
@@ -15,11 +15,11 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c    |    2 ++
- drivers/sh/pfc/core.h    |   44 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/sh/pfc/gpio.c    |    2 ++
- drivers/sh/pfc/pinctrl.c |    2 ++
- include/linux/sh_pfc.h   |   29 -----------------------------
+ drivers/sh/pfc/core.c    |  2 ++
+ drivers/sh/pfc/core.h    | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/sh/pfc/gpio.c    |  2 ++
+ drivers/sh/pfc/pinctrl.c |  2 ++
+ include/linux/sh_pfc.h   | 29 -----------------------------
  5 files changed, 50 insertions(+), 29 deletions(-)
  create mode 100644 drivers/sh/pfc/core.h
 
@@ -166,5 +166,5 @@ index 58587f9..f7f01b2 100644
  static inline int register_pinmux(struct pinmux_info *pip)
  {
 -- 
-1.7.10.4
+1.8.3.2
 

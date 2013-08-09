@@ -1,7 +1,7 @@
 From 63fd5f0cd2bc123da39875ffd7be928e9152eaca Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 10:25:07 +0100
-Subject: [PATCH 271/715] pinctrl: Declare operation structures as const
+Subject: [PATCH 0271/1083] pinctrl: Declare operation structures as const
 
 The pinconf, pinctrl and pinmux operation structures hold function
 pointers that are never modified. Declare them as const.
@@ -32,13 +32,13 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/devicetree.c     |    4 ++--
- drivers/pinctrl/pinctrl-at91.c   |    6 +++---
- drivers/pinctrl/pinctrl-pxa3xx.c |    4 ++--
- drivers/pinctrl/pinctrl-sirf.c   |    4 ++--
- drivers/pinctrl/pinctrl-tegra.c  |    6 +++---
- drivers/pinctrl/pinctrl-u300.c   |    6 +++---
- include/linux/pinctrl/pinctrl.h  |    6 +++---
+ drivers/pinctrl/devicetree.c     | 4 ++--
+ drivers/pinctrl/pinctrl-at91.c   | 6 +++---
+ drivers/pinctrl/pinctrl-pxa3xx.c | 4 ++--
+ drivers/pinctrl/pinctrl-sirf.c   | 4 ++--
+ drivers/pinctrl/pinctrl-tegra.c  | 6 +++---
+ drivers/pinctrl/pinctrl-u300.c   | 6 +++---
+ include/linux/pinctrl/pinctrl.h  | 6 +++---
  7 files changed, 18 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/pinctrl/devicetree.c b/drivers/pinctrl/devicetree.c
@@ -218,5 +218,5 @@ index aeefb67..a43a391 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

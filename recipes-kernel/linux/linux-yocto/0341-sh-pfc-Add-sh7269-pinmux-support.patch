@@ -1,7 +1,7 @@
 From 212427c7c6558deb617783314591cccd4558ce45 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:31 +0100
-Subject: [PATCH 341/715] sh-pfc: Add sh7269 pinmux support
+Subject: [PATCH 0341/1083] sh-pfc: Add sh7269 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -2913,5 +2913,5 @@ index 0000000..dab04d4
 +	.gpio_data_size = ARRAY_SIZE(pinmux_data),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

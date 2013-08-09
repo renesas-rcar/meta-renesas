@@ -1,7 +1,7 @@
 From 11c34fa27ee1c972019671927b96f122f63da184 Mon Sep 17 00:00:00 2001
 From: Grant Likely <grant.likely@secretlab.ca>
 Date: Thu, 17 May 2012 13:54:40 -0600
-Subject: [PATCH 237/715] gpio: Adjust of_xlate API to support multiple GPIO
+Subject: [PATCH 0237/1083] gpio: Adjust of_xlate API to support multiple GPIO
  chips
 
 This patch changes the of_xlate API to make it possible for multiple
@@ -18,11 +18,11 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-imx/mach-mx35_3ds.c |    3 +-
- drivers/gpio/gpiolib-of.c         |   80 ++++++++++++++++++-------------------
- drivers/gpio/gpiolib.c            |    2 +-
- include/asm-generic/gpio.h        |    2 +-
- include/linux/of_gpio.h           |    1 -
+ arch/arm/mach-imx/mach-mx35_3ds.c |  3 +-
+ drivers/gpio/gpiolib-of.c         | 80 +++++++++++++++++++--------------------
+ drivers/gpio/gpiolib.c            |  2 +-
+ include/asm-generic/gpio.h        |  2 +-
+ include/linux/of_gpio.h           |  1 -
  5 files changed, 41 insertions(+), 47 deletions(-)
 
 diff --git a/arch/arm/mach-imx/mach-mx35_3ds.c b/arch/arm/mach-imx/mach-mx35_3ds.c
@@ -194,5 +194,5 @@ index 81733d1..c454f57 100644
  				const struct of_phandle_args *gpiospec,
  				u32 *flags);
 -- 
-1.7.10.4
+1.8.3.2
 

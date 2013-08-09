@@ -1,15 +1,15 @@
 From 11d15330483c6596d20de29f3310c0330e3ea933 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:52:54 +0900
-Subject: [PATCH 523/715] mtd: devices: Add Spansion S25FL512S support
+Subject: [PATCH 0523/1083] mtd: devices: Add Spansion S25FL512S support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit 94a71043164701b816fe9dd75a373ab268ee8f08)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mtd/devices/Kconfig  |   19 +++++++-
- drivers/mtd/devices/m25p80.c |  101 ++++++++++++++++++++++++++++++++++++++----
+ drivers/mtd/devices/Kconfig  |  19 +++++++-
+ drivers/mtd/devices/m25p80.c | 101 +++++++++++++++++++++++++++++++++++++++----
  2 files changed, 109 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/mtd/devices/Kconfig b/drivers/mtd/devices/Kconfig
@@ -225,5 +225,5 @@ index 1924d24..93f4368 100644
  		flash->mtd.name = data->name;
  	else
 -- 
-1.7.10.4
+1.8.3.2
 

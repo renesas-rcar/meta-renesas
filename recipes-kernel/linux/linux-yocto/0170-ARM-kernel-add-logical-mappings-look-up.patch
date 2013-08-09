@@ -1,7 +1,7 @@
 From 81b0a78829dfbe26c1e7e2dcd256fa580dde7eb7 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Mon, 4 Feb 2013 10:42:31 +0900
-Subject: [PATCH 170/715] ARM: kernel: add logical mappings look-up
+Subject: [PATCH 0170/1083] ARM: kernel: add logical mappings look-up
 
 In ARM SMP systems the MPIDR register ([23:0] bits) is used to uniquely
 identify CPUs.
@@ -19,7 +19,7 @@ Acked-by: Nicolas Pitre <nico@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/smp_plat.h |   17 +++++++++++++++++
+ arch/arm/include/asm/smp_plat.h | 17 +++++++++++++++++
  1 file changed, 17 insertions(+)
 
 diff --git a/arch/arm/include/asm/smp_plat.h b/arch/arm/include/asm/smp_plat.h
@@ -57,5 +57,5 @@ index 558d6c8..aaa61b6 100644
  
  #endif
 -- 
-1.7.10.4
+1.8.3.2
 

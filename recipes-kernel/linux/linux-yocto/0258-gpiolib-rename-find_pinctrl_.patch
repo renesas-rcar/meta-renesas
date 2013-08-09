@@ -1,7 +1,7 @@
 From 37c46d93e2001f59625cdeaad5b455cbf6409e24 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 20 Nov 2012 14:03:37 +0100
-Subject: [PATCH 258/715] gpiolib: rename find_pinctrl_*
+Subject: [PATCH 0258/1083] gpiolib: rename find_pinctrl_*
 
 Rename the function find_pinctrl_and_add_gpio_range()
 to pinctrl_find_and_add_gpio_range() so as to be consistent
@@ -14,9 +14,9 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c          |    2 +-
- drivers/pinctrl/core.c          |    4 ++--
- include/linux/pinctrl/pinctrl.h |    2 +-
+ drivers/gpio/gpiolib.c          | 2 +-
+ drivers/pinctrl/core.c          | 4 ++--
+ include/linux/pinctrl/pinctrl.h | 2 +-
  3 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -68,5 +68,5 @@ index 559ba85..36409c2 100644
  
  #ifdef CONFIG_OF
 -- 
-1.7.10.4
+1.8.3.2
 

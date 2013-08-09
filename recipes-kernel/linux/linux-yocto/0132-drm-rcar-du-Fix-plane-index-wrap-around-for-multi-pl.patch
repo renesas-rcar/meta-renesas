@@ -1,7 +1,7 @@
 From d6336c3042398bff3bb641d32ae08e46672322aa Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 5 Mar 2013 00:48:56 +0100
-Subject: [PATCH 132/715] drm/rcar-du: Fix plane index wrap-around for
+Subject: [PATCH 0132/1083] drm/rcar-du: Fix plane index wrap-around for
  multi-planar overlays
 
 If the first hardware plane of a multi-planar overlay is plane 7 the
@@ -13,7 +13,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    7 +++++--
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 7 +++++--
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -40,5 +40,5 @@ index 22b87ec..ca80939 100644
  	}
  
 -- 
-1.7.10.4
+1.8.3.2
 

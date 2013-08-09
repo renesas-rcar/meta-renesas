@@ -1,7 +1,7 @@
 From ebc98a462deff09f30b03877f4329d6d2d9e7f0d Mon Sep 17 00:00:00 2001
 From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 Date: Tue, 6 Nov 2012 12:23:43 +0900
-Subject: [PATCH 351/715] ARM: shmobile: Remove SH7367 support
+Subject: [PATCH 0351/1083] ARM: shmobile: Remove SH7367 support
 
 This is old CPU of shmobile, and the machine by which this CPU is
 used cannot be obtained.
@@ -3437,5 +3437,5 @@ index 2e3074a..0000000
 -	shmobile_timer.init = sh7367_earlytimer_init;
 -}
 -- 
-1.7.10.4
+1.8.3.2
 

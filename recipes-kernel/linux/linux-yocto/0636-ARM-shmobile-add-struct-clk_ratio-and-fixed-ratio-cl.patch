@@ -1,7 +1,7 @@
 From 02f392faeed9a91d6ac08bd55c1ee8fcdc5fa863 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 27 Mar 2013 00:55:41 -0700
-Subject: [PATCH 636/715] ARM: shmobile: add struct clk_ratio and fixed ratio
+Subject: [PATCH 0636/1083] ARM: shmobile: add struct clk_ratio and fixed ratio
  clock macro
 
 Renesas chip has many clocks inside,
@@ -20,8 +20,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock.c              |   13 +++++++++
- arch/arm/mach-shmobile/include/mach/clock.h |   39 +++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/clock.c              | 13 ++++++++++
+ arch/arm/mach-shmobile/include/mach/clock.h | 39 +++++++++++++++++++++++++++++
  2 files changed, 52 insertions(+)
  create mode 100644 arch/arm/mach-shmobile/include/mach/clock.h
 
@@ -95,5 +95,5 @@ index 0000000..76ac612
 +
 +#endif
 -- 
-1.7.10.4
+1.8.3.2
 

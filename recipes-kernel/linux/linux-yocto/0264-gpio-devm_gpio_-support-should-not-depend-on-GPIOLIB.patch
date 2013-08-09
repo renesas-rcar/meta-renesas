@@ -1,7 +1,7 @@
 From 14830b6f41d4a4a136f5cfe8629bbee0a667a0ac Mon Sep 17 00:00:00 2001
 From: Shawn Guo <shawn.guo@linaro.org>
 Date: Fri, 18 Jan 2013 15:57:46 +0800
-Subject: [PATCH 264/715] gpio: devm_gpio_* support should not depend on
+Subject: [PATCH 0264/1083] gpio: devm_gpio_* support should not depend on
  GPIOLIB
 
 Some architectures (e.g. blackfin) provide gpio API without requiring
@@ -20,10 +20,10 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/Kconfig       |    3 +++
- drivers/gpio/Makefile      |    3 ++-
- include/asm-generic/gpio.h |    6 ------
- include/linux/gpio.h       |   14 ++++++++------
+ drivers/gpio/Kconfig       |  3 +++
+ drivers/gpio/Makefile      |  3 ++-
+ include/asm-generic/gpio.h |  6 ------
+ include/linux/gpio.h       | 14 ++++++++------
  4 files changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
@@ -102,5 +102,5 @@ index 3221142..466258a 100644
 +
  #endif /* __LINUX_GPIO_H */
 -- 
-1.7.10.4
+1.8.3.2
 

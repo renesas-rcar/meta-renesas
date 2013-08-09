@@ -1,7 +1,7 @@
 From 5746e4c098311f542a3e220fbc04c21d31413180 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 16:38:23 +0100
-Subject: [PATCH 416/715] sh-pfc: Use proper error codes
+Subject: [PATCH 0416/1083] sh-pfc: Use proper error codes
 
 Return proper error codes instead of -1, and propagate the error codes.
 
@@ -11,9 +11,9 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c    |   19 ++++++++++---------
- drivers/pinctrl/sh-pfc/gpio.c    |   13 ++++---------
- drivers/pinctrl/sh-pfc/pinctrl.c |   24 +++++++++++-------------
+ drivers/pinctrl/sh-pfc/core.c    | 19 ++++++++++---------
+ drivers/pinctrl/sh-pfc/gpio.c    | 13 ++++---------
+ drivers/pinctrl/sh-pfc/pinctrl.c | 24 +++++++++++-------------
  3 files changed, 25 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -180,5 +180,5 @@ index b4960df..c150910 100644
  
  	return ret;
 -- 
-1.7.10.4
+1.8.3.2
 

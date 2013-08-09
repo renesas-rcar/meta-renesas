@@ -1,7 +1,7 @@
 From 7e5740eb9bdb6229a43976c26c9692aa1106d2be Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 13:24:58 +0900
-Subject: [PATCH 507/715] ARM: shmobile: r8a7790: Fix HS-USB register access
+Subject: [PATCH 0507/1083] ARM: shmobile: r8a7790: Fix HS-USB register access
  using ioremap
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
@@ -9,7 +9,7 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c |    5 +++--
+ arch/arm/mach-shmobile/setup-r8a7790.c | 5 +++--
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
@@ -43,5 +43,5 @@ index 7c1eabc..9856e24 100644
  	return 0;
  }
 -- 
-1.7.10.4
+1.8.3.2
 

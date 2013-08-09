@@ -1,7 +1,7 @@
 From 80ee0c7843a42a7942d549818e20a0e12fe8f412 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Wed, 26 Jun 2013 14:48:49 +0900
-Subject: [PATCH 710/715] drm: Add display resolution parameters
+Subject: [PATCH 0710/1083] drm: Add display resolution parameters
 
 The resolufion parameter of 800x480,1024x600,1280x720,1920x1080
 was added.
@@ -11,7 +11,7 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/drm_edid_modes.h |   24 ++++++++++++++++++++++++
+ drivers/gpu/drm/drm_edid_modes.h | 24 ++++++++++++++++++++++++
  1 file changed, 24 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
@@ -71,5 +71,5 @@ index 57459b3..627cf2d 100644
  	{ DRM_MODE("1920x1200", DRM_MODE_TYPE_DRIVER, 154000, 1920, 1968,
  		   2000, 2080, 0, 1200, 1203, 1209, 1235, 0,
 -- 
-1.7.10.4
+1.8.3.2
 

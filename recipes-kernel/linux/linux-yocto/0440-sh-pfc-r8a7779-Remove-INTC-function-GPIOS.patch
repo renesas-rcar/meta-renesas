@@ -1,7 +1,7 @@
 From 28dde84d44b3ee7911020ea5c93ef6e9832037ff Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:58:48 +0100
-Subject: [PATCH 440/715] sh-pfc: r8a7779: Remove INTC function GPIOS
+Subject: [PATCH 0440/1083] sh-pfc: r8a7779: Remove INTC function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the INTC pins,
 the corresponding function GPIOS are unused. Remove them.
@@ -12,7 +12,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |   15 +++++++--------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 15 +++++++--------
  1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -59,5 +59,5 @@ index 5d65499..1d7b0df 100644
  	GPIO_FN(ARM_TRACEDATA_14), GPIO_FN(MT1_CLK),
  	GPIO_FN(TS_SCK0), GPIO_FN(VI0_R5), GPIO_FN(ETH_TXD0),
 -- 
-1.7.10.4
+1.8.3.2
 

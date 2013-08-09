@@ -1,7 +1,7 @@
 From 5c4ff6ae9a285b174a114fc9b2d408eebd9214f0 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 17 Feb 2013 01:57:45 +0100
-Subject: [PATCH 126/715] drm/rcar-du: Add DRM PRIME support
+Subject: [PATCH 0126/1083] drm/rcar-du: Add DRM PRIME support
 
 Just use the GEM CMA DRM PRIME helpers.
 
@@ -10,7 +10,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_drv.c |    7 ++++++-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
@@ -39,5 +39,5 @@ index cbad07e..dbc1a62 100644
  	.dumb_map_offset	= drm_gem_cma_dumb_map_offset,
  	.dumb_destroy		= drm_gem_cma_dumb_destroy,
 -- 
-1.7.10.4
+1.8.3.2
 

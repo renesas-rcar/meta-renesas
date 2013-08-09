@@ -1,7 +1,7 @@
 From b2e4d2a2c0554d637ca3dba43d30e43cd787cc3c Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Fri, 23 Nov 2012 12:09:26 -0200
-Subject: [PATCH 100/715] drm: add drm_mode_cea_vic
+Subject: [PATCH 0100/1083] drm: add drm_mode_cea_vic
 
 This function returns the VIC of the mode. This value can be used when
 creating AVI InfoFrames.
@@ -16,8 +16,8 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   19 +++++++++++++++++++
- include/drm/drm_crtc.h     |    1 +
+ drivers/gpu/drm/drm_edid.c | 19 +++++++++++++++++++
+ include/drm/drm_crtc.h     |  1 +
  2 files changed, 20 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -60,5 +60,5 @@ index c0635b7..3538eda 100644
  extern int drm_edid_header_is_valid(const u8 *raw_edid);
  extern bool drm_edid_block_valid(u8 *raw_edid, int block, bool print_bad_edid);
 -- 
-1.7.10.4
+1.8.3.2
 

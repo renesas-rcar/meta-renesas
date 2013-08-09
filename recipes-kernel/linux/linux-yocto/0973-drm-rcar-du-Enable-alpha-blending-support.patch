@@ -1,0 +1,191 @@
+From 3df8c0aade1bfd7b97484137ec9720aabbf3a9cd Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 8 Feb 2013 17:22:58 +0100
+Subject: [PATCH 0973/1083] drm/rcar-du: Enable alpha blending support
+
+Alpha-blending is unconditinally disabled, treating alpha-aware formats
+as corresponding opaque formats. Fix this.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 902126064ed5961781e0cd7d3e655ce104e349f0)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 2be94bb133e367c54459c51b535d357e0830bff5)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   | 18 +++++++++---------
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h   |  2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 11 +++++++----
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |  1 -
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  | 15 +++++++++------
+ 5 files changed, 26 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 4f54f6a..976823e 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -31,56 +31,56 @@ static const struct rcar_du_format_info rcar_du_format_infos[] = {
+ 		.fourcc = DRM_FORMAT_RGB565,
+ 		.bpp = 16,
+ 		.planes = 1,
+-		.dddf = PnMR_DDDF_16BPP,
++		.pnmr = PnMR_SPIM_TP | PnMR_DDDF_16BPP,
+ 		.edf = PnDDCR4_EDF_NONE,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_ARGB1555,
+ 		.bpp = 16,
+ 		.planes = 1,
+-		.dddf = PnMR_DDDF_ARGB,
++		.pnmr = PnMR_SPIM_ALP | PnMR_DDDF_ARGB,
+ 		.edf = PnDDCR4_EDF_NONE,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_XRGB8888,
+ 		.bpp = 32,
+ 		.planes = 1,
+-		.dddf = PnMR_DDDF_16BPP,
++		.pnmr = PnMR_SPIM_TP | PnMR_DDDF_16BPP,
+ 		.edf = PnDDCR4_EDF_RGB888,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_ARGB8888,
+ 		.bpp = 32,
+ 		.planes = 1,
+-		.dddf = PnMR_DDDF_16BPP,
++		.pnmr = PnMR_SPIM_ALP | PnMR_DDDF_16BPP,
+ 		.edf = PnDDCR4_EDF_ARGB8888,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_UYVY,
+ 		.bpp = 16,
+ 		.planes = 1,
+-		.dddf = PnMR_DDDF_YC,
++		.pnmr = PnMR_SPIM_TP_OFF | PnMR_DDDF_YC,
+ 		.edf = PnDDCR4_EDF_NONE,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_YUYV,
+ 		.bpp = 16,
+ 		.planes = 1,
+-		.dddf = PnMR_DDDF_YC,
++		.pnmr = PnMR_SPIM_TP_OFF | PnMR_DDDF_YC,
+ 		.edf = PnDDCR4_EDF_NONE,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_NV12,
+ 		.bpp = 12,
+ 		.planes = 2,
+-		.dddf = PnMR_DDDF_YC,
++		.pnmr = PnMR_SPIM_TP_OFF | PnMR_DDDF_YC,
+ 		.edf = PnDDCR4_EDF_NONE,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_NV21,
+ 		.bpp = 12,
+ 		.planes = 2,
+-		.dddf = PnMR_DDDF_YC,
++		.pnmr = PnMR_SPIM_TP_OFF | PnMR_DDDF_YC,
+ 		.edf = PnDDCR4_EDF_NONE,
+ 	}, {
+ 		/* In YUV 4:2:2, only NV16 is supported (NV61 isn't) */
+ 		.fourcc = DRM_FORMAT_NV16,
+ 		.bpp = 16,
+ 		.planes = 2,
+-		.dddf = PnMR_DDDF_YC,
++		.pnmr = PnMR_SPIM_TP_OFF | PnMR_DDDF_YC,
+ 		.edf = PnDDCR4_EDF_NONE,
+ 	},
+ };
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.h b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+index 4ba34cc..fd74093 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+@@ -22,7 +22,7 @@ struct rcar_du_format_info {
+ 	u32 fourcc;
+ 	unsigned int bpp;
+ 	unsigned int planes;
+-	unsigned int dddf;
++	unsigned int pnmr;
+ 	unsigned int edf;
+ };
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index c668eac..a14af96 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -135,7 +135,8 @@ static void __rcar_du_plane_setup(struct rcar_du_plane *plane,
+ 	ddcr4 &= ~PnDDCR4_EDF_MASK;
+ 	ddcr4 |= plane->format->edf | PnDDCR4_CODE;
+ 
+-	pnmr = PnMR_SPIM_TP_OFF | PnMR_BM_MD | plane->format->dddf;
++	/* Disable color-keying for now. */
++	pnmr = PnMR_SPIM_TP_OFF | PnMR_BM_MD | plane->format->pnmr;
+ 
+ 	/* For packed YUV formats we need to select the U/V order. */
+ 	if (plane->format->fourcc == DRM_FORMAT_YUYV)
+@@ -160,8 +161,11 @@ static void __rcar_du_plane_setup(struct rcar_du_plane *plane,
+ 	rcar_du_plane_write(rcdu, index, PnDDCR2, ddcr2);
+ 	rcar_du_plane_write(rcdu, index, PnDDCR4, ddcr4);
+ 
+-	/* Global alpha value */
+-	rcar_du_plane_write(rcdu, index, PnALPHAR, plane->alpha);
++	/* The PnALPHAR register controls alpha-blending in 16bpp formats
++	 * (ARGB1555). Set the alpha value to 0, and enable alpha-blending when
++	 * the A bit is 0. This maps A=0 to alpha=0 and A=1 to alpha=255.
++	 */
++	rcar_du_plane_write(rcdu, index, PnALPHAR, PnALPHAR_ABIT_0);
+ 
+ 	/* Memory pitch (expressed in pixels) */
+ 	if (plane->format->planes == 2)
+@@ -283,7 +287,6 @@ int rcar_du_plane_init(struct rcar_du_device *rcdu)
+ 
+ 		plane->dev = rcdu;
+ 		plane->hwindex = -1;
+-		plane->alpha = 255;
+ 
+ 		/* Reserve one plane per CRTC */
+ 		if (i < ARRAY_SIZE(rcdu->crtc))
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.h b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+index f02f971..1e30237 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+@@ -29,7 +29,6 @@ struct rcar_du_plane {
+ 	bool enabled;
+ 
+ 	int hwindex;		/* 0-based, -1 means unused */
+-	unsigned int alpha;
+ 
+ 	const struct rcar_du_format_info *format;
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+index a2786d9..7ad54ca 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_regs.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -262,12 +262,10 @@
+ #define PnMR_TC_R		(0 << 17)	/* Tranparent color is PnTC1R */
+ #define PnMR_TC_CP		(1 << 17)	/* Tranparent color is color palette */
+ #define PnMR_WAE		(1 << 16)	/* Wrap around Enable */
+-#define PnMR_SPIM_TP_ON		(0 << 12)	/* Transparent Color */
+-#define PnMR_SPIM_ALP_ON	(1 << 12)	/* Alpha Blending */
+-#define PnMR_SPIM_EOR_ON	(2 << 12)	/* EOR */
+-#define PnMR_SPIM_TP_OFF	(4 << 12)	/* No Transparent Color */
+-#define PnMR_SPIM_ALP_OFF	(5 << 12)	/* Alpha Blending, No Transp. */
+-#define PnMR_SPIM_EOR_OFF	(6 << 12)	/* EOR, No Transp. */
++#define PnMR_SPIM_TP		(0 << 12)	/* Transparent Color */
++#define PnMR_SPIM_ALP		(1 << 12)	/* Alpha Blending */
++#define PnMR_SPIM_EOR		(2 << 12)	/* EOR */
++#define PnMR_SPIM_TP_OFF	(1 << 14)	/* No Transparent Color */
+ #define PnMR_CPSL_CP1		(0 << 8)	/* Color Palette selected 1 */
+ #define PnMR_CPSL_CP2		(1 << 8)	/* Color Palette selected 2 */
+ #define PnMR_CPSL_CP3		(2 << 8)	/* Color Palette selected 3 */
+@@ -284,7 +282,12 @@
+ #define PnMR_DDDF_MASK		(3 << 0)
+ 
+ #define PnMWR			0x00104
++
+ #define PnALPHAR		0x00108
++#define PnALPHAR_ABIT_1		(0 << 12)
++#define PnALPHAR_ABIT_0		(1 << 12)
++#define PnALPHAR_ABIT_X		(2 << 12)
++
+ #define PnDSXR			0x00110
+ #define PnDSYR			0x00114
+ #define PnDPXR			0x00118
+-- 
+1.8.3.2
+

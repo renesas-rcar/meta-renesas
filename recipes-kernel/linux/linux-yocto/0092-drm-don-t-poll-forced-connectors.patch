@@ -1,7 +1,7 @@
 From e1cfe0d577d97524584c8b18edd4f3dc3f0f3824 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:38 +0000
-Subject: [PATCH 092/715] drm: don't poll forced connectors
+Subject: [PATCH 0092/1083] drm: don't poll forced connectors
 
 Otherwise if the detect callback reports a different state than what
 the user forced (rather likely), we continously annoy userspace about
@@ -14,7 +14,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc_helper.c |    4 ++++
+ drivers/gpu/drm/drm_crtc_helper.c | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
@@ -33,5 +33,5 @@ index e0804cd..47ace7c 100644
  		 * want any hotplug detection at all for polling. */
  		if (!connector->polled || connector->polled == DRM_CONNECTOR_POLL_HPD)
 -- 
-1.7.10.4
+1.8.3.2
 

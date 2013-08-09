@@ -1,7 +1,7 @@
 From 712527da3bc1c97a344b49525cfc3fe7108dd4a2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:38:10 +0100
-Subject: [PATCH 444/715] ARM: shmobile: r8a7779: Remove HSPI function GPIOs
+Subject: [PATCH 0444/1083] ARM: shmobile: r8a7779: Remove HSPI function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.
@@ -14,7 +14,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7779.h |   52 ++++++++++++-------------
+ arch/arm/mach-shmobile/include/mach/r8a7779.h | 52 +++++++++++++--------------
  1 file changed, 26 insertions(+), 26 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
@@ -139,5 +139,5 @@ index e1835a2..6f44dfb 100644
  	GPIO_FN_SPA_TDO, GPIO_FN_HCTS0_B, GPIO_FN_VI1_G1, GPIO_FN_VI3_DATA1,
  	GPIO_FN_SSI_SCK1, GPIO_FN_TS_SDEN1, GPIO_FN_DACK2_B,
 -- 
-1.7.10.4
+1.8.3.2
 

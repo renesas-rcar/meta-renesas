@@ -1,7 +1,7 @@
 From 890c62f62e94750390e137ca945488dd0416a206 Mon Sep 17 00:00:00 2001
 From: Takashi Iwai <tiwai@suse.de>
 Date: Tue, 3 Jul 2012 11:22:11 +0200
-Subject: [PATCH 046/715] drm: edid: Don't add inferred modes with higher
+Subject: [PATCH 0046/1083] drm: edid: Don't add inferred modes with higher
  resolution
 
 When a monitor EDID doesn't give the preferred bit, driver assumes
@@ -22,7 +22,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   27 ++++++++++++++++++++++++---
+ drivers/gpu/drm/drm_edid.c | 27 ++++++++++++++++++++++++---
  1 file changed, 24 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -85,5 +85,5 @@ index 5873e48..a8743c3 100644
  			continue;
  		}
 -- 
-1.7.10.4
+1.8.3.2
 

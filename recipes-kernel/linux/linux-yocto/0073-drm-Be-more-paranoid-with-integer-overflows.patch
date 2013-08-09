@@ -1,7 +1,7 @@
 From 6e7fe08be3043cb39c8f50989ed2889db1b7a9fd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:04 +0000
-Subject: [PATCH 073/715] drm: Be more paranoid with integer overflows
+Subject: [PATCH 0073/1083] drm: Be more paranoid with integer overflows
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,7 +16,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   10 +++++++++-
+ drivers/gpu/drm/drm_crtc.c | 10 +++++++++-
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -47,5 +47,5 @@ index 9c346a5..b094abe 100644
  			return -EINVAL;
  		}
 -- 
-1.7.10.4
+1.8.3.2
 

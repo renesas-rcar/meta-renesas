@@ -1,7 +1,7 @@
 From 6b1ab15c16fd08064f115ae4904558b3f4ee06a2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 9 Jan 2013 23:19:07 +0100
-Subject: [PATCH 121/715] drm: Renesas R-Car Display Unit DRM driver
+Subject: [PATCH 0121/1083] drm: Renesas R-Car Display Unit DRM driver
 
 The R-Car Display Unit (DU) DRM driver supports both superposition
 processors and all eight planes in RGB and YUV formats without alpha
@@ -18,24 +18,24 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/Kconfig                 |    2 +
- drivers/gpu/drm/Makefile                |    1 +
- drivers/gpu/drm/rcar-du/Kconfig         |    9 +
- drivers/gpu/drm/rcar-du/Makefile        |    8 +
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |  471 +++++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_crtc.h  |   47 +++
- drivers/gpu/drm/rcar-du/rcar_du_drv.c   |  265 +++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_drv.h   |   56 ++++
- drivers/gpu/drm/rcar-du/rcar_du_kms.c   |  163 +++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_kms.h   |   33 +++
- drivers/gpu/drm/rcar-du/rcar_du_lvds.c  |  247 ++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_lvds.h  |   25 ++
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |  299 ++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_plane.h |   58 ++++
- drivers/gpu/drm/rcar-du/rcar_du_regs.h  |  439 ++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_vga.c   |  193 +++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_vga.h   |   24 ++
- include/linux/platform_data/rcar-du.h   |   51 ++++
+ drivers/gpu/drm/Kconfig                 |   2 +
+ drivers/gpu/drm/Makefile                |   1 +
+ drivers/gpu/drm/rcar-du/Kconfig         |   9 +
+ drivers/gpu/drm/rcar-du/Makefile        |   8 +
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  | 471 ++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h  |  47 ++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c   | 265 ++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   |  56 ++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   | 163 +++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h   |  33 +++
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c  | 247 +++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.h  |  25 ++
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 299 ++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |  58 ++++
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  | 439 +++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c   | 193 +++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vga.h   |  24 ++
+ include/linux/platform_data/rcar-du.h   |  51 ++++
  18 files changed, 2391 insertions(+)
  create mode 100644 drivers/gpu/drm/rcar-du/Kconfig
  create mode 100644 drivers/gpu/drm/rcar-du/Makefile
@@ -2558,5 +2558,5 @@ index 0000000..0f2c836
 +
 +#endif /* __RCAR_DU_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

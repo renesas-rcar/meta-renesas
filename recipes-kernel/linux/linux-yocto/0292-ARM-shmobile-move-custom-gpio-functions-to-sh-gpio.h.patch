@@ -1,7 +1,7 @@
 From 630547df0c30c61e0fbe49d439e0c5ebd4fa5056 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Tue, 28 Aug 2012 12:54:42 -0500
-Subject: [PATCH 292/715] ARM: shmobile: move custom gpio functions to
+Subject: [PATCH 0292/1083] ARM: shmobile: move custom gpio functions to
  sh-gpio.h
 
 Move custom shmobile gpio code to a sh-gpio.h to remove the dependency
@@ -15,19 +15,19 @@ Cc: Magnus Damm <magnus.damm@gmail.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-ap4evb.c          |    2 +
- arch/arm/mach-shmobile/board-armadillo800eva.c |    2 +
- arch/arm/mach-shmobile/board-g4evm.c           |    2 +
- arch/arm/mach-shmobile/board-mackerel.c        |    2 +
- arch/arm/mach-shmobile/include/mach/gpio.h     |   63 +-----------------------
- arch/arm/mach-shmobile/pfc-r8a7740.c           |    2 +-
- arch/arm/mach-shmobile/pfc-r8a7779.c           |    2 +-
- arch/arm/mach-shmobile/pfc-sh7367.c            |    2 +-
- arch/arm/mach-shmobile/pfc-sh7372.c            |    2 +-
- arch/arm/mach-shmobile/pfc-sh7377.c            |    2 +-
- arch/arm/mach-shmobile/pfc-sh73a0.c            |    2 +-
- arch/arm/mach-shmobile/sh-gpio.h               |   48 ++++++++++++++++++
- drivers/sh/pfc/gpio.c                          |    1 +
+ arch/arm/mach-shmobile/board-ap4evb.c          |  2 +
+ arch/arm/mach-shmobile/board-armadillo800eva.c |  2 +
+ arch/arm/mach-shmobile/board-g4evm.c           |  2 +
+ arch/arm/mach-shmobile/board-mackerel.c        |  2 +
+ arch/arm/mach-shmobile/include/mach/gpio.h     | 63 +-------------------------
+ arch/arm/mach-shmobile/pfc-r8a7740.c           |  2 +-
+ arch/arm/mach-shmobile/pfc-r8a7779.c           |  2 +-
+ arch/arm/mach-shmobile/pfc-sh7367.c            |  2 +-
+ arch/arm/mach-shmobile/pfc-sh7372.c            |  2 +-
+ arch/arm/mach-shmobile/pfc-sh7377.c            |  2 +-
+ arch/arm/mach-shmobile/pfc-sh73a0.c            |  2 +-
+ arch/arm/mach-shmobile/sh-gpio.h               | 48 ++++++++++++++++++++
+ drivers/sh/pfc/gpio.c                          |  1 +
  13 files changed, 64 insertions(+), 68 deletions(-)
  create mode 100644 arch/arm/mach-shmobile/sh-gpio.h
 
@@ -296,5 +296,5 @@ index 62bca98..038fa07 100644
  struct sh_pfc_chip {
  	struct sh_pfc		*pfc;
 -- 
-1.7.10.4
+1.8.3.2
 

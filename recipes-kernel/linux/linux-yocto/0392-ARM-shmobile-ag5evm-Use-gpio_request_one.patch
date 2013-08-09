@@ -1,7 +1,7 @@
 From c52288ebea4e8595f62bd267013a53956ce09846 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:28 +0100
-Subject: [PATCH 392/715] ARM: shmobile: ag5evm: Use gpio_request_one()
+Subject: [PATCH 0392/1083] ARM: shmobile: ag5evm: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().
@@ -16,7 +16,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-ag5evm.c |   15 +++++----------
+ arch/arm/mach-shmobile/board-ag5evm.c | 15 +++++----------
  1 file changed, 5 insertions(+), 10 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-ag5evm.c b/arch/arm/mach-shmobile/board-ag5evm.c
@@ -60,5 +60,5 @@ index d10c08f..ec023ea 100644
  
  	/* enable SDHI0 on CN15 [SD I/F] */
 -- 
-1.7.10.4
+1.8.3.2
 

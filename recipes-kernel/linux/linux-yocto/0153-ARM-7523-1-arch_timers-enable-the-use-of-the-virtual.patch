@@ -1,7 +1,7 @@
 From 9d88fcaae14a237721fdf6f3838d74dc6f7f91c9 Mon Sep 17 00:00:00 2001
 From: Marc Zyngier <Marc.Zyngier@arm.com>
 Date: Fri, 7 Sep 2012 18:09:57 +0100
-Subject: [PATCH 153/715] ARM: 7523/1: arch_timers: enable the use of the
+Subject: [PATCH 0153/1083] ARM: 7523/1: arch_timers: enable the use of the
  virtual timer
 
 At the moment, the arch_timer driver only uses the physical timer,
@@ -19,7 +19,7 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/arch_timer.c |  343 +++++++++++++++++++++++++++++-------------
+ arch/arm/kernel/arch_timer.c | 343 ++++++++++++++++++++++++++++++-------------
  1 file changed, 241 insertions(+), 102 deletions(-)
 
 diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
@@ -542,5 +542,5 @@ index cf25880..c4e20b6 100644
  	return 0;
  }
 -- 
-1.7.10.4
+1.8.3.2
 

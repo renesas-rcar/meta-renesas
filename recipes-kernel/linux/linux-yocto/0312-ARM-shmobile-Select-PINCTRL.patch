@@ -1,7 +1,7 @@
 From e8344a784feee754addaa8c35a9986391b8e4150 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:56 +0100
-Subject: [PATCH 312/715] ARM: shmobile: Select PINCTRL
+Subject: [PATCH 0312/1083] ARM: shmobile: Select PINCTRL
 
 The pin control framework is required by mach-shmobile. Select it in
 Kconfig.
@@ -20,7 +20,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/Kconfig |    1 +
+ arch/arm/Kconfig | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
@@ -36,5 +36,5 @@ index 32c978e..4c21c07 100644
  	select MULTI_IRQ_HANDLER
  	select PM_GENERIC_DOMAINS if PM
 -- 
-1.7.10.4
+1.8.3.2
 

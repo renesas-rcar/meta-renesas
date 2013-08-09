@@ -1,18 +1,18 @@
 From 8d8af84f18fdc9f40b92ff68b0491fa65edf7642 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Wed, 26 Jun 2013 19:58:57 +0900
-Subject: [PATCH 665/715] usb: Add Renesas R-Car xhci host driver
+Subject: [PATCH 0665/1083] usb: Add Renesas R-Car xhci host driver
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit 471d9158d5284fd5866f90fda759d21018293e96)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/usb/Kconfig          |    1 +
- drivers/usb/host/Kconfig     |    5 +
- drivers/usb/host/Makefile    |    4 +
- drivers/usb/host/xhci-rcar.c |  298 ++++++++++++++++++++++++++++++++++++++++++
- drivers/usb/host/xhci-rcar.h |   96 ++++++++++++++
+ drivers/usb/Kconfig          |   1 +
+ drivers/usb/host/Kconfig     |   5 +
+ drivers/usb/host/Makefile    |   4 +
+ drivers/usb/host/xhci-rcar.c | 298 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/usb/host/xhci-rcar.h |  96 ++++++++++++++
  5 files changed, 404 insertions(+)
  create mode 100644 drivers/usb/host/xhci-rcar.c
  create mode 100644 drivers/usb/host/xhci-rcar.h
@@ -469,5 +469,5 @@ index 0000000..defb12b
 +
 +#endif /* __XHCI_RCAR_H */
 -- 
-1.7.10.4
+1.8.3.2
 

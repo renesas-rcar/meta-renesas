@@ -1,7 +1,7 @@
 From db5c639f2c8785d0021fd8df424a54e606ba455e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:24 +0100
-Subject: [PATCH 338/715] sh-pfc: Add sh73a0 pinmux support
+Subject: [PATCH 0338/1083] sh-pfc: Add sh73a0 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -2871,5 +2871,5 @@ index 0000000..8a0eee9
 +	.gpio_irq_size = ARRAY_SIZE(pinmux_irqs),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

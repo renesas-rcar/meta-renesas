@@ -1,7 +1,7 @@
 From 8f7e9a01b9b9e53c80ced7d9a3ee016158b5343a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:14 +0200
-Subject: [PATCH 465/715] sh-pfc: r8a7790: Add ETH pin groups and functions
+Subject: [PATCH 0465/1083] sh-pfc: r8a7790: Add ETH pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
@@ -9,7 +9,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |   58 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 58 ++++++++++++++++++++++++++++++++++++
  1 file changed, 58 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -97,5 +97,5 @@ index 42b0c55..3774242 100644
  	.func_gpios	= pinmux_func_gpios,
  	.nr_func_gpios	= ARRAY_SIZE(pinmux_func_gpios),
 -- 
-1.7.10.4
+1.8.3.2
 

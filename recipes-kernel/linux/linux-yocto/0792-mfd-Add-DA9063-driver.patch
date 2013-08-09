@@ -1,0 +1,2069 @@
+From d2e2d76f9909e3d045635ce095d610c9e89b5034 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 30 Jul 2013 10:57:50 +0900
+Subject: [PATCH 0792/1083] mfd: Add DA9063 driver
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ drivers/mfd/Kconfig                  |   10 +
+ drivers/mfd/Makefile                 |    3 +
+ drivers/mfd/da9063-core.c            |  231 +++++++
+ drivers/mfd/da9063-i2c.c             |  132 ++++
+ drivers/mfd/da9063-irq.c             |  315 ++++++++++
+ include/linux/mfd/da9063/core.h      |  111 ++++
+ include/linux/mfd/da9063/pdata.h     |   91 +++
+ include/linux/mfd/da9063/registers.h | 1092 ++++++++++++++++++++++++++++++++++
+ 8 files changed, 1985 insertions(+)
+ create mode 100644 drivers/mfd/da9063-core.c
+ create mode 100644 drivers/mfd/da9063-i2c.c
+ create mode 100644 drivers/mfd/da9063-irq.c
+ create mode 100644 include/linux/mfd/da9063/core.h
+ create mode 100644 include/linux/mfd/da9063/pdata.h
+ create mode 100644 include/linux/mfd/da9063/registers.h
+
+diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
+index 11e4438..b6b5a6b 100644
+--- a/drivers/mfd/Kconfig
++++ b/drivers/mfd/Kconfig
+@@ -398,6 +398,16 @@ config MFD_DA9052_I2C
+ 	  for accessing the device, additional drivers must be enabled in
+ 	  order to use the functionality of the device.
+ 
++config MFD_DA9063
++	bool "Dialog Semiconductor DA9063 PMIC Support"
++	depends on I2C=y
++	select MFD_CORE
++	select REGMAP_I2C
++	help
++	  Say yes here to add support for the Dialog Semiconductor DA9063 
++	  Power Management IC. This driver provides core functions for 
++	  DA9063.
++
+ config PMIC_ADP5520
+ 	bool "Analog Devices ADP5520/01 MFD PMIC Core Support"
+ 	depends on I2C=y
+diff --git a/drivers/mfd/Makefile b/drivers/mfd/Makefile
+index 05fa538..0fe026e 100644
+--- a/drivers/mfd/Makefile
++++ b/drivers/mfd/Makefile
+@@ -75,6 +75,9 @@ obj-$(CONFIG_PMIC_DA9052)	+= da9052-core.o
+ obj-$(CONFIG_MFD_DA9052_SPI)	+= da9052-spi.o
+ obj-$(CONFIG_MFD_DA9052_I2C)	+= da9052-i2c.o
+ 
++da9063-objs			:= da9063-core.o da9063-irq.o da9063-i2c.o
++obj-$(CONFIG_MFD_DA9063)	+= da9063.o
++
+ max8925-objs			:= max8925-core.o max8925-i2c.o
+ obj-$(CONFIG_MFD_MAX8925)	+= max8925.o
+ obj-$(CONFIG_MFD_MAX8997)	+= max8997.o max8997-irq.o
+diff --git a/drivers/mfd/da9063-core.c b/drivers/mfd/da9063-core.c
+new file mode 100644
+index 0000000..d079e02
+--- /dev/null
++++ b/drivers/mfd/da9063-core.c
+@@ -0,0 +1,231 @@
++
++/* da9063-core.c - Core MFD device driver for DA9063
++ * Copyright (C) 2012  Dialog Semiconductor Ltd.
++ * 
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA  02110-1301, USA.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/device.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/mutex.h>
++#include <linux/mfd/core.h>
++
++#include <linux/mfd/da9063/core.h>
++#include <linux/mfd/da9063/pdata.h>
++#include <linux/mfd/da9063/registers.h>
++
++#include <linux/proc_fs.h>
++#include <linux/kthread.h>
++#include <linux/uaccess.h>
++
++
++static struct resource da9063_regulators_resources[] = {
++	{
++		.name	= "LDO_LIM",
++		.start	= DA9063_IRQ_LDO_LIM,
++		.end	= DA9063_IRQ_LDO_LIM,
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct resource da9063_rtc_resources[] = {
++	{
++		.name	= "ALARM",
++		.start	= DA9063_IRQ_ALARM,
++		.end	= DA9063_IRQ_ALARM,
++		.flags	= IORESOURCE_IRQ,
++	},
++	{
++		.name	= "TICK",
++		.start	= DA9063_IRQ_TICK,
++		.end	= DA9063_IRQ_TICK,
++		.flags	= IORESOURCE_IRQ,
++	}
++};
++
++static struct resource da9063_onkey_resources[] = {
++	{
++		.start	= DA9063_IRQ_ONKEY,
++		.end	= DA9063_IRQ_ONKEY,
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct resource da9063_hwmon_resources[] = {
++	{
++		.start	= DA9063_IRQ_ADC_RDY,
++		.end	= DA9063_IRQ_ADC_RDY,
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++
++static struct mfd_cell da9063_devs[] = {
++	{
++		.name		= DA9063_DRVNAME_REGULATORS,
++		.num_resources	= ARRAY_SIZE(da9063_regulators_resources),
++		.resources	= da9063_regulators_resources,
++	},
++	{
++		.name		= DA9063_DRVNAME_HWMON,
++		.num_resources	= ARRAY_SIZE(da9063_hwmon_resources),
++		.resources	= da9063_hwmon_resources,
++	},
++	{
++		.name		= DA9063_DRVNAME_ONKEY,
++		.num_resources	= ARRAY_SIZE(da9063_onkey_resources),
++		.resources	= da9063_onkey_resources,
++	},
++	{
++		.name		= DA9063_DRVNAME_RTC,
++		.num_resources	= ARRAY_SIZE(da9063_rtc_resources),
++		.resources	= da9063_rtc_resources,
++	},
++};
++
++int da9063_reg_read(struct da9063 *da9063, u16 reg)
++{
++	u8 val;
++	int ret;
++
++	mutex_lock(&da9063->io_mutex);
++	ret = da9063_read_device(da9063, DA9063_I2C_REG(reg), 1, &val);
++	mutex_unlock(&da9063->io_mutex);
++
++	if (ret)
++		return ret;
++
++	return val;
++}
++
++int da9063_reg_write(struct da9063 *da9063, u16 reg, u8 val)
++{
++	int ret;
++
++	mutex_lock(&da9063->io_mutex);
++	ret = da9063_write_device(da9063, DA9063_I2C_REG(reg), 1, &val);
++	mutex_unlock(&da9063->io_mutex);
++
++	return ret;
++}
++
++int da9063_block_read(struct da9063 *da9063, u16 reg, int bytes, u8 *dst)
++{
++	int ret;
++
++	mutex_lock(&da9063->io_mutex);
++	ret = da9063_read_device(da9063, DA9063_I2C_REG(reg), bytes, dst);
++	mutex_unlock(&da9063->io_mutex);
++
++	return ret;
++}
++
++int da9063_block_write(struct da9063 *da9063, u16 reg, int bytes, const u8 *src)
++{
++	int ret;
++
++	mutex_lock(&da9063->io_mutex);
++	ret = da9063_write_device(da9063, DA9063_I2C_REG(reg), bytes, src);
++	mutex_unlock(&da9063->io_mutex);
++
++	return ret;
++}
++
++int da9063_reg_update(struct da9063 *da9063, u16 reg, u8 mask, u8 val)
++{
++	u8 orig, new;
++	int ret;
++
++	mutex_lock(&da9063->io_mutex);
++
++	ret = da9063_read_device(da9063, DA9063_I2C_REG(reg), 1, &orig);
++	if (ret)
++		goto unlock_out;
++
++	new = (orig & ~mask) | (val & mask);
++	if (new == orig)
++		goto unlock_out;
++
++	ret = da9063_write_device(da9063, DA9063_I2C_REG(reg), 1, &new);
++unlock_out:
++	mutex_unlock(&da9063->io_mutex);
++
++	return ret;
++}
++
++int da9063_reg_set_bits(struct da9063 *da9063, u16 reg, u8 mask)
++{
++	return da9063_reg_update(da9063, reg, mask, mask);
++}
++
++int da9063_reg_clear_bits(struct da9063 *da9063, u16 reg, u8 mask)
++{
++	return da9063_reg_update(da9063, reg, mask, 0);
++}
++
++int da9063_device_init(struct da9063 *da9063, unsigned int irq)
++{
++	struct da9063_pdata *pdata = da9063->dev->platform_data;
++	int ret = 0;
++
++	mutex_init(&da9063->io_mutex);
++
++	if (pdata == NULL) {
++		dev_err(da9063->dev, "Platform data not specified.\n");
++		return -EINVAL;
++	}
++	da9063->irq_base = pdata->irq_base;
++	da9063->chip_irq = irq;
++
++	if (pdata->init != NULL) {
++		ret = pdata->init(da9063);
++		if (ret != 0) {
++			dev_err(da9063->dev,
++				"Platform initialization failed.\n");
++			return ret;
++		}
++	}
++
++	ret = da9063_irq_init(da9063);
++	if (ret) {
++		dev_err(da9063->dev, "Cannot initialize interrupts.\n");
++		return ret;
++	}
++
++	ret = mfd_add_devices(da9063->dev, -1, da9063_devs,
++			      ARRAY_SIZE(da9063_devs), NULL, da9063->irq_base);
++	if (ret)
++		dev_err(da9063->dev, "Cannot add MFD cells\n");
++
++	dev_info(da9063->dev, "Device detected DA9063\n" );
++
++	return ret;
++}
++
++void da9063_device_exit(struct da9063 *da9063)
++{
++	mfd_remove_devices(da9063->dev);
++}
++
++MODULE_DESCRIPTION("Core MFD device driver for Dialog DA9063");
++MODULE_AUTHOR("S Twiss <stwiss.opensource@diasemi.com>");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:" DA9063_DRVNAME_CORE);
+diff --git a/drivers/mfd/da9063-i2c.c b/drivers/mfd/da9063-i2c.c
+new file mode 100644
+index 0000000..25e4160
+--- /dev/null
++++ b/drivers/mfd/da9063-i2c.c
+@@ -0,0 +1,132 @@
++
++/* da9063-i2c.c - I2C device access for DA9063
++ * Copyright (C) 2012  Dialog Semiconductor Ltd.
++ * 
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA  02110-1301, USA.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/i2c.h>
++#include <linux/delay.h>
++#include <linux/slab.h>
++#include <linux/err.h>
++
++#include <linux/mfd/core.h>
++#include <linux/mfd/da9063/core.h>
++#include <linux/mfd/da9063/registers.h>
++
++
++int da9063_read_device(struct da9063 *da9063, u8 reg,
++	int bytes, u8 *dest)
++{
++	struct i2c_client *i2c = da9063->i2c;
++	struct i2c_msg xfer[2];
++	int ret;
++
++	xfer[0].addr = i2c->addr;
++	xfer[0].flags = 0;
++	xfer[0].len = 1;
++	xfer[0].buf = &reg;
++
++	xfer[1].addr = i2c->addr;
++	xfer[1].flags = I2C_M_RD;
++	xfer[1].len = bytes;
++	xfer[1].buf = dest;
++
++	ret = i2c_transfer(i2c->adapter, xfer, 2);
++	if (ret < 0)
++		return ret;
++	if (ret != 2)
++		return -EIO;
++
++	return 0;
++}
++
++int da9063_write_device(struct da9063 *da9063, u8 reg,
++	int bytes, const u8 *src)
++{
++	u8 buf[bytes + 1];
++	int ret;
++
++	buf[0] = reg;
++	memcpy(&buf[1], src, bytes);
++
++	ret = i2c_master_send(da9063->i2c, buf, bytes + 1);
++	if (ret != bytes + 1)
++		return -EIO;
++
++	return 0;
++}
++
++static int da9063_i2c_probe(struct i2c_client *i2c,
++	const struct i2c_device_id *id)
++{
++	struct da9063 *da9063;
++
++	da9063 = devm_kzalloc(&i2c->dev, sizeof(struct da9063), GFP_KERNEL);
++	if (da9063 == NULL)
++		return -ENOMEM;
++
++	i2c_set_clientdata(i2c, da9063);
++	da9063->dev = &i2c->dev;
++	da9063->i2c = i2c;
++
++	return da9063_device_init(da9063, i2c->irq);
++}
++
++static int da9063_i2c_remove(struct i2c_client *i2c)
++{
++	struct da9063 *da9063 = i2c_get_clientdata(i2c);
++
++	da9063_device_exit(da9063);
++
++	return 0;
++}
++
++static const struct i2c_device_id da9063_i2c_id[] = {
++	{"da9063", DA9063_ID},
++	{},
++};
++MODULE_DEVICE_TABLE(i2c, da9063_i2c_id);
++
++static struct i2c_driver da9063_i2c_driver = {
++	.driver = {
++		.name = "da9063",
++		.owner = THIS_MODULE,
++	},
++	.probe    = da9063_i2c_probe,
++	.remove   = da9063_i2c_remove,
++	.id_table = da9063_i2c_id,
++};
++
++static int __init da9063_i2c_init(void)
++{
++	int ret;
++
++	ret = i2c_add_driver(&da9063_i2c_driver);
++	if (ret != 0)
++		pr_err("Failed to register da9063 I2C driver\n");
++
++	return ret;
++}
++subsys_initcall(da9063_i2c_init);
++
++static void __exit da9063_i2c_exit(void)
++{
++	i2c_del_driver(&da9063_i2c_driver);
++}
++module_exit(da9063_i2c_exit);
+diff --git a/drivers/mfd/da9063-irq.c b/drivers/mfd/da9063-irq.c
+new file mode 100644
+index 0000000..fb706a4
+--- /dev/null
++++ b/drivers/mfd/da9063-irq.c
+@@ -0,0 +1,315 @@
++
++/* da9063-irq.c - Interrupt support for DA9063
++ * Copyright (C) 2012  Dialog Semiconductor Ltd.
++ * 
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA  02110-1301, USA.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/irq.h>
++#include <linux/mfd/core.h>
++#include <linux/interrupt.h>
++#include <linux/mfd/da9063/core.h>
++#include <linux/mfd/da9063/pdata.h>
++
++#define	DA9063_REG_EVENT_A_OFFSET	0
++#define	DA9063_REG_EVENT_B_OFFSET	1
++#define	DA9063_REG_EVENT_C_OFFSET	2
++#define	DA9063_REG_EVENT_D_OFFSET	3
++
++static const u8 mask_events_buf[] = { [0 ... (DA9063_EVENT_REG_NUM - 1)] = ~0 };
++
++struct da9063_irq_data {
++	u16 reg;
++	u8 mask;
++};
++
++static struct da9063_irq_data da9063_irqs[] = {
++	/* DA9063 event A register */
++	[DA9063_IRQ_ONKEY] = {
++		.reg = DA9063_REG_EVENT_A_OFFSET,
++		.mask = DA9063_M_ONKEY,
++	},
++	[DA9063_IRQ_ALARM] = {
++		.reg = DA9063_REG_EVENT_A_OFFSET,
++		.mask = DA9063_M_ALARM,
++	},
++	[DA9063_IRQ_TICK] = {
++		.reg = DA9063_REG_EVENT_A_OFFSET,
++		.mask = DA9063_M_TICK,
++	},
++	[DA9063_IRQ_ADC_RDY] = {
++		.reg = DA9063_REG_EVENT_A_OFFSET,
++		.mask = DA9063_M_ADC_RDY,
++	},
++	[DA9063_IRQ_SEQ_RDY] = {
++		.reg = DA9063_REG_EVENT_A_OFFSET,
++		.mask = DA9063_M_SEQ_RDY,
++	},
++	/* DA9063 event B register */
++	[DA9063_IRQ_WAKE] = {
++		.reg = DA9063_REG_EVENT_B_OFFSET,
++		.mask = DA9063_M_WAKE,
++	},
++	[DA9063_IRQ_TEMP] = {
++		.reg = DA9063_REG_EVENT_B_OFFSET,
++		.mask = DA9063_M_TEMP,
++	},
++	[DA9063_IRQ_COMP_1V2] = {
++		.reg = DA9063_REG_EVENT_B_OFFSET,
++		.mask = DA9063_M_COMP_1V2,
++	},
++	[DA9063_IRQ_LDO_LIM] = {
++		.reg = DA9063_REG_EVENT_B_OFFSET,
++		.mask = DA9063_M_LDO_LIM,
++	},
++	[DA9063_IRQ_REG_UVOV] = {
++		.reg = DA9063_REG_EVENT_B_OFFSET,
++		.mask = DA9063_M_UVOV,
++	},
++	[DA9063_IRQ_VDD_MON] = {
++		.reg = DA9063_REG_EVENT_B_OFFSET,
++		.mask = DA9063_M_VDD_MON,
++	},
++	[DA9063_IRQ_WARN] = {
++		.reg = DA9063_REG_EVENT_B_OFFSET,
++		.mask = DA9063_M_VDD_WARN,
++	},
++	/* DA9063 event C register */
++	[DA9063_IRQ_GPI0] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI0,
++	},
++	[DA9063_IRQ_GPI1] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI1,
++	},
++	[DA9063_IRQ_GPI2] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI2,
++	},
++	[DA9063_IRQ_GPI3] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI3,
++	},
++	[DA9063_IRQ_GPI4] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI4,
++	},
++	[DA9063_IRQ_GPI5] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI5,
++	},
++	[DA9063_IRQ_GPI6] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI6,
++	},
++	[DA9063_IRQ_GPI7] = {
++		.reg = DA9063_REG_EVENT_C_OFFSET,
++		.mask = DA9063_M_GPI7,
++	},
++	/* DA9063 event D register */
++	[DA9063_IRQ_GPI8] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI8,
++	},
++	[DA9063_IRQ_GPI9] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI9,
++	},
++	[DA9063_IRQ_GPI10] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI10,
++	},
++	[DA9063_IRQ_GPI11] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI11,
++	},
++	[DA9063_IRQ_GPI12] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI12,
++	},
++	[DA9063_IRQ_GPI13] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI13,
++	},
++	[DA9063_IRQ_GPI14] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI14,
++	},
++	[DA9063_IRQ_GPI15] = {
++		.reg = DA9063_REG_EVENT_D_OFFSET,
++		.mask = DA9063_M_GPI15,
++	},
++};
++
++static inline int irq_to_da9063_irq(struct da9063 *da9063, int irq)
++{
++	return irq - da9063->irq_base;
++}
++
++static void da9063_irq_lock(struct irq_data *data)
++{
++	struct da9063 *da9063 = irq_data_get_irq_chip_data(data);
++
++	mutex_lock(&da9063->irq_mutex);
++}
++
++static void da9063_irq_sync_unlock(struct irq_data *data)
++{
++	struct da9063 *da9063 = irq_data_get_irq_chip_data(data);
++	int i;
++
++	for (i = 0; i < DA9063_EVENT_REG_NUM; i++) {
++		if (da9063->irq_masks[i] != da9063->irq_cache[i])
++			da9063_reg_write(da9063, DA9063_REG_IRQ_MASK_A + i,
++					 da9063->irq_masks[i]);
++	}
++
++	mutex_unlock(&da9063->irq_mutex);
++}
++
++static void da9063_irq_enable(struct irq_data *data)
++{
++	struct da9063 *da9063 = irq_data_get_irq_chip_data(data);
++	int irq_idx = irq_to_da9063_irq(da9063, data->irq);
++	struct da9063_irq_data *da9063_irq = &da9063_irqs[irq_idx];
++	unsigned offset;
++
++	offset = da9063_irq->reg;
++	if (irq_idx >= DA9063_IRQ_BASE_OFFSET &&
++	    irq_idx < DA9063_IRQ_BASE_OFFSET + DA9063_NUM_IRQ)
++		da9063->irq_masks[offset] &= ~da9063_irq->mask;
++}
++
++static void da9063_irq_disable(struct irq_data *data)
++{
++	struct da9063 *da9063 = irq_data_get_irq_chip_data(data);
++	int irq_idx = irq_to_da9063_irq(da9063, data->irq);
++	struct da9063_irq_data *da9063_irq = &da9063_irqs[irq_idx];
++	unsigned offset;
++
++	offset = da9063_irq->reg;
++	if (irq_idx >= DA9063_IRQ_BASE_OFFSET &&
++	    irq_idx < DA9063_IRQ_BASE_OFFSET + DA9063_NUM_IRQ)
++		da9063->irq_masks[offset] |= da9063_irq->mask;
++}
++
++static struct irq_chip da9063_irq_chip = {
++	.name = "da9063",
++	.irq_bus_lock = da9063_irq_lock,
++	.irq_bus_sync_unlock = da9063_irq_sync_unlock,
++	.irq_disable = da9063_irq_disable,
++	.irq_enable = da9063_irq_enable,
++};
++
++static irqreturn_t da9063_irq_thread(int irq_id, void *da9063_data)
++{
++	struct da9063 *da9063 = (struct da9063 *)da9063_data;
++	struct da9063_irq_data *irq;
++	u8 events[DA9063_EVENT_REG_NUM];
++	bool error_detect = true;
++	int i;
++	int err;
++
++	err = da9063_block_read(da9063, DA9063_REG_EVENT_A,
++				DA9063_EVENT_REG_NUM, events);
++	if (err) {
++		dev_err(da9063->dev, "Cannot read EVENT bits.\n");
++		return IRQ_NONE;
++	}
++
++	for (i = DA9063_NUM_IRQ; i >= 0; i--) {
++		irq = &da9063_irqs[i + DA9063_IRQ_BASE_OFFSET];
++		if (!(irq->mask & da9063->irq_masks[irq->reg]) &&
++		    irq->mask & events[irq->reg]) {
++			handle_nested_irq(da9063->irq_base + i);
++			error_detect = false;
++		}
++	}
++
++	if( true == error_detect )
++		return IRQ_NONE;
++
++	err = da9063_block_write(da9063, DA9063_REG_EVENT_A,
++				 DA9063_EVENT_REG_NUM, events);
++	if (err)
++		dev_err(da9063->dev, "Cannot clear EVENT bits.\n");
++
++	return IRQ_HANDLED;
++}
++
++int da9063_irq_init(struct da9063 *da9063)
++{
++	struct da9063_pdata *pdata = da9063->dev->platform_data;
++	int i, cur_irq;
++	int ret = -EINVAL;
++
++	if (!da9063->chip_irq) {
++		dev_err(da9063->dev, "No IRQ configured\n");
++		return -EINVAL;
++	}
++
++	if (pdata != NULL)
++		da9063->irq_base = pdata->irq_base;
++	else {
++		dev_err(da9063->dev, "No interrupt base specified.\n");
++		return -EINVAL;
++	}
++
++	for (i = 0; i < DA9063_EVENT_REG_NUM; i++) {
++		da9063->irq_masks[i] = ~0;
++		da9063->irq_cache[i] = ~0;
++	}
++
++	/* Mask all interrupt sources and clear event registers */
++	ret = da9063_block_write(da9063, DA9063_REG_IRQ_MASK_A,
++				DA9063_EVENT_REG_NUM, mask_events_buf);
++	if (ret < 0)
++		return ret;
++	ret = da9063_block_write(da9063, DA9063_REG_EVENT_A,
++				DA9063_EVENT_REG_NUM, mask_events_buf);
++	if (ret < 0)
++		return ret;
++
++	mutex_init(&da9063->irq_mutex);
++
++	for (i = 0; i < DA9063_NUM_IRQ; i++) {
++		cur_irq = i + da9063->irq_base;
++		irq_set_chip_data(cur_irq, da9063);
++		irq_set_chip_and_handler(cur_irq, &da9063_irq_chip,
++			handle_level_irq);
++		irq_set_nested_thread(cur_irq, 1);
++#ifdef CONFIG_ARM
++		set_irq_flags(cur_irq, IRQF_VALID);
++#else
++		set_irq_noprobe(cur_irq);
++#endif
++	}
++
++	ret = devm_request_threaded_irq(da9063->dev, da9063->chip_irq, NULL, 
++			da9063_irq_thread, IRQF_TRIGGER_LOW | IRQF_ONESHOT,
++			"da9063-irq", da9063);
++	if (ret) {
++		dev_err(da9063->dev, "Failed to reguest IRQ %d: %d\n",
++				da9063->chip_irq, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+diff --git a/include/linux/mfd/da9063/core.h b/include/linux/mfd/da9063/core.h
+new file mode 100644
+index 0000000..34c0e6a
+--- /dev/null
++++ b/include/linux/mfd/da9063/core.h
+@@ -0,0 +1,111 @@
++
++/* core.h - Definitions for DA9063 MFD driver
++ * Copyright (C) 2012  Dialog Semiconductor Ltd.
++ * 
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA  02110-1301, USA.
++ */
++
++#ifndef __MFD_DA9063_CORE_H__
++#define __MFD_DA9063_CORE_H__
++
++#include <linux/interrupt.h>
++#include <linux/mfd/da9063/registers.h>
++
++/* Dialog ID */
++#define DA9063_ID	0x61
++
++/* DA9063 modules */
++#define DA9063_DRVNAME_CORE		"da9063-core"
++#define DA9063_DRVNAME_REGULATORS	"da9063-regulators"
++#define DA9063_DRVNAME_LEDS		"da9063-leds"
++#define DA9063_DRVNAME_WATCHDOG		"da9063-watchdog"
++#define DA9063_DRVNAME_HWMON		"da9063-hwmon"
++#define DA9063_DRVNAME_ONKEY		"da9063-onkey"
++#define DA9063_DRVNAME_RTC		"da9063-rtc"
++#define DA9063_DRVNAME_VIBRATION	"da9063-vibration"
++
++/* Interrupts */
++enum da9063_irqs {
++	DA9063_IRQ_ONKEY = 0,
++	DA9063_IRQ_ALARM,
++	DA9063_IRQ_TICK,
++	DA9063_IRQ_ADC_RDY,
++	DA9063_IRQ_SEQ_RDY,
++	DA9063_IRQ_WAKE,
++	DA9063_IRQ_TEMP,
++	DA9063_IRQ_COMP_1V2,
++	DA9063_IRQ_LDO_LIM,
++	DA9063_IRQ_REG_UVOV,
++	DA9063_IRQ_VDD_MON,
++	DA9063_IRQ_WARN,
++	DA9063_IRQ_GPI0,
++	DA9063_IRQ_GPI1,
++	DA9063_IRQ_GPI2,
++	DA9063_IRQ_GPI3,
++	DA9063_IRQ_GPI4,
++	DA9063_IRQ_GPI5,
++	DA9063_IRQ_GPI6,
++	DA9063_IRQ_GPI7,
++	DA9063_IRQ_GPI8,
++	DA9063_IRQ_GPI9,
++	DA9063_IRQ_GPI10,
++	DA9063_IRQ_GPI11,
++	DA9063_IRQ_GPI12,
++	DA9063_IRQ_GPI13,
++	DA9063_IRQ_GPI14,
++	DA9063_IRQ_GPI15,
++};
++
++#define DA9063_IRQ_BASE_OFFSET	0
++#define DA9063_NUM_IRQ		(DA9063_IRQ_GPI15 + 1 - DA9063_IRQ_BASE_OFFSET)
++
++struct da9063 {
++	/* Device */
++	struct device		*dev;
++	unsigned short		model;
++	unsigned short		revision;
++
++	/* Control interface */
++	struct mutex		io_mutex;
++	struct i2c_client	*i2c;
++
++	/* Interrupts */
++	int			chip_irq;
++	unsigned int		irq_base;
++	struct mutex		irq_mutex;
++	u8			irq_masks[DA9063_EVENT_REG_NUM];
++	u8			irq_cache[DA9063_EVENT_REG_NUM];
++};
++
++int da9063_reg_read(struct da9063 *da9063, u16 reg);
++int da9063_reg_write(struct da9063 *da9063, u16 reg, u8 val);
++
++int da9063_block_write(struct da9063 *da9063, u16 reg, int bytes, const u8 *buf);
++int da9063_block_read(struct da9063 *da9063, u16 reg, int bytes, u8 *buf);
++
++int da9063_reg_set_bits(struct da9063 *da9063, u16 reg, u8 mask);
++int da9063_reg_clear_bits(struct da9063 *da9063, u16 reg, u8 mask);
++int da9063_reg_update(struct da9063*, u16 reg, u8 mask, u8 val);
++
++int da9063_read_device(struct da9063 *da9063, u8 reg, int bytes, u8 *dest);
++int da9063_write_device(struct da9063 *da9063, u8 reg,
++			int bytes, const u8 *src);
++int da9063_device_init(struct da9063 *da9063, unsigned int irq);
++int da9063_irq_init(struct da9063 *da9063);
++void da9063_device_exit(struct da9063 *da9063);
++void da9063_irq_exit(struct da9063 *da9063);
++
++#endif /* __MFD_DA9063_CORE_H__ */
+diff --git a/include/linux/mfd/da9063/pdata.h b/include/linux/mfd/da9063/pdata.h
+new file mode 100644
+index 0000000..a399c59
+--- /dev/null
++++ b/include/linux/mfd/da9063/pdata.h
+@@ -0,0 +1,91 @@
++
++/* pdata.h - Platform configuration options for DA9063
++ * Copyright (C) 2012  Dialog Semiconductor Ltd.
++ * 
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA  02110-1301, USA.
++ */
++
++#ifndef __MFD_DA9063_PDATA_H__
++#define __MFD_DA9063_PDATA_H__
++
++#include <linux/regulator/machine.h>
++
++/*
++ * Regulator configuration
++ */
++/* DA9063 regulator IDs */
++enum {
++	/* BUCKs */
++	DA9063_ID_BCORE1,
++	DA9063_ID_BCORE2,
++	DA9063_ID_BPRO,
++	DA9063_ID_BMEM,
++	DA9063_ID_BIO,
++	DA9063_ID_BPERI,
++
++	/* BCORE1 and BCORE2 in merged mode */
++	DA9063_ID_BCORES_MERGED,
++	/* BMEM and BIO in merged mode */
++	DA9063_ID_BMEM_BIO_MERGED,
++	/* When two BUCKs are merged, they cannot be reused separately */
++
++	/* LDOs */
++	DA9063_ID_LDO1,
++	DA9063_ID_LDO2,
++	DA9063_ID_LDO3,
++	DA9063_ID_LDO4,
++	DA9063_ID_LDO5,
++	DA9063_ID_LDO6,
++	DA9063_ID_LDO7,
++	DA9063_ID_LDO8,
++	DA9063_ID_LDO9,
++	DA9063_ID_LDO10,
++	DA9063_ID_LDO11,
++
++	/* RTC internal oscilator switch */
++	DA9063_ID_32K_OUT,
++};
++
++/* Regulators platform data */
++struct da9063_regulator_data {
++	int				id;
++	struct regulator_init_data	*initdata;
++
++	/* For DVC interface, base and max voltage. */
++	int				dvc_base_uV;
++	int				dvc_max_uV;
++};
++
++struct da9063_regulators_pdata {
++	unsigned			n_regulators;
++	struct da9063_regulator_data	*regulator_data;
++};
++
++struct da9063;
++
++/* DA9063 platform data */
++struct da9063_pdata {
++	int				(*init)(struct da9063 *da9063);
++	int				irq_base;
++	/* driver behaviour and stup */
++	bool 				bcores_merged;
++	bool				bmem_bio_merged;
++	bool				key_power;
++	signed char			t_offset;
++	struct da9063_regulators_pdata	*regulators_pdata;
++};
++
++#endif	/* __MFD_DA9063_PDATA_H__ */
+diff --git a/include/linux/mfd/da9063/registers.h b/include/linux/mfd/da9063/registers.h
+new file mode 100644
+index 0000000..f90467e
+--- /dev/null
++++ b/include/linux/mfd/da9063/registers.h
+@@ -0,0 +1,1092 @@
++
++/* registers.h - Registers definition for DA9063
++ * Copyright (C) 2012  Dialog Semiconductor Ltd.
++ * 
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA  02110-1301, USA.
++ */
++
++#ifndef _DA9063_REG_H
++#define	_DA9063_REG_H
++
++#define DA9063_I2C_REG(v)		((v) & 0xFF)
++
++#define	DA9063_EVENT_REG_NUM		4
++
++/* Page selection I2C or SPI always in the begining of any page. */
++/* Page 0 : I2C access 0x000 - 0x0FF	SPI access 0x000 - 0x07F */
++/* Page 1 :				SPI access 0x080 - 0x0FF */
++/* Page 2 : I2C access 0x100 - 0x1FF	SPI access 0x100 - 0x17F */
++/* Page 3 :				SPI access 0x180 - 0x1FF */
++#define	DA9063_REG_PAGE_CON		0x00
++
++/* Create virtual range for pageable registers just above physical range */
++#define DA9063_MAPPING_BASE		0x100
++
++/* System Control and Event Registers */
++#define	DA9063_REG_STATUS_A		0x01
++#define	DA9063_REG_STATUS_B		0x02
++#define	DA9063_REG_STATUS_C		0x03
++#define	DA9063_REG_STATUS_D		0x04
++#define	DA9063_REG_FAULT_LOG		0x05
++#define	DA9063_REG_EVENT_A		0x06
++#define	DA9063_REG_EVENT_B		0x07
++#define	DA9063_REG_EVENT_C		0x08
++#define	DA9063_REG_EVENT_D		0x09
++#define	DA9063_REG_IRQ_MASK_A		0x0A
++#define	DA9063_REG_IRQ_MASK_B		0x0B
++#define	DA9063_REG_IRQ_MASK_C		0x0C
++#define	DA9063_REG_IRQ_MASK_D		0x0D
++#define	DA9063_REG_CONTROL_A		0x0E
++#define	DA9063_REG_CONTROL_B		0x0F
++#define	DA9063_REG_CONTROL_C		0x10
++#define	DA9063_REG_CONTROL_D		0x11
++#define	DA9063_REG_CONTROL_E		0x12
++#define	DA9063_REG_CONTROL_F		0x13
++#define	DA9063_REG_PD_DIS		0x14
++
++/* GPIO Control Registers */
++#define	DA9063_REG_GPIO_0_1		0x15
++#define	DA9063_REG_GPIO_2_3		0x16
++#define	DA9063_REG_GPIO_4_5		0x17
++#define	DA9063_REG_GPIO_6_7		0x18
++#define	DA9063_REG_GPIO_8_9		0x19
++#define	DA9063_REG_GPIO_10_11		0x1A
++#define	DA9063_REG_GPIO_12_13		0x1B
++#define	DA9063_REG_GPIO_14_15		0x1C
++#define	DA9063_REG_GPIO_MODE_0_7	0x1D
++#define	DA9063_REG_GPIO_MODE_8_15	0x1E
++#define	DA9063_REG_GPIO_SWITCH_CONT	0x1F
++
++/* Regulator Control Registers */
++#define	DA9063_REG_BCORE2_CONT		0x20
++#define	DA9063_REG_BCORE1_CONT		0x21
++#define	DA9063_REG_BPRO_CONT		0x22
++#define	DA9063_REG_BMEM_CONT		0x23
++#define	DA9063_REG_BIO_CONT		0x24
++#define	DA9063_REG_BPERI_CONT		0x25
++#define	DA9063_REG_LDO1_CONT		0x26
++#define	DA9063_REG_LDO2_CONT		0x27
++#define	DA9063_REG_LDO3_CONT		0x28
++#define	DA9063_REG_LDO4_CONT		0x29
++#define	DA9063_REG_LDO5_CONT		0x2A
++#define	DA9063_REG_LDO6_CONT		0x2B
++#define	DA9063_REG_LDO7_CONT		0x2C
++#define	DA9063_REG_LDO8_CONT		0x2D
++#define	DA9063_REG_LDO9_CONT		0x2E
++#define	DA9063_REG_LDO10_CONT		0x2F
++#define	DA9063_REG_LDO11_CONT		0x30
++#define	DA9063_REG_VIB			0x31
++#define	DA9063_REG_DVC_1		0x32
++#define	DA9063_REG_DVC_2		0x33
++
++/* GP-ADC Control Registers */
++#define	DA9063_REG_ADC_MAN		0x34
++#define	DA9063_REG_ADC_CONT		0x35
++#define	DA9063_REG_VSYS_MON		0x36
++#define	DA9063_REG_ADC_RES_L		0x37
++#define	DA9063_REG_ADC_RES_H		0x38
++#define	DA9063_REG_VSYS_RES		0x39
++#define	DA9063_REG_ADCIN1_RES		0x3A
++#define	DA9063_REG_ADCIN2_RES		0x3B
++#define	DA9063_REG_ADCIN3_RES		0x3C
++#define	DA9063_REG_MON1_RES		0x3D
++#define	DA9063_REG_MON2_RES		0x3E
++#define	DA9063_REG_MON3_RES		0x3F
++
++/* RTC Calendar and Alarm Registers */
++#define	DA9063_REG_COUNT_S		0x40
++#define	DA9063_REG_COUNT_MI		0x41
++#define	DA9063_REG_COUNT_H		0x42
++#define	DA9063_REG_COUNT_D		0x43
++#define	DA9063_REG_COUNT_MO		0x44
++#define	DA9063_REG_COUNT_Y		0x45
++#define	DA9063_REG_ALARM_MI		0x46
++#define	DA9063_REG_ALARM_H		0x47
++#define	DA9063_REG_ALARM_D		0x48
++#define	DA9063_REG_ALARM_MO		0x49
++#define	DA9063_REG_ALARM_Y		0x4A
++#define	DA9063_REG_SECOND_A		0x4B
++#define	DA9063_REG_SECOND_B		0x4C
++#define	DA9063_REG_SECOND_C		0x4D
++#define	DA9063_REG_SECOND_D		0x4E
++
++/* Sequencer Control Registers */
++#define	DA9063_REG_SEQ			0x81
++#define	DA9063_REG_SEQ_TIMER		0x82
++#define	DA9063_REG_ID_2_1		0x83
++#define	DA9063_REG_ID_4_3		0x84
++#define	DA9063_REG_ID_6_5		0x85
++#define	DA9063_REG_ID_8_7		0x86
++#define	DA9063_REG_ID_10_9		0x87
++#define	DA9063_REG_ID_12_11		0x88
++#define	DA9063_REG_ID_14_13		0x89
++#define	DA9063_REG_ID_16_15		0x8A
++#define	DA9063_REG_ID_18_17		0x8B
++#define	DA9063_REG_ID_20_19		0x8C
++#define	DA9063_REG_ID_22_21		0x8D
++#define	DA9063_REG_ID_24_23		0x8E
++#define	DA9063_REG_ID_26_25		0x8F
++#define	DA9063_REG_ID_28_27		0x90
++#define	DA9063_REG_ID_30_29		0x91
++#define	DA9063_REG_ID_32_31		0x92
++#define	DA9063_REG_SEQ_A		0x95
++#define	DA9063_REG_SEQ_B		0x96
++#define	DA9063_REG_WAIT			0x97
++#define	DA9063_REG_EN_32K		0x98
++#define	DA9063_REG_RESET		0x99
++
++/* Regulator Setting Registers */
++#define	DA9063_REG_BUCK_ILIM_A		0x9A
++#define	DA9063_REG_BUCK_ILIM_B		0x9B
++#define	DA9063_REG_BUCK_ILIM_C		0x9C
++#define	DA9063_REG_BCORE2_CFG		0x9D
++#define	DA9063_REG_BCORE1_CFG		0x9E
++#define	DA9063_REG_BPRO_CFG		0x9F
++#define	DA9063_REG_BIO_CFG		0xA0
++#define	DA9063_REG_BMEM_CFG		0xA1
++#define	DA9063_REG_BPERI_CFG		0xA2
++#define	DA9063_REG_VBCORE2_A		0xA3
++#define	DA9063_REG_VBCORE1_A		0xA4
++#define	DA9063_REG_VBPRO_A		0xA5
++#define	DA9063_REG_VBMEM_A		0xA6
++#define	DA9063_REG_VBIO_A		0xA7
++#define	DA9063_REG_VBPERI_A		0xA8
++#define	DA9063_REG_VLDO1_A		0xA9
++#define	DA9063_REG_VLDO2_A		0xAA
++#define	DA9063_REG_VLDO3_A		0xAB
++#define	DA9063_REG_VLDO4_A		0xAC
++#define	DA9063_REG_VLDO5_A		0xAD
++#define	DA9063_REG_VLDO6_A		0xAE
++#define	DA9063_REG_VLDO7_A		0xAF
++#define	DA9063_REG_VLDO8_A		0xB0
++#define	DA9063_REG_VLDO9_A		0xB1
++#define	DA9063_REG_VLDO10_A		0xB2
++#define	DA9063_REG_VLDO11_A		0xB3
++#define	DA9063_REG_VBCORE2_B		0xB4
++#define	DA9063_REG_VBCORE1_B		0xB5
++#define	DA9063_REG_VBPRO_B		0xB6
++#define	DA9063_REG_VBMEM_B		0xB7
++#define	DA9063_REG_VBIO_B		0xB8
++#define	DA9063_REG_VBPERI_B		0xB9
++#define	DA9063_REG_VLDO1_B		0xBA
++#define	DA9063_REG_VLDO2_B		0xBB
++#define	DA9063_REG_VLDO3_B		0xBC
++#define	DA9063_REG_VLDO4_B		0xBD
++#define	DA9063_REG_VLDO5_B		0xBE
++#define	DA9063_REG_VLDO6_B		0xBF
++#define	DA9063_REG_VLDO7_B		0xC0
++#define	DA9063_REG_VLDO8_B		0xC1
++#define	DA9063_REG_VLDO9_B		0xC2
++#define	DA9063_REG_VLDO10_B		0xC3
++#define	DA9063_REG_VLDO11_B		0xC4
++
++/* Backup Battery Charger Control Register */
++#define	DA9063_REG_BBAT_CONT		0xC5
++
++/* GPIO PWM (LED) */
++#define	DA9063_REG_GPO11_LED		0xC6
++#define	DA9063_REG_GPO14_LED		0xC7
++#define	DA9063_REG_GPO15_LED		0xC8
++
++/* GP-ADC Threshold Registers */
++#define	DA9063_REG_ADC_CFG		0xC9
++#define	DA9063_REG_AUTO1_HIGH		0xCA
++#define	DA9063_REG_AUTO1_LOW		0xCB
++#define	DA9063_REG_AUTO2_HIGH		0xCC
++#define	DA9063_REG_AUTO2_LOW		0xCD
++#define	DA9063_REG_AUTO3_HIGH		0xCE
++#define	DA9063_REG_AUTO3_LOW		0xCF
++
++/* DA9063 Configuration registers */
++/* OTP */
++#define	DA9063_REG_OPT_COUNT		0x101
++#define	DA9063_REG_OPT_ADDR		0x102
++#define	DA9063_REG_OPT_DATA		0x103
++
++/* Customer Trim and Configuration */
++#define	DA9063_REG_T_OFFSET		0x104
++#define	DA9063_REG_INTERFACE		0x105
++#define	DA9063_REG_CONFIG_A		0x106
++#define	DA9063_REG_CONFIG_B		0x107
++#define	DA9063_REG_CONFIG_C		0x108
++#define	DA9063_REG_CONFIG_D		0x109
++#define	DA9063_REG_CONFIG_E		0x10A
++#define	DA9063_REG_CONFIG_F		0x10B
++#define	DA9063_REG_CONFIG_G		0x10C
++#define	DA9063_REG_CONFIG_H		0x10D
++#define	DA9063_REG_CONFIG_I		0x10E
++#define	DA9063_REG_CONFIG_J		0x10F
++#define	DA9063_REG_CONFIG_K		0x110
++#define	DA9063_REG_CONFIG_L		0x111
++#define	DA9063_REG_MON_REG_1		0x112
++#define	DA9063_REG_MON_REG_2		0x113
++#define	DA9063_REG_MON_REG_3		0x114
++#define	DA9063_REG_MON_REG_4		0x115
++#define	DA9063_REG_MON_REG_5		0x116
++#define	DA9063_REG_MON_REG_6		0x117
++#define	DA9063_REG_TRIM_CLDR		0x118
++
++/* General Purpose Registers */
++#define	DA9063_REG_GP_ID_0		0x119
++#define	DA9063_REG_GP_ID_1		0x11A
++#define	DA9063_REG_GP_ID_2		0x11B
++#define	DA9063_REG_GP_ID_3		0x11C
++#define	DA9063_REG_GP_ID_4		0x11D
++#define	DA9063_REG_GP_ID_5		0x11E
++#define	DA9063_REG_GP_ID_6		0x11F
++#define	DA9063_REG_GP_ID_7		0x120
++#define	DA9063_REG_GP_ID_8		0x121
++#define	DA9063_REG_GP_ID_9		0x122
++#define	DA9063_REG_GP_ID_10		0x123
++#define	DA9063_REG_GP_ID_11		0x124
++#define	DA9063_REG_GP_ID_12		0x125
++#define	DA9063_REG_GP_ID_13		0x126
++#define	DA9063_REG_GP_ID_14		0x127
++#define	DA9063_REG_GP_ID_15		0x128
++#define	DA9063_REG_GP_ID_16		0x129
++#define	DA9063_REG_GP_ID_17		0x12A
++#define	DA9063_REG_GP_ID_18		0x12B
++#define	DA9063_REG_GP_ID_19		0x12C
++
++/* Chip ID and variant */
++#define	DA9063_REG_CHIP_ID		0x181
++#define	DA9063_REG_CHIP_VARIANT		0x182
++
++/*
++ * Chip registers bits
++ */
++/* DA9063_REG_PAGE_CON (addr=0x00) */
++#define	DA9063_PEG_PAGE_SHIFT			0
++#define	DA9063_REG_PAGE_MASK			0x07
++#define		DA9063_REG_PAGE0		0x00
++#define		DA9063_REG_PAGE2		0x02
++#define	DA9063_PAGE_WRITE_MODE			0x00
++#define	DA9063_REPEAT_WRITE_MODE		0x40
++#define	DA9063_PAGE_REVERT			0x80
++
++/* DA9063_REG_STATUS_A (addr=0x01) */
++#define	DA9063_NONKEY				0x01
++#define	DA9063_WAKE				0x02
++#define	DA9063_DVC_BUSY				0x04
++#define	DA9063_COMP_1V2				0x08
++
++/* DA9063_REG_STATUS_B (addr=0x02) */
++#define	DA9063_GPI0				0x01
++#define	DA9063_GPI1				0x02
++#define	DA9063_GPI2				0x04
++#define	DA9063_GPI3				0x08
++#define	DA9063_GPI4				0x10
++#define	DA9063_GPI5				0x20
++#define	DA9063_GPI6				0x40
++#define	DA9063_GPI7				0x80
++
++/* DA9063_REG_STATUS_C (addr=0x03) */
++#define	DA9063_GPI8				0x01
++#define	DA9063_GPI9				0x02
++#define	DA9063_GPI10				0x04
++#define	DA9063_GPI11				0x08
++#define	DA9063_GPI12				0x10
++#define	DA9063_GPI13				0x20
++#define	DA9063_GPI14				0x40
++#define	DA9063_GPI15				0x80
++
++/* DA9063_REG_STATUS_D (addr=0x04) */
++#define	DA9063_LDO3_LIM				0x08
++#define	DA9063_LDO4_LIM				0x10
++#define	DA9063_LDO7_LIM				0x20
++#define	DA9063_LDO8_LIM				0x40
++#define	DA9063_LDO11_LIM			0x80
++
++/* DA9063_REG_FAULT_LOG (addr=0x05) */
++#define	DA9063_TWD_ERROR			0x01
++#define	DA9063_POR				0x02
++#define	DA9063_VDD_FAULT			0x04
++#define	DA9063_VDD_START			0x08
++#define	DA9063_TEMP_CRIT			0x10
++#define	DA9063_KEY_RESET			0x20
++#define	DA9063_NSHUTDOWN			0x40
++#define	DA9063_WAIT_SHUT			0x80
++
++/* DA9063_REG_EVENT_A (addr=0x06) */
++#define	DA9063_E_NONKEY				0x01
++#define	DA9063_E_ALARM				0x02
++#define	DA9063_E_TICK				0x04
++#define	DA9063_E_ADC_RDY			0x08
++#define	DA9063_E_SEQ_RDY			0x10
++#define	DA9063_EVENTS_B				0x20
++#define	DA9063_EVENTS_C				0x40
++#define	DA9063_EVENTS_D				0x80
++
++/* DA9063_REG_EVENT_B (addr=0x07) */
++#define	DA9063_E_WAKE				0x01
++#define	DA9063_E_TEMP				0x02
++#define	DA9063_E_COMP_1V2			0x04
++#define	DA9063_E_LDO_LIM			0x08
++#define	DA9063_E_REG_UVOV			0x10
++#define	DA9063_E_DVC_RDY			0x20
++#define	DA9063_E_VDD_MON			0x40
++#define	DA9063_E_VDD_WARN			0x80
++
++/* DA9063_REG_EVENT_C (addr=0x08) */
++#define	DA9063_E_GPI0				0x01
++#define	DA9063_E_GPI1				0x02
++#define	DA9063_E_GPI2				0x04
++#define	DA9063_E_GPI3				0x08
++#define	DA9063_E_GPI4				0x10
++#define	DA9063_E_GPI5				0x20
++#define	DA9063_E_GPI6				0x40
++#define	DA9063_E_GPI7				0x80
++
++/* DA9063_REG_EVENT_D (addr=0x09) */
++#define	DA9063_E_GPI8				0x01
++#define	DA9063_E_GPI9				0x02
++#define	DA9063_E_GPI10				0x04
++#define	DA9063_E_GPI11				0x08
++#define	DA9063_E_GPI12				0x10
++#define	DA9063_E_GPI13				0x20
++#define	DA9063_E_GPI14				0x40
++#define	DA9063_E_GPI15				0x80
++
++/* DA9063_REG_IRQ_MASK_A (addr=0x0A) */
++#define	DA9063_M_ONKEY				0x01
++#define	DA9063_M_ALARM				0x02
++#define	DA9063_M_TICK				0x04
++#define	DA9063_M_ADC_RDY			0x08
++#define	DA9063_M_SEQ_RDY			0x10
++
++/* DA9063_REG_IRQ_MASK_B (addr=0x0B) */
++#define	DA9063_M_WAKE				0x01
++#define	DA9063_M_TEMP				0x02
++#define	DA9063_M_COMP_1V2			0x04
++#define	DA9063_M_LDO_LIM			0x08
++#define	DA9063_M_UVOV				0x10
++#define	DA9063_M_DVC_RDY			0x20
++#define	DA9063_M_VDD_MON			0x40
++#define	DA9063_M_VDD_WARN			0x80
++
++/* DA9063_REG_IRQ_MASK_C (addr=0x0C) */
++#define	DA9063_M_GPI0				0x01
++#define	DA9063_M_GPI1				0x02
++#define	DA9063_M_GPI2				0x04
++#define	DA9063_M_GPI3				0x08
++#define	DA9063_M_GPI4				0x10
++#define	DA9063_M_GPI5				0x20
++#define	DA9063_M_GPI6				0x40
++#define	DA9063_M_GPI7				0x80
++
++/* DA9063_REG_IRQ_MASK_D (addr=0x0D) */
++#define	DA9063_M_GPI8				0x01
++#define	DA9063_M_GPI9				0x02
++#define	DA9063_M_GPI10				0x04
++#define	DA9063_M_GPI11				0x08
++#define	DA9063_M_GPI12				0x10
++#define	DA9063_M_GPI13				0x20
++#define	DA9063_M_GPI14				0x40
++#define	DA9063_M_GPI15				0x80
++
++/* DA9063_REG_CONTROL_A (addr=0x0E) */
++#define	DA9063_SYSTEM_EN			0x01
++#define	DA9063_POWER_EN				0x02
++#define	DA9063_POWER1_EN			0x04
++#define	DA9063_STANDBY				0x08
++#define	DA9063_M_SYSTEM_EN			0x10
++#define	DA9063_M_POWER_EN			0x20
++#define	DA9063_M_POWER1_EN			0x40
++#define	DA9063_CP_EN				0x80
++
++/* DA9063_REG_CONTROL_B (addr=0x0F) */
++#define	DA9063_CHG_SEL				0x01
++#define	DA9063_WATCHDOG_PD			0x02
++#define	DA9063_NRES_MODE			0x08
++#define	DA9063_NONKEY_LOCK			0x10
++
++/* DA9063_REG_CONTROL_C (addr=0x10) */
++#define	DA9063_DEBOUNCING_SHIFT			0
++#define	DA9063_DEBOUNCING_MASK			0x07
++#define		DA9063_DEBOUNCING_OFF		0x0
++#define		DA9063_DEBOUNCING_0MS1		0x1
++#define		DA9063_DEBOUNCING_1MS		0x2
++#define		DA9063_DEBOUNCING_10MS24	0x3
++#define		DA9063_DEBOUNCING_51MS2		0x4
++#define		DA9063_DEBOUNCING_256MS		0x5
++#define		DA9063_DEBOUNCING_512MS		0x6
++#define		DA9063_DEBOUNCING_1024MS	0x7
++
++#define	DA9063_AUTO_BOOT			0x08
++#define	DA9063_OTPREAD_EN			0x10
++#define	DA9063_SLEW_RATE_SHIFT			5
++#define	DA9063_SLEW_RATE_MASK			0x60
++#define		DA9063_SLEW_RATE_4US		0x00
++#define		DA9063_SLEW_RATE_3US		0x20
++#define		DA9063_SLEW_RATE_1US		0x40
++#define		DA9063_SLEW_RATE_0US5		0x60
++#define	DA9063_DEF_SUPPLY			0x80
++
++/* DA9063_REG_CONTROL_D (addr=0x11) */
++#define	DA9063_TWDSCALE_SHIFT			0
++#define	DA9063_TWDSCALE_MASK			0x07
++#define	DA9063_BLINK_FRQ_SHIFT			3
++#define	DA9063_BLINK_FRQ_MASK			0x38
++#define		DA9063_BLINK_FRQ_OFF		0x00
++#define		DA9063_BLINK_FRQ_1S0		0x08
++#define		DA9063_BLINK_FRQ_2S0		0x10
++#define		DA9063_BLINK_FRQ_4S0		0x18
++#define		DA9063_BLINK_FRQ_0S18		0x20
++#define		DA9063_BLINK_FRQ_2S0_VDD	0x28
++#define		DA9063_BLINK_FRQ_4S0_VDD	0x30
++#define		DA9063_BLINK_FRQ_0S18_VDD	0x38
++
++#define	DA9063_BLINK_DUR_SHIFT			6
++#define	DA9063_BLINK_DUR_MASK			0xC0
++#define		DA9063_BLINK_DUR_10MS		0x00
++#define		DA9063_BLINK_DUR_20MS		0x40
++#define		DA9063_BLINK_DUR_40MS		0x80
++#define		DA9063_BLINK_DUR_20MSDBL	0xC0
++
++/* DA9063_REG_CONTROL_E (addr=0x12) */
++#define	DA9063_RTC_MODE_PD			0x01
++#define	DA9063_RTC_MODE_SD			0x02
++#define	DA9063_RTC_EN				0x04
++#define	DA9063_ECO_MODE				0x08
++#define	DA9063_PM_FB1_PIN			0x10
++#define	DA9063_PM_FB2_PIN			0x20
++#define	DA9063_PM_FB3_PIN			0x40
++#define	DA9063_V_LOCK				0x80
++
++/* DA9063_REG_CONTROL_F (addr=0x13) */
++#define	DA9063_WATCHDOG				0x01
++#define	DA9063_SHUTDOWN				0x02
++#define	DA9063_WAKE_UP				0x04
++
++/* DA9063_REG_PD_DIS (addr=0x14) */
++#define	DA9063_GPI_DIS				0x01
++#define	DA9063_GPADC_PAUSE			0x02
++#define	DA9063_PMIF_DIS				0x04
++#define	DA9063_HS2WIRE_DIS			0x08
++#define	DA9063_BBAT_DIS				0x20
++#define	DA9063_OUT_32K_PAUSE			0x40
++#define	DA9063_PMCONT_DIS			0x80
++
++/* DA9063_REG_GPIO_0_1 (addr=0x15) */
++#define	DA9063_GPIO0_PIN_SHIFT			0
++#define	DA9063_GPIO0_PIN_MASK			0x03
++#define		DA9063_GPIO0_PIN_ADCIN1		0x00
++#define		DA9063_GPIO0_PIN_GPI		0x01
++#define		DA9063_GPIO0_PIN_GPO_OD		0x02
++#define		DA9063_GPIO0_PIN_GPO		0x03
++#define	DA9063_GPIO0_TYPE			0x04
++#define		DA9063_GPIO0_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO0_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO0_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO0_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO0_NO_WAKEUP			0x08
++#define	DA9063_GPIO1_PIN_SHIFT			4
++#define	DA9063_GPIO1_PIN_MASK			0x30
++#define		DA9063_GPIO1_PIN_ADCIN2_COMP	0x00
++#define		DA9063_GPIO1_PIN_GPI		0x10
++#define		DA9063_GPIO1_PIN_GPO_OD		0x20
++#define		DA9063_GPIO1_PIN_GPO		0x30
++#define	DA9063_GPIO1_TYPE			0x40
++#define		DA9063_GPIO1_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO1_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO1_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO1_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO1_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_2_3 (addr=0x16) */
++#define	DA9063_GPIO2_PIN_SHIFT			0
++#define	DA9063_GPIO2_PIN_MASK			0x03
++#define		DA9063_GPIO2_PIN_ADCIN3		0x00
++#define		DA9063_GPIO2_PIN_GPI		0x01
++#define		DA9063_GPIO2_PIN_GPO_PSS	0x02
++#define		DA9063_GPIO2_PIN_GPO		0x03
++#define	DA9063_GPIO2_TYPE			0x04
++#define		DA9063_GPIO2_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO2_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO2_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO2_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO2_NO_WAKEUP			0x08
++#define	DA9063_GPIO3_PIN_SHIFT			4
++#define	DA9063_GPIO3_PIN_MASK			0x30
++#define		DA9063_GPIO3_PIN_CORE_SW_G	0x00
++#define		DA9063_GPIO3_PIN_GPI		0x10
++#define		DA9063_GPIO3_PIN_GPO_OD		0x20
++#define		DA9063_GPIO3_PIN_GPO		0x30
++#define	DA9063_GPIO3_TYPE			0x40
++#define		DA9063_GPIO3_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO3_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO3_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO3_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO3_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_4_5 (addr=0x17) */
++#define	DA9063_GPIO4_PIN_SHIFT			0
++#define	DA9063_GPIO4_PIN_MASK			0x03
++#define		DA9063_GPIO4_PIN_CORE_SW_S	0x00
++#define		DA9063_GPIO4_PIN_GPI		0x01
++#define		DA9063_GPIO4_PIN_GPO_OD		0x02
++#define		DA9063_GPIO4_PIN_GPO		0x03
++#define	DA9063_GPIO4_TYPE			0x04
++#define		DA9063_GPIO4_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO4_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO4_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO4_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO4_NO_WAKEUP			0x08
++#define	DA9063_GPIO5_PIN_SHIFT			4
++#define	DA9063_GPIO5_PIN_MASK			0x30
++#define		DA9063_GPIO5_PIN_PERI_SW_G	0x00
++#define		DA9063_GPIO5_PIN_GPI		0x10
++#define		DA9063_GPIO5_PIN_GPO_OD		0x20
++#define		DA9063_GPIO5_PIN_GPO		0x30
++#define	DA9063_GPIO5_TYPE			0x40
++#define		DA9063_GPIO5_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO5_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO5_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO5_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO5_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_6_7 (addr=0x18) */
++#define	DA9063_GPIO6_PIN_SHIFT			0
++#define	DA9063_GPIO6_PIN_MASK			0x03
++#define		DA9063_GPIO6_PIN_PERI_SW_S	0x00
++#define		DA9063_GPIO6_PIN_GPI		0x01
++#define		DA9063_GPIO6_PIN_GPO_OD		0x02
++#define		DA9063_GPIO6_PIN_GPO		0x03
++#define	DA9063_GPIO6_TYPE			0x04
++#define		DA9063_GPIO6_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO6_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO6_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO6_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO6_NO_WAKEUP			0x08
++#define	DA9063_GPIO7_PIN_SHIFT			4
++#define	DA9063_GPIO7_PIN_MASK			0x30
++#define		DA9063_GPIO7_PIN_GPI		0x10
++#define		DA9063_GPIO7_PIN_GPO_PSS	0x20
++#define		DA9063_GPIO7_PIN_GPO		0x30
++#define	DA9063_GPIO7_TYPE			0x40
++#define		DA9063_GPIO7_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO7_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO7_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO7_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO7_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_8_9 (addr=0x19) */
++#define	DA9063_GPIO8_PIN_SHIFT			0
++#define	DA9063_GPIO8_PIN_MASK			0x03
++#define		DA9063_GPIO8_PIN_GPI_SYS_EN	0x00
++#define		DA9063_GPIO8_PIN_GPI		0x01
++#define		DA9063_GPIO8_PIN_GPO_PSS	0x02
++#define		DA9063_GPIO8_PIN_GPO		0x03
++#define	DA9063_GPIO8_TYPE			0x04
++#define		DA9063_GPIO8_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO8_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO8_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO8_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO8_NO_WAKEUP			0x08
++#define	DA9063_GPIO9_PIN_SHIFT			4
++#define	DA9063_GPIO9_PIN_MASK			0x30
++#define		DA9063_GPIO9_PIN_GPI_PWR_EN	0x00
++#define		DA9063_GPIO9_PIN_GPI		0x10
++#define		DA9063_GPIO9_PIN_GPO_PSS	0x20
++#define		DA9063_GPIO9_PIN_GPO		0x30
++#define	DA9063_GPIO9_TYPE			0x40
++#define		DA9063_GPIO9_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO9_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO9_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO9_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO9_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_10_11 (addr=0x1A) */
++#define	DA9063_GPIO10_PIN_SHIFT			0
++#define	DA9063_GPIO10_PIN_MASK			0x03
++#define		DA9063_GPIO10_PIN_GPI_PWR1_EN	0x00
++#define		DA9063_GPIO10_PIN_GPI		0x01
++#define		DA9063_GPIO10_PIN_GPO_OD	0x02
++#define		DA9063_GPIO10_PIN_GPO		0x03
++#define	DA9063_GPIO10_TYPE			0x04
++#define		DA9063_GPIO10_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO10_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO10_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO10_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO10_NO_WAKEUP			0x08
++#define	DA9063_GPIO11_PIN_SHIFT			4
++#define	DA9063_GPIO11_PIN_MASK			0x30
++#define		DA9063_GPIO11_PIN_GPO_OD	0x00
++#define		DA9063_GPIO11_PIN_GPI		0x10
++#define		DA9063_GPIO11_PIN_GPO_PSS	0x20
++#define		DA9063_GPIO11_PIN_GPO		0x30
++#define	DA9063_GPIO11_TYPE			0x40
++#define		DA9063_GPIO11_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO11_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO11_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO11_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO11_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_12_13 (addr=0x1B) */
++#define	DA9063_GPIO12_PIN_SHIFT			0
++#define	DA9063_GPIO12_PIN_MASK			0x03
++#define		DA9063_GPIO12_PIN_NVDDFLT_OUT	0x00
++#define		DA9063_GPIO12_PIN_GPI		0x01
++#define		DA9063_GPIO12_PIN_VSYSMON_OUT	0x02
++#define		DA9063_GPIO12_PIN_GPO		0x03
++#define	DA9063_GPIO12_TYPE			0x04
++#define		DA9063_GPIO12_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO12_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO12_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO12_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO12_NO_WAKEUP			0x08
++#define	DA9063_GPIO13_PIN_SHIFT			4
++#define	DA9063_GPIO13_PIN_MASK			0x30
++#define		DA9063_GPIO13_PIN_GPFB1_OUT	0x00
++#define		DA9063_GPIO13_PIN_GPI		0x10
++#define		DA9063_GPIO13_PIN_GPFB1_OUTOD	0x20
++#define		DA9063_GPIO13_PIN_GPO		0x30
++#define	DA9063_GPIO13_TYPE			0x40
++#define		DA9063_GPIO13_TYPE_GPFB1_OUT	0x00
++#define		DA9063_GPIO13_TYPE_GPI		0x00
++#define		DA9063_GPIO13_TYPE_GPFB1_OUTOD	0x04
++#define		DA9063_GPIO13_TYPE_GPO		0x04
++#define	DA9063_GPIO13_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_14_15 (addr=0x1C) */
++#define	DA9063_GPIO14_PIN_SHIFT			0
++#define	DA9063_GPIO14_PIN_MASK			0x03
++#define		DA9063_GPIO14_PIN_GPO_OD	0x00
++#define		DA9063_GPIO14_PIN_GPI		0x01
++#define		DA9063_GPIO14_PIN_HS2DATA	0x02
++#define		DA9063_GPIO14_PIN_GPO		0x03
++#define	DA9063_GPIO14_TYPE			0x04
++#define		DA9063_GPIO14_TYPE_GPI_ACT_LOW	0x00
++#define		DA9063_GPIO14_TYPE_GPO_VDD_IO1	0x00
++#define		DA9063_GPIO14_TYPE_GPI_ACT_HIGH	0x04
++#define		DA9063_GPIO14_TYPE_GPO_VDD_IO2	0x04
++#define	DA9063_GPIO14_NO_WAKEUP			0x08
++#define	DA9063_GPIO15_PIN_SHIFT			4
++#define	DA9063_GPIO15_PIN_MASK			0x30
++#define		DA9063_GPIO15_PIN_GPO_OD	0x00
++#define		DA9063_GPIO15_PIN_GPI		0x10
++#define		DA9063_GPIO15_PIN_GPO		0x30
++#define	DA9063_GPIO15_TYPE			0x40
++#define		DA9063_GPIO15_TYPE_GPFB1_OUT	0x00
++#define		DA9063_GPIO15_TYPE_GPI		0x00
++#define		DA9063_GPIO15_TYPE_GPFB1_OUTOD	0x04
++#define		DA9063_GPIO15_TYPE_GPO		0x04
++#define	DA9063_GPIO15_NO_WAKEUP			0x80
++
++/* DA9063_REG_GPIO_MODE_0_7 (addr=0x1D) */
++#define	DA9063_GPIO0_MODE			0x01
++#define	DA9063_GPIO1_MODE			0x02
++#define	DA9063_GPIO2_MODE			0x04
++#define	DA9063_GPIO3_MODE			0x08
++#define	DA9063_GPIO4_MODE			0x10
++#define	DA9063_GPIO5_MODE			0x20
++#define	DA9063_GPIO6_MODE			0x40
++#define	DA9063_GPIO7_MODE			0x80
++
++/* DA9063_REG_GPIO_MODE_8_15 (addr=0x1E) */
++#define	DA9063_GPIO8_MODE			0x01
++#define	DA9063_GPIO9_MODE			0x02
++#define	DA9063_GPIO10_MODE			0x04
++#define	DA9063_GPIO11_MODE			0x08
++#define		DA9063_GPIO11_MODE_LED_ACT_HIGH	0x00
++#define		DA9063_GPIO11_MODE_LED_ACT_LOW	0x08
++#define	DA9063_GPIO12_MODE			0x10
++#define	DA9063_GPIO13_MODE			0x20
++#define	DA9063_GPIO14_MODE			0x40
++#define		DA9063_GPIO14_MODE_LED_ACT_HIGH	0x00
++#define		DA9063_GPIO14_MODE_LED_ACT_LOW	0x40
++#define	DA9063_GPIO15_MODE			0x80
++#define		DA9063_GPIO15_MODE_LED_ACT_HIGH	0x00
++#define		DA9063_GPIO15_MODE_LED_ACT_LOW	0x80
++
++/* DA9063_REG_SWITCH_CONT (addr=0x1F) */
++#define	DA9063_CORE_SW_GPI_SHIFT		0
++#define	DA9063_CORE_SW_GPI_MASK			0x03
++#define		DA9063_CORE_SW_GPI_OFF		0x00
++#define		DA9063_CORE_SW_GPI_GPIO1	0x01
++#define		DA9063_CORE_SW_GPI_GPIO2	0x02
++#define		DA9063_CORE_SW_GPI_GPIO13	0x03
++#define	DA9063_PERI_SW_GPI_SHIFT		2
++#define	DA9063_PERI_SW_GPI_MASK			0x0C
++#define		DA9063_PERI_SW_GPI_OFF		0x00
++#define		DA9063_PERI_SW_GPI_GPIO1	0x04
++#define		DA9063_PERI_SW_GPI_GPIO2	0x08
++#define		DA9063_PERI_SW_GPI_GPIO13	0x0C
++#define	DA9063_SWITCH_SR_SHIFT			4
++#define	DA9063_SWITCH_SR_MASK			0x30
++#define		DA9063_SWITCH_SR_1MV		0x00
++#define		DA9063_SWITCH_SR_5MV		0x10
++#define		DA9063_SWITCH_SR_10MV		0x20
++#define		DA9063_SWITCH_SR_50MV		0x30
++#define	DA9063_SWITCH_SR_DIS			0x40
++#define	DA9063_CP_EN_MODE			0x80
++
++/* DA9063_REGL_Bxxxx_CONT common bits (addr=0x20-0x25) */
++#define	DA9063_BUCK_EN				0x01
++#define	DA9063_BUCK_GPI_SHIFT			1
++#define DA9063_BUCK_GPI_MASK			0x06
++#define		DA9063_BUCK_GPI_OFF		0x00
++#define		DA9063_BUCK_GPI_GPIO1		0x02
++#define		DA9063_BUCK_GPI_GPIO2		0x04
++#define		DA9063_BUCK_GPI_GPIO13		0x06
++#define	DA9063_BUCK_CONF			0x08
++#define	DA9063_VBUCK_GPI_SHIFT			5
++#define	DA9063_VBUCK_GPI_MASK			0x60
++#define		DA9063_VBUCK_GPI_OFF		0x00
++#define		DA9063_VBUCK_GPI_GPIO1		0x20
++#define		DA9063_VBUCK_GPI_GPIO2		0x40
++#define		DA9063_VBUCK_GPI_GPIO13		0x60
++
++/* DA9063_REG_BCORE1_CONT specific bits (addr=0x21) */
++#define	DA9063_CORE_SW_EN			0x10
++#define	DA9063_CORE_SW_CONF			0x80
++
++/* DA9063_REG_BPERI_CONT specific bits (addr=0x25) */
++#define	DA9063_PERI_SW_EN			0x10
++#define	DA9063_PERI_SW_CONF			0x80
++
++/* DA9063_REG_LDOx_CONT common bits (addr=0x26-0x30) */
++#define	DA9063_LDO_EN				0x01
++#define	DA9063_LDO_GPI_SHIFT			1
++#define DA9063_LDO_GPI_MASK			0x06
++#define		DA9063_LDO_GPI_OFF		0x00
++#define		DA9063_LDO_GPI_GPIO1		0x02
++#define		DA9063_LDO_GPI_GPIO2		0x04
++#define		DA9063_LDO_GPI_GPIO13		0x06
++#define	DA9063_LDO_PD_DIS			0x08
++#define	DA9063_VLDO_GPI_SHIFT			5
++#define	DA9063_VLDO_GPI_MASK			0x60
++#define		DA9063_VLDO_GPI_OFF		0x00
++#define		DA9063_VLDO_GPI_GPIO1		0x20
++#define		DA9063_VLDO_GPI_GPIO2		0x40
++#define		DA9063_VLDO_GPI_GPIO13		0x60
++#define	DA9063_LDO_CONF				0x80
++
++/* DA9063_REG_LDO5_CONT specific bits (addr=0x2A) */
++#define	DA9063_VLDO5_SEL			0x10
++
++/* DA9063_REG_LDO6_CONT specific bits (addr=0x2B) */
++#define	DA9063_VLDO6_SEL			0x10
++
++/* DA9063_REG_LDO7_CONT specific bits (addr=0x2C) */
++#define	DA9063_VLDO7_SEL			0x10
++
++/* DA9063_REG_LDO8_CONT specific bits (addr=0x2D) */
++#define	DA9063_VLDO8_SEL			0x10
++
++/* DA9063_REG_LDO9_CONT specific bits (addr=0x2E) */
++#define	DA9063_VLDO9_SEL			0x10
++
++/* DA9063_REG_LDO10_CONT specific bits (addr=0x2F) */
++#define	DA9063_VLDO10_SEL			0x10
++
++/* DA9063_REG_LDO11_CONT specific bits (addr=0x30) */
++#define	DA9063_VLDO11_SEL			0x10
++
++/* DA9063_REG_VIB (addr=0x31) */
++#define DA9063_VIB_SET_MASK			0x3F
++#define		DA9063_VIB_SET_OFF		0
++#define		DA9063_VIB_SET_MAX		0x3F
++
++/* DA9063_REG_DVC_1 (addr=0x32) */
++#define	DA9063_VBCORE1_SEL			0x01
++#define	DA9063_VBCORE2_SEL			0x02
++#define	DA9063_VBPRO_SEL			0x04
++#define	DA9063_VBMEM_SEL			0x08
++#define	DA9063_VBPERI_SEL			0x10
++#define	DA9063_VLDO1_SEL			0x20
++#define	DA9063_VLDO2_SEL			0x40
++#define	DA9063_VLDO3_SEL			0x80
++
++/* DA9063_REG_DVC_2 (addr=0x33) */
++#define	DA9063_VBIO_SEL				0x01
++#define	DA9063_VLDO4_SEL			0x80
++
++/* DA9063_REG_ADC_MAN (addr=0x34) */
++#define	DA9063_ADC_MUX_SHIFT			0
++#define	DA9063_ADC_MUX_MASK			0x0F
++#define		DA9063_ADC_MUX_VSYS		0x00
++#define		DA9063_ADC_MUX_ADCIN1		0x01
++#define		DA9063_ADC_MUX_ADCIN2		0x02
++#define		DA9063_ADC_MUX_ADCIN3		0x03
++#define		DA9063_ADC_MUX_T_SENSE		0x04
++#define		DA9063_ADC_MUX_VBBAT		0x05
++#define		DA9063_ADC_MUX_LDO_G1		0x08
++#define		DA9063_ADC_MUX_LDO_G2		0x09
++#define		DA9063_ADC_MUX_LDO_G3		0x0A
++#define	DA9063_ADC_MAN				0x10
++#define	DA9063_ADC_MODE				0x20
++
++/* DA9063_REG_ADC_CONT (addr=0x35) */
++#define	DA9063_ADC_AUTO_VSYS_EN			0x01
++#define	DA9063_ADC_AUTO_AD1_EN			0x02
++#define	DA9063_ADC_AUTO_AD2_EN			0x04
++#define	DA9063_ADC_AUTO_AD3_EN			0x08
++#define	DA9063_ADC_AD1_ISRC_EN			0x10
++#define	DA9063_ADC_AD2_ISRC_EN			0x20
++#define	DA9063_ADC_AD3_ISRC_EN			0x40
++#define	DA9063_COMP1V2_EN			0x80
++
++/* DA9063_REG_VSYS_MON (addr=0x36) */
++#define	DA9063_VSYS_VAL_SHIFT			0
++#define	DA9063_VSYS_VAL_MASK			0xFF
++#define	DA9063_VSYS_VAL_BASE			0x00
++
++/* DA9063_REG_ADC_RES_L (addr=0x37) */
++#define	DA9063_ADC_RES_L_SHIFT			6
++#define	DA9063_ADC_RES_L_BITS			2
++#define	DA9063_ADC_RES_L_MASK			0xC0
++
++/* DA9063_REG_ADC_RES_H (addr=0x38) */
++#define	DA9063_ADC_RES_M_SHIFT			0
++#define	DA9063_ADC_RES_M_BITS			8
++#define	DA9063_ADC_RES_M_MASK			0xFF
++
++/* DA9063_REG_(xxx_RES/ADC_RES_H) (addr=0x39-0x3F) */
++#define	DA9063_ADC_VAL_SHIFT			0
++#define	DA9063_ADC_VAL_MASK			0xFF
++
++/* DA9063_REG_COUNT_S (addr=0x40) */
++#define DA9063_RTC_READ				0x80
++#define DA9063_COUNT_SEC_MASK			0x3F
++
++/* DA9063_REG_COUNT_MI (addr=0x41) */
++#define DA9063_COUNT_MIN_MASK			0x3F
++
++/* DA9063_REG_COUNT_H (addr=0x42) */
++#define DA9063_COUNT_HOUR_MASK			0x1F
++
++/* DA9063_REG_COUNT_D (addr=0x43) */
++#define DA9063_COUNT_DAY_MASK			0x1F
++
++/* DA9063_REG_COUNT_MO (addr=0x44) */
++#define DA9063_COUNT_MONTH_MASK			0x0F
++
++/* DA9063_REG_COUNT_Y (addr=0x45) */
++#define DA9063_COUNT_YEAR_MASK			0x3F
++#define DA9063_MONITOR				0x40
++
++/* DA9063_REG_ALARM_MI (addr=0x46) */
++#define DA9063_ALARM_STATUS_ALARM		0x80
++#define DA9063_ALARM_STATUS_TICK		0x40
++#define DA9063_ALARM_MIN_MASK			0x3F
++
++/* DA9063_REG_ALARM_H (addr=0x47) */
++#define DA9063_ALARM_HOUR_MASK			0x1F
++
++/* DA9063_REG_ALARM_D (addr=0x48) */
++#define DA9063_ALARM_DAY_MASK			0x1F
++
++/* DA9063_REG_ALARM_MO (addr=0x49) */
++#define DA9063_TICK_WAKE			0x20
++#define DA9063_TICK_TYPE			0x10
++#define		DA9063_TICK_TYPE_SEC		0x00
++#define		DA9063_TICK_TYPE_MIN		0x10
++#define DA9063_ALARM_MONTH_MASK			0x0F
++
++/* DA9063_REG_ALARM_Y (addr=0x4A) */
++#define DA9063_TICK_ON				0x80
++#define DA9063_ALARM_ON				0x40
++#define DA9063_ALARM_YEAR_MASK			0x3F
++
++/* DA9063_REG_WAIT (addr=0x97)*/
++#define	DA9063_REG_WAIT_TIME_SHIFT		0
++#define	DA9063_REG_WAIT_TIME_MASK		0xF
++#define	DA9063_WAIT_TIME_0_US			0x0
++#define	DA9063_WAIT_TIME_512_US			0x1
++#define	DA9063_WAIT_TIME_1_MS			0x2
++#define	DA9063_WAIT_TIME_2_MS			0x3
++#define	DA9063_WAIT_TIME_4_1_MS			0x4
++#define	DA9063_WAIT_TIME_8_2_MS			0x5
++#define	DA9063_WAIT_TIME_16_4_MS		0x6
++#define	DA9063_WAIT_TIME_32_8_MS		0x7
++#define	DA9063_WAIT_TIME_65_5_MS		0x8
++#define	DA9063_WAIT_TIME_128_MS			0x9
++#define	DA9063_WAIT_TIME_256_MS			0xA
++#define	DA9063_WAIT_TIME_512_MS			0xB
++#define	DA9063_WAIT_TIME_1_S			0xC
++#define	DA9063_WAIT_TIME_2_1_S			0xD
++
++/* DA9063_REG_EN_32K  (addr=0x98)*/
++#define	DA9063_STABILIZ_TIME_SHIFT		0
++#define	DA9063_STABILIZ_TIME_MASK		0x7
++#define	DA9063_CRYSTAL				0x08
++#define	DA9063_DELAY_MODE			0x10
++#define	DA9063_OUT_CLOCK			0x20
++#define	DA9063_RTC_CLOCK			0x40
++#define	DA9063_OUT_32K_EN			0x80
++
++/* DA9063_REG_CHIP_VARIANT */
++#define	DA9063_CHIP_VARIANT_SHIFT		4
++
++/* DA9063_REG_BUCK_ILIM_A (addr=0x9A) */
++#define DA9063_BIO_ILIM_SHIFT			0
++#define DA9063_BIO_ILIM_MASK			0x0F
++#define DA9063_BMEM_ILIM_SHIFT			4
++#define DA9063_BMEM_ILIM_MASK			0x0F
++
++/* DA9063_REG_BUCK_ILIM_B (addr=0x9B) */
++#define DA9063_BPRO_ILIM_SHIFT			0
++#define DA9063_BPRO_ILIM_MASK			0x0F
++#define DA9063_BPERI_ILIM_SHIFT			4
++#define DA9063_BPERI_ILIM_MASK			0x0F
++
++/* DA9063_REG_BUCK_ILIM_C (addr=0x9C) */
++#define DA9063_BCORE1_ILIM_SHIFT		0
++#define DA9063_BCORE1_ILIM_MASK			0x0F
++#define DA9063_BCORE2_ILIM_SHIFT		4
++#define DA9063_BCORE2_ILIM_MASK			0x0F
++
++/* DA9063_REG_Bxxxx_CFG common bits (addr=0x9D-0xA2) */
++#define DA9063_BUCK_FB_MASK			0x07
++#define DA9063_BUCK_PD_DIS_SHIFT		5
++#define DA9063_BUCK_MODE_SHIFT			6
++#define DA9063_BUCK_MODE_MASK			0xC0
++#define		DA9063_BUCK_MODE_MANUAL		0x00
++#define		DA9063_BUCK_MODE_SLEEP		0x40
++#define		DA9063_BUCK_MODE_SYNC		0x80
++#define		DA9063_BUCK_MODE_AUTO		0xC0
++
++/* DA9063_REG_BPRO_CFG (addr=0x9F) */
++#define	DA9063_BPRO_VTTR_EN			0x08
++#define	DA9063_BPRO_VTT_EN			0x10
++
++/* DA9063_REG_VBxxxx_A/B (addr=0xA3-0xA8, 0xB4-0xB9) */
++#define DA9063_VBUCK_SHIFT			0
++#define DA9063_VBUCK_MASK			0x7F
++#define DA9063_VBUCK_BIAS			0
++#define DA9063_BUCK_SL				0x80
++
++/* DA9063_REG_VLDOx_A/B (addr=0xA9-0x3, 0xBA-0xC4) */
++#define DA9063_LDO_SL				0x80
++
++/* DA9063_REG_VLDO1_A/B (addr=0xA9, 0xBA) */
++#define DA9063_VLDO1_MASK			0x3F
++#define DA9063_VLDO1_SHIFT			0
++#define DA9063_VLDO1_BIAS			0
++
++/* DA9063_REG_VLDO2_A/B (addr=0xAA, 0xBB) */
++#define DA9063_VLDO2_MASK			0x3F
++#define DA9063_VLDO2_SHIFT			0
++#define DA9063_VLDO2_BIAS			0
++
++/* DA9063_REG_VLDO3_A/B (addr=0xAB, 0xBC) */
++#define DA9063_VLDO3_MASK			0x7F
++#define DA9063_VLDO3_SHIFT			0
++#define DA9063_VLDO3_BIAS			0
++
++/* DA9063_REG_VLDO4_A/B (addr=0xAC, 0xBD) */
++#define DA9063_VLDO4_MASK			0x7F
++#define DA9063_VLDO4_SHIFT			0
++#define DA9063_VLDO4_BIAS			0
++
++/* DA9063_REG_VLDO5_A/B (addr=0xAD, 0xBE) */
++#define DA9063_VLDO5_MASK			0x3F
++#define DA9063_VLDO5_SHIFT			0
++#define DA9063_VLDO5_BIAS			2
++
++/* DA9063_REG_VLDO6_A/B (addr=0xAE, 0xBF) */
++#define DA9063_VLDO6_MASK			0x3F
++#define DA9063_VLDO6_SHIFT			0
++#define DA9063_VLDO6_BIAS			2
++
++/* DA9063_REG_VLDO7_A/B (addr=0xAF, 0xC0) */
++#define DA9063_VLDO7_MASK			0x3F
++#define DA9063_VLDO7_SHIFT			0
++#define DA9063_VLDO7_BIAS			2
++
++/* DA9063_REG_VLDO8_A/B (addr=0xB0, 0xC1) */
++#define DA9063_VLDO8_MASK			0x3F
++#define DA9063_VLDO8_SHIFT			0
++#define DA9063_VLDO8_BIAS			2
++
++/* DA9063_REG_VLDO9_A/B (addr=0xB1, 0xC2) */
++#define DA9063_VLDO9_MASK			0x3F
++#define DA9063_VLDO9_SHIFT			0
++#define DA9063_VLDO9_BIAS			3
++
++/* DA9063_REG_VLDO10_A/B (addr=0xB2, 0xC3) */
++#define DA9063_VLDO10_MASK			0x3F
++#define DA9063_VLDO10_SHIFT			0
++#define DA9063_VLDO10_BIAS			2
++
++/* DA9063_REG_VLDO11_A/B (addr=0xB3, 0xC4) */
++#define DA9063_VLDO11_MASK			0x3F
++#define DA9063_VLDO11_SHIFT			0
++#define DA9063_VLDO11_BIAS			2
++
++/* DA9063_REG_GPO11_LED (addr=0xC6) */
++/* DA9063_REG_GPO14_LED (addr=0xC7) */
++/* DA9063_REG_GPO15_LED (addr=0xC8) */
++#define DA9063_GPIO_DIM				0x80
++#define DA9063_GPIO_PWM_SHIFT			0
++#define DA9063_GPIO_PWM_MASK			0x7F
++
++/* DA9063_REG_CONFIG_H (addr=0x10D) */
++#define DA9063_PWM_CLK_MASK			0x01
++#define		DA9063_PWM_CLK_PWM2MHZ		0x00
++#define		DA9063_PWM_CLK_PWM1MHZ		0x01
++#define DA9063_LDO8_MODE_MASK			0x02
++#define		DA9063_LDO8_MODE_LDO		0
++#define		DA9063_LDO8_MODE_VIBR		0x02
++#define DA9063_MERGE_SENSE_MASK			0x04
++#define 	DA9063_MERGE_SENSE_GP_FB2	0x00
++#define 	DA9063_MERGE_SENSE_GPIO4	0x04
++#define DA9063_BCORE_MERGE			0x08
++#define DA9063_BPRO_OD				0x10
++#define DA9063_BCORE2_OD			0x20
++#define DA9063_BCORE1_OD			0x40
++#define DA9063_BUCK_MERGE			0x80
++
++/* DA9063_REG_CONFIG_I (addr=0x10E) */
++#define DA9063_NONKEY_PIN_MASK			0x03
++#define		DA9063_NONKEY_PIN_PORT		0x00
++#define		DA9063_NONKEY_PIN_SWDOWN	0x01
++#define		DA9063_NONKEY_PIN_AUTODOWN	0x02
++#define		DA9063_NONKEY_PIN_AUTOFLPRT	0x03
++
++/* DA9063_REG_MON_REG_5 (addr=0x116) */
++#define DA9063_MON_A8_IDX_SHIFT			0
++#define DA9063_MON_A8_IDX_MASK			0x07
++#define		DA9063_MON_A8_IDX_NONE		0x00
++#define		DA9063_MON_A8_IDX_BCORE1	0x01
++#define		DA9063_MON_A8_IDX_BCORE2	0x02
++#define		DA9063_MON_A8_IDX_BPRO		0x03
++#define		DA9063_MON_A8_IDX_LDO3		0x04
++#define		DA9063_MON_A8_IDX_LDO4		0x05
++#define		DA9063_MON_A8_IDX_LDO11		0x06
++#define DA9063_MON_A9_IDX_SHIFT			4
++#define DA9063_MON_A9_IDX_MASK			0x70
++#define		DA9063_MON_A9_IDX_NONE		0x00
++#define		DA9063_MON_A9_IDX_BIO		0x01
++#define		DA9063_MON_A9_IDX_BMEM		0x02
++#define		DA9063_MON_A9_IDX_BPERI		0x03
++#define		DA9063_MON_A9_IDX_LDO1		0x04
++#define		DA9063_MON_A9_IDX_LDO2		0x05
++#define		DA9063_MON_A9_IDX_LDO5		0x06
++
++/* DA9063_REG_MON_REG_6 (addr=0x117) */
++#define DA9063_MON_A10_IDX_SHIFT		0
++#define DA9063_MON_A10_IDX_MASK			0x07
++#define		DA9063_MON_A10_IDX_NONE		0x00
++#define		DA9063_MON_A10_IDX_LDO6		0x01
++#define		DA9063_MON_A10_IDX_LDO7		0x02
++#define		DA9063_MON_A10_IDX_LDO8		0x03
++#define		DA9063_MON_A10_IDX_LDO9		0x04
++#define		DA9063_MON_A10_IDX_LDO10	0x05
++
++#endif /* _DA9063_REG_H */
++
+-- 
+1.8.3.2
+

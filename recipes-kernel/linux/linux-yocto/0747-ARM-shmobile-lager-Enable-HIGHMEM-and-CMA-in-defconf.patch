@@ -1,0 +1,38 @@
+From 8f1bf4e9d9661e5bded3ef044baee158ac1be31b Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Fri, 26 Jul 2013 09:11:05 +0900
+Subject: [PATCH 0747/1083] ARM: shmobile: lager: Enable HIGHMEM and CMA in
+ defconfig
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ arch/arm/configs/lager_defconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm/configs/lager_defconfig b/arch/arm/configs/lager_defconfig
+index 1206422..e62ca70 100644
+--- a/arch/arm/configs/lager_defconfig
++++ b/arch/arm/configs/lager_defconfig
+@@ -19,6 +19,7 @@ CONFIG_ARCH_SHMOBILE=y
+ CONFIG_ARCH_R8A7790=y
+ CONFIG_MACH_LAGER=y
+ CONFIG_SHMOBILE_TIMER_HZ=100
++CONFIG_HIGHMEM=y
+ # CONFIG_SH_TIMER_TMU is not set
+ # CONFIG_EM_TIMER_STI is not set
+ # CONFIG_SWP_EMULATE is not set
+@@ -80,6 +81,11 @@ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_DEVTMPFS=y
+ CONFIG_DEVTMPFS_MOUNT=y
+ CONFIG_REGMAP_SPI=y
++CONFIG_CMA=y
++CONFIG_CMA_SIZE_MBYTES=32
++CONFIG_CMA_SIZE_SEL_MBYTES=y
++CONFIG_CMA_ALIGNMENT=8
++CONFIG_CMA_AREAS=7
+ CONFIG_MTD=y
+ CONFIG_MTD_OF_PARTS=y
+ CONFIG_MTD_CHAR=y
+-- 
+1.8.3.2
+

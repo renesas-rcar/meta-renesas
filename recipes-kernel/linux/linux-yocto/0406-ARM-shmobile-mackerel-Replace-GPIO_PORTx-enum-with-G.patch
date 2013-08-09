@@ -1,7 +1,7 @@
 From 65f63397a9cd2444fabc177d954d3762ac68703d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 07:38:50 +0100
-Subject: [PATCH 406/715] ARM: shmobile: mackerel: Replace GPIO_PORTx enum
+Subject: [PATCH 0406/1083] ARM: shmobile: mackerel: Replace GPIO_PORTx enum
  with GPIO port numbers
 
 The PFC GPIO API implementation moved to using port numbers. Replace all
@@ -14,7 +14,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-mackerel.c |   34 +++++++++++++++----------------
+ arch/arm/mach-shmobile/board-mackerel.c | 34 ++++++++++++++++-----------------
  1 file changed, 17 insertions(+), 17 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-mackerel.c b/arch/arm/mach-shmobile/board-mackerel.c
@@ -139,5 +139,5 @@ index b0ef9be..fb9be17 100644
  	/* MMCIF */
  	gpio_request(GPIO_FN_MMCD0_0, NULL);
 -- 
-1.7.10.4
+1.8.3.2
 

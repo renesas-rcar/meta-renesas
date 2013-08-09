@@ -1,7 +1,7 @@
 From 83c345908ec1006f0734ad674578eecbc075e691 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 20 Jun 2012 22:29:14 +0900
-Subject: [PATCH 275/715] sh: pfc: Kill off unused pinmux bias flags.
+Subject: [PATCH 0275/1083] sh: pfc: Kill off unused pinmux bias flags.
 
 WANT_PULLUP/DOWN were never interfaced with anything, so just kill them
 off.
@@ -11,7 +11,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/linux/sh_pfc.h |    2 --
+ include/linux/sh_pfc.h | 2 --
  1 file changed, 2 deletions(-)
 
 diff --git a/include/linux/sh_pfc.h b/include/linux/sh_pfc.h
@@ -28,5 +28,5 @@ index 95dad34..c06a473 100644
  #define PINMUX_FLAG_DBIT_SHIFT      5
  #define PINMUX_FLAG_DBIT            (0x1f << PINMUX_FLAG_DBIT_SHIFT)
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From b6cd5d199e555729da293f20c82d4621b75dee04 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 16 Jun 2013 21:01:02 +0200
-Subject: [PATCH 621/715] drm/rcar-du: Introduce CRTCs groups
+Subject: [PATCH 0621/1083] drm/rcar-du: Introduce CRTCs groups
 
 The R8A7779 DU is split in per-CRTC resources (scan-out engine, blending
 unit, timings generator, ...) and device-global resources (start/stop
@@ -33,17 +33,17 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c  |   66 -------------
- drivers/gpu/drm/rcar-du/Makefile        |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |   92 ++++++------------
- drivers/gpu/drm/rcar-du/rcar_du_crtc.h  |    5 +-
- drivers/gpu/drm/rcar-du/rcar_du_drv.c   |   53 -----------
- drivers/gpu/drm/rcar-du/rcar_du_drv.h   |   10 +-
- drivers/gpu/drm/rcar-du/rcar_du_group.c |  127 +++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_group.h |   47 ++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_kms.c   |   11 ++-
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |  155 ++++++++++++++++---------------
- drivers/gpu/drm/rcar-du/rcar_du_plane.h |    8 +-
+ arch/arm/mach-shmobile/setup-r8a7790.c  |  66 --------------
+ drivers/gpu/drm/rcar-du/Makefile        |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |  92 ++++++-------------
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h  |   5 +-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c   |  53 -----------
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   |  10 +--
+ drivers/gpu/drm/rcar-du/rcar_du_group.c | 127 ++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_group.h |  47 ++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   |  11 ++-
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 155 ++++++++++++++++----------------
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |   8 +-
  11 files changed, 299 insertions(+), 276 deletions(-)
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_group.c
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_group.h
@@ -1199,5 +1199,5 @@ index bcf6f76..f94f9ce 100644
  void rcar_du_plane_setup(struct rcar_du_plane *plane);
  void rcar_du_plane_update_base(struct rcar_du_plane *plane);
 -- 
-1.7.10.4
+1.8.3.2
 

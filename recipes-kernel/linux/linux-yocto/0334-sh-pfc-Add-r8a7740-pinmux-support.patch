@@ -1,7 +1,7 @@
 From 6efd8ff16b3d91fbe648d48ae37626e906f79169 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:21 +0100
-Subject: [PATCH 334/715] sh-pfc: Add r8a7740 pinmux support
+Subject: [PATCH 0334/1083] sh-pfc: Add r8a7740 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -2685,5 +2685,5 @@ index 0000000..0ab4cb6
 +	.gpio_irq_size	= ARRAY_SIZE(pinmux_irqs),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

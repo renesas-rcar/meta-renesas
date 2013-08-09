@@ -1,7 +1,7 @@
 From 3dac4336f2dc1246749cc278bb8e99d73331515b Mon Sep 17 00:00:00 2001
 From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 Date: Mon, 29 Oct 2012 15:06:00 +0900
-Subject: [PATCH 352/715] ARM: shmobile: Remove SH7377 support
+Subject: [PATCH 0352/1083] ARM: shmobile: Remove SH7377 support
 
 This is old CPU of shmobile, and the machine by which this CPU is
 used cannot be obtained.
@@ -3636,5 +3636,5 @@ index d576a6a..0000000
 -	shmobile_timer.init = sh7377_earlytimer_init;
 -}
 -- 
-1.7.10.4
+1.8.3.2
 

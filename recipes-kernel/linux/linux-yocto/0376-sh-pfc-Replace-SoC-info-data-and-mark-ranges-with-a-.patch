@@ -1,8 +1,8 @@
 From 1f90be38529a0120458c80d15e939094ec3d1def Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 29 Nov 2012 12:24:51 +0100
-Subject: [PATCH 376/715] sh-pfc: Replace SoC info data and mark ranges with a
- number of pins
+Subject: [PATCH 0376/1083] sh-pfc: Replace SoC info data and mark ranges with
+ a number of pins
 
 The data and mark ranges are only used to check whether a GPIO
 corresponds to a real pin or a function. As pins come first in the list
@@ -20,24 +20,24 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c        |   27 +++++++++++++++++++--------
- drivers/pinctrl/sh-pfc/pfc-r8a7740.c |    5 +----
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7203.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7264.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7269.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7372.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh73a0.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7720.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7722.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7723.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7724.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7734.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7757.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7785.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-sh7786.c  |    3 +--
- drivers/pinctrl/sh-pfc/pfc-shx3.c    |    3 +--
- drivers/pinctrl/sh-pfc/sh_pfc.h      |    3 +--
+ drivers/pinctrl/sh-pfc/core.c        | 27 +++++++++++++++++++--------
+ drivers/pinctrl/sh-pfc/pfc-r8a7740.c |  5 +----
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7203.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7264.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7269.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7372.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh73a0.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7720.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7722.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7723.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7724.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7734.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7757.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7785.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-sh7786.c  |  3 +--
+ drivers/pinctrl/sh-pfc/pfc-shx3.c    |  3 +--
+ drivers/pinctrl/sh-pfc/sh_pfc.h      |  3 +--
  18 files changed, 36 insertions(+), 44 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -453,5 +453,5 @@ index 67fe91b..c50fb51 100644
  
  	struct pinmux_cfg_reg *cfg_regs;
 -- 
-1.7.10.4
+1.8.3.2
 

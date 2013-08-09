@@ -1,7 +1,7 @@
 From e9a3362c13e36bfa07af33325fedb68e59a97d9e Mon Sep 17 00:00:00 2001
 From: Ulrich Hecht <ulrich.hecht@gmail.com>
 Date: Fri, 31 May 2013 17:57:01 +0200
-Subject: [PATCH 597/715] serial: sh-sci: HSCIF support
+Subject: [PATCH 0597/1083] serial: sh-sci: HSCIF support
 
 Adds support for "High Speed Serial Communications Interface with FIFO",
 essentially a SCIF with 128-byte FIFOs and more accurate baud rate
@@ -22,9 +22,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/tty/serial/sh-sci.c |  102 +++++++++++++++++++++++++++++++++++++++----
- include/linux/serial_core.h |    3 ++
- include/linux/serial_sci.h  |   12 +++--
+ drivers/tty/serial/sh-sci.c | 102 ++++++++++++++++++++++++++++++++++++++++----
+ include/linux/serial_core.h |   3 ++
+ include/linux/serial_sci.h  |  12 ++++--
  3 files changed, 106 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
@@ -356,5 +356,5 @@ index eb763ad..d340497 100644
  	unsigned long	capabilities;		/* Port features/capabilities */
  
 -- 
-1.7.10.4
+1.8.3.2
 

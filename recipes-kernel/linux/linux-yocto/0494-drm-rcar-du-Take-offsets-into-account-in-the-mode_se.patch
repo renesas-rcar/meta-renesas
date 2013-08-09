@@ -1,7 +1,7 @@
 From a50018952a15cbd55bdbde24656f61f632335eac Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 10:38:30 +0900
-Subject: [PATCH 494/715] drm: rcar-du: Take offsets into account in the
+Subject: [PATCH 0494/1083] drm: rcar-du: Take offsets into account in the
  mode_set_base handler
 
 Store the x and y offsets passed to the mode_set_base handler in the
@@ -13,7 +13,7 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c |    5 +++++
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 5 +++++
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -33,5 +33,5 @@ index 08a69db..01e9d24 100644
  
  	return 0;
 -- 
-1.7.10.4
+1.8.3.2
 

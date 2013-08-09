@@ -1,7 +1,7 @@
 From a6a81b6ef51d1bade23d66ef8afe38eafb6190ad Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Thu, 28 Mar 2013 00:49:34 +0900
-Subject: [PATCH 551/715] ARM: shmobile: Initial r8a7790 SoC support
+Subject: [PATCH 0551/1083] ARM: shmobile: Initial r8a7790 SoC support
 
 Add initial support for the r8a7790 SoC including:
  - Single Cortex-A15 CPU Core
@@ -24,7 +24,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/Kconfig |    7 +++++++
+ arch/arm/mach-shmobile/Kconfig | 7 +++++++
  1 file changed, 7 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
@@ -46,5 +46,5 @@ index b5f3b2d..9a2dd78 100644
  	bool "Emma Mobile EV2"
  	select CPU_V7
 -- 
-1.7.10.4
+1.8.3.2
 

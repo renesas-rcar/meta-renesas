@@ -1,7 +1,7 @@
 From 9f0cdf291e6dd53deb598c24b6fd3c1f7b2a5c90 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Fri, 21 Jun 2013 14:39:50 +0900
-Subject: [PATCH 657/715] dma: sh: Add descriptor operating mode
+Subject: [PATCH 0657/1083] dma: sh: Add descriptor operating mode
 
 If you want to use the descriptor transfer function, please add the setting
 to the member of sh_dmadesc_slave_config structure.
@@ -26,11 +26,11 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/dma/sh/shdma-base.c |   25 ++++++++-
- drivers/dma/sh/shdma-desc.c |  129 +++++++++++++++++++++++++++++++++++++------
- drivers/dma/sh/shdma-desc.h |   17 ++++++
- include/linux/sh_dma-desc.h |    3 +
- include/linux/shdma-base.h  |    1 +
+ drivers/dma/sh/shdma-base.c |  25 ++++++++-
+ drivers/dma/sh/shdma-desc.c | 129 ++++++++++++++++++++++++++++++++++++++------
+ drivers/dma/sh/shdma-desc.h |  17 ++++++
+ include/linux/sh_dma-desc.h |   3 ++
+ include/linux/shdma-base.h  |   1 +
  5 files changed, 157 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/dma/sh/shdma-base.c b/drivers/dma/sh/shdma-base.c
@@ -433,5 +433,5 @@ index a3728bf..e31b838 100644
  
  struct shdma_dev {
 -- 
-1.7.10.4
+1.8.3.2
 

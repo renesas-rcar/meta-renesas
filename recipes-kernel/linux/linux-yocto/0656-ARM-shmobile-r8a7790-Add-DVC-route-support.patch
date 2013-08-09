@@ -1,7 +1,7 @@
 From bed6a4edc0691a8df82d0263c51cb6d062d3dad0 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Fri, 21 Jun 2013 14:37:11 +0900
-Subject: [PATCH 656/715] ARM: shmobile: r8a7790: Add DVC route support
+Subject: [PATCH 0656/1083] ARM: shmobile: r8a7790: Add DVC route support
 
 Add DVC route setting to r8a7790_audma_slaves and r8a7790_audmapp_slaves.
 
@@ -10,7 +10,7 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c |   10 ++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c | 10 ++++++++++
  1 file changed, 10 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
@@ -42,5 +42,5 @@ index 1fd9423..1adca0a 100644
  		.sar		= 0xec401000,
  		.dar		= 0xec300400,
 -- 
-1.7.10.4
+1.8.3.2
 

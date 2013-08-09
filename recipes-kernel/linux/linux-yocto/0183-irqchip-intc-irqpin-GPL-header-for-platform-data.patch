@@ -1,7 +1,7 @@
 From 2aa05167f71970e6de5cb4ed2f6a48124da7b797 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Feb 2013 20:59:23 +0900
-Subject: [PATCH 183/715] irqchip: intc-irqpin: GPL header for platform data
+Subject: [PATCH 0183/1083] irqchip: intc-irqpin: GPL header for platform data
 
 Add GPL header to platform data include file.
 
@@ -10,7 +10,7 @@ Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
 Tested-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- .../linux/platform_data/irq-renesas-intc-irqpin.h   |   19 +++++++++++++++++++
+ include/linux/platform_data/irq-renesas-intc-irqpin.h | 19 +++++++++++++++++++
  1 file changed, 19 insertions(+)
 
 diff --git a/include/linux/platform_data/irq-renesas-intc-irqpin.h b/include/linux/platform_data/irq-renesas-intc-irqpin.h
@@ -41,5 +41,5 @@ index 00ccac3..e4cb911 100644
  #define __IRQ_RENESAS_INTC_IRQPIN_H__
  
 -- 
-1.7.10.4
+1.8.3.2
 

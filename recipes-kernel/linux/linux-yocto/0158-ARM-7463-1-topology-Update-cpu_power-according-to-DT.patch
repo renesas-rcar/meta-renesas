@@ -1,8 +1,8 @@
 From ef347dfab9035a084fd30051eef4fd7942b13b0d Mon Sep 17 00:00:00 2001
 From: Vincent Guittot <vincent.guittot@linaro.org>
 Date: Tue, 10 Jul 2012 14:13:12 +0100
-Subject: [PATCH 158/715] ARM: 7463/1: topology: Update cpu_power according to
- DT information
+Subject: [PATCH 0158/1083] ARM: 7463/1: topology: Update cpu_power according
+ to DT information
 
 Use cpu compatibility field and clock-frequency field of DT to
 estimate the capacity of each core of the system and to update
@@ -19,7 +19,7 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/topology.c |  153 ++++++++++++++++++++++++++++++++++++++++++++
+ arch/arm/kernel/topology.c | 153 +++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 153 insertions(+)
 
 diff --git a/arch/arm/kernel/topology.c b/arch/arm/kernel/topology.c
@@ -214,5 +214,5 @@ index eb5fc81..198b084 100644
 +	parse_dt_topology();
  }
 -- 
-1.7.10.4
+1.8.3.2
 

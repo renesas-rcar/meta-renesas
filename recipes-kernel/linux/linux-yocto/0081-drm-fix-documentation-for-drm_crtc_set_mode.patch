@@ -1,7 +1,7 @@
 From 4ed76f7c1dd2717702191142b04d551432b8aec6 Mon Sep 17 00:00:00 2001
 From: Alex Deucher <alexander.deucher@amd.com>
 Date: Fri, 9 Nov 2012 17:26:32 +0000
-Subject: [PATCH 081/715] drm: fix documentation for drm_crtc_set_mode()
+Subject: [PATCH 0081/1083] drm: fix documentation for drm_crtc_set_mode()
 
 x and y parameters are offsets, not width/height
 
@@ -12,7 +12,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc_helper.c |    4 ++--
+ drivers/gpu/drm/drm_crtc_helper.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
@@ -31,5 +31,5 @@ index 8236678..1f06972 100644
   * LOCKING:
   * Caller must hold mode config lock.
 -- 
-1.7.10.4
+1.8.3.2
 

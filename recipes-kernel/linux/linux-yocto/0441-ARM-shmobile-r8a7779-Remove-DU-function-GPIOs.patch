@@ -1,7 +1,7 @@
 From bfd0a3c1204fb63514091dee3203968b3861a687 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 3 Jan 2013 16:30:34 +0100
-Subject: [PATCH 441/715] ARM: shmobile: r8a7779: Remove DU function GPIOs
+Subject: [PATCH 0441/1083] ARM: shmobile: r8a7779: Remove DU function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.
@@ -11,7 +11,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7779.h |   88 ++++++++++++-------------
+ arch/arm/mach-shmobile/include/mach/r8a7779.h | 88 +++++++++++++--------------
  1 file changed, 44 insertions(+), 44 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
@@ -140,5 +140,5 @@ index cc594d0..5f0b635 100644
  	GPIO_FN_AUDIO_CLKOUT, GPIO_FN_RX2_D, GPIO_FN_GPS_CLK_C,
  	GPIO_FN_GPS_CLK_D, GPIO_FN_AUDIO_CLKA, GPIO_FN_CAN_TXCLK,
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From da652ac331e0b5b04e2fd9d8d6c2b17b067c358d Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:53:50 +0900
-Subject: [PATCH 524/715] spi: Add QSPI driver
+Subject: [PATCH 0524/1083] spi: Add QSPI driver
 
 This driver controls Quad Serial Peripheral Interface on
 Renesas SOC family and provides the MTD interface to access the
@@ -1332,5 +1332,5 @@ index 0000000..af46d84
 +MODULE_AUTHOR("Renesas Electronics Corporation");
 +MODULE_LICENSE("GPL v2");
 -- 
-1.7.10.4
+1.8.3.2
 

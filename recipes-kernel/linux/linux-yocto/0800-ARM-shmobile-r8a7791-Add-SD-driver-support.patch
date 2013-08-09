@@ -1,0 +1,212 @@
+From 8278f2e733164892fba1540b225b2e5f307aba8d Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Tue, 30 Jul 2013 19:49:18 +0900
+Subject: [PATCH 0800/1083] ARM: shmobile: r8a7791: Add SD driver support
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7791.c | 61 ++++++++++++++++++++++++++++++++--
+ arch/arm/mach-shmobile/setup-r8a7791.c | 31 ++++++++++++++++-
+ 2 files changed, 89 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
+index 7ac579a..95daa48 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7791.c
++++ b/arch/arm/mach-shmobile/clock-r8a7791.c
+@@ -59,8 +59,8 @@
+ 
+ #define MODEMR		0xE6160060
+ #define SDCKCR		0xE6150074
+-#define SD2CKCR		0xE6150078
+-#define SD3CKCR		0xE615007C
++#define SD1CKCR		0xE6150078
++#define SD2CKCR		0xE615007C
+ #define MMC0CKCR	0xE6150240
+ #define SSPCKCR		0xE6150248
+ #define SSPRSCKCR	0xE615024C
+@@ -130,14 +130,38 @@ static struct clk *main_clks[] = {
+ 	&sata1_clk,
+ };
+ 
++/* SDHI (DIV4) clock */
++static int divisors[] = { 2, 3, 4, 6, 8, 12, 16, 18, 24, 0, 36, 48, 10 };
++
++static struct clk_div_mult_table div4_div_mult_table = {
++	.divisors = divisors,
++	.nr_divisors = ARRAY_SIZE(divisors),
++};
++
++static struct clk_div4_table div4_table = {
++	.div_mult_table = &div4_div_mult_table,
++};
++
++enum {
++	DIV4_SD0, DIV4_NR
++};
++
++static struct clk div4_clks[DIV4_NR] = {
++	[DIV4_SD0] = SH_CLK_DIV4(&pll1_clk, SDCKCR, 4, 0x1de0,
++						CLK_ENABLE_ON_INIT),
++};
++
+ /* DIV6 clocks */
+ enum {
+ 	DIV6_MMC,
++	DIV6_SD1, DIV6_SD2,
+ 	DIV6_NR
+ };
+ 
+ static struct clk div6_clks[DIV6_NR] = {
+ 	[DIV6_MMC]	= SH_CLK_DIV6(&pll1_div2_clk, MMC0CKCR, 0),
++	[DIV6_SD1]	= SH_CLK_DIV6(&pll1_div2_clk, SD1CKCR, 0),
++	[DIV6_SD2]	= SH_CLK_DIV6(&pll1_div2_clk, SD2CKCR, 0),
+ };
+ 
+ 
+@@ -145,6 +169,7 @@ static struct clk div6_clks[DIV6_NR] = {
+ enum {
+ 	MSTP112,
+ 	MSTP219, MSTP218,
++	MSTP314, MSTP312, MSTP311,
+ 	MSTP315,
+ 	MSTP502, MSTP501,
+ 	MSTP721, MSTP720,
+@@ -163,6 +188,9 @@ enum {
+ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP219] = SH_CLK_MSTP32(&hp_clk, SMSTPCR2, 19, 0),
+ 	[MSTP218] = SH_CLK_MSTP32(&hp_clk, SMSTPCR2, 18, 0),
++	[MSTP314] = SH_CLK_MSTP32(&div4_clks[DIV4_SD0], SMSTPCR3, 14, 0),
++	[MSTP312] = SH_CLK_MSTP32(&div6_clks[DIV6_SD1], SMSTPCR3, 12, 0),
++	[MSTP311] = SH_CLK_MSTP32(&div6_clks[DIV6_SD2], SMSTPCR3, 11, 0),
+ 	[MSTP315] = SH_CLK_MSTP32(&div6_clks[DIV6_MMC], SMSTPCR3, 15, 0),
+ 	[MSTP502] = SH_CLK_MSTP32(&hp_clk, SMSTPCR5, 2, 0),
+ 	[MSTP501] = SH_CLK_MSTP32(&hp_clk, SMSTPCR5, 1, 0),
+@@ -220,6 +248,8 @@ static struct clk_lookup lookups[] = {
+ 
+ 	/* DIV6 */
+ 	CLKDEV_CON_ID("mmc.0", &div6_clks[DIV6_MMC]),
++	CLKDEV_CON_ID("sdhi1", &div6_clks[DIV6_SD1]),
++	CLKDEV_CON_ID("sdhi2", &div6_clks[DIV6_SD2]),
+ 
+ 	/* MSTP */
+ 	CLKDEV_DEV_ID("pvrsrvkm", &mstp_clks[MSTP112]),
+@@ -255,6 +285,9 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("i2c-rcar.3", &mstp_clks[MSTP928]),
+ 	CLKDEV_DEV_ID("i2c-rcar.4", &mstp_clks[MSTP927]),
+ 	CLKDEV_DEV_ID("i2c-rcar.5", &mstp_clks[MSTP925]),
++	CLKDEV_DEV_ID("sh_mobile_sdhi.0", &mstp_clks[MSTP314]),
++	CLKDEV_DEV_ID("sh_mobile_sdhi.1", &mstp_clks[MSTP312]),
++	CLKDEV_DEV_ID("sh_mobile_sdhi.2", &mstp_clks[MSTP311]),
+ 	CLKDEV_DEV_ID("ee200000.mmcif", &mstp_clks[MSTP315]),
+ 	CLKDEV_DEV_ID("sh_mmcif.0", &mstp_clks[MSTP315]),
+ 	CLKDEV_DEV_ID("sata_rcar.0", &mstp_clks[MSTP815]),
+@@ -274,6 +307,25 @@ static struct clk_lookup lookups[] = {
+ 		SH_CLK_SET_RATIO(&pll3_clk_ratio, p30, 1)
+ 
+ 
++static void __init r8a7791_sdhi_clock_init(void)
++{
++	struct clk *sdhi1_clk, *sdhi2_clk;
++
++	/* set SDHI1 clock to 97.5 MHz */
++	sdhi1_clk = clk_get(NULL, "sdhi1");
++	if (!IS_ERR(sdhi1_clk)) {
++		clk_set_rate(sdhi1_clk, 97500000);
++		clk_put(sdhi1_clk);
++	}
++
++	/* set SDHI2 clock to 97.5 MHz */
++	sdhi2_clk = clk_get(NULL, "sdhi2");
++	if (!IS_ERR(sdhi2_clk)) {
++		clk_set_rate(sdhi2_clk, 97500000);
++		clk_put(sdhi2_clk);
++	}
++}
++
+ void __init r8a7791_clock_init(void)
+ {
+ 	void __iomem *modemr = ioremap_nocache(MODEMR, PAGE_SIZE);
+@@ -309,6 +361,9 @@ void __init r8a7791_clock_init(void)
+ 		ret = clk_register(main_clks[k]);
+ 
+ 	if (!ret)
++		ret = sh_clk_div4_register(div4_clks, DIV4_NR, &div4_table);
++
++	if (!ret)
+ 		ret = sh_clk_div6_register(div6_clks, DIV6_NR);
+ 
+ 	if (!ret)
+@@ -326,6 +381,8 @@ void __init r8a7791_clock_init(void)
+ 	if (ret)
+ 		goto epanic;
+ 
++	r8a7791_sdhi_clock_init();
++
+ 	return;
+ 
+ epanic:
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index c80b3f6..2c100e4 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -37,7 +37,6 @@
+ #include <linux/usb/ehci_pdriver.h>
+ #include <linux/usb/ohci_pdriver.h>
+ #include <linux/mfd/tmio.h>
+-#include <linux/mmc/sh_mobile_sdhi.h>
+ #include <linux/mmc/sh_mmcif.h>
+ #include <linux/regulator/fixed.h>
+ #include <linux/regulator/machine.h>
+@@ -1477,8 +1476,22 @@ static struct resource irqc0_resources[] = {
+ 					  &irqc##idx##_data,		\
+ 					  sizeof(struct renesas_irqc_config))
+ 
++/* Fixed 3.3V regulator to be used by SDHI0/1/2 */
++static struct regulator_consumer_supply fixed3v3_power_consumers[] = {
++	REGULATOR_SUPPLY("vmmc", "sh_mobile_sdhi.0"),
++	REGULATOR_SUPPLY("vqmmc", "sh_mobile_sdhi.0"),
++	REGULATOR_SUPPLY("vmmc", "sh_mobile_sdhi.1"),
++	REGULATOR_SUPPLY("vqmmc", "sh_mobile_sdhi.1"),
++	REGULATOR_SUPPLY("vmmc", "sh_mobile_sdhi.2"),
++	REGULATOR_SUPPLY("vqmmc", "sh_mobile_sdhi.2"),
++};
++
+ void __init r8a7791_add_standard_devices(void)
+ {
++	void __iomem *pfcctl;
++
++	pfcctl = ioremap(0xe6060000, 0x300);
++
+ 	r8a7791_pm_init();
+ 
+ 	r8a7791_init_pm_domain(&r8a7791_sgx);
+@@ -1500,10 +1513,26 @@ void __init r8a7791_add_standard_devices(void)
+ 	r8a7791_register_scif(SCIFA5);
+ 	r8a7791_register_irqc(0);
+ 	usbh_init();
++
++	regulator_register_fixed(0, fixed3v3_power_consumers,
++				ARRAY_SIZE(fixed3v3_power_consumers));
++
++	/* SD control registers IOCTRLn: SD pins driving ability */
++	iowrite32(~0x8000AAAA, pfcctl);		/* PMMR */
++	iowrite32(0x8000AAAA, pfcctl + 0x60);	/* IOCTRL0 */
++	iowrite32(~0xAAAAAAAA, pfcctl);		/* PMMR */
++	iowrite32(0xAAAAAAAA, pfcctl + 0x64);	/* IOCTRL1 */
++	iowrite32(~0x55554401, pfcctl);		/* PMMR */
++	iowrite32(0x55554401, pfcctl + 0x88);	/* IOCTRL5 */
++	iowrite32(~0xFFFFFFFF, pfcctl);		/* PMMR */
++	iowrite32(0xFFFFFFFF, pfcctl + 0x8C);	/* IOCTRL6 */
++
+ 	platform_add_devices(r8a7791_early_devices,
+ 			     ARRAY_SIZE(r8a7791_early_devices));
+ 
+ 	r8a7791_add_device_to_domain(&r8a7791_sgx, &powervr_device);
++
++	iounmap(pfcctl);
+ }
+ 
+ void __init r8a7791_timer_init(void)
+-- 
+1.8.3.2
+

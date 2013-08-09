@@ -1,7 +1,7 @@
 From 01047f364a5711984974bd1f7c8096acf89e33d1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 04:02:15 +0100
-Subject: [PATCH 459/715] sh-pfc: r8a7779: Remove GPIO data
+Subject: [PATCH 0459/1083] sh-pfc: r8a7779: Remove GPIO data
 
 GPIOs are now handled by a separate driver, remove GPIO data from the
 SoC information structure.
@@ -12,7 +12,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |   58 +---------------------------------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 58 +-----------------------------------
  1 file changed, 1 insertion(+), 57 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -118,5 +118,5 @@ index 41d8bda..e448ff1 100644
  	.gpio_data = pinmux_data,
  	.gpio_data_size = ARRAY_SIZE(pinmux_data),
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 9483431925e9c562de91bbc82194e938fef80b28 Mon Sep 17 00:00:00 2001
 From: Thierry Reding <thierry.reding@avionic-design.de>
 Date: Wed, 21 Nov 2012 16:01:52 +0100
-Subject: [PATCH 700/715] video: Add generic HDMI helpers
+Subject: [PATCH 0700/1083] video: Add generic HDMI helpers
 
 Add generic helpers to pack HDMI infoframes into a binary buffers.
 
@@ -11,10 +11,10 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/video/Kconfig  |    3 ++
- drivers/video/Makefile |    1 +
- drivers/video/hdmi.c   |   84 ++++++++++++++++++++++++++++++++++
- include/linux/hdmi.h   |  119 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/video/Kconfig  |   3 ++
+ drivers/video/Makefile |   1 +
+ drivers/video/hdmi.c   |  84 ++++++++++++++++++++++++++++++++++
+ include/linux/hdmi.h   | 119 +++++++++++++++++++++++++++++++++++++++++++++++++
  4 files changed, 207 insertions(+)
  create mode 100644 drivers/video/hdmi.c
  create mode 100644 include/linux/hdmi.h
@@ -261,5 +261,5 @@ index 0000000..132556f
 +
 +#endif /* _DRM_HDMI_H */
 -- 
-1.7.10.4
+1.8.3.2
 

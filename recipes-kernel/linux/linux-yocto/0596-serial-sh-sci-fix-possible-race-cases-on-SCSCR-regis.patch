@@ -1,7 +1,7 @@
 From fb9bb1e64de6f3c640ec89b0724760d4b0fda2bf Mon Sep 17 00:00:00 2001
 From: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
 Date: Fri, 16 Nov 2012 10:54:49 +0900
-Subject: [PATCH 596/715] serial: sh-sci: fix possible race cases on SCSCR
+Subject: [PATCH 0596/1083] serial: sh-sci: fix possible race cases on SCSCR
  register accesses
 
 In the previous commit, console write function (serial_console_write)
@@ -35,7 +35,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/tty/serial/sh-sci.c |    6 ++++++
+ drivers/tty/serial/sh-sci.c | 6 ++++++
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
@@ -77,5 +77,5 @@ index 0b8d029..8e3c7f7 100644
  	sci_free_dma(port);
  	sci_free_irq(s);
 -- 
-1.7.10.4
+1.8.3.2
 

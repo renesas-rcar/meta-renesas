@@ -1,7 +1,7 @@
 From 0bb3d9c4e7306ba1d8a149bf288cbc0aab0d9210 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 15:47:20 +0900
-Subject: [PATCH 521/715] mmc: tmio: Add return processing from PIO fall back
+Subject: [PATCH 0521/1083] mmc: tmio: Add return processing from PIO fall back
  to DMA mode
 
 DMA channel request processing is added if it is released.
@@ -11,7 +11,7 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/tmio_mmc_dma.c |   40 +++++++++++++++++++++++++++++++++++++++
+ drivers/mmc/host/tmio_mmc_dma.c | 40 ++++++++++++++++++++++++++++++++++++++++
  1 file changed, 40 insertions(+)
 
 diff --git a/drivers/mmc/host/tmio_mmc_dma.c b/drivers/mmc/host/tmio_mmc_dma.c
@@ -83,5 +83,5 @@ index b49d79c..7f7ef93 100644
  		if (host->chan_rx)
  			tmio_mmc_start_dma_rx(host);
 -- 
-1.7.10.4
+1.8.3.2
 

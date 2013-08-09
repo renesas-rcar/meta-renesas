@@ -1,7 +1,7 @@
 From 832953b20fbe13166418661d8ccc33faf4ffacf1 Mon Sep 17 00:00:00 2001
 From: Jonathan Austin <Jonathan.Austin@arm.com>
 Date: Fri, 21 Sep 2012 18:51:44 +0100
-Subject: [PATCH 155/715] ARM: 7538/1: delay: add registration mechanism for
+Subject: [PATCH 0155/1083] ARM: 7538/1: delay: add registration mechanism for
  delay timer sources
 
 The current timer-based delay loop relies on the architected timer to
@@ -22,11 +22,11 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/arch_timer.h |    1 -
- arch/arm/include/asm/delay.h      |    9 +++++++++
- arch/arm/include/asm/timex.h      |    6 ------
- arch/arm/kernel/arch_timer.c      |   17 ++++++++---------
- arch/arm/lib/delay.c              |   34 ++++++++++++++++++++++++++--------
+ arch/arm/include/asm/arch_timer.h |  1 -
+ arch/arm/include/asm/delay.h      |  9 +++++++++
+ arch/arm/include/asm/timex.h      |  6 ------
+ arch/arm/kernel/arch_timer.c      | 17 ++++++++---------
+ arch/arm/lib/delay.c              | 34 ++++++++++++++++++++++++++--------
  5 files changed, 43 insertions(+), 24 deletions(-)
 
 diff --git a/arch/arm/include/asm/arch_timer.h b/arch/arm/include/asm/arch_timer.h
@@ -198,5 +198,5 @@ index d6dacc6..9d0a300 100644
  }
 -#endif
 -- 
-1.7.10.4
+1.8.3.2
 

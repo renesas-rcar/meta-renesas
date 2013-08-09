@@ -1,7 +1,7 @@
 From 2bff4006b5137e1199f694ff3c45e1c502479579 Mon Sep 17 00:00:00 2001
 From: Mark Rutland <mark.rutland@arm.com>
 Date: Mon, 12 Nov 2012 14:33:44 +0000
-Subject: [PATCH 581/715] arm: arch_timer: move core to drivers/clocksource
+Subject: [PATCH 0581/1083] arm: arch_timer: move core to drivers/clocksource
 
 The core functionality of the arch_timer driver is not directly tied to
 anything under arch/arm, and can be split out.
@@ -30,13 +30,13 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/Kconfig                     |    3 +-
- arch/arm/include/asm/arch_timer.h    |   19 +-
- arch/arm/kernel/arch_timer.c         |  386 ++--------------------------------
- drivers/clocksource/Kconfig          |    3 +
- drivers/clocksource/Makefile         |    3 +-
- drivers/clocksource/arm_arch_timer.c |  385 +++++++++++++++++++++++++++++++++
- include/clocksource/arm_arch_timer.h |   63 ++++++
+ arch/arm/Kconfig                     |   3 +-
+ arch/arm/include/asm/arch_timer.h    |  19 +-
+ arch/arm/kernel/arch_timer.c         | 386 ++---------------------------------
+ drivers/clocksource/Kconfig          |   3 +
+ drivers/clocksource/Makefile         |   3 +-
+ drivers/clocksource/arm_arch_timer.c | 385 ++++++++++++++++++++++++++++++++++
+ include/clocksource/arm_arch_timer.h |  63 ++++++
  7 files changed, 476 insertions(+), 386 deletions(-)
  create mode 100644 drivers/clocksource/arm_arch_timer.c
  create mode 100644 include/clocksource/arm_arch_timer.h
@@ -1008,5 +1008,5 @@ index 0000000..b61f996
 +
 +#endif
 -- 
-1.7.10.4
+1.8.3.2
 

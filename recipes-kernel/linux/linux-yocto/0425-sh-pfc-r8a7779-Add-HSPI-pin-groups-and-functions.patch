@@ -1,7 +1,7 @@
 From b0781ca30f9e856872f2805a07d49a17b118d9e5 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 19:04:43 +0100
-Subject: [PATCH 425/715] sh-pfc: r8a7779: Add HSPI pin groups and functions
+Subject: [PATCH 0425/1083] sh-pfc: r8a7779: Add HSPI pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
@@ -9,7 +9,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |   79 +++++++++++++++++++++++++++++++++-
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 79 +++++++++++++++++++++++++++++++++++-
  1 file changed, 78 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -131,5 +131,5 @@ index a01adea..361b162 100644
  	SH_PFC_FUNCTION(mmc1),
  	SH_PFC_FUNCTION(sdhi0),
 -- 
-1.7.10.4
+1.8.3.2
 

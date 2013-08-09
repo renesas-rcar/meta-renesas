@@ -1,15 +1,15 @@
 From 46f9859f803171c1f7ff6b572fb5a571648a2d95 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 18 May 2012 23:47:40 +0200
-Subject: [PATCH 066/715] drm: Add NV24 and NV42 pixel formats
+Subject: [PATCH 0066/1083] drm: Add NV24 and NV42 pixel formats
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 (cherry picked from commit ba623f6a5a419ac31806e77682da38a9f9b5b462)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |    6 ++++++
- include/drm/drm_fourcc.h   |    2 ++
+ drivers/gpu/drm/drm_crtc.c | 6 ++++++
+ include/drm/drm_fourcc.h   | 2 ++
  2 files changed, 8 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -57,5 +57,5 @@ index bdf0152..fac7235 100644
  /* 2 non contiguous plane YCbCr */
  #define DRM_FORMAT_NV12M	fourcc_code('N', 'M', '1', '2') /* 2x2 subsampled Cr:Cb plane */
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 102ae9c3bc9fad3c7f5c47eecf19cb4be5402658 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Fri, 7 Sep 2012 10:14:52 +0200
-Subject: [PATCH 058/715] drm/fb helper: don't call drm_helper_connector_dpms
+Subject: [PATCH 0058/1083] drm/fb helper: don't call drm_helper_connector_dpms
  directly
 
 Yet again a case where the fb helper is too intimate with the crtc
@@ -19,7 +19,7 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_fb_helper.c |    2 +-
+ drivers/gpu/drm/drm_fb_helper.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
@@ -36,5 +36,5 @@ index eb79515..b5d05f5 100644
  				dev->mode_config.dpms_property, dpms_mode);
  		}
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 4687f2db4ab419231495e2a3e1dd0fdd67a2d8bf Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:17 +0100
-Subject: [PATCH 330/715] sh-pfc: Remove platform device registration
+Subject: [PATCH 0330/1083] sh-pfc: Remove platform device registration
 
 The PFC platform device is now registered by arch code, remove the
 legacy registration mechanism.
@@ -11,8 +11,8 @@ Acked-by: Paul Mundt <lethal@linux-sh.org>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c  |   12 ------------
- include/linux/sh_pfc.h |   10 ----------
+ drivers/sh/pfc/core.c  | 12 ------------
+ include/linux/sh_pfc.h | 10 ----------
  2 files changed, 22 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -60,5 +60,5 @@ index f7f01b2..fa1fec0 100644
  
  /* helper macro for port */
 -- 
-1.7.10.4
+1.8.3.2
 

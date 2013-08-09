@@ -1,7 +1,7 @@
 From c1f6fd72e74f523cf675d2ff3d13e2b0b34f6261 Mon Sep 17 00:00:00 2001
 From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 Date: Mon, 11 Mar 2013 22:08:12 +0800
-Subject: [PATCH 408/715] sh-pfc: Fix return value check in
+Subject: [PATCH 0408/1083] sh-pfc: Fix return value check in
  sh_pfc_register_pinctrl()
 
 In case of error, the function pinctrl_register() returns NULL not
@@ -15,7 +15,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pinctrl.c |    4 ++--
+ drivers/pinctrl/sh-pfc/pinctrl.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pinctrl.c b/drivers/pinctrl/sh-pfc/pinctrl.c
@@ -34,5 +34,5 @@ index c7f3c40..3e49bf0 100644
  	return 0;
  }
 -- 
-1.7.10.4
+1.8.3.2
 

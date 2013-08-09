@@ -1,0 +1,112 @@
+From 0079d7c91ac3464925abddbd56c4249e9cebaf51 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 5 Jun 2013 05:25:18 +0200
+Subject: [PATCH 0893/1083] ARM: shmobile: r8a7790: Add VSP1 support
+
+Add a function to register a VSP1 device.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 80875e6d832d95f13ed040b700d2a6f3ff06bb4d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	arch/arm/mach-shmobile/include/mach/r8a7790.h
+(cherry picked from commit 7b17f366f077a8e2b50e5ff98d1504a6fa08afca)
+
+Conflicts:
+	arch/arm/mach-shmobile/setup-r8a7790.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  3 ++
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 49 +++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+index 9a0b83b..4469473 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7790.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+@@ -7,9 +7,12 @@
+ struct platform_device;
+ 
+ struct rcar_du_platform_data;
++struct vsp1_platform_data;
+ 
+ void r8a7790_add_standard_devices(void);
+ void r8a7790_add_du_device(struct rcar_du_platform_data *pdata);
++void r8a7790_add_vsp1_device(struct vsp1_platform_data *pdata,
++			     unsigned int index);
+ void r8a7790_clock_init(void);
+ void r8a7790_pinmux_init(void);
+ 
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 36ec679..3f5703d 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -34,6 +34,7 @@
+ #include <linux/platform_data/gpio-rcar.h>
+ #include <linux/platform_data/rcar-du.h>
+ #include <linux/platform_data/irq-renesas-irqc.h>
++#include <linux/platform_data/vsp1.h>
+ #include <linux/platform_data/rcar-du.h>
+ #include <linux/clk.h>
+ #include <linux/usb/ehci_pdriver.h>
+@@ -121,6 +122,54 @@ void __init r8a7790_add_du_device(struct rcar_du_platform_data *pdata)
+ 	platform_device_register_full(&info);
+ }
+ 
++/* VSP1 */
++static const struct resource vsp1_0_resources[] = {
++	DEFINE_RES_MEM(0xfe920000, 0x8000),
++	DEFINE_RES_IRQ(gic_spi(266)),
++};
++
++static const struct resource vsp1_1_resources[] = {
++	DEFINE_RES_MEM(0xfe928000, 0x8000),
++	DEFINE_RES_IRQ(gic_spi(267)),
++};
++
++static const struct resource vsp1_2_resources[] = {
++	DEFINE_RES_MEM(0xfe930000, 0x8000),
++	DEFINE_RES_IRQ(gic_spi(246)),
++};
++
++static const struct resource vsp1_3_resources[] = {
++	DEFINE_RES_MEM(0xfe938000, 0x8000),
++	DEFINE_RES_IRQ(gic_spi(247)),
++};
++
++static const struct resource *vsp1_resources[4] = {
++	vsp1_0_resources,
++	vsp1_1_resources,
++	vsp1_2_resources,
++	vsp1_3_resources,
++};
++
++void __init r8a7790_add_vsp1_device(struct vsp1_platform_data *pdata,
++				    unsigned int index)
++{
++	struct platform_device_info info = {
++		.name = "vsp1",
++		.id = index,
++		.data = pdata,
++		.size_data = sizeof(*pdata),
++		.num_res = 2,
++		.dma_mask = DMA_BIT_MASK(32),
++	};
++
++	if (index >= ARRAY_SIZE(vsp1_resources))
++		return;
++
++	info.res = vsp1_resources[index];
++
++	platform_device_register_full(&info);
++}
++
+ #define SCIF_COMMON(scif_type, baseaddr, irq)			\
+ 	.type		= scif_type,				\
+ 	.mapbase	= baseaddr,				\
+-- 
+1.8.3.2
+

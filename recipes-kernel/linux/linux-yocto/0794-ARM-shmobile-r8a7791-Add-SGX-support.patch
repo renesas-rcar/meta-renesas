@@ -1,0 +1,53 @@
+From bf2f5bfce967a67a4a1e0ddd7c9409ca3ef467ce Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 30 Jul 2013 16:53:24 +0900
+Subject: [PATCH 0794/1083] ARM: shmobile: r8a7791: Add SGX support
+
+Add I/O resource data and platform_device information for SGX.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7791.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index 2a834ad..a5c8715 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -206,6 +206,25 @@ static struct platform_device eth_device = {
+ 	.resource = eth_resources,
+ };
+ 
++static struct resource powervr_resources[] = {
++	{
++		.start  = 0xfd800000,
++		.end    = 0xfd80ffff,
++		.flags  = IORESOURCE_MEM,
++	},
++	{
++		.start  = gic_spi(119),
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device powervr_device = {
++	.name           = "pvrsrvkm",
++	.id             = -1,
++	.resource       = powervr_resources,
++	.num_resources  = ARRAY_SIZE(powervr_resources),
++};
++
+ static u64 usb_dmamask = ~(u32)0;
+ 
+ struct usb_ehci_pdata ehci_pdata = {
+@@ -1407,6 +1426,7 @@ static struct platform_device vin2_device = {
+ 
+ static struct platform_device *r8a7791_early_devices[] __initdata = {
+ 	&eth_device,
++	&powervr_device,
+ 	&ehci0_device,
+ 	&ohci0_device,
+ #if defined(CONFIG_USB_XHCI_HCD)
+-- 
+1.8.3.2
+

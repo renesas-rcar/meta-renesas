@@ -1,7 +1,7 @@
 From f9b200d90137de139e279c2402e87bfe17cf1477 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 18 Oct 2012 10:15:24 +0200
-Subject: [PATCH 072/715] drm: dp helper: extract drm_dp_channel_eq_ok
+Subject: [PATCH 0072/1083] drm: dp helper: extract drm_dp_channel_eq_ok
 
 radeon and intel use the exact same definition.
 
@@ -12,10 +12,10 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_dp_helper.c      |   50 ++++++++++++++++++++++++++++++++++
- drivers/gpu/drm/i915/intel_dp.c      |   35 ++----------------------
- drivers/gpu/drm/radeon/atombios_dp.c |   24 ++--------------
- include/drm/drm_dp_helper.h          |    5 ++++
+ drivers/gpu/drm/drm_dp_helper.c      | 50 ++++++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/i915/intel_dp.c      | 35 ++-----------------------
+ drivers/gpu/drm/radeon/atombios_dp.c | 24 ++---------------
+ include/drm/drm_dp_helper.h          |  5 ++++
  4 files changed, 59 insertions(+), 55 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_dp_helper.c b/drivers/gpu/drm/drm_dp_helper.c
@@ -221,5 +221,5 @@ index 93df2d7..c2a6b1c 100644
 +
  #endif /* _DRM_DP_HELPER_H_ */
 -- 
-1.7.10.4
+1.8.3.2
 

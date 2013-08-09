@@ -1,7 +1,7 @@
 From e248edd2a2a72a321f14e965c121d942dd5624ad Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 14 Sep 2012 20:25:48 +0200
-Subject: [PATCH 289/715] sh: pfc: Release spinlock in
+Subject: [PATCH 0289/1083] sh: pfc: Release spinlock in
  sh_pfc_gpio_request_enable() error path
 
 The sh_pfc_gpio_request_enable() function acquires a spinlock but fails
@@ -14,7 +14,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |    3 ++-
+ drivers/sh/pfc/pinctrl.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -32,5 +32,5 @@ index 2804eaa..a3ac39b 100644
  
  	ret = 0;
 -- 
-1.7.10.4
+1.8.3.2
 

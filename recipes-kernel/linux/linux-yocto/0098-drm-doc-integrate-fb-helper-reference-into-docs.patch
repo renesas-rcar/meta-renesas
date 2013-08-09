@@ -1,7 +1,7 @@
 From e3cf5d2d9f9fd4afc22934fef5a5aff745ff7ccc Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 1 Nov 2012 14:45:17 +0100
-Subject: [PATCH 098/715] drm/doc: integrate fb helper reference into docs
+Subject: [PATCH 0098/1083] drm/doc: integrate fb helper reference into docs
 
 Again only minimal changes to make kerneldoc no longer shout. Plus a
 little introduction in the form of a inline DOC: section to quickly
@@ -16,8 +16,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/DocBook/drm.tmpl  |    5 +++++
- drivers/gpu/drm/drm_fb_helper.c |   19 +++++++++++++++----
+ Documentation/DocBook/drm.tmpl  |  5 +++++
+ drivers/gpu/drm/drm_fb_helper.c | 19 +++++++++++++++----
  2 files changed, 20 insertions(+), 4 deletions(-)
 
 diff --git a/Documentation/DocBook/drm.tmpl b/Documentation/DocBook/drm.tmpl
@@ -84,5 +84,5 @@ index 72aef36..1b21a25 100644
   *
   * LOCKING:
 -- 
-1.7.10.4
+1.8.3.2
 

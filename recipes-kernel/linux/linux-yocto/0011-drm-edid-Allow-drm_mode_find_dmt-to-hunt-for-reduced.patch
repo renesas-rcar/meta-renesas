@@ -1,7 +1,7 @@
 From 6d7dc110ef10012afba989536a4ec2f37a4be89c Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:31 -0400
-Subject: [PATCH 011/715] drm/edid: Allow drm_mode_find_dmt to hunt for
+Subject: [PATCH 0011/1083] drm/edid: Allow drm_mode_find_dmt to hunt for
  reduced-blanking modes
 
 It won't find any, yet.  Fix up callers to match: standard mode codes
@@ -19,9 +19,9 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c      |   37 ++++++++++++++++++++++++-------------
- drivers/gpu/drm/drm_fb_helper.c |    2 +-
- include/drm/drm_crtc.h          |    3 ++-
+ drivers/gpu/drm/drm_edid.c      | 37 ++++++++++++++++++++++++-------------
+ drivers/gpu/drm/drm_fb_helper.c |  2 +-
+ include/drm/drm_crtc.h          |  3 ++-
  3 files changed, 27 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -142,5 +142,5 @@ index 2d63a02..6f5faf6 100644
  extern int drm_mode_create_dumb_ioctl(struct drm_device *dev,
  				      void *data, struct drm_file *file_priv);
 -- 
-1.7.10.4
+1.8.3.2
 

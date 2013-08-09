@@ -1,7 +1,7 @@
 From f60afa10d42956fe0c6faa7e51598caefb55f411 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:59:26 +0100
-Subject: [PATCH 446/715] ARM: shmobile: r8a7779: Remove LBSC function GPIOs
+Subject: [PATCH 0446/1083] ARM: shmobile: r8a7779: Remove LBSC function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.
@@ -11,7 +11,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7779.h |   14 ++++++--------
+ arch/arm/mach-shmobile/include/mach/r8a7779.h | 14 ++++++--------
  1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
@@ -48,5 +48,5 @@ index 13127ac..7705d57 100644
  	GPIO_FN_SSI_WS9, GPIO_FN_MLB_CLK, GPIO_FN_PWM2,
  	GPIO_FN_MLB_SIG, GPIO_FN_PWM3,
 -- 
-1.7.10.4
+1.8.3.2
 

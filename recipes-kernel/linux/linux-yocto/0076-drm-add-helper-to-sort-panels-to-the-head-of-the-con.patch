@@ -1,7 +1,7 @@
 From 5fe3bf0e7be17facec524acff050c56d11688a24 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Sat, 27 Oct 2012 15:52:04 +0200
-Subject: [PATCH 076/715] drm: add helper to sort panels to the head of the
+Subject: [PATCH 0076/1083] drm: add helper to sort panels to the head of the
  connector list
 
 Userspace seems to like this, see
@@ -30,8 +30,8 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc_helper.c |   18 ++++++++++++++++++
- include/drm/drm_crtc_helper.h     |    2 ++
+ drivers/gpu/drm/drm_crtc_helper.c | 18 ++++++++++++++++++
+ include/drm/drm_crtc_helper.h     |  2 ++
  2 files changed, 20 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
@@ -77,5 +77,5 @@ index 7988e55..b1be770 100644
  					  struct drm_mode_fb_cmd2 *mode_cmd);
  
 -- 
-1.7.10.4
+1.8.3.2
 

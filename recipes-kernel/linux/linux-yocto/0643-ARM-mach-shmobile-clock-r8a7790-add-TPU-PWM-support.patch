@@ -1,7 +1,7 @@
 From 7c09c2569882acaea31d44c4a897d85f463a6404 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 24 Apr 2013 22:36:01 +0200
-Subject: [PATCH 643/715] ARM: mach-shmobile: clock-r8a7790: add TPU PWM
+Subject: [PATCH 0643/1083] ARM: mach-shmobile: clock-r8a7790: add TPU PWM
  support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
@@ -16,7 +16,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c |    3 ++-
+ arch/arm/mach-shmobile/clock-r8a7790.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -41,5 +41,5 @@ index 328ebf5..225fa05 100644
  	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
  	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
 -- 
-1.7.10.4
+1.8.3.2
 

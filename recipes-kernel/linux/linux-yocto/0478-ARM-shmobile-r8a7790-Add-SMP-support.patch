@@ -1,22 +1,22 @@
 From 98be0891f05545330daf6e26107c70269e9e55e7 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Tue, 11 Jun 2013 14:46:17 +0900
-Subject: [PATCH 478/715] ARM: shmobile: r8a7790: Add SMP support
+Subject: [PATCH 0478/1083] ARM: shmobile: r8a7790: Add SMP support
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 (cherry picked from commit 5e9e5285c19f554740c5808f35d3ac828e1224a9)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/boot/dts/r8a7790.dtsi               |   39 +++++++++-
- arch/arm/mach-shmobile/Makefile              |    3 +-
- arch/arm/mach-shmobile/board-lager.c         |   20 ++++-
- arch/arm/mach-shmobile/headsmp.S             |    7 ++
- arch/arm/mach-shmobile/include/mach/common.h |   13 ++++
- arch/arm/mach-shmobile/intc-r8a7790.c        |   48 ++++++++++++
- arch/arm/mach-shmobile/platsmp.c             |   52 +++++++++++++
- arch/arm/mach-shmobile/smp-r8a7790.c         |  103 ++++++++++++++++++++++++++
- drivers/irqchip/irq-gic.c                    |    2 +
+ arch/arm/boot/dts/r8a7790.dtsi               |  39 +++++++++-
+ arch/arm/mach-shmobile/Makefile              |   3 +-
+ arch/arm/mach-shmobile/board-lager.c         |  20 +++++-
+ arch/arm/mach-shmobile/headsmp.S             |   7 ++
+ arch/arm/mach-shmobile/include/mach/common.h |  13 ++++
+ arch/arm/mach-shmobile/intc-r8a7790.c        |  48 +++++++++++++
+ arch/arm/mach-shmobile/platsmp.c             |  52 ++++++++++++++
+ arch/arm/mach-shmobile/smp-r8a7790.c         | 103 +++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic.c                    |   2 +
  9 files changed, 284 insertions(+), 3 deletions(-)
  create mode 100644 arch/arm/mach-shmobile/intc-r8a7790.c
  create mode 100644 arch/arm/mach-shmobile/smp-r8a7790.c
@@ -457,5 +457,5 @@ index a32e0d5..3507a60 100644
  
  	/*
 -- 
-1.7.10.4
+1.8.3.2
 

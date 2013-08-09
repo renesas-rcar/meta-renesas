@@ -1,0 +1,44 @@
+From 94cdd439abac0075becc0c1fa3dd32d0cc4f4047 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Mon, 5 Aug 2013 19:51:21 +0900
+Subject: [PATCH 1073/1083] ASoC: sh: koelsch: Fix control names
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ sound/soc/sh/koelsch.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/sound/soc/sh/koelsch.c b/sound/soc/sh/koelsch.c
+index b50bc31..7d5e962 100644
+--- a/sound/soc/sh/koelsch.c
++++ b/sound/soc/sh/koelsch.c
+@@ -448,20 +448,20 @@ static const struct soc_enum widget_switch_enum =
+ 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(widget_switch), widget_switch);
+ 
+ static const struct snd_kcontrol_new playback_controls[] = {
+-	SOC_ENUM_EXT("SSI0 control", widget_switch_enum,
++	SOC_ENUM_EXT("SSI0 Control", widget_switch_enum,
+ 		scu_get_ssi0_route, scu_set_ssi0_route),
+-	SOC_ENUM_EXT("SRC0 control", widget_switch_enum,
++	SOC_ENUM_EXT("SRC0 Control", widget_switch_enum,
+ 		scu_get_src0_route, scu_set_src0_route),
+-	SOC_ENUM_EXT("DVC0 control", widget_switch_enum,
++	SOC_ENUM_EXT("DVC0 Control", widget_switch_enum,
+ 		scu_get_dvc0_route, scu_set_dvc0_route),
+ };
+ 
+ static const struct snd_kcontrol_new capture_controls[] = {
+-	SOC_ENUM_EXT("SSI1 control", widget_switch_enum,
++	SOC_ENUM_EXT("SSI1 Control", widget_switch_enum,
+ 		scu_get_ssi1_route, scu_set_ssi1_route),
+-	SOC_ENUM_EXT("SRC1 control", widget_switch_enum,
++	SOC_ENUM_EXT("SRC1 Control", widget_switch_enum,
+ 		scu_get_src1_route, scu_set_src1_route),
+-	SOC_ENUM_EXT("DVC1 control", widget_switch_enum,
++	SOC_ENUM_EXT("DVC1 Control", widget_switch_enum,
+ 		scu_get_dvc1_route, scu_set_dvc1_route),
+ };
+ 
+-- 
+1.8.3.2
+

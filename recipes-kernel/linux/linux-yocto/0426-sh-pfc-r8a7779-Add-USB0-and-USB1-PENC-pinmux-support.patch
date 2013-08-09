@@ -1,7 +1,7 @@
 From c16bb2e703c8031f5974258cbe2083febd74984a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:36:36 +0100
-Subject: [PATCH 426/715] sh-pfc: r8a7779: Add USB0 and USB1 PENC pinmux
+Subject: [PATCH 0426/1083] sh-pfc: r8a7779: Add USB0 and USB1 PENC pinmux
  support
 
 The USB0 and USB1 PENC functions were missing. Add them.
@@ -12,7 +12,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |    6 +++++-
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 6 +++++-
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -40,5 +40,5 @@ index 361b162..946572bc 100644
  	PINMUX_IPSR_MODSEL_DATA(IP0_2_0, SCK0, SEL_SCIF0_0),
  	PINMUX_IPSR_DATA(IP0_2_0, PWM1),
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 6779a0c59100d40b9df5a81d4bb4dc5f78874194 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 10:42:44 +0900
-Subject: [PATCH 498/715] drm: fb_helper: Support FBIO_WAITFORVSYNC
+Subject: [PATCH 0498/1083] drm: fb_helper: Support FBIO_WAITFORVSYNC
 
 The operation is restricted to the first CRTC, as waiting for VSYNC
 simultaneously on multiple unsynchronized CRTCs juste doesn't make any
@@ -12,10 +12,10 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/drm_fb_cma_helper.c |    1 +
- drivers/gpu/drm/drm_fb_helper.c     |   29 +++++++++++++++++++++++++++++
- drivers/gpu/drm/drm_irq.c           |    1 +
- include/drm/drm_fb_helper.h         |    2 ++
+ drivers/gpu/drm/drm_fb_cma_helper.c |  1 +
+ drivers/gpu/drm/drm_fb_helper.c     | 29 +++++++++++++++++++++++++++++
+ drivers/gpu/drm/drm_irq.c           |  1 +
+ include/drm/drm_fb_helper.h         |  2 ++
  4 files changed, 33 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_fb_cma_helper.c b/drivers/gpu/drm/drm_fb_cma_helper.c
@@ -96,5 +96,5 @@ index 5120b01..929f663 100644
  int drm_fb_helper_check_var(struct fb_var_screeninfo *var,
  			    struct fb_info *info);
 -- 
-1.7.10.4
+1.8.3.2
 

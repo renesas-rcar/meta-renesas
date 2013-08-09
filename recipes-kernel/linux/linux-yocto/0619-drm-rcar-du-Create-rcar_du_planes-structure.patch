@@ -1,7 +1,7 @@
 From fa8fc50f27f7cbdfb020329999daa1d1fa440128 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 16 Jun 2013 21:02:49 +0200
-Subject: [PATCH 619/715] drm/rcar-du: Create rcar_du_planes structure
+Subject: [PATCH 0619/1083] drm/rcar-du: Create rcar_du_planes structure
 
 Move the plane-related fields of struct rcar_du_device to their own
 structure.
@@ -14,8 +14,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_drv.h   |   11 +----------
- drivers/gpu/drm/rcar-du/rcar_du_plane.h |   17 +++++++++++++++--
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   | 11 +----------
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h | 17 +++++++++++++++--
  2 files changed, 16 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
@@ -83,5 +83,5 @@ index 5397dba..5c8488c 100644
  int rcar_du_plane_register(struct rcar_du_device *rcdu);
  void rcar_du_plane_setup(struct rcar_du_plane *plane);
 -- 
-1.7.10.4
+1.8.3.2
 

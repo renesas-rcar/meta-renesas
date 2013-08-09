@@ -1,7 +1,7 @@
 From 1bf926d9becd5986576f946ca846dbe8593f6521 Mon Sep 17 00:00:00 2001
 From: Mark Rutland <mark.rutland@arm.com>
 Date: Mon, 12 Nov 2012 16:46:40 +0000
-Subject: [PATCH 577/715] arm: arch_timer: split cntfrq accessor
+Subject: [PATCH 0577/1083] arm: arch_timer: split cntfrq accessor
 
 The CNTFRQ register is not duplicated for physical and virtual timers,
 and accessing it as if it were is confusing.
@@ -20,7 +20,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/kernel/arch_timer.c |   16 +++++++++-------
+ arch/arm/kernel/arch_timer.c | 16 +++++++++-------
  1 file changed, 9 insertions(+), 7 deletions(-)
 
 diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
@@ -72,5 +72,5 @@ index eb78f43..f31c9ee 100644
  		/* Check the timer frequency. */
  		if (freq == 0) {
 -- 
-1.7.10.4
+1.8.3.2
 

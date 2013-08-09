@@ -1,7 +1,7 @@
 From 0a9578540a773b77545b467277e65b106a24dcfc Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 20 Jun 2012 17:29:04 +0900
-Subject: [PATCH 273/715] sh: pfc: Split out gpio chip support.
+Subject: [PATCH 0273/1083] sh: pfc: Split out gpio chip support.
 
 This implements a bit of rework for the PFC code, making the core itself
 slightly more pluggable and moving out the gpio chip handling completely.
@@ -20,10 +20,10 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/Makefile    |    2 +-
- drivers/sh/pfc-gpio.c  |  309 +++++++++++++++++++++++++++++++++++++++
- drivers/sh/pfc.c       |  376 ++++++++++++++----------------------------------
- include/linux/sh_pfc.h |   37 ++++-
+ drivers/sh/Makefile    |   2 +-
+ drivers/sh/pfc-gpio.c  | 309 ++++++++++++++++++++++++++++++++++++++++
+ drivers/sh/pfc.c       | 376 ++++++++++++++-----------------------------------
+ include/linux/sh_pfc.h |  37 ++++-
  4 files changed, 447 insertions(+), 277 deletions(-)
  create mode 100644 drivers/sh/pfc-gpio.c
 
@@ -1090,5 +1090,5 @@ index 5c15aed..95dad34 100644
  /* helper macro for port */
  #define PORT_1(fn, pfx, sfx) fn(pfx, sfx)
 -- 
-1.7.10.4
+1.8.3.2
 

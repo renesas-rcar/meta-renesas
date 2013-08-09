@@ -1,7 +1,7 @@
 From fce6707ce3ec4081f5c9a32309a903796604daa9 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Tue, 20 Nov 2012 21:21:40 -0600
-Subject: [PATCH 549/715] irqchip: Move ARM GIC to drivers/irqchip
+Subject: [PATCH 0549/1083] irqchip: Move ARM GIC to drivers/irqchip
 
 Now that we have drivers/irqchip, move GIC irqchip to drivers/irqchip. This
 is necessary to share the GIC with arm and arm64.
@@ -21,7 +21,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/irqchip/irq-gic.c |    2 ++
+ drivers/irqchip/irq-gic.c | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
@@ -38,5 +38,5 @@ index 3507a60..4978a44 100644
  	void __iomem *common_base;
  	void __percpu __iomem **percpu_base;
 -- 
-1.7.10.4
+1.8.3.2
 

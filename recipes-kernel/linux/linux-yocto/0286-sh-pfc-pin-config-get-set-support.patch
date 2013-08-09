@@ -1,7 +1,7 @@
 From 18ff36256bf8a29cf1d3c615935608afe5699f89 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Fri, 20 Jul 2012 16:39:09 +0900
-Subject: [PATCH 286/715] sh: pfc: pin config get/set support.
+Subject: [PATCH 0286/1083] sh: pfc: pin config get/set support.
 
 This implements simple support for adjusting the pin config value via the
 pinctrl API. The pinconf-generic code is abandoned for now until we've
@@ -13,8 +13,8 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/Kconfig   |    1 -
- drivers/sh/pfc/pinctrl.c |  147 ++++++++++++++++++++++++++++++----------------
+ drivers/sh/pfc/Kconfig   |   1 -
+ drivers/sh/pfc/pinctrl.c | 147 +++++++++++++++++++++++++++++++----------------
  2 files changed, 97 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/sh/pfc/Kconfig b/drivers/sh/pfc/Kconfig
@@ -226,5 +226,5 @@ index 900afa5..0802b6c 100644
  
  static struct pinctrl_gpio_range sh_pfc_gpio_range = {
 -- 
-1.7.10.4
+1.8.3.2
 

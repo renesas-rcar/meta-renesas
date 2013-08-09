@@ -1,7 +1,7 @@
 From 9fb57b40b125054876c377283a0d66174c11b39e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 19 Feb 2013 18:01:39 +0100
-Subject: [PATCH 122/715] drm/rcar-du: Use drm_encoder_cleanup() directly as
+Subject: [PATCH 0122/1083] drm/rcar-du: Use drm_encoder_cleanup() directly as
  .destroy handlers
 
 There's no need for a local static encoder .destroy handler that only
@@ -13,8 +13,8 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_lvds.c |    7 +------
- drivers/gpu/drm/rcar-du/rcar_du_vga.c  |    7 +------
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c | 7 +------
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c  | 7 +------
  2 files changed, 2 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
@@ -56,5 +56,5 @@ index 8b90c71..ac90da8 100644
  
  int rcar_du_vga_init(struct rcar_du_device *rcdu,
 -- 
-1.7.10.4
+1.8.3.2
 

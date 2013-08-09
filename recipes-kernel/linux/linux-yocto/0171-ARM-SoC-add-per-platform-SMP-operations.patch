@@ -1,7 +1,7 @@
 From 3b2f8ab6b2d6abd844fadf4e179788754761a2a1 Mon Sep 17 00:00:00 2001
 From: Marc Zyngier <marc.zyngier@arm.com>
 Date: Thu, 8 Sep 2011 09:06:10 +0100
-Subject: [PATCH 171/715] ARM: SoC: add per-platform SMP operations
+Subject: [PATCH 0171/1083] ARM: SoC: add per-platform SMP operations
 
 This adds a 'struct smp_operations' to abstract the CPU initialization
 and hot plugging functions on SMP systems, which otherwise conflict
@@ -30,10 +30,10 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/mach/arch.h |    7 +++++
- arch/arm/include/asm/smp.h       |   33 ++++++++++++++++++++
- arch/arm/kernel/setup.c          |    4 ++-
- arch/arm/kernel/smp.c            |   62 +++++++++++++++++++++++++++++++++++++-
+ arch/arm/include/asm/mach/arch.h |  7 +++++
+ arch/arm/include/asm/smp.h       | 33 +++++++++++++++++++++
+ arch/arm/kernel/setup.c          |  4 ++-
+ arch/arm/kernel/smp.c            | 62 +++++++++++++++++++++++++++++++++++++++-
  4 files changed, 104 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm/include/asm/mach/arch.h b/arch/arm/include/asm/mach/arch.h
@@ -224,5 +224,5 @@ index 0b80aab..4025a0d 100644
   * __cpu_disable runs on the processor to be shutdown.
   */
 -- 
-1.7.10.4
+1.8.3.2
 

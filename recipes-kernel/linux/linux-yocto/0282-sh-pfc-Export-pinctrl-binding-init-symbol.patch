@@ -1,7 +1,7 @@
 From 6fb5be37702e5590395558e7655cdb8bea1fbd59 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 17 Jul 2012 15:21:47 +0900
-Subject: [PATCH 282/715] sh: pfc: Export pinctrl binding init symbol.
+Subject: [PATCH 0282/1083] sh: pfc: Export pinctrl binding init symbol.
 
 symbol_request() requires the registration symbol to be exported, make
 sure it is.
@@ -11,7 +11,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |    1 +
+ drivers/sh/pfc/pinctrl.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -27,5 +27,5 @@ index fe1750e..4eaf24b 100644
  static inline void __devinit sh_pfc_map_one_gpio(struct sh_pfc *pfc,
  						 struct sh_pfc_pinctrl *pmx,
 -- 
-1.7.10.4
+1.8.3.2
 

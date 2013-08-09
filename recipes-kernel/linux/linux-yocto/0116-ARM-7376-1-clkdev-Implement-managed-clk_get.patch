@@ -1,7 +1,7 @@
 From 5967b361d523d4a7daa83da2e95bdf3b0235e810 Mon Sep 17 00:00:00 2001
 From: Mark Brown <broonie@sirena.org.uk>
 Date: Thu, 5 Apr 2012 11:42:09 +0100
-Subject: [PATCH 116/715] ARM: 7376/1: clkdev: Implement managed clk_get()
+Subject: [PATCH 0116/1083] ARM: 7376/1: clkdev: Implement managed clk_get()
 
 Allow clk API users to simplify their cleanup paths by providing a
 managed version of clk_get() and clk_put().
@@ -15,9 +15,9 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/driver-model/devres.txt |    4 +++
- drivers/clk/clkdev.c                  |   45 +++++++++++++++++++++++++++++++++
- include/linux/clk.h                   |   32 +++++++++++++++++++++++
+ Documentation/driver-model/devres.txt |  4 ++++
+ drivers/clk/clkdev.c                  | 45 +++++++++++++++++++++++++++++++++++
+ include/linux/clk.h                   | 32 +++++++++++++++++++++++++
  3 files changed, 81 insertions(+)
 
 diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
@@ -139,5 +139,5 @@ index b025272..70cf722 100644
  /*
   * The remaining APIs are optional for machine class support.
 -- 
-1.7.10.4
+1.8.3.2
 

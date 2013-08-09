@@ -1,7 +1,7 @@
 From b64cce58c3dbb146e913da4e535068d68119b5ec Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Mon, 13 May 2013 17:53:52 +0900
-Subject: [PATCH 540/715] ARM: shmobile: r8a7790: Configure R-Car GPIO for
+Subject: [PATCH 0540/1083] ARM: shmobile: r8a7790: Configure R-Car GPIO for
  IRQ_TYPE_EDGE_BOTH
 
 "gpio-rcar: Support IRQ_TYPE_EDGE_BOTH" adds support to the R-Car GPIO
@@ -17,7 +17,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c |    1 +
+ arch/arm/mach-shmobile/setup-r8a7790.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
@@ -33,5 +33,5 @@ index e5f583f..20ce5e8 100644
  
  R8A7790_GPIO(0);
 -- 
-1.7.10.4
+1.8.3.2
 

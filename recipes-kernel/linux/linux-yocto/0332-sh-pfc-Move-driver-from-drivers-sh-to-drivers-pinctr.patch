@@ -1,7 +1,7 @@
 From 5d84202c2d41b43510550ae371862cc38910bcca Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:19 +0100
-Subject: [PATCH 332/715] sh-pfc: Move driver from drivers/sh/ to
+Subject: [PATCH 0332/1083] sh-pfc: Move driver from drivers/sh/ to
  drivers/pinctrl/
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
@@ -15,22 +15,22 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/Kconfig          |    1 +
- drivers/pinctrl/Makefile         |    2 +
- drivers/pinctrl/sh-pfc/Kconfig   |   24 ++
- drivers/pinctrl/sh-pfc/Makefile  |    5 +
- drivers/pinctrl/sh-pfc/core.c    |  586 ++++++++++++++++++++++++++++++++++++++
- drivers/pinctrl/sh-pfc/core.h    |   54 ++++
- drivers/pinctrl/sh-pfc/gpio.c    |  179 ++++++++++++
- drivers/pinctrl/sh-pfc/pinctrl.c |  464 ++++++++++++++++++++++++++++++
- drivers/sh/Kconfig               |    1 -
- drivers/sh/Makefile              |    1 -
- drivers/sh/pfc/Kconfig           |   18 --
- drivers/sh/pfc/Makefile          |    5 -
- drivers/sh/pfc/core.c            |  586 --------------------------------------
- drivers/sh/pfc/core.h            |   54 ----
- drivers/sh/pfc/gpio.c            |  179 ------------
- drivers/sh/pfc/pinctrl.c         |  464 ------------------------------
+ drivers/pinctrl/Kconfig          |   1 +
+ drivers/pinctrl/Makefile         |   2 +
+ drivers/pinctrl/sh-pfc/Kconfig   |  24 ++
+ drivers/pinctrl/sh-pfc/Makefile  |   5 +
+ drivers/pinctrl/sh-pfc/core.c    | 586 +++++++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/core.h    |  54 ++++
+ drivers/pinctrl/sh-pfc/gpio.c    | 179 ++++++++++++
+ drivers/pinctrl/sh-pfc/pinctrl.c | 464 +++++++++++++++++++++++++++++++
+ drivers/sh/Kconfig               |   1 -
+ drivers/sh/Makefile              |   1 -
+ drivers/sh/pfc/Kconfig           |  18 --
+ drivers/sh/pfc/Makefile          |   5 -
+ drivers/sh/pfc/core.c            | 586 ---------------------------------------
+ drivers/sh/pfc/core.h            |  54 ----
+ drivers/sh/pfc/gpio.c            | 179 ------------
+ drivers/sh/pfc/pinctrl.c         | 464 -------------------------------
  16 files changed, 1315 insertions(+), 1308 deletions(-)
  create mode 100644 drivers/pinctrl/sh-pfc/Kconfig
  create mode 100644 drivers/pinctrl/sh-pfc/Makefile
@@ -2781,5 +2781,5 @@ index 221bde0..0000000
 -	return 0;
 -}
 -- 
-1.7.10.4
+1.8.3.2
 

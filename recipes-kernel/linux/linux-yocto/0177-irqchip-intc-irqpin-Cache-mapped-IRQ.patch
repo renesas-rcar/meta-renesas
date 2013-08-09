@@ -1,7 +1,7 @@
 From 831da132ebf268012a537b8fa2dd589c9b99f1df Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Feb 2013 20:58:54 +0900
-Subject: [PATCH 177/715] irqchip: intc-irqpin: Cache mapped IRQ
+Subject: [PATCH 0177/1083] irqchip: intc-irqpin: Cache mapped IRQ
 
 Cache IRQ in domain_irq variable instead of
 making use of irq_find_mapping(). While at it
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/irq-renesas-intc-irqpin.c |   30 +++++++++++++++--------------
+ drivers/irqchip/irq-renesas-intc-irqpin.c | 30 ++++++++++++++++--------------
  1 file changed, 16 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/irqchip/irq-renesas-intc-irqpin.c b/drivers/irqchip/irq-renesas-intc-irqpin.c
@@ -129,5 +129,5 @@ index 1e5058a..3295366 100644
  	irq_domain_remove(p->irq_domain);
  
 -- 
-1.7.10.4
+1.8.3.2
 

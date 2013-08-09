@@ -1,8 +1,8 @@
 From da956fce9bfa14c8348b54b70a363f2f37ea4cb4 Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Fri, 17 May 2013 16:55:12 +0200
-Subject: [PATCH 601/715] pinctrl: r8a7790: add pinmux data for MMCIF and SDHI
- interfaces
+Subject: [PATCH 0601/1083] pinctrl: r8a7790: add pinmux data for MMCIF and
+ SDHI interfaces
 
 This patch adds pinmux groups and functions for the two MMCIF and four
 SDHI interfaces on r8a73a4 (APE6).
@@ -19,7 +19,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |  225 ++++++++++++++++++++++++++--------
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 225 +++++++++++++++++++++++++++--------
  1 file changed, 173 insertions(+), 52 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -351,5 +351,5 @@ index 71518fc..e1a3f8e 100644
  	SH_PFC_FUNCTION(sdhi1),
  	SH_PFC_FUNCTION(sdhi2),
 -- 
-1.7.10.4
+1.8.3.2
 

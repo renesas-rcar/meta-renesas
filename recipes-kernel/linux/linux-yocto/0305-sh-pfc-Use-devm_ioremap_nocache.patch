@@ -1,7 +1,7 @@
 From f0bd3d16f0dad73a36bfe26dcc8264de29b36943 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:49 +0100
-Subject: [PATCH 305/715] sh-pfc: Use devm_ioremap_nocache()
+Subject: [PATCH 0305/1083] sh-pfc: Use devm_ioremap_nocache()
 
 Replace probe-time ioremap_nocache() call with devm_ioremap_nocache()
 and get rid of the corresponding iounmap() call.
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c |   25 ++++---------------------
+ drivers/sh/pfc/core.c | 25 ++++---------------------
  1 file changed, 4 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -82,5 +82,5 @@ index 5491902..8ec57bd 100644
  
  	return 0;
 -- 
-1.7.10.4
+1.8.3.2
 

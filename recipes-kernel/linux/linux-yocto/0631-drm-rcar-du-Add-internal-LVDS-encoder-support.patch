@@ -1,7 +1,7 @@
 From 6b59665601c62a937f321bdb7962401af4efab89 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 13:48:27 +0200
-Subject: [PATCH 631/715] drm/rcar-du: Add internal LVDS encoder support
+Subject: [PATCH 0631/1083] drm/rcar-du: Add internal LVDS encoder support
 
 The R8A7790 includes two internal LVDS encoders. Support them in the DU
 driver.
@@ -18,18 +18,18 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/Kconfig           |   22 +---
- drivers/gpu/drm/rcar-du/Makefile          |    4 +-
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |    3 -
- drivers/gpu/drm/rcar-du/rcar_du_crtc.h    |    2 +
- drivers/gpu/drm/rcar-du/rcar_du_drv.c     |    2 +
- drivers/gpu/drm/rcar-du/rcar_du_drv.h     |    4 +
- drivers/gpu/drm/rcar-du/rcar_du_encoder.c |   38 ++++++
- drivers/gpu/drm/rcar-du/rcar_du_encoder.h |    2 +
- drivers/gpu/drm/rcar-du/rcar_du_kms.c     |    5 +
- drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c |  191 +++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h |   46 +++++++
- drivers/gpu/drm/rcar-du/rcar_lvds_regs.h  |   69 +++++++++++
+ drivers/gpu/drm/rcar-du/Kconfig           |  22 +---
+ drivers/gpu/drm/rcar-du/Makefile          |   4 +-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |   3 -
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h    |   2 +
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c     |   2 +
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h     |   4 +
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c |  38 ++++++
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h |   2 +
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     |   5 +
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c | 191 ++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h |  46 +++++++
+ drivers/gpu/drm/rcar-du/rcar_lvds_regs.h  |  69 +++++++++++
  12 files changed, 366 insertions(+), 22 deletions(-)
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
  create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h
@@ -617,5 +617,5 @@ index 0000000..50a6d85
 +
 +#endif /* __RCAR_LVDS_REGS_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

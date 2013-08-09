@@ -1,7 +1,7 @@
 From 4b7808b3af63922d2cb037cc7e0e40a87b75110f Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Thu, 27 Sep 2012 14:59:39 +0200
-Subject: [PATCH 174/715] irqdomain: augment add_simple() to allocate descs
+Subject: [PATCH 0174/1083] irqdomain: augment add_simple() to allocate descs
 
 Currently we rely on all IRQ chip instances to dynamically
 allocate their IRQ descriptors unless they use the linear
@@ -28,7 +28,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- kernel/irq/irqdomain.c |   33 ++++++++++++++++++++++++++++-----
+ kernel/irq/irqdomain.c | 33 ++++++++++++++++++++++++++++-----
  1 file changed, 28 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
@@ -84,5 +84,5 @@ index 49a7772..4e69e24 100644
  
  /**
 -- 
-1.7.10.4
+1.8.3.2
 

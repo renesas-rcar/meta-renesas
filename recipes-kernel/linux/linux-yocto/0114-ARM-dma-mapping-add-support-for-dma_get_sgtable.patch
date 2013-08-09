@@ -1,7 +1,7 @@
 From 68647b95df4c02c3cdd96cbfe2c484b105da9c81 Mon Sep 17 00:00:00 2001
 From: Marek Szyprowski <m.szyprowski@samsung.com>
 Date: Wed, 13 Jun 2012 10:01:15 +0200
-Subject: [PATCH 114/715] ARM: dma-mapping: add support for dma_get_sgtable()
+Subject: [PATCH 0114/1083] ARM: dma-mapping: add support for dma_get_sgtable()
 
 This patch adds support for dma_get_sgtable() function which is required
 to let drivers to share the buffers allocated by DMA-mapping subsystem.
@@ -15,9 +15,9 @@ Reviewed-by: Kyungmin Park <kyungmin.park@samsung.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/common/dmabounce.c        |    1 +
- arch/arm/include/asm/dma-mapping.h |    3 +++
- arch/arm/mm/dma-mapping.c          |   31 +++++++++++++++++++++++++++++++
+ arch/arm/common/dmabounce.c        |  1 +
+ arch/arm/include/asm/dma-mapping.h |  3 +++
+ arch/arm/mm/dma-mapping.c          | 31 +++++++++++++++++++++++++++++++
  3 files changed, 35 insertions(+)
 
 diff --git a/arch/arm/common/dmabounce.c b/arch/arm/common/dmabounce.c
@@ -110,5 +110,5 @@ index 760e13b..f88738c 100644
  	.map_page		= arm_iommu_map_page,
  	.unmap_page		= arm_iommu_unmap_page,
 -- 
-1.7.10.4
+1.8.3.2
 

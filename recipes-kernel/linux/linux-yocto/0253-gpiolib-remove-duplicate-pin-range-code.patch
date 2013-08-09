@@ -1,7 +1,7 @@
 From 45c9807e047dbb779a5da6545f89761f316afef8 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 15:03:47 +0100
-Subject: [PATCH 253/715] gpiolib: remove duplicate pin range code
+Subject: [PATCH 0253/1083] gpiolib: remove duplicate pin range code
 
 Commit 69e1601bca88809dc118abd1becb02c15a02ec71
 "gpiolib: provide provision to register pin ranges"
@@ -18,7 +18,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib-of.c |   13 +------------
+ drivers/gpio/gpiolib-of.c | 13 +------------
  1 file changed, 1 insertion(+), 12 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
@@ -55,5 +55,5 @@ index 220caa5..67403e4 100644
  	if (chip->of_node)
  		of_node_put(chip->of_node);
 -- 
-1.7.10.4
+1.8.3.2
 

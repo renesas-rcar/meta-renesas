@@ -1,7 +1,7 @@
 From 9d95c8d94507da3e1b07ed8b89a479b66bf211f1 Mon Sep 17 00:00:00 2001
 From: Marc Zyngier <marc.zyngier@arm.com>
 Date: Fri, 20 Jan 2012 10:47:00 +0000
-Subject: [PATCH 148/715] ARM: architected timers: add support for UP timer
+Subject: [PATCH 0148/1083] ARM: architected timers: add support for UP timer
 
 If CONFIG_LOCAL_TIMERS is not defined, let the architected timer
 driver register a single clock_event_device that is used as a
@@ -12,7 +12,7 @@ Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/arch_timer.c |   13 +++++++++++++
+ arch/arm/kernel/arch_timer.c | 13 +++++++++++++
  1 file changed, 13 insertions(+)
 
 diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
@@ -47,5 +47,5 @@ index 1a34eee..154f0a1 100644
  		goto out_free_irq;
  
 -- 
-1.7.10.4
+1.8.3.2
 

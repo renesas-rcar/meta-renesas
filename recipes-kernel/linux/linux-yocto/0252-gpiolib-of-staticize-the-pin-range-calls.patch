@@ -1,7 +1,7 @@
 From 1d7c798a5b1eb4d42f3790abb399b7eeeab80250 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 14:58:55 +0100
-Subject: [PATCH 252/715] gpiolib-of: staticize the pin range calls
+Subject: [PATCH 0252/1083] gpiolib-of: staticize the pin range calls
 
 Commit 69e1601bca88809dc118abd1becb02c15a02ec71
 "gpiolib: provide provision to register pin ranges"
@@ -17,7 +17,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib-of.c |    8 ++++----
+ drivers/gpio/gpiolib-of.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
@@ -54,5 +54,5 @@ index a5b90c8..220caa5 100644
  
  void of_gpiochip_add(struct gpio_chip *chip)
 -- 
-1.7.10.4
+1.8.3.2
 

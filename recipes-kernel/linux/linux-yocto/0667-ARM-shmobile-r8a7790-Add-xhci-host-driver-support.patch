@@ -1,16 +1,17 @@
 From 66fff6a58898af18939e54f563eaa2ff32cfb1a4 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Wed, 26 Jun 2013 20:01:48 +0900
-Subject: [PATCH 667/715] ARM: shmobile: r8a7790: Add xhci host driver support
+Subject: [PATCH 0667/1083] ARM: shmobile: r8a7790: Add xhci host driver
+ support
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit 332ee0d50917bb514920158cf042135c5e629a3f)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c        |    4 ++-
- arch/arm/mach-shmobile/include/mach/r8a7790.h |    3 ++
- arch/arm/mach-shmobile/setup-r8a7790.c        |   41 +++++++++++++++++++++++++
+ arch/arm/mach-shmobile/clock-r8a7790.c        |  4 ++-
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  3 ++
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 41 +++++++++++++++++++++++++++
  3 files changed, 47 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -134,5 +135,5 @@ index 4820b61..33a5559 100644
  	&sdhi1_device,
  	&sdhi2_device,
 -- 
-1.7.10.4
+1.8.3.2
 

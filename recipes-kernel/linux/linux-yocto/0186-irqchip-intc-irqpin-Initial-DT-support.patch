@@ -1,7 +1,7 @@
 From 7f396c2f851e341433b7441a1e252d911f274209 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Wed, 6 Mar 2013 15:16:08 +0900
-Subject: [PATCH 186/715] irqchip: intc-irqpin: Initial DT support
+Subject: [PATCH 0186/1083] irqchip: intc-irqpin: Initial DT support
 
 Add initial DT support to the INTC External IRQ Pin
 driver. At this point only hardware with 4-bit wide
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/irq-renesas-intc-irqpin.c |    9 +++++++++
+ drivers/irqchip/irq-renesas-intc-irqpin.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/irqchip/irq-renesas-intc-irqpin.c b/drivers/irqchip/irq-renesas-intc-irqpin.c
@@ -49,5 +49,5 @@ index 21f4602..fd5dabc 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

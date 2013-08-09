@@ -1,7 +1,7 @@
 From ab0a4bbe795d7ad02dfde3dd0b63e23963c3e6f1 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 10 Jul 2012 12:08:14 +0900
-Subject: [PATCH 279/715] sh: pfc: Rudimentary pinctrl-backed GPIO support.
+Subject: [PATCH 0279/1083] sh: pfc: Rudimentary pinctrl-backed GPIO support.
 
 This begins the migration of the PFC core to the pinctrl subsystem.
 Initial support is very basic, with the bulk of the implementation simply
@@ -25,12 +25,12 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/Kconfig   |   13 ++
- drivers/sh/pfc/Makefile  |    1 +
- drivers/sh/pfc/core.c    |   81 +++++-----
- drivers/sh/pfc/gpio.c    |  102 ++-----------
- drivers/sh/pfc/pinctrl.c |  371 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/sh_pfc.h   |    5 +-
+ drivers/sh/pfc/Kconfig   |  13 ++
+ drivers/sh/pfc/Makefile  |   1 +
+ drivers/sh/pfc/core.c    |  81 +++++------
+ drivers/sh/pfc/gpio.c    | 102 ++-----------
+ drivers/sh/pfc/pinctrl.c | 371 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/sh_pfc.h   |   5 +-
  6 files changed, 440 insertions(+), 133 deletions(-)
  create mode 100644 drivers/sh/pfc/pinctrl.c
 
@@ -721,5 +721,5 @@ index 8c4cbcb..c19a092 100644
  /* xxx */
  static inline int register_pinmux(struct pinmux_info *pip)
 -- 
-1.7.10.4
+1.8.3.2
 

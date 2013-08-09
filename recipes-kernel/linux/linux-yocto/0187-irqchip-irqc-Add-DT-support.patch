@@ -1,7 +1,7 @@
 From 331b758003a0b6d03d8080e4bb706274b8544ccf Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Wed, 6 Mar 2013 15:23:39 +0900
-Subject: [PATCH 187/715] irqchip: irqc: Add DT support
+Subject: [PATCH 0187/1083] irqchip: irqc: Add DT support
 
 Add DT support to the IRQC External IRQ Pin driver.
 
@@ -11,7 +11,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/irqchip/irq-renesas-irqc.c |    9 +++++++++
+ drivers/irqchip/irq-renesas-irqc.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/irqchip/irq-renesas-irqc.c b/drivers/irqchip/irq-renesas-irqc.c
@@ -47,5 +47,5 @@ index 95d69bf..927bff3 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

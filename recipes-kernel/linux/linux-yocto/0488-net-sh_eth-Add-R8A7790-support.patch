@@ -1,16 +1,16 @@
 From fb7b236a943f6c919ba0edda7b6af60f522bf3fb Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 12 Jun 2013 16:10:00 +0900
-Subject: [PATCH 488/715] net: sh_eth: Add R8A7790 support
+Subject: [PATCH 0488/1083] net: sh_eth: Add R8A7790 support
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 (cherry picked from commit bfd07ec019bf4df172dbbda8df4b031741147bcd)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/net/ethernet/renesas/Kconfig  |    3 ++-
- drivers/net/ethernet/renesas/sh_eth.c |    8 ++++++--
- drivers/net/ethernet/renesas/sh_eth.h |    7 +++++++
+ drivers/net/ethernet/renesas/Kconfig  | 3 ++-
+ drivers/net/ethernet/renesas/sh_eth.c | 8 ++++++--
+ drivers/net/ethernet/renesas/sh_eth.h | 7 +++++++
  3 files changed, 15 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/ethernet/renesas/Kconfig b/drivers/net/ethernet/renesas/Kconfig
@@ -100,5 +100,5 @@ index bae84fd..2026fc6 100644
  	[RPADIR]	= 0x0078,
  	[TRIMD]	= 0x007c,
 -- 
-1.7.10.4
+1.8.3.2
 

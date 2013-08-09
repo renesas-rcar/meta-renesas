@@ -1,7 +1,7 @@
 From ff2b32d7e8ccc7bf50b04ed97e3806c17a1cce8c Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Wed, 6 Mar 2013 15:10:06 +0900
-Subject: [PATCH 185/715] ARM: shmobile: Make r8a7779 INTC irqpin platform
+Subject: [PATCH 0185/1083] ARM: shmobile: Make r8a7779 INTC irqpin platform
  data static
 
 The platform data for the INTC irq pin driver
@@ -14,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/intc-r8a7779.c |    2 +-
+ arch/arm/mach-shmobile/intc-r8a7779.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/intc-r8a7779.c b/arch/arm/mach-shmobile/intc-r8a7779.c
@@ -31,5 +31,5 @@ index 9de6d03..1c1efd2 100644
  	.sense_bitfield_width = 2,
  };
 -- 
-1.7.10.4
+1.8.3.2
 

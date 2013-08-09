@@ -1,7 +1,7 @@
 From 9abc78e079ea546636bc60493503b517e2c682e2 Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Sat, 2 Feb 2013 23:44:06 +0900
-Subject: [PATCH 265/715] gpiolib: remove gpiochip_reserve()
+Subject: [PATCH 0265/1083] gpiolib: remove gpiochip_reserve()
 
 gpiochip_reserve() has no user and stands in the way of the removal of
 the static gpio_desc[] array. Remove this function as well as the now
@@ -13,8 +13,8 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c     |   58 ++++++--------------------------------------
- include/asm-generic/gpio.h |    1 -
+ drivers/gpio/gpiolib.c     | 58 +++++++---------------------------------------
+ include/asm-generic/gpio.h |  1 -
  2 files changed, 8 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -113,5 +113,5 @@ index 45b8916..2034e69 100644
  /* add/remove chips */
  extern int gpiochip_add(struct gpio_chip *chip);
 -- 
-1.7.10.4
+1.8.3.2
 

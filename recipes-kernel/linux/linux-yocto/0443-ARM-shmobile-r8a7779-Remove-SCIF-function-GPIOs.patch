@@ -1,7 +1,7 @@
 From 738133ff312a14ebbc576490db64b675bc26bd79 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:38:10 +0100
-Subject: [PATCH 443/715] ARM: shmobile: r8a7779: Remove SCIF function GPIOs
+Subject: [PATCH 0443/1083] ARM: shmobile: r8a7779: Remove SCIF function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
 unneeded, remove them.
@@ -14,7 +14,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7779.h |  144 ++++++++++++-------------
+ arch/arm/mach-shmobile/include/mach/r8a7779.h | 144 +++++++++++++-------------
  1 file changed, 71 insertions(+), 73 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
@@ -288,5 +288,5 @@ index a6dcfbf..e1835a2 100644
  
  struct platform_device;
 -- 
-1.7.10.4
+1.8.3.2
 

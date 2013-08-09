@@ -1,7 +1,7 @@
 From 33d3d2ef9c02cc701bd8561d4e08d5991526fb39 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:23 +0100
-Subject: [PATCH 337/715] sh-pfc: Add sh7372 pinmux support
+Subject: [PATCH 0337/1083] sh-pfc: Add sh7372 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -1731,5 +1731,5 @@ index 0000000..a52fabe
 +	.gpio_irq_size = ARRAY_SIZE(pinmux_irqs),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

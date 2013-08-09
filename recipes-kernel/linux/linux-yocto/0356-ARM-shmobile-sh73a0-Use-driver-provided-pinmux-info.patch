@@ -1,7 +1,7 @@
 From 2593a25cca50963455e0df5b18d1c3f95b10000a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:28 +0100
-Subject: [PATCH 356/715] ARM: shmobile: sh73a0: Use driver-provided pinmux
+Subject: [PATCH 0356/1083] ARM: shmobile: sh73a0: Use driver-provided pinmux
  info
 
 Pinmux info for the sh73a0 is now provided by pinmux drivers. Remove the
@@ -2918,5 +2918,5 @@ index 38ed2dd..13d579e 100644
  	.mapbase	= 0xe6c40000,
  	.flags		= UPF_BOOT_AUTOCONF,
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From b8581dec29c8ebd25b1000e264300c0719141465 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 15:15:44 +0100
-Subject: [PATCH 254/715] gpiolib: call pin removal in chip removal function
+Subject: [PATCH 0254/1083] gpiolib: call pin removal in chip removal function
 
 This makes us call gpiochio_remove_pin_ranges() in the
 gpiochip_remove() function, so we get rid of ranges when
@@ -14,7 +14,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c |    1 +
+ drivers/gpio/gpiolib.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -30,5 +30,5 @@ index 88cef98..064d2af 100644
  
  	for (id = chip->base; id < chip->base + chip->ngpio; id++) {
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,15 +1,15 @@
 From 50f378da2e90eed0eaca6344732e55896921229c Mon Sep 17 00:00:00 2001
 From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
 Date: Thu, 27 Jun 2013 10:25:16 +0900
-Subject: [PATCH 686/715] mmc: sh_mmcif: Add r8a7790 quirk to SH MMC driver
+Subject: [PATCH 0686/1083] mmc: sh_mmcif: Add r8a7790 quirk to SH MMC driver
 
 Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
 (cherry picked from commit 5d4f1bdd752e96dd1d1ca670807833fd07011570)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/sh_mmcif.c  |   14 ++++++++++++++
- include/linux/mmc/sh_mmcif.h |    5 +++++
+ drivers/mmc/host/sh_mmcif.c  | 14 ++++++++++++++
+ include/linux/mmc/sh_mmcif.h |  5 +++++
  2 files changed, 19 insertions(+)
 
 diff --git a/drivers/mmc/host/sh_mmcif.c b/drivers/mmc/host/sh_mmcif.c
@@ -81,5 +81,5 @@ index e7d5dd6..a0f4e41 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

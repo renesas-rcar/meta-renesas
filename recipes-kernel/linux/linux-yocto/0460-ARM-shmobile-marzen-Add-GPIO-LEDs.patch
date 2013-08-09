@@ -1,7 +1,7 @@
 From d8105adfcd4331cfd38b5432061f008cf3577582 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 03:43:32 +0100
-Subject: [PATCH 460/715] ARM: shmobile: marzen: Add GPIO LEDs
+Subject: [PATCH 0460/1083] ARM: shmobile: marzen: Add GPIO LEDs
 
 The board has 3 LEDs connected to GPIOs. Add a led-gpio device to
 support them.
@@ -14,7 +14,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-marzen.c |   32 ++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/board-marzen.c | 32 ++++++++++++++++++++++++++++++++
  1 file changed, 32 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
@@ -70,5 +70,5 @@ index d86baf3..be692cd 100644
  
  static const struct pinctrl_map marzen_pinctrl_map[] = {
 -- 
-1.7.10.4
+1.8.3.2
 

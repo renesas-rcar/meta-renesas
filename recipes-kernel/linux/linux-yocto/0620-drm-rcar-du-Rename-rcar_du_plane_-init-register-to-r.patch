@@ -1,8 +1,8 @@
 From 77ad5034db0de1b1a591a9370ca76cbea0be824e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 16 Jun 2013 19:18:31 +0200
-Subject: [PATCH 620/715] drm/rcar-du: Rename rcar_du_plane_(init|register) to
- rcar_du_planes_*
+Subject: [PATCH 0620/1083] drm/rcar-du: Rename rcar_du_plane_(init|register)
+ to rcar_du_planes_*
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit 4628f78aa8353cfdd073cad4aed713b2f743d50e)
@@ -12,9 +12,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_kms.c   |    4 ++--
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |    4 ++--
- drivers/gpu/drm/rcar-du/rcar_du_plane.h |    5 +++--
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   | 4 ++--
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 4 ++--
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h | 5 +++--
  3 files changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
@@ -78,5 +78,5 @@ index 5c8488c..bcf6f76 100644
  void rcar_du_plane_update_base(struct rcar_du_plane *plane);
  void rcar_du_plane_compute_base(struct rcar_du_plane *plane,
 -- 
-1.7.10.4
+1.8.3.2
 

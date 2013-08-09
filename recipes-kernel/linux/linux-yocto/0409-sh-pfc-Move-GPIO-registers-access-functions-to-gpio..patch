@@ -1,7 +1,7 @@
 From a4180ea4f93d527e6ff2a44408fb96d8d3da1ed1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 15 Feb 2013 02:04:55 +0100
-Subject: [PATCH 409/715] sh-pfc: Move GPIO registers access functions to
+Subject: [PATCH 0409/1083] sh-pfc: Move GPIO registers access functions to
  gpio.c
 
 Move the sh_pfc_setup_data_regs(), sh_pfc_setup_data_reg(),
@@ -15,9 +15,9 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c |  110 ++---------------------------------------
- drivers/pinctrl/sh-pfc/core.h |   11 +++--
- drivers/pinctrl/sh-pfc/gpio.c |   92 +++++++++++++++++++++++++++++++---
+ drivers/pinctrl/sh-pfc/core.c | 110 ++----------------------------------------
+ drivers/pinctrl/sh-pfc/core.h |  11 +++--
+ drivers/pinctrl/sh-pfc/gpio.c |  92 ++++++++++++++++++++++++++++++++---
  3 files changed, 97 insertions(+), 116 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -325,5 +325,5 @@ index 806e2dd..027c777 100644
  	chip = sh_pfc_add_gpiochip(pfc, gpio_pin_setup);
  	if (IS_ERR(chip))
 -- 
-1.7.10.4
+1.8.3.2
 

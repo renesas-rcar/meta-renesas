@@ -1,7 +1,7 @@
 From 908d23d8328cd7ce7e4f77cbed32a143364c3a16 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:13 +0200
-Subject: [PATCH 464/715] gpio-rcar: Add RCAR_GP_PIN macro
+Subject: [PATCH 0464/1083] gpio-rcar: Add RCAR_GP_PIN macro
 
 Pins are numbered in the R-Car family documentation using a bank number
 and a pin number in the bank. As the Linux pin number space is linear,
@@ -18,7 +18,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/linux/platform_data/gpio-rcar.h |    2 ++
+ include/linux/platform_data/gpio-rcar.h | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/include/linux/platform_data/gpio-rcar.h b/include/linux/platform_data/gpio-rcar.h
@@ -33,5 +33,5 @@ index b253f77..cc472f6 100644
 +
  #endif /* __GPIO_RCAR_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

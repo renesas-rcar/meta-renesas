@@ -1,7 +1,7 @@
 From 9e900ad83d88bb9d7efa20c72d15c0467f0522f7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 3 Jan 2013 13:07:05 +0100
-Subject: [PATCH 422/715] sh-pfc: r8a7779: Add DU pin groups and functions
+Subject: [PATCH 0422/1083] sh-pfc: r8a7779: Add DU pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
@@ -9,7 +9,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  283 ++++++++++++++++++++++++++++------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 283 +++++++++++++++++++++++++++++------
  1 file changed, 236 insertions(+), 47 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -347,5 +347,5 @@ index eb56858..9046a8f 100644
  	.nr_func_gpios = ARRAY_SIZE(pinmux_func_gpios),
  
 -- 
-1.7.10.4
+1.8.3.2
 

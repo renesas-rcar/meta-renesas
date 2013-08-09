@@ -1,7 +1,7 @@
 From 60f8618d4cce45ccc5c5742a1bd9b5ba69804bf8 Mon Sep 17 00:00:00 2001
 From: Grant Likely <grant.likely@secretlab.ca>
 Date: Sat, 7 Apr 2012 14:31:33 -0600
-Subject: [PATCH 234/715] gpio: Move DT support code into drivers/gpio
+Subject: [PATCH 0234/1083] gpio: Move DT support code into drivers/gpio
 
 The code in drivers/of/gpio.c isn't shared by any other subsystem since it
 is all gpiolib specific.  drivers/gpio is a better place to maintain these
@@ -14,12 +14,12 @@ Cc: Linus Walleij <linus.walleij@stericsson.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/Kconfig      |    4 +
- drivers/gpio/Makefile     |    1 +
- drivers/gpio/gpiolib-of.c |  240 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/Kconfig        |    6 --
- drivers/of/Makefile       |    1 -
- drivers/of/gpio.c         |  240 ---------------------------------------------
+ drivers/gpio/Kconfig      |   4 +
+ drivers/gpio/Makefile     |   1 +
+ drivers/gpio/gpiolib-of.c | 240 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/Kconfig        |   6 --
+ drivers/of/Makefile       |   1 -
+ drivers/of/gpio.c         | 240 ----------------------------------------------
  6 files changed, 245 insertions(+), 247 deletions(-)
  create mode 100644 drivers/gpio/gpiolib-of.c
  delete mode 100644 drivers/of/gpio.c
@@ -573,5 +573,5 @@ index bf984b6..0000000
 -	return gpiochip_find(np, of_gpiochip_is_match);
 -}
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 394b5132551b269f8804940e634a14095d82a28c Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 12:03:38 +0900
-Subject: [PATCH 509/715] mmc: tmio: Add CTL_RESET_SDIO register access pass
+Subject: [PATCH 0509/1083] mmc: tmio: Add CTL_RESET_SDIO register access pass
  option
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
@@ -9,8 +9,8 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/tmio_mmc_pio.c |    8 ++++++--
- include/linux/mfd/tmio.h        |    3 +++
+ drivers/mmc/host/tmio_mmc_pio.c | 8 ++++++--
+ include/linux/mfd/tmio.h        | 3 +++
  2 files changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
@@ -61,5 +61,5 @@ index 9d35929..c19c5fc 100644
  int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
  void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
 -- 
-1.7.10.4
+1.8.3.2
 

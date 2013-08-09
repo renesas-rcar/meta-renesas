@@ -1,7 +1,7 @@
 From 352f2c18bc454759cfe8ec5e471391650b06ec2c Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Mon, 4 Feb 2013 10:42:22 +0900
-Subject: [PATCH 165/715] ARM: mm: rename jump labels in v7_flush_dcache_all
+Subject: [PATCH 0165/1083] ARM: mm: rename jump labels in v7_flush_dcache_all
  function
 
 This patch renames jump labels in v7_flush_dcache_all in order to define
@@ -14,7 +14,7 @@ Tested-by: Shawn Guo <shawn.guo@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mm/cache-v7.S |   14 +++++++-------
+ arch/arm/mm/cache-v7.S | 14 +++++++-------
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/arch/arm/mm/cache-v7.S b/arch/arm/mm/cache-v7.S
@@ -69,5 +69,5 @@ index 7d22db3..202a572 100644
  	mov	r10, #0				@ swith back to cache level 0
  	mcr	p15, 2, r10, c0, c0, 0		@ select current cache level in cssr
 -- 
-1.7.10.4
+1.8.3.2
 

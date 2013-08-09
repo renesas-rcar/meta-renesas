@@ -1,7 +1,7 @@
 From 8e32003b9ff0f2f0ccaf1505256807b71780a74b Mon Sep 17 00:00:00 2001
 From: Teppei Kamijou <teppei.kamijou.yb@renesas.com>
 Date: Wed, 13 Jun 2012 04:39:14 +0000
-Subject: [PATCH 714/715] net: sh_eth: adjust rx ring indices for Fast
+Subject: [PATCH 0714/1083] net: sh_eth: adjust rx ring indices for Fast
  Ethernet when restarting rx
 
 Redmine: N/A
@@ -62,7 +62,7 @@ Signed-off-by: Teppei Kamijou <teppei.kamijou.yb@renesas.com>
 Signed-off-by: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/net/ethernet/renesas/sh_eth.c |    7 ++++++-
+ drivers/net/ethernet/renesas/sh_eth.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
@@ -87,5 +87,5 @@ index c64e290..c5432f7 100644
  	}
  
 -- 
-1.7.10.4
+1.8.3.2
 

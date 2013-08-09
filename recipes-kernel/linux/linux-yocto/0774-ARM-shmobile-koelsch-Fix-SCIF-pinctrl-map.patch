@@ -1,0 +1,30 @@
+From d71132edbb169aa9cd22f959ace01e5073e91b63 Mon Sep 17 00:00:00 2001
+From: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+Date: Mon, 29 Jul 2013 18:23:14 +0900
+Subject: [PATCH 0774/1083] ARM: shmobile: koelsch: Fix SCIF pinctrl map
+
+Signed-off-by: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+---
+ arch/arm/mach-shmobile/board-koelsch.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-koelsch.c b/arch/arm/mach-shmobile/board-koelsch.c
+index 0dd6a27..77d38c4 100644
+--- a/arch/arm/mach-shmobile/board-koelsch.c
++++ b/arch/arm/mach-shmobile/board-koelsch.c
+@@ -96,10 +96,10 @@ static struct spi_board_info spi_bus[] __initdata = {
+ 
+ static const struct pinctrl_map koelsch_pinctrl_map[] = {
+ 	/* SCIF0 (CN19: DEBUG SERIAL0) */
+-	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.0", "pfc-r8a7791",
++	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.6", "pfc-r8a7791",
+ 				  "scif0_data_d", "scif0"),
+ 	/* SCIF1 (CN20: DEBUG SERIAL1) */
+-	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.1", "pfc-r8a7791",
++	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.7", "pfc-r8a7791",
+ 				  "scif1_data_d", "scif1"),
+ 
+ 	/* MSIOF0 */
+-- 
+1.8.3.2
+

@@ -1,7 +1,7 @@
 From fb9d4ac38909610d193bc4bd0e9c82ad17a0b28c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 16 Feb 2013 23:39:07 +0100
-Subject: [PATCH 411/715] sh-pfc: Drop unused support for 1:1 physical to
+Subject: [PATCH 0411/1083] sh-pfc: Drop unused support for 1:1 physical to
  virtual memory mappings
 
 Now that all PFC platform devices provide memory resources support for
@@ -14,7 +14,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c |   15 ++++++---------
+ drivers/pinctrl/sh-pfc/core.c | 15 ++++++---------
  1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -60,5 +60,5 @@ index 327018d..130ac3d 100644
  
  struct sh_pfc_pin *sh_pfc_get_pin(struct sh_pfc *pfc, unsigned int pin)
 -- 
-1.7.10.4
+1.8.3.2
 

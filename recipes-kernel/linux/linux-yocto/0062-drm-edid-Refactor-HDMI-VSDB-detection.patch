@@ -1,7 +1,7 @@
 From e5dd2a8cb6f8d1e0c01c6e3737153b0e34fb24cb Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 16 Aug 2012 14:55:06 +0000
-Subject: [PATCH 062/715] drm: edid: Refactor HDMI VSDB detection
+Subject: [PATCH 0062/1083] drm: edid: Refactor HDMI VSDB detection
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -22,7 +22,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |   38 ++++++++++++++++++++++----------------
+ drivers/gpu/drm/drm_edid.c | 38 ++++++++++++++++++++++----------------
  1 file changed, 22 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -103,5 +103,5 @@ index bd5a112..47dcd9e 100644
  EXPORT_SYMBOL(drm_detect_hdmi_monitor);
  
 -- 
-1.7.10.4
+1.8.3.2
 

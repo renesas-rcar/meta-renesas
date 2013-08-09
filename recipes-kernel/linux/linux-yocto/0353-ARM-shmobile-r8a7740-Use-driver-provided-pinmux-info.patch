@@ -1,7 +1,7 @@
 From 55067040665231f24dca8a9b281c8ab1a11d22b8 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:25 +0100
-Subject: [PATCH 353/715] ARM: shmobile: r8a7740: Use driver-provided pinmux
+Subject: [PATCH 0353/1083] ARM: shmobile: r8a7740: Use driver-provided pinmux
  info
 
 Pinmux info for the r8a7740 is now provided by pinmux drivers. Remove
@@ -2722,5 +2722,5 @@ index 4d3c945..afbc142 100644
  static struct plat_sci_port scif0_platform_data = {
  	.mapbase	= 0xe6c40000,
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 0bad13a1e1db881b4c8c69dfcd1604fc270dc137 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Thu, 4 Apr 2013 11:22:48 +0900
-Subject: [PATCH 207/715] ARM: shmobile: defconfig: Begin common shmobile
+Subject: [PATCH 0207/1083] ARM: shmobile: defconfig: Begin common shmobile
  defconfig
 
 To begin with this is simply a copy of armadillo800eva_defconfig.
@@ -12,7 +12,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/configs/shmobile_defconfig |  153 +++++++++++++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig | 153 ++++++++++++++++++++++++++++++++++++
  1 file changed, 153 insertions(+)
  create mode 100644 arch/arm/configs/shmobile_defconfig
 
@@ -176,5 +176,5 @@ index 0000000..0f2d80d
 +CONFIG_CRYPTO_ANSI_CPRNG=y
 +CONFIG_XZ_DEC=y
 -- 
-1.7.10.4
+1.8.3.2
 

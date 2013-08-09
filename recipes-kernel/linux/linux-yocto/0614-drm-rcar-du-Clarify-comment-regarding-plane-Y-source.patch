@@ -1,7 +1,7 @@
 From 889ea5e86abd5cfab2235fbd3dcaf7b1fc3fe9ea Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 14 Jun 2013 20:54:16 +0200
-Subject: [PATCH 614/715] drm/rcar-du: Clarify comment regarding plane Y
+Subject: [PATCH 0614/1083] drm/rcar-du: Clarify comment regarding plane Y
  source coordinate
 
 The R8A7790 DU documentation contains further information regarding the
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |    9 ++++++---
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 9 ++++++---
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
@@ -39,5 +39,5 @@ index 13a9c87..f6647b2 100644
  	 */
  	rcar_du_plane_write(rcdu, index, PnSPXR, plane->src_x);
 -- 
-1.7.10.4
+1.8.3.2
 

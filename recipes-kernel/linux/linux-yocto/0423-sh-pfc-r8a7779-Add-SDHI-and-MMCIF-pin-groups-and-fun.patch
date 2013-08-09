@@ -1,7 +1,7 @@
 From 4d0ab7a8eacce239f17bf5358313b6016ec900e1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 19:04:43 +0100
-Subject: [PATCH 423/715] sh-pfc: r8a7779: Add SDHI and MMCIF pin groups and
+Subject: [PATCH 0423/1083] sh-pfc: r8a7779: Add SDHI and MMCIF pin groups and
  functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
@@ -10,7 +10,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  284 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 284 +++++++++++++++++++++++++++++++++++
  1 file changed, 284 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -326,5 +326,5 @@ index 9046a8f..ca16b04 100644
  
  #define PINMUX_FN_BASE	ARRAY_SIZE(pinmux_pins)
 -- 
-1.7.10.4
+1.8.3.2
 

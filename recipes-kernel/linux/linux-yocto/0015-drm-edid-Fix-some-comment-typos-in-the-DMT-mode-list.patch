@@ -1,7 +1,7 @@
 From 2b6fea859c3be6a621ef55915d9deb11e8b007db Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:35 -0400
-Subject: [PATCH 015/715] drm/edid: Fix some comment typos in the DMT mode
+Subject: [PATCH 0015/1083] drm/edid: Fix some comment typos in the DMT mode
  list
 
 Signed-off-by: Adam Jackson <ajax@redhat.com>
@@ -12,7 +12,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_modes.h |   10 +++++-----
+ drivers/gpu/drm/drm_edid_modes.h | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
@@ -57,5 +57,5 @@ index a8f604a..8bf8235 100644
  		   2176, 2528, 0, 1392, 1393, 1396, 1439, 0,
  		   DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_PVSYNC) },
 -- 
-1.7.10.4
+1.8.3.2
 

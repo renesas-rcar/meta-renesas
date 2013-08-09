@@ -1,7 +1,7 @@
 From 8bedfcf9e43aa5af19c561168f073ca554fdbb80 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:54:56 +0900
-Subject: [PATCH 525/715] ARM: shmobile: r8a7790: Add QSPI driver support
+Subject: [PATCH 0525/1083] ARM: shmobile: r8a7790: Add QSPI driver support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit 37824dde5a3effb5bc6695bb5a4ddb6f87095f14)
@@ -13,9 +13,9 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig    |   16 ++++++-
- arch/arm/mach-shmobile/clock-r8a7790.c |    9 +++-
- arch/arm/mach-shmobile/setup-r8a7790.c |   75 ++++++++++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig    | 16 +++++++-
+ arch/arm/mach-shmobile/clock-r8a7790.c |  9 +++-
+ arch/arm/mach-shmobile/setup-r8a7790.c | 75 ++++++++++++++++++++++++++++++++++
  3 files changed, 98 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -230,5 +230,5 @@ index 09bee62..5f30e9c 100644
  
  void __init r8a7790_timer_init(void)
 -- 
-1.7.10.4
+1.8.3.2
 

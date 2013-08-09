@@ -1,7 +1,7 @@
 From 826a7873f7a38013a67b3e782c58431bee12eda4 Mon Sep 17 00:00:00 2001
 From: Shiraz Hashim <shiraz.hashim@st.com>
 Date: Sat, 27 Oct 2012 15:21:36 +0530
-Subject: [PATCH 250/715] gpiolib: provide provision to register pin ranges
+Subject: [PATCH 0250/1083] gpiolib: provide provision to register pin ranges
 
 pinctrl subsystem needs gpio chip base to prepare set of gpio
 pin ranges, which a given pinctrl driver can handle. This is
@@ -31,16 +31,16 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/devicetree/bindings/gpio/gpio.txt |   36 +++++++++++++++
- Documentation/gpio.txt                          |   42 +++++++++++++++++
- Documentation/pinctrl.txt                       |    3 ++
- drivers/gpio/gpiolib-of.c                       |   56 +++++++++++++++++++++++
- drivers/gpio/gpiolib.c                          |   43 +++++++++++++++++
- drivers/pinctrl/core.c                          |   13 ++++++
- drivers/pinctrl/devicetree.c                    |   13 ++++++
- include/asm-generic/gpio.h                      |   25 ++++++++++
- include/linux/gpio.h                            |    3 ++
- include/linux/pinctrl/pinctrl.h                 |   17 +++++++
+ Documentation/devicetree/bindings/gpio/gpio.txt | 36 ++++++++++++++++
+ Documentation/gpio.txt                          | 42 +++++++++++++++++++
+ Documentation/pinctrl.txt                       |  3 ++
+ drivers/gpio/gpiolib-of.c                       | 56 +++++++++++++++++++++++++
+ drivers/gpio/gpiolib.c                          | 43 +++++++++++++++++++
+ drivers/pinctrl/core.c                          | 13 ++++++
+ drivers/pinctrl/devicetree.c                    | 13 ++++++
+ include/asm-generic/gpio.h                      | 25 +++++++++++
+ include/linux/gpio.h                            |  3 ++
+ include/linux/pinctrl/pinctrl.h                 | 17 ++++++++
  10 files changed, 251 insertions(+)
 
 diff --git a/Documentation/devicetree/bindings/gpio/gpio.txt b/Documentation/devicetree/bindings/gpio/gpio.txt
@@ -443,5 +443,5 @@ index 74b2540..3b23e80 100644
  extern const char *pinctrl_dev_get_devname(struct pinctrl_dev *pctldev);
  extern void *pinctrl_dev_get_drvdata(struct pinctrl_dev *pctldev);
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,8 @@
 From 6502671537bc2f0a7336649837868844904afa52 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Thu, 22 Nov 2012 09:53:55 +0100
-Subject: [PATCH 095/715] drm/edid: tune down debug message in parse_hdmi_vsdb
+Subject: [PATCH 0095/1083] drm/edid: tune down debug message in
+ parse_hdmi_vsdb
 
 Those tend to be totally not interesting for end-users, and for
 debugging we tend to dump the entire noise anyway by enabling all
@@ -14,7 +15,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    2 +-
+ drivers/gpu/drm/drm_edid.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -31,5 +32,5 @@ index 13100bd..baa85a1 100644
  		    "latency present %d %d, "
  		    "video latency %d %d, "
 -- 
-1.7.10.4
+1.8.3.2
 

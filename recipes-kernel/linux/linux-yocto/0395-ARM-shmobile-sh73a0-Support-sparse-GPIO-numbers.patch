@@ -1,7 +1,7 @@
 From d4116df51eec6f356ae2c2af2b5e411bc86f466e Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Tue, 12 Feb 2013 16:50:02 +0100
-Subject: [PATCH 395/715] ARM: shmobile: sh73a0: Support sparse GPIO numbers
+Subject: [PATCH 0395/1083] ARM: shmobile: sh73a0: Support sparse GPIO numbers
 
 The SH73A0 SoC has sparse GPIO numbers. Declare the pin numbers ranges
 in the PFC SoC data and use the pin numbers in the GPIO API.
@@ -16,11 +16,11 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-ag5evm.c        |   16 +++---
- arch/arm/mach-shmobile/board-kota2.c         |   42 +++++++--------
- arch/arm/mach-shmobile/board-kzm9g.c         |   14 ++---
- arch/arm/mach-shmobile/include/mach/sh73a0.h |    2 +-
- drivers/pinctrl/sh-pfc/pfc-sh73a0.c          |   75 ++++++++++++++------------
+ arch/arm/mach-shmobile/board-ag5evm.c        | 16 +++---
+ arch/arm/mach-shmobile/board-kota2.c         | 42 ++++++++--------
+ arch/arm/mach-shmobile/board-kzm9g.c         | 14 +++---
+ arch/arm/mach-shmobile/include/mach/sh73a0.h |  2 +-
+ drivers/pinctrl/sh-pfc/pfc-sh73a0.c          | 75 ++++++++++++++++------------
  5 files changed, 79 insertions(+), 70 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-ag5evm.c b/arch/arm/mach-shmobile/board-ag5evm.c
@@ -348,5 +348,5 @@ index 639b5e2..9cef0d8 100644
  	.nr_func_gpios = ARRAY_SIZE(pinmux_func_gpios),
  
 -- 
-1.7.10.4
+1.8.3.2
 

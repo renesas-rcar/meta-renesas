@@ -1,14 +1,14 @@
 From 6defb82094af49b72e572abfec180d74563a4439 Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Thu, 4 Apr 2013 11:57:12 +0900
-Subject: [PATCH 210/715] ARM: shmobile: Add kzm9d to consolidated defconfig
+Subject: [PATCH 0210/1083] ARM: shmobile: Add kzm9d to consolidated defconfig
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 (cherry picked from commit f032ffd21336aa77935fe193f2c7ee753bdf4ac5)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/configs/shmobile_defconfig |   16 ++++++++++++++--
+ arch/arm/configs/shmobile_defconfig | 16 ++++++++++++++--
  1 file changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -81,5 +81,5 @@ index fd1c074..8228e09 100644
  CONFIG_REGULATOR=y
  CONFIG_MEDIA_SUPPORT=y
 -- 
-1.7.10.4
+1.8.3.2
 

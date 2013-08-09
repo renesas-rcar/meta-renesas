@@ -1,7 +1,7 @@
 From de13dca0ce7222d707d0750eb6451b3ac9aa5030 Mon Sep 17 00:00:00 2001
 From: Haojian Zhuang <haojian.zhuang@linaro.org>
 Date: Sun, 17 Feb 2013 19:42:53 +0800
-Subject: [PATCH 269/715] pinctrl: generic: dump pin configuration
+Subject: [PATCH 0269/1083] pinctrl: generic: dump pin configuration
 
 Add the support of dumping pin configuration.
 
@@ -11,8 +11,8 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/pinconf-generic.c |   14 ++++++++++++++
- drivers/pinctrl/pinconf.h         |    8 ++++++++
+ drivers/pinctrl/pinconf-generic.c | 14 ++++++++++++++
+ drivers/pinctrl/pinconf.h         |  8 ++++++++
  2 files changed, 22 insertions(+)
 
 diff --git a/drivers/pinctrl/pinconf-generic.c b/drivers/pinctrl/pinconf-generic.c
@@ -70,5 +70,5 @@ index 54510de..5a52bbb 100644
 +}
  #endif
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,0 +1,38 @@
+From 9f84c61c1ae98f32810abde360c7fb693f6f048e Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Tue, 30 Jul 2013 19:31:15 +0900
+Subject: [PATCH 0803/1083] ASoC: sh: scu: Fix author
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ sound/soc/sh/lager.c   | 2 +-
+ sound/soc/sh/scu_dai.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/sh/lager.c b/sound/soc/sh/lager.c
+index 2b177e2..3c71447 100644
+--- a/sound/soc/sh/lager.c
++++ b/sound/soc/sh/lager.c
+@@ -677,6 +677,6 @@ static struct platform_driver lager_alsa_driver = {
+ 
+ module_platform_driver(lager_alsa_driver);
+ 
+-MODULE_AUTHOR("Renesas Electronics");
++MODULE_AUTHOR("Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>");
+ MODULE_DESCRIPTION("ALSA SoC LAGER");
+ MODULE_LICENSE("GPL v2");
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index bb60176..757381c 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -1480,6 +1480,6 @@ static struct platform_driver scu_driver = {
+ 
+ module_platform_driver(scu_driver);
+ 
+-MODULE_AUTHOR("Carlos Munoz <carlos@kenati.com>");
++MODULE_AUTHOR("Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>");
+ MODULE_DESCRIPTION("ALSA SoC SH7722 SIU driver");
+ MODULE_LICENSE("GPL");
+-- 
+1.8.3.2
+

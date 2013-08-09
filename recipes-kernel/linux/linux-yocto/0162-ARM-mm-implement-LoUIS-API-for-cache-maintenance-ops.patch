@@ -1,7 +1,7 @@
 From ecb3196ed2ba377b850759a042554c64a5df81d7 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Mon, 4 Feb 2013 10:42:03 +0900
-Subject: [PATCH 162/715] ARM: mm: implement LoUIS API for cache maintenance
+Subject: [PATCH 0162/1083] ARM: mm: implement LoUIS API for cache maintenance
  ops
 
 ARM v7 architecture introduced the concept of cache levels and related
@@ -43,30 +43,30 @@ Tested-by: Shawn Guo <shawn.guo@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/cacheflush.h |   15 +++++++++++++++
- arch/arm/include/asm/glue-cache.h |    1 +
- arch/arm/mm/cache-fa.S            |    3 +++
- arch/arm/mm/cache-v3.S            |    3 +++
- arch/arm/mm/cache-v4.S            |    3 +++
- arch/arm/mm/cache-v4wb.S          |    3 +++
- arch/arm/mm/cache-v4wt.S          |    3 +++
- arch/arm/mm/cache-v6.S            |    3 +++
- arch/arm/mm/cache-v7.S            |   36 ++++++++++++++++++++++++++++++++++++
- arch/arm/mm/proc-arm1020.S        |    3 +++
- arch/arm/mm/proc-arm1020e.S       |    3 +++
- arch/arm/mm/proc-arm1022.S        |    3 +++
- arch/arm/mm/proc-arm1026.S        |    3 +++
- arch/arm/mm/proc-arm920.S         |    3 +++
- arch/arm/mm/proc-arm922.S         |    3 +++
- arch/arm/mm/proc-arm925.S         |    3 +++
- arch/arm/mm/proc-arm926.S         |    3 +++
- arch/arm/mm/proc-arm940.S         |    3 +++
- arch/arm/mm/proc-arm946.S         |    3 +++
- arch/arm/mm/proc-feroceon.S       |    3 +++
- arch/arm/mm/proc-macros.S         |    1 +
- arch/arm/mm/proc-mohawk.S         |    3 +++
- arch/arm/mm/proc-xsc3.S           |    3 +++
- arch/arm/mm/proc-xscale.S         |    3 +++
+ arch/arm/include/asm/cacheflush.h | 15 +++++++++++++++
+ arch/arm/include/asm/glue-cache.h |  1 +
+ arch/arm/mm/cache-fa.S            |  3 +++
+ arch/arm/mm/cache-v3.S            |  3 +++
+ arch/arm/mm/cache-v4.S            |  3 +++
+ arch/arm/mm/cache-v4wb.S          |  3 +++
+ arch/arm/mm/cache-v4wt.S          |  3 +++
+ arch/arm/mm/cache-v6.S            |  3 +++
+ arch/arm/mm/cache-v7.S            | 36 ++++++++++++++++++++++++++++++++++++
+ arch/arm/mm/proc-arm1020.S        |  3 +++
+ arch/arm/mm/proc-arm1020e.S       |  3 +++
+ arch/arm/mm/proc-arm1022.S        |  3 +++
+ arch/arm/mm/proc-arm1026.S        |  3 +++
+ arch/arm/mm/proc-arm920.S         |  3 +++
+ arch/arm/mm/proc-arm922.S         |  3 +++
+ arch/arm/mm/proc-arm925.S         |  3 +++
+ arch/arm/mm/proc-arm926.S         |  3 +++
+ arch/arm/mm/proc-arm940.S         |  3 +++
+ arch/arm/mm/proc-arm946.S         |  3 +++
+ arch/arm/mm/proc-feroceon.S       |  3 +++
+ arch/arm/mm/proc-macros.S         |  1 +
+ arch/arm/mm/proc-mohawk.S         |  3 +++
+ arch/arm/mm/proc-xsc3.S           |  3 +++
+ arch/arm/mm/proc-xscale.S         |  3 +++
  24 files changed, 113 insertions(+)
 
 diff --git a/arch/arm/include/asm/cacheflush.h b/arch/arm/include/asm/cacheflush.h
@@ -482,5 +482,5 @@ index 4ffebaa..b5ea31d 100644
  	define_cache_functions xscale
  
 -- 
-1.7.10.4
+1.8.3.2
 

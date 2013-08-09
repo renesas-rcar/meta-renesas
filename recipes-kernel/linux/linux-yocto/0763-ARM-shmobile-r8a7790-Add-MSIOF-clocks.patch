@@ -1,0 +1,60 @@
+From 4a7c7e45b898a966558352b7df94be648811dc21 Mon Sep 17 00:00:00 2001
+From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+Date: Mon, 29 Jul 2013 12:29:12 +0900
+Subject: [PATCH 0763/1083] ARM: shmobile: r8a7790: Add MSIOF clocks
+
+The clocks of MSIOF 0/2/3 are added.
+
+Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7790.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
+index 778389c..45a8fa5 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7790.c
++++ b/arch/arm/mach-shmobile/clock-r8a7790.c
+@@ -48,6 +48,7 @@
+ #define CPG_BASE 0xe6150000
+ #define CPG_LEN 0x1000
+ 
++#define SMSTPCR0	0xE6150130
+ #define SMSTPCR1	0xE6150134
+ #define SMSTPCR2	0xe6150138
+ #define SMSTPCR3	0xE615013C
+@@ -202,8 +203,9 @@ enum {
+ 	MSTP717, MSTP716,
+ 	MSTP522,
+ 	MSTP328, MSTP315, MSTP314, MSTP313, MSTP312, MSTP311, MSTP305, MSTP304,
+-	MSTP216, MSTP208, MSTP207, MSTP206, MSTP204, MSTP203, MSTP202,
++	MSTP216, MSTP207, MSTP206, MSTP204, MSTP203, MSTP202,
+ 	MSTP112,
++	MSTP000, MSTP208, MSTP205, MSTP215,
+ 	MSTP219, MSTP218,
+ 	MSTP502, MSTP501,
+ 	MSTP811, MSTP810, MSTP809, MSTP808,
+@@ -232,7 +234,10 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP305] = SH_CLK_MSTP32(&div6_clks[DIV6_MMC1], SMSTPCR3, 5, 0), /* MMC1 */
+ 	[MSTP304] = SH_CLK_MSTP32(&cp_clk, SMSTPCR3, 4, 0), /* TPU0 */
+ 	[MSTP216] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 16, 0), /* SCIFB2 */
++	[MSTP000] = SH_CLK_MSTP32(&mp_clk, SMSTPCR0, 0, 0), /* MSIOF0 */
+ 	[MSTP208] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 8, 0), /* MSIOF1 */
++	[MSTP205] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 5, 0), /* MSIOF2 */
++	[MSTP215] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 15, 0), /* MSIOF3 */
+ 	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
+ 	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
+ 	[MSTP204] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 4, 0), /* SCIFA0 */
+@@ -349,7 +354,10 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("usb_fck", &mstp_clks[MSTP703]),
+ 	CLKDEV_CON_ID("ss_usb", &mstp_clks[MSTP328]),
+ 	CLKDEV_DEV_ID("qspi.0", &mstp_clks[MSTP917]),
++	CLKDEV_DEV_ID("spi_sh_msiof.1", &mstp_clks[MSTP000]),
+ 	CLKDEV_DEV_ID("spi_sh_msiof.2", &mstp_clks[MSTP208]),
++	CLKDEV_DEV_ID("spi_sh_msiof.3", &mstp_clks[MSTP205]),
++	CLKDEV_DEV_ID("spi_sh_msiof.4", &mstp_clks[MSTP215]),
+ 	CLKDEV_DEV_ID("i2c-rcar.0", &mstp_clks[MSTP931]),
+ 	CLKDEV_DEV_ID("i2c-rcar.1", &mstp_clks[MSTP930]),
+ 	CLKDEV_DEV_ID("i2c-rcar.2", &mstp_clks[MSTP929]),
+-- 
+1.8.3.2
+

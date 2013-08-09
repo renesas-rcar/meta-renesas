@@ -1,8 +1,8 @@
 From ab29b786ee7ec9d8ff9e15cfb6e56acf57c7b90e Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 17:30:25 +0100
-Subject: [PATCH 457/715] sh-pfc: Configure pins as GPIOs at request time when
- handled externally
+Subject: [PATCH 0457/1083] sh-pfc: Configure pins as GPIOs at request time
+ when handled externally
 
 When a GPIO is handled by a separate driver the pinmux
 gpio_set_direction() handler won't be called. The pin mux type then need
@@ -13,8 +13,8 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c    |   37 ++++++++++++++++---------------------
- drivers/pinctrl/sh-pfc/pinctrl.c |   11 +++++++++++
+ drivers/pinctrl/sh-pfc/core.c    | 37 ++++++++++++++++---------------------
+ drivers/pinctrl/sh-pfc/pinctrl.c | 11 +++++++++++
  2 files changed, 27 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -112,5 +112,5 @@ index aef268b..3492ec9 100644
  
  	ret = 0;
 -- 
-1.7.10.4
+1.8.3.2
 

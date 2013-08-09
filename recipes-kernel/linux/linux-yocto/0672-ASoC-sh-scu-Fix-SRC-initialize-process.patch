@@ -1,7 +1,7 @@
 From 20f903512c7d756bf398eaf4239dff1bc6cdd7df Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Wed, 26 Jun 2013 13:36:17 +0900
-Subject: [PATCH 672/715] ASoC: sh: scu: Fix SRC initialize process
+Subject: [PATCH 0672/1083] ASoC: sh: scu: Fix SRC initialize process
 
 Modify the interface (argument) of callback function for SRC process.
 Move the SRC process that is executed in the PCM function to the callback
@@ -12,9 +12,9 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- include/sound/sh_scu.h |    9 ++++-----
- sound/soc/sh/scu_dai.c |   40 ++++++++++++++++++++++++++++------------
- sound/soc/sh/scu_pcm.c |   12 ++++--------
+ include/sound/sh_scu.h |  9 ++++-----
+ sound/soc/sh/scu_dai.c | 40 ++++++++++++++++++++++++++++------------
+ sound/soc/sh/scu_pcm.c | 12 ++++--------
  3 files changed, 36 insertions(+), 25 deletions(-)
 
 diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
@@ -207,5 +207,5 @@ index f4a436e..d9c2eb8 100644
  		}
  
 -- 
-1.7.10.4
+1.8.3.2
 

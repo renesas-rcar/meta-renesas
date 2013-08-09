@@ -1,8 +1,8 @@
 From 0d2bace6ec87ab66e06358d2429e0580b5596ee1 Mon Sep 17 00:00:00 2001
 From: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
 Date: Fri, 16 Nov 2012 10:51:24 +0900
-Subject: [PATCH 589/715] Partially revert "serial: sh-sci: console Runtime PM
- support"
+Subject: [PATCH 0589/1083] Partially revert "serial: sh-sci: console Runtime
+ PM support"
 
 This partially reverts commit 1ba7622094 (serial: sh-sci: console
 Runtime PM support, from Magnus Damm <damm@opensource.se>, 2011-08-03).
@@ -27,7 +27,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/tty/serial/sh-sci.c |   53 +------------------------------------------
+ drivers/tty/serial/sh-sci.c | 53 +--------------------------------------------
  1 file changed, 1 insertion(+), 52 deletions(-)
 
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
@@ -123,5 +123,5 @@ index 9abe977..e9e8883 100644
  	.resume		= sci_resume,
  };
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,14 +1,14 @@
 From b100f32865d2415b53e2361581c3a0bfd4409333 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:44:16 +0900
-Subject: [PATCH 500/715] drm: Fix FBIOPAN_DISPLAY ywrapstep
+Subject: [PATCH 0500/1083] drm: Fix FBIOPAN_DISPLAY ywrapstep
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit eed5d53a27d636cfab0132e3234bb3f1f146bea4)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/drm_fb_helper.c |    2 +-
+ drivers/gpu/drm/drm_fb_helper.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
@@ -25,5 +25,5 @@ index 698039b..d82be0f 100644
  	info->fix.type_aux = 0;
  
 -- 
-1.7.10.4
+1.8.3.2
 

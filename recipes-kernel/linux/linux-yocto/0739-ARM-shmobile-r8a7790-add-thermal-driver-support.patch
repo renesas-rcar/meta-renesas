@@ -1,0 +1,56 @@
+From 6dc24665c9f47612dc65dd4a2e2a8fd9ab5c73dc Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 26 Jun 2013 16:22:21 +0900
+Subject: [PATCH 0739/1083] ARM: shmobile: r8a7790: add thermal driver support
+
+The current temperature may be read using:
+cat /sys/class/thermal/thermal_zone0/temp
+
+Based on similar work for the r8a73a4 by Kuninori Morimoto.
+
+Cc: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit fa13d0f6f0a285f5ed6575feaa6f1968bc2fbc2d)
+
+Conflicts:
+	arch/arm/mach-shmobile/setup-r8a7790.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7790.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 069d859..34f540e 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -1925,6 +1925,17 @@ static struct resource irqc0_resources[] = {
+ 					  &irqc##idx##_data,		\
+ 					  sizeof(struct renesas_irqc_config))
+ 
++static struct resource thermal_resources[] __initdata = {
++	DEFINE_RES_MEM(0xe61f0000, 0x14),
++	DEFINE_RES_MEM(0xe61f0100, 0x38),
++	DEFINE_RES_IRQ(gic_spi(69)),
++};
++
++#define r8a7790_register_thermal()					\
++	platform_device_register_simple("rcar_thermal", -1,		\
++					thermal_resources,		\
++					ARRAY_SIZE(thermal_resources))
++
+ void __init r8a7790_add_standard_devices(void)
+ {
+ 	r8a7790_pm_init();
+@@ -1966,6 +1977,8 @@ void __init r8a7790_add_standard_devices(void)
+ 
+ 	/* spidev for MSIOF */
+ 	spi_register_board_info(spi_bus, ARRAY_SIZE(spi_bus));
++
++	r8a7790_register_thermal();
+ }
+ 
+ void __init r8a7790_timer_init(void)
+-- 
+1.8.3.2
+

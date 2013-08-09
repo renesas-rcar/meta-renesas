@@ -1,0 +1,87 @@
+From 50647066ab96f6a0b0b9bb9318aaadfaac559931 Mon Sep 17 00:00:00 2001
+From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+Date: Mon, 29 Jul 2013 12:48:14 +0900
+Subject: [PATCH 0764/1083] ARM: shmobile: lager: Move MSIOF spi_board_info to
+ board dependence part
+
+Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c   | 15 +++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c | 14 --------------
+ 2 files changed, 15 insertions(+), 14 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index b62217a..6706a01 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -31,6 +31,7 @@
+ #include <linux/platform_data/rcar-du.h>
+ #include <linux/platform_device.h>
+ #include <linux/i2c.h>
++#include <linux/spi/spi.h>
+ #include <mach/common.h>
+ #include <mach/r8a7790.h>
+ #include <asm/mach-types.h>
+@@ -100,6 +101,17 @@ static __initdata struct gpio_led_platform_data lager_leds_pdata = {
+ 	.num_leds	= ARRAY_SIZE(lager_leds),
+ };
+ 
++/* spidev for MSIOF */
++static struct spi_board_info spi_bus[] __initdata = {
++	{
++		.modalias       = "spidev",
++		.max_speed_hz   = 6000000,
++		.mode           = SPI_MODE_3,
++		.bus_num        = 2,
++		.chip_select    = 0,
++	},
++};
++
+ /* GPIO KEY */
+ #define GPIO_KEY(c, g, d, ...) \
+ 	{ .code = c, .gpio = g, .desc = d, .active_low = 1 }
+@@ -214,6 +226,9 @@ static void __init lager_add_standard_devices(void)
+ 	platform_device_register_data(&platform_bus, "gpio-keys", -1,
+ 				      &lager_keys_pdata,
+ 				      sizeof(lager_keys_pdata));
++
++	/* spidev for MSIOF */
++	spi_register_board_info(spi_bus, ARRAY_SIZE(spi_bus));
+ }
+ 
+ static const char *lager_boards_compat_dt[] __initdata = {
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 3eb9881..71cbaa8 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -952,17 +952,6 @@ static struct platform_device sh_msiof3_device = {
+ 	.resource	= sh_msiof3_resources,
+ };
+ 
+-/* spidev for MSIOF */
+-static struct spi_board_info spi_bus[] __initdata = {
+-	{
+-		.modalias	= "spidev",
+-		.max_speed_hz	= 6000000,
+-		.mode		= SPI_MODE_3,
+-		.bus_num	= 2,
+-		.chip_select	= 0,
+-	},
+-};
+-
+ /* I2C */
+ static struct i2c_rcar_platform_data i2c_pd[] = {
+ 	{
+@@ -1975,9 +1964,6 @@ void __init r8a7790_add_standard_devices(void)
+ 	/* QSPI flash memory */
+ 	spi_register_board_info(spi_info, ARRAY_SIZE(spi_info));
+ 
+-	/* spidev for MSIOF */
+-	spi_register_board_info(spi_bus, ARRAY_SIZE(spi_bus));
+-
+ 	r8a7790_register_thermal();
+ }
+ 
+-- 
+1.8.3.2
+

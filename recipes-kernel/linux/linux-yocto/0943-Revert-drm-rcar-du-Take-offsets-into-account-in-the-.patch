@@ -1,0 +1,33 @@
+From abfe2921f01173839aaed1d9f5b4a82e02e2351a Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:20 +0900
+Subject: [PATCH 0943/1083] Revert "drm/rcar-du: Take offsets into account in
+ the mode_set_base handler"
+
+This reverts commit c6eaf567b0c0ab01075ef8147adf732a37acafe2.
+(cherry picked from commit 274e652994659e4bbaeab9b4a733b325194616f2)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 01e9d24..08a69db 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -445,11 +445,6 @@ static void rcar_du_crtc_mode_commit(struct drm_crtc *crtc)
+ static int rcar_du_crtc_mode_set_base(struct drm_crtc *crtc, int x, int y,
+ 				      struct drm_framebuffer *old_fb)
+ {
+-	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+-
+-	rcrtc->plane->src_x = x;
+-	rcrtc->plane->src_y = y;
+-
+ 	rcar_du_crtc_update_base(to_rcar_crtc(crtc));
+ 
+ 	return 0;
+-- 
+1.8.3.2
+

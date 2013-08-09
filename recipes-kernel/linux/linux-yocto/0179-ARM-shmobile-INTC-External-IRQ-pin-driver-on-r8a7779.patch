@@ -1,7 +1,7 @@
 From 4f83d3227ad99072e622b290a5631729eb6c9ffe Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 26 Feb 2013 12:01:18 +0900
-Subject: [PATCH 179/715] ARM: shmobile: INTC External IRQ pin driver on
+Subject: [PATCH 0179/1083] ARM: shmobile: INTC External IRQ pin driver on
  r8a7779
 
 Update the r8a7779 IRQ code to make use of the
@@ -35,10 +35,10 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms@verge.net.au>
 ---
- arch/arm/mach-shmobile/Kconfig               |    1 +
- arch/arm/mach-shmobile/board-marzen.c        |    3 +-
- arch/arm/mach-shmobile/include/mach/common.h |    2 +
- arch/arm/mach-shmobile/intc-r8a7779.c        |   52 ++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/Kconfig               |  1 +
+ arch/arm/mach-shmobile/board-marzen.c        |  3 +-
+ arch/arm/mach-shmobile/include/mach/common.h |  2 ++
+ arch/arm/mach-shmobile/intc-r8a7779.c        | 52 ++++++++++++++++++++++++++++
  4 files changed, 57 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
@@ -163,5 +163,5 @@ index f04fad4..9de6d03 100644
  {
  	return 0; /* always allow wakeup */
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From d23e7a167334f5e8a525bffe944a62b2c9dcb561 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:36:28 +0100
-Subject: [PATCH 435/715] sh-pfc: r8a7779: Remove SDHI and MMCIF function
+Subject: [PATCH 0435/1083] sh-pfc: r8a7779: Remove SDHI and MMCIF function
  GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the SDHI and
@@ -13,7 +13,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  112 +++++++++++++++++-----------------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 112 +++++++++++++++++------------------
  1 file changed, 56 insertions(+), 56 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -236,5 +236,5 @@ index f1fa355..0a65003 100644
  	GPIO_FN(VI1_G0), GPIO_FN(VI3_DATA0),
  	GPIO_FN(TS_SCK1), GPIO_FN(DREQ2_B), GPIO_FN(TX2), GPIO_FN(SPA_TDO),
 -- 
-1.7.10.4
+1.8.3.2
 

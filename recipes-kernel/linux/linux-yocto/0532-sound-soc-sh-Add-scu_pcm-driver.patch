@@ -1,7 +1,7 @@
 From 1a02d9a898d829850d0a02d37d22d6b22ae6d7c9 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Thu, 13 Jun 2013 14:33:32 +0900
-Subject: [PATCH 532/715] sound: soc: sh: Add scu_pcm driver
+Subject: [PATCH 0532/1083] sound: soc: sh: Add scu_pcm driver
 
 Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 (cherry picked from commit 6b6ab4912be63a90a37c9ba44ac7a9f6c1fb5b13)
@@ -4614,5 +4614,5 @@ index 0000000..f4a436e
 +};
 +EXPORT_SYMBOL_GPL(scu_platform);
 -- 
-1.7.10.4
+1.8.3.2
 

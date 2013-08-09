@@ -1,7 +1,7 @@
 From 41b927f2484eba803cec6e90954aa23c9b0a5410 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:19 +0200
-Subject: [PATCH 469/715] sh-pfc: r8a7790: Remove function GPIOs
+Subject: [PATCH 0469/1083] sh-pfc: r8a7790: Remove function GPIOs
 
 No r8a7770 platform use the function GPIOs API. Remove it.
 
@@ -12,7 +12,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |  350 ----------------------------------
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 350 -----------------------------------
  1 file changed, 350 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -384,5 +384,5 @@ index 7716a1e..51219e1 100644
  
  	.gpio_data = pinmux_data,
 -- 
-1.7.10.4
+1.8.3.2
 

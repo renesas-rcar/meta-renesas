@@ -1,8 +1,8 @@
 From a6274fd1a24220e08517918b7699991cc79bb2f1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:31 +0100
-Subject: [PATCH 400/715] ARM: shmobile: armadillo800eva: Use gpio_set_value()
- to set GPIO value
+Subject: [PATCH 0400/1083] ARM: shmobile: armadillo800eva: Use
+ gpio_set_value() to set GPIO value
 
 The GPIO is already configured as an output, there's no reason to use
 gpio_direction_output() just to set the output value. Use
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-armadillo800eva.c |    4 ++--
+ arch/arm/mach-shmobile/board-armadillo800eva.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
@@ -35,5 +35,5 @@ index 5595497..e676c8e 100644
  	}
  
 -- 
-1.7.10.4
+1.8.3.2
 

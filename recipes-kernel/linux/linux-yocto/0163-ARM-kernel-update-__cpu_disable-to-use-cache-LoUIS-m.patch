@@ -1,8 +1,8 @@
 From 5949a6fd9ecb4ecd50f82cd217527f6a863e69e8 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Mon, 4 Feb 2013 10:42:18 +0900
-Subject: [PATCH 163/715] ARM: kernel: update __cpu_disable to use cache LoUIS
- maintenance API
+Subject: [PATCH 0163/1083] ARM: kernel: update __cpu_disable to use cache
+ LoUIS maintenance API
 
 When a CPU is hotplugged out caches that reside in its power domain
 lose their contents and so must be cleaned to the next memory level.
@@ -24,7 +24,7 @@ Tested-by: Shawn Guo <shawn.guo@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/smp.c |    5 ++++-
+ arch/arm/kernel/smp.c | 5 ++++-
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
@@ -45,5 +45,5 @@ index 8f14a1b..0b80aab 100644
  
  	read_lock(&tasklist_lock);
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 89c3175362ca362d414630de74f4d0ec38d94bfd Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:48 +0100
-Subject: [PATCH 304/715] sh-pfc: Use devm_kzalloc()
+Subject: [PATCH 0304/1083] sh-pfc: Use devm_kzalloc()
 
 Replace probe-time kmalloc()/kzalloc() calls with devm_kzalloc() and get
 rid of the corresponding kfree() calls.
@@ -13,9 +13,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c    |   20 +++++++-------------
- drivers/sh/pfc/gpio.c    |    8 +++-----
- drivers/sh/pfc/pinctrl.c |   31 +++++++++----------------------
+ drivers/sh/pfc/core.c    | 20 +++++++-------------
+ drivers/sh/pfc/gpio.c    |  8 +++-----
+ drivers/sh/pfc/pinctrl.c | 31 +++++++++----------------------
  3 files changed, 19 insertions(+), 40 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -195,5 +195,5 @@ index 2fc8731..b3dbefd 100644
  	return 0;
  }
 -- 
-1.7.10.4
+1.8.3.2
 

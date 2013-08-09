@@ -1,7 +1,7 @@
 From 0a2857db7717101e2580c13d4d234465d75b7e12 Mon Sep 17 00:00:00 2001
 From: Lars-Peter Clausen <lars@metafoo.de>
 Date: Tue, 11 Sep 2012 19:56:23 +0100
-Subject: [PATCH 563/715] ARM: 7534/1: clk: Make the managed clk functions
+Subject: [PATCH 0563/1083] ARM: 7534/1: clk: Make the managed clk functions
  generically available
 
 The managed clk functions are currently only available when the generic clk
@@ -33,7 +33,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/clk/clkdev.c |   45 ---------------------------------------------
+ drivers/clk/clkdev.c | 45 ---------------------------------------------
  1 file changed, 45 deletions(-)
 
 diff --git a/drivers/clk/clkdev.c b/drivers/clk/clkdev.c
@@ -93,5 +93,5 @@ index a9a1137..6db161f 100644
  {
  	mutex_lock(&clocks_mutex);
 -- 
-1.7.10.4
+1.8.3.2
 

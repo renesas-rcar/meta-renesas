@@ -1,11 +1,11 @@
 From 3fb935b11f3fdf161c5e35310d4f0603f2d2dc7c Mon Sep 17 00:00:00 2001
 From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 Date: Fri, 28 Jun 2013 22:34:27 +0900
-Subject: [PATCH 713/715] ARM: shmobile: defconfig: Enable EXT2 and EXT3 FS
+Subject: [PATCH 0713/1083] ARM: shmobile: defconfig: Enable EXT2 and EXT3 FS
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig |   14 ++++++++++++++
+ arch/arm/configs/shmobile_defconfig | 14 ++++++++++++++
  1 file changed, 14 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -34,5 +34,5 @@ index 3ebee99..d55ac24 100644
  # CONFIG_INET_XFRM_MODE_TUNNEL is not set
  # CONFIG_INET_XFRM_MODE_BEET is not set
 -- 
-1.7.10.4
+1.8.3.2
 

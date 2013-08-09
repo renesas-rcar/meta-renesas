@@ -1,7 +1,7 @@
 From c9ecb69b06508958b3cf91923b194c96f5580f5c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 03:27:00 +0100
-Subject: [PATCH 453/715] gpio-rcar: Add pinctrl support
+Subject: [PATCH 0453/1083] gpio-rcar: Add pinctrl support
 
 Register the GPIO pin range, and request and free GPIO pins using the
 pinctrl API.
@@ -12,8 +12,8 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpio-rcar.c                |   23 +++++++++++++++++++++++
- include/linux/platform_data/gpio-rcar.h |    1 +
+ drivers/gpio/gpio-rcar.c                | 23 +++++++++++++++++++++++
+ include/linux/platform_data/gpio-rcar.h |  1 +
  2 files changed, 24 insertions(+)
 
 diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
@@ -84,5 +84,5 @@ index bebfcd8..b253f77 100644
  
  #endif /* __GPIO_RCAR_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

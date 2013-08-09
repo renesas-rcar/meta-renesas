@@ -1,7 +1,7 @@
 From 8983374bd3443bf4f13997cf55112ae613dd9d46 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:34 +0100
-Subject: [PATCH 344/715] sh-pfc: Add sh7723 pinmux support
+Subject: [PATCH 0344/1083] sh-pfc: Add sh7723 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -1977,5 +1977,5 @@ index 0000000..fa3d36b
 +	.gpio_data_size = ARRAY_SIZE(pinmux_data),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

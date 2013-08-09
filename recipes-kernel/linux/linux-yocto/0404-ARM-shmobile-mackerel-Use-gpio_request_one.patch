@@ -1,7 +1,7 @@
 From 9f22898723fd0ac552f96df640b02fd30da59c08 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:35 +0100
-Subject: [PATCH 404/715] ARM: shmobile: mackerel: Use gpio_request_one()
+Subject: [PATCH 0404/1083] ARM: shmobile: mackerel: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-mackerel.c |   16 ++++++----------
+ arch/arm/mach-shmobile/board-mackerel.c | 16 ++++++----------
  1 file changed, 6 insertions(+), 10 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-mackerel.c b/arch/arm/mach-shmobile/board-mackerel.c
@@ -66,5 +66,5 @@ index 8969a03..ed05efa 100644
  	/* MMCIF */
  	gpio_request(GPIO_FN_MMCD0_0, NULL);
 -- 
-1.7.10.4
+1.8.3.2
 

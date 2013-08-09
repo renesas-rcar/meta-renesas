@@ -1,0 +1,130 @@
+From 989446c73b30492ee68eb9d0aaa560aaddfcc750 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Tue, 30 Jul 2013 18:09:17 +0900
+Subject: [PATCH 0807/1083] ASoC: sh: scu: Fix SSI start and stop procedure
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ sound/soc/sh/scu_dai.c | 94 +++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 67 insertions(+), 27 deletions(-)
+
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index 166313d..7742565 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -151,22 +151,29 @@ static void scu_ssi_control(int master_ch, int slave_ch)
+ 
+ static void scu_ssi_start(int ssi_ch)
+ {
+-	u32 val, reg;
++	u32 val;
+ 
+ 	FNC_ENTRY
+-	/* SSI enable (figure.39.12 flow) */
+-	val = readl(&rinfo->ssireg[ssi_ch]->cr);
+-	val |= (SSICR_DMEN | SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
+-	writel(val, &rinfo->ssireg[ssi_ch]->cr);
+-
+-	/* SSIU start (figure.39.12 flow) */
+-	if (ssi_ch == 0)
+-		reg = SSI0_0_CONTROL;
+-	else
+-		reg = SSI1_0_CONTROL;
+-
+-	scu_or_writel(SSI_CTRL_4CH_START0,
+-		(u32 *)(rinfo->ssiureg + reg));
++	if (ssi_ch == 0) {
++		/* SSI enable (figure.39.12 flow) */
++		val = readl(&rinfo->ssireg[ssi_ch]->cr);
++		val |= (SSICR_DMEN | SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
++		writel(val, &rinfo->ssireg[ssi_ch]->cr);
++
++		/* SSIU start (figure.39.12 flow) */
++		scu_or_writel(SSI_CTRL_4CH_START0,
++			(u32 *)(rinfo->ssiureg + SSI0_0_CONTROL));
++	} else if (ssi_ch == 1) {
++		/* SSIU start (figure.39.14 flow) */
++		scu_or_writel(SSI_CTRL_4CH_START0,
++			(u32 *)(rinfo->ssiureg + SSI1_0_CONTROL));
++
++		/* SSI enable (figure.39.14 flow) */
++		val = readl(&rinfo->ssireg[ssi_ch]->cr);
++		val |= (SSICR_DMEN | SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
++		writel(val, &rinfo->ssireg[ssi_ch]->cr);
++	} else
++		pr_info("%s ssi channel error", __func__);
+ 
+ 	FNC_EXIT
+ 	return;
+@@ -174,22 +181,55 @@ static void scu_ssi_start(int ssi_ch)
+ 
+ static void scu_ssi_stop(int ssi_ch)
+ {
+-	u32 val, reg;
++	u32 val;
++	int tmout;
+ 
+ 	FNC_ENTRY
+-	/* SSI disable (figure.39.13 flow) */
+-	val = readl(&rinfo->ssireg[ssi_ch]->cr);
+-	val &= ~(SSICR_DMEN | SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
+-	writel(val, &rinfo->ssireg[ssi_ch]->cr);
+-	FNC_EXIT
+-
+-	/* SSIU stop (figure.39.13 flow) */
+-	if (ssi_ch == 0)
+-		reg = SSI0_0_CONTROL;
+-	else
+-		reg = SSI1_0_CONTROL;
++	if (ssi_ch == 0) {
++		/* SSI disable (figure.39.13 flow) */
++		val = readl(&rinfo->ssireg[ssi_ch]->cr);
++		val &= ~SSICR_DMEN;
++		writel(val, &rinfo->ssireg[ssi_ch]->cr);
++
++		tmout = 1000;
++		while (--tmout &&
++		    !(readl(&rinfo->ssireg[ssi_ch]->sr) & SSISR_DIRQ))
++			udelay(1);
++		if (!tmout)
++			pr_info("timeout waiting for SSI data idle\n");
++
++		val = readl(&rinfo->ssireg[ssi_ch]->cr);
++		val &= ~(SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
++		writel(val, &rinfo->ssireg[ssi_ch]->cr);
++
++		tmout = 1000;
++		while (--tmout &&
++		    !(readl(&rinfo->ssireg[ssi_ch]->sr) & SSISR_IDST))
++			udelay(1);
++		if (!tmout)
++			pr_info("timeout waiting for SSI idle\n");
++
++		/* SSIU stop (figure.39.13 flow) */
++		writel(0, (u32 *)(rinfo->ssiureg + SSI0_0_CONTROL));
++	} else if (ssi_ch == 1) {
++		/* SSIU stop (figure.39.15 flow) */
++		writel(0, (u32 *)(rinfo->ssiureg + SSI1_0_CONTROL));
++
++		/* SSI disable (figure.39.15 flow) */
++		val = readl(&rinfo->ssireg[ssi_ch]->cr);
++		val &= ~(SSICR_DMEN | SSICR_UIEN | SSICR_OIEN | SSICR_ENABLE);
++		writel(val, &rinfo->ssireg[ssi_ch]->cr);
++
++		tmout = 1000;
++		while (--tmout &&
++		    !(readl(&rinfo->ssireg[ssi_ch]->sr) & SSISR_IDST))
++			udelay(1);
++		if (!tmout)
++			pr_info("timeout waiting for SSI idle\n");
++	} else
++		pr_info("%s ssi channel error", __func__);
+ 
+-	writel(0, (u32 *)(rinfo->ssiureg + reg));
++	FNC_EXIT
+ }
+ 
+ static void scu_src_init(int src_ch, unsigned int sync_sw)
+-- 
+1.8.3.2
+

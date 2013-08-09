@@ -1,7 +1,7 @@
 From 79fc02aaa791325210da46c5b7905d431629cad1 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Sun, 25 Nov 2012 22:01:46 -0800
-Subject: [PATCH 684/715] sh: clkfwk: bugfix: sh_clk_div_enable() care
+Subject: [PATCH 0684/1083] sh: clkfwk: bugfix: sh_clk_div_enable() care
  sh_clk_div_set_rate() if div6
 
 764f4e4e33d18cde4dcaf8a0d860b749c6d6d08b
@@ -17,7 +17,7 @@ Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/sh/clk/cpg.c |    6 ++++++
+ drivers/sh/clk/cpg.c | 6 ++++++
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/sh/clk/cpg.c b/drivers/sh/clk/cpg.c
@@ -38,5 +38,5 @@ index 07e9fb4..d118bac 100644
  	return 0;
  }
 -- 
-1.7.10.4
+1.8.3.2
 

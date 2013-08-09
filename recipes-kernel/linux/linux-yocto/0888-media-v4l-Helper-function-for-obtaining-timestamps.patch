@@ -1,0 +1,62 @@
+From 86ceb8b68fa3d286a8ba71919e2b3106b49dca22 Mon Sep 17 00:00:00 2001
+From: Sakari Ailus <sakari.ailus@iki.fi>
+Date: Sat, 15 Sep 2012 07:51:47 -0300
+Subject: [PATCH 0888/1083] [media] v4l: Helper function for obtaining
+ timestamps
+
+v4l2_get_timestamp() produces a monotonic timestamp but unlike
+ktime_get_ts(), it uses struct timeval instead of struct timespec, saving
+the drivers the conversion job when getting timestamps for v4l2_buffer's
+timestamp field.
+
+Signed-off-by: Sakari Ailus <sakari.ailus@iki.fi>
+Acked-by: Hans Verkuil <hans.verkuil@cisco.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+(cherry picked from commit abd23295648a9e3ae72a806e70a510d3dcd8b374)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	drivers/media/v4l2-core/v4l2-common.c
+	drivers/media/video/v4l2-common.c
+	include/media/v4l2-common.h
+(cherry picked from commit 3bcc3963c374ec9b2a5d824f61f7961ba24e1d7b)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/media/video/v4l2-common.c | 10 ++++++++++
+ include/media/v4l2-common.h       |  2 ++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/media/video/v4l2-common.c b/drivers/media/video/v4l2-common.c
+index 1baec83..43ae53b 100644
+--- a/drivers/media/video/v4l2-common.c
++++ b/drivers/media/video/v4l2-common.c
+@@ -621,3 +621,13 @@ const struct v4l2_frmsize_discrete *v4l2_find_nearest_format(
+ 	return best;
+ }
+ EXPORT_SYMBOL_GPL(v4l2_find_nearest_format);
++
++void v4l2_get_timestamp(struct timeval *tv)
++{
++	struct timespec ts;
++
++	ktime_get_ts(&ts);
++	tv->tv_sec = ts.tv_sec;
++	tv->tv_usec = ts.tv_nsec / NSEC_PER_USEC;
++}
++EXPORT_SYMBOL_GPL(v4l2_get_timestamp);
+diff --git a/include/media/v4l2-common.h b/include/media/v4l2-common.h
+index a298ec4..4b0ffe0 100644
+--- a/include/media/v4l2-common.h
++++ b/include/media/v4l2-common.h
+@@ -212,4 +212,6 @@ const struct v4l2_frmsize_discrete *v4l2_find_nearest_format(
+ 		const struct v4l2_discrete_probe *probe,
+ 		s32 width, s32 height);
+ 
++void v4l2_get_timestamp(struct timeval *tv);
++
+ #endif /* V4L2_COMMON_H_ */
+-- 
+1.8.3.2
+

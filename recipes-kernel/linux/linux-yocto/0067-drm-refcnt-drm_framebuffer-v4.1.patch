@@ -1,7 +1,7 @@
 From 705cb2917cfc35874b77c82e135cbd19bc3b34b9 Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Wed, 5 Sep 2012 21:48:38 +0000
-Subject: [PATCH 067/715] drm: refcnt drm_framebuffer (v4.1)
+Subject: [PATCH 0067/1083] drm: refcnt drm_framebuffer (v4.1)
 
 This simplifies drm fb lifetime, and if the crtc/plane needs to hold
 a ref to the fb when disabling a pipe until the next vblank, this
@@ -30,10 +30,10 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c                |   79 ++++++++++++++++++++++++-----
- drivers/gpu/drm/exynos/exynos_drm_fbdev.c |    4 +-
- drivers/staging/omapdrm/omap_fbdev.c      |    4 +-
- include/drm/drm_crtc.h                    |   14 +++++
+ drivers/gpu/drm/drm_crtc.c                | 79 ++++++++++++++++++++++++++-----
+ drivers/gpu/drm/exynos/exynos_drm_fbdev.c |  4 +-
+ drivers/staging/omapdrm/omap_fbdev.c      |  4 +-
+ include/drm/drm_crtc.h                    | 14 ++++++
  4 files changed, 85 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -246,5 +246,5 @@ index eb91d52..68fdb29 100644
  extern int drmfb_probe(struct drm_device *dev, struct drm_crtc *crtc);
  extern int drmfb_remove(struct drm_device *dev, struct drm_framebuffer *fb);
 -- 
-1.7.10.4
+1.8.3.2
 

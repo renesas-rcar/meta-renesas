@@ -1,7 +1,7 @@
 From c76fc4713955ad10035ce3f9c2a8c36e2a17ecd1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 12 Apr 2013 15:44:32 +0200
-Subject: [PATCH 535/715] sh-pfc: r8a7790: Add DU pin groups and functions
+Subject: [PATCH 0535/1083] sh-pfc: r8a7790: Add DU pin groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit fa1c81e0a0db3681a0d131d383ccea976b172f46)
@@ -11,7 +11,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |  134 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 134 +++++++++++++++++++++++++++++++++++
  1 file changed, 134 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -181,5 +181,5 @@ index 933d6c8..be8658d 100644
  	SH_PFC_FUNCTION(intc),
  	SH_PFC_FUNCTION(scif0),
 -- 
-1.7.10.4
+1.8.3.2
 

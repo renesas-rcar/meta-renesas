@@ -1,7 +1,7 @@
 From 1e4fa55ba744d7a5bc78d9419d4a37432cb17559 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Mar 2013 11:06:37 +0100
-Subject: [PATCH 461/715] sh-pfc: r8a7779: Split DU input and output pixel
+Subject: [PATCH 0461/1083] sh-pfc: r8a7779: Split DU input and output pixel
  clocks
 
 The output pixel clocks can be used without the input pixel clocks.
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |   60 ++++++++++++++++++++++------------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 60 +++++++++++++++++++++++-------------
  1 file changed, 39 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -126,5 +126,5 @@ index e448ff1..62dcdcd 100644
  	"du1_sync_1",
  	"du1_oddf",
 -- 
-1.7.10.4
+1.8.3.2
 

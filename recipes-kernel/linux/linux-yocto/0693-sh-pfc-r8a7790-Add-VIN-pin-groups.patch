@@ -1,7 +1,7 @@
 From 71d0d29b97a5a7fffbe064205082c0df75d97c8e Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Thu, 27 Jun 2013 19:38:02 +0900
-Subject: [PATCH 693/715] sh-pfc: r8a7790: Add VIN pin groups
+Subject: [PATCH 0693/1083] sh-pfc: r8a7790: Add VIN pin groups
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit a6ef51b07e64910a0bad55ffad7c6668e77e7dbf)
@@ -11,7 +11,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |  110 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 110 +++++++++++++++++++++++++++++++++++
  1 file changed, 110 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -157,5 +157,5 @@ index 1b04f9f..8f605bc 100644
  
  static struct pinmux_cfg_reg pinmux_config_regs[] = {
 -- 
-1.7.10.4
+1.8.3.2
 

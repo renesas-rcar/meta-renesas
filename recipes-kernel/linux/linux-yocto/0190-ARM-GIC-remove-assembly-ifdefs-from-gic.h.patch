@@ -1,7 +1,7 @@
 From 20e738bab9094848c7ce128dcdda996d9a41975b Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Thu, 1 Nov 2012 06:23:14 -0500
-Subject: [PATCH 190/715] ARM: GIC: remove assembly ifdefs from gic.h
+Subject: [PATCH 0190/1083] ARM: GIC: remove assembly ifdefs from gic.h
 
 With multi irq handler and all GIC users converted to it, we don't need
 asm/hardware/gic.h to be included in assembly. Clean-up ifdefs and
@@ -13,7 +13,7 @@ Acked-by: Olof Johansson <olof@lixom.net>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/hardware/gic.h |    6 ------
+ arch/arm/include/asm/hardware/gic.h | 6 ------
  1 file changed, 6 deletions(-)
 
 diff --git a/arch/arm/include/asm/hardware/gic.h b/arch/arm/include/asm/hardware/gic.h
@@ -45,5 +45,5 @@ index 4b1ce6c..fc59698 100644
 -
 -#endif
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 8a5324dff51f658b5b4a6ffb1eb2e859a87c148f Mon Sep 17 00:00:00 2001
 From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 Date: Sat, 22 Jun 2013 19:49:03 +0900
-Subject: [PATCH 659/715] i2c: rcar: Add fixed clock setting interface
+Subject: [PATCH 0659/1083] i2c: rcar: Add fixed clock setting interface
 
 Renesas I2C macro has ICCCR2 register for precise setting of SCL clock.
 If you would like to use this function, please set icccr2 member of
@@ -16,8 +16,8 @@ Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/i2c/busses/i2c-rcar.c |   30 +++++++++++++++++++++++++++++-
- include/linux/i2c/i2c-rcar.h  |    5 +++++
+ drivers/i2c/busses/i2c-rcar.c | 30 +++++++++++++++++++++++++++++-
+ include/linux/i2c/i2c-rcar.h  |  5 +++++
  2 files changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
@@ -106,5 +106,5 @@ index 6bf5b89..db5aecd 100644
  
  #endif /* __I2C_R_CAR_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

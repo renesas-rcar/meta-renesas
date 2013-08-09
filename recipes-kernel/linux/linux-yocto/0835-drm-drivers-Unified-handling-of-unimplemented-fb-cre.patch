@@ -1,0 +1,107 @@
+From 6dc1cdb564495d8a3135d06398c2598aba30ec17 Mon Sep 17 00:00:00 2001
+From: Daniel Vetter <daniel.vetter@ffwll.ch>
+Date: Thu, 13 Dec 2012 23:07:50 +0100
+Subject: [PATCH 0835/1083] drm/<drivers>: Unified handling of unimplemented
+ fb->create_handle
+
+Some drivers don't have real ->create_handle callbacks.
+
+- cirrus/ast/mga200: Returns either 0 or -EINVAL.
+
+- udl: Didn't even bother with a callback, leading to a nice
+  userspace-triggerable OOPS.
+
+- vmwgfx: This driver bothered with an implementation to return 0 as
+  the handle (which is the canonical no-obj gem handle).
+
+All have in common that ->create_handle doesn't really make too much
+sense for them - that ioctl is used only for seamless fb takeover in
+the radeon/nouveau/i915 ddx drivers. So allow drivers to not implement
+this and return a consistent -ENODEV.
+
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+(cherry picked from commit af26ef3b3978349cfbd864163a6ebb4906b733b5)
+
+Conflicts:
+	drivers/gpu/drm/ast/ast_main.c
+	drivers/gpu/drm/cirrus/cirrus_main.c
+	drivers/gpu/drm/mgag200/mgag200_main.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit eb3d7ae4d743f4f924b1bdd9ca423f31473468ae)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_crtc.c          |  5 ++++-
+ drivers/gpu/drm/udl/udl_fb.c        |  1 -
+ drivers/gpu/drm/vmwgfx/vmwgfx_kms.c | 12 ------------
+ 3 files changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index f778190..9b64998 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -2389,7 +2389,10 @@ int drm_mode_getfb(struct drm_device *dev,
+ 	r->depth = fb->depth;
+ 	r->bpp = fb->bits_per_pixel;
+ 	r->pitch = fb->pitches[0];
+-	fb->funcs->create_handle(fb, file_priv, &r->handle);
++	if (fb->funcs->create_handle)
++		ret = fb->funcs->create_handle(fb, file_priv, &r->handle);
++	else
++		ret = -ENODEV;
+ 
+ out:
+ 	mutex_unlock(&dev->mode_config.mutex);
+diff --git a/drivers/gpu/drm/udl/udl_fb.c b/drivers/gpu/drm/udl/udl_fb.c
+index b9282cf..1e42408 100644
+--- a/drivers/gpu/drm/udl/udl_fb.c
++++ b/drivers/gpu/drm/udl/udl_fb.c
+@@ -396,7 +396,6 @@ static void udl_user_framebuffer_destroy(struct drm_framebuffer *fb)
+ static const struct drm_framebuffer_funcs udlfb_funcs = {
+ 	.destroy = udl_user_framebuffer_destroy,
+ 	.dirty = udl_user_framebuffer_dirty,
+-	.create_handle = NULL,
+ };
+ 
+ 
+diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c b/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c
+index c50724b..aca8174 100644
+--- a/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c
++++ b/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c
+@@ -373,16 +373,6 @@ void vmw_kms_cursor_post_execbuf(struct vmw_private *dev_priv)
+  * Generic framebuffer code
+  */
+ 
+-int vmw_framebuffer_create_handle(struct drm_framebuffer *fb,
+-				  struct drm_file *file_priv,
+-				  unsigned int *handle)
+-{
+-	if (handle)
+-		*handle = 0;
+-
+-	return 0;
+-}
+-
+ /*
+  * Surface framebuffer code
+  */
+@@ -611,7 +601,6 @@ int vmw_framebuffer_surface_dirty(struct drm_framebuffer *framebuffer,
+ static struct drm_framebuffer_funcs vmw_framebuffer_surface_funcs = {
+ 	.destroy = vmw_framebuffer_surface_destroy,
+ 	.dirty = vmw_framebuffer_surface_dirty,
+-	.create_handle = vmw_framebuffer_create_handle,
+ };
+ 
+ static int vmw_kms_new_framebuffer_surface(struct vmw_private *dev_priv,
+@@ -961,7 +950,6 @@ int vmw_framebuffer_dmabuf_dirty(struct drm_framebuffer *framebuffer,
+ static struct drm_framebuffer_funcs vmw_framebuffer_dmabuf_funcs = {
+ 	.destroy = vmw_framebuffer_dmabuf_destroy,
+ 	.dirty = vmw_framebuffer_dmabuf_dirty,
+-	.create_handle = vmw_framebuffer_create_handle,
+ };
+ 
+ /**
+-- 
+1.8.3.2
+

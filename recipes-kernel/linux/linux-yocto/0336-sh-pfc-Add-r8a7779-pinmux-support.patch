@@ -1,7 +1,7 @@
 From d567de1996713bcbed5abcf1b03b4b4537b6a1f9 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:22 +0100
-Subject: [PATCH 336/715] sh-pfc: Add r8a7779 pinmux support
+Subject: [PATCH 0336/1083] sh-pfc: Add r8a7779 pinmux support
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -2697,5 +2697,5 @@ index 0000000..8147172
 +	.gpio_data_size = ARRAY_SIZE(pinmux_data),
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

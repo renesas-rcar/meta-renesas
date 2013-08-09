@@ -1,7 +1,7 @@
 From 2a2312d3b3cce986590220b521f988558fd730a4 Mon Sep 17 00:00:00 2001
 From: Haojian Zhuang <haojian.zhuang@linaro.org>
 Date: Fri, 18 Jan 2013 15:31:07 +0800
-Subject: [PATCH 262/715] gpio: use pinctrl device name for add range
+Subject: [PATCH 0262/1083] gpio: use pinctrl device name for add range
 
 gpiochip_add_pin_range() needs pinctrl device name as parameter.
 Currently the parameter is pinctrl description name. So fix it.
@@ -12,7 +12,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib-of.c |    2 +-
+ drivers/gpio/gpiolib-of.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
@@ -29,5 +29,5 @@ index d542a14..25b1dbe 100644
  					     pinspec.args[0],
  					     pinspec.args[1]);
 -- 
-1.7.10.4
+1.8.3.2
 

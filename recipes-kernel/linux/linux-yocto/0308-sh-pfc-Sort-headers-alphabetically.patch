@@ -1,7 +1,7 @@
 From d15a35a3448b5c7f300a83dc0f086b2f9c22ec92 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:52 +0100
-Subject: [PATCH 308/715] sh-pfc: Sort headers alphabetically
+Subject: [PATCH 0308/1083] sh-pfc: Sort headers alphabetically
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Acked-by: Paul Mundt <lethal@linux-sh.org>
@@ -11,9 +11,9 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c    |   12 ++++++------
- drivers/sh/pfc/gpio.c    |    6 +++---
- drivers/sh/pfc/pinctrl.c |   12 ++++++------
+ drivers/sh/pfc/core.c    | 12 ++++++------
+ drivers/sh/pfc/gpio.c    |  6 +++---
+ drivers/sh/pfc/pinctrl.c | 12 ++++++------
  3 files changed, 15 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -94,5 +94,5 @@ index 47dbd02..221bde0 100644
  #include "core.h"
  
 -- 
-1.7.10.4
+1.8.3.2
 

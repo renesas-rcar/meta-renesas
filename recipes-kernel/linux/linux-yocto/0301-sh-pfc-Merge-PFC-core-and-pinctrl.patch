@@ -1,7 +1,7 @@
 From 24a5d2831e4377795cfed0eb40898477ada0b212 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:45 +0100
-Subject: [PATCH 301/715] sh-pfc: Merge PFC core and pinctrl
+Subject: [PATCH 0301/1083] sh-pfc: Merge PFC core and pinctrl
 
 The PFC core is only used by the pinctrl and gpio modules. As the gpio
 module depends on the pinctrl module, the pinctrl module will always be
@@ -16,10 +16,10 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/Kconfig   |   10 +---------
- drivers/sh/pfc/Makefile  |    4 ++--
- drivers/sh/pfc/core.c    |   15 +++------------
- drivers/sh/pfc/pinctrl.c |    3 +--
+ drivers/sh/pfc/Kconfig   | 10 +---------
+ drivers/sh/pfc/Makefile  |  4 ++--
+ drivers/sh/pfc/core.c    | 15 +++------------
+ drivers/sh/pfc/pinctrl.c |  3 +--
  4 files changed, 7 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/sh/pfc/Kconfig b/drivers/sh/pfc/Kconfig
@@ -119,5 +119,5 @@ index 5801a56..6f0f58b 100644
  static void __exit sh_pfc_pinctrl_exit(void)
  {
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From c25756bc6f8776cf05e6d6054075effa1ded3a3b Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 15:07:05 +0900
-Subject: [PATCH 512/715] mmc: card: Add single read option in two blocks
+Subject: [PATCH 0512/1083] mmc: card: Add single read option in two blocks
  access
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
@@ -9,8 +9,8 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/card/block.c |    6 ++++++
- include/linux/mmc/host.h |    1 +
+ drivers/mmc/card/block.c | 6 ++++++
+ include/linux/mmc/host.h | 1 +
  2 files changed, 7 insertions(+)
 
 diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
@@ -50,5 +50,5 @@ index 65c64ee..b093dd2 100644
  	mmc_pm_flag_t		pm_caps;	/* supported pm features */
  	unsigned int        power_notify_type;
 -- 
-1.7.10.4
+1.8.3.2
 

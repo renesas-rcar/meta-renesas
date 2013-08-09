@@ -1,7 +1,7 @@
 From b677533888e324abcd1c408cc3800e73dbb7407c Mon Sep 17 00:00:00 2001
 From: Stephen Boyd <sboyd@codeaurora.org>
 Date: Wed, 22 Aug 2012 20:05:34 +0100
-Subject: [PATCH 192/715] ARM: 7498/1: mach-shmobile: Use SGI0 to wake
+Subject: [PATCH 0192/1083] ARM: 7498/1: mach-shmobile: Use SGI0 to wake
  secondary CPUs
 
 Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
@@ -11,7 +11,7 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/smp-emev2.c |    2 +-
+ arch/arm/mach-shmobile/smp-emev2.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/smp-emev2.c b/arch/arm/mach-shmobile/smp-emev2.c
@@ -28,5 +28,5 @@ index f978c5d..f674562 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

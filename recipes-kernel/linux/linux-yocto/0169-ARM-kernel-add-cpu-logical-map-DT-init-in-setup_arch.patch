@@ -1,7 +1,7 @@
 From 4db0b488a9708ebc4efce8d2d6636251da69e305 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Mon, 4 Feb 2013 10:42:29 +0900
-Subject: [PATCH 169/715] ARM: kernel: add cpu logical map DT init in
+Subject: [PATCH 0169/1083] ARM: kernel: add cpu logical map DT init in
  setup_arch
 
 As soon as the device tree is unflattened the cpu logical to physical
@@ -29,7 +29,7 @@ Acked-by: Nicolas Pitre <nico@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/setup.c |    1 +
+ arch/arm/kernel/setup.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
@@ -45,5 +45,5 @@ index f05d9fd..e319670 100644
  	if (is_smp())
  		smp_init_cpus();
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,0 +1,56 @@
+From 73d88b7bea79a824b284d1e7ca7ef3d964bc0791 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 5 Jun 2013 09:19:53 +0200
+Subject: [PATCH 0873/1083] v4l: Add media format codes for ARGB8888 and
+ AYUV8888 on 32-bit busses
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit e5db5733d82ef2f4757b05f18c1705e859e678b7)
+
+Conflicts:
+	include/uapi/linux/v4l2-mediabus.h
+	include/linux/v4l2-mediabus.h
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 1f3714f4b317e55557ace08efafeaae3945d2757)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/linux/v4l2-mediabus.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/v4l2-mediabus.h b/include/linux/v4l2-mediabus.h
+index 2263554..f209ef8 100644
+--- a/include/linux/v4l2-mediabus.h
++++ b/include/linux/v4l2-mediabus.h
+@@ -37,7 +37,7 @@
+ enum v4l2_mbus_pixelcode {
+ 	V4L2_MBUS_FMT_FIXED = 0x0001,
+ 
+-	/* RGB - next is 0x100d */
++	/* RGB - next is 0x100e */
+ 	V4L2_MBUS_FMT_RGB444_2X8_PADHI_BE = 0x1001,
+ 	V4L2_MBUS_FMT_RGB444_2X8_PADHI_LE = 0x1002,
+ 	V4L2_MBUS_FMT_RGB555_2X8_PADHI_BE = 0x1003,
+@@ -50,8 +50,9 @@ enum v4l2_mbus_pixelcode {
+ 	V4L2_MBUS_FMT_RGB888_1X24 = 0x100a,
+ 	V4L2_MBUS_FMT_RGB888_2X12_BE = 0x100b,
+ 	V4L2_MBUS_FMT_RGB888_2X12_LE = 0x100c,
++	V4L2_MBUS_FMT_ARGB8888_1X32 = 0x100d,
+ 
+-	/* YUV (including grey) - next is 0x2017 */
++	/* YUV (including grey) - next is 0x2018 */
+ 	V4L2_MBUS_FMT_Y8_1X8 = 0x2001,
+ 	V4L2_MBUS_FMT_UV8_1X8 = 0x2015,
+ 	V4L2_MBUS_FMT_UYVY8_1_5X8 = 0x2002,
+@@ -74,6 +75,7 @@ enum v4l2_mbus_pixelcode {
+ 	V4L2_MBUS_FMT_YUYV10_1X20 = 0x200d,
+ 	V4L2_MBUS_FMT_YVYU10_1X20 = 0x200e,
+ 	V4L2_MBUS_FMT_YUV10_1X30 = 0x2016,
++	V4L2_MBUS_FMT_AYUV8_1X32 = 0x2017,
+ 
+ 	/* Bayer - next is 0x3019 */
+ 	V4L2_MBUS_FMT_SBGGR8_1X8 = 0x3001,
+-- 
+1.8.3.2
+

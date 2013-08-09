@@ -1,7 +1,7 @@
 From 465f34b01df34b56db47805bdaa352a56d7b5959 Mon Sep 17 00:00:00 2001
 From: Rob Herring <rob.herring@calxeda.com>
 Date: Mon, 5 Nov 2012 16:18:28 -0600
-Subject: [PATCH 204/715] ARM: use common irqchip_init for GIC init
+Subject: [PATCH 0204/1083] ARM: use common irqchip_init for GIC init
 
 Convert all GIC DT initialization over to use common irqchip_init
 function.
@@ -43,14 +43,14 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/hardware/gic.h  |    1 -
- arch/arm/mach-exynos/common.c        |   12 +++---------
- arch/arm/mach-highbank/highbank.c    |    9 ++-------
- arch/arm/mach-imx/mach-imx6q.c       |    4 ++--
- arch/arm/mach-shmobile/setup-emev2.c |   14 ++------------
- arch/arm/mach-tegra/common.c         |   10 ++--------
- arch/arm/mach-ux500/cpu.c            |    8 ++------
- arch/arm/mach-vexpress/v2m.c         |   14 ++------------
+ arch/arm/include/asm/hardware/gic.h  |  1 -
+ arch/arm/mach-exynos/common.c        | 12 +++---------
+ arch/arm/mach-highbank/highbank.c    |  9 ++-------
+ arch/arm/mach-imx/mach-imx6q.c       |  4 ++--
+ arch/arm/mach-shmobile/setup-emev2.c | 14 ++------------
+ arch/arm/mach-tegra/common.c         | 10 ++--------
+ arch/arm/mach-ux500/cpu.c            |  8 ++------
+ arch/arm/mach-vexpress/v2m.c         | 14 ++------------
  8 files changed, 15 insertions(+), 57 deletions(-)
 
 diff --git a/arch/arm/include/asm/hardware/gic.h b/arch/arm/include/asm/hardware/gic.h
@@ -341,5 +341,5 @@ index aa82608..30f3a6a 100644
  	.init_machine	= v2m_dt_init,
  	.restart	= v2m_restart,
 -- 
-1.7.10.4
+1.8.3.2
 

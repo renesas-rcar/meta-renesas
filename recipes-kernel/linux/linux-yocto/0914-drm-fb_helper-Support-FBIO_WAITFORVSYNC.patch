@@ -1,0 +1,106 @@
+From 86ac9c53bc0d705fa61ee873355218ab53934aa9 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 3 Apr 2013 14:44:34 +0200
+Subject: [PATCH 0914/1083] drm/fb_helper: Support FBIO_WAITFORVSYNC
+
+The operation is restricted to the first CRTC, as waiting for VSYNC
+simultaneously on multiple unsynchronized CRTCs juste doesn't make any
+sense.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 339b72778a0c492e8122688f88722fc8cf2cd78f)
+
+Conflicts:
+	drivers/gpu/drm/drm_fb_helper.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 4e7dc5c1e648512af953e3749377a205cb375fba)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_fb_cma_helper.c |  1 +
+ drivers/gpu/drm/drm_fb_helper.c     | 29 +++++++++++++++++++++++++++++
+ drivers/gpu/drm/drm_irq.c           |  1 +
+ include/drm/drm_fb_helper.h         |  2 ++
+ 4 files changed, 33 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_fb_cma_helper.c b/drivers/gpu/drm/drm_fb_cma_helper.c
+index 20e9e3e..ca06fcc 100644
+--- a/drivers/gpu/drm/drm_fb_cma_helper.c
++++ b/drivers/gpu/drm/drm_fb_cma_helper.c
+@@ -189,6 +189,7 @@ static struct fb_ops drm_fbdev_cma_ops = {
+ 	.fb_set_par	= drm_fb_helper_set_par,
+ 	.fb_blank	= drm_fb_helper_blank,
+ 	.fb_pan_display	= drm_fb_helper_pan_display,
++	.fb_ioctl	= drm_fb_helper_ioctl,
+ 	.fb_setcmap	= drm_fb_helper_setcmap,
+ };
+ 
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 94f1e7d..5140a50 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -723,6 +723,35 @@ int drm_fb_helper_pan_display(struct fb_var_screeninfo *var,
+ }
+ EXPORT_SYMBOL(drm_fb_helper_pan_display);
+ 
++static int drm_fb_helper_wait_for_vsync(struct drm_fb_helper *fb_helper)
++{
++	struct drm_device *dev = fb_helper->dev;
++	union drm_wait_vblank vblwait;
++
++	/* Waiting for VSYNC on multiple CRTCs doesn't make sense. Use the first
++	 * CRTC only.
++	 */
++	vblwait.request.type = _DRM_VBLANK_RELATIVE;
++	vblwait.request.sequence = 1;
++
++	return drm_wait_vblank(dev, &vblwait, NULL);
++}
++
++int drm_fb_helper_ioctl(struct fb_info *info, unsigned int cmd,
++			unsigned long arg)
++{
++	struct drm_fb_helper *fb_helper = info->par;
++
++	switch (cmd) {
++	case FBIO_WAITFORVSYNC:
++		return drm_fb_helper_wait_for_vsync(fb_helper);
++
++	default:
++		return -ENOIOCTLCMD;
++	}
++}
++EXPORT_SYMBOL(drm_fb_helper_ioctl);
++
+ int drm_fb_helper_single_fb_probe(struct drm_fb_helper *fb_helper,
+ 				  int preferred_bpp)
+ {
+diff --git a/drivers/gpu/drm/drm_irq.c b/drivers/gpu/drm/drm_irq.c
+index b031fcd..126cf69 100644
+--- a/drivers/gpu/drm/drm_irq.c
++++ b/drivers/gpu/drm/drm_irq.c
+@@ -1267,6 +1267,7 @@ done:
+ 	drm_vblank_put(dev, crtc);
+ 	return ret;
+ }
++EXPORT_SYMBOL(drm_wait_vblank);
+ 
+ void drm_handle_vblank_events(struct drm_device *dev, int crtc)
+ {
+diff --git a/include/drm/drm_fb_helper.h b/include/drm/drm_fb_helper.h
+index 5120b01..929f663 100644
+--- a/include/drm/drm_fb_helper.h
++++ b/include/drm/drm_fb_helper.h
+@@ -92,6 +92,8 @@ void drm_fb_helper_fini(struct drm_fb_helper *helper);
+ int drm_fb_helper_blank(int blank, struct fb_info *info);
+ int drm_fb_helper_pan_display(struct fb_var_screeninfo *var,
+ 			      struct fb_info *info);
++int drm_fb_helper_ioctl(struct fb_info *info, unsigned int cmd,
++			unsigned long arg);
+ int drm_fb_helper_set_par(struct fb_info *info);
+ int drm_fb_helper_check_var(struct fb_var_screeninfo *var,
+ 			    struct fb_info *info);
+-- 
+1.8.3.2
+

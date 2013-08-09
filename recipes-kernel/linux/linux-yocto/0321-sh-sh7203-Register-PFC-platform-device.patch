@@ -1,7 +1,7 @@
 From ada62dc7d59b1145a3daa86bff0e758227346876 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:05 +0100
-Subject: [PATCH 321/715] sh: sh7203: Register PFC platform device
+Subject: [PATCH 0321/1083] sh: sh7203: Register PFC platform device
 
 Add arch code to register the PFC platform device instead of calling the
 driver directly. Platform device registration in the sh-pfc driver will
@@ -14,8 +14,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/Kconfig                         |    1 +
- arch/sh/kernel/cpu/sh2a/pinmux-sh7203.c |    3 ++-
+ arch/sh/Kconfig                         | 1 +
+ arch/sh/kernel/cpu/sh2a/pinmux-sh7203.c | 3 ++-
  2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
@@ -51,5 +51,5 @@ index c465af7..814926e 100644
  }
  arch_initcall(plat_pinmux_setup);
 -- 
-1.7.10.4
+1.8.3.2
 

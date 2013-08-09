@@ -1,7 +1,7 @@
 From a1b9aefbb611c54fe254fe05b2ce1742e94d7e8e Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 25 Feb 2013 01:39:44 -0800
-Subject: [PATCH 452/715] ARM: shmobile: add gic_iid macro for ICCIAR /
+Subject: [PATCH 0452/1083] ARM: shmobile: add gic_iid macro for ICCIAR /
  interrupt ID
 
 R-Car H1 datasheet GIC number is indicating
@@ -21,7 +21,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/irqs.h |    1 +
+ arch/arm/mach-shmobile/include/mach/irqs.h | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/irqs.h b/arch/arm/mach-shmobile/include/mach/irqs.h
@@ -37,5 +37,5 @@ index 3b1e8f2..b2074e2 100644
  /* INTCS */
  #define INTCS_VECT_BASE		0x3400
 -- 
-1.7.10.4
+1.8.3.2
 

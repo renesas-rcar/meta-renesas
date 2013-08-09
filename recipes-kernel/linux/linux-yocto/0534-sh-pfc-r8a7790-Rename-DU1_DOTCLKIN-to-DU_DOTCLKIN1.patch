@@ -1,7 +1,8 @@
 From 5186a204626d9b30c74f04d08827c63f9f8dcce1 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 12 Apr 2013 15:43:39 +0200
-Subject: [PATCH 534/715] sh-pfc: r8a7790: Rename DU1_DOTCLKIN to DU_DOTCLKIN1
+Subject: [PATCH 0534/1083] sh-pfc: r8a7790: Rename DU1_DOTCLKIN to
+ DU_DOTCLKIN1
 
 Name the DU clock input 1 consistently with clock inputs 0 and 2.
 
@@ -13,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |    8 ++++----
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -57,5 +58,5 @@ index a73d735..933d6c8 100644
  		FN_PWM2, FN_PWMFSW0, FN_SCIFA2_RXD_C, FN_PCMWE_N, FN_IECLK_C,
  		0, 0, 0,
 -- 
-1.7.10.4
+1.8.3.2
 

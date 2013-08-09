@@ -1,7 +1,7 @@
 From 7e69b62a4f50f8c9ba168a0486c682b363167b7a Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Thu, 27 Jun 2013 16:55:20 +0900
-Subject: [PATCH 678/715] ASoC: sh: scu: Add DVC control interface
+Subject: [PATCH 0678/1083] ASoC: sh: scu: Add DVC control interface
 
 Add the following Control.
 	PCM Playback Volume
@@ -13,8 +13,8 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- include/sound/sh_scu.h |    5 ++
- sound/soc/sh/scu_dai.c |  197 ++++++++++++++++++++++++++++++++++++++++++++++--
+ include/sound/sh_scu.h |   5 ++
+ sound/soc/sh/scu_dai.c | 197 +++++++++++++++++++++++++++++++++++++++++++++++--
  2 files changed, 196 insertions(+), 6 deletions(-)
 
 diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
@@ -279,5 +279,5 @@ index 7ccf0b4..af3f601 100644
  }
  EXPORT_SYMBOL(scu_dai_add_control);
 -- 
-1.7.10.4
+1.8.3.2
 

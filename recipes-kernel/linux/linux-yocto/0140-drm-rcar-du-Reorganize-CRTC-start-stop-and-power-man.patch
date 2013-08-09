@@ -1,7 +1,7 @@
 From 0c34275ae02933afb6c6c88f56f147d1217d3ead Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 13:16:08 +0100
-Subject: [PATCH 140/715] drm/rcar-du: Reorganize CRTC start/stop and power
+Subject: [PATCH 0140/1083] drm/rcar-du: Reorganize CRTC start/stop and power
  management code
 
 The DU is acquired in the CRTC start handler and released in its stop
@@ -15,7 +15,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c |   53 ++++++++++++++++++++++++++------
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 53 +++++++++++++++++++++++++++-------
  1 file changed, 43 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -149,5 +149,5 @@ index 0e5eab1..98c54ff 100644
  
  static int rcar_du_crtc_mode_set_base(struct drm_crtc *crtc, int x, int y,
 -- 
-1.7.10.4
+1.8.3.2
 

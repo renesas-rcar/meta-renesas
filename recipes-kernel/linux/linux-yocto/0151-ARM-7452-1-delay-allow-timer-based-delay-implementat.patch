@@ -1,7 +1,7 @@
 From 6d689f8bee4d9ce289d4279d5cb266282df41bc6 Mon Sep 17 00:00:00 2001
 From: Will Deacon <will.deacon@arm.com>
 Date: Fri, 6 Jul 2012 15:47:17 +0100
-Subject: [PATCH 151/715] ARM: 7452/1: delay: allow timer-based delay
+Subject: [PATCH 0151/1083] ARM: 7452/1: delay: allow timer-based delay
  implementation to be selected
 
 This patch allows a timer-based delay implementation to be selected by
@@ -28,14 +28,14 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/delay.h |   32 ++++++++++++++-----
- arch/arm/kernel/arch_timer.c |    3 ++
- arch/arm/kernel/armksyms.c   |    3 +-
- arch/arm/lib/Makefile        |    2 +-
- arch/arm/lib/delay-loop.S    |   67 +++++++++++++++++++++++++++++++++++++++
- arch/arm/lib/delay.S         |   69 ----------------------------------------
- arch/arm/lib/delay.c         |   71 ++++++++++++++++++++++++++++++++++++++++++
- arch/arm/mach-sa1100/sleep.S |    8 ++---
+ arch/arm/include/asm/delay.h | 32 +++++++++++++++-----
+ arch/arm/kernel/arch_timer.c |  3 ++
+ arch/arm/kernel/armksyms.c   |  3 +-
+ arch/arm/lib/Makefile        |  2 +-
+ arch/arm/lib/delay-loop.S    | 67 +++++++++++++++++++++++++++++++++++++++++
+ arch/arm/lib/delay.S         | 69 ------------------------------------------
+ arch/arm/lib/delay.c         | 71 ++++++++++++++++++++++++++++++++++++++++++++
+ arch/arm/mach-sa1100/sleep.S |  8 ++---
  8 files changed, 172 insertions(+), 83 deletions(-)
  create mode 100644 arch/arm/lib/delay-loop.S
  delete mode 100644 arch/arm/lib/delay.S
@@ -407,5 +407,5 @@ index 30cc672..8586374 100644
  	/*
  	 * SA1110 SDRAM controller workaround.  register values:
 -- 
-1.7.10.4
+1.8.3.2
 

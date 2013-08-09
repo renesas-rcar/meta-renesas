@@ -1,7 +1,7 @@
 From a463f8d5273ed82a235ed446caa07c6caaef9d27 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Thu, 27 Jun 2013 19:40:08 +0900
-Subject: [PATCH 694/715] media: video: Add Renesas VIN driver
+Subject: [PATCH 0694/1083] media: video: Add Renesas VIN driver
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit 314f4f12a29d65150ba1447398d8b0678af30354)
@@ -2615,5 +2615,5 @@ index 0000000..c35d8d6
 +
 +#endif /* __ASM_VIN_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

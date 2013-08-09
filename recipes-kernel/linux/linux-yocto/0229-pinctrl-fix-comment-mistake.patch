@@ -1,7 +1,7 @@
 From b5636ed9a6cb6ff7b43368ba474b8720eb219a11 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 11 Dec 2012 13:12:35 +0100
-Subject: [PATCH 229/715] pinctrl: fix comment mistake
+Subject: [PATCH 0229/1083] pinctrl: fix comment mistake
 
 This variable pertains to pinctrl handles not muxes
 specifically.
@@ -11,7 +11,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/core.c |    2 +-
+ drivers/pinctrl/core.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
@@ -28,5 +28,5 @@ index 009efd8..e8e393a 100644
  
  	return p;
 -- 
-1.7.10.4
+1.8.3.2
 

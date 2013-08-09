@@ -1,7 +1,7 @@
 From 1a464cdcb6704ccdd665662f58a4149c4fa1b340 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 27 Nov 2012 01:20:32 +0100
-Subject: [PATCH 175/715] irqdomain: stop screaming about preallocated
+Subject: [PATCH 0175/1083] irqdomain: stop screaming about preallocated
  irqdescs
 
 In the simple irqdomain: don't shout warnings to the user,
@@ -13,7 +13,7 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- kernel/irq/irqdomain.c |    4 ++--
+ kernel/irq/irqdomain.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
@@ -32,5 +32,5 @@ index 4e69e24..96f3a1d 100644
  			}
  		} else
 -- 
-1.7.10.4
+1.8.3.2
 

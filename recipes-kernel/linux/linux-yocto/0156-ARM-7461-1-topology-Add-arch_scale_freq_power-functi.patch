@@ -1,7 +1,7 @@
 From 8a4563bf04560a6d089aeb44e7eff04b76bbf709 Mon Sep 17 00:00:00 2001
 From: Vincent Guittot <vincent.guittot@linaro.org>
 Date: Tue, 10 Jul 2012 14:08:40 +0100
-Subject: [PATCH 156/715] ARM: 7461/1: topology: Add arch_scale_freq_power
+Subject: [PATCH 0156/1083] ARM: 7461/1: topology: Add arch_scale_freq_power
  function
 
 Add infrastructure to be able to modify the cpu_power of each core
@@ -14,7 +14,7 @@ Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/kernel/topology.c |   38 +++++++++++++++++++++++++++++++++++++-
+ arch/arm/kernel/topology.c | 38 +++++++++++++++++++++++++++++++++++++-
  1 file changed, 37 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/kernel/topology.c b/arch/arm/kernel/topology.c
@@ -88,5 +88,5 @@ index 8200dea..51f23b3 100644
  	smp_wmb();
  }
 -- 
-1.7.10.4
+1.8.3.2
 

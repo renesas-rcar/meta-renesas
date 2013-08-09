@@ -1,7 +1,7 @@
 From d85e75716f122c7ee0d50a0e59aeaf1fa0a1080e Mon Sep 17 00:00:00 2001
 From: Ulrich Hecht <ulrich.hecht@gmail.com>
 Date: Fri, 31 May 2013 15:57:03 +0000
-Subject: [PATCH 602/715] sh-pfc: r8a7790: add HSCIF pin groups
+Subject: [PATCH 0602/1083] sh-pfc: r8a7790: add HSCIF pin groups
 
 Adds HSCIF data/clk/ctrl groups to R8A7790 PFC driver.
 
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |  211 +++++++++++++++++++++++++++++++---
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 211 ++++++++++++++++++++++++++++++++---
  1 file changed, 196 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -292,5 +292,5 @@ index e1a3f8e..37d9a50 100644
  
  static struct pinmux_cfg_reg pinmux_config_regs[] = {
 -- 
-1.7.10.4
+1.8.3.2
 

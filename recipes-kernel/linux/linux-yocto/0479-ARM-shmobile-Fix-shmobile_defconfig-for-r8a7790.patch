@@ -1,7 +1,7 @@
 From 25746cc30e638e2a362afc1ad3abecee10fda4b5 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Tue, 11 Jun 2013 14:54:53 +0900
-Subject: [PATCH 479/715] ARM: shmobile: Fix shmobile_defconfig for r8a7790
+Subject: [PATCH 0479/1083] ARM: shmobile: Fix shmobile_defconfig for r8a7790
 
 ARCH_REQUIRE_GPIOLIB added to MACH_LAGER in mach-shmobile/Kconfig.
 
@@ -10,8 +10,8 @@ Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig |   12 ++++--------
- arch/arm/mach-shmobile/Kconfig      |    1 +
+ arch/arm/configs/shmobile_defconfig | 12 ++++--------
+ arch/arm/mach-shmobile/Kconfig      |  1 +
  2 files changed, 5 insertions(+), 8 deletions(-)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -66,5 +66,5 @@ index 403159f..b5f3b2d 100644
  
  config MACH_KZM9D
 -- 
-1.7.10.4
+1.8.3.2
 

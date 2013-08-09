@@ -1,7 +1,7 @@
 From 2b7dee822f630a7099202ee2c75076d0acf7f9d9 Mon Sep 17 00:00:00 2001
 From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
 Date: Thu, 27 Jun 2013 10:26:21 +0900
-Subject: [PATCH 687/715] ARM: shmobile: r8a7790: Add MMC driver support
+Subject: [PATCH 0687/1083] ARM: shmobile: r8a7790: Add MMC driver support
 
 Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
 (cherry picked from commit f6a5e10f773932574e8c5363a0adc65f4dccf65d)
@@ -13,10 +13,10 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/board-lager.c          |    5 ++
- arch/arm/mach-shmobile/clock-r8a7790.c        |   15 +++-
- arch/arm/mach-shmobile/include/mach/r8a7790.h |    4 +
- arch/arm/mach-shmobile/setup-r8a7790.c        |  110 +++++++++++++++++++++++++
+ arch/arm/mach-shmobile/board-lager.c          |   5 ++
+ arch/arm/mach-shmobile/clock-r8a7790.c        |  15 +++-
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |   4 +
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 110 ++++++++++++++++++++++++++
  4 files changed, 133 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -241,5 +241,5 @@ index 3affcaa..526afef 100644
  
  static struct renesas_irqc_config irqc0_data = {
 -- 
-1.7.10.4
+1.8.3.2
 

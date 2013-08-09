@@ -1,0 +1,175 @@
+From 0e7beb6fde47b3717ab3aa549ef23da56f3ef8c5 Mon Sep 17 00:00:00 2001
+From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+Date: Thu, 1 Aug 2013 14:22:15 +0900
+Subject: [PATCH 1071/1083] ARM: shmobile: koelsch: Move MMC support to board
+ dependence part
+
+Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+---
+ arch/arm/mach-shmobile/board-koelsch.c | 54 +++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7791.c | 55 ----------------------------------
+ 2 files changed, 54 insertions(+), 55 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-koelsch.c b/arch/arm/mach-shmobile/board-koelsch.c
+index e457cdd..8e308ff 100644
+--- a/arch/arm/mach-shmobile/board-koelsch.c
++++ b/arch/arm/mach-shmobile/board-koelsch.c
+@@ -35,6 +35,7 @@
+ #include <linux/spi/flash.h>
+ #include <linux/mfd/tmio.h>
+ #include <linux/mmc/sh_mobile_sdhi.h>
++#include <linux/mmc/sh_mmcif.h>
+ #include <mach/common.h>
+ #include <media/vin.h>
+ #include <mach/r8a7791.h>
+@@ -397,14 +398,67 @@ static struct platform_device sdhi2_device = {
+ 	}
+ };
+ 
++/* MMC */
++static void shmmcif_set_pwr(struct platform_device *pdev, int state)
++{
++}
++
++static void shmmcif_down_pwr(struct platform_device *pdev)
++{
++}
++
++static int shmmcif_get_cd(struct platform_device *pdev)
++{
++	return 1;
++}
++
++static struct resource sh_mmcif_resources[] = {
++	[0] = {
++		.name	= "mmc",
++		.start	= 0xEE200000,
++		.end	= 0xEE200080-1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(169),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct sh_mmcif_plat_data sh_mmcif_plat = {
++	.set_pwr	= shmmcif_set_pwr,
++	.down_pwr	= shmmcif_down_pwr,
++	.get_cd		= shmmcif_get_cd,
++	.slave_id_tx	= SHDMA_SLAVE_MMC_TX,
++	.slave_id_rx	= SHDMA_SLAVE_MMC_RX,
++	.use_cd_gpio	= 0,
++	.cd_gpio	= 0,
++	.sup_pclk	= 0 ,
++	.caps		= MMC_CAP_MMC_HIGHSPEED |
++			  MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE ,
++	.ocr		= MMC_VDD_32_33 | MMC_VDD_33_34 ,
++};
++
++static struct platform_device mmc_device = {
++	.name		= "sh_mmcif",
++	.num_resources	= ARRAY_SIZE(sh_mmcif_resources),
++	.resource	= sh_mmcif_resources,
++	.id		= 0,
++	.dev = {
++		.platform_data	= &sh_mmcif_plat,
++	}
++};
++
+ static struct platform_device *koelsch_devices[] __initdata = {
+ 	&soc_camera_device[0],
+ 	&soc_camera_device[1],
+ 	&sdhi0_device,
+ 	&sdhi1_device,
+ 	&sdhi2_device,
++	&mmc_device,
+ };
+ 
++
+ static void __init koelsch_add_standard_devices(void)
+ {
+ 	r8a7791_clock_init();
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index d3455dd..49f250b 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -36,8 +36,6 @@
+ #include <linux/clk.h>
+ #include <linux/usb/ehci_pdriver.h>
+ #include <linux/usb/ohci_pdriver.h>
+-#include <linux/mfd/tmio.h>
+-#include <linux/mmc/sh_mmcif.h>
+ #include <linux/regulator/fixed.h>
+ #include <linux/regulator/machine.h>
+ #include <linux/mtd/mtd.h>
+@@ -1267,58 +1265,6 @@ static struct platform_device sh_msiof2_device = {
+ 	.resource	= sh_msiof2_resources,
+ };
+ 
+-/* MMC */
+-static void shmmcif_set_pwr(struct platform_device *pdev, int state)
+-{
+-}
+-
+-static void shmmcif_down_pwr(struct platform_device *pdev)
+-{
+-}
+-
+-static int shmmcif_get_cd(struct platform_device *pdev)
+-{
+-	return 1;
+-}
+-
+-static struct resource sh_mmcif_resources[] = {
+-	[0] = {
+-		.name	= "mmc",
+-		.start	= 0xEE200000,
+-		.end	= 0xEE200080-1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[1] = {
+-		.start	= gic_spi(169),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-};
+-
+-static struct sh_mmcif_plat_data sh_mmcif_plat = {
+-	.set_pwr	= shmmcif_set_pwr,
+-	.down_pwr	= shmmcif_down_pwr,
+-	.get_cd		= shmmcif_get_cd,
+-	.slave_id_tx	= SHDMA_SLAVE_MMC_TX,
+-	.slave_id_rx	= SHDMA_SLAVE_MMC_RX,
+-	.use_cd_gpio	= 0,
+-	.cd_gpio	= 0,
+-	.sup_pclk	= 0 ,
+-	.caps		= MMC_CAP_MMC_HIGHSPEED |
+-			  MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE ,
+-	.ocr		= MMC_VDD_32_33 | MMC_VDD_33_34 ,
+-};
+-
+-static struct platform_device mmc_device = {
+-	.name		= "sh_mmcif",
+-	.num_resources	= ARRAY_SIZE(sh_mmcif_resources),
+-	.resource	= sh_mmcif_resources,
+-	.id		= 0,
+-	.dev = {
+-		.platform_data	= &sh_mmcif_plat,
+-	}
+-};
+-
+-
+ /* SATA0 */
+ static struct resource sata0_resources[] = {
+ 	[0] = {
+@@ -1514,7 +1460,6 @@ static struct platform_device *r8a7791_early_devices[] __initdata = {
+ 	&sh_msiof0_device,
+ 	&sh_msiof1_device,
+ 	&sh_msiof2_device,
+-	&mmc_device,
+ 	&sata0_device,
+ 	&sata1_device,
+ 	&vin0_device,
+-- 
+1.8.3.2
+

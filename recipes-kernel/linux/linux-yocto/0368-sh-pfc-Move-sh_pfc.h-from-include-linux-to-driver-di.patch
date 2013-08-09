@@ -1,7 +1,7 @@
 From 8af9139a55b6ed1bc0e89bb6e386844eb144c9d3 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:55 +0100
-Subject: [PATCH 368/715] sh-pfc: Move sh_pfc.h from include/linux/ to driver
+Subject: [PATCH 0368/1083] sh-pfc: Move sh_pfc.h from include/linux/ to driver
  directory
 
 The header file isn't used by arch code anymore. Make it private to the
@@ -15,28 +15,28 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c        |    1 -
- drivers/pinctrl/sh-pfc/core.h        |    3 +-
- drivers/pinctrl/sh-pfc/gpio.c        |    1 -
- drivers/pinctrl/sh-pfc/pfc-r8a7740.c |    3 +-
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7203.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7264.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7269.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7372.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh73a0.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7720.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7722.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7723.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7724.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7734.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7757.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7785.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-sh7786.c  |    3 +-
- drivers/pinctrl/sh-pfc/pfc-shx3.c    |    3 +-
- drivers/pinctrl/sh-pfc/pinctrl.c     |    1 -
- drivers/pinctrl/sh-pfc/sh_pfc.h      |  195 ++++++++++++++++++++++++++++++++++
- include/linux/sh_pfc.h               |  195 ----------------------------------
+ drivers/pinctrl/sh-pfc/core.c        |   1 -
+ drivers/pinctrl/sh-pfc/core.h        |   3 +-
+ drivers/pinctrl/sh-pfc/gpio.c        |   1 -
+ drivers/pinctrl/sh-pfc/pfc-r8a7740.c |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7203.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7264.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7269.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7372.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh73a0.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7720.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7722.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7723.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7724.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7734.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7757.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7785.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-sh7786.c  |   3 +-
+ drivers/pinctrl/sh-pfc/pfc-shx3.c    |   3 +-
+ drivers/pinctrl/sh-pfc/pinctrl.c     |   1 -
+ drivers/pinctrl/sh-pfc/sh_pfc.h      | 195 +++++++++++++++++++++++++++++++++++
+ include/linux/sh_pfc.h               | 195 -----------------------------------
  22 files changed, 229 insertions(+), 215 deletions(-)
  create mode 100644 drivers/pinctrl/sh-pfc/sh_pfc.h
  delete mode 100644 include/linux/sh_pfc.h
@@ -755,5 +755,5 @@ index 13049c4..0000000
 -
 -#endif /* __SH_PFC_H */
 -- 
-1.7.10.4
+1.8.3.2
 

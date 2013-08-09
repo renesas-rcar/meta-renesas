@@ -1,7 +1,7 @@
 From 6d51729bf54ca212ab89254e08be7d85c2be65d9 Mon Sep 17 00:00:00 2001
 From: Mathias Nyman <mathias.nyman@linux.intel.com>
 Date: Wed, 24 Oct 2012 17:25:27 +0300
-Subject: [PATCH 248/715] gpiolib: add gpio get direction callback support
+Subject: [PATCH 0248/1083] gpiolib: add gpio get direction callback support
 
 Add .get_direction callback to gpio_chip. This allows gpiolib
 to check the current direction of a gpio.
@@ -16,8 +16,8 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c     |   38 +++++++++++++++++++++++++++++++++++++-
- include/asm-generic/gpio.h |    5 ++++-
+ drivers/gpio/gpiolib.c     | 38 +++++++++++++++++++++++++++++++++++++-
+ include/asm-generic/gpio.h |  5 ++++-
  2 files changed, 41 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -130,5 +130,5 @@ index a9432fc..eb70ca2 100644
  						unsigned offset);
  	int			(*get)(struct gpio_chip *chip,
 -- 
-1.7.10.4
+1.8.3.2
 

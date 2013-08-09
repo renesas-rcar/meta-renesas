@@ -1,0 +1,27 @@
+From c08d3556d7c44b93ff86988fc15936659a7c5899 Mon Sep 17 00:00:00 2001
+From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+Date: Wed, 31 Jul 2013 14:15:03 +0900
+Subject: [PATCH 0816/1083] Revert "drm: rcar-du: Fix irq_enable for
+ FBIO_WAITFORVSYNC"
+
+This reverts commit 4df382cb4533c2cccf899e59df39907368b7fef4.
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index bcf63df..25d074c 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -599,8 +599,6 @@ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index)
+ 		return ret;
+ 	}
+ 
+-	rcdu->ddev->irq_enabled = 1;
+-
+ 	ret = devm_request_irq(rcdu->dev, irq, rcar_du_crtc_irq, irqflags,
+ 			       dev_name(rcdu->dev), rcrtc);
+ 	if (ret < 0) {
+-- 
+1.8.3.2
+

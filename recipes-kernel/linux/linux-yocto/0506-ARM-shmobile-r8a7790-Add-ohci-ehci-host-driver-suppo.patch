@@ -1,7 +1,7 @@
 From aea569ba2b29d3f4803a363afb06055bd5d97df7 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 13:20:42 +0900
-Subject: [PATCH 506/715] ARM: shmobile: r8a7790: Add ohci/ehci host driver
+Subject: [PATCH 0506/1083] ARM: shmobile: r8a7790: Add ohci/ehci host driver
  support
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
@@ -12,9 +12,9 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig           |    6 +
- arch/arm/mach-shmobile/include/mach/r8a7790.h |  155 +++++++++++
- arch/arm/mach-shmobile/setup-r8a7790.c        |  341 +++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig           |   6 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h | 155 ++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 341 ++++++++++++++++++++++++++
  3 files changed, 502 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -573,5 +573,5 @@ index 6b196fa..7c1eabc 100644
  			     ARRAY_SIZE(r8a7790_early_devices));
  
 -- 
-1.7.10.4
+1.8.3.2
 

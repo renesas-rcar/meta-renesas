@@ -1,7 +1,7 @@
 From c16ca15a07e22bea3a5739f86cdad0663d98ed10 Mon Sep 17 00:00:00 2001
 From: Paulo Zanoni <paulo.r.zanoni@intel.com>
 Date: Tue, 15 May 2012 18:09:04 -0300
-Subject: [PATCH 033/715] drm: add 'count' to struct drm_object_properties
+Subject: [PATCH 0033/1083] drm: add 'count' to struct drm_object_properties
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -19,8 +19,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |   64 +++++++++++++++++++-------------------------
- include/drm/drm_crtc.h     |    1 +
+ drivers/gpu/drm/drm_crtc.c | 64 +++++++++++++++++++---------------------------
+ include/drm/drm_crtc.h     |  1 +
  2 files changed, 28 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -161,5 +161,5 @@ index b0c3249..6d36552 100644
  	uint64_t values[DRM_OBJECT_MAX_PROPERTY];
  };
 -- 
-1.7.10.4
+1.8.3.2
 

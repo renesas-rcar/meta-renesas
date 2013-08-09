@@ -1,7 +1,7 @@
 From 26fd03f814e73d4dd4cf6a61c503a58c9a9e948b Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 29 Oct 2012 01:14:31 -0700
-Subject: [PATCH 335/715] ARM: shmobile: r8a7779: PFC rename PENCx ->
+Subject: [PATCH 0335/1083] ARM: shmobile: r8a7779: PFC rename PENCx ->
  USB_PENCx
 
 PENCx is Power Enable Control pin for USB.
@@ -15,8 +15,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7779.h |    2 +-
- arch/arm/mach-shmobile/pfc-r8a7779.c          |   16 ++++++++--------
+ arch/arm/mach-shmobile/include/mach/r8a7779.h |  2 +-
+ arch/arm/mach-shmobile/pfc-r8a7779.c          | 16 ++++++++--------
  2 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
@@ -102,5 +102,5 @@ index 187ae97..3d333b1 100644
  	},
  	{ PINMUX_CFG_REG_VAR("IPSR1", 0xfffc0024, 32,
 -- 
-1.7.10.4
+1.8.3.2
 

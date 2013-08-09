@@ -1,7 +1,7 @@
 From 91f9b5ae27a7b7bad3f94d011898fb262edd468b Mon Sep 17 00:00:00 2001
 From: Sachin Kamat <sachin.kamat@linaro.org>
 Date: Thu, 15 Nov 2012 03:43:30 +0000
-Subject: [PATCH 079/715] drm/drm_fb_helper: Remove unnecessary braces
+Subject: [PATCH 0079/1083] drm/drm_fb_helper: Remove unnecessary braces
 
 Remove unnecessary braces to silence the following type of
 checkpatch warnings:
@@ -14,7 +14,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_fb_helper.c |   23 ++++++++++-------------
+ drivers/gpu/drm/drm_fb_helper.c | 23 ++++++++++-------------
  1 file changed, 10 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
@@ -90,5 +90,5 @@ index 418deb5..3928e88 100644
  
  	return drm_fb_helper_single_fb_probe(fb_helper, bpp_sel);
 -- 
-1.7.10.4
+1.8.3.2
 

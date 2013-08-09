@@ -1,7 +1,7 @@
 From c5f5e373e18e52d81a8c37c6201035f10418618b Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 17 Jul 2012 15:48:18 +0900
-Subject: [PATCH 284/715] sh: pfc: pinctrl legacy group support.
+Subject: [PATCH 0284/1083] sh: pfc: pinctrl legacy group support.
 
 This follows the function support by simply doing 1 pin per group
 encapsulation in order to keep with legacy behaviour. This will be
@@ -12,7 +12,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |   26 ++++++++++++++++----------
+ drivers/sh/pfc/pinctrl.c | 26 ++++++++++++++++----------
  1 file changed, 16 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -66,5 +66,5 @@ index e79e379..45e80ee 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

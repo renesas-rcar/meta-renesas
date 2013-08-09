@@ -1,15 +1,15 @@
 From 122ff305cc6813cd3dca6bef152a0199247e5cb8 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 15:14:17 +0900
-Subject: [PATCH 514/715] mmc: tmio: Add SD clock start/stop wait pass option
+Subject: [PATCH 0514/1083] mmc: tmio: Add SD clock start/stop wait pass option
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit 6fbd45f72f0422633aa7fbf9f7712652ab68da18)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/tmio_mmc_pio.c |   12 ++++++++----
- include/linux/mfd/tmio.h        |    3 +++
+ drivers/mmc/host/tmio_mmc_pio.c | 12 ++++++++----
+ include/linux/mfd/tmio.h        |  3 +++
  2 files changed, 11 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
@@ -66,5 +66,5 @@ index b1254b0..c8f6407 100644
  int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
  void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
 -- 
-1.7.10.4
+1.8.3.2
 

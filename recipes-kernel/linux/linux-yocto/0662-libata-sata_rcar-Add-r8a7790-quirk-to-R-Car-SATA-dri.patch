@@ -1,7 +1,7 @@
 From eeacbe93a6a39d006daa8c714dca3f72f17b4366 Mon Sep 17 00:00:00 2001
 From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
 Date: Tue, 25 Jun 2013 17:46:31 +0900
-Subject: [PATCH 662/715] libata: sata_rcar: Add r8a7790 quirk to R-Car SATA
+Subject: [PATCH 0662/1083] libata: sata_rcar: Add r8a7790 quirk to R-Car SATA
  driver
 
 Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
@@ -9,7 +9,7 @@ Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/ata/sata_rcar.c |    9 +++++++++
+ drivers/ata/sata_rcar.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
@@ -69,5 +69,5 @@ index caf33f6..499f0f2 100644
  	/* SATA-IP reset state */
  	val = ioread32(priv->base + ATAPI_CONTROL1_REG);
 -- 
-1.7.10.4
+1.8.3.2
 

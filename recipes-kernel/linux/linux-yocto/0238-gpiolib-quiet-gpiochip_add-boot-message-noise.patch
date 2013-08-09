@@ -1,7 +1,7 @@
 From 95f23d24de05c6344d199b7db18cafda92d225e3 Mon Sep 17 00:00:00 2001
 From: H Hartley Sweeten <hartleys@visionengravers.com>
 Date: Fri, 11 May 2012 16:58:33 -0700
-Subject: [PATCH 238/715] gpiolib: quiet gpiochip_add boot message noise
+Subject: [PATCH 0238/1083] gpiolib: quiet gpiochip_add boot message noise
 
 The pr_info message in gpiochip_add gets displayed for every
 gpiochip registered. When first bringing up a system this
@@ -14,7 +14,7 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c |    2 +-
+ drivers/gpio/gpiolib.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -31,5 +31,5 @@ index 6d1dd8c..b7cea45 100644
  		chip->label ? : "generic");
  
 -- 
-1.7.10.4
+1.8.3.2
 

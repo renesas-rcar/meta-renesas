@@ -1,7 +1,7 @@
 From 95725fd41fc90476364ba59a587b28410bc70770 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Wed, 10 Oct 2012 23:32:36 -0700
-Subject: [PATCH 108/715] i2c: rcar: used devm_request_and_ioremap() instead
+Subject: [PATCH 0108/1083] i2c: rcar: used devm_request_and_ioremap() instead
  of devm_ioremap()
 
 Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
@@ -10,7 +10,7 @@ Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/i2c/busses/i2c-rcar.c |    2 +-
+ drivers/i2c/busses/i2c-rcar.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
@@ -27,5 +27,5 @@ index f9399d1..2bce56d 100644
  		dev_err(dev, "cannot ioremap\n");
  		return -ENODEV;
 -- 
-1.7.10.4
+1.8.3.2
 

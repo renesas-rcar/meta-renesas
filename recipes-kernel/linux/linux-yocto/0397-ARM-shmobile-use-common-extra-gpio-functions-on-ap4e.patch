@@ -1,7 +1,7 @@
 From efb891ce5d3f8df64807da5fb61e0b2891ae086f Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 25 Jun 2012 03:41:19 -0700
-Subject: [PATCH 397/715] ARM: shmobile: use common extra gpio functions on
+Subject: [PATCH 0397/1083] ARM: shmobile: use common extra gpio functions on
  ap4evb
 
 This patch switch over to use common extra gpio method,
@@ -17,7 +17,7 @@ Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-ap4evb.c |   19 ++-----------------
+ arch/arm/mach-shmobile/board-ap4evb.c | 19 ++-----------------
  1 file changed, 2 insertions(+), 17 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-ap4evb.c b/arch/arm/mach-shmobile/board-ap4evb.c
@@ -58,5 +58,5 @@ index 7f54423..53c244d 100644
  	/* card detect pin for MMC slot (CN7) */
  	gpio_request_one(GPIO_PORT41, GPIOF_IN, NULL);
 -- 
-1.7.10.4
+1.8.3.2
 

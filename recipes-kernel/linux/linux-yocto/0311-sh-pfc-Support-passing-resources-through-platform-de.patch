@@ -1,7 +1,7 @@
 From ea14a84f4bb698a428eae60e11af974df10eeda0 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:55 +0100
-Subject: [PATCH 311/715] sh-pfc: Support passing resources through platform
+Subject: [PATCH 0311/1083] sh-pfc: Support passing resources through platform
  device
 
 Resources should be passed through the platform device, not through
@@ -19,8 +19,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c |   26 +++++++++++++++++++-------
- drivers/sh/pfc/core.h |    2 ++
+ drivers/sh/pfc/core.c | 26 +++++++++++++++++++-------
+ drivers/sh/pfc/core.h |  2 ++
  2 files changed, 21 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -99,5 +99,5 @@ index d6a40bc..87ae5fd 100644
  	struct sh_pfc_pinctrl *pinctrl;
  };
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,18 +1,19 @@
 From 6fd418911a8f92c2c405b805db99c8a2b90754a9 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 12 Jun 2013 14:29:53 +0900
-Subject: [PATCH 484/715] ARM: shmobile: r8a7790: Add power management support
+Subject: [PATCH 0484/1083] ARM: shmobile: r8a7790: Add power management
+ support
 
 Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 (cherry picked from commit ed7fecca9bc54105cf9931a651f65dd38185ee1d)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/Makefile               |    1 +
- arch/arm/mach-shmobile/include/mach/common.h  |    1 +
- arch/arm/mach-shmobile/include/mach/r8a7790.h |   31 ++++
- arch/arm/mach-shmobile/pm-r8a7790.c           |  225 +++++++++++++++++++++++++
- arch/arm/mach-shmobile/setup-r8a7790.c        |    2 +
+ arch/arm/mach-shmobile/Makefile               |   1 +
+ arch/arm/mach-shmobile/include/mach/common.h  |   1 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  31 ++++
+ arch/arm/mach-shmobile/pm-r8a7790.c           | 225 ++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c        |   2 +
  5 files changed, 260 insertions(+)
  create mode 100644 arch/arm/mach-shmobile/pm-r8a7790.c
 
@@ -332,5 +333,5 @@ index 6cea67e..b84aff2 100644
  	r8a7790_register_scif(SCIFA1);
  	r8a7790_register_scif(SCIFB0);
 -- 
-1.7.10.4
+1.8.3.2
 

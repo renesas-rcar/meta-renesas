@@ -1,7 +1,7 @@
 From 9b5bccf5999ef37d9b2ebebfad272cd1d28e973e Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:36 +0000
-Subject: [PATCH 091/715] drm: don't start the poll engine in
+Subject: [PATCH 0091/1083] drm: don't start the poll engine in
  probe_single_connector
 
 Actually there's a reason this stuff is there, and it's called
@@ -43,8 +43,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc_helper.c |    7 ++++++-
- include/drm/drm_crtc.h            |    1 +
+ drivers/gpu/drm/drm_crtc_helper.c | 7 ++++++-
+ include/drm/drm_crtc.h            | 1 +
  2 files changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
@@ -80,5 +80,5 @@ index 1f5f1d6..c0635b7 100644
  
  	/* pointers to standard properties */
 -- 
-1.7.10.4
+1.8.3.2
 

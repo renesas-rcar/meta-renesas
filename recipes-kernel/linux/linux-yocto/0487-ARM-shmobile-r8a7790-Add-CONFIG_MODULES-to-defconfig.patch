@@ -1,7 +1,7 @@
 From 18b89e847acc0f5e2bd70f74180ec63315759602 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 12 Jun 2013 16:00:53 +0900
-Subject: [PATCH 487/715] ARM: shmobile: r8a7790: Add CONFIG_MODULES to
+Subject: [PATCH 0487/1083] ARM: shmobile: r8a7790: Add CONFIG_MODULES to
  defconfig
 
 PowerVR G6400 driver is provided as kernel loadable module.
@@ -12,7 +12,7 @@ Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig |    2 ++
+ arch/arm/configs/shmobile_defconfig | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -29,5 +29,5 @@ index 13010ef..6aed48c 100644
  # CONFIG_IOSCHED_DEADLINE is not set
  # CONFIG_IOSCHED_CFQ is not set
 -- 
-1.7.10.4
+1.8.3.2
 

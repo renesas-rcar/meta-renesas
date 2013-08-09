@@ -1,18 +1,18 @@
 From 7bbf915665858a1e51fc1cbb473c7ffb740c75d3 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Thu, 13 Jun 2013 14:03:41 +0900
-Subject: [PATCH 528/715] dma: sh: Add shdma-desc driver
+Subject: [PATCH 0528/1083] dma: sh: Add shdma-desc driver
 
 Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 (cherry picked from commit a687b462d56af4e2493e4c163c10628ec7d28ac8)
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/dma/Kconfig         |   24 +-
- drivers/dma/sh/Makefile     |    3 +-
- drivers/dma/sh/shdma-desc.c |  910 +++++++++++++++++++++++++++++++++++++++++++
- drivers/dma/sh/shdma-desc.h |   99 +++++
- include/linux/sh_dma-desc.h |   75 ++++
+ drivers/dma/Kconfig         |  24 +-
+ drivers/dma/sh/Makefile     |   3 +-
+ drivers/dma/sh/shdma-desc.c | 910 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sh/shdma-desc.h |  99 +++++
+ include/linux/sh_dma-desc.h |  75 ++++
  5 files changed, 1109 insertions(+), 2 deletions(-)
  create mode 100644 drivers/dma/sh/shdma-desc.c
  create mode 100644 drivers/dma/sh/shdma-desc.h
@@ -1172,5 +1172,5 @@ index 0000000..398ff76
 +
 +#endif	/* SH_DMA_DESC_H */
 -- 
-1.7.10.4
+1.8.3.2
 

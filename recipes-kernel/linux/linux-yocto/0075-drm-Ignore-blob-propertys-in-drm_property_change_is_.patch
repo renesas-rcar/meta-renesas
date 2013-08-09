@@ -1,7 +1,7 @@
 From 58a3eeea4609d0b90fb084da4eb5f243ba0001d2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:06 +0000
-Subject: [PATCH 075/715] drm: Ignore blob propertys in
+Subject: [PATCH 0075/1083] drm: Ignore blob propertys in
  drm_property_change_is_valid()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -18,7 +18,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |    3 +++
+ drivers/gpu/drm/drm_crtc.c | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -36,5 +36,5 @@ index b094abe..54eca93 100644
  		int i;
  		for (i = 0; i < property->num_values; i++)
 -- 
-1.7.10.4
+1.8.3.2
 

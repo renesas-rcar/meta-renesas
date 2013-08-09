@@ -1,7 +1,7 @@
 From 1a8eedb4470a5cd4827af65e3455b58edcad3587 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Fri, 29 Mar 2013 17:49:37 +0900
-Subject: [PATCH 473/715] ARM: shmobile: Initial r8a7790 Lager board support
+Subject: [PATCH 0473/1083] ARM: shmobile: Initial r8a7790 Lager board support
 
 Lager base board support making use of 2 GiB of memory,
 the r8a7790 SoC with the SCIF0 serial port and CA15 with
@@ -20,11 +20,11 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/boot/dts/r8a7790-lager.dts  |   31 +++++++++++++++++++++++
- arch/arm/mach-shmobile/Kconfig       |    9 ++++++-
- arch/arm/mach-shmobile/Makefile      |    1 +
- arch/arm/mach-shmobile/Makefile.boot |    2 ++
- arch/arm/mach-shmobile/board-lager.c |   46 ++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/r8a7790-lager.dts  | 31 ++++++++++++++++++++++++
+ arch/arm/mach-shmobile/Kconfig       |  9 ++++++-
+ arch/arm/mach-shmobile/Makefile      |  1 +
+ arch/arm/mach-shmobile/Makefile.boot |  2 ++
+ arch/arm/mach-shmobile/board-lager.c | 46 ++++++++++++++++++++++++++++++++++++
  5 files changed, 88 insertions(+), 1 deletion(-)
  create mode 100644 arch/arm/boot/dts/r8a7790-lager.dts
  create mode 100644 arch/arm/mach-shmobile/board-lager.c
@@ -175,5 +175,5 @@ index 0000000..7a09b0e
 +	.dt_compat	= lager_boards_compat_dt,
 +MACHINE_END
 -- 
-1.7.10.4
+1.8.3.2
 

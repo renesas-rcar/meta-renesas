@@ -1,7 +1,7 @@
 From ea2f9dfc5e4d20d0277156280a8e841a6e145282 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Fri, 14 Jun 2013 11:57:45 +0900
-Subject: [PATCH 508/715] mmc: sh_mobile_sdhi: Add buffer access size switch
+Subject: [PATCH 0508/1083] mmc: sh_mobile_sdhi: Add buffer access size switch
  option
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
@@ -9,8 +9,8 @@ Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/mmc/host/sh_mobile_sdhi.c |    5 +++++
- include/linux/mfd/tmio.h          |    3 +++
+ drivers/mmc/host/sh_mobile_sdhi.c | 5 +++++
+ include/linux/mfd/tmio.h          | 3 +++
  2 files changed, 8 insertions(+)
 
 diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
@@ -51,5 +51,5 @@ index d83af39..9d35929 100644
  int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
  void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
 -- 
-1.7.10.4
+1.8.3.2
 

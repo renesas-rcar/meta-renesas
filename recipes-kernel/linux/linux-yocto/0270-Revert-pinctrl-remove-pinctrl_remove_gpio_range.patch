@@ -1,7 +1,7 @@
 From 62ab17108269e0168aad87c060f8df0566fac6bc Mon Sep 17 00:00:00 2001
 From: Viresh Kumar <viresh.kumar@linaro.org>
 Date: Sat, 27 Oct 2012 15:21:35 +0530
-Subject: [PATCH 270/715] Revert "pinctrl: remove pinctrl_remove_gpio_range"
+Subject: [PATCH 0270/1083] Revert "pinctrl: remove pinctrl_remove_gpio_range"
 
 This reverts earlier commit which removed
 pinctrl_remove_gpio_range(), because at that time there
@@ -21,8 +21,8 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/core.c          |   14 ++++++++++++++
- include/linux/pinctrl/pinctrl.h |    2 ++
+ drivers/pinctrl/core.c          | 14 ++++++++++++++
+ include/linux/pinctrl/pinctrl.h |  2 ++
  2 files changed, 16 insertions(+)
 
 diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
@@ -64,5 +64,5 @@ index 36409c2..aeefb67 100644
  extern const char *pinctrl_dev_get_devname(struct pinctrl_dev *pctldev);
  extern void *pinctrl_dev_get_drvdata(struct pinctrl_dev *pctldev);
 -- 
-1.7.10.4
+1.8.3.2
 

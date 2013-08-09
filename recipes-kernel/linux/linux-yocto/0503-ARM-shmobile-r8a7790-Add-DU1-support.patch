@@ -1,7 +1,7 @@
 From 518554570b0023447d86b644ad14f414325d3674 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:46:42 +0900
-Subject: [PATCH 503/715] ARM: shmobile: r8a7790: Add DU1 support
+Subject: [PATCH 0503/1083] ARM: shmobile: r8a7790: Add DU1 support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 (cherry picked from commit b60c8a553dd8188f8336d3824e22ae71186a4f8c)
@@ -11,7 +11,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c |    4 +++-
+ arch/arm/mach-shmobile/clock-r8a7790.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -44,5 +44,5 @@ index 046b7ed..7752187 100644
  	CLKDEV_DEV_ID("sh-sci.1", &mstp_clks[MSTP203]),
  	CLKDEV_DEV_ID("sh-sci.2", &mstp_clks[MSTP206]),
 -- 
-1.7.10.4
+1.8.3.2
 

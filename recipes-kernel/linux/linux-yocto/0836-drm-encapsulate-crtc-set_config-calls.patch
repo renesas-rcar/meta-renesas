@@ -1,0 +1,169 @@
+From fe8dec43b3df24644afa46ea0ec088e827dc6ae6 Mon Sep 17 00:00:00 2001
+From: Daniel Vetter <daniel.vetter@ffwll.ch>
+Date: Tue, 11 Dec 2012 13:47:23 +0100
+Subject: [PATCH 0836/1083] drm: encapsulate crtc->set_config calls
+
+With refcounting we need to adjust framebuffer refcounts at each
+callsite - much easier to do if they all call the same little helper
+function.
+
+Reviewed-by: Rob Clark <rob@ti.com>
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+(cherry picked from commit 2d13b6796e420ed00389b7399a5d5ac7b1fed436)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 3bc599a1d7dcd99406a3ea660fb4b4e37f131ab9)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_crtc.c             | 19 +++++++++++++++++--
+ drivers/gpu/drm/drm_fb_helper.c        |  6 +++---
+ drivers/gpu/drm/i2c/ch7006_drv.c       |  2 +-
+ drivers/gpu/drm/nouveau/nv04_display.c |  2 +-
+ drivers/gpu/drm/nouveau/nv17_tv.c      |  2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_drv.c    |  2 +-
+ include/drm/drm_crtc.h                 |  1 +
+ 7 files changed, 25 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 9b64998..abf86bd 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -378,7 +378,7 @@ void drm_framebuffer_remove(struct drm_framebuffer *fb)
+ 			memset(&set, 0, sizeof(struct drm_mode_set));
+ 			set.crtc = crtc;
+ 			set.fb = NULL;
+-			ret = crtc->funcs->set_config(&set);
++			ret = drm_mode_set_config_internal(&set);
+ 			if (ret)
+ 				DRM_ERROR("failed to reset crtc %p when fb was deleted\n", crtc);
+ 		}
+@@ -1801,6 +1801,21 @@ out:
+ }
+ 
+ /**
++ * drm_mode_set_config_internal - helper to call ->set_config
++ * @set: modeset config to set
++ *
++ * This is a little helper to wrap internal calls to the ->set_config driver
++ * interface. The only thing it adds is correct refcounting dance.
++ */
++int drm_mode_set_config_internal(struct drm_mode_set *set)
++{
++	struct drm_crtc *crtc = set->crtc;
++
++	return crtc->funcs->set_config(set);
++}
++EXPORT_SYMBOL(drm_mode_set_config_internal);
++
++/**
+  * drm_mode_setcrtc - set CRTC configuration
+  * @inode: inode from the ioctl
+  * @filp: file * from the ioctl
+@@ -1964,7 +1979,7 @@ int drm_mode_setcrtc(struct drm_device *dev, void *data,
+ 	set.connectors = connector_set;
+ 	set.num_connectors = crtc_req->count_connectors;
+ 	set.fb = fb;
+-	ret = crtc->funcs->set_config(&set);
++	ret = drm_mode_set_config_internal(&set);
+ 
+ out:
+ 	kfree(connector_set);
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 50d60d9..caed1dc 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -245,7 +245,7 @@ bool drm_fb_helper_restore_fbdev_mode(struct drm_fb_helper *fb_helper)
+ 	int i, ret;
+ 	for (i = 0; i < fb_helper->crtc_count; i++) {
+ 		struct drm_mode_set *mode_set = &fb_helper->crtc_info[i].mode_set;
+-		ret = mode_set->crtc->funcs->set_config(mode_set);
++		ret = drm_mode_set_config_internal(mode_set);
+ 		if (ret)
+ 			error = true;
+ 	}
+@@ -675,7 +675,7 @@ int drm_fb_helper_set_par(struct fb_info *info)
+ 	mutex_lock(&dev->mode_config.mutex);
+ 	for (i = 0; i < fb_helper->crtc_count; i++) {
+ 		crtc = fb_helper->crtc_info[i].mode_set.crtc;
+-		ret = crtc->funcs->set_config(&fb_helper->crtc_info[i].mode_set);
++		ret = drm_mode_set_config_internal(&fb_helper->crtc_info[i].mode_set);
+ 		if (ret) {
+ 			mutex_unlock(&dev->mode_config.mutex);
+ 			return ret;
+@@ -711,7 +711,7 @@ int drm_fb_helper_pan_display(struct fb_var_screeninfo *var,
+ 		modeset->y = var->yoffset;
+ 
+ 		if (modeset->num_connectors) {
+-			ret = crtc->funcs->set_config(modeset);
++			ret = drm_mode_set_config_internal(modeset);
+ 			if (!ret) {
+ 				info->var.xoffset = var->xoffset;
+ 				info->var.yoffset = var->yoffset;
+diff --git a/drivers/gpu/drm/i2c/ch7006_drv.c b/drivers/gpu/drm/i2c/ch7006_drv.c
+index 36d9522..e1a3446 100644
+--- a/drivers/gpu/drm/i2c/ch7006_drv.c
++++ b/drivers/gpu/drm/i2c/ch7006_drv.c
+@@ -364,7 +364,7 @@ static int ch7006_encoder_set_property(struct drm_encoder *encoder,
+ 				.crtc = crtc,
+ 			};
+ 
+-			crtc->funcs->set_config(&modeset);
++			drm_mode_set_config_internal(&modeset);
+ 		}
+ 	}
+ 
+diff --git a/drivers/gpu/drm/nouveau/nv04_display.c b/drivers/gpu/drm/nouveau/nv04_display.c
+index 7047d37..0f2205f 100644
+--- a/drivers/gpu/drm/nouveau/nv04_display.c
++++ b/drivers/gpu/drm/nouveau/nv04_display.c
+@@ -201,7 +201,7 @@ nv04_display_destroy(struct drm_device *dev)
+ 			.crtc = crtc,
+ 		};
+ 
+-		crtc->funcs->set_config(&modeset);
++		drm_mode_set_config_internal(&modeset);
+ 	}
+ 
+ 	/* Restore state */
+diff --git a/drivers/gpu/drm/nouveau/nv17_tv.c b/drivers/gpu/drm/nouveau/nv17_tv.c
+index 67be5db..ae14db1 100644
+--- a/drivers/gpu/drm/nouveau/nv17_tv.c
++++ b/drivers/gpu/drm/nouveau/nv17_tv.c
+@@ -748,7 +748,7 @@ static int nv17_tv_set_property(struct drm_encoder *encoder,
+ 				.crtc = crtc,
+ 			};
+ 
+-			crtc->funcs->set_config(&modeset);
++			drm_mode_set_config_internal(&modeset);
+ 		}
+ 	}
+ 
+diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_drv.c b/drivers/gpu/drm/vmwgfx/vmwgfx_drv.c
+index db50604..ac2c6c5 100644
+--- a/drivers/gpu/drm/vmwgfx/vmwgfx_drv.c
++++ b/drivers/gpu/drm/vmwgfx/vmwgfx_drv.c
+@@ -840,7 +840,7 @@ static void vmw_lastclose(struct drm_device *dev)
+ 
+ 	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
+ 		set.crtc = crtc;
+-		ret = crtc->funcs->set_config(&set);
++		ret = drm_mode_set_config_internal(&set);
+ 		WARN_ON(ret != 0);
+ 	}
+ 
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 00d78b5..665289a 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -985,6 +985,7 @@ extern int drm_mode_getcrtc(struct drm_device *dev,
+ 			    void *data, struct drm_file *file_priv);
+ extern int drm_mode_getconnector(struct drm_device *dev,
+ 			      void *data, struct drm_file *file_priv);
++extern int drm_mode_set_config_internal(struct drm_mode_set *set);
+ extern int drm_mode_setcrtc(struct drm_device *dev,
+ 			    void *data, struct drm_file *file_priv);
+ extern int drm_mode_getplane(struct drm_device *dev,
+-- 
+1.8.3.2
+

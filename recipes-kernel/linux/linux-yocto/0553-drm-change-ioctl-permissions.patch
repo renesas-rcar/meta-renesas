@@ -1,7 +1,7 @@
 From 0200bc457f65e7bffa54b8c0842fa259d2f134ee Mon Sep 17 00:00:00 2001
 From: Rob Clark <rob@ti.com>
 Date: Thu, 13 Sep 2012 03:34:08 +0000
-Subject: [PATCH 553/715] drm: change ioctl permissions
+Subject: [PATCH 0553/1083] drm: change ioctl permissions
 
 Previously read-only KMS ioctls had some somewhat inconsistent settings
 regarding whether mastership was required.  For example, GETRESOURCES
@@ -21,7 +21,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/drm_drv.c |   10 +++++-----
+ drivers/gpu/drm/drm_drv.c | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
@@ -63,5 +63,5 @@ index b6d1e27..ccb5dff 100644
  };
  
 -- 
-1.7.10.4
+1.8.3.2
 

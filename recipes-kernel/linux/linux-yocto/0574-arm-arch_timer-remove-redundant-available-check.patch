@@ -1,7 +1,7 @@
 From 4217cdb59ac890d14719b9768c6eb8f7a2fd7028 Mon Sep 17 00:00:00 2001
 From: Mark Rutland <mark.rutland@arm.com>
 Date: Mon, 12 Nov 2012 14:40:44 +0000
-Subject: [PATCH 574/715] arm: arch_timer: remove redundant available check
+Subject: [PATCH 0574/1083] arm: arch_timer: remove redundant available check
 
 This check is a holdover from the pre-devicetree days. As the timer
 is not probed except by platforms which register it via devicetree,
@@ -17,7 +17,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/kernel/arch_timer.c |   12 ------------
+ arch/arm/kernel/arch_timer.c | 12 ------------
  1 file changed, 12 deletions(-)
 
 diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
@@ -58,5 +58,5 @@ index 6dd73c6..1bb3b582 100644
  		freq = arch_timer_reg_read(ARCH_TIMER_PHYS_ACCESS,
  					   ARCH_TIMER_REG_FREQ);
 -- 
-1.7.10.4
+1.8.3.2
 

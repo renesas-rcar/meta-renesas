@@ -1,7 +1,7 @@
 From 261608d3f3b41beee6a4fce8858ec87dd829dffe Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
 Date: Fri, 30 Mar 2012 22:04:51 +0200
-Subject: [PATCH 221/715] pinctrl: mark const init data with __initconst
+Subject: [PATCH 0221/1083] pinctrl: mark const init data with __initconst
  instead of __initdata
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -23,8 +23,8 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/pinctrl.txt        |    2 +-
- drivers/pinctrl/pinctrl-coh901.c |    4 ++--
+ Documentation/pinctrl.txt        | 2 +-
+ drivers/pinctrl/pinctrl-coh901.c | 4 ++--
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/pinctrl.txt b/Documentation/pinctrl.txt
@@ -63,5 +63,5 @@ index 0797eba..55697a5 100644
  	/* Port 0, pins 0-7 */
  	{
 -- 
-1.7.10.4
+1.8.3.2
 

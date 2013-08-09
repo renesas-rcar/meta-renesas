@@ -1,7 +1,7 @@
 From d165199db25bf8bd516e74233d813c22aba51abc Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Fri, 13 Apr 2012 16:33:32 -0400
-Subject: [PATCH 012/715] drm/edid: Remove a misleading comment
+Subject: [PATCH 0012/1083] drm/edid: Remove a misleading comment
 
 mode_in_range() handles what this was warning about.
 
@@ -13,7 +13,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    4 ----
+ drivers/gpu/drm/drm_edid.c | 4 ----
  1 file changed, 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -32,5 +32,5 @@ index ad24ccd..4ddc0e5 100644
  drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
  			struct detailed_timing *timing)
 -- 
-1.7.10.4
+1.8.3.2
 

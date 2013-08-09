@@ -1,7 +1,7 @@
 From b5d17894e396b9b9fcd42fa4c5ef45e3c54f0f19 Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:46:00 +0900
-Subject: [PATCH 502/715] drm: rcar-du: Add signal selection support
+Subject: [PATCH 0502/1083] drm: rcar-du: Add signal selection support
 
 Output of DU0 can only select Analog RGB connector.
 Output of DU1 can select Analog RGB connector or LVDS connector.
@@ -11,8 +11,8 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/Kconfig       |   21 +++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_drv.c |    7 +++++++
+ drivers/gpu/drm/rcar-du/Kconfig       | 21 +++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c |  7 +++++++
  2 files changed, 28 insertions(+)
 
 diff --git a/drivers/gpu/drm/rcar-du/Kconfig b/drivers/gpu/drm/rcar-du/Kconfig
@@ -63,5 +63,5 @@ index e457598..161913c 100644
  	 * superposition 0 to DU0 pins. DU1 pins will be configured dynamically.
  	 */
 -- 
-1.7.10.4
+1.8.3.2
 

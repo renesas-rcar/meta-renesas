@@ -1,7 +1,7 @@
 From f7665e3b48c7fd3db92cc5efb48ff767cae12847 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Date: Fri, 13 Jul 2012 00:57:26 +0200
-Subject: [PATCH 053/715] Documentation: DocBook DRM framework documentation
+Subject: [PATCH 0053/1083] Documentation: DocBook DRM framework documentation
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Reviewed-by: Rob Clark <rob.clark@linaro.org>
@@ -2971,5 +2971,5 @@ index 196b8b9..b030052 100644
  
    <!-- API reference -->
 -- 
-1.7.10.4
+1.8.3.2
 

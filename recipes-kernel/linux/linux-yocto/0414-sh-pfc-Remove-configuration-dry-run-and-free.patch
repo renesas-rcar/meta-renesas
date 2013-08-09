@@ -1,7 +1,7 @@
 From 03f7190040a09455c36202fbb66044bb11ec5ee7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 15:29:14 +0100
-Subject: [PATCH 414/715] sh-pfc: Remove configuration dry-run and free
+Subject: [PATCH 0414/1083] sh-pfc: Remove configuration dry-run and free
 
 The purpose of the dry-run is to ensure that a pin about to be
 configured isn't in use. However, the current implementation is a no-op.
@@ -15,11 +15,11 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c    |   50 ++++++--------------------------------
- drivers/pinctrl/sh-pfc/core.h    |    3 +--
- drivers/pinctrl/sh-pfc/gpio.c    |   14 +----------
- drivers/pinctrl/sh-pfc/pinctrl.c |   48 ++----------------------------------
- drivers/pinctrl/sh-pfc/sh_pfc.h  |    5 +---
+ drivers/pinctrl/sh-pfc/core.c    | 50 ++++++----------------------------------
+ drivers/pinctrl/sh-pfc/core.h    |  3 +--
+ drivers/pinctrl/sh-pfc/gpio.c    | 14 +----------
+ drivers/pinctrl/sh-pfc/pinctrl.c | 48 ++------------------------------------
+ drivers/pinctrl/sh-pfc/sh_pfc.h  |  5 +---
  5 files changed, 12 insertions(+), 108 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -305,5 +305,5 @@ index 6a4a62f..19da3b7 100644
  /* helper macro for port */
  #define PORT_1(fn, pfx, sfx) fn(pfx, sfx)
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 0c6c757ace42fba06f522781f221bb93e1ba5a3a Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:22 +0200
-Subject: [PATCH 475/715] ARM: shmobile: lager: Initialize pinmux
+Subject: [PATCH 0475/1083] ARM: shmobile: lager: Initialize pinmux
 
 Initialize r8a7790 pinmuxing and register mappings for the two debug
 serial ports.
@@ -12,7 +12,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-lager.c |   15 +++++++++++++++
+ arch/arm/mach-shmobile/board-lager.c | 15 +++++++++++++++
  1 file changed, 15 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -51,5 +51,5 @@ index 7013934..c8a64b1 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

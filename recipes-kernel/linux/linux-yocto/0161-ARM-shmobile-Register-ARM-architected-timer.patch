@@ -1,7 +1,7 @@
 From 9650e164bb700ade8d810182ea25177dacfae648 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Tue, 5 Feb 2013 16:30:49 +0900
-Subject: [PATCH 161/715] ARM: shmobile: Register ARM architected timer
+Subject: [PATCH 0161/1083] ARM: shmobile: Register ARM architected timer
 
 Register ARM architected timer by default for all mach-shmobile
 systems using late timer.
@@ -12,7 +12,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/timer.c |    3 +++
+ arch/arm/mach-shmobile/timer.c | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/timer.c b/arch/arm/mach-shmobile/timer.c
@@ -37,5 +37,5 @@ index a689197..b66d65b 100644
  
  struct sys_timer shmobile_timer = {
 -- 
-1.7.10.4
+1.8.3.2
 

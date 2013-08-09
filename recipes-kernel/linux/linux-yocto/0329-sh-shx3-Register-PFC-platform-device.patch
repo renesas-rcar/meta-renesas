@@ -1,7 +1,7 @@
 From 35a957b7a742effbf3f21e84e7d8b547c93b41f5 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:16 +0100
-Subject: [PATCH 329/715] sh: shx3: Register PFC platform device
+Subject: [PATCH 0329/1083] sh: shx3: Register PFC platform device
 
 Add arch code to register the PFC platform device instead of calling the
 driver directly. Platform device registration in the sh-pfc driver will
@@ -14,8 +14,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/Kconfig                       |    1 +
- arch/sh/kernel/cpu/sh4a/pinmux-shx3.c |    3 ++-
+ arch/sh/Kconfig                       | 1 +
+ arch/sh/kernel/cpu/sh4a/pinmux-shx3.c | 3 ++-
  2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
@@ -51,5 +51,5 @@ index 2ebb983..eef1b8f 100644
  }
  arch_initcall(shx3_pinmux_setup);
 -- 
-1.7.10.4
+1.8.3.2
 

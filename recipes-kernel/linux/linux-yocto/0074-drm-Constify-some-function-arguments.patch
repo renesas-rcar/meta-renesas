@@ -1,7 +1,7 @@
 From 7d07f698420c9b3b63046d47db50a5d9b3747d58 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 25 Oct 2012 18:05:05 +0000
-Subject: [PATCH 074/715] drm: Constify some function arguments
+Subject: [PATCH 0074/1083] drm: Constify some function arguments
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,8 +16,8 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_modes.c |    8 ++++----
- include/drm/drm_crtc.h      |    8 ++++----
+ drivers/gpu/drm/drm_modes.c | 8 ++++----
+ include/drm/drm_crtc.h      | 8 ++++----
  2 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_modes.c b/drivers/gpu/drm/drm_modes.c
@@ -84,5 +84,5 @@ index 3fa18b7..49dd8c2 100644
  /* for us by fb module */
  extern int drm_mode_attachmode_crtc(struct drm_device *dev,
 -- 
-1.7.10.4
+1.8.3.2
 

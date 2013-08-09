@@ -1,7 +1,7 @@
 From 54ef13e433152b522a6ee624292b1f090feab4e9 Mon Sep 17 00:00:00 2001
 From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
 Date: Mon, 25 Jun 2012 03:41:36 -0700
-Subject: [PATCH 405/715] ARM: shmobile: use common extra gpio functions on
+Subject: [PATCH 0405/1083] ARM: shmobile: use common extra gpio functions on
  Mackerel
 
 This patch switch over to use common extra gpio method,
@@ -17,7 +17,7 @@ Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-mackerel.c |   34 ++++---------------------------
+ arch/arm/mach-shmobile/board-mackerel.c | 34 ++++-----------------------------
  1 file changed, 4 insertions(+), 30 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-mackerel.c b/arch/arm/mach-shmobile/board-mackerel.c
@@ -83,5 +83,5 @@ index ed05efa..b0ef9be 100644
  	intc_set_priority(IRQ_FSI, 3); /* irq priority FSI(3) > SMSC911X(2) */
  
 -- 
-1.7.10.4
+1.8.3.2
 

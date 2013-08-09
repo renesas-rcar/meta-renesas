@@ -1,7 +1,7 @@
 From f9ea70b97c933f17317f56ecc8aa8aa5c7963012 Mon Sep 17 00:00:00 2001
 From: Marc Zyngier <marc.zyngier@arm.com>
 Date: Fri, 14 Jan 2011 15:32:36 +0000
-Subject: [PATCH 146/715] ARM: architected timers: Add A15 specific
+Subject: [PATCH 0146/1083] ARM: architected timers: Add A15 specific
  sched_clock implementation
 
 Provide an A15 sched_clock implementation using the virtual counter,
@@ -15,8 +15,8 @@ Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/arch_timer.h |    6 ++++++
- arch/arm/kernel/arch_timer.c      |   25 +++++++++++++++++++++++++
+ arch/arm/include/asm/arch_timer.h |  6 ++++++
+ arch/arm/kernel/arch_timer.c      | 25 +++++++++++++++++++++++++
  2 files changed, 31 insertions(+)
 
 diff --git a/arch/arm/include/asm/arch_timer.h b/arch/arm/include/asm/arch_timer.h
@@ -89,5 +89,5 @@ index bb9a8b4..dd90704 100644
 +	return 0;
 +}
 -- 
-1.7.10.4
+1.8.3.2
 

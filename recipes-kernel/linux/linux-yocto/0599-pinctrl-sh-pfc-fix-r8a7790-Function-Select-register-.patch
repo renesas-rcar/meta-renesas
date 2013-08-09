@@ -1,7 +1,7 @@
 From 3c9e8ae99cf967ce4c3b02df1a83cf3cb659d148 Mon Sep 17 00:00:00 2001
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Date: Wed, 15 May 2013 10:46:49 +0000
-Subject: [PATCH 599/715] pinctrl: sh-pfc: fix r8a7790 Function Select
+Subject: [PATCH 0599/1083] pinctrl: sh-pfc: fix r8a7790 Function Select
  register tables
 
 Fix several errors in Peripheral Function Select register tables for
@@ -19,7 +19,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |   14 ++++++--------
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 14 ++++++--------
  1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -63,5 +63,5 @@ index 5a633f4..7d39902 100644
  		/* SEL_ADI [1] */
  		FN_SEL_ADI_0, FN_SEL_ADI_1,
 -- 
-1.7.10.4
+1.8.3.2
 

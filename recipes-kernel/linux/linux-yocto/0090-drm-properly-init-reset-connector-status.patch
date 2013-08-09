@@ -1,7 +1,7 @@
 From 187d50fe313e4242e52ac6e1a5dd68eac50a7908 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Tue, 23 Oct 2012 18:23:35 +0000
-Subject: [PATCH 090/715] drm: properly init/reset connector status
+Subject: [PATCH 0090/1083] drm: properly init/reset connector status
 
 This can help drivers to make somewhat intelligent decisions in their
 ->detect callback: If the connector is hpd capable and in the unknown
@@ -19,7 +19,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |    6 +++++-
+ drivers/gpu/drm/drm_crtc.c | 6 +++++-
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -49,5 +49,5 @@ index 02cc454..94a8d7a 100644
  EXPORT_SYMBOL(drm_mode_config_reset);
  
 -- 
-1.7.10.4
+1.8.3.2
 

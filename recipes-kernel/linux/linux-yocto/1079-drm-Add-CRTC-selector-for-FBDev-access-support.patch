@@ -1,0 +1,71 @@
+From 1d4f99677898426485f513a042ff517d80266c71 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 26 Jul 2013 15:25:13 +0900
+Subject: [PATCH 1079/1083] drm: Add CRTC selector for FBDev access support
+
+The CRT controller which can be accessed as FBDev is chosen.
+When this option is disabled, chooses the maximum resolution
+of CRTCs and fixes the VSYNC wait in CRTC0.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/Kconfig         | 7 +++++++
+ drivers/gpu/drm/drm_fb_helper.c | 8 ++------
+ drivers/gpu/drm/drm_irq.c       | 4 ++++
+ 3 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/Kconfig b/drivers/gpu/drm/Kconfig
+index ab2987c..bb3ae81 100644
+--- a/drivers/gpu/drm/Kconfig
++++ b/drivers/gpu/drm/Kconfig
+@@ -200,6 +200,13 @@ config DRM_ADV7511
+ 	select REGMAP_I2C
+ 	select HDMI
+ 
++config DRM_FBDEV_CRTC
++	int "Select FBDev CRTC"
++	depends on DRM_KMS_HELPER
++	help
++	  Choose this option if you want to select CRTC of
++	  fbdev access.
++
+ source "drivers/gpu/drm/exynos/Kconfig"
+ 
+ source "drivers/gpu/drm/vmwgfx/Kconfig"
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 28e0db0..82f173c 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -809,12 +809,8 @@ int drm_fb_helper_single_fb_probe(struct drm_fb_helper *fb_helper,
+ 		struct drm_display_mode *desired_mode;
+ 		desired_mode = fb_helper->crtc_info[i].desired_mode;
+ 
+-#if defined(CONFIG_DRM_RCAR_DU)
+-#if defined(CONFIG_MACH_LAGER)
+-		if ((desired_mode) && (i == 0)) {
+-#elif defined(CONFIG_MACH_KOELSCH)
+-		if ((desired_mode) && (i == 1)) {
+-#endif
++#if defined(CONFIG_DRM_FBDEV_CRTC)
++		if ((desired_mode) && (i == CONFIG_DRM_FBDEV_CRTC)) {
+ #else
+ 		if (desired_mode) {
+ #endif
+diff --git a/drivers/gpu/drm/drm_irq.c b/drivers/gpu/drm/drm_irq.c
+index 126cf69..973cc18 100644
+--- a/drivers/gpu/drm/drm_irq.c
++++ b/drivers/gpu/drm/drm_irq.c
+@@ -1209,6 +1209,10 @@ int drm_wait_vblank(struct drm_device *dev, void *data,
+ 		crtc = high_crtc >> _DRM_VBLANK_HIGH_CRTC_SHIFT;
+ 	else
+ 		crtc = flags & _DRM_VBLANK_SECONDARY ? 1 : 0;
++#if defined(CONFIG_DRM_FBDEV_CRTC)
++	if (file_priv == NULL)
++		crtc = CONFIG_DRM_FBDEV_CRTC;
++#endif
+ 	if (crtc >= dev->num_crtcs)
+ 		return -EINVAL;
+ 
+-- 
+1.8.3.2
+

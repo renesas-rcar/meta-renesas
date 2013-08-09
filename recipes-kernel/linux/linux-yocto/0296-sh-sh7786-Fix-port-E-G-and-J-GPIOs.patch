@@ -1,7 +1,7 @@
 From 65f7064d640f7492ec81f4113ee214ddb6afd5ac Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:39 +0100
-Subject: [PATCH 296/715] sh: sh7786: Fix port E, G and J GPIOs
+Subject: [PATCH 0296/1083] sh: sh7786: Fix port E, G and J GPIOs
 
 The port E, G and J GPIOs don't match the SoC datasheet (they seem to
 have been copied from the SH7785). Fix them.
@@ -13,8 +13,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/sh/include/cpu-sh4/cpu/sh7786.h    |    8 +++-----
- arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c |    4 ++--
+ arch/sh/include/cpu-sh4/cpu/sh7786.h    | 8 +++-----
+ arch/sh/kernel/cpu/sh4a/pinmux-sh7786.c | 4 ++--
  2 files changed, 5 insertions(+), 7 deletions(-)
 
 diff --git a/arch/sh/include/cpu-sh4/cpu/sh7786.h b/arch/sh/include/cpu-sh4/cpu/sh7786.h
@@ -65,5 +65,5 @@ index 4229e07..c24a777 100644
  	/* PF */
  	PINMUX_GPIO(GPIO_PF7, PF7_DATA),
 -- 
-1.7.10.4
+1.8.3.2
 

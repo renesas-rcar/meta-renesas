@@ -1,8 +1,8 @@
 From d62d1561d816e835f4b0de6806d5bd5af5a51206 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:46:02 +0100
-Subject: [PATCH 432/715] ARM: shmobile: marzen: Register pinctrl mappings for
- LBSC
+Subject: [PATCH 0432/1083] ARM: shmobile: marzen: Register pinctrl mappings
+ for LBSC
 
 Replace the GPIO-based LBSC pinmux configuration by pinctrl mappings.
 
@@ -14,7 +14,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-marzen.c |    4 +++-
+ arch/arm/mach-shmobile/board-marzen.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
@@ -40,5 +40,5 @@ index 42ed8c1..56dd3e0 100644
  
  	r8a7779_add_standard_devices();
 -- 
-1.7.10.4
+1.8.3.2
 

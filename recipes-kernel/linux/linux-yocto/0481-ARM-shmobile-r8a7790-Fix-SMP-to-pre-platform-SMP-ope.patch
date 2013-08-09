@@ -1,7 +1,7 @@
 From ffb4dd1f3f6cc7e507916284bc7e28b9b224d250 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Tue, 11 Jun 2013 15:30:21 +0900
-Subject: [PATCH 481/715] ARM: shmobile: r8a7790: Fix SMP to pre-platform SMP
+Subject: [PATCH 0481/1083] ARM: shmobile: r8a7790: Fix SMP to pre-platform SMP
  operations basis
 
 SMP is fixed to the code using struct smp_operations,
@@ -12,12 +12,12 @@ Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/board-lager.c          |    1 +
- arch/arm/mach-shmobile/headsmp.S              |    7 ---
- arch/arm/mach-shmobile/include/mach/common.h  |    6 ---
- arch/arm/mach-shmobile/include/mach/r8a7790.h |    1 +
- arch/arm/mach-shmobile/platsmp.c              |   52 --------------------
- arch/arm/mach-shmobile/smp-r8a7790.c          |   63 +++++++++++++++++++------
+ arch/arm/mach-shmobile/board-lager.c          |  1 +
+ arch/arm/mach-shmobile/headsmp.S              |  7 ---
+ arch/arm/mach-shmobile/include/mach/common.h  |  6 ---
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  1 +
+ arch/arm/mach-shmobile/platsmp.c              | 52 ----------------------
+ arch/arm/mach-shmobile/smp-r8a7790.c          | 63 ++++++++++++++++++++-------
  6 files changed, 50 insertions(+), 80 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -266,5 +266,5 @@ index 261a7c0..d921def 100644
 +#endif
 +};
 -- 
-1.7.10.4
+1.8.3.2
 

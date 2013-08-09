@@ -1,7 +1,7 @@
 From 567a52ca8764041028be6eefc3c6e290e213ab62 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 20 Nov 2012 14:56:25 +0100
-Subject: [PATCH 259/715] gpiolib: return any error code from range creation
+Subject: [PATCH 0259/1083] gpiolib: return any error code from range creation
 
 If we try to create a range for a certain GPIO chip and the
 target pin controller is not yet available it may return
@@ -15,7 +15,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c |    3 ++-
+ drivers/gpio/gpiolib.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -36,5 +36,5 @@ index a2a5119..2c57e4c 100644
  	pr_debug("%s: GPIO chip: created GPIO range %d->%d ==> PIN %d->%d\n",
  		 chip->label, offset, offset + npins - 1,
 -- 
-1.7.10.4
+1.8.3.2
 

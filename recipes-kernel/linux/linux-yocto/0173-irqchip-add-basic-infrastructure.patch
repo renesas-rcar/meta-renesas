@@ -1,7 +1,7 @@
 From 7fd7464ca2e2c0cdad84beb63fba3a4b210178ff Mon Sep 17 00:00:00 2001
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Date: Tue, 20 Nov 2012 23:00:52 +0100
-Subject: [PATCH 173/715] irqchip: add basic infrastructure
+Subject: [PATCH 0173/1083] irqchip: add basic infrastructure
 
 With the recent creation of the drivers/irqchip/ directory, it is
 desirable to move irq controller drivers here. At the moment, the only
@@ -52,14 +52,14 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/Kconfig                   |    1 +
- drivers/Makefile                  |    2 ++
- drivers/irqchip/Kconfig           |    3 +++
- drivers/irqchip/Makefile          |    1 +
- drivers/irqchip/irqchip.c         |   30 ++++++++++++++++++++++++++++++
- drivers/irqchip/irqchip.h         |   29 +++++++++++++++++++++++++++++
- include/asm-generic/vmlinux.lds.h |   12 +++++++++++-
- include/linux/irqchip.h           |   16 ++++++++++++++++
+ drivers/Kconfig                   |  1 +
+ drivers/Makefile                  |  2 ++
+ drivers/irqchip/Kconfig           |  3 +++
+ drivers/irqchip/Makefile          |  1 +
+ drivers/irqchip/irqchip.c         | 30 ++++++++++++++++++++++++++++++
+ drivers/irqchip/irqchip.h         | 29 +++++++++++++++++++++++++++++
+ include/asm-generic/vmlinux.lds.h | 12 +++++++++++-
+ include/linux/irqchip.h           | 16 ++++++++++++++++
  8 files changed, 93 insertions(+), 1 deletion(-)
  create mode 100644 drivers/irqchip/Kconfig
  create mode 100644 drivers/irqchip/Makefile
@@ -227,5 +227,5 @@ index 0000000..e0006f1
 +
 +#endif
 -- 
-1.7.10.4
+1.8.3.2
 

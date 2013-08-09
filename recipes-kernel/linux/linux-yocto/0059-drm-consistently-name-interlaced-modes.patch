@@ -1,7 +1,7 @@
 From 63af9b24933746abb1e2fb4e6bec13de82bae4e4 Mon Sep 17 00:00:00 2001
 From: Russell King - ARM Linux <linux@arm.linux.org.uk>
 Date: Fri, 10 Aug 2012 22:52:18 +0000
-Subject: [PATCH 059/715] drm: consistently name interlaced modes
+Subject: [PATCH 0059/1083] drm: consistently name interlaced modes
 
 At the moment, there is an inconsistency in the way modes are named.
 Modes with timings parsed from the EDID information will call
@@ -29,7 +29,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid_modes.h |   42 +++++++++++++++++++-------------------
+ drivers/gpu/drm/drm_edid_modes.h | 42 ++++++++++++++++++++--------------------
  1 file changed, 21 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_edid_modes.h b/drivers/gpu/drm/drm_edid_modes.h
@@ -196,5 +196,5 @@ index ff98a7e..57459b3 100644
  		   DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC |
  			DRM_MODE_FLAG_INTERLACE | DRM_MODE_FLAG_DBLCLK) },
 -- 
-1.7.10.4
+1.8.3.2
 

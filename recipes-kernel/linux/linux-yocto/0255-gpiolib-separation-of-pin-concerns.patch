@@ -1,7 +1,7 @@
 From 1af4d3178a3a360fc31c85d1b12c632b6395b7b2 Mon Sep 17 00:00:00 2001
 From: Linus Walleij <linus.walleij@linaro.org>
 Date: Tue, 6 Nov 2012 16:03:35 +0100
-Subject: [PATCH 255/715] gpiolib: separation of pin concerns
+Subject: [PATCH 0255/1083] gpiolib: separation of pin concerns
 
 The fact that of_gpiochip_add_pin_range() and
 gpiochip_add_pin_range() share too much code is fragile and
@@ -36,12 +36,12 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib-of.c       |   23 +++++++++--------------
- drivers/gpio/gpiolib.c          |    8 +++++---
- drivers/pinctrl/devicetree.c    |    4 +---
- include/asm-generic/gpio.h      |    4 ++--
- include/linux/gpio.h            |    2 +-
- include/linux/pinctrl/pinctrl.h |    7 ++-----
+ drivers/gpio/gpiolib-of.c       | 23 +++++++++--------------
+ drivers/gpio/gpiolib.c          |  8 +++++---
+ drivers/pinctrl/devicetree.c    |  4 +---
+ include/asm-generic/gpio.h      |  4 ++--
+ include/linux/gpio.h            |  2 +-
+ include/linux/pinctrl/pinctrl.h |  7 ++-----
  6 files changed, 20 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
@@ -196,5 +196,5 @@ index 3b23e80..559ba85 100644
  
  extern const char *pinctrl_dev_get_name(struct pinctrl_dev *pctldev);
 -- 
-1.7.10.4
+1.8.3.2
 

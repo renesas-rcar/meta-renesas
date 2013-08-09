@@ -1,7 +1,7 @@
 From 449a2d38e59c9b9b5f225ddda7763132ef94dd70 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 14 Jun 2013 14:16:35 +0200
-Subject: [PATCH 625/715] drm/rcar-du: Add support for the R8A7790 DU
+Subject: [PATCH 0625/1083] drm/rcar-du: Add support for the R8A7790 DU
 
 The DU revision in the R8A7790 SoC uses one IRQ and clock per CRTC. Add
 a corresponding entry in the module platform ID table.
@@ -14,8 +14,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_drv.c  |    5 +++
- drivers/gpu/drm/rcar-du/rcar_du_regs.h |   66 ++++++++++++++++++++++++++++++--
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c  |  5 +++
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h | 66 ++++++++++++++++++++++++++++++++--
  2 files changed, 68 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
@@ -124,5 +124,5 @@ index 6a583cc..7d835c9 100644
  /* -----------------------------------------------------------------------------
   * Color Palette Registers
 -- 
-1.7.10.4
+1.8.3.2
 

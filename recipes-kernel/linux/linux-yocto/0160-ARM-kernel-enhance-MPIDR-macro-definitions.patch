@@ -1,7 +1,7 @@
 From 99931d86098a14ad339880cb900fab21c2599179 Mon Sep 17 00:00:00 2001
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Date: Thu, 15 Nov 2012 17:30:32 +0000
-Subject: [PATCH 160/715] ARM: kernel: enhance MPIDR macro definitions
+Subject: [PATCH 0160/1083] ARM: kernel: enhance MPIDR macro definitions
 
 Kernel subsystems other than the topology layer need the MPIDR
 mask definitions to access the MPIDR without relying on hardcoded
@@ -16,8 +16,8 @@ Acked-by: Nicolas Pitre <nico@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/include/asm/cputype.h |   13 +++++++++++++
- arch/arm/kernel/topology.c     |   27 +--------------------------
+ arch/arm/include/asm/cputype.h | 13 +++++++++++++
+ arch/arm/kernel/topology.c     | 27 +--------------------------
  2 files changed, 14 insertions(+), 26 deletions(-)
 
 diff --git a/arch/arm/include/asm/cputype.h b/arch/arm/include/asm/cputype.h
@@ -83,5 +83,5 @@ index ec0aae0..c12f64f 100644
   */
  struct cputopo_arm cpu_topology[NR_CPUS];
 -- 
-1.7.10.4
+1.8.3.2
 

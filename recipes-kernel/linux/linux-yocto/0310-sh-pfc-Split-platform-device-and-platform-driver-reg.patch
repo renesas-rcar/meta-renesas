@@ -1,7 +1,7 @@
 From 66d4e7a75b6359677d7d4dd9a457df1e54e39fee Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:54 +0100
-Subject: [PATCH 310/715] sh-pfc: Split platform device and platform driver
+Subject: [PATCH 0310/1083] sh-pfc: Split platform device and platform driver
  registration
 
 Move platform driver registration to a static postcore initcall. This
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c |   15 ++++++---------
+ drivers/sh/pfc/core.c | 15 ++++++---------
  1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -49,5 +49,5 @@ index 1bb38e8..cd8f09d 100644
  static void __exit sh_pfc_exit(void)
  {
 -- 
-1.7.10.4
+1.8.3.2
 

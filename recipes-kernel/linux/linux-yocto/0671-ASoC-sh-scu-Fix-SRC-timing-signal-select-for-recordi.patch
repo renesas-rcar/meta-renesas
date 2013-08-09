@@ -1,7 +1,7 @@
 From c056a198c4edca8f007e50df01317f455d3e571a Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Wed, 26 Jun 2013 13:33:51 +0900
-Subject: [PATCH 671/715] ASoC: sh: scu: Fix SRC timing signal select for
+Subject: [PATCH 0671/1083] ASoC: sh: scu: Fix SRC timing signal select for
  recording
 
 Add the setting of the SRC timing signal of ADG for the capture process.
@@ -11,7 +11,7 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- sound/soc/sh/scu_dai.c |    6 ++++--
+ sound/soc/sh/scu_dai.c | 6 ++++--
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
@@ -35,5 +35,5 @@ index 95fe501..e3ddb72 100644
  
  	/* CMD Output Timing */
 -- 
-1.7.10.4
+1.8.3.2
 

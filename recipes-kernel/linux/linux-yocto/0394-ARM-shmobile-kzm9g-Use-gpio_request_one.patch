@@ -1,7 +1,7 @@
 From 9c2c56185b5a95bacdf5d13053d80f87adaddbeb Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:34 +0100
-Subject: [PATCH 394/715] ARM: shmobile: kzm9g: Use gpio_request_one()
+Subject: [PATCH 0394/1083] ARM: shmobile: kzm9g: Use gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
 gpio_request_one().
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-kzm9g.c |   18 ++++++------------
+ arch/arm/mach-shmobile/board-kzm9g.c | 18 ++++++------------
  1 file changed, 6 insertions(+), 12 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-kzm9g.c b/arch/arm/mach-shmobile/board-kzm9g.c
@@ -69,5 +69,5 @@ index ac08d0d..0debb38 100644
  	/* I2C 3 */
  	gpio_request(GPIO_FN_PORT27_I2C_SCL3, NULL);
 -- 
-1.7.10.4
+1.8.3.2
 

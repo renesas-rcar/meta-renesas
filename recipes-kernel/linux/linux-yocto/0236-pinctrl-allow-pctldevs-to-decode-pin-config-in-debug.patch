@@ -1,7 +1,7 @@
 From 759b93f54098714ccac560c29373befd648057a3 Mon Sep 17 00:00:00 2001
 From: Stephen Warren <swarren@nvidia.com>
 Date: Fri, 13 Apr 2012 10:49:06 -0600
-Subject: [PATCH 236/715] pinctrl: allow pctldevs to decode pin config in
+Subject: [PATCH 0236/1083] pinctrl: allow pctldevs to decode pin config in
  debugfs
 
 Add a pinconf op so that pin controller drivers can decode their pin
@@ -13,8 +13,8 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/pinconf.c       |   31 +++++++++++++++++++++++++++----
- include/linux/pinctrl/pinconf.h |    5 +++++
+ drivers/pinctrl/pinconf.c       | 31 +++++++++++++++++++++++++++----
+ include/linux/pinctrl/pinconf.h |  5 +++++
  2 files changed, 32 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pinctrl/pinconf.c b/drivers/pinctrl/pinconf.c
@@ -106,5 +106,5 @@ index ec431f0..7b9d5f0 100644
  
  #endif
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,0 +1,662 @@
+From 74092529fbe9b359d63fbdf1ad3098865a9d91d3 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 31 Jul 2013 15:53:09 +0900
+Subject: [PATCH 1055/1083] drm: rcar-du: Add HDMI support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/Makefile          |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |  12 +++-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h     |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c |  95 +++++++++++++++++++++---
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h |  24 ++++++-
+ drivers/gpu/drm/rcar-du/rcar_du_group.c   |   6 ++
+ drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c | 116 ++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h |  27 +++++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     |   4 +-
+ drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c |   5 +-
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h   |   4 ++
+ drivers/gpu/drm/rcar-du/rcar_du_vgacon.c  |   5 +-
+ include/linux/platform_data/rcar-du.h     |   7 ++
+ 14 files changed, 287 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h
+
+diff --git a/drivers/gpu/drm/rcar-du/Makefile b/drivers/gpu/drm/rcar-du/Makefile
+index 12b8d44..a6909f0 100644
+--- a/drivers/gpu/drm/rcar-du/Makefile
++++ b/drivers/gpu/drm/rcar-du/Makefile
+@@ -2,6 +2,7 @@ rcar-du-drm-y := rcar_du_crtc.o \
+ 		 rcar_du_drv.o \
+ 		 rcar_du_encoder.o \
+ 		 rcar_du_group.o \
++		 rcar_du_hdmicon.o \
+ 		 rcar_du_kms.o \
+ 		 rcar_du_lvdscon.o \
+ 		 rcar_du_plane.o \
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index aa7ea17..25d074c 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -98,15 +98,19 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	div = DIV_ROUND_CLOSEST(clk, mode->clock * 1000);
+ 	div = clamp(div, 1U, 64U) - 1;
+ 
+-	rcar_du_group_write(rcrtc->group, rcrtc->index % 2 ? ESCR2 : ESCR,
+-			    ESCR_DCLKSEL_CLKS | div);
++	if (strcmp(mode->name, "1920x1080") == 0)
++		rcar_du_group_write(rcrtc->group, rcrtc->index % 2 ? ESCR2 :
++			ESCR, 0);
++	else
++		rcar_du_group_write(rcrtc->group, rcrtc->index % 2 ? ESCR2 :
++			ESCR, ESCR_DCLKSEL_CLKS | div);
+ 	rcar_du_group_write(rcrtc->group, rcrtc->index % 2 ? OTAR2 : OTAR, 0);
+ 
+ 	/* Signal polarities */
+ 	value = ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? 0 : DSMR_VSL)
+ 	      | ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? 0 : DSMR_HSL)
+ 	      | DSMR_DIPM_DE;
+-	rcar_du_crtc_write(rcrtc, DSMR, value);
++	rcar_du_crtc_write(rcrtc, DSMR, value | DSMR_CSPM); /* for HDMI */
+ 
+ 	/* Display timings */
+ 	rcar_du_crtc_write(rcrtc, HDSR, mode->htotal - mode->hsync_start - 19);
+@@ -577,6 +581,8 @@ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	rcdu->crtcs_connect_id[index] = rcrtc->plane->crtc->base.id;
++
+ 	drm_crtc_helper_add(crtc, &crtc_helper_funcs);
+ 
+ 	/* Register the interrupt handler. */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index b739bc3..6b94826 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -79,6 +79,7 @@ struct rcar_du_device {
+ 	unsigned int vspd1_sink;
+ 
+ 	struct rcar_du_lvdsenc *lvds[2];
++	unsigned int crtcs_connect_id[3];
+ };
+ 
+ static inline bool rcar_du_has(struct rcar_du_device *rcdu,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+index 3daa7a1..f0f581b 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+@@ -12,10 +12,13 @@
+  */
+ 
+ #include <linux/export.h>
++#include <linux/hdmi.h>
++#include <linux/i2c.h>
+ 
+ #include <drm/drmP.h>
+ #include <drm/drm_crtc.h>
+ #include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
+ 
+ #include "rcar_du_drv.h"
+ #include "rcar_du_encoder.h"
+@@ -23,6 +26,8 @@
+ #include "rcar_du_lvdscon.h"
+ #include "rcar_du_lvdsenc.h"
+ #include "rcar_du_vgacon.h"
++#include "rcar_du_hdmicon.h"
++#include "../i2c/adv7511.h"
+ 
+ /* -----------------------------------------------------------------------------
+  * Common connector functions
+@@ -33,7 +38,7 @@ rcar_du_connector_best_encoder(struct drm_connector *connector)
+ {
+ 	struct rcar_du_connector *rcon = to_rcar_connector(connector);
+ 
+-	return &rcon->encoder->encoder;
++	return rcon->encoder->encoder;
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -42,24 +47,29 @@ rcar_du_connector_best_encoder(struct drm_connector *connector)
+ 
+ static void rcar_du_encoder_dpms(struct drm_encoder *encoder, int mode)
+ {
+-	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++	struct rcar_du_encoder *renc = rcar_du_encoder(encoder);
+ 
+ 	if (renc->lvds)
+ 		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc, mode);
++
++	if ((renc->output == RCAR_DU_OUTPUT_LVDS0) &&
++			(get_rcar_slave_funcs(encoder)->dpms))
++		get_rcar_slave_funcs(encoder)->dpms(encoder, mode);
+ }
+ 
+ static bool rcar_du_encoder_mode_fixup(struct drm_encoder *encoder,
+ 				       const struct drm_display_mode *mode,
+ 				       struct drm_display_mode *adjusted_mode)
+ {
+-	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++	struct rcar_du_encoder *renc = rcar_du_encoder(encoder);
+ 	const struct drm_display_mode *panel_mode;
+ 	struct drm_device *dev = encoder->dev;
+ 	struct drm_connector *connector;
+ 	bool found = false;
+ 
+-	/* DAC encoders have currently no restriction on the mode. */
+-	if (encoder->encoder_type == DRM_MODE_ENCODER_DAC)
++	/* DAC and TMDS encoders have currently no restriction on the mode. */
++	if ((encoder->encoder_type == DRM_MODE_ENCODER_DAC)
++		|| (encoder->encoder_type == DRM_MODE_ENCODER_TMDS))
+ 		return true;
+ 
+ 	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
+@@ -102,29 +112,40 @@ static bool rcar_du_encoder_mode_fixup(struct drm_encoder *encoder,
+ 
+ static void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder)
+ {
+-	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++	struct rcar_du_encoder *renc = rcar_du_encoder(encoder);
+ 
+ 	if (renc->lvds)
+ 		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc,
+ 				     DRM_MODE_DPMS_OFF);
++	if ((renc->output == RCAR_DU_OUTPUT_LVDS0) &&
++		(get_rcar_slave_funcs(encoder)->dpms))
++		get_rcar_slave_funcs(encoder)->dpms(encoder, DRM_MODE_DPMS_OFF);
+ }
+ 
+ static void rcar_du_encoder_mode_commit(struct drm_encoder *encoder)
+ {
+-	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++	struct rcar_du_encoder *renc = rcar_du_encoder(encoder);
+ 
+ 	if (renc->lvds)
+ 		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc,
+ 				     DRM_MODE_DPMS_ON);
++	if ((renc->output == RCAR_DU_OUTPUT_LVDS0) &&
++		(get_rcar_slave_funcs(encoder)->dpms))
++		get_rcar_slave_funcs(encoder)->dpms(encoder, DRM_MODE_DPMS_ON);
+ }
+ 
+ static void rcar_du_encoder_mode_set(struct drm_encoder *encoder,
+ 				     struct drm_display_mode *mode,
+ 				     struct drm_display_mode *adjusted_mode)
+ {
+-	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++	struct rcar_du_encoder *renc = rcar_du_encoder(encoder);
+ 
+ 	rcar_du_crtc_route_output(encoder->crtc, renc->output);
++
++	if ((renc->output == RCAR_DU_OUTPUT_LVDS0) &&
++		(get_rcar_slave_funcs(encoder)->mode_set))
++		get_rcar_slave_funcs(encoder)->mode_set(encoder,
++						 mode, adjusted_mode);
+ }
+ 
+ static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
+@@ -139,6 +160,23 @@ static const struct drm_encoder_funcs encoder_funcs = {
+ 	.destroy = drm_encoder_cleanup,
+ };
+ 
++struct hdmi_avi_infoframe avi_info[] = {
++	{
++		HDMI_INFOFRAME_TYPE_AVI,
++		2, 13,
++		HDMI_COLORSPACE_RGB,
++		0, 0, 0,
++		HDMI_SCAN_MODE_UNDERSCAN,
++		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++	},
++};
++
++static const uint16_t adv7511_csc_ycbcr_to_rgb[] = {
++	0x0734, 0x04ad, 0x0000, 0x1c1b,
++	0x1ddc, 0x04ad, 0x1f24, 0x0135,
++	0x0000, 0x04ad, 0x087c, 0x1b77,
++};
++
+ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 			 enum rcar_du_encoder_type type,
+ 			 enum rcar_du_output output,
+@@ -147,6 +185,21 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	struct rcar_du_encoder *renc;
+ 	unsigned int encoder_type;
+ 	int ret;
++	struct i2c_adapter *adapter;
++	struct i2c_board_info info[] = {
++		{
++			.type = "adv7511",
++			.addr = 0x39,
++			.platform_data = &(struct adv7511_video_config) {
++				false,
++				ADV7511_CSC_SCALING_4,
++				adv7511_csc_ycbcr_to_rgb,
++				true,
++				avi_info[0],
++			}
++		},
++		{},
++	};
+ 
+ 	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
+ 	if (renc == NULL)
+@@ -174,6 +227,9 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	case RCAR_DU_ENCODER_LVDS:
+ 		encoder_type = DRM_MODE_ENCODER_LVDS;
+ 		break;
++	case RCAR_DU_ENCODER_HDMI:
++		encoder_type = DRM_MODE_ENCODER_TMDS;
++		break;
+ 	case RCAR_DU_ENCODER_NONE:
+ 	default:
+ 		/* No external encoder, use the internal encoder type. */
+@@ -181,17 +237,34 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 		break;
+ 	}
+ 
+-	ret = drm_encoder_init(rcdu->ddev, &renc->encoder, &encoder_funcs,
++	renc->encoder = to_drm_encoder(renc);
++
++	ret = drm_encoder_init(rcdu->ddev, renc->encoder, &encoder_funcs,
+ 			       encoder_type);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	drm_encoder_helper_add(&renc->encoder, &encoder_helper_funcs);
++	if (type == RCAR_DU_ENCODER_HDMI) {
++		adapter = i2c_get_adapter(2);
++		if (adapter == NULL) {
++			DRM_ERROR("No adapter available!\n");
++			return -EINVAL;
++		}
++
++		drm_i2c_encoder_init(rcdu->ddev,
++				     to_encoder_slave(renc->encoder),
++				     adapter,
++				     &info[0]);
++	}
++
++	drm_encoder_helper_add(renc->encoder, &encoder_helper_funcs);
+ 
+ 	switch (encoder_type) {
+ 	case DRM_MODE_ENCODER_LVDS:
+ 		return rcar_du_lvds_connector_init(rcdu, renc,
+-						   &data->connector.lvds.panel);
++						&data->connector.lvds.panel);
++	case DRM_MODE_ENCODER_TMDS:
++		return rcar_du_hdmi_connector_init(rcdu, renc);
+ 
+ 	case DRM_MODE_ENCODER_DAC:
+ 		return rcar_du_vga_connector_init(rcdu, renc);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h b/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+index 0e5a65e..188bc29 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+@@ -22,7 +22,8 @@ struct rcar_du_device;
+ struct rcar_du_lvdsenc;
+ 
+ struct rcar_du_encoder {
+-	struct drm_encoder encoder;
++	struct drm_encoder_slave slave_encoder;
++	struct drm_encoder *encoder;
+ 	enum rcar_du_output output;
+ 	struct rcar_du_lvdsenc *lvds;
+ };
+@@ -30,6 +31,9 @@ struct rcar_du_encoder {
+ #define to_rcar_encoder(e) \
+ 	container_of(e, struct rcar_du_encoder, encoder)
+ 
++#define to_rcar_slave_encoder(e) \
++	container_of(e, struct rcar_du_encoder, slave_encoder)
++
+ struct rcar_du_connector {
+ 	struct drm_connector connector;
+ 	struct rcar_du_encoder *encoder;
+@@ -46,4 +50,22 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 			 enum rcar_du_output output,
+ 			 const struct rcar_du_encoder_data *data);
+ 
++static inline struct drm_encoder *to_drm_encoder(struct rcar_du_encoder *renc)
++{
++	return &renc->slave_encoder.base;
++};
++
++static inline struct drm_encoder_slave_funcs *
++get_rcar_slave_funcs(struct drm_encoder *enc)
++{
++	return to_encoder_slave(enc)->slave_funcs;
++}
++
++static inline struct rcar_du_encoder *rcar_du_encoder(struct drm_encoder *renc)
++{
++	struct drm_encoder_slave *slave = to_encoder_slave(renc);
++
++	return container_of(slave, struct rcar_du_encoder, slave_encoder);
++}
++
+ #endif /* __RCAR_DU_ENCODER_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.c b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+index f790af5..e732007 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+@@ -61,6 +61,12 @@ static void rcar_du_group_setup_defr8(struct rcar_du_group *rgrp)
+ 	}
+ 
+ 	rcar_du_group_write(rgrp, DEFR8, defr8);
++
++	/* reset to reflect DEFR8 register */
++	rcar_du_write(rgrp->dev, DSYSR,
++		(rcar_du_read(rgrp->dev, DSYSR) & ~0x00000300) | DSYSR_DRES);
++	rcar_du_write(rgrp->dev, DSYSR,
++		(rcar_du_read(rgrp->dev, DSYSR) & ~0x00000300) | DSYSR_DEN);
+ }
+ 
+ static void rcar_du_group_setup(struct rcar_du_group *rgrp)
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
+new file mode 100644
+index 0000000..4f08133
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
+@@ -0,0 +1,116 @@
++/*
++ * drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
++ *    R-Car Display Unit HDMI Connector
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
++#include <linux/i2c.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_encoder.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_hdmicon.h"
++#include "../i2c/adv7511.h"
++
++static int rcar_du_hdmi_connector_get_modes(struct drm_connector *connector)
++{
++	int count = 0;
++
++	count += to_encoder_slave(connector->encoder)->slave_funcs->get_modes(
++					connector->encoder, connector);
++
++	return count;
++}
++
++static int rcar_du_hdmi_connector_mode_valid(struct drm_connector *connector,
++					    struct drm_display_mode *mode)
++{
++	if (mode->clock > 165000)
++		return MODE_CLOCK_HIGH;
++
++	if (mode->flags & DRM_MODE_FLAG_INTERLACE)
++		return MODE_NO_INTERLACE;
++
++	return MODE_OK;
++}
++
++static const struct drm_connector_helper_funcs connector_helper_funcs = {
++	.get_modes = rcar_du_hdmi_connector_get_modes,
++	.mode_valid = rcar_du_hdmi_connector_mode_valid,
++	.best_encoder = rcar_du_connector_best_encoder,
++};
++
++static void rcar_du_hdmi_connector_destroy(struct drm_connector *connector)
++{
++	drm_sysfs_connector_remove(connector);
++	drm_connector_cleanup(connector);
++}
++
++static enum drm_connector_status
++rcar_du_hdmi_connector_detect(struct drm_connector *connector, bool force)
++{
++	return connector_status_connected;
++}
++
++static const struct drm_connector_funcs connector_funcs = {
++	.dpms = drm_helper_connector_dpms,
++	.detect = rcar_du_hdmi_connector_detect,
++	.fill_modes = drm_helper_probe_single_connector_modes,
++	.destroy = rcar_du_hdmi_connector_destroy,
++};
++
++int rcar_du_hdmi_connector_init(struct rcar_du_device *rcdu,
++			       struct rcar_du_encoder *renc)
++{
++	struct rcar_du_connector *rcon;
++	struct drm_connector *connector;
++	int ret;
++
++	rcon = devm_kzalloc(rcdu->dev, sizeof(*rcon), GFP_KERNEL);
++	if (rcon == NULL)
++		return -ENOMEM;
++
++	connector = &rcon->connector;
++	connector->polled = DRM_CONNECTOR_POLL_CONNECT |
++				DRM_CONNECTOR_POLL_DISCONNECT;
++
++	ret = drm_connector_init(rcdu->ddev, connector, &connector_funcs,
++				 DRM_MODE_CONNECTOR_HDMIA);
++
++	if (ret < 0)
++		return ret;
++
++	drm_connector_helper_add(connector, &connector_helper_funcs);
++	ret = drm_sysfs_connector_add(connector);
++	if (ret < 0)
++		return ret;
++
++	drm_helper_connector_dpms(connector, DRM_MODE_DPMS_OFF);
++	drm_object_property_set_value(&connector->base,
++		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
++
++	ret = drm_mode_connector_attach_encoder(connector, renc->encoder);
++	if (ret < 0)
++		return ret;
++
++	connector->encoder = renc->encoder;
++	rcon->encoder = renc;
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h
+new file mode 100644
+index 0000000..5497b24
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h
+@@ -0,0 +1,27 @@
++/*
++ * drivers/gpu/drm/rcar-du/rcar_du_hdmicon.h
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is based on the drivers/gpu/drm/rcar-du/rcar_du_lvdscon.h
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_HDMI_H__
++#define __RCAR_DU_HDMI_H__
++
++struct rcar_du_device;
++struct rcar_du_encoder;
++
++int rcar_du_hdmi_connector_init(struct rcar_du_device *rcdu,
++			       struct rcar_du_encoder *renc);
++
++#endif /* __RCAR_DU_HDMI_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index d953000..785424f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -18,6 +18,7 @@
+ #include <drm/drm_crtc_helper.h>
+ #include <drm/drm_fb_cma_helper.h>
+ #include <drm/drm_gem_cma_helper.h>
++#include <drm/drm_encoder_slave.h>
+ 
+ #include "rcar_du_crtc.h"
+ #include "rcar_du_drv.h"
+@@ -261,7 +262,7 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	 * possible clones field.
+ 	 */
+ 	list_for_each_entry(encoder, &dev->mode_config.encoder_list, head) {
+-		struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++		struct rcar_du_encoder *renc = rcar_du_encoder(encoder);
+ 		const struct rcar_du_output_routing *route =
+ 			&rcdu->info->routes[renc->output];
+ 
+@@ -285,7 +286,6 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	drm_kms_helper_poll_init(dev);
+ 
+ 	drm_helper_disable_unused_functions(dev);
+-
+ 	fbdev = drm_fbdev_cma_init(dev, 32, dev->mode_config.num_crtc,
+ 				   dev->mode_config.num_connector,
+ 				   rcar_du_fbdev_pan ? 3 : 1);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
+index 628a744..26ddad4 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
+@@ -14,6 +14,7 @@
+ #include <drm/drmP.h>
+ #include <drm/drm_crtc.h>
+ #include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
+ 
+ #include "rcar_du_drv.h"
+ #include "rcar_du_encoder.h"
+@@ -119,11 +120,11 @@ int rcar_du_lvds_connector_init(struct rcar_du_device *rcdu,
+ 	drm_object_property_set_value(&connector->base,
+ 		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
+ 
+-	ret = drm_mode_connector_attach_encoder(connector, &renc->encoder);
++	ret = drm_mode_connector_attach_encoder(connector, renc->encoder);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	connector->encoder = &renc->encoder;
++	connector->encoder = renc->encoder;
+ 	lvdscon->connector.encoder = renc;
+ 
+ 	return 0;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+index 4b53108..23e5716 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+@@ -16,6 +16,7 @@
+ #include <linux/io.h>
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
++#include <drm/drm_encoder_slave.h>
+ 
+ #include "rcar_du_drv.h"
+ #include "rcar_du_encoder.h"
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.h b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+index 7c843e5..b2c98b5 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+@@ -39,6 +39,10 @@ enum rcar_du_plane_source {
+ 	RCAR_DU_PLANE_VSPD1,
+ };
+ 
++#define DU_CH_0		0
++#define DU_CH_1		1
++#define DU_CH_2		2
++
+ struct rcar_du_plane {
+ 	struct rcar_du_group *group;
+ 	struct drm_crtc *crtc;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c b/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c
+index 72312f7..40f8d9b 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c
+@@ -14,6 +14,7 @@
+ #include <drm/drmP.h>
+ #include <drm/drm_crtc.h>
+ #include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
+ 
+ #include "rcar_du_drv.h"
+ #include "rcar_du_encoder.h"
+@@ -85,11 +86,11 @@ int rcar_du_vga_connector_init(struct rcar_du_device *rcdu,
+ 	drm_object_property_set_value(&connector->base,
+ 		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
+ 
+-	ret = drm_mode_connector_attach_encoder(connector, &renc->encoder);
++	ret = drm_mode_connector_attach_encoder(connector, renc->encoder);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	connector->encoder = &renc->encoder;
++	connector->encoder = renc->encoder;
+ 	rcon->encoder = renc;
+ 
+ 	return 0;
+diff --git a/include/linux/platform_data/rcar-du.h b/include/linux/platform_data/rcar-du.h
+index 1a2e990..091ace0 100644
+--- a/include/linux/platform_data/rcar-du.h
++++ b/include/linux/platform_data/rcar-du.h
+@@ -22,6 +22,7 @@ enum rcar_du_output {
+ 	RCAR_DU_OUTPUT_LVDS0,
+ 	RCAR_DU_OUTPUT_LVDS1,
+ 	RCAR_DU_OUTPUT_TCON,
++	RCAR_DU_OUTPUT_HDMI,
+ 	RCAR_DU_OUTPUT_MAX,
+ };
+ 
+@@ -30,6 +31,7 @@ enum rcar_du_encoder_type {
+ 	RCAR_DU_ENCODER_NONE,
+ 	RCAR_DU_ENCODER_VGA,
+ 	RCAR_DU_ENCODER_LVDS,
++	RCAR_DU_ENCODER_HDMI,
+ };
+ 
+ struct rcar_du_panel_data {
+@@ -46,6 +48,10 @@ struct rcar_du_connector_vga_data {
+ 	/* TODO: Add DDC information for EDID retrieval */
+ };
+ 
++struct rcar_du_connector_hdmi_data {
++	/* TODO: Add DDC information for EDID retrieval */
++};
++
+ /*
+  * struct rcar_du_encoder_data - Encoder platform data
+  * @type: the encoder type (RCAR_DU_ENCODER_*)
+@@ -63,6 +69,7 @@ struct rcar_du_encoder_data {
+ 	union {
+ 		struct rcar_du_connector_lvds_data lvds;
+ 		struct rcar_du_connector_vga_data vga;
++		struct rcar_du_connector_hdmi_data hdmi;
+ 	} connector;
+ };
+ 
+-- 
+1.8.3.2
+

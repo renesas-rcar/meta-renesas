@@ -1,7 +1,7 @@
 From 50ac3a79c4496ede51fb8f8487ad38aa7094cac7 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 17 Jun 2013 03:13:11 +0200
-Subject: [PATCH 629/715] drm/rcar-du: Rework output routing support
+Subject: [PATCH 0629/1083] drm/rcar-du: Rework output routing support
 
 Split the output routing specification between SoC-internal data,
 specified in the rcar_du_device_info structure, and board data, passed
@@ -23,15 +23,15 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |    6 ++++--
- drivers/gpu/drm/rcar-du/rcar_du_crtc.h    |    4 +++-
- drivers/gpu/drm/rcar-du/rcar_du_drv.c     |   30 +++++++++++++++++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_drv.h     |   16 +++++++++++++++
- drivers/gpu/drm/rcar-du/rcar_du_encoder.c |   26 ++++++++++++++++++++-----
- drivers/gpu/drm/rcar-du/rcar_du_encoder.h |    5 +++--
- drivers/gpu/drm/rcar-du/rcar_du_group.c   |    8 ++++----
- drivers/gpu/drm/rcar-du/rcar_du_kms.c     |   17 ++++++++++------
- include/linux/platform_data/rcar-du.h     |   17 ++++++++++++++--
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |  6 ++++--
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h    |  4 +++-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c     | 30 ++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h     | 16 ++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c | 26 +++++++++++++++++++++-----
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h |  5 +++--
+ drivers/gpu/drm/rcar-du/rcar_du_group.c   |  8 ++++----
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     | 17 +++++++++++------
+ include/linux/platform_data/rcar-du.h     | 17 +++++++++++++++--
  9 files changed, 107 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -345,5 +345,5 @@ index 64cd863..1a2e990 100644
  	union {
  		struct rcar_du_connector_lvds_data lvds;
 -- 
-1.7.10.4
+1.8.3.2
 

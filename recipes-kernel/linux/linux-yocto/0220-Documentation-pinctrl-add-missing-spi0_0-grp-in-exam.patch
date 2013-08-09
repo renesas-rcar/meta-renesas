@@ -1,7 +1,7 @@
 From 4495e413da38cea24ba966f048dd74b01a1994e9 Mon Sep 17 00:00:00 2001
 From: Viresh Kumar <viresh.kumar@st.com>
 Date: Thu, 29 Mar 2012 11:03:27 +0530
-Subject: [PATCH 220/715] Documentation: pinctrl: add missing spi0_0 grp in
+Subject: [PATCH 0220/1083] Documentation: pinctrl: add missing spi0_0 grp in
  example
 
 Missed one group from the documentation when proofreading.
@@ -12,7 +12,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- Documentation/pinctrl.txt |    2 +-
+ Documentation/pinctrl.txt | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Documentation/pinctrl.txt b/Documentation/pinctrl.txt
@@ -29,5 +29,5 @@ index f5add79..2c6897c 100644
  static const char * const mmc0_groups[] = { "mmc0_1_grp", "mmc0_2_grp",
  					"mmc0_3_grp" };
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 790a4c4e7205d5f9eae5549e316e930aaa804e25 Mon Sep 17 00:00:00 2001
 From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 Date: Thu, 13 Jun 2013 13:08:31 +0900
-Subject: [PATCH 526/715] i2c: rcar: Add extended clock division factor field
+Subject: [PATCH 0526/1083] i2c: rcar: Add extended clock division factor field
  support
 
 Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
@@ -9,8 +9,8 @@ Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/i2c/busses/i2c-rcar.c |   11 +++++++++--
- include/linux/i2c/i2c-rcar.h  |    3 +++
+ drivers/i2c/busses/i2c-rcar.c | 11 +++++++++--
+ include/linux/i2c/i2c-rcar.h  |  3 +++
  2 files changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
@@ -80,5 +80,5 @@ index 496f5c2..6bf5b89 100644
  
  #endif /* __I2C_R_CAR_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 

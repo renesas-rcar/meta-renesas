@@ -1,7 +1,7 @@
 From b7a9744492d13b372614722d01b77c71ef799b2d Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 24 Jan 2013 13:16:30 +0100
-Subject: [PATCH 399/715] ARM: shmobile: armadillo800eva: Use
+Subject: [PATCH 0399/1083] ARM: shmobile: armadillo800eva: Use
  gpio_request_one()
 
 Replace occurences of gpio_request() and gpio_direction_*() by calls to
@@ -14,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-armadillo800eva.c |   48 +++++++++---------------
+ arch/arm/mach-shmobile/board-armadillo800eva.c | 48 +++++++++-----------------
  1 file changed, 17 insertions(+), 31 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
@@ -129,5 +129,5 @@ index fdc7518..5595497 100644
  		platform_device_register(&sdhi1_device);
  	}
 -- 
-1.7.10.4
+1.8.3.2
 

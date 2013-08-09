@@ -1,7 +1,7 @@
 From 60b83444ce49d09eff6252a60d170f8a356a443f Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 16 Apr 2013 17:16:20 +0200
-Subject: [PATCH 642/715] ARM: sh-mobile: r8a7790: Make private clock arrays
+Subject: [PATCH 0642/1083] ARM: sh-mobile: r8a7790: Make private clock arrays
  static
 
 Both clock-r8a7740.c and clock-r8a7790.c define a div4_clks array as
@@ -17,7 +17,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/clock-r8a7790.c |    2 +-
+ arch/arm/mach-shmobile/clock-r8a7790.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
@@ -34,5 +34,5 @@ index 4e940fb..328ebf5 100644
  	[DIV4_SD0] = SH_CLK_DIV4(&pll1_clk, SDCKCR, 4, 0x1de0, CLK_ENABLE_ON_INIT),
  	[DIV4_SD1] = SH_CLK_DIV4(&pll1_clk, SDCKCR, 0, 0x1de0, CLK_ENABLE_ON_INIT),
 -- 
-1.7.10.4
+1.8.3.2
 

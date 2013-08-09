@@ -1,7 +1,7 @@
 From 8fd8cf4f57af8cc2a567b09febb36948f237c3ef Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 8 Mar 2013 17:43:54 +0100
-Subject: [PATCH 413/715] sh-pfc: Don't modify sh_pfc_pin SoC data
+Subject: [PATCH 0413/1083] sh-pfc: Don't modify sh_pfc_pin SoC data
 
 The sh_pfc_pin structure supplied in SoC data contains information about
 pin configuration and name. It's abused to store GPIO data registers
@@ -15,11 +15,11 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/core.c    |   14 +++------
- drivers/pinctrl/sh-pfc/core.h    |    2 +-
- drivers/pinctrl/sh-pfc/gpio.c    |   47 ++++++++++++++++++------------
- drivers/pinctrl/sh-pfc/pinctrl.c |   59 ++++++++++++++++++++++----------------
- drivers/pinctrl/sh-pfc/sh_pfc.h  |    7 -----
+ drivers/pinctrl/sh-pfc/core.c    | 14 +++-------
+ drivers/pinctrl/sh-pfc/core.h    |  2 +-
+ drivers/pinctrl/sh-pfc/gpio.c    | 47 +++++++++++++++++++-------------
+ drivers/pinctrl/sh-pfc/pinctrl.c | 59 ++++++++++++++++++++++++----------------
+ drivers/pinctrl/sh-pfc/sh_pfc.h  |  7 -----
  5 files changed, 68 insertions(+), 61 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/core.c b/drivers/pinctrl/sh-pfc/core.c
@@ -391,5 +391,5 @@ index e6a51a9..6a4a62f 100644
  #define PINMUX_GPIO_FN(gpio, base, data_or_mark)	\
  	[gpio - (base)] = {				\
 -- 
-1.7.10.4
+1.8.3.2
 

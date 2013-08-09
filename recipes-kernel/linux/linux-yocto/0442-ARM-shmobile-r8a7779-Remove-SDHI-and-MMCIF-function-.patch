@@ -1,7 +1,7 @@
 From 745a0a995c920dbdd88dfbf8c0ceaee1a734c4f2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:38:10 +0100
-Subject: [PATCH 442/715] ARM: shmobile: r8a7779: Remove SDHI and MMCIF
+Subject: [PATCH 0442/1083] ARM: shmobile: r8a7779: Remove SDHI and MMCIF
  function GPIOs
 
 Those GPIOs have been deprecated by the pinctrl API. They are unused and
@@ -12,7 +12,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7779.h |  104 ++++++++++++-------------
+ arch/arm/mach-shmobile/include/mach/r8a7779.h | 104 +++++++++++++-------------
  1 file changed, 52 insertions(+), 52 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
@@ -227,5 +227,5 @@ index 5f0b635..a6dcfbf 100644
  	GPIO_FN_DU1_DOTCLKOUT1, GPIO_FN_TS_SCK1, GPIO_FN_DREQ2_B, GPIO_FN_TX2,
  	GPIO_FN_SPA_TDO, GPIO_FN_HCTS0_B, GPIO_FN_VI1_G1, GPIO_FN_VI3_DATA1,
 -- 
-1.7.10.4
+1.8.3.2
 

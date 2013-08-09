@@ -1,7 +1,7 @@
 From 72b509eccfe434e9ebdc96b6236a0f271d19759b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:36:28 +0100
-Subject: [PATCH 436/715] sh-pfc: r8a7779: Remove SCIF function GPIOS
+Subject: [PATCH 0436/1083] sh-pfc: r8a7779: Remove SCIF function GPIOS
 
 All r8a7779 platforms now use the pinctrl API to control the SCIF pins,
 the corresponding function GPIOS are unused. Remove them.
@@ -12,7 +12,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7779.c |  141 +++++++++++++++++-----------------
+ drivers/pinctrl/sh-pfc/pfc-r8a7779.c | 141 +++++++++++++++++------------------
  1 file changed, 69 insertions(+), 72 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7779.c b/drivers/pinctrl/sh-pfc/pfc-r8a7779.c
@@ -292,5 +292,5 @@ index 0a65003..ecc300d 100644
  
  static const struct pinmux_cfg_reg pinmux_config_regs[] = {
 -- 
-1.7.10.4
+1.8.3.2
 

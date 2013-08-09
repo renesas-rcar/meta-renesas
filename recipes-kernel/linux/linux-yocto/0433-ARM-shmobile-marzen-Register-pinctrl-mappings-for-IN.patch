@@ -1,8 +1,8 @@
 From 69ea9ca553829e7d7409c170569ee0b895ae05ae Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 13:46:02 +0100
-Subject: [PATCH 433/715] ARM: shmobile: marzen: Register pinctrl mappings for
- INTC
+Subject: [PATCH 0433/1083] ARM: shmobile: marzen: Register pinctrl mappings
+ for INTC
 
 Replace the GPIO-based INTC pinmux configuration by pinctrl mappings.
 
@@ -11,7 +11,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-marzen.c |    6 ++----
+ arch/arm/mach-shmobile/board-marzen.c | 6 ++----
  1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
@@ -46,5 +46,5 @@ index 56dd3e0..d86baf3 100644
  	platform_add_devices(marzen_devices, ARRAY_SIZE(marzen_devices));
  }
 -- 
-1.7.10.4
+1.8.3.2
 

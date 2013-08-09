@@ -1,7 +1,7 @@
 From b5e493f5b0da9d637862696b1301908110fc85d4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:51:54 +0100
-Subject: [PATCH 367/715] sh-pfc: Remove pinmux_info definition
+Subject: [PATCH 0367/1083] sh-pfc: Remove pinmux_info definition
 
 The pinmux_info alias to sh_pfc_soc_info isn't needed anymore, remove
 it.
@@ -14,7 +14,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/linux/sh_pfc.h |    3 ---
+ include/linux/sh_pfc.h | 3 ---
  1 file changed, 3 deletions(-)
 
 diff --git a/include/linux/sh_pfc.h b/include/linux/sh_pfc.h
@@ -32,5 +32,5 @@ index 9fd6228..13049c4 100644
  
  /* helper macro for port */
 -- 
-1.7.10.4
+1.8.3.2
 

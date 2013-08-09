@@ -1,12 +1,12 @@
 From ca85a79e239c6eadd105f78b03d0a0a04fa8d3eb Mon Sep 17 00:00:00 2001
 From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 Date: Mon, 1 Jul 2013 19:03:13 +0900
-Subject: [PATCH 715/715] ARM: shmobile: defconfig: Increase
+Subject: [PATCH 0715/1083] ARM: shmobile: defconfig: Increase
  SERIAL_SH_SCI_NR_UARTS
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/configs/shmobile_defconfig |    2 +-
+ arch/arm/configs/shmobile_defconfig | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -23,5 +23,5 @@ index d55ac24..e658cfc 100644
  # CONFIG_HW_RANDOM is not set
  CONFIG_I2C=y
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 36a60b6f25294bffc7cc14269181a1b8c60ce8a2 Mon Sep 17 00:00:00 2001
 From: Adam Jackson <ajax@redhat.com>
 Date: Tue, 18 Sep 2012 10:58:47 -0400
-Subject: [PATCH 069/715] drm: Export drm_probe_ddc()
+Subject: [PATCH 0069/1083] drm: Export drm_probe_ddc()
 
 Tested-by: Takashi Iwai <tiwai@suse.de>
 Signed-off-by: Adam Jackson <ajax@redhat.com>
@@ -11,8 +11,8 @@ Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    3 ++-
- include/drm/drm_crtc.h     |    1 +
+ drivers/gpu/drm/drm_edid.c | 3 ++-
+ include/drm/drm_crtc.h     | 1 +
  2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -48,5 +48,5 @@ index 8e405b8..4daedf4 100644
  				 struct i2c_adapter *adapter);
  extern int drm_add_edid_modes(struct drm_connector *connector, struct edid *edid);
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From cf96c85f26ee7cf7e39af5f44e2c350cc293839c Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Tue, 16 Apr 2013 14:32:34 +0200
-Subject: [PATCH 556/715] drm: GEM CMA: Split object mapping into GEM mapping
+Subject: [PATCH 0556/1083] drm: GEM CMA: Split object mapping into GEM mapping
  and CMA mapping
 
 The CMA-specific mapping code will be used to implement dma-buf mmap
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/drm_gem_cma_helper.c |   22 +++++++++++++++-------
+ drivers/gpu/drm/drm_gem_cma_helper.c | 22 +++++++++++++++-------
  1 file changed, 15 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_gem_cma_helper.c b/drivers/gpu/drm/drm_gem_cma_helper.c
@@ -65,5 +65,5 @@ index 897441c..ab501ab 100644
  EXPORT_SYMBOL_GPL(drm_gem_cma_mmap);
  
 -- 
-1.7.10.4
+1.8.3.2
 

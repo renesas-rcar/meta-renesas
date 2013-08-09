@@ -1,7 +1,7 @@
 From 04f1b158f853dd0c7d6ae0c5d0fa406c7dc5cbe5 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 17 Apr 2013 01:19:41 +0200
-Subject: [PATCH 652/715] ARM: shmobile: lager: Add Display Unit support
+Subject: [PATCH 0652/1083] ARM: shmobile: lager: Add Display Unit support
 
 Only the VGA output is currently supported.
 
@@ -19,7 +19,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/board-lager.c |   42 ++++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/board-lager.c | 42 ++++++++++++++++++++++++++++++++++++
  1 file changed, 42 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
@@ -97,5 +97,5 @@ index 45b7d71..aabf760 100644
  				      &lager_leds_pdata,
  				      sizeof(lager_leds_pdata));
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From 5e624aa0f638c62d01401f89de8080900fd49daf Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 12 Jun 2013 16:24:47 +0900
-Subject: [PATCH 489/715] ARM: shmobile: r8a7790: Add sh_eth driver support
+Subject: [PATCH 0489/1083] ARM: shmobile: r8a7790: Add sh_eth driver support
 
 Lager's PHY device is micrel KSZ8041RNLI.
 
@@ -13,7 +13,7 @@ Conflicts:
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c |   34 ++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c | 34 ++++++++++++++++++++++++++++++++++
  1 file changed, 34 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
@@ -90,5 +90,5 @@ index 6df55ef..73d4b8f 100644
  	r8a7790_add_device_to_domain(&r8a7790_rgx, &powervr_device);
  }
 -- 
-1.7.10.4
+1.8.3.2
 

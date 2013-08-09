@@ -1,7 +1,7 @@
 From 5836dee0955f6db2bfdcb56680f37851fcdf9326 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Wed, 11 Jul 2012 16:28:08 +0200
-Subject: [PATCH 049/715] drm: remove the list_head from drm_mode_set
+Subject: [PATCH 0049/1083] drm: remove the list_head from drm_mode_set
 
 It's unused. At it confused me quite a bit until I've discovered that.
 
@@ -12,7 +12,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- include/drm/drm_crtc.h |    2 --
+ include/drm/drm_crtc.h | 2 --
  1 file changed, 2 deletions(-)
 
 diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
@@ -29,5 +29,5 @@ index bac55c2..a1a0386 100644
  	struct drm_crtc *crtc;
  	struct drm_display_mode *mode;
 -- 
-1.7.10.4
+1.8.3.2
 

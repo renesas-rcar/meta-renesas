@@ -1,7 +1,7 @@
 From 9d73e6c34657c3b4c24d209c24c590a28c451275 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sun, 10 Mar 2013 16:55:19 +0100
-Subject: [PATCH 418/715] sh-pfc: Merge sh_pfc_reconfig_pin() into
+Subject: [PATCH 0418/1083] sh-pfc: Merge sh_pfc_reconfig_pin() into
  sh_pfc_gpio_set_direction()
 
 The sh_pfc_reconfig_pin() is only called from a single location. Merge
@@ -13,7 +13,7 @@ Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pinctrl.c |   71 +++++++++++++++++---------------------
+ drivers/pinctrl/sh-pfc/pinctrl.c | 71 ++++++++++++++++++----------------------
  1 file changed, 32 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/pinctrl/sh-pfc/pinctrl.c b/drivers/pinctrl/sh-pfc/pinctrl.c
@@ -107,5 +107,5 @@ index 79fa170..36f08f8 100644
  
  static const struct pinmux_ops sh_pfc_pinmux_ops = {
 -- 
-1.7.10.4
+1.8.3.2
 

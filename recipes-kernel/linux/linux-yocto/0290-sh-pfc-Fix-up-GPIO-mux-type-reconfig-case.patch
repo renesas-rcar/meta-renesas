@@ -1,7 +1,7 @@
 From a68712ccf2b273f8a2571fc16895d204add04417 Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Tue, 25 Sep 2012 11:51:05 +0900
-Subject: [PATCH 290/715] sh: pfc: Fix up GPIO mux type reconfig case.
+Subject: [PATCH 0290/1083] sh: pfc: Fix up GPIO mux type reconfig case.
 
 Some drivers need to switch pin states between GPIO and pin function at
 runtime, which was inadvertently broken in the pinctrl driver for GPIOs
@@ -21,7 +21,7 @@ Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/pinctrl.c |    2 ++
+ drivers/sh/pfc/pinctrl.c | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
@@ -38,5 +38,5 @@ index a3ac39b..0646bf6 100644
  	default:
  		pr_err("Unsupported mux type (%d), bailing...\n", pinmux_type);
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
 From ccccdc90a38dbcce8635cc2d2c1860eee5cdf2c8 Mon Sep 17 00:00:00 2001
 From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
 Date: Fri, 28 Jun 2013 09:35:00 +0900
-Subject: [PATCH 689/715] spi: msiof: Fix chipselect signal select
+Subject: [PATCH 0689/1083] spi: msiof: Fix chipselect signal select
 
 The chipselect signal does not use GPIO when the controller_data
 member of the spi_board_info structure is not set.
@@ -11,7 +11,7 @@ Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/spi/spi-sh-msiof.c |    4 +++-
+ drivers/spi/spi-sh-msiof.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
@@ -37,5 +37,5 @@ index 1f466bc..edf5144 100644
  	if (is_on == BITBANG_CS_INACTIVE) {
  		if (test_and_clear_bit(0, &p->flags)) {
 -- 
-1.7.10.4
+1.8.3.2
 

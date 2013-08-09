@@ -1,8 +1,8 @@
 From 80c2ff0a8bf3f65eb0b705c4877819862bb9e4b4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:22:11 +0100
-Subject: [PATCH 430/715] ARM: shmobile: marzen: Register pinctrl mappings for
- SDHI and MMCIF
+Subject: [PATCH 0430/1083] ARM: shmobile: marzen: Register pinctrl mappings
+ for SDHI and MMCIF
 
 Replace the GPIO-based SDHI and MMCIF pinmux configuration by pinctrl
 mappings
@@ -15,7 +15,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-marzen.c |   15 +++++++++++++++
+ arch/arm/mach-shmobile/board-marzen.c | 15 +++++++++++++++
  1 file changed, 15 insertions(+)
 
 diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
@@ -56,5 +56,5 @@ index aedf0db..2f444ec 100644
  	r8a7779_init_irq_extpin(1); /* IRQ1 as individual interrupt */
  
 -- 
-1.7.10.4
+1.8.3.2
 

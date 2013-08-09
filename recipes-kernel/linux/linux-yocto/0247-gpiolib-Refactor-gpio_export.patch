@@ -1,7 +1,7 @@
 From 0ba9c63430d464e43205c2bd6a06c89e1c465b61 Mon Sep 17 00:00:00 2001
 From: Ryan Mallon <rmallon@gmail.com>
 Date: Mon, 22 Oct 2012 11:39:12 +1100
-Subject: [PATCH 247/715] gpiolib: Refactor gpio_export
+Subject: [PATCH 0247/1083] gpiolib: Refactor gpio_export
 
 The gpio_export function uses nested if statements and the status
 variable to handle the failure cases. This makes the function logic
@@ -16,7 +16,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c |   85 ++++++++++++++++++++++++++----------------------
+ drivers/gpio/gpiolib.c | 85 +++++++++++++++++++++++++++-----------------------
  1 file changed, 46 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -139,5 +139,5 @@ index 1c8d9e3..6fa60df 100644
  }
  EXPORT_SYMBOL_GPL(gpio_export);
 -- 
-1.7.10.4
+1.8.3.2
 

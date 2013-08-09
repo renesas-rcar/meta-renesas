@@ -1,7 +1,7 @@
 From e94dc4b8b9632716e052ce46458e72cee21be5f1 Mon Sep 17 00:00:00 2001
 From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 Date: Wed, 12 Jun 2013 16:40:33 +0900
-Subject: [PATCH 490/715] net: sh_eth: Change PHY LED mode to Link signal for
+Subject: [PATCH 0490/1083] net: sh_eth: Change PHY LED mode to Link signal for
  Lager board
 
 ETH_LINK pin connects to LED0 pin of ethernet PHY device.
@@ -14,7 +14,7 @@ Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/net/ethernet/renesas/sh_eth.c |    8 ++++++++
+ drivers/net/ethernet/renesas/sh_eth.c | 8 ++++++++
  1 file changed, 8 insertions(+)
 
 diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
@@ -37,5 +37,5 @@ index 9ed64da..c64e290 100644
  
  	return 0;
 -- 
-1.7.10.4
+1.8.3.2
 

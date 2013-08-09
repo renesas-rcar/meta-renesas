@@ -1,7 +1,7 @@
 From 030b81661a2a030988cb15a00fb5c55c9dc2bcfe Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:17 +0200
-Subject: [PATCH 471/715] ARM: shmobile: r8a7790: Register GPIO devices
+Subject: [PATCH 0471/1083] ARM: shmobile: r8a7790: Register GPIO devices
 
 Move GPIOs handling from the PFC device to separate GPIO devices.
 
@@ -11,7 +11,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c |   35 +++++++++++++++++++++++++++++++-
+ arch/arm/mach-shmobile/setup-r8a7790.c | 35 +++++++++++++++++++++++++++++++++-
  1 file changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
@@ -74,5 +74,5 @@ index 79ff040..21bbc51 100644
  
  #define SCIF_COMMON(scif_type, baseaddr, irq)			\
 -- 
-1.7.10.4
+1.8.3.2
 

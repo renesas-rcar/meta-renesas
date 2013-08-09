@@ -1,7 +1,7 @@
 From 6fe951b03508ddaf54aec4197f2b7696c560dbe4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 17 Apr 2013 10:58:09 +0200
-Subject: [PATCH 559/715] drm/rcar-du: Don't clean up mode setting if it
+Subject: [PATCH 0559/1083] drm/rcar-du: Don't clean up mode setting if it
  hasn't been initialized
 
 When no error cleanup is required return the error code directly. This
@@ -15,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_drv.c |   12 ++++--------
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 12 ++++--------
  1 file changed, 4 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
@@ -61,5 +61,5 @@ index 161913c..982f7d4 100644
  
  	rcdu->clock_du1 = clk_get(NULL, "rcar-du.1");
 -- 
-1.7.10.4
+1.8.3.2
 

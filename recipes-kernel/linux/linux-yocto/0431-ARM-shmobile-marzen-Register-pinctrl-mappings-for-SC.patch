@@ -1,8 +1,8 @@
 From 84c254e8ec90de0b6b830234c33f83180142b4c2 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 6 Mar 2013 14:22:11 +0100
-Subject: [PATCH 431/715] ARM: shmobile: marzen: Register pinctrl mappings for
- SCIF
+Subject: [PATCH 0431/1083] ARM: shmobile: marzen: Register pinctrl mappings
+ for SCIF
 
 Replace the GPIO-based SCIF pinmux configuration by pinctrl mappings.
 
@@ -11,7 +11,7 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/board-marzen.c |   14 ++++++--------
+ arch/arm/mach-shmobile/board-marzen.c | 14 ++++++--------
  1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
@@ -47,5 +47,5 @@ index 2f444ec..42ed8c1 100644
  	gpio_request(GPIO_FN_EX_CS0, NULL); /* nCS */
  	gpio_request(GPIO_FN_IRQ1_B, NULL); /* IRQ + PME */
 -- 
-1.7.10.4
+1.8.3.2
 

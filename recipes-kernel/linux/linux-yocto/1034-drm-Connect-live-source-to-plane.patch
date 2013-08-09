@@ -1,0 +1,335 @@
+From ceb85df9c9e89a8e77714b2a78c2b7b3cb03f33d Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 24 Jun 2013 03:32:11 +0200
+Subject: [PATCH 1034/1083] drm: Connect live source to plane
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit db412984238a8df7aea84fda7bb903b65435517f)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	drivers/gpu/drm/i915/intel_sprite.c
+	drivers/gpu/drm/omapdrm/omap_plane.c
+	drivers/gpu/drm/shmobile/shmob_drm_plane.c
+(cherry picked from commit 91216dbebdae040b4027063b4d0e3664cc9ac534)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_crtc.c                | 112 +++++++++++++++++++++++++-----
+ drivers/gpu/drm/drm_fops.c                |   6 +-
+ drivers/gpu/drm/exynos/exynos_drm_plane.c |   3 +-
+ drivers/gpu/drm/i915/intel_sprite.c       |   3 +-
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c   |   3 +-
+ include/drm/drmP.h                        |   3 +
+ include/drm/drm_crtc.h                    |   4 ++
+ 7 files changed, 111 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index ac652c5..91aa04f 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -895,6 +895,31 @@ void drm_live_source_cleanup(struct drm_live_source *src)
+ }
+ EXPORT_SYMBOL(drm_live_source_cleanup);
+ 
++void drm_live_sources_release(struct drm_file *priv)
++{
++	struct drm_device *dev = priv->minor->dev;
++	struct drm_live_source *src, *next;
++	int ret;
++
++	drm_modeset_lock_all(dev);
++	mutex_lock(&priv->sources_lock);
++
++	list_for_each_entry_safe(src, next, &priv->sources, filp_head) {
++		list_del_init(&src->filp_head);
++		if (src->plane) {
++			ret = src->plane->funcs->disable_plane(src->plane);
++			if (ret)
++				DRM_ERROR("failed to disable plane with busy source\n");
++			src->plane->src = NULL;
++			src->plane->crtc = NULL;
++			src->plane = NULL;
++		}
++	}
++
++	mutex_unlock(&priv->sources_lock);
++	drm_modeset_unlock_all(dev);
++}
++
+ /**
+  * drm_mode_create - create a new display mode
+  * @dev: DRM device
+@@ -1867,6 +1892,8 @@ int drm_mode_getplane(struct drm_device *dev, void *data,
+ 
+ 	if (plane->fb)
+ 		plane_resp->fb_id = plane->fb->base.id;
++	else if (plane->src)
++		plane_resp->fb_id = plane->src->base.id;
+ 	else
+ 		plane_resp->fb_id = 0;
+ 
+@@ -1912,8 +1939,10 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 	struct drm_plane *plane;
+ 	struct drm_crtc *crtc;
+ 	struct drm_framebuffer *fb = NULL, *old_fb = NULL;
++	struct drm_live_source *src = NULL;
++	unsigned int width, height;
++	uint32_t pixel_format;
+ 	int ret = 0;
+-	unsigned int fb_width, fb_height;
+ 	int i;
+ 
+ 	if (!drm_core_check_feature(dev, DRIVER_MODESET))
+@@ -1939,7 +1968,7 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 		plane->funcs->disable_plane(plane);
+ 		plane->crtc = NULL;
+ 		plane->fb = NULL;
+-		drm_modeset_unlock_all(dev);
++		plane->src = NULL;
+ 		goto out;
+ 	}
+ 
+@@ -1948,37 +1977,70 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 	if (!obj) {
+ 		DRM_DEBUG_KMS("Unknown crtc ID %d\n",
+ 			      plane_req->crtc_id);
+-		ret = -ENOENT;
+-		goto out;
++		return -ENOENT;
+ 	}
+ 	crtc = obj_to_crtc(obj);
+ 
+ 	fb = drm_framebuffer_lookup(dev, plane_req->fb_id);
+ 	if (!fb) {
+-		DRM_DEBUG_KMS("Unknown framebuffer ID %d\n",
++		obj = drm_mode_object_find(dev, plane_req->fb_id,
++					   DRM_MODE_OBJECT_LIVE_SOURCE);
++		if (obj)
++			src = obj_to_live_source(obj);
++	}
++
++	drm_modeset_lock_all(dev);
++
++	if (fb) {
++		width = fb->width << 16;
++		height = fb->height << 16;
++		pixel_format = fb->pixel_format;
++	} else if (src) {
++		unsigned int plane_mask = 1;
++		struct drm_plane *p;
++
++		if (src->plane && src->plane != plane) {
++			ret = -EBUSY;
++			goto out;
++		}
++
++		/* Verify that the source can be associated with the plane. */
++		list_for_each_entry(p, &dev->mode_config.plane_list, head) {
++			if (p == plane)
++				break;
++			plane_mask <<= 1;
++		}
++
++		if (!(src->possible_planes & plane_mask)) {
++			ret = -EINVAL;
++			goto out;
++		}
++
++		width = src->width << 16;
++		height = src->height << 16;
++		pixel_format = src->pixel_format;
++	} else {
++		DRM_DEBUG_KMS("Unknown framebuffer or live source ID %d\n",
+ 			      plane_req->fb_id);
+ 		ret = -ENOENT;
+ 		goto out;
+ 	}
+ 
+-	/* Check whether this plane supports the fb pixel format. */
++	/* Check whether this plane supports the pixel format. */
+ 	for (i = 0; i < plane->format_count; i++)
+-		if (fb->pixel_format == plane->format_types[i])
++		if (pixel_format == plane->format_types[i])
+ 			break;
+ 	if (i == plane->format_count) {
+-		DRM_DEBUG_KMS("Invalid pixel format 0x%08x\n", fb->pixel_format);
++		DRM_DEBUG_KMS("Invalid pixel format 0x%08x\n", pixel_format);
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
+-	fb_width = fb->width << 16;
+-	fb_height = fb->height << 16;
+-
+-	/* Make sure source coordinates are inside the fb. */
+-	if (plane_req->src_w > fb_width ||
+-	    plane_req->src_x > fb_width - plane_req->src_w ||
+-	    plane_req->src_h > fb_height ||
+-	    plane_req->src_y > fb_height - plane_req->src_h) {
++	/* Make sure source coordinates are inside the source. */
++	if (plane_req->src_w > width ||
++	    plane_req->src_x > width - plane_req->src_w ||
++	    plane_req->src_h > height ||
++	    plane_req->src_y > height - plane_req->src_h) {
+ 		DRM_DEBUG_KMS("Invalid source coordinates "
+ 			      "%u.%06ux%u.%06u+%u.%06u+%u.%06u\n",
+ 			      plane_req->src_w >> 16,
+@@ -2005,21 +2067,33 @@ int drm_mode_setplane(struct drm_device *dev, void *data,
+ 		goto out;
+ 	}
+ 
+-	drm_modeset_lock_all(dev);
+-	ret = plane->funcs->update_plane(plane, crtc, fb,
++	ret = plane->funcs->update_plane(plane, crtc, fb, src,
+ 					 plane_req->crtc_x, plane_req->crtc_y,
+ 					 plane_req->crtc_w, plane_req->crtc_h,
+ 					 plane_req->src_x, plane_req->src_y,
+ 					 plane_req->src_w, plane_req->src_h);
+ 	if (!ret) {
++		mutex_lock(&file_priv->sources_lock);
++		if (src) {
++			list_add_tail(&src->filp_head, &file_priv->sources);
++			src->plane = plane;
++		}
++		if (plane->src) {
++			list_del(&plane->src->filp_head);
++			plane->src->plane = NULL;
++		}
++		mutex_unlock(&file_priv->sources_lock);
++
+ 		old_fb = plane->fb;
+ 		plane->crtc = crtc;
+ 		plane->fb = fb;
++		plane->src = src;
+ 		fb = NULL;
+ 	}
+-	drm_modeset_unlock_all(dev);
+ 
+ out:
++	drm_modeset_unlock_all(dev);
++
+ 	if (fb)
+ 		drm_framebuffer_unreference(fb);
+ 	if (old_fb)
+diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
+index 093c23f..fd52c4f 100644
+--- a/drivers/gpu/drm/drm_fops.c
++++ b/drivers/gpu/drm/drm_fops.c
+@@ -268,6 +268,8 @@ static int drm_open_helper(struct inode *inode, struct file *filp,
+ 	INIT_LIST_HEAD(&priv->lhead);
+ 	INIT_LIST_HEAD(&priv->fbs);
+ 	mutex_init(&priv->fbs_lock);
++	INIT_LIST_HEAD(&priv->sources);
++	mutex_init(&priv->sources_lock);
+ 	INIT_LIST_HEAD(&priv->event_list);
+ 	init_waitqueue_head(&priv->event_wait);
+ 	priv->event_space = 4096; /* set aside 4k for event buffer */
+@@ -511,8 +513,10 @@ int drm_release(struct inode *inode, struct file *filp)
+ 
+ 	drm_events_release(file_priv);
+ 
+-	if (dev->driver->driver_features & DRIVER_MODESET)
++	if (dev->driver->driver_features & DRIVER_MODESET) {
+ 		drm_fb_release(file_priv);
++		drm_live_sources_release(file_priv);
++	}
+ 
+ 	if (dev->driver->driver_features & DRIVER_GEM)
+ 		drm_gem_release(dev, file_priv);
+diff --git a/drivers/gpu/drm/exynos/exynos_drm_plane.c b/drivers/gpu/drm/exynos/exynos_drm_plane.c
+index f92fe4c..546f852 100644
+--- a/drivers/gpu/drm/exynos/exynos_drm_plane.c
++++ b/drivers/gpu/drm/exynos/exynos_drm_plane.c
+@@ -32,7 +32,8 @@ static const uint32_t formats[] = {
+ 
+ static int
+ exynos_update_plane(struct drm_plane *plane, struct drm_crtc *crtc,
+-		     struct drm_framebuffer *fb, int crtc_x, int crtc_y,
++		     struct drm_framebuffer *fb, struct drm_live_source *src,
++		     int crtc_x, int crtc_y,
+ 		     unsigned int crtc_w, unsigned int crtc_h,
+ 		     uint32_t src_x, uint32_t src_y,
+ 		     uint32_t src_w, uint32_t src_h)
+diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
+index e90dfb6..d99f3af 100644
+--- a/drivers/gpu/drm/i915/intel_sprite.c
++++ b/drivers/gpu/drm/i915/intel_sprite.c
+@@ -388,7 +388,8 @@ snb_get_colorkey(struct drm_plane *plane, struct drm_intel_sprite_colorkey *key)
+ 
+ static int
+ intel_update_plane(struct drm_plane *plane, struct drm_crtc *crtc,
+-		   struct drm_framebuffer *fb, int crtc_x, int crtc_y,
++		   struct drm_framebuffer *fb, struct drm_live_source *src,
++		   int crtc_x, int crtc_y,
+ 		   unsigned int crtc_w, unsigned int crtc_h,
+ 		   uint32_t src_x, uint32_t src_y,
+ 		   uint32_t src_w, uint32_t src_h)
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 5300064..8786a02 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -272,7 +272,8 @@ void rcar_du_plane_setup(struct rcar_du_plane *plane)
+ 
+ static int
+ rcar_du_plane_update(struct drm_plane *plane, struct drm_crtc *crtc,
+-		       struct drm_framebuffer *fb, int crtc_x, int crtc_y,
++		       struct drm_framebuffer *fb, struct drm_live_source *src,
++		       int crtc_x, int crtc_y,
+ 		       unsigned int crtc_w, unsigned int crtc_h,
+ 		       uint32_t src_x, uint32_t src_y,
+ 		       uint32_t src_w, uint32_t src_h)
+diff --git a/include/drm/drmP.h b/include/drm/drmP.h
+index c49e92f..65ca260 100644
+--- a/include/drm/drmP.h
++++ b/include/drm/drmP.h
+@@ -457,6 +457,9 @@ struct drm_file {
+ 	struct list_head fbs;
+ 	struct mutex fbs_lock;
+ 
++	struct list_head sources;
++	struct mutex sources_lock;
++
+ 	wait_queue_head_t event_wait;
+ 	struct list_head event_list;
+ 	int event_space;
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 4c9914a..2ed1c8e 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -636,6 +636,7 @@ struct drm_connector {
+ struct drm_plane_funcs {
+ 	int (*update_plane)(struct drm_plane *plane,
+ 			    struct drm_crtc *crtc, struct drm_framebuffer *fb,
++			    struct drm_live_source *src,
+ 			    int crtc_x, int crtc_y,
+ 			    unsigned int crtc_w, unsigned int crtc_h,
+ 			    uint32_t src_x, uint32_t src_y,
+@@ -676,6 +677,7 @@ struct drm_plane {
+ 
+ 	struct drm_crtc *crtc;
+ 	struct drm_framebuffer *fb;
++	struct drm_live_source *src;
+ 
+ 	/* CRTC gamma size for reporting to userspace */
+ 	uint32_t gamma_size;
+@@ -696,6 +698,7 @@ struct drm_live_source_funcs {
+ struct drm_live_source {
+ 	struct drm_device *dev;
+ 	struct list_head head;
++	struct list_head filp_head;
+ 
+ 	struct drm_mode_object base;
+ 
+@@ -932,6 +935,7 @@ extern int drm_live_source_init(struct drm_device *dev,
+ 				const uint32_t *formats, uint32_t format_count,
+ 				const struct drm_live_source_funcs *funcs);
+ extern void drm_live_source_cleanup(struct drm_live_source *src);
++extern void drm_live_sources_release(struct drm_file *priv);
+ 
+ extern char *drm_get_connector_name(struct drm_connector *connector);
+ extern char *drm_get_dpms_name(int val);
+-- 
+1.8.3.2
+

@@ -1,7 +1,7 @@
 From 9ade5adf54974a37b357e541dc022c3aec31f1da Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Fri, 24 May 2013 18:47:24 +0900
-Subject: [PATCH 537/715] gpio-rcar: Add support for IRQ_TYPE_EDGE_BOTH
+Subject: [PATCH 0537/1083] gpio-rcar: Add support for IRQ_TYPE_EDGE_BOTH
 
 As hardware support for this feature is not universal for all SoCs a flag,
 has_both_edge_trigger, has been added to the platform data of the driver to
@@ -20,8 +20,8 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpio/gpio-rcar.c                |   26 +++++++++++++++++++++-----
- include/linux/platform_data/gpio-rcar.h |    1 +
+ drivers/gpio/gpio-rcar.c                | 26 +++++++++++++++++++++-----
+ include/linux/platform_data/gpio-rcar.h |  1 +
  2 files changed, 22 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
@@ -101,5 +101,5 @@ index fb2c718..2d8d694 100644
  
  #define RCAR_GP_PIN(bank, pin)		(((bank) * 32) + (pin))
 -- 
-1.7.10.4
+1.8.3.2
 

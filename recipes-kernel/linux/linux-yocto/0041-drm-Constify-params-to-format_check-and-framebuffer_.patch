@@ -1,7 +1,7 @@
 From f2b79be3a5d1b14df91fb40997a79200ca7aae04 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
 Date: Thu, 24 May 2012 20:54:00 +0300
-Subject: [PATCH 041/715] drm: Constify params to format_check() and
+Subject: [PATCH 0041/1083] drm: Constify params to format_check() and
  framebuffer_checks()
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -14,7 +14,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_crtc.c |    4 ++--
+ drivers/gpu/drm/drm_crtc.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
@@ -40,5 +40,5 @@ index 9c89332..cca03f6 100644
  	int ret, hsub, vsub, num_planes, i;
  
 -- 
-1.7.10.4
+1.8.3.2
 

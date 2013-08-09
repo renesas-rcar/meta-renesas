@@ -1,7 +1,7 @@
 From 426d9395ef68736afaad4786668b3d5d2de2b452 Mon Sep 17 00:00:00 2001
 From: Alexandre Courbot <acourbot@nvidia.com>
 Date: Mon, 4 Feb 2013 17:42:04 +0900
-Subject: [PATCH 266/715] gpiolib: add missing braces in gpio_direction_show
+Subject: [PATCH 0266/1083] gpiolib: add missing braces in gpio_direction_show
 
 Add missing braces in an if..else condition.
 
@@ -11,7 +11,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpio/gpiolib.c |    5 +++--
+ drivers/gpio/gpiolib.c | 5 +++--
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
@@ -36,5 +36,5 @@ index e27877a..e14eb88 100644
  	mutex_unlock(&sysfs_lock);
  	return status;
 -- 
-1.7.10.4
+1.8.3.2
 

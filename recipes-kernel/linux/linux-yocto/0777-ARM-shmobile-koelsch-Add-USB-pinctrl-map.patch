@@ -1,0 +1,31 @@
+From 59cb3e1f640d573fc5827857615ddc9eb14ebdb9 Mon Sep 17 00:00:00 2001
+From: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+Date: Mon, 29 Jul 2013 19:17:06 +0900
+Subject: [PATCH 0777/1083] ARM: shmobile: koelsch: Add USB pinctrl map
+
+Signed-off-by: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+---
+ arch/arm/mach-shmobile/board-koelsch.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-koelsch.c b/arch/arm/mach-shmobile/board-koelsch.c
+index 77d38c4..bb14e0c 100644
+--- a/arch/arm/mach-shmobile/board-koelsch.c
++++ b/arch/arm/mach-shmobile/board-koelsch.c
+@@ -102,6 +102,13 @@ static const struct pinctrl_map koelsch_pinctrl_map[] = {
+ 	PIN_MAP_MUX_GROUP_DEFAULT("sh-sci.7", "pfc-r8a7791",
+ 				  "scif1_data_d", "scif1"),
+ 
++	/* USB0 */
++	PIN_MAP_MUX_GROUP_DEFAULT("ehci-platform.0", "pfc-r8a7791",
++				  "usb0", "usb0"),
++	/* USB1 */
++	PIN_MAP_MUX_GROUP_DEFAULT("ehci-platform.1", "pfc-r8a7791",
++				  "usb1", "usb1"),
++
+ 	/* MSIOF0 */
+ 	PIN_MAP_MUX_GROUP_DEFAULT("spi_sh_msiof.0", "pfc-r8a7791",
+ 				  "msiof0_clk", "msiof0"),
+-- 
+1.8.3.2
+

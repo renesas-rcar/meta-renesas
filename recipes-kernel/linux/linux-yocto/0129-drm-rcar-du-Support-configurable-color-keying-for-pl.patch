@@ -1,7 +1,7 @@
 From 68458def18a55244fd37dde30191e9235c22f31b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Wed, 27 Feb 2013 04:18:22 +0100
-Subject: [PATCH 129/715] drm/rcar-du: Support configurable color keying for
+Subject: [PATCH 0129/1083] drm/rcar-du: Support configurable color keying for
  planes
 
 The color key is expressed as an RGB888 triplet stored in a 32-bit
@@ -16,10 +16,10 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_drv.h   |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_plane.c |  122 ++++++++++++++++++++++++++-----
- drivers/gpu/drm/rcar-du/rcar_du_plane.h |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_regs.h  |    1 +
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 122 +++++++++++++++++++++++++++-----
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |   1 +
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  |   1 +
  4 files changed, 106 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
@@ -257,5 +257,5 @@ index 7ad54ca..bf731de 100644
  #define PnMLR			0x00150
  
 -- 
-1.7.10.4
+1.8.3.2
 

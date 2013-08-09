@@ -1,7 +1,7 @@
 From cb6acdcf918a06071507d28c619d025801886ff2 Mon Sep 17 00:00:00 2001
 From: Richard Genoud <richard.genoud@gmail.com>
 Date: Fri, 10 Aug 2012 16:53:49 +0200
-Subject: [PATCH 225/715] trivial: pinctrl core: remove extraneous code lines
+Subject: [PATCH 0225/1083] trivial: pinctrl core: remove extraneous code lines
 
 In function pinctrl_get_locked, pointer p is returned on
 error, and also return on no_error.
@@ -16,7 +16,7 @@ Signed-off-by: Richard Genoud <richard.genoud@gmail.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/core.c |   13 +++----------
+ drivers/pinctrl/core.c | 13 +++----------
  1 file changed, 3 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
@@ -51,5 +51,5 @@ index b06a72a..f7faf80 100644
  
  	return state;
 -- 
-1.7.10.4
+1.8.3.2
 

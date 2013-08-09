@@ -1,7 +1,7 @@
 From f0f860c0cd5ea859b390ffaa2db16c68d8d4c169 Mon Sep 17 00:00:00 2001
 From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 Date: Thu, 27 Jun 2013 19:42:19 +0900
-Subject: [PATCH 696/715] media: video: Add ADV7612 HDMI receiver driver
+Subject: [PATCH 0696/1083] media: video: Add ADV7612 HDMI receiver driver
 
 Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
 (cherry picked from commit c3256817a0b1f21eabac1da6b9e196086619d9e4)
@@ -1440,5 +1440,5 @@ index 7395c81..425d9e7 100644
  	V4L2_IDENT_SAA7706H = 7706,
  
 -- 
-1.7.10.4
+1.8.3.2
 

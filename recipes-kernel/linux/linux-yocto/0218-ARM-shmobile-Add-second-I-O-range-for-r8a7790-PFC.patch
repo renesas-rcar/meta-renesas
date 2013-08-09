@@ -1,7 +1,7 @@
 From 1cf608ce04ad4aebb85624b54f306bbdeff87eb6 Mon Sep 17 00:00:00 2001
 From: Magnus Damm <damm@opensource.se>
 Date: Mon, 8 Apr 2013 11:08:44 +0900
-Subject: [PATCH 218/715] ARM: shmobile: Add second I/O range for r8a7790 PFC
+Subject: [PATCH 0218/1083] ARM: shmobile: Add second I/O range for r8a7790 PFC
 
 Add the GPIO I/O memory range to the r8a7790 PFC device.
 
@@ -19,7 +19,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/setup-r8a7790.c |    1 +
+ arch/arm/mach-shmobile/setup-r8a7790.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
@@ -35,5 +35,5 @@ index a24328f..0759e6b 100644
  
  void __init r8a7790_pinmux_init(void)
 -- 
-1.7.10.4
+1.8.3.2
 

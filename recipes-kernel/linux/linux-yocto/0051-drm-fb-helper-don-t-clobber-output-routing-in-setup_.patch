@@ -1,7 +1,7 @@
 From 3f9a23aa3306fc79e6fc1f8cff956eba9f68ba73 Mon Sep 17 00:00:00 2001
 From: Daniel Vetter <daniel.vetter@ffwll.ch>
 Date: Sun, 12 Aug 2012 18:15:48 +0200
-Subject: [PATCH 051/715] drm/fb-helper: don't clobber output routing in
+Subject: [PATCH 0051/1083] drm/fb-helper: don't clobber output routing in
  setup_crtcs
 
 Yet again the too close relationship between the fb helper and the
@@ -39,7 +39,7 @@ Signed-Off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_fb_helper.c |    6 ------
+ drivers/gpu/drm/drm_fb_helper.c | 6 ------
  1 file changed, 6 deletions(-)
 
 diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
@@ -67,5 +67,5 @@ index f546d1e..4ecc869 100644
  			sizeof(struct drm_fb_helper_crtc *), GFP_KERNEL);
  	modes = kcalloc(dev->mode_config.num_connector,
 -- 
-1.7.10.4
+1.8.3.2
 

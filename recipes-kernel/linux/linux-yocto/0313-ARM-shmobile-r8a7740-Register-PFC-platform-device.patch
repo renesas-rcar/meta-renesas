@@ -1,7 +1,8 @@
 From 9d6bdff445415baef6f8d6de5988ab8aa9b742d3 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Sat, 15 Dec 2012 23:50:57 +0100
-Subject: [PATCH 313/715] ARM: shmobile: r8a7740: Register PFC platform device
+Subject: [PATCH 0313/1083] ARM: shmobile: r8a7740: Register PFC platform
+ device
 
 Add arch code to register the PFC platform device instead of calling the
 driver directly. Platform device registration in the sh-pfc driver will
@@ -14,7 +15,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/pfc-r8a7740.c |   11 ++++++++++-
+ arch/arm/mach-shmobile/pfc-r8a7740.c | 11 ++++++++++-
  1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/mach-shmobile/pfc-r8a7740.c b/arch/arm/mach-shmobile/pfc-r8a7740.c
@@ -47,5 +48,5 @@ index 134d1b9..8a412b1 100644
 +	platform_device_register(&r8a7740_pfc_device);
  }
 -- 
-1.7.10.4
+1.8.3.2
 

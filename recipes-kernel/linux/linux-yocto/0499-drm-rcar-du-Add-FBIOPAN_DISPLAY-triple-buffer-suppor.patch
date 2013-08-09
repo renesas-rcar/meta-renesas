@@ -1,7 +1,7 @@
 From 535c531d88b9fb71ab3d0379c9f4caa6e6222b0f Mon Sep 17 00:00:00 2001
 From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 Date: Mon, 17 Jun 2013 10:43:45 +0900
-Subject: [PATCH 499/715] drm: rcar-du: Add FBIOPAN_DISPLAY triple buffer
+Subject: [PATCH 0499/1083] drm: rcar-du: Add FBIOPAN_DISPLAY triple buffer
  support
 
 Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
@@ -9,7 +9,7 @@ Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_kms.c |    4 ++--
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
@@ -35,5 +35,5 @@ index a670211..3060ab7 100644
  		return PTR_ERR(fbdev);
  
 -- 
-1.7.10.4
+1.8.3.2
 

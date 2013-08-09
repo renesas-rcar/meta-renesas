@@ -1,16 +1,16 @@
 From 86222b70aecbc32841d3e19856851e116fcdee3a Mon Sep 17 00:00:00 2001
 From: Paul Mundt <lethal@linux-sh.org>
 Date: Wed, 11 Jul 2012 17:21:04 +0900
-Subject: [PATCH 281/715] sh: pfc: Make pr_fmt consistent across pfc drivers.
+Subject: [PATCH 0281/1083] sh: pfc: Make pr_fmt consistent across pfc drivers.
 
 Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 (cherry picked from commit a2d3afffd98f9cafa87d7efa57cba0d86abfad87)
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/sh/pfc/core.c    |    2 +-
- drivers/sh/pfc/gpio.c    |    2 +-
- drivers/sh/pfc/pinctrl.c |    2 +-
+ drivers/sh/pfc/core.c    | 2 +-
+ drivers/sh/pfc/gpio.c    | 2 +-
+ drivers/sh/pfc/pinctrl.c | 2 +-
  3 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/sh/pfc/core.c b/drivers/sh/pfc/core.c
@@ -53,5 +53,5 @@ index f62659a..fe1750e 100644
  #include <linux/init.h>
  #include <linux/module.h>
 -- 
-1.7.10.4
+1.8.3.2
 

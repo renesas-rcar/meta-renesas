@@ -1,7 +1,7 @@
 From 195edd1e12f45351d5fcdc0f2dfb818b1fce9979 Mon Sep 17 00:00:00 2001
 From: Takashi Yoshii <takashi.yoshii.zj@renesas.com>
 Date: Fri, 16 Nov 2012 10:53:31 +0900
-Subject: [PATCH 594/715] serial: sh-sci: fix common SCIFB regmap definition
+Subject: [PATCH 0594/1083] serial: sh-sci: fix common SCIFB regmap definition
 
 About FIFO count, there are two variants of SCIFs which show
 a) TX count in upper, RX count in lower byte of FDR register
@@ -28,7 +28,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- drivers/tty/serial/sh-sci.c |    6 +++---
+ drivers/tty/serial/sh-sci.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
@@ -49,5 +49,5 @@ index 63a3bd0..502fa47 100644
  		[SCLSR]		= sci_reg_invalid,
  	},
 -- 
-1.7.10.4
+1.8.3.2
 

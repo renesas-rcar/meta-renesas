@@ -1,7 +1,7 @@
 From 7dc0f1eca682498104ae839a9c91670149dc9588 Mon Sep 17 00:00:00 2001
 From: Paul Menzel <paulepanter@users.sourceforge.net>
 Date: Wed, 8 Aug 2012 23:12:19 +0200
-Subject: [PATCH 057/715] drm: Add EDID_QUIRK_FORCE_REDUCED_BLANKING for ASUS
+Subject: [PATCH 0057/1083] drm: Add EDID_QUIRK_FORCE_REDUCED_BLANKING for ASUS
  VW222S
 
 Connecting an ASUS VW222S [1] over VGA a garbled screen is shown with
@@ -37,7 +37,7 @@ Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/drm_edid.c |    3 +++
+ drivers/gpu/drm/drm_edid.c | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
@@ -55,5 +55,5 @@ index bcc4725..c8ebeba 100644
  	{ "ACR", 44358, EDID_QUIRK_PREFER_LARGE_60 },
  	/* Acer F51 */
 -- 
-1.7.10.4
+1.8.3.2
 

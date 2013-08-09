@@ -1,0 +1,44 @@
+From 74c59f63b0a5ae7f010513f7e25cf303c5f75b13 Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:14 +0900
+Subject: [PATCH 0924/1083] Revert "drm/rcar-du: Use dynamic number of CRTCs
+ instead of CRTCs array size"
+
+This reverts commit 5f137a8082493393d77afc5d5dd281413e7d8411.
+(cherry picked from commit ab70d33675159d24634bf5d65c6f2919051b31f0)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index ad7d080..500d39c 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -115,7 +115,7 @@ static void rcar_du_preclose(struct drm_device *dev, struct drm_file *file)
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+ 	unsigned int i;
+ 
+-	for (i = 0; i < rcdu->num_crtcs; ++i)
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i)
+ 		rcar_du_crtc_cancel_page_flip(&rcdu->crtcs[i], file);
+ }
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 7e7e054..8d1c790 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -206,7 +206,7 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 		if (pdata->type == RCAR_DU_ENCODER_UNUSED)
+ 			continue;
+ 
+-		if (pdata->output >= rcdu->num_crtcs) {
++		if (pdata->output >= ARRAY_SIZE(rcdu->crtcs)) {
+ 			dev_warn(rcdu->dev,
+ 				 "encoder %u references unexisting output %u, skipping\n",
+ 				 i, pdata->output);
+-- 
+1.8.3.2
+

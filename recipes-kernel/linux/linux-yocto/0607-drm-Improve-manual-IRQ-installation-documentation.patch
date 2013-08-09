@@ -1,7 +1,7 @@
 From 01dcc3eec868a3e6529c9c4733da628428763a07 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Fri, 14 Jun 2013 13:38:02 +0200
-Subject: [PATCH 607/715] drm: Improve manual IRQ installation documentation
+Subject: [PATCH 0607/1083] drm: Improve manual IRQ installation documentation
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 (cherry picked from commit f57c9646612678af80766013cd88f43df6866187)
@@ -11,7 +11,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
 ---
- Documentation/DocBook/drm.tmpl |   14 ++++++++------
+ Documentation/DocBook/drm.tmpl | 14 ++++++++------
  1 file changed, 8 insertions(+), 6 deletions(-)
 
 diff --git a/Documentation/DocBook/drm.tmpl b/Documentation/DocBook/drm.tmpl
@@ -47,5 +47,5 @@ index 4ee2304..7e1191c 100644
    <!--!Fdrivers/char/drm/drm_irq.c drm_irq_install-->
          <para>
 -- 
-1.7.10.4
+1.8.3.2
 

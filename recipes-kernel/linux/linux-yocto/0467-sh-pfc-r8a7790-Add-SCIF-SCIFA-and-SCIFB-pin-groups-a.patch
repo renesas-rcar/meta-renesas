@@ -1,7 +1,7 @@
 From e047e182a351ad5547993a1e6aec5778ee7654c6 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 8 Apr 2013 11:36:16 +0200
-Subject: [PATCH 467/715] sh-pfc: r8a7790: Add SCIF, SCIFA and SCIFB pin
+Subject: [PATCH 0467/1083] sh-pfc: r8a7790: Add SCIF, SCIFA and SCIFB pin
  groups and functions
 
 Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
@@ -10,7 +10,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/pinctrl/sh-pfc/pfc-r8a7790.c |  617 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 617 +++++++++++++++++++++++++++++++++++
  1 file changed, 617 insertions(+)
 
 diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
@@ -659,5 +659,5 @@ index a92b204..54c1e10 100644
  
  #define PINMUX_FN_BASE	ARRAY_SIZE(pinmux_pins)
 -- 
-1.7.10.4
+1.8.3.2
 

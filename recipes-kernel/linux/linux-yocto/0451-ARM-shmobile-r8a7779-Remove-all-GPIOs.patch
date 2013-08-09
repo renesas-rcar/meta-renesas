@@ -1,7 +1,7 @@
 From f0d52196133f996c1b21d8d0319060b08b00986b Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Thu, 7 Mar 2013 14:44:27 +0100
-Subject: [PATCH 451/715] ARM: shmobile: r8a7779: Remove all GPIOs
+Subject: [PATCH 0451/1083] ARM: shmobile: r8a7779: Remove all GPIOs
 
 Function GPIOs are not used anymore, and all code use the GPIO numbers
 directly. Remove the GPIOs enumeration.
@@ -15,7 +15,7 @@ Conflicts:
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/mach-shmobile/include/mach/r8a7779.h |  317 -------------------------
+ arch/arm/mach-shmobile/include/mach/r8a7779.h | 317 --------------------------
  1 file changed, 317 deletions(-)
 
 diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
@@ -347,5 +347,5 @@ index 3ea815c..bb9a671 100644
  
  struct r8a7779_pm_ch {
 -- 
-1.7.10.4
+1.8.3.2
 

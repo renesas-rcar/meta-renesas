@@ -1,7 +1,7 @@
 From acd7e7d1b374f136b78e1c171f2a9caa060272bc Mon Sep 17 00:00:00 2001
 From: Simon Horman <horms+renesas@verge.net.au>
 Date: Thu, 4 Apr 2013 11:30:15 +0900
-Subject: [PATCH 208/715] ARM: shmobile: prune defconfig
+Subject: [PATCH 0208/1083] ARM: shmobile: prune defconfig
 
 Remove a number of lines from the shmobile defconfig as they seem to
 be orthogonal to shmobile, not necessary for booting boards,
@@ -13,7 +13,7 @@ Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/arm/configs/shmobile_defconfig |   12 ------------
+ arch/arm/configs/shmobile_defconfig | 12 ------------
  1 file changed, 12 deletions(-)
 
 diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
@@ -47,5 +47,5 @@ index 0f2d80d..90f5600 100644
 -CONFIG_CRYPTO_ANSI_CPRNG=y
 -CONFIG_XZ_DEC=y
 -- 
-1.7.10.4
+1.8.3.2
 

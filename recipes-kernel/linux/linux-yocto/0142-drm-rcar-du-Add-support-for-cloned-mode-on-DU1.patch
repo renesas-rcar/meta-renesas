@@ -1,7 +1,7 @@
 From 7c4bb4f670e3b1ce12df9f5845c64aab488aa1f4 Mon Sep 17 00:00:00 2001
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 Date: Mon, 18 Mar 2013 14:37:15 +0100
-Subject: [PATCH 142/715] drm/rcar-du: Add support for cloned mode on DU1
+Subject: [PATCH 0142/1083] drm/rcar-du: Add support for cloned mode on DU1
 
 The DU1 output can be driven by the superposition processor (CRTC) 0 in
 cloned mode. Support this.
@@ -11,17 +11,17 @@ Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
 Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c |   44 ++++++++++++++++++++++++--------
- drivers/gpu/drm/rcar-du/rcar_du_crtc.h |    2 ++
- drivers/gpu/drm/rcar-du/rcar_du_drv.c  |    5 ++++
- drivers/gpu/drm/rcar-du/rcar_du_kms.c  |   38 +++++++++++++++++++++------
- drivers/gpu/drm/rcar-du/rcar_du_kms.h  |    1 +
- drivers/gpu/drm/rcar-du/rcar_du_lvds.c |   10 +++-----
- drivers/gpu/drm/rcar-du/rcar_du_lvds.h |    3 +--
- drivers/gpu/drm/rcar-du/rcar_du_regs.h |    2 ++
- drivers/gpu/drm/rcar-du/rcar_du_vga.c  |   10 +++-----
- drivers/gpu/drm/rcar-du/rcar_du_vga.h  |    2 +-
- include/linux/platform_data/rcar-du.h  |    5 +++-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 44 +++++++++++++++++++++++++---------
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h |  2 ++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c  |  5 ++++
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c  | 38 ++++++++++++++++++++++-------
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h  |  1 +
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c | 10 ++++----
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.h |  3 +--
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h |  2 ++
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c  | 10 ++++----
+ drivers/gpu/drm/rcar-du/rcar_du_vga.h  |  2 +-
+ include/linux/platform_data/rcar-du.h  |  5 +++-
  11 files changed, 87 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
@@ -375,5 +375,5 @@ index c315d32..80587fd 100644
  
  #endif /* __RCAR_DU_H__ */
 -- 
-1.7.10.4
+1.8.3.2
 
