@@ -1,0 +1,49 @@
+From e4780d996e36eff38203da7aa93d348a6748c717 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Dec 2012 23:50:50 +0100
+Subject: [PATCH 0306/1083] sh-pfc: Let the compiler decide whether to inline
+ functions
+
+The compiler should be smart enough to automatically inline static
+functions that are called from a single location.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Paul Mundt <lethal@linux-sh.org>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 4a2e0d18f95e1ec2b264f66e7cedec7f3dc54b44)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/sh/pfc/pinctrl.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
+index b3dbefd..47dbd02 100644
+--- a/drivers/sh/pfc/pinctrl.c
++++ b/drivers/sh/pfc/pinctrl.c
+@@ -116,7 +116,7 @@ static void sh_pfc_noop_disable(struct pinctrl_dev *pctldev, unsigned func,
+ {
+ }
+ 
+-static inline int sh_pfc_config_function(struct sh_pfc *pfc, unsigned offset)
++static int sh_pfc_config_function(struct sh_pfc *pfc, unsigned offset)
+ {
+ 	if (sh_pfc_config_gpio(pfc, offset,
+ 			       PINMUX_TYPE_FUNCTION,
+@@ -328,10 +328,8 @@ static struct pinctrl_desc sh_pfc_pinctrl_desc = {
+ 	.confops	= &sh_pfc_pinconf_ops,
+ };
+ 
+-static inline void sh_pfc_map_one_gpio(struct sh_pfc *pfc,
+-				       struct sh_pfc_pinctrl *pmx,
+-				       struct pinmux_gpio *gpio,
+-				       unsigned offset)
++static void sh_pfc_map_one_gpio(struct sh_pfc *pfc, struct sh_pfc_pinctrl *pmx,
++				struct pinmux_gpio *gpio, unsigned offset)
+ {
+ 	struct pinmux_data_reg *dummy;
+ 	unsigned long flags;
+-- 
+1.8.3.2
+

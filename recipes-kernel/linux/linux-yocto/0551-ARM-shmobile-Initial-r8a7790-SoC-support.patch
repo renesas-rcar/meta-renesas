@@ -1,0 +1,50 @@
+From a6a81b6ef51d1bade23d66ef8afe38eafb6190ad Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm@opensource.se>
+Date: Thu, 28 Mar 2013 00:49:34 +0900
+Subject: [PATCH 0551/1083] ARM: shmobile: Initial r8a7790 SoC support
+
+Add initial support for the r8a7790 SoC including:
+ - Single Cortex-A15 CPU Core
+ - GIC
+ - Architecture timer
+
+No static virtual mappings are used, all the components
+make use of ioremap(). DT_MACHINE_START is still wrapped
+in CONFIG_USE_OF to match other mach-shmobile code.
+
+Signed-off-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 0468b2d6b6ae71699c22e67701e23d6ca8ff3046)
+
+Conflicts:
+    arch/arm/mach-shmobile/setup-r8a7790.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 1c48865ffdae40d50470d05ef59513f38251710c)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/Kconfig | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index b5f3b2d..9a2dd78 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -39,6 +39,13 @@ config ARCH_R8A7790
+ 	select SH_CLK_CPG
+ 	select RENESAS_IRQC
+ 
++config ARCH_R8A7790
++	bool "R-Car H2 (R8A77900)"
++	select ARM_GIC
++	select CPU_V7
++	select ARM_ARCH_TIMER
++	select SH_CLK_CPG
++
+ config ARCH_EMEV2
+ 	bool "Emma Mobile EV2"
+ 	select CPU_V7
+-- 
+1.8.3.2
+

@@ -1,0 +1,229 @@
+From 11d15330483c6596d20de29f3310c0330e3ea933 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 17 Jun 2013 10:52:54 +0900
+Subject: [PATCH 0523/1083] mtd: devices: Add Spansion S25FL512S support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit 94a71043164701b816fe9dd75a373ab268ee8f08)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/mtd/devices/Kconfig  |  19 +++++++-
+ drivers/mtd/devices/m25p80.c | 101 +++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 109 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/mtd/devices/Kconfig b/drivers/mtd/devices/Kconfig
+index 4cdb2af..ef2f97a 100644
+--- a/drivers/mtd/devices/Kconfig
++++ b/drivers/mtd/devices/Kconfig
+@@ -96,13 +96,28 @@ config MTD_M25P80
+ 	  if you want to specify device partitioning or to use a device which
+ 	  doesn't support the JEDEC ID instruction.
+ 
++choice
++	prompt "Choice Read/Write OPCode"
++	depends on MTD_M25P80
++	default M25PXX_USE_QUAD_READ
++
+ config M25PXX_USE_FAST_READ
+ 	bool "Use FAST_READ OPCode allowing SPI CLK <= 50MHz"
+-	depends on MTD_M25P80
+-	default y
+ 	help
+ 	  This option enables FAST_READ access supported by ST M25Pxx.
+ 
++config M25PXX_USE_DUAL_READ
++	bool "Use DUAL_READ OPCode"
++	help
++	  This option enables DUAL_READ access supported by Spansion S25FLxx.
++
++config M25PXX_USE_QUAD_READ
++	bool "Use QUAD_READ and QUAD_PAGE_PROGRAM OPCodes"
++	help
++	  This option enables QUAD_READ and QUAD_PAGE_PROGRAM access supported by Spansion S25FLxx.
++
++endchoice
++
+ config MTD_SPEAR_SMI
+ 	tristate "SPEAR MTD NOR Support through SMI controller"
+ 	depends on PLAT_SPEAR
+diff --git a/drivers/mtd/devices/m25p80.c b/drivers/mtd/devices/m25p80.c
+index 1924d24..93f4368 100644
+--- a/drivers/mtd/devices/m25p80.c
++++ b/drivers/mtd/devices/m25p80.c
+@@ -1,4 +1,8 @@
+ /*
++ * drivers/mtd/devices/m25p80.c
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
+  * MTD SPI driver for ST M25Pxx (and similar) serial flash chips
+  *
+  * Author: Mike Lavender, mike@steroidmicros.com
+@@ -39,9 +43,13 @@
+ #define	OPCODE_WREN		0x06	/* Write enable */
+ #define	OPCODE_RDSR		0x05	/* Read status register */
+ #define	OPCODE_WRSR		0x01	/* Write status register 1 byte */
++#define	OPCODE_RDCR		0x35	/* Read configuration register */
+ #define	OPCODE_NORM_READ	0x03	/* Read data bytes (low frequency) */
+ #define	OPCODE_FAST_READ	0x0b	/* Read data bytes (high frequency) */
++#define	OPCODE_DUAL_READ	0x3b	/* Read data bytes (dual output read) */
++#define	OPCODE_QUAD_READ	0x6b	/* Read data bytes (quad output read) */
+ #define	OPCODE_PP		0x02	/* Page program (up to 256 bytes) */
++#define	OPCODE_QPP		0x32	/* Quad Page program */
+ #define	OPCODE_BE_4K		0x20	/* Erase 4KiB block */
+ #define	OPCODE_BE_32K		0x52	/* Erase 32KiB block */
+ #define	OPCODE_CHIP_ERASE	0xc7	/* Erase whole flash chip */
+@@ -73,14 +81,30 @@
+ #define	MAX_READY_WAIT_JIFFIES	(40 * HZ)	/* M25P16 specs 40s max chip erase */
+ #define	MAX_CMD_SIZE		5
+ 
+-#ifdef CONFIG_M25PXX_USE_FAST_READ
+-#define OPCODE_READ 	OPCODE_FAST_READ
+-#define FAST_READ_DUMMY_BYTE 1
++/* Needs 8 dummy cycles (8 bits) before read for fast/dual/quad reads */
++#ifdef CONFIG_M25PXX_USE_QUAD_READ
++	#define OPCODE_READ	OPCODE_QUAD_READ
++	#define OPCODE_WRITE	OPCODE_QPP
++	#define READ_DUMMY_BYTE 1
+ #else
+-#define OPCODE_READ 	OPCODE_NORM_READ
+-#define FAST_READ_DUMMY_BYTE 0
++	#ifdef CONFIG_M25PXX_USE_DUAL_READ
++		#define OPCODE_READ	OPCODE_DUAL_READ
++		#define READ_DUMMY_BYTE 1
++	#else
++		#ifdef CONFIG_M25PXX_USE_FAST_READ
++			#define OPCODE_READ	OPCODE_FAST_READ
++			#define READ_DUMMY_BYTE 1
++		#else
++			#define OPCODE_READ	OPCODE_NORM_READ
++			#define READ_DUMMY_BYTE 0
++		#endif
++	#endif
++	#define OPCODE_WRITE	OPCODE_PP
+ #endif
+ 
++
++
++
+ #define JEDEC_MFR(_jedec_id)	((_jedec_id) >> 16)
+ 
+ /****************************************************************************/
+@@ -141,6 +165,41 @@ static int write_sr(struct m25p *flash, u8 val)
+ }
+ 
+ /*
++ * Read the configuration register, returning its value in the location
++ * Return the configuration register value.
++ * Returns negative if error occurred.
++ */
++static int read_cr(struct m25p *flash)
++{
++	ssize_t retval;
++	u8 code = OPCODE_RDCR;
++	u8 val;
++
++	retval = spi_write_then_read(flash->spi, &code, 1, &val, 1);
++
++	if (retval < 0) {
++		dev_err(&flash->spi->dev, "error %d reading CR\n",
++				(int) retval);
++		return retval;
++	}
++
++	return val;
++}
++
++/*
++ * Write status and configuration register 2 bytes
++ * Returns negative if error occurred.
++ */
++static int write_srcr(struct m25p *flash, u8 sr, u8 cr)
++{
++	flash->command[0] = OPCODE_WRSR;
++	flash->command[1] = sr;
++	flash->command[2] = cr;
++
++	return spi_write(flash->spi, flash->command, 3);
++}
++
++/*
+  * Set write enable latch with Write Enable command.
+  * Returns negative if error occurred.
+  */
+@@ -354,7 +413,7 @@ static int m25p80_read(struct mtd_info *mtd, loff_t from, size_t len,
+ 	 * Should add 1 byte DUMMY_BYTE.
+ 	 */
+ 	t[0].tx_buf = flash->command;
+-	t[0].len = m25p_cmdsz(flash) + FAST_READ_DUMMY_BYTE;
++	t[0].len = m25p_cmdsz(flash) + READ_DUMMY_BYTE;
+ 	spi_message_add_tail(&t[0], &m);
+ 
+ 	t[1].rx_buf = buf;
+@@ -381,7 +440,7 @@ static int m25p80_read(struct mtd_info *mtd, loff_t from, size_t len,
+ 
+ 	spi_sync(flash->spi, &m);
+ 
+-	*retlen = m.actual_length - m25p_cmdsz(flash) - FAST_READ_DUMMY_BYTE;
++	*retlen = m.actual_length - m25p_cmdsz(flash) - READ_DUMMY_BYTE;
+ 
+ 	mutex_unlock(&flash->lock);
+ 
+@@ -425,7 +484,7 @@ static int m25p80_write(struct mtd_info *mtd, loff_t to, size_t len,
+ 	write_enable(flash);
+ 
+ 	/* Set up the opcode in the write buffer. */
+-	flash->command[0] = OPCODE_PP;
++	flash->command[0] = OPCODE_WRITE;
+ 	m25p_addr2cmd(flash, to, flash->command);
+ 
+ 	page_offset = to & (flash->page_size - 1);
+@@ -846,12 +905,13 @@ static int __devinit m25p_probe(struct spi_device *spi)
+ 	flash = kzalloc(sizeof *flash, GFP_KERNEL);
+ 	if (!flash)
+ 		return -ENOMEM;
+-	flash->command = kmalloc(MAX_CMD_SIZE + FAST_READ_DUMMY_BYTE, GFP_KERNEL);
++	flash->command = kmalloc(MAX_CMD_SIZE + READ_DUMMY_BYTE, GFP_KERNEL);
+ 	if (!flash->command) {
+ 		kfree(flash);
+ 		return -ENOMEM;
+ 	}
+ 
++	memset(flash->command, 0x00, MAX_CMD_SIZE + READ_DUMMY_BYTE);
+ 	flash->spi = spi;
+ 	mutex_init(&flash->lock);
+ 	dev_set_drvdata(&spi->dev, flash);
+@@ -868,6 +928,29 @@ static int __devinit m25p_probe(struct spi_device *spi)
+ 		write_sr(flash, 0);
+ 	}
+ 
++	/*
++	 * Spansion S25FL512S
++	 */
++	if ((info->jedec_id >> 8) == P_ID_SST_PAGE) {
++		int cr, sr;
++
++		cr = read_cr(flash);
++		write_enable(flash);
++		sr = read_sr(flash);
++#ifdef CONFIG_M25PXX_USE_QUAD_READ
++		cr |= 0x02;
++#else
++		cr &= ~0x02;
++#endif
++		write_srcr(flash, sr, cr);
++
++		while (1) {
++			sr = read_sr(flash);
++			if ((sr & 0x01) == 0)
++				break;
++		}
++	}
++
+ 	if (data && data->name)
+ 		flash->mtd.name = data->name;
+ 	else
+-- 
+1.8.3.2
+

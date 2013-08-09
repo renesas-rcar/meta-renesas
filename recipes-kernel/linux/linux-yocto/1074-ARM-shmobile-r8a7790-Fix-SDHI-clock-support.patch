@@ -1,0 +1,63 @@
+From f6f5cd12a563adb8e41d17fba5a688e7236ab6ad Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Tue, 6 Aug 2013 17:18:49 +0900
+Subject: [PATCH 1074/1083] ARM: shmobile: r8a7790: Fix SDHI clock support
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7790.c | 33 ++++++++++++++++++++++++---------
+ 1 file changed, 24 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
+index e533f6f..c1cc821 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7790.c
++++ b/arch/arm/mach-shmobile/clock-r8a7790.c
+@@ -415,21 +415,36 @@ static void __init r8a7790_rgx_control_init(void)
+ 
+ static void __init r8a7790_sdhi_clock_init(void)
+ {
+-	struct clk *sdhi2_clk, *sdhi3_clk;
++	int ret = 0;
++	struct clk *sdhi_clk;
+ 
+ 	/* set SDHI2 clock to 97.5 MHz */
+-	sdhi2_clk = clk_get(NULL, "sdhi2");
+-	if (!IS_ERR(sdhi2_clk)) {
+-		clk_set_rate(sdhi2_clk, 97500000);
+-		clk_put(sdhi2_clk);
++	sdhi_clk = clk_get(NULL, "sdhi2");
++	if (IS_ERR(sdhi_clk)) {
++		pr_err("Cannot get sdhi2 clock\n");
++		goto sdhi2_out;
+ 	}
++	ret = clk_set_rate(sdhi_clk, 97500000);
++	if (ret < 0)
++		pr_err("Cannot set sdhi2 clock rate :%d\n", ret);
++
++	clk_put(sdhi_clk);
++sdhi2_out:
+ 
+ 	/* set SDHI3 clock to 97.5 MHz */
+-	sdhi3_clk = clk_get(NULL, "sdhi3");
+-	if (!IS_ERR(sdhi3_clk)) {
+-		clk_set_rate(sdhi3_clk, 97500000);
+-		clk_put(sdhi3_clk);
++	sdhi_clk = clk_get(NULL, "sdhi3");
++	if (IS_ERR(sdhi_clk)) {
++		pr_err("Cannot get sdhi3 clock\n");
++		goto sdhi3_out;
+ 	}
++	ret = clk_set_rate(sdhi_clk, 97500000);
++	if (ret < 0)
++		pr_err("Cannot set sdhi3 clock rate :%d\n", ret);
++
++	clk_put(sdhi_clk);
++sdhi3_out:
++
++	return;
+ }
+ 
+ static void __init r8a7790_mmc_clock_init(void)
+-- 
+1.8.3.2
+

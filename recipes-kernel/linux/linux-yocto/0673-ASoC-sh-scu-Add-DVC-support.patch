@@ -1,0 +1,510 @@
+From 28b886f413819122856f094b8cc0bc41b26f9744 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Wed, 26 Jun 2013 13:39:41 +0900
+Subject: [PATCH 0673/1083] ASoC: sh: scu: Add DVC support
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit 157ecdb8107084f17b036e92abbad6d027143d94)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/sound/sh_scu.h |  51 +++++++++++++++--
+ sound/soc/sh/scu_dai.c | 153 +++++++++++++++++++++++++++++++++++++++++++++----
+ sound/soc/sh/scu_pcm.c | 101 ++++++++++++++++++++++++++++----
+ 3 files changed, 278 insertions(+), 27 deletions(-)
+
+diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
+index 484074d..b7f9ab1 100644
+--- a/include/sound/sh_scu.h
++++ b/include/sound/sh_scu.h
+@@ -141,11 +141,11 @@
+ #define	SRC9_INT_ENABLE0	0x0138
+ #define	CMD0OUT_BUSIF_MODE	0x0184
+ #define	CMD0_BUSIF_DALIGN	0x0188
+-#define	CMD0_MODE		0x018c
++#define	CMD0_ROUTE_SELECT	0x018c
+ #define	CMD0_CONTROL		0x0190
+ #define	CMD1OUT_BUSIF_MODE	0x01a4
+ #define	CMD1_BUSIF_DALIGN	0x01a8
+-#define	CMD1_MODE		0x01ac
++#define	CMD1_ROUTE_SELECT	0x01ac
+ #define	CMD1_CONTROL		0x01b0
+ #define	SCU_SYSTEM_STATUS0	0x01c8
+ #define	SCU_SYSTEM_INT_ENABLE0	0x01cc
+@@ -163,6 +163,20 @@
+ #define	SRC_MODE_START_OUT	(1<<4)
+ #define	SRC_MODE_START_IN	(1<<0)
+ 
++/* CMD_ROUTE_SELECT */
++#define	CMD_ROUTE_SELECT_CASE_CTU_ALL	(0<<16)
++#define	CMD_ROUTE_SELECT_CASE_CTU0	(1<<16)
++#define	CMD_ROUTE_SELECT_CASE_CTU1	(2<<16)
++#define	CMD_ROUTE_SELECT_CASE_CTU2	(3<<16)
++#define	CMD_ROUTE_SELECT_CASE_CTU3	(4<<16)
++#define	CMD_ROUTE_SELECT_CTU3_SRC2	(0<<8)
++#define	CMD_ROUTE_SELECT_CTU3_SRC5	(1<<8)
++#define	CMD_ROUTE_SELECT_CTU2_SRC0	(0<<0)
++#define	CMD_ROUTE_SELECT_CTU2_SRC1	(1<<0)
++
++/* CMD_CONTROL */
++#define	CMD_CONTROL_START_OUT	(1<<4)
++
+ /*
+  *	SRC
+  */
+@@ -186,6 +200,33 @@
+ #define	SRC_IFS_48KHZ	48000ULL
+ 
+ /*
++ *	DVC
++ */
++/* DVC_ADINR */
++#define	DVCADIN_OTBL_24BIT	(0<<16)
++#define	DVCADIN_OTBL_22BIT	(2<<16)
++#define	DVCADIN_OTBL_20BIT	(4<<16)
++#define	DVCADIN_OTBL_18BIT	(6<<16)
++#define	DVCADIN_OTBL_16BIT	(8<<16)
++#define	DVCADIN_OTBL_8BIT	(16<<16)
++#define	DVCADIN_CHNUM_0		(0<<0)
++#define	DVCADIN_CHNUM_1		(1<<0)
++#define	DVCADIN_CHNUM_2		(2<<0)
++#define	DVCADIN_CHNUM_4		(4<<0)
++#define	DVCADIN_CHNUM_6		(6<<0)
++#define	DVCADIN_CHNUM_8		(8<<0)
++
++/* DVC_DVUCR */
++#define	DVCDVUC_HWMD_DISABLE	(0<<16)
++#define	DVCDVUC_HWMD_ENABLE	(1<<16)
++#define	DVCDVUC_VVMD_SLEEP	(0<<8)
++#define	DVCDVUC_VVMD_USE	(1<<8)
++#define	DVCDVUC_VRMD_SLEEP	(0<<4)
++#define	DVCDVUC_VRMD_USE	(1<<4)
++#define	DVCDVUC_ZCMD_SLEEP	(0<<0)
++#define	DVCDVUC_ZCMD_USE	(1<<0)
++
++/*
+  *	SSIU
+  */
+ /* register offset */
+@@ -1849,7 +1890,7 @@ struct scu_src_regs {
+ struct scu_cmd_regs {
+ 	u32	out_busif_mode;
+ 	u32	dalign;
+-	u32	mode;
++	u32	route_select;
+ 	u32	control;
+ };
+ 
+@@ -1990,7 +2031,7 @@ struct scu_capture_callback {
+ 	void (*init_ssi_src)(void);
+ 	void (*init_ssi_dvc)(void);
+ 	void (*init_src)(unsigned int);
+-	void (*init_src_dvc)(void);
++	void (*init_src_dvc)(unsigned int);
+ 	void (*init_dvc)(void);
+ 	void (*deinit_ssi)(void);
+ 	void (*deinit_ssi_src)(void);
+@@ -2071,7 +2112,7 @@ extern void scu_init_ssi1(void);
+ extern void scu_init_ssi1_src1(void);
+ extern void scu_init_ssi1_dvc1(void);
+ extern void scu_init_src1(unsigned int);
+-extern void scu_init_src1_dvc1(void);
++extern void scu_init_src1_dvc1(unsigned int);
+ extern void scu_init_dvc1(void);
+ extern void scu_deinit_ssi1(void);
+ extern void scu_deinit_ssi1_src1(void);
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index 29b1f9a..587a0a8 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -115,7 +115,9 @@ static void adg_init(void)
+ 		(u32 *)(rinfo->adgreg + ADG_SRCOUT_TIMSEL0));
+ 
+ 	/* CMD Output Timing */
+-	/* not implement */
++	scu_or_writel((ADG_CMDOUT_CMD1_DIVCLK_SSI_WS0 |
++		ADG_CMDOUT_CMD0_DIVCLK_SSI_WS0),
++		(u32 *)(rinfo->adgreg + ADG_CMDOUT_TIMSEL));
+ 
+ 	/* division enable */
+ 	scu_or_writel(ADG_DIVEN_AUDIO_CLKA,
+@@ -288,6 +290,92 @@ static void scu_src_stop(int src_ch, int src_dir)
+ 	return;
+ }
+ 
++static void scu_dvc_init(int dvc_ch)
++{
++	FNC_ENTRY
++	/* SCU CMD_ROUTE_SELECT */
++	if (dvc_ch == 0) /* SRC0 route */
++		writel((CMD_ROUTE_SELECT_CASE_CTU2 |
++			CMD_ROUTE_SELECT_CTU2_SRC0),
++			(u32 *)&rinfo->scucmdreg[dvc_ch]->route_select);
++	else /* SRC1 route */
++		writel((CMD_ROUTE_SELECT_CASE_CTU2 |
++			CMD_ROUTE_SELECT_CTU2_SRC1),
++			(u32 *)&rinfo->scucmdreg[dvc_ch]->route_select);
++
++	/* SCU CMD_CONTROL */
++	writel(CMD_CONTROL_START_OUT,
++		(u32 *)&rinfo->scucmdreg[dvc_ch]->control);
++
++	FNC_EXIT
++	return;
++}
++
++static void scu_dvc_deinit(int dvc_ch)
++{
++	FNC_ENTRY
++	/* SCU CMD_CONTROL */
++	writel(0, (u32 *)&rinfo->scucmdreg[dvc_ch]->control);
++
++	/* SCU CMD_ROUTE_SELECT */
++	writel(0, (u32 *)&rinfo->scucmdreg[dvc_ch]->route_select);
++	FNC_EXIT
++	return;
++}
++
++void scu_dvc_control(int dvc_ch)
++{
++	FNC_ENTRY
++	/* DVC Activation (DVC_SWRSR) Figure42.27 */
++	writel(0, (u32 *)&rinfo->dvcreg[dvc_ch]->swrsr);
++	writel(1, (u32 *)&rinfo->dvcreg[dvc_ch]->swrsr);
++
++	/* DVC_DVUIR */
++	writel(1, (u32 *)&rinfo->dvcreg[dvc_ch]->dvuir);
++
++	/* General Information */
++	/*  DVC_ADINR  *//* only stereo now */
++	writel((DVCADIN_OTBL_16BIT | DVCADIN_CHNUM_2),
++		(u32 *)&rinfo->dvcreg[dvc_ch]->adinr);
++
++	/*  DVC_DVUCR  */
++	writel((DVCDVUC_VVMD_USE | DVCDVUC_ZCMD_USE),
++		(u32 *)&rinfo->dvcreg[dvc_ch]->dvucr);
++
++	/* Digital Volume Function Parameter */
++	/*  DVC_VOL*R  */
++	writel(0x100000, (u32 *)&rinfo->dvcreg[dvc_ch]->vol0r);
++	writel(0x100000, (u32 *)&rinfo->dvcreg[dvc_ch]->vol1r);
++
++	/* Zero Cross Mute Function */
++	/*  0:no mute 1:R 2:L 3:LR  */
++	writel(0x0, (u32 *)&rinfo->dvcreg[dvc_ch]->zcmcr);
++
++	/* DVC_DVUIR */
++	writel(0, (u32 *)&rinfo->dvcreg[dvc_ch]->dvuir);
++
++	FNC_EXIT
++	return;
++}
++
++static void scu_dvc_start(int dvc_ch)
++{
++	FNC_ENTRY
++	/* DVC_DVUER */
++	writel(1, (u32 *)&rinfo->dvcreg[dvc_ch]->dvuer);
++	FNC_EXIT
++	return;
++}
++
++static void scu_dvc_stop(int dvc_ch)
++{
++	FNC_ENTRY
++	/* DVC_DVUER */
++	writel(0, (u32 *)&rinfo->dvcreg[dvc_ch]->dvuer);
++	FNC_EXIT
++	return;
++}
++
+ /************************************************************************
+ 
+ 	DAPM callback function
+@@ -347,13 +435,23 @@ EXPORT_SYMBOL(scu_deinit_ssi0_src0);
+ 
+ void scu_init_ssi0_dvc0(void)
+ {
+-	/* no process (not implement ) */
++	/* SSI0_0_BUSIF_ADINR */
++	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
++	/* SSI init */
++	scu_ssi_control(0, 1);
++	/* SSI start */
++	scu_ssi_start(0);
+ }
+ EXPORT_SYMBOL(scu_init_ssi0_dvc0);
+ 
+ void scu_deinit_ssi0_dvc0(void)
+ {
+-	/* no process (not implement ) */
++	/* SSI stop */
++	scu_ssi_stop(0);
++	/* SSI0_0_BUSIF_ADINR */
++	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI0_0_BUSIF_ADINR));
+ }
+ EXPORT_SYMBOL(scu_deinit_ssi0_dvc0);
+ 
+@@ -376,13 +474,18 @@ EXPORT_SYMBOL(scu_deinit_src0);
+ 
+ void scu_init_dvc0(void)
+ {
+-	/* no process (not implement ) */
++	scu_dvc_init(0);
++	scu_dvc_control(0);
++	/* start dvc */
++	scu_dvc_start(0);
+ }
+ EXPORT_SYMBOL(scu_init_dvc0);
+ 
+ void scu_deinit_dvc0(void)
+ {
+-	/* no process (not implement ) */
++	/* stop dvc */
++	scu_dvc_stop(0);
++	scu_dvc_deinit(0);
+ }
+ EXPORT_SYMBOL(scu_deinit_dvc0);
+ 
+@@ -448,13 +551,29 @@ EXPORT_SYMBOL(scu_deinit_ssi1_src1);
+ 
+ void scu_init_ssi1_dvc1(void)
+ {
+-	/* no process (not implement ) */
++	/* SSI1_0_BUSIF_ADINR */
++	scu_or_writel((SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
++	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++	scu_or_writel(SSI_MODE1_SSI1_MASTER,
++			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	/* SSI init */
++	scu_ssi_control(0, 1);
++	/* SSI start */
++	scu_ssi_start(1);
+ }
+ EXPORT_SYMBOL(scu_init_ssi1_dvc1);
+ 
+ void scu_deinit_ssi1_dvc1(void)
+ {
+-	/* no process (not implement ) */
++	/* SSI stop */
++	scu_ssi_stop(1);
++	/* SSI_MODE1 (SSI1 slave, SSI0 master) */
++	scu_and_writel(~SSI_MODE1_SSI1_MASTER,
++			(u32 *)(rinfo->ssiureg + SSI_MODE1));
++	/* SSI0_0_BUSIF_ADINR */
++	scu_and_writel(~(SSI_ADINR_OTBL_16BIT | SSI_ADINR_CHNUM_2CH),
++			(u32 *)(rinfo->ssiureg + SSI1_0_BUSIF_ADINR));
+ }
+ EXPORT_SYMBOL(scu_deinit_ssi1_dvc1);
+ 
+@@ -475,27 +594,37 @@ void scu_deinit_src1(void)
+ }
+ EXPORT_SYMBOL(scu_deinit_src1);
+ 
+-void scu_init_src1_dvc1(void)
++void scu_init_src1_dvc1(unsigned int rate)
+ {
+-	/* no process (not implement ) */
++	scu_src_init(1);
++	scu_src_control(1, rate);
++	/* start src */
++	scu_src_start(1, SRC_INOUT);
+ }
+ EXPORT_SYMBOL(scu_init_src1_dvc1);
+ 
+ void scu_deinit_src1_dvc1(void)
+ {
+-	/* no process (not implement ) */
++	/* stop src */
++	scu_src_stop(1, SRC_INOUT);
++	scu_src_deinit(1);
+ }
+ EXPORT_SYMBOL(scu_deinit_src1_dvc1);
+ 
+ void scu_init_dvc1(void)
+ {
+-	/* no process (not implement ) */
++	scu_dvc_init(1);
++	scu_dvc_control(1);
++	/* start dvc */
++	scu_dvc_start(1);
+ }
+ EXPORT_SYMBOL(scu_init_dvc1);
+ 
+ void scu_deinit_dvc1(void)
+ {
+-	/* no process (not implement ) */
++	/* stop dvc */
++	scu_dvc_stop(1);
++	scu_dvc_deinit(1);
+ }
+ EXPORT_SYMBOL(scu_deinit_dvc1);
+ 
+diff --git a/sound/soc/sh/scu_pcm.c b/sound/soc/sh/scu_pcm.c
+index d9c2eb8..fab7ad4 100644
+--- a/sound/soc/sh/scu_pcm.c
++++ b/sound/soc/sh/scu_pcm.c
+@@ -219,7 +219,17 @@ static int scu_dmae_request(struct snd_pcm_substream *ss)
+ 		}
+ 
+ 		/* ssi0 via src0,dvc0 */
+-		/* not implement */
++		if (pcminfo->routeinfo->pcb.init_ssi_dvc &&
++		    pcminfo->routeinfo->pcb.init_src &&
++		    pcminfo->routeinfo->pcb.init_dvc) {
++			/* dma(mem->src) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_MEM_SRC0,
++						SHDMA_DEVID_AUDIO, ss);
++
++			/* dma(cmd->ssi) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_CMD0_SSI0,
++						SHDMA_DEVID_AUDIOPP, ss);
++		}
+ 	} else { /* capture */
+ 		/* ssi1 */
+ 		if (pcminfo->routeinfo->ccb.init_ssi) {
+@@ -241,7 +251,17 @@ static int scu_dmae_request(struct snd_pcm_substream *ss)
+ 		}
+ 
+ 		/* ssi1 via src1,dvc1 */
+-		/* not implement */
++		if (pcminfo->routeinfo->ccb.init_ssi_dvc &&
++		    pcminfo->routeinfo->ccb.init_src_dvc &&
++		    pcminfo->routeinfo->ccb.init_dvc) {
++			/* dma(ssi->src) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_SSI1_SRC1,
++						SHDMA_DEVID_AUDIOPP, ss);
++
++			/* dma(cmd->mem) channel allocation */
++			ret = scu_dmae_req_chan(SHDMA_SLAVE_PCM_CMD1_MEM,
++						SHDMA_DEVID_AUDIO, ss);
++		}
+ 	}
+ 
+ 	FNC_EXIT
+@@ -267,8 +287,11 @@ static int scu_dmae_release(struct snd_pcm_substream *ss)
+ 		}
+ 
+ 		/* ssi via src/dvc */
+-		/* not implement */
+-
++		if (pcminfo->routeinfo->pcb.init_ssi_dvc &&
++		    pcminfo->routeinfo->pcb.init_src &&
++		    pcminfo->routeinfo->pcb.init_dvc) {
++			ret = scu_dmae_rel_allchan(ss);
++		}
+ 	} else { /* capture */
+ 		/* ssi */
+ 		if (pcminfo->routeinfo->ccb.init_ssi)
+@@ -281,7 +304,11 @@ static int scu_dmae_release(struct snd_pcm_substream *ss)
+ 		}
+ 
+ 		/* ssi via src/dvc */
+-		/* not implement */
++		if (pcminfo->routeinfo->ccb.init_ssi_dvc &&
++		    pcminfo->routeinfo->ccb.init_src_dvc &&
++		    pcminfo->routeinfo->ccb.init_dvc) {
++			ret = scu_dmae_rel_allchan(ss);
++		}
+ 	}
+ 
+ 	FNC_EXIT
+@@ -386,8 +413,24 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 		}
+ 
+ 		/* ssi via src/dvc */
+-		/* not implement */
++		if (pcminfo->routeinfo->pcb.init_ssi_dvc &&
++		    pcminfo->routeinfo->pcb.init_src &&
++		    pcminfo->routeinfo->pcb.init_dvc) {
++			/* start dma */
++			scu_audma_start(SHDMA_SLAVE_PCM_MEM_SRC0, ss);
++
++			if (first_flag) {
++				/* start ssi */
++				pcminfo->routeinfo->pcb.init_ssi_dvc();
++
++				/* start dvc */
++				pcminfo->routeinfo->pcb.init_dvc();
+ 
++				/* start src */
++				pcminfo->routeinfo->pcb.init_src(
++					ss->runtime->rate);
++			}
++		}
+ 	} else { /* capture */
+ 		/* ssi */
+ 		if (pcminfo->routeinfo->ccb.init_ssi) {
+@@ -417,7 +460,24 @@ static void scu_pcm_start(struct snd_pcm_substream *ss, int first_flag)
+ 		}
+ 
+ 		/* ssi via src/dvc */
+-		/* not implement */
++		if (pcminfo->routeinfo->ccb.init_ssi_dvc &&
++		    pcminfo->routeinfo->ccb.init_src_dvc &&
++		    pcminfo->routeinfo->ccb.init_dvc) {
++			/* start dma */
++			scu_audma_start(SHDMA_SLAVE_PCM_CMD1_MEM, ss);
++
++			if (first_flag) {
++				/* start ssi */
++				pcminfo->routeinfo->ccb.init_ssi_dvc();
++
++				/* start dvc */
++				pcminfo->routeinfo->ccb.init_dvc();
++
++				/* start src */
++				pcminfo->routeinfo->ccb.init_src_dvc(
++					ss->runtime->rate);
++			}
++		}
+ 	}
+ 
+ 	FNC_EXIT
+@@ -453,8 +513,18 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		}
+ 
+ 		/* ssi via src/dvc */
+-		/* not implement */
+-
++		if (pcminfo->routeinfo->pcb.deinit_ssi_dvc &&
++		    pcminfo->routeinfo->pcb.deinit_src &&
++		    pcminfo->routeinfo->pcb.deinit_dvc) {
++			/* stop src */
++			pcminfo->routeinfo->pcb.deinit_src();
++			/* stop dvc */
++			pcminfo->routeinfo->pcb.deinit_dvc();
++			/* stop ssi */
++			pcminfo->routeinfo->pcb.deinit_ssi_dvc();
++			/* stop dma */
++			scu_audma_stop(ss);
++		}
+ 	} else { /* capture */
+ 		/* ssi */
+ 		if (pcminfo->routeinfo->ccb.deinit_ssi) {
+@@ -478,7 +548,18 @@ static void scu_pcm_stop(struct snd_pcm_substream *ss)
+ 		}
+ 
+ 		/* ssi via src/dvc */
+-		/* not implement */
++		if (pcminfo->routeinfo->ccb.deinit_ssi_dvc &&
++		    pcminfo->routeinfo->ccb.deinit_src_dvc &&
++		    pcminfo->routeinfo->ccb.deinit_dvc) {
++			/* start src */
++			pcminfo->routeinfo->ccb.deinit_src_dvc();
++			/* start dvc */
++			pcminfo->routeinfo->ccb.deinit_dvc();
++			/* start ssi */
++			pcminfo->routeinfo->ccb.deinit_ssi_dvc();
++			/* start dma */
++			scu_audma_stop(ss);
++		}
+ 	}
+ 
+ 	FNC_EXIT
+-- 
+1.8.3.2
+

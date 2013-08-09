@@ -1,0 +1,243 @@
+From c210e691d48549274e3ea008882f834b4aeba937 Mon Sep 17 00:00:00 2001
+From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+Date: Thu, 1 Aug 2013 13:45:08 +0900
+Subject: [PATCH 1069/1083] ARM: shmobile: lager: Move MMC support to board
+ dependence part
+
+Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c   | 90 ++++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7790.c | 90 ----------------------------------
+ 2 files changed, 90 insertions(+), 90 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index 4155550..a35ece0 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -38,6 +38,7 @@
+ #include <linux/spi/flash.h>
+ #include <linux/mfd/tmio.h>
+ #include <linux/mmc/sh_mobile_sdhi.h>
++#include <linux/mmc/sh_mmcif.h>
+ #include <mach/common.h>
+ #include <mach/r8a7790.h>
+ #include <mach/irqs.h>
+@@ -466,11 +467,100 @@ static struct platform_device sdhi3_device = {
+ 	}
+ };
+ 
++static void shmmcif_set_pwr(struct platform_device *pdev, int state)
++{
++}
++
++static void shmmcif_down_pwr(struct platform_device *pdev)
++{
++}
++
++static int shmmcif_get_cd(struct platform_device *pdev)
++{
++	return 1;
++}
++
++static struct resource sh_mmcif0_resources[] = {
++	[0] = {
++		.name	= "mmc0",
++		.start	= 0xEE200000,
++		.end	= 0xEE200080-1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(169),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct sh_mmcif_plat_data sh_mmcif0_plat = {
++	.set_pwr	= shmmcif_set_pwr,
++	.down_pwr	= shmmcif_down_pwr,
++	.get_cd		= shmmcif_get_cd,
++	.slave_id_tx	= SHDMA_SLAVE_MMC0_TX,
++	.slave_id_rx	= SHDMA_SLAVE_MMC0_RX,
++	.use_cd_gpio	= 0,
++	.cd_gpio	= 0,
++	.sup_pclk	= 0 ,
++	.caps		= MMC_CAP_MMC_HIGHSPEED |
++			  MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE ,
++	.ocr		= MMC_VDD_32_33 | MMC_VDD_33_34 ,
++};
++
++static struct platform_device mmc0_device = {
++	.name		= "sh_mmcif",
++	.num_resources	= ARRAY_SIZE(sh_mmcif0_resources),
++	.resource	= sh_mmcif0_resources,
++	.id		= 0,
++	.dev = {
++		.platform_data	= &sh_mmcif0_plat,
++	}
++};
++
++static struct resource sh_mmcif1_resources[] = {
++	[0] = {
++		.name	= "mmc1",
++		.start	= 0xEE220000,
++		.end	= 0xEE220080-1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(170),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct sh_mmcif_plat_data sh_mmcif1_plat = {
++	.set_pwr	= shmmcif_set_pwr,
++	.down_pwr	= shmmcif_down_pwr,
++	.get_cd		= shmmcif_get_cd,
++	.slave_id_tx	= SHDMA_SLAVE_MMC1_TX,
++	.slave_id_rx	= SHDMA_SLAVE_MMC1_RX,
++	.use_cd_gpio	= 0,
++	.cd_gpio	= 0,
++	.sup_pclk	= 0 ,
++	.caps		= MMC_CAP_MMC_HIGHSPEED |
++			  MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE ,
++	.ocr		= MMC_VDD_32_33 | MMC_VDD_33_34 ,
++};
++
++static struct platform_device mmc1_device = {
++	.name		= "sh_mmcif",
++	.num_resources	= ARRAY_SIZE(sh_mmcif1_resources),
++	.resource	= sh_mmcif1_resources,
++	.id		= 1,
++	.dev = {
++		.platform_data	= &sh_mmcif1_plat,
++	}
++};
++
+ static struct platform_device *lager_devices[] __initdata = {
+ 	&sdhi0_device,
+ 	&sdhi1_device,
+ 	&sdhi2_device,
+ 	&sdhi3_device,
++	&mmc0_device,
++	&mmc1_device,
+ };
+ 
+ static void __init lager_add_standard_devices(void)
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 529d2ef..8b72c9b 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -41,8 +41,6 @@
+ #include <linux/clk.h>
+ #include <linux/usb/ehci_pdriver.h>
+ #include <linux/usb/ohci_pdriver.h>
+-#include <linux/mfd/tmio.h>
+-#include <linux/mmc/sh_mmcif.h>
+ #include <linux/regulator/fixed.h>
+ #include <linux/regulator/machine.h>
+ #include <linux/spi/spi.h>
+@@ -1423,92 +1421,6 @@ static struct platform_device sata1_device = {
+ 	},
+ };
+ 
+-static void shmmcif_set_pwr(struct platform_device *pdev, int state)
+-{
+-}
+-
+-static void shmmcif_down_pwr(struct platform_device *pdev)
+-{
+-}
+-
+-static int shmmcif_get_cd(struct platform_device *pdev)
+-{
+-	return 1;
+-}
+-
+-static struct resource sh_mmcif0_resources[] = {
+-	[0] = {
+-		.name	= "mmc0",
+-		.start	= 0xEE200000,
+-		.end	= 0xEE200080-1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[1] = {
+-		.start	= gic_spi(169),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-};
+-
+-static struct sh_mmcif_plat_data sh_mmcif0_plat = {
+-	.set_pwr	= shmmcif_set_pwr,
+-	.down_pwr	= shmmcif_down_pwr,
+-	.get_cd		= shmmcif_get_cd,
+-	.slave_id_tx	= SHDMA_SLAVE_MMC0_TX,
+-	.slave_id_rx	= SHDMA_SLAVE_MMC0_RX,
+-	.use_cd_gpio	= 0,
+-	.cd_gpio	= 0,
+-	.sup_pclk	= 0 ,
+-	.caps		= MMC_CAP_MMC_HIGHSPEED |
+-			  MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE ,
+-	.ocr		= MMC_VDD_32_33 | MMC_VDD_33_34 ,
+-};
+-
+-static struct platform_device mmc0_device = {
+-	.name		= "sh_mmcif",
+-	.num_resources	= ARRAY_SIZE(sh_mmcif0_resources),
+-	.resource	= sh_mmcif0_resources,
+-	.id		= 0,
+-	.dev = {
+-		.platform_data	= &sh_mmcif0_plat,
+-	}
+-};
+-
+-static struct resource sh_mmcif1_resources[] = {
+-	[0] = {
+-		.name	= "mmc1",
+-		.start	= 0xEE220000,
+-		.end	= 0xEE220080-1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[1] = {
+-		.start	= gic_spi(170),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-};
+-
+-static struct sh_mmcif_plat_data sh_mmcif1_plat = {
+-	.set_pwr	= shmmcif_set_pwr,
+-	.down_pwr	= shmmcif_down_pwr,
+-	.get_cd		= shmmcif_get_cd,
+-	.slave_id_tx	= SHDMA_SLAVE_MMC1_TX,
+-	.slave_id_rx	= SHDMA_SLAVE_MMC1_RX,
+-	.use_cd_gpio	= 0,
+-	.cd_gpio	= 0,
+-	.sup_pclk	= 0 ,
+-	.caps		= MMC_CAP_MMC_HIGHSPEED |
+-			  MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE ,
+-	.ocr		= MMC_VDD_32_33 | MMC_VDD_33_34 ,
+-};
+-
+-static struct platform_device mmc1_device = {
+-	.name		= "sh_mmcif",
+-	.num_resources	= ARRAY_SIZE(sh_mmcif1_resources),
+-	.resource	= sh_mmcif1_resources,
+-	.id		= 1,
+-	.dev = {
+-		.platform_data	= &sh_mmcif1_plat,
+-	}
+-};
+ 
+ /* VIN */
+ static struct resource vin0_resources[] = {
+@@ -1731,8 +1643,6 @@ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&scu_device,
+ 	&sata0_device,
+ 	&sata1_device,
+-	&mmc0_device,
+-	&mmc1_device,
+ 	&vin0_device,
+ 	&vin1_device,
+ 	&vin2_device,
+-- 
+1.8.3.2
+

@@ -1,0 +1,70 @@
+From 122ff305cc6813cd3dca6bef152a0199247e5cb8 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Fri, 14 Jun 2013 15:14:17 +0900
+Subject: [PATCH 0514/1083] mmc: tmio: Add SD clock start/stop wait pass option
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit 6fbd45f72f0422633aa7fbf9f7712652ab68da18)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c | 12 ++++++++----
+ include/linux/mfd/tmio.h        |  3 +++
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 2cf1ae9..fae0057 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -167,12 +167,14 @@ static void tmio_mmc_clk_stop(struct tmio_mmc_host *host)
+ 	if (!(pdata->flags & TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL)
+ 		&& resource_size(res) > 0x100) {
+ 		sd_ctrl_write16(host, CTL_CLK_AND_WAIT_CTL, 0x0000);
+-		msleep(10);
++		if (!(pdata->flags & TMIO_MMC_CLK_NO_SLEEP))
++			msleep(10);
+ 	}
+ 
+ 	sd_ctrl_write16(host, CTL_SD_CARD_CLK_CTL, ~0x0100 &
+ 		sd_ctrl_read16(host, CTL_SD_CARD_CLK_CTL));
+-	msleep(10);
++	if (!(pdata->flags & TMIO_MMC_CLK_NO_SLEEP))
++		msleep(10);
+ }
+ 
+ static void tmio_mmc_clk_start(struct tmio_mmc_host *host)
+@@ -182,13 +184,15 @@ static void tmio_mmc_clk_start(struct tmio_mmc_host *host)
+ 
+ 	sd_ctrl_write16(host, CTL_SD_CARD_CLK_CTL, 0x0100 |
+ 		sd_ctrl_read16(host, CTL_SD_CARD_CLK_CTL));
+-	msleep(10);
++	if (!(pdata->flags & TMIO_MMC_CLK_NO_SLEEP))
++		msleep(10);
+ 
+ 	/* implicit BUG_ON(!res) */
+ 	if (!(pdata->flags & TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL)
+ 		&& resource_size(res) > 0x100) {
+ 		sd_ctrl_write16(host, CTL_CLK_AND_WAIT_CTL, 0x0100);
+-		msleep(10);
++		if (!(pdata->flags & TMIO_MMC_CLK_NO_SLEEP))
++			msleep(10);
+ 	}
+ }
+ 
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index b1254b0..c8f6407 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -94,6 +94,9 @@
+ /* Some controllers check the ILL_FUNC bit. */
+ #define TMIO_MMC_CHECK_ILL_FUNC		(1 << 9)
+ 
++/* The start or stop of SD clock don't wait 10msec. */
++#define TMIO_MMC_CLK_NO_SLEEP		(1 << 10)
++
+ int tmio_core_mmc_enable(void __iomem *cnf, int shift, unsigned long base);
+ int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
+ void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
+-- 
+1.8.3.2
+

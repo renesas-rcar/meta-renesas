@@ -1,0 +1,44 @@
+From 63109619a10b32d36f3146a921149a6c45f16f8d Mon Sep 17 00:00:00 2001
+From: Roland Stigge <stigge@antcom.de>
+Date: Thu, 28 Jun 2012 00:32:14 +0200
+Subject: [PATCH 0243/1083] gpio: of_get_named_gpio_flags() return
+ -EPROBE_DEFER if GPIO not yet available
+
+of_get_named_gpio_flags() and of_get_named_gpio() return -EPROBE_DEFER if the
+respective GPIO is not (yet) available. This is useful if driver's probe()
+functions try to get a GPIO whose controller isn't probed yet. Thus, the driver
+can be probed again later on.
+
+The function still returns -EINVAL on other errors (parse error or node doesn't
+exist). This way, the case of an optional/intentionally missing GPIO is handled
+appropriately.
+
+Signed-off-by: Roland Stigge <stigge@antcom.de>
+Acked-by: Alexandre Pereira da Silva <aletes.xgr@gmail.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 4fbb0022cba37eef4a263183fdb7dbee89b299f2)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib-of.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpiolib-of.c b/drivers/gpio/gpiolib-of.c
+index a71aeca..a18c4aa 100644
+--- a/drivers/gpio/gpiolib-of.c
++++ b/drivers/gpio/gpiolib-of.c
+@@ -62,7 +62,10 @@ static int of_gpiochip_find_and_xlate(struct gpio_chip *gc, void *data)
+ int of_get_named_gpio_flags(struct device_node *np, const char *propname,
+                            int index, enum of_gpio_flags *flags)
+ {
+-	struct gg_data gg_data = { .flags = flags, .out_gpio = -ENODEV };
++	/* Return -EPROBE_DEFER to support probe() functions to be called
++	 * later when the GPIO actually becomes available
++	 */
++	struct gg_data gg_data = { .flags = flags, .out_gpio = -EPROBE_DEFER };
+ 	int ret;
+ 
+ 	/* .of_xlate might decide to not fill in the flags, so clear it. */
+-- 
+1.8.3.2
+

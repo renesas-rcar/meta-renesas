@@ -1,0 +1,270 @@
+From ffb4dd1f3f6cc7e507916284bc7e28b9b224d250 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 11 Jun 2013 15:30:21 +0900
+Subject: [PATCH 0481/1083] ARM: shmobile: r8a7790: Fix SMP to pre-platform SMP
+ operations basis
+
+SMP is fixed to the code using struct smp_operations,
+and is added hot plugging functions.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+(cherry picked from commit f2886e5164b6b68f19f31ac91a7ff232af368e0d)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c          |  1 +
+ arch/arm/mach-shmobile/headsmp.S              |  7 ---
+ arch/arm/mach-shmobile/include/mach/common.h  |  6 ---
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  1 +
+ arch/arm/mach-shmobile/platsmp.c              | 52 ----------------------
+ arch/arm/mach-shmobile/smp-r8a7790.c          | 63 ++++++++++++++++++++-------
+ 6 files changed, 50 insertions(+), 80 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index d68051c..660cafe 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -55,6 +55,7 @@ static const char *lager_boards_compat_dt[] __initdata = {
+ };
+ 
+ DT_MACHINE_START(LAGER_DT, "lager")
++	.smp		= smp_ops(r8a7790_smp_ops),
+ 	.init_irq	= r8a7790_init_irq,
+ 	.timer		= &r8a7790_timer,
+ 	.init_machine	= lager_add_standard_devices,
+diff --git a/arch/arm/mach-shmobile/headsmp.S b/arch/arm/mach-shmobile/headsmp.S
+index 9a3ac22..b202c12 100644
+--- a/arch/arm/mach-shmobile/headsmp.S
++++ b/arch/arm/mach-shmobile/headsmp.S
+@@ -1,7 +1,6 @@
+ /*
+  * SMP support for R-Mobile / SH-Mobile
+  *
+- * Copyright (C) 2013  Renesas Electronics Corporation
+  * Copyright (C) 2010  Magnus Damm
+  * Copyright (C) 2010  Takashi Yoshii
+  *
+@@ -80,9 +79,3 @@ ENTRY(shmobile_secondary_vector)
+ 	ldr     pc, 1f
+ 1:	.long   shmobile_invalidate_start - PAGE_OFFSET + PLAT_PHYS_OFFSET
+ ENDPROC(shmobile_secondary_vector)
+-
+-	.align
+-ENTRY(r8a7790_secondary_cpu_entry)
+-	ldr     pc, 1f
+-1:	.long   secondary_startup - PAGE_OFFSET + PLAT_PHYS_OFFSET
+-ENDPROC(r8a7790_secondary_cpu_entry)
+diff --git a/arch/arm/mach-shmobile/include/mach/common.h b/arch/arm/mach-shmobile/include/mach/common.h
+index d52b7ce..154a893 100644
+--- a/arch/arm/mach-shmobile/include/mach/common.h
++++ b/arch/arm/mach-shmobile/include/mach/common.h
+@@ -68,12 +68,6 @@ extern void r8a7790_add_standard_devices(void);
+ extern void r8a7790_clock_init(void);
+ extern void r8a7790_pinmux_init(void);
+ 
+-extern unsigned int r8a7790_get_core_count(void);
+-extern void r8a7790_secondary_init(unsigned int cpu);
+-extern int r8a7790_boot_secondary(unsigned int cpu);
+-extern void r8a7790_smp_prepare_cpus(unsigned int max_cpus);
+-extern void r8a7790_secondary_cpu_entry(void);
+-
+ extern void shmobile_init_late(void);
+ 
+ #ifdef CONFIG_SUSPEND
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+index 52bfc30..e4ed791 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7790.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+@@ -8,5 +8,6 @@ void r8a7790_clock_init(void);
+ void r8a7790_pinmux_init(void);
+ 
+ extern struct sys_timer r8a7790_timer;
++extern struct smp_operations r8a7790_smp_ops;
+ 
+ #endif /* __ASM_R8A7790_H__ */
+diff --git a/arch/arm/mach-shmobile/platsmp.c b/arch/arm/mach-shmobile/platsmp.c
+index dc0b5e4..5833c60 100644
+--- a/arch/arm/mach-shmobile/platsmp.c
++++ b/arch/arm/mach-shmobile/platsmp.c
+@@ -1,7 +1,6 @@
+ /*
+  * SMP support for R-Mobile / SH-Mobile
+  *
+- * Copyright (C) 2013  Renesas Electronics Corporation
+  * Copyright (C) 2010  Magnus Damm
+  * Copyright (C) 2011  Paul Mundt
+  *
+@@ -19,36 +18,6 @@
+ #include <mach/common.h>
+ #include <mach/emev2.h>
+ 
+-#ifdef CONFIG_ARCH_R8A7790
+-#define is_r8a7790() of_machine_is_compatible("renesas,r8a7790")
+-#else
+-#define is_r8a7790() (0)
+-#endif
+-
+-static unsigned int __init shmobile_smp_get_core_count(void)
+-{
+-	if (is_r8a7790())
+-		return r8a7790_get_core_count();
+-
+-	return 1;
+-}
+-
+-void __cpuinit platform_secondary_init(unsigned int cpu)
+-{
+-	trace_hardirqs_off();
+-
+-	if (is_r8a7790())
+-		r8a7790_secondary_init(cpu);
+-}
+-
+-int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
+-{
+-	if (is_r8a7790())
+-		return r8a7790_boot_secondary(cpu);
+-
+-	return -ENOSYS;
+-}
+-
+ void __init shmobile_smp_init_cpus(unsigned int ncores)
+ {
+ 	unsigned int i;
+@@ -62,24 +31,3 @@ void __init shmobile_smp_init_cpus(unsigned int ncores)
+ 	for (i = 0; i < ncores; i++)
+ 		set_cpu_possible(i, true);
+ }
+-
+-void __init smp_init_cpus(void)
+-{
+-	unsigned int ncores = shmobile_smp_get_core_count();
+-	unsigned int i;
+-
+-	if (ncores > nr_cpu_ids) {
+-		pr_warn("SMP: %u cores greater than maximum (%u), clipping\n",
+-			ncores, nr_cpu_ids);
+-		ncores = nr_cpu_ids;
+-	}
+-
+-	for (i = 0; i < ncores; i++)
+-		set_cpu_possible(i, true);
+-}
+-
+-void __init platform_smp_prepare_cpus(unsigned int max_cpus)
+-{
+-	if (is_r8a7790())
+-		r8a7790_smp_prepare_cpus(max_cpus);
+-}
+diff --git a/arch/arm/mach-shmobile/smp-r8a7790.c b/arch/arm/mach-shmobile/smp-r8a7790.c
+index 261a7c0..d921def 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7790.c
++++ b/arch/arm/mach-shmobile/smp-r8a7790.c
+@@ -22,6 +22,7 @@
+ #include <linux/init.h>
+ #include <linux/delay.h>
+ #include <linux/jiffies.h>
++#include <linux/irqchip/arm-gic.h>
+ #include <linux/smp.h>
+ #include <asm/cacheflush.h>
+ #include <asm/io.h>
+@@ -29,13 +30,6 @@
+ #include <mach/common.h>
+ #include <mach/hardware.h>
+ 
+-void gic_secondary_init(unsigned int);
+-
+-unsigned int r8a7790_get_core_count(void)
+-{
+-	return CONFIG_NR_CPUS;
+-}
+-
+ #define IO_BASE		0xe6150000
+ #define CA15BAR		0x016020
+ #define CA15RESCNT	0x010040
+@@ -49,18 +43,26 @@ unsigned int r8a7790_get_core_count(void)
+ #define CCI_SNOOP	0x0000
+ #define CCI_STATUS	0x000c
+ 
+-void __init r8a7790_smp_prepare_cpus(unsigned int max_cpus)
++static unsigned int r8a7790_get_core_count(void)
++{
++	return CONFIG_NR_CPUS;
++}
++
++static void __init r8a7790_smp_init_cpus(void)
++{
++	unsigned int ncores = r8a7790_get_core_count();
++
++	shmobile_smp_init_cpus(ncores);
++}
++
++static void __init r8a7790_smp_prepare_cpus(unsigned int max_cpus)
+ {
+-	int i;
+ 	u32 bar;
+ 	void __iomem *p;
+ 
+-	for (i = 0; i < max_cpus; i++)
+-		set_cpu_present(i, true);
+-
+ 	/* MERAM for jump stub, because BAR requires 256KB aligned address */
+ 	p = ioremap_nocache(MERAM, 16);
+-	memcpy(p, r8a7790_secondary_cpu_entry, 16);
++	memcpy(p, shmobile_secondary_vector, 16);
+ 	iounmap(p);
+ 
+ 	p = ioremap_nocache(IO_BASE, 0x40000);
+@@ -70,12 +72,13 @@ void __init r8a7790_smp_prepare_cpus(unsigned int max_cpus)
+ 	iounmap(p);
+ }
+ 
+-void __cpuinit r8a7790_secondary_init(unsigned int cpu)
++static void __cpuinit r8a7790_secondary_init(unsigned int cpu)
+ {
+ 	gic_secondary_init(0);
+ }
+ 
+-int __cpuinit r8a7790_boot_secondary(unsigned int cpu)
++static int __cpuinit r8a7790_boot_secondary(unsigned int cpu,
++					    struct task_struct *idle)
+ {
+ 	u32 val;
+ 	void __iomem *p;
+@@ -108,3 +111,33 @@ int __cpuinit r8a7790_boot_secondary(unsigned int cpu)
+ 	iounmap(p);
+ 	return 0;
+ }
++
++static int __maybe_unused r8a7790_cpu_kill(unsigned int cpu)
++{
++	int k;
++
++	/* this function is running on another CPU than the offline target,
++	 * here we need wait for shutdown code in platform_cpu_die() to
++	 * finish before asking SoC-specific code to power off the CPU core.
++	 */
++	for (k = 0; k < 1000; k++) {
++		if (shmobile_cpu_is_dead(cpu))
++			return 1;
++
++		mdelay(1);
++	}
++
++	return 0;
++}
++
++struct smp_operations r8a7790_smp_ops  __initdata = {
++	.smp_init_cpus		= r8a7790_smp_init_cpus,
++	.smp_prepare_cpus	= r8a7790_smp_prepare_cpus,
++	.smp_secondary_init	= r8a7790_secondary_init,
++	.smp_boot_secondary	= r8a7790_boot_secondary,
++#ifdef CONFIG_HOTPLUG_CPU
++	.cpu_kill		= r8a7790_cpu_kill,
++	.cpu_die		= shmobile_cpu_die,
++	.cpu_disable		= shmobile_cpu_disable,
++#endif
++};
+-- 
+1.8.3.2
+

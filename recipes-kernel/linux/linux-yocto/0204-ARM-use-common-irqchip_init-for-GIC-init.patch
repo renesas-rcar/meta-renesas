@@ -1,0 +1,345 @@
+From 465f34b01df34b56db47805bdaa352a56d7b5959 Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Mon, 5 Nov 2012 16:18:28 -0600
+Subject: [PATCH 0204/1083] ARM: use common irqchip_init for GIC init
+
+Convert all GIC DT initialization over to use common irqchip_init
+function.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Kukjin Kim <kgene.kim@samsung.com>
+Acked-by: Shawn Guo <shawn.guo@linaro.org>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: David Brown <davidb@codeaurora.org>
+Cc: Daniel Walker <dwalker@fifo99.com>
+Cc: Bryan Huntsman <bryanh@codeaurora.org>
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Paul Mundt <lethal@linux-sh.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Dinh Nguyen <dinguyen@altera.com>
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: Shiraz Hashim <shiraz.hashim@st.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 0529e315bbda5d502c93df2cfafba9bb337fbdf4)
+
+Conflicts:
+	arch/arm/mach-bcm/board_bcm.c
+	arch/arm/mach-exynos/common.c
+	arch/arm/mach-highbank/highbank.c
+	arch/arm/mach-imx/mach-imx6q.c
+	arch/arm/mach-msm/board-dt-8660.c
+	arch/arm/mach-msm/board-dt-8960.c
+	arch/arm/mach-omap2/omap4-common.c
+	arch/arm/mach-socfpga/socfpga.c
+	arch/arm/mach-spear13xx/include/mach/generic.h
+	arch/arm/mach-spear13xx/spear1310.c
+	arch/arm/mach-spear13xx/spear1340.c
+	arch/arm/mach-spear13xx/spear13xx.c
+	arch/arm/mach-ux500/cpu.c
+	arch/arm/mach-zynq/common.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/include/asm/hardware/gic.h  |  1 -
+ arch/arm/mach-exynos/common.c        | 12 +++---------
+ arch/arm/mach-highbank/highbank.c    |  9 ++-------
+ arch/arm/mach-imx/mach-imx6q.c       |  4 ++--
+ arch/arm/mach-shmobile/setup-emev2.c | 14 ++------------
+ arch/arm/mach-tegra/common.c         | 10 ++--------
+ arch/arm/mach-ux500/cpu.c            |  8 ++------
+ arch/arm/mach-vexpress/v2m.c         | 14 ++------------
+ 8 files changed, 15 insertions(+), 57 deletions(-)
+
+diff --git a/arch/arm/include/asm/hardware/gic.h b/arch/arm/include/asm/hardware/gic.h
+index 2a16e03..5c14398 100644
+--- a/arch/arm/include/asm/hardware/gic.h
++++ b/arch/arm/include/asm/hardware/gic.h
+@@ -36,7 +36,6 @@ extern struct irq_chip gic_arch_extn;
+ 
+ void gic_init_bases(unsigned int, int, void __iomem *, void __iomem *,
+ 		    u32 offset, struct device_node *);
+-int gic_of_init(struct device_node *node, struct device_node *parent);
+ void gic_secondary_init(unsigned int);
+ void gic_cascade_irq(unsigned int gic_nr, unsigned int irq);
+ 
+diff --git a/arch/arm/mach-exynos/common.c b/arch/arm/mach-exynos/common.c
+index 5ccd6e8..a487079 100644
+--- a/arch/arm/mach-exynos/common.c
++++ b/arch/arm/mach-exynos/common.c
+@@ -19,6 +19,7 @@
+ #include <linux/serial_core.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
++#include <linux/irqchip.h>
+ 
+ #include <asm/proc-fns.h>
+ #include <asm/exception.h>
+@@ -507,13 +508,6 @@ static void __init combiner_init(unsigned int combiner_nr, void __iomem *base,
+ 	}
+ }
+ 
+-#ifdef CONFIG_OF
+-static const struct of_device_id exynos4_dt_irq_match[] = {
+-	{ .compatible = "arm,cortex-a9-gic", .data = gic_of_init, },
+-	{},
+-};
+-#endif
+-
+ void __init exynos4_init_irq(void)
+ {
+ 	int irq;
+@@ -525,7 +519,7 @@ void __init exynos4_init_irq(void)
+ 		gic_init_bases(0, IRQ_PPI(0), S5P_VA_GIC_DIST, S5P_VA_GIC_CPU, gic_bank_offset, NULL);
+ #ifdef CONFIG_OF
+ 	else
+-		of_irq_init(exynos4_dt_irq_match);
++		irqchip_init();
+ #endif
+ 
+ 	for (irq = 0; irq < EXYNOS4_MAX_COMBINER_NR; irq++) {
+@@ -548,7 +542,7 @@ void __init exynos5_init_irq(void)
+ 	int irq;
+ 
+ #ifdef CONFIG_OF
+-	of_irq_init(exynos4_dt_irq_match);
++	irqchip_init();
+ #endif
+ 
+ 	for (irq = 0; irq < EXYNOS5_MAX_COMBINER_NR; irq++) {
+diff --git a/arch/arm/mach-highbank/highbank.c b/arch/arm/mach-highbank/highbank.c
+index 8e29c43..42f456e 100644
+--- a/arch/arm/mach-highbank/highbank.c
++++ b/arch/arm/mach-highbank/highbank.c
+@@ -17,6 +17,7 @@
+ #include <linux/clkdev.h>
+ #include <linux/io.h>
+ #include <linux/irq.h>
++#include <linux/irqchip.h>
+ #include <linux/irqdomain.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+@@ -30,7 +31,6 @@
+ #include <asm/smp_twd.h>
+ #include <asm/hardware/arm_timer.h>
+ #include <asm/hardware/timer-sp.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/cache-l2x0.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+@@ -80,14 +80,9 @@ void highbank_set_cpu_jump(int cpu, void *jump_addr)
+ 			  HB_JUMP_TABLE_PHYS(cpu) + 15);
+ }
+ 
+-const static struct of_device_id irq_match[] = {
+-	{ .compatible = "arm,cortex-a9-gic", .data = gic_of_init, },
+-	{}
+-};
+-
+ static void __init highbank_init_irq(void)
+ {
+-	of_irq_init(irq_match);
++	irqchip_init();
+ 	l2x0_of_init(0, ~0UL);
+ }
+ 
+diff --git a/arch/arm/mach-imx/mach-imx6q.c b/arch/arm/mach-imx/mach-imx6q.c
+index 7e9f159..7f75f95 100644
+--- a/arch/arm/mach-imx/mach-imx6q.c
++++ b/arch/arm/mach-imx/mach-imx6q.c
+@@ -15,6 +15,7 @@
+ #include <linux/io.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/irqchip.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+@@ -23,7 +24,6 @@
+ #include <linux/micrel_phy.h>
+ #include <asm/smp_twd.h>
+ #include <asm/hardware/cache-l2x0.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/time.h>
+ #include <asm/system_misc.h>
+@@ -106,7 +106,6 @@ static int __init imx6q_gpio_add_irq_domain(struct device_node *np,
+ }
+ 
+ static const struct of_device_id imx6q_irq_match[] __initconst = {
+-	{ .compatible = "arm,cortex-a9-gic", .data = gic_of_init, },
+ 	{ .compatible = "fsl,imx6q-gpio", .data = imx6q_gpio_add_irq_domain, },
+ 	{ /* sentinel */ }
+ };
+@@ -116,6 +115,7 @@ static void __init imx6q_init_irq(void)
+ 	l2x0_of_init(0, ~0UL);
+ 	imx_src_init();
+ 	imx_gpc_init();
++	irqchip_init();
+ 	of_irq_init(imx6q_irq_match);
+ }
+ 
+diff --git a/arch/arm/mach-shmobile/setup-emev2.c b/arch/arm/mach-shmobile/setup-emev2.c
+index 8fcfae7..8aa0ba2 100644
+--- a/arch/arm/mach-shmobile/setup-emev2.c
++++ b/arch/arm/mach-shmobile/setup-emev2.c
+@@ -20,13 +20,13 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
++#include <linux/irqchip.h>
+ #include <linux/platform_device.h>
+ #include <linux/platform_data/gpio-em.h>
+ #include <linux/of_platform.h>
+ #include <linux/delay.h>
+ #include <linux/input.h>
+ #include <linux/io.h>
+-#include <linux/of_irq.h>
+ #include <mach/hardware.h>
+ #include <mach/common.h>
+ #include <mach/emev2.h>
+@@ -424,26 +424,16 @@ void __init emev2_add_standard_devices_dt(void)
+ 			     emev2_auxdata_lookup, NULL);
+ }
+ 
+-static const struct of_device_id emev2_dt_irq_match[] = {
+-	{ .compatible = "arm,cortex-a9-gic", .data = gic_of_init, },
+-	{},
+-};
+-
+ static const char *emev2_boards_compat_dt[] __initdata = {
+ 	"renesas,emev2",
+ 	NULL,
+ };
+ 
+-void __init emev2_init_irq_dt(void)
+-{
+-	of_irq_init(emev2_dt_irq_match);
+-}
+-
+ DT_MACHINE_START(EMEV2_DT, "Generic Emma Mobile EV2 (Flattened Device Tree)")
+ 	.smp		= smp_ops(emev2_smp_ops),
+ 	.init_early	= emev2_init_delay,
+ 	.nr_irqs	= NR_IRQS_LEGACY,
+-	.init_irq	= emev2_init_irq_dt,
++	.init_irq	= irqchip_init,
+ 	.init_machine	= emev2_add_standard_devices_dt,
+ 	.timer		= &shmobile_timer,
+ 	.dt_compat	= emev2_boards_compat_dt,
+diff --git a/arch/arm/mach-tegra/common.c b/arch/arm/mach-tegra/common.c
+index 22df10f..e3f5052 100644
+--- a/arch/arm/mach-tegra/common.c
++++ b/arch/arm/mach-tegra/common.c
+@@ -21,10 +21,9 @@
+ #include <linux/io.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+-#include <linux/of_irq.h>
++#include <linux/irqchip.h>
+ 
+ #include <asm/hardware/cache-l2x0.h>
+-#include <asm/hardware/gic.h>
+ 
+ #include <mach/iomap.h>
+ #include <mach/powergate.h>
+@@ -52,15 +51,10 @@ u32 tegra_uart_config[3] = {
+ };
+ 
+ #ifdef CONFIG_OF
+-static const struct of_device_id tegra_dt_irq_match[] __initconst = {
+-	{ .compatible = "arm,cortex-a9-gic", .data = gic_of_init },
+-	{ }
+-};
+-
+ void __init tegra_dt_init_irq(void)
+ {
+ 	tegra_init_irq();
+-	of_irq_init(tegra_dt_irq_match);
++	irqchip_init();
+ }
+ #endif
+ 
+diff --git a/arch/arm/mach-ux500/cpu.c b/arch/arm/mach-ux500/cpu.c
+index d11f389..3932906 100644
+--- a/arch/arm/mach-ux500/cpu.c
++++ b/arch/arm/mach-ux500/cpu.c
+@@ -18,6 +18,7 @@
+ #include <linux/stat.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
++#include <linux/irqchip.h>
+ 
+ #include <asm/hardware/gic.h>
+ #include <asm/mach/map.h>
+@@ -30,11 +31,6 @@
+ 
+ void __iomem *_PRCMU_BASE;
+ 
+-static const struct of_device_id ux500_dt_irq_match[] = {
+-	{ .compatible = "arm,cortex-a9-gic", .data = gic_of_init, },
+-	{},
+-};
+-
+ void __init ux500_init_irq(void)
+ {
+ 	void __iomem *dist_base;
+@@ -51,7 +47,7 @@ void __init ux500_init_irq(void)
+ 
+ #ifdef CONFIG_OF
+ 	if (of_have_populated_dt())
+-		of_irq_init(ux500_dt_irq_match);
++		irqchip_init();
+ 	else
+ #endif
+ 		gic_init(0, 29, dist_base, cpu_base);
+diff --git a/arch/arm/mach-vexpress/v2m.c b/arch/arm/mach-vexpress/v2m.c
+index aa82608..30f3a6a 100644
+--- a/arch/arm/mach-vexpress/v2m.c
++++ b/arch/arm/mach-vexpress/v2m.c
+@@ -6,6 +6,7 @@
+ #include <linux/amba/mmci.h>
+ #include <linux/io.h>
+ #include <linux/init.h>
++#include <linux/irqchip.h>
+ #include <linux/of_address.h>
+ #include <linux/of_fdt.h>
+ #include <linux/of_irq.h>
+@@ -26,7 +27,6 @@
+ #include <asm/mach/time.h>
+ #include <asm/hardware/arm_timer.h>
+ #include <asm/hardware/cache-l2x0.h>
+-#include <asm/hardware/gic.h>
+ #include <asm/hardware/timer-sp.h>
+ #include <asm/hardware/sp810.h>
+ #include <asm/hardware/gic.h>
+@@ -618,16 +618,6 @@ void __init v2m_dt_init_early(void)
+ 	versatile_sched_clock_init(v2m_sysreg_base + V2M_SYS_24MHZ, 24000000);
+ }
+ 
+-static  struct of_device_id vexpress_irq_match[] __initdata = {
+-	{ .compatible = "arm,cortex-a9-gic", .data = gic_of_init, },
+-	{}
+-};
+-
+-static void __init v2m_dt_init_irq(void)
+-{
+-	of_irq_init(vexpress_irq_match);
+-}
+-
+ static void __init v2m_dt_timer_init(void)
+ {
+ 	struct device_node *node;
+@@ -676,7 +666,7 @@ DT_MACHINE_START(VEXPRESS_DT, "ARM-Versatile Express")
+ 	.dt_compat	= v2m_dt_match,
+ 	.map_io		= v2m_dt_map_io,
+ 	.init_early	= v2m_dt_init_early,
+-	.init_irq	= v2m_dt_init_irq,
++	.init_irq	= irqchip_init,
+ 	.timer		= &v2m_dt_timer,
+ 	.init_machine	= v2m_dt_init,
+ 	.restart	= v2m_restart,
+-- 
+1.8.3.2
+

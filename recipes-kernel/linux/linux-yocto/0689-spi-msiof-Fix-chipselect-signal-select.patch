@@ -1,0 +1,41 @@
+From ccccdc90a38dbcce8635cc2d2c1860eee5cdf2c8 Mon Sep 17 00:00:00 2001
+From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+Date: Fri, 28 Jun 2013 09:35:00 +0900
+Subject: [PATCH 0689/1083] spi: msiof: Fix chipselect signal select
+
+The chipselect signal does not use GPIO when the controller_data
+member of the spi_board_info structure is not set.
+
+Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+(cherry picked from commit c61368b88fe6e45338ea41c6c5e4ba8917945609)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/spi/spi-sh-msiof.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index 1f466bc..edf5144 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -1,6 +1,7 @@
+ /*
+  * SuperH MSIOF SPI Master Interface
+  *
++ * Copyright (c) 2013 Renesas Electronics Corporation
+  * Copyright (c) 2009 Magnus Damm
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -420,7 +421,8 @@ static void sh_msiof_spi_chipselect(struct spi_device *spi, int is_on)
+ 	}
+ 
+ 	/* use spi->controller data for CS (same strategy as spi_gpio) */
+-	gpio_set_value((unsigned)spi->controller_data, value);
++	if (spi->controller_data)
++		gpio_set_value((unsigned)spi->controller_data, value);
+ 
+ 	if (is_on == BITBANG_CS_INACTIVE) {
+ 		if (test_and_clear_bit(0, &p->flags)) {
+-- 
+1.8.3.2
+

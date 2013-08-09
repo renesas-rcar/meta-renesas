@@ -1,0 +1,82 @@
+From 2e6e1d5efbbbc6c3e81a56e90b793cbef0157589 Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Thu, 27 Dec 2012 13:10:24 -0600
+Subject: [PATCH 0550/1083] irqchip: Move ARM gic.h to
+ include/linux/irqchip/arm-gic.h
+
+Now that we have GIC moved to drivers/irqchip and all GIC DT init for
+platforms using irqchip_init, move gic.h and update the remaining
+includes.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Anton Vorontsov <avorontsov@mvista.com>
+Cc: Kukjin Kim <kgene.kim@samsung.com>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: David Brown <davidb@codeaurora.org>
+Cc: Daniel Walker <dwalker@fifo99.com>
+Cc: Bryan Huntsman <bryanh@codeaurora.org>
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Paul Mundt <lethal@linux-sh.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: Shiraz Hashim <shiraz.hashim@st.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+(cherry picked from commit 520f7bd73354f003a9a59937b28e4903d985c420)
+
+Conflicts:
+        arch/arm/mach-exynos/common.c
+        arch/arm/mach-msm/board-msm8960.c
+        arch/arm/mach-msm/board-msm8x60.c
+        arch/arm/mach-omap2/board-4430sdp.c
+        arch/arm/mach-omap2/board-omap4panda.c
+        arch/arm/mach-omap2/omap4-common.c
+        arch/arm/mach-realview/realview_eb.c
+        arch/arm/mach-realview/realview_pb1176.c
+        arch/arm/mach-realview/realview_pb11mp.c
+        arch/arm/mach-realview/realview_pba8.c
+        arch/arm/mach-realview/realview_pbx.c
+        arch/arm/mach-shmobile/board-ag5evm.c
+        arch/arm/mach-shmobile/smp-sh73a0.c
+        arch/arm/mach-socfpga/platsmp.c
+        arch/arm/mach-spear13xx/platsmp.c
+        arch/arm/mach-tegra/board-dt-tegra20.c
+        arch/arm/mach-tegra/board-harmony.c
+        arch/arm/mach-tegra/board-paz00.c
+        arch/arm/mach-tegra/board-seaboard.c
+        arch/arm/mach-tegra/board-trimslice.c
+        arch/arm/mach-ux500/board-u5500.c
+        arch/arm/mach-ux500/cpu.c
+        arch/arm/mach-vexpress/ct-ca9x4.c
+        arch/arm/mach-vexpress/v2m.c
+        arch/arm/mach-zynq/common.c
+        drivers/mfd/db8500-prcmu.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 3c5ba9adbb0cc38c28138cf3f9f6e0537204bec1)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/irqchip/irq-gic.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 4978a44..3507a60 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -47,8 +47,6 @@
+ 
+ #include "irqchip.h"
+ 
+-#include "irqchip.h"
+-
+ union gic_base {
+ 	void __iomem *common_base;
+ 	void __percpu __iomem **percpu_base;
+-- 
+1.8.3.2
+

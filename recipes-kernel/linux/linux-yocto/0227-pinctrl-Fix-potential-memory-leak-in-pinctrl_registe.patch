@@ -1,0 +1,37 @@
+From 66f80e1947b240e3f7c5d12285f497267a50a65b Mon Sep 17 00:00:00 2001
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Date: Tue, 25 Sep 2012 12:41:40 +0530
+Subject: [PATCH 0227/1083] pinctrl: Fix potential memory leak in
+ pinctrl_register_one_pin()
+
+'pindesc' was not freed when returning from an error induced
+exit path.
+
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit eb26cc9c71f81f44777bbf5ca1bd72aa76997786)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pinctrl/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
+index f7faf80..3fa50fe 100644
+--- a/drivers/pinctrl/core.c
++++ b/drivers/pinctrl/core.c
+@@ -230,8 +230,10 @@ static int pinctrl_register_one_pin(struct pinctrl_dev *pctldev,
+ 		pindesc->name = name;
+ 	} else {
+ 		pindesc->name = kasprintf(GFP_KERNEL, "PIN%u", number);
+-		if (pindesc->name == NULL)
++		if (pindesc->name == NULL) {
++			kfree(pindesc);
+ 			return -ENOMEM;
++		}
+ 		pindesc->dynamic_name = true;
+ 	}
+ 
+-- 
+1.8.3.2
+

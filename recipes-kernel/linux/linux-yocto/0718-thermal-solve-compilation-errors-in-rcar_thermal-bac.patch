@@ -1,0 +1,35 @@
+From 04bed1388b2f17edc05d338581b6ce89c8a87af5 Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 26 Jun 2013 11:29:36 +0900
+Subject: [PATCH 0718/1083] thermal: solve compilation errors in rcar_thermal
+ backport
+
+This is a glue patch to allow rcar_thermal to compile
+against ltsi-3.4.25.
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 015b648383672df0ec82fbadb265511726844cd0)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/thermal/rcar_thermal.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/thermal/rcar_thermal.c b/drivers/thermal/rcar_thermal.c
+index f7a1b57..2496b4f 100644
+--- a/drivers/thermal/rcar_thermal.c
++++ b/drivers/thermal/rcar_thermal.c
+@@ -210,8 +210,8 @@ static int rcar_thermal_probe(struct platform_device *pdev)
+ 		goto error_free_priv;
+ 	}
+ 
+-	zone = thermal_zone_device_register("rcar_thermal", 0, 0, priv,
+-					    &rcar_thermal_zone_ops, 0, 0);
++	zone = thermal_zone_device_register("rcar_thermal", 0, priv,
++					    &rcar_thermal_zone_ops, 0, 0, 0, 0);
+ 	if (IS_ERR(zone)) {
+ 		dev_err(&pdev->dev, "thermal zone device is NULL\n");
+ 		ret = PTR_ERR(zone);
+-- 
+1.8.3.2
+

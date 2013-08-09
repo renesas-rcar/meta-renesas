@@ -1,0 +1,64 @@
+From fce4d0675760db7f5fe29cb3bd991f087faec80c Mon Sep 17 00:00:00 2001
+From: Takashi Iwai <tiwai@suse.de>
+Date: Mon, 23 Apr 2012 17:40:33 +0100
+Subject: [PATCH 0022/1083] drm/edid: Add a workaround for 1366x768 HD panel
+
+HD panel (1366x768) found most commonly on laptops can't be represented
+exactly in CVT/DMT expression, which leads to 1368x768 instead, because
+1366 can't be divided by 8.
+
+Add a hack to convert to 1366x768 manually as an exception.
+
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+Acked-by: Adam Jackson <ajax@redhat.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit c09dedb7a50e23f0166e0bbae61c75c7ec23cf7f)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index e8ef017..261b766 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -1039,6 +1039,19 @@ drm_dmt_modes_for_range(struct drm_connector *connector, struct edid *edid,
+ 	return modes;
+ }
+ 
++/* fix up 1366x768 mode from 1368x768;
++ * GFT/CVT can't express 1366 width which isn't dividable by 8
++ */
++static void fixup_mode_1366x768(struct drm_display_mode *mode)
++{
++	if (mode->hdisplay == 1368 && mode->vdisplay == 768) {
++		mode->hdisplay = 1366;
++		mode->hsync_start--;
++		mode->hsync_end--;
++		drm_mode_set_name(mode);
++	}
++}
++
+ static int
+ drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
+ 			struct detailed_timing *timing)
+@@ -1053,6 +1066,7 @@ drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
+ 		if (!newmode)
+ 			return modes;
+ 
++		fixup_mode_1366x768(newmode);
+ 		if (!mode_in_range(newmode, edid, timing)) {
+ 			drm_mode_destroy(dev, newmode);
+ 			continue;
+@@ -1080,6 +1094,7 @@ drm_cvt_modes_for_range(struct drm_connector *connector, struct edid *edid,
+ 		if (!newmode)
+ 			return modes;
+ 
++		fixup_mode_1366x768(newmode);
+ 		if (!mode_in_range(newmode, edid, timing)) {
+ 			drm_mode_destroy(dev, newmode);
+ 			continue;
+-- 
+1.8.3.2
+

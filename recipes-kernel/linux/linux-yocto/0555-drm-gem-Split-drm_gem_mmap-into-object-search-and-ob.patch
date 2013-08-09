@@ -1,0 +1,124 @@
+From 94861e73c82398921c761b7e800c25d30b36a93b Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 16 Apr 2013 14:14:52 +0200
+Subject: [PATCH 0555/1083] drm/gem: Split drm_gem_mmap() into object search
+ and object mapping
+
+The drm_gem_mmap() function first finds the GEM object to be mapped
+based on the fake mmap offset and then maps the object. Split the object
+mapping code into a standalone drm_gem_mmap_obj() function that can be
+used to implement dma-buf mmap() operations.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 3b4127b8b3dd535a0fe02e9d996fbd3f72ff5e97)
+
+Conflicts:
+	drivers/gpu/drm/drm_gem.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 7ad81a43cf3d8be040754e23a5ada746668ab6b8)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_gem.c | 57 +++++++++++++++++++++++++----------------------
+ include/drm/drmP.h        |  2 ++
+ 2 files changed, 32 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_gem.c b/drivers/gpu/drm/drm_gem.c
+index 72ba075..b382686 100644
+--- a/drivers/gpu/drm/drm_gem.c
++++ b/drivers/gpu/drm/drm_gem.c
+@@ -643,6 +643,35 @@ void drm_gem_vm_close(struct vm_area_struct *vma)
+ }
+ EXPORT_SYMBOL(drm_gem_vm_close);
+ 
++int drm_gem_mmap_obj(struct drm_gem_object *obj, unsigned long obj_size,
++		     struct vm_area_struct *vma)
++{
++	struct drm_device *dev = obj->dev;
++
++	/* Check for valid size. */
++	if (obj_size < vma->vm_end - vma->vm_start)
++		return -EINVAL;
++
++	if (!dev->driver->gem_vm_ops)
++		return -EINVAL;
++
++	vma->vm_flags |= VM_RESERVED | VM_IO | VM_PFNMAP | VM_DONTEXPAND;
++	vma->vm_ops = dev->driver->gem_vm_ops;
++	vma->vm_private_data = obj;
++	vma->vm_page_prot =  pgprot_writecombine(vm_get_page_prot(vma->vm_flags));
++
++	/* Take a ref for this mapping of the object, so that the fault
++	 * handler can dereference the mmap offset's pointer to the object.
++	 * This reference is cleaned up by the corresponding vm_close
++	 * (which should happen whether the vma was created by this call, or
++	 * by a vm_open due to mremap or partial unmap or whatever).
++	 */
++	drm_gem_object_reference(obj);
++
++	drm_vm_open_locked(dev, vma);
++	return 0;
++}
++EXPORT_SYMBOL(drm_gem_mmap_obj);
+ 
+ /**
+  * drm_gem_mmap - memory map routine for GEM objects
+@@ -664,7 +693,6 @@ int drm_gem_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	struct drm_device *dev = priv->minor->dev;
+ 	struct drm_gem_mm *mm = dev->mm_private;
+ 	struct drm_local_map *map = NULL;
+-	struct drm_gem_object *obj;
+ 	struct drm_hash_item *hash;
+ 	int ret = 0;
+ 
+@@ -685,32 +713,7 @@ int drm_gem_mmap(struct file *filp, struct vm_area_struct *vma)
+ 		goto out_unlock;
+ 	}
+ 
+-	/* Check for valid size. */
+-	if (map->size < vma->vm_end - vma->vm_start) {
+-		ret = -EINVAL;
+-		goto out_unlock;
+-	}
+-
+-	obj = map->handle;
+-	if (!obj->dev->driver->gem_vm_ops) {
+-		ret = -EINVAL;
+-		goto out_unlock;
+-	}
+-
+-	vma->vm_flags |= VM_RESERVED | VM_IO | VM_PFNMAP | VM_DONTEXPAND;
+-	vma->vm_ops = obj->dev->driver->gem_vm_ops;
+-	vma->vm_private_data = map->handle;
+-	vma->vm_page_prot =  pgprot_writecombine(vm_get_page_prot(vma->vm_flags));
+-
+-	/* Take a ref for this mapping of the object, so that the fault
+-	 * handler can dereference the mmap offset's pointer to the object.
+-	 * This reference is cleaned up by the corresponding vm_close
+-	 * (which should happen whether the vma was created by this call, or
+-	 * by a vm_open due to mremap or partial unmap or whatever).
+-	 */
+-	drm_gem_object_reference(obj);
+-
+-	drm_vm_open_locked(dev, vma);
++	ret = drm_gem_mmap_obj(map->handle, map->size, vma);
+ 
+ out_unlock:
+ 	mutex_unlock(&dev->struct_mutex);
+diff --git a/include/drm/drmP.h b/include/drm/drmP.h
+index a0a6131..1920936 100644
+--- a/include/drm/drmP.h
++++ b/include/drm/drmP.h
+@@ -1622,6 +1622,8 @@ int drm_gem_private_object_init(struct drm_device *dev,
+ void drm_gem_object_handle_free(struct drm_gem_object *obj);
+ void drm_gem_vm_open(struct vm_area_struct *vma);
+ void drm_gem_vm_close(struct vm_area_struct *vma);
++int drm_gem_mmap_obj(struct drm_gem_object *obj, unsigned long obj_size,
++		     struct vm_area_struct *vma);
+ int drm_gem_mmap(struct file *filp, struct vm_area_struct *vma);
+ 
+ #include "drm_global.h"
+-- 
+1.8.3.2
+

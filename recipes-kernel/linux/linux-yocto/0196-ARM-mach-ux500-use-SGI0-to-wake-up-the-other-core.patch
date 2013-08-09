@@ -1,0 +1,36 @@
+From 5ec71b5f26e4c28a5f4177f97c3a99cd5c046dae Mon Sep 17 00:00:00 2001
+From: Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>
+Date: Fri, 2 Nov 2012 18:14:34 +0530
+Subject: [PATCH 0196/1083] ARM: mach-ux500: use SGI0 to wake up the other core
+
+The commit 7d28e3eaa1a8e951251b942e7220f97114bd73b9
+("ARM: ux500: wake secondary cpu via resched") makes use
+of schedule IPI to wake up the secondary core which seems
+incorrect. Rather use SGI0.
+
+Signed-off-by: srinidhi kasagar <srinidhi.kasagar@stericsson.com>
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Acked-by: Olof Johansson <olof@lixom.net>
+(cherry picked from commit 902ef5d77aeaff43bce8d3ce55c442a12eb71819)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-ux500/platsmp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-ux500/platsmp.c b/arch/arm/mach-ux500/platsmp.c
+index eff5842..7f35ed2 100644
+--- a/arch/arm/mach-ux500/platsmp.c
++++ b/arch/arm/mach-ux500/platsmp.c
+@@ -99,7 +99,7 @@ int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
+ 	 */
+ 	write_pen_release(cpu_logical_map(cpu));
+ 
+-	smp_send_reschedule(cpu);
++	gic_raise_softirq(cpumask_of(cpu), 0);
+ 
+ 	timeout = jiffies + (1 * HZ);
+ 	while (time_before(jiffies, timeout)) {
+-- 
+1.8.3.2
+

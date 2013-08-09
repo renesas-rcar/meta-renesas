@@ -1,0 +1,141 @@
+From e9b61aee4e122d6c10fac3d400dae5aaa3ccbf06 Mon Sep 17 00:00:00 2001
+From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+Date: Mon, 29 Jul 2013 20:00:15 +0900
+Subject: [PATCH 0782/1083] ARM: shmobile: r8a7791: Add SATA driver support
+
+Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7791.c | 17 +++++++++++
+ arch/arm/mach-shmobile/setup-r8a7791.c | 53 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 70 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
+index 0741b8b..b3e1548 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7791.c
++++ b/arch/arm/mach-shmobile/clock-r8a7791.c
+@@ -104,6 +104,16 @@ SH_FIXED_RATIO_CLK_SET(p_clk,			pll1_clk,	1, 24);
+ 
+ SH_FIXED_RATIO_CLK_SET(mp_clk,			pll1_div2_clk,	1, 15);
+ 
++static struct clk sata0_clk = {
++	.rate		= 100000000,
++	.mapping	= &cpg_mapping,
++};
++
++static struct clk sata1_clk = {
++	.rate		= 100000000,
++	.mapping	= &cpg_mapping,
++};
++
+ static struct clk *main_clks[] = {
+ 	&extal_clk,
+ 	&extal_div2_clk,
+@@ -116,6 +126,8 @@ static struct clk *main_clks[] = {
+ 	&p_clk,
+ 	&mp_clk,
+ 	&cp_clk,
++	&sata0_clk,
++	&sata1_clk,
+ };
+ 
+ /* DIV6 clocks */
+@@ -136,6 +148,7 @@ enum {
+ 	MSTP502, MSTP501,
+ 	MSTP721, MSTP720,
+ 	MSTP719, MSTP718, MSTP715, MSTP714,
++	MSTP815, MSTP814,
+ 	MSTP216, MSTP207, MSTP206,
+ 	MSTP204, MSTP203, MSTP202, MSTP1105, MSTP1106, MSTP1107,
+ 	MSTP704, MSTP703, MSTP328,
+@@ -157,6 +170,8 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP718] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 18, 0), /* SCIF3 */
+ 	[MSTP715] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 15, 0), /* SCIF4 */
+ 	[MSTP714] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 14, 0), /* SCIF5 */
++	[MSTP815] = SH_CLK_MSTP32(&sata0_clk, SMSTPCR8, 15, 0),
++	[MSTP814] = SH_CLK_MSTP32(&sata1_clk, SMSTPCR8, 14, 0),
+ 	[MSTP216] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 16, 0), /* SCIFB2 */
+ 	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
+ 	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
+@@ -235,6 +250,8 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("i2c-rcar.5", &mstp_clks[MSTP925]),
+ 	CLKDEV_DEV_ID("ee200000.mmcif", &mstp_clks[MSTP315]),
+ 	CLKDEV_DEV_ID("sh_mmcif.0", &mstp_clks[MSTP315]),
++	CLKDEV_DEV_ID("sata_rcar.0", &mstp_clks[MSTP815]),
++	CLKDEV_DEV_ID("sata_rcar.1", &mstp_clks[MSTP814]),
+ };
+ 
+ #define R8A7791_CLOCK_ROOT(e, m, p0, p1, p30, p31)		\
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index 07a74ec..48ff9ea 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -1263,6 +1263,57 @@ static struct platform_device mmc_device = {
+ };
+ 
+ 
++/* SATA0 */
++static struct resource sata0_resources[] = {
++	[0] = {
++		.name	= "sata0",
++		.start  = 0xee300000,
++		.end    = (0xee500000 - 1),
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start  = gic_spi(105),
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device sata0_device = {
++	.name		= "sata_rcar",
++	.id		= 0,
++	.resource	= sata0_resources,
++	.num_resources	= ARRAY_SIZE(sata0_resources),
++	.dev = {
++		.dma_mask	= &sata0_device.dev.coherent_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++
++/* SATA1 */
++static struct resource sata1_resources[] = {
++	[0] = {
++		.name	= "sata1",
++		.start  = 0xee500000,
++		.end    = (0xee700000 - 1),
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start  = gic_spi(106),
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device sata1_device = {
++	.name		= "sata_rcar",
++	.id		= 1,
++	.resource	= sata1_resources,
++	.num_resources	= ARRAY_SIZE(sata1_resources),
++	.dev = {
++		.dma_mask	= &sata1_device.dev.coherent_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
+ static struct platform_device *r8a7791_early_devices[] __initdata = {
+ 	&eth_device,
+ 	&ehci0_device,
+@@ -1289,6 +1340,8 @@ static struct platform_device *r8a7791_early_devices[] __initdata = {
+ 	&sh_msiof1_device,
+ 	&sh_msiof2_device,
+ 	&mmc_device,
++	&sata0_device,
++	&sata1_device,
+ };
+ 
+ static struct renesas_irqc_config irqc0_data = {
+-- 
+1.8.3.2
+

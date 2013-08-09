@@ -1,0 +1,104 @@
+From fb7b236a943f6c919ba0edda7b6af60f522bf3fb Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Wed, 12 Jun 2013 16:10:00 +0900
+Subject: [PATCH 0488/1083] net: sh_eth: Add R8A7790 support
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+(cherry picked from commit bfd07ec019bf4df172dbbda8df4b031741147bcd)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/net/ethernet/renesas/Kconfig  | 3 ++-
+ drivers/net/ethernet/renesas/sh_eth.c | 8 ++++++--
+ drivers/net/ethernet/renesas/sh_eth.h | 7 +++++++
+ 3 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/Kconfig b/drivers/net/ethernet/renesas/Kconfig
+index 24c2305..07bad49 100644
+--- a/drivers/net/ethernet/renesas/Kconfig
++++ b/drivers/net/ethernet/renesas/Kconfig
+@@ -8,7 +8,8 @@ config SH_ETH
+ 		(CPU_SUBTYPE_SH7710 || CPU_SUBTYPE_SH7712 || \
+ 		 CPU_SUBTYPE_SH7763 || CPU_SUBTYPE_SH7619 || \
+ 		 CPU_SUBTYPE_SH7724 || CPU_SUBTYPE_SH7734 || \
+-		 CPU_SUBTYPE_SH7757 || ARCH_R8A7740 || ARCH_R8A7779)
++		 CPU_SUBTYPE_SH7757 || ARCH_R8A7740 || ARCH_R8A7779 || \
++		 ARCH_R8A7790 )
+ 	select CRC32
+ 	select NET_CORE
+ 	select MII
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index bad8f2e..9ed64da 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -1,6 +1,7 @@
+ /*
+  *  SuperH Ethernet device driver
+  *
++ *  Copyright (C) 2013 Renesas Electronics Corporation
+  *  Copyright (C) 2006-2012 Nobuhiro Iwamatsu
+  *  Copyright (C) 2008-2012 Renesas Solutions Corp.
+  *
+@@ -78,7 +79,8 @@ static void sh_eth_select_mii(struct net_device *ndev)
+ #endif
+ 
+ /* There is CPU dependent code */
+-#if defined(CONFIG_CPU_SUBTYPE_SH7724) || defined(CONFIG_ARCH_R8A7779)
++#if defined(CONFIG_CPU_SUBTYPE_SH7724) || defined(CONFIG_ARCH_R8A7779) \
++	|| defined(CONFIG_ARCH_R8A7790)
+ #define SH_ETH_RESET_DEFAULT	1
+ static void sh_eth_set_duplex(struct net_device *ndev)
+ {
+@@ -95,7 +97,7 @@ static void sh_eth_set_rate(struct net_device *ndev)
+ 	struct sh_eth_private *mdp = netdev_priv(ndev);
+ 	unsigned int bits = ECMR_RTM;
+ 
+-#if defined(CONFIG_ARCH_R8A7779)
++#if defined(CONFIG_ARCH_R8A7779) || defined(CONFIG_ARCH_R8A7790)
+ 	bits |= ECMR_ELB;
+ #endif
+ 
+@@ -976,6 +978,8 @@ static int sh_eth_dev_init(struct net_device *ndev, bool start)
+ 	if (ret)
+ 		goto out;
+ 
++	sh_eth_write(ndev, 0x1, RMIIMODE);
++
+ 	/* Descriptor format */
+ 	sh_eth_ring_format(ndev);
+ 	if (mdp->cd->rpadir)
+diff --git a/drivers/net/ethernet/renesas/sh_eth.h b/drivers/net/ethernet/renesas/sh_eth.h
+index bae84fd..2026fc6 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.h
++++ b/drivers/net/ethernet/renesas/sh_eth.h
+@@ -1,6 +1,7 @@
+ /*
+  *  SuperH Ethernet device driver
+  *
++ *  Copyright (C) 2013 Renesas Electronics Corporation
+  *  Copyright (C) 2006-2012 Nobuhiro Iwamatsu
+  *  Copyright (C) 2008-2012 Renesas Solutions Corp.
+  *
+@@ -60,6 +61,9 @@ enum {
+ 	EDOCR,
+ 	TFUCR,
+ 	RFOCR,
++#if defined(CONFIG_ARCH_R8A7790)
++	RMIIMODE,
++#endif
+ 	FCFTR,
+ 	RPADIR,
+ 	TRIMD,
+@@ -297,6 +301,9 @@ static const u16 sh_eth_offset_fast_sh4[SH_ETH_MAX_REGISTER_OFFSET] = {
+ 	[RMCR]	= 0x0058,
+ 	[TFUCR]	= 0x0064,
+ 	[RFOCR]	= 0x0068,
++#if defined(CONFIG_ARCH_R8A7790)
++	[RMIIMODE]	= 0x006c,
++#endif
+ 	[FCFTR]	= 0x0070,
+ 	[RPADIR]	= 0x0078,
+ 	[TRIMD]	= 0x007c,
+-- 
+1.8.3.2
+

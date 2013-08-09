@@ -1,0 +1,47 @@
+From 308aa2d7e703152a1758a7281d313f06e7c02ebc Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:19 +0900
+Subject: [PATCH 0938/1083] Revert "drm/rcar-du: Add missing alpha plane
+ register definitions"
+
+This reverts commit 2bb54b86c78679cd9e76e201dde66fcda5834d5a.
+(cherry picked from commit 6d96a2d6a9045546bc59e58c7512427d1c75a7a5)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h | 15 ---------------
+ 1 file changed, 15 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+index 3aba27f..69f21f1 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_regs.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -349,25 +349,10 @@
+ #define APnMR_BM_AD		(2 << 4)	/* Auto Display Change Mode */
+ 
+ #define APnMWR			0x0a104
+-
+-#define APnDSXR			0x0a110
+-#define APnDSYR			0x0a114
+-#define APnDPXR			0x0a118
+-#define APnDPYR			0x0a11c
+-
+ #define APnDSA0R		0x0a120
+ #define APnDSA1R		0x0a124
+ #define APnDSA2R		0x0a128
+-
+-#define APnSPXR			0x0a130
+-#define APnSPYR			0x0a134
+-#define APnWASPR		0x0a138
+-#define APnWAMWR		0x0a13c
+-
+-#define APnBTR			0x0a140
+-
+ #define APnMLR			0x0a150
+-#define APnSWAPR		0x0a180
+ 
+ /* -----------------------------------------------------------------------------
+  * Display Capture Registers
+-- 
+1.8.3.2
+

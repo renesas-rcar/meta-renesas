@@ -1,0 +1,33 @@
+From 3e1ba3a72d1a612bdcb522ef7e77256b7ecaf89e Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 26 Jun 2013 17:54:23 +0900
+Subject: [PATCH 0698/1083] ARM: shmobile: defconfig: Increase
+ FORCE_MAX_ZONEORDER for r8a7790
+
+The maximum size of the allocation buffer is changed from 16MB to 32MB
+by setting of CONFIG_FORCE_MAX_ZONEORDER.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit 80cd7a407a30afcfed2f73b10e0e24f168ad6939)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index bddb49e..0fcd646 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -38,7 +38,7 @@ CONFIG_NR_CPUS=4
+ CONFIG_LOCAL_TIMERS=y
+ CONFIG_AEABI=y
+ # CONFIG_OABI_COMPAT is not set
+-CONFIG_FORCE_MAX_ZONEORDER=13
++CONFIG_FORCE_MAX_ZONEORDER=14
+ CONFIG_ZBOOT_ROM_TEXT=0x0
+ CONFIG_ZBOOT_ROM_BSS=0x0
+ CONFIG_ARM_APPENDED_DTB=y
+-- 
+1.8.3.2
+

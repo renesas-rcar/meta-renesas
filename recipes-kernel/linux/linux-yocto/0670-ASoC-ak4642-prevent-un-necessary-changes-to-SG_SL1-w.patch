@@ -1,0 +1,37 @@
+From d2db213db763dfbec27a57aee407d54ee446a7a1 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 10 Jul 2012 08:28:33 +0100
+Subject: [PATCH 0670/1083] ASoC: ak4642: prevent un-necessary changes to
+ SG_SL1 which provide for a confusing mixer experience
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+
+If you record the sound during playback, the playback sound becoms silent.
+Modify so that the codec driver does not clear DACL bit of SG_SL1 register
+for playback.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit 323f1d60a727021f1fcc34092efe8e2c539bf0c0)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ sound/soc/codecs/ak4642.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/codecs/ak4642.c b/sound/soc/codecs/ak4642.c
+index b3e24f2..a5fbdd4 100644
+--- a/sound/soc/codecs/ak4642.c
++++ b/sound/soc/codecs/ak4642.c
+@@ -262,7 +262,8 @@ static int ak4642_dai_startup(struct snd_pcm_substream *substream,
+ 		 * This operation came from example code of
+ 		 * "ASAHI KASEI AK4642" (japanese) manual p94.
+ 		 */
+-		snd_soc_write(codec, SG_SL1, PMMP | MGAIN0);
++		snd_soc_update_bits(codec, SG_SL1, PMMP, PMMP);
++		snd_soc_update_bits(codec, SG_SL1, MGAIN0, MGAIN0);
+ 		snd_soc_write(codec, TIMER, ZTM(0x3) | WTM(0x3));
+ 		snd_soc_write(codec, ALC_CTL1, ALC | LMTH0);
+ 		snd_soc_update_bits(codec, PW_MGMT1, PMADL, PMADL);
+-- 
+1.8.3.2
+

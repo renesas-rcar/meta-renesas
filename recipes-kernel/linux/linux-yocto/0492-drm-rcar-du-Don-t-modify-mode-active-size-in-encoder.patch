@@ -1,0 +1,42 @@
+From c44227cb1ab98e7feb052d5acaac0bb3b29b7ba4 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 17 Jun 2013 10:36:55 +0900
+Subject: [PATCH 0492/1083] drm: rcar-du: Don't modify mode active size in
+ encoder fixup
+
+The mode fixup operation isn't allowed to modify the mode active size.
+Reject modes with an active size that doesn't match the LVDS panel
+resolution.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit 4ea0d9bd027f9fd0604a8b0653df26eb90c97db6)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+index 8a3ef36..7aefe72 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+@@ -166,9 +166,15 @@ static bool rcar_du_lvds_encoder_mode_fixup(struct drm_encoder *encoder,
+ 		return false;
+ 	}
+ 
+-	/* The flat panel mode is fixed, just copy it to the adjusted mode. */
+ 	panel_mode = list_first_entry(&connector->modes,
+ 				      struct drm_display_mode, head);
++
++	/* We're not allowed to modify the resolution. */
++	if (mode->hdisplay != panel_mode->hdisplay ||
++	    mode->vdisplay != panel_mode->vdisplay)
++		return false;
++
++	/* The flat panel mode is fixed, just copy it to the adjusted mode. */
+ 	drm_mode_copy(adjusted_mode, panel_mode);
+ 
+ 	return true;
+-- 
+1.8.3.2
+

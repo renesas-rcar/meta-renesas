@@ -1,0 +1,67 @@
+From 8e096f0c1358febfa5b1b45d3bb9e245f724705e Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Fri, 21 Dec 2012 15:11:38 -0800
+Subject: [PATCH 0899/1083] Drivers: clocksource: remove __dev* attributes.
+
+CONFIG_HOTPLUG is going away as an option.  As a result, the __dev*
+markings need to be removed.
+
+This change removes the use of __devinit, __devexit_p, __devinitdata,
+__devinitconst, and __devexit from these drivers.
+
+Based on patches originally written by Bill Pemberton, but redone by me
+in order to handle some of the coding style issues better, by hand.
+
+Cc: Bill Pemberton <wfp5p@virginia.edu>
+Cc: John Stultz <johnstul@us.ibm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit 1850514b3ebde0f5eeedbe918a7d0d344b752653)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	drivers/clocksource/sh_tmu.c
+	drivers/clocksource/em_sti.c
+	drivers/clocksource/sh_mtu2.c
+	drivers/clocksource/acpi_pm.c
+(cherry picked from commit c2e1db2fb08b404ec106b3452eaacd5c82712643)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/clocksource/sh_cmt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/clocksource/sh_cmt.c b/drivers/clocksource/sh_cmt.c
+index 98b06ba..48fb800 100644
+--- a/drivers/clocksource/sh_cmt.c
++++ b/drivers/clocksource/sh_cmt.c
+@@ -685,7 +685,7 @@ err0:
+ 	return ret;
+ }
+ 
+-static int __devinit sh_cmt_probe(struct platform_device *pdev)
++static int sh_cmt_probe(struct platform_device *pdev)
+ {
+ 	struct sh_cmt_priv *p = platform_get_drvdata(pdev);
+ 	int ret;
+@@ -712,14 +712,14 @@ static int __devinit sh_cmt_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
+-static int __devexit sh_cmt_remove(struct platform_device *pdev)
++static int sh_cmt_remove(struct platform_device *pdev)
+ {
+ 	return -EBUSY; /* cannot unregister clockevent and clocksource */
+ }
+ 
+ static struct platform_driver sh_cmt_device_driver = {
+ 	.probe		= sh_cmt_probe,
+-	.remove		= __devexit_p(sh_cmt_remove),
++	.remove		= sh_cmt_remove,
+ 	.driver		= {
+ 		.name	= "sh_cmt",
+ 	}
+-- 
+1.8.3.2
+

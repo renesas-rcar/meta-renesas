@@ -1,0 +1,64 @@
+From b2e4d2a2c0554d637ca3dba43d30e43cd787cc3c Mon Sep 17 00:00:00 2001
+From: Paulo Zanoni <paulo.r.zanoni@intel.com>
+Date: Fri, 23 Nov 2012 12:09:26 -0200
+Subject: [PATCH 0100/1083] drm: add drm_mode_cea_vic
+
+This function returns the VIC of the mode. This value can be used when
+creating AVI InfoFrames.
+
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=50371
+Signed-off-by: Paulo Zanoni <paulo.r.zanoni@intel.com>
+Reviewed-by: Thierry Reding <thierry.reding@avionic-design.de>
+Acked-by: Dave Airlie <airlied@gmail.com>
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+(cherry picked from commit 374a868a726eb8a1cb28ba88805e51ce34222f8d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid.c | 19 +++++++++++++++++++
+ include/drm/drm_crtc.h     |  1 +
+ 2 files changed, 20 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index baa85a1..dbad86a 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -2079,3 +2079,22 @@ int drm_add_modes_noedid(struct drm_connector *connector,
+ 	return num_modes;
+ }
+ EXPORT_SYMBOL(drm_add_modes_noedid);
++
++/**
++ * drm_mode_cea_vic - return the CEA-861 VIC of a given mode
++ * @mode: mode
++ *
++ * RETURNS:
++ * The VIC number, 0 in case it's not a CEA-861 mode.
++ */
++uint8_t drm_mode_cea_vic(const struct drm_display_mode *mode)
++{
++	uint8_t i;
++
++	for (i = 0; i < drm_num_cea_modes; i++)
++		if (drm_mode_equal(mode, &edid_cea_modes[i]))
++			return i + 1;
++
++	return 0;
++}
++EXPORT_SYMBOL(drm_mode_cea_vic);
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index c0635b7..3538eda 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -1055,6 +1055,7 @@ extern struct drm_display_mode *drm_gtf_mode_complex(struct drm_device *dev,
+ 				int GTF_2C, int GTF_K, int GTF_2J);
+ extern int drm_add_modes_noedid(struct drm_connector *connector,
+ 				int hdisplay, int vdisplay);
++extern uint8_t drm_mode_cea_vic(const struct drm_display_mode *mode);
+ 
+ extern int drm_edid_header_is_valid(const u8 *raw_edid);
+ extern bool drm_edid_block_valid(u8 *raw_edid, int block, bool print_bad_edid);
+-- 
+1.8.3.2
+

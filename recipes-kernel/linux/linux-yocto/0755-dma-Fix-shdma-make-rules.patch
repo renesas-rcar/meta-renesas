@@ -1,0 +1,30 @@
+From d4fb9cda4ad7bf7cc5b984af3530983fb53eaa5d Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Fri, 26 Jul 2013 16:22:36 +0900
+Subject: [PATCH 0755/1083] dma: Fix shdma make rules
+
+The make rules of sh directory is changed into CONFIG_SH_DMAE_BASE
+and CONFIG_SH_DMAEPP_BASE dependance.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ drivers/dma/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/dma/Makefile b/drivers/dma/Makefile
+index 59c10e5..e78cbd7 100644
+--- a/drivers/dma/Makefile
++++ b/drivers/dma/Makefile
+@@ -14,7 +14,8 @@ obj-$(CONFIG_DW_DMAC) += dw_dmac.o
+ obj-$(CONFIG_AT_HDMAC) += at_hdmac.o
+ obj-$(CONFIG_MX3_IPU) += ipu/
+ obj-$(CONFIG_TXX9_DMAC) += txx9dmac.o
+-obj-$(CONFIG_SH_DMAE) += sh/
++obj-$(CONFIG_SH_DMAE_BASE) += sh/
++obj-$(CONFIG_SH_DMAEPP_BASE) += sh/
+ obj-$(CONFIG_COH901318) += coh901318.o coh901318_lli.o
+ obj-$(CONFIG_AMCC_PPC440SPE_ADMA) += ppc4xx/
+ obj-$(CONFIG_IMX_SDMA) += imx-sdma.o
+-- 
+1.8.3.2
+

@@ -1,0 +1,86 @@
+From 0aafda86844df11a59f8071aa508a64777da13ad Mon Sep 17 00:00:00 2001
+From: Adam Jackson <ajax@redhat.com>
+Date: Mon, 16 Apr 2012 10:40:08 -0400
+Subject: [PATCH 0024/1083] drm/edid: Try harder to fix up base EDID blocks
+
+Requiring the first byte of the EDID base block header to be 0 means we
+don't fix up as many transfer errors as we could.  Instead have the
+callers specify whether it's meant to be block 0 or not, and
+conditionally run header fixup based on that.
+
+Bugzilla: https://bugzilla.redhat.com/812890
+Signed-off-by: Adam Jackson <ajax@redhat.com>
+Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit f89ec8a456dde7f18a13de77b4d79e6b05ca7c84)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid.c | 10 +++++-----
+ include/drm/drm_crtc.h     |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index 261b766..f93a784 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -149,13 +149,13 @@ EXPORT_SYMBOL(drm_edid_header_is_valid);
+  * Sanity check the EDID block (base or extension).  Return 0 if the block
+  * doesn't check out, or 1 if it's valid.
+  */
+-bool drm_edid_block_valid(u8 *raw_edid)
++bool drm_edid_block_valid(u8 *raw_edid, int block)
+ {
+ 	int i;
+ 	u8 csum = 0;
+ 	struct edid *edid = (struct edid *)raw_edid;
+ 
+-	if (raw_edid[0] == 0x00) {
++	if (block == 0) {
+ 		int score = drm_edid_header_is_valid(raw_edid);
+ 		if (score == 8) ;
+ 		else if (score >= 6) {
+@@ -219,7 +219,7 @@ bool drm_edid_is_valid(struct edid *edid)
+ 		return false;
+ 
+ 	for (i = 0; i <= edid->extensions; i++)
+-		if (!drm_edid_block_valid(raw + i * EDID_LENGTH))
++		if (!drm_edid_block_valid(raw + i * EDID_LENGTH, i))
+ 			return false;
+ 
+ 	return true;
+@@ -299,7 +299,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ 	for (i = 0; i < 4; i++) {
+ 		if (drm_do_probe_ddc_edid(adapter, block, 0, EDID_LENGTH))
+ 			goto out;
+-		if (drm_edid_block_valid(block))
++		if (drm_edid_block_valid(block, 0))
+ 			break;
+ 		if (i == 0 && drm_edid_is_zero(block, EDID_LENGTH)) {
+ 			connector->null_edid_counter++;
+@@ -324,7 +324,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ 				  block + (valid_extensions + 1) * EDID_LENGTH,
+ 				  j, EDID_LENGTH))
+ 				goto out;
+-			if (drm_edid_block_valid(block + (valid_extensions + 1) * EDID_LENGTH)) {
++			if (drm_edid_block_valid(block + (valid_extensions + 1) * EDID_LENGTH, j)) {
+ 				valid_extensions++;
+ 				break;
+ 			}
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 6f5faf6..f35e7ed 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -1012,7 +1012,7 @@ extern int drm_add_modes_noedid(struct drm_connector *connector,
+ 				int hdisplay, int vdisplay);
+ 
+ extern int drm_edid_header_is_valid(const u8 *raw_edid);
+-extern bool drm_edid_block_valid(u8 *raw_edid);
++extern bool drm_edid_block_valid(u8 *raw_edid, int block);
+ extern bool drm_edid_is_valid(struct edid *edid);
+ struct drm_display_mode *drm_mode_find_dmt(struct drm_device *dev,
+ 					   int hsize, int vsize, int fresh,
+-- 
+1.8.3.2
+

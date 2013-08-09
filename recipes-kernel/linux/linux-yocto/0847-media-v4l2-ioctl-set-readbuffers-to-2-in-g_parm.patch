@@ -1,0 +1,35 @@
+From 1da169b80ed9d08e4ec164852da6c161b3c11a3b Mon Sep 17 00:00:00 2001
+From: Hans Verkuil <hans.verkuil@cisco.com>
+Date: Fri, 25 May 2012 11:51:31 -0300
+Subject: [PATCH 0847/1083] [media] v4l2-ioctl: set readbuffers to 2 in g_parm
+
+If g_parm is handled automatically, then set readbuffers to 2, which is the
+minimum number of buffers videobuf uses.
+
+Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+(cherry picked from commit 0c142c86991551b8b9675ab72609f7a29ee2e1e3)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 66e4be12ca855938d012e98429a5146f33eafc1e)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/media/video/v4l2-ioctl.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/video/v4l2-ioctl.c b/drivers/media/video/v4l2-ioctl.c
+index 91be4e8..d7fa896 100644
+--- a/drivers/media/video/v4l2-ioctl.c
++++ b/drivers/media/video/v4l2-ioctl.c
+@@ -1680,6 +1680,7 @@ static long __video_do_ioctl(struct file *file,
+ 				break;
+ 
+ 			ret = 0;
++			p->parm.capture.readbuffers = 2;
+ 			if (ops->vidioc_g_std)
+ 				ret = ops->vidioc_g_std(file, fh, &std);
+ 			if (ret == 0)
+-- 
+1.8.3.2
+

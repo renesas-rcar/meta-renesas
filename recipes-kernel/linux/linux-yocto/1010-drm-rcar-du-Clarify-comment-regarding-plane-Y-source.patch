@@ -1,0 +1,43 @@
+From 6698f5a0eb5cb596fe36c2651d615cadd6ef7362 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 14 Jun 2013 20:54:16 +0200
+Subject: [PATCH 1010/1083] drm/rcar-du: Clarify comment regarding plane Y
+ source coordinate
+
+The R8A7790 DU documentation contains further information regarding the
+plane Y source coordinate. Update the comment accordingly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit c704def13532687e562cde86153c7ae00bf405f3)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 667ad314e24177f3267a69b34ffbe5a64ca11e0b)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index a65f81d..38ebd20 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -103,9 +103,12 @@ void rcar_du_plane_update_base(struct rcar_du_plane *plane)
+ 	struct rcar_du_device *rcdu = plane->dev;
+ 	unsigned int index = plane->hwindex;
+ 
+-	/* According to the datasheet the Y position is expressed in raster line
+-	 * units. However, 32bpp formats seem to require a doubled Y position
+-	 * value. Similarly, for the second plane, NV12 and NV21 formats seem to
++	/* The Y position is expressed in raster line units and must be doubled
++	 * for 32bpp formats, according to the R8A7790 datasheet. No mention of
++	 * doubling the Y position is found in the R8A7779 datasheet, but the
++	 * rule seems to apply there as well.
++	 *
++	 * Similarly, for the second plane, NV12 and NV21 formats seem to
+ 	 * require a halved Y position value.
+ 	 */
+ 	rcar_du_plane_write(rcdu, index, PnSPXR, plane->src_x);
+-- 
+1.8.3.2
+

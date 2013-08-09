@@ -1,0 +1,460 @@
+From 5f525de1313c538cf5254333df89b9ca1573dafc Mon Sep 17 00:00:00 2001
+From: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+Date: Mon, 29 Jul 2013 18:45:35 +0900
+Subject: [PATCH 0776/1083] ARM: shmobile: r8a7791: Add USB driver support
+
+Signed-off-by: Yoshikazu Fujikawa <yoshikazu.fujikawa.ue@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7791.c |   7 +
+ arch/arm/mach-shmobile/setup-r8a7791.c | 361 +++++++++++++++++++++++++++++++++
+ drivers/usb/Kconfig                    |   3 +
+ 3 files changed, 371 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
+index 90c11e2..c6f94d5 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7791.c
++++ b/arch/arm/mach-shmobile/clock-r8a7791.c
+@@ -127,6 +127,7 @@ enum {
+ 	MSTP719, MSTP718, MSTP715, MSTP714,
+ 	MSTP216, MSTP207, MSTP206,
+ 	MSTP204, MSTP203, MSTP202, MSTP1105, MSTP1106, MSTP1107,
++	MSTP704, MSTP703, MSTP328,
+ 	MSTP000, MSTP208, MSTP205,
+ 	MSTP917,
+ 	MSTP931, MSTP930, MSTP929, MSTP928, MSTP927, MSTP925,
+@@ -153,6 +154,9 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP1105] = SH_CLK_MSTP32(&mp_clk, SMSTPCR11, 5, 0), /* SCIFA3 */
+ 	[MSTP1106] = SH_CLK_MSTP32(&mp_clk, SMSTPCR11, 6, 0), /* SCIFA4 */
+ 	[MSTP1107] = SH_CLK_MSTP32(&mp_clk, SMSTPCR11, 7, 0), /* SCIFA5 */
++	[MSTP704] = SH_CLK_MSTP32(&mp_clk, SMSTPCR7, 4, 0), /* HSUSB */
++	[MSTP703] = SH_CLK_MSTP32(&mp_clk, SMSTPCR7, 3, 0), /* EHCI */
++	[MSTP328] = SH_CLK_MSTP32(&mp_clk, SMSTPCR3, 28, 0), /* SSUSB */
+ 	[MSTP917] = SH_CLK_MSTP32(&qspi_clk, SMSTPCR9, 17, 0), /* QSPI */
+ 	[MSTP000] = SH_CLK_MSTP32(&mp_clk, SMSTPCR0, 0, 0), /* MSIOF0 */
+ 	[MSTP208] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 8, 0), /* MSIOF1 */
+@@ -201,6 +205,9 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh-sci.14", &mstp_clks[MSTP1105]), /* SCIFA3 */
+ 	CLKDEV_DEV_ID("sh-sci.15", &mstp_clks[MSTP1106]), /* SCIFA4 */
+ 	CLKDEV_DEV_ID("sh-sci.16", &mstp_clks[MSTP1107]), /* SCIFA5 */
++	CLKDEV_CON_ID("hs_usb", &mstp_clks[MSTP704]), /* HSUSB */
++	CLKDEV_CON_ID("usb_fck", &mstp_clks[MSTP703]), /* ECHI */
++	CLKDEV_CON_ID("ss_usb", &mstp_clks[MSTP328]), /* SSUSB */
+ 	CLKDEV_DEV_ID("qspi.0", &mstp_clks[MSTP917]),
+ 	CLKDEV_DEV_ID("spi_sh_msiof.1", &mstp_clks[MSTP000]),
+ 	CLKDEV_DEV_ID("spi_sh_msiof.2", &mstp_clks[MSTP208]),
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index 10dc5ab..2c8d21c 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -208,6 +208,358 @@ static struct platform_device eth_device = {
+ 	.resource = eth_resources,
+ };
+ 
++static u64 usb_dmamask = ~(u32)0;
++
++struct usb_ehci_pdata ehci_pdata = {
++	.caps_offset	= 0,
++	.has_tt		= 0,
++};
++
++struct usb_ohci_pdata ohci_pdata = {
++};
++
++static struct resource ehci0_resources[] = {
++	[0] = {
++		.start	= 0xee080000 + 0x1000,
++		.end	= 0xee080000 + 0x1000 + 0x0fff - 1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(108),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++struct platform_device ehci0_device = {
++	.name	= "ehci-platform",
++	.id	= 0,
++	.dev	= {
++		.platform_data		= &ehci_pdata,
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++	},
++	.num_resources	= ARRAY_SIZE(ehci0_resources),
++	.resource	= ehci0_resources,
++};
++
++static struct resource ohci0_resources[] = {
++	[0] = {
++		.start	= 0xee080000,
++		.end	= 0xee080000 + 0x0fff - 1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(108),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++struct platform_device ohci0_device = {
++	.name	= "ohci-platform",
++	.id	= 0,
++	.dev	= {
++		.platform_data		= &ohci_pdata,
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++	},
++	.num_resources	= ARRAY_SIZE(ohci0_resources),
++	.resource	= ohci0_resources,
++};
++
++static struct resource ehci1_resources[] = {
++	[0] = {
++		.start	= 0xee0c0000 + 0x1000,
++		.end	= 0xee0c0000 + 0x1000 + 0x0fff - 1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(113),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++struct platform_device ehci1_device = {
++	.name	= "ehci-platform",
++	.id	= 1,
++	.dev	= {
++		.platform_data		= &ehci_pdata,
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++	},
++	.num_resources	= ARRAY_SIZE(ehci1_resources),
++	.resource	= ehci1_resources,
++};
++
++static struct resource ohci1_resources[] = {
++	[0] = {
++		.start	= 0xee0c0000,
++		.end	= 0xee0c0000 + 0x0fff - 1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(113),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++struct platform_device ohci1_device = {
++	.name	= "ohci-platform",
++	.id	= 1,
++	.dev	= {
++		.platform_data		= &ohci_pdata,
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++	},
++	.num_resources	= ARRAY_SIZE(ohci1_resources),
++	.resource	= ohci1_resources,
++};
++
++static struct resource xhci0_resources[] = {
++	[0] = {
++		.start	= SHUSBH_XHCI_BASE,
++		.end	= SHUSBH_XHCI_BASE + SHUSBH_XHCI_SIZE - 1,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(101),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++struct platform_device xhci0_device = {
++	.name	= "xhci-hcd",
++	.id	= 0,
++	.dev	= {
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++	},
++	.num_resources	= ARRAY_SIZE(xhci0_resources),
++	.resource	= xhci0_resources,
++};
++
++static void __init usbh_internal_pci_bridge_init(int ch)
++{
++	u32 data;
++	void __iomem *ahbpci_base;
++	void __iomem *pci_conf_ahbpci_bas;
++
++	ahbpci_base =
++		ioremap_nocache((AHBPCI_BASE + (ch * 0x20000)), 0x400);
++	if (!ahbpci_base)
++		return;
++
++	pci_conf_ahbpci_bas =
++		ioremap_nocache((PCI_CONF_AHBPCI_BAS + (ch * 0x20000)),
++								0x100);
++	if (!pci_conf_ahbpci_bas)
++		goto err_iounmap_ahbpci;
++
++	/* Clock & Reset & Direct Power Down */
++	data = ioread32(ahbpci_base + USBCTR);
++	data &= ~(DIRPD);
++	iowrite32(data, (ahbpci_base + USBCTR));
++
++	data &= ~(PLL_RST | PCICLK_MASK | USBH_RST);
++	iowrite32(data | PCI_AHB_WIN1_SIZE_1G, (ahbpci_base + USBCTR));
++
++	data = ioread32((ahbpci_base + AHB_BUS_CTR));
++	if (data == AHB_BUS_CTR_SET)
++		goto err_iounmap_pci_conf;
++
++	/****** AHB-PCI Bridge Communication Registers ******/
++	/* AHB_BUS_CTR */
++	iowrite32(AHB_BUS_CTR_SET, (ahbpci_base + AHB_BUS_CTR));
++
++	/* PCIAHB_WIN1_CTR */
++	iowrite32((0x40000000 | PREFETCH),
++			(ahbpci_base + PCIAHB_WIN1_CTR));
++
++	/* AHBPCI_WIN2_CTR */
++	iowrite32((SHUSBH_OHCI_BASE | PCIWIN2_PCICMD),
++			(ahbpci_base + AHBPCI_WIN2_CTR));
++
++	/* PCI_ARBITER_CTR */
++	data = ioread32((ahbpci_base + PCI_ARBITER_CTR));
++	data |= (PCIBP_MODE | PCIREQ1 | PCIREQ0);
++	iowrite32(data, (ahbpci_base + PCI_ARBITER_CTR));
++
++	/* AHBPCI_WIN1_CTR : set PCI Configuratin Register for AHBPCI */
++	iowrite32(PCIWIN1_PCICMD | AHB_CFG_AHBPCI,
++			(ahbpci_base + AHBPCI_WIN1_CTR));
++
++	/****** PCI Configuration Registers for AHBPCI ******/
++	/* BASEAD */
++	iowrite32(AHBPCI_BASE, (pci_conf_ahbpci_bas + BASEAD));
++
++	/* WIN1_BASEAD */
++	iowrite32(0x40000000, (pci_conf_ahbpci_bas + WIN1_BASEAD));
++
++	/* System error enable, Parity error enable, PCI Master enable, */
++	/* Memory cycle enable */
++	iowrite32(((ioread32(pci_conf_ahbpci_bas + CMND_STS) & ~0x00100000)
++			| (SERREN | PERREN | MASTEREN | MEMEN)),
++			(pci_conf_ahbpci_bas + CMND_STS));
++
++	/****** PCI Configuration Registers for OHCI/EHCI ******/
++	iowrite32(PCIWIN1_PCICMD | AHB_CFG_HOST,
++			(ahbpci_base + AHBPCI_WIN1_CTR));
++
++err_iounmap_pci_conf:
++	iounmap(pci_conf_ahbpci_bas);
++err_iounmap_ahbpci:
++	iounmap(ahbpci_base);
++
++}
++
++static int __init usbh_ohci_init(int ch)
++{
++	u32 val;
++	int retval;
++
++	void __iomem *pci_conf_ohci_base
++		= ioremap_nocache((PCI_CONF_OHCI_BASE + (ch * 0x20000)),
++								0x100);
++
++	if (!pci_conf_ohci_base)
++		return -ENOMEM;
++
++	val = ioread32((pci_conf_ohci_base + OHCI_VID_DID));
++
++	if (val == OHCI_ID) {
++		/* OHCI_BASEAD */
++		iowrite32(SHUSBH_OHCI_BASE,
++				(pci_conf_ohci_base + OHCI_BASEAD));
++		retval = 0;
++
++		/* System error enable, Parity error enable, */
++		/* PCI Master enable, Memory cycle enable */
++		iowrite32(ioread32(pci_conf_ohci_base + OHCI_CMND_STS)
++				| (SERREN | PERREN | MASTEREN | MEMEN),
++				(pci_conf_ohci_base + OHCI_CMND_STS));
++	} else {
++		printk(KERN_ERR "Don't found OHCI controller. %x\n", val);
++		retval = -1;
++	}
++	iounmap(pci_conf_ohci_base);
++
++	return retval;
++}
++
++static int __init usbh_ehci_init(int ch)
++{
++	u32 val;
++	int retval;
++
++	void __iomem *pci_conf_ehci_base
++		= ioremap_nocache((PCI_CONF_EHCI_BASE + (ch * 0x20000)),
++								 0x100);
++
++	if (!pci_conf_ehci_base)
++		return -ENOMEM;
++
++	val = ioread32((pci_conf_ehci_base + EHCI_VID_DID));
++	if (val == EHCI_ID) {
++		/* EHCI_BASEAD */
++		iowrite32(SHUSBH_EHCI_BASE,
++				(pci_conf_ehci_base + EHCI_BASEAD));
++
++		/* System error enable, Parity error enable, */
++		/* PCI Master enable, Memory cycle enable */
++		iowrite32(ioread32(pci_conf_ehci_base + EHCI_CMND_STS) |
++				(SERREN | PERREN | MASTEREN | MEMEN),
++				(pci_conf_ehci_base + EHCI_CMND_STS));
++		retval = 0;
++	} else {
++		printk(KERN_ERR "Don't found EHCI controller. %x\n", val);
++		retval = -1;
++	}
++	iounmap(pci_conf_ehci_base);
++
++	return retval;
++}
++
++static void __init usbh_pci_int_enable(int ch)
++{
++	void __iomem *ahbpci_base =
++		ioremap_nocache((AHBPCI_BASE + (ch * 0x20000)), 0x400);
++	u32 data;
++
++	if (!ahbpci_base)
++		return;
++
++	/* PCI_INT_ENABLE */
++	data = ioread32((ahbpci_base + PCI_INT_ENABLE));
++	data |= USBH_PMEEN | USBH_INTBEN | USBH_INTAEN;
++	iowrite32(data, (ahbpci_base + PCI_INT_ENABLE));
++
++	iounmap(ahbpci_base);
++}
++
++static int __init usbh_init(void)
++{
++	struct clk *clk_hs, *clk_ehci;
++#if defined(CONFIG_USB_XHCI_HCD)
++	struct clk *clk_xhci;
++#endif /* CONFIG_USB_XHCI_HCD */
++	void __iomem *hs_usb = ioremap_nocache(0xE6590000, 0x1ff);
++	unsigned int ch;
++	int ret = 0;
++
++	if (!hs_usb)
++		return -ENOMEM;
++
++	clk_hs = clk_get(NULL, "hs_usb");
++	if (IS_ERR(clk_hs)) {
++		ret = PTR_ERR(clk_hs);
++		goto err_iounmap;
++	}
++
++	clk_ehci = clk_get(NULL, "usb_fck");
++	if (IS_ERR(clk_ehci)) {
++		ret = PTR_ERR(clk_ehci);
++		goto err_iounmap;
++	}
++
++	clk_enable(clk_hs);
++	clk_enable(clk_ehci);
++
++#if defined(CONFIG_USB_XHCI_HCD)
++	clk_xhci = clk_get(NULL, "ss_usb");
++	if (IS_ERR(clk_xhci)) {
++		ret = PTR_ERR(clk_xhci);
++		goto err_iounmap;
++	}
++
++	clk_enable(clk_xhci);
++
++	/* Select XHCI for ch2 and EHCI for ch0 */
++	iowrite32(0x80000011, (hs_usb + 0x184));
++#else
++	/* Set EHCI for UGCTRL2 */
++	iowrite32(0x00000011, (hs_usb + 0x184));
++#endif /* CONFIG_USB_XHCI_HCD */
++
++	for (ch = 0; ch < SHUSBH_MAX_CH; ch++) {
++		if (1 != ch) {
++			/* internal pci-bus bridge initialize */
++			usbh_internal_pci_bridge_init(ch);
++
++			/* ohci initialize */
++			usbh_ohci_init(ch);
++
++			/* ehci initialize */
++			usbh_ehci_init(ch);
++
++			/* pci int enable */
++			usbh_pci_int_enable(ch);
++		}
++	}
++err_iounmap:
++	iounmap(hs_usb);
++
++	return ret;
++}
++
+ /* I2C */
+ static struct i2c_rcar_platform_data i2c_pd[] = {
+ 	{
+@@ -861,6 +1213,14 @@ static struct platform_device sh_msiof2_device = {
+ 
+ static struct platform_device *r8a7791_early_devices[] __initdata = {
+ 	&eth_device,
++	&ehci0_device,
++	&ohci0_device,
++#if defined(CONFIG_USB_XHCI_HCD)
++	&xhci0_device,
++#else
++	&ehci1_device,
++	&ohci1_device,
++#endif /* CONFIG_USB_XHCI_HCD */
+ 	&i2c0_device,
+ 	&i2c1_device,
+ 	&i2c2_device,
+@@ -915,6 +1275,7 @@ void __init r8a7791_add_standard_devices(void)
+ 	r8a7791_register_scif(SCIFA4);
+ 	r8a7791_register_scif(SCIFA5);
+ 	r8a7791_register_irqc(0);
++	usbh_init();
+ 	platform_add_devices(r8a7791_early_devices,
+ 			     ARRAY_SIZE(r8a7791_early_devices));
+ }
+diff --git a/drivers/usb/Kconfig b/drivers/usb/Kconfig
+index df4e4bb..d4345f4 100644
+--- a/drivers/usb/Kconfig
++++ b/drivers/usb/Kconfig
+@@ -21,6 +21,7 @@ config USB_ARCH_HAS_OHCI
+ 	default y if PLAT_SPEAR
+ 	default y if ARCH_EXYNOS
+ 	default y if ARCH_R8A7790
++	default y if ARCH_R8A7791
+ 	# PPC:
+ 	default y if STB03xxx
+ 	default y if PPC_MPC52xx
+@@ -50,12 +51,14 @@ config USB_ARCH_HAS_EHCI
+ 	default y if ARCH_MMP
+ 	default y if MACH_LOONGSON1
+ 	default y if ARCH_R8A7790
++	default y if ARCH_R8A7791
+ 	default PCI
+ 
+ # some non-PCI HCDs implement xHCI
+ config USB_ARCH_HAS_XHCI
+ 	boolean
+ 	default y if ARCH_R8A7790
++	default y if ARCH_R8A7791
+ 	default PCI
+ 
+ menuconfig USB_SUPPORT
+-- 
+1.8.3.2
+

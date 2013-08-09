@@ -1,0 +1,26 @@
+From a7368205c4763185a72608fa887f63326a85e2b0 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 2 Aug 2013 10:00:45 +0900
+Subject: [PATCH 1080/1083] ARM: shmobile: lager: Enable DRM_FBDEV_CRTC in
+ defconfig
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm/configs/lager_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/configs/lager_defconfig b/arch/arm/configs/lager_defconfig
+index 44a6eeb..e534b6e 100644
+--- a/arch/arm/configs/lager_defconfig
++++ b/arch/arm/configs/lager_defconfig
+@@ -145,6 +145,7 @@ CONFIG_DRM=y
+ CONFIG_DRM_RCAR_DU=y
+ CONFIG_DRM_RCAR_LVDS=y
+ CONFIG_DRM_ADV7511=y
++CONFIG_DRM_FBDEV_CRTC=0
+ CONFIG_SPI=y
+ CONFIG_SPI_MASTER=y
+ CONFIG_SPI_QSPI=y
+-- 
+1.8.3.2
+

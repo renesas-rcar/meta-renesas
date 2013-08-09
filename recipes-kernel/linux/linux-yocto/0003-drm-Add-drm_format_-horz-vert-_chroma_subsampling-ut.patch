@@ -1,0 +1,105 @@
+From 81f107c1edd640422cd783045f096e8831ece5c8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
+Date: Thu, 5 Apr 2012 21:35:17 +0300
+Subject: [PATCH 0003/1083] drm: Add drm_format_{horz,
+ vert}_chroma_subsampling() utility functions
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+These functions return the chroma subsampling factors for the specified
+pixel format.
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 01b68b0483627631c738dcfca0dee7e22892c420)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_crtc.c | 60 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/drm/drm_crtc.h     |  2 ++
+ 2 files changed, 62 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 5d2f87b..d1d49e9 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -3545,3 +3545,63 @@ int drm_format_plane_cpp(uint32_t format, int plane)
+ 	}
+ }
+ EXPORT_SYMBOL(drm_format_plane_cpp);
++
++/**
++ * drm_format_horz_chroma_subsampling - get the horizontal chroma subsampling factor
++ * @format: pixel format (DRM_FORMAT_*)
++ *
++ * RETURNS:
++ * The horizontal chroma subsampling factor for the
++ * specified pixel format.
++ */
++int drm_format_horz_chroma_subsampling(uint32_t format)
++{
++	switch (format) {
++	case DRM_FORMAT_YUV411:
++	case DRM_FORMAT_YVU411:
++	case DRM_FORMAT_YUV410:
++	case DRM_FORMAT_YVU410:
++		return 4;
++	case DRM_FORMAT_YUYV:
++	case DRM_FORMAT_YVYU:
++	case DRM_FORMAT_UYVY:
++	case DRM_FORMAT_VYUY:
++	case DRM_FORMAT_NV12:
++	case DRM_FORMAT_NV21:
++	case DRM_FORMAT_NV16:
++	case DRM_FORMAT_NV61:
++	case DRM_FORMAT_YUV422:
++	case DRM_FORMAT_YVU422:
++	case DRM_FORMAT_YUV420:
++	case DRM_FORMAT_YVU420:
++		return 2;
++	default:
++		return 1;
++	}
++}
++EXPORT_SYMBOL(drm_format_horz_chroma_subsampling);
++
++/**
++ * drm_format_vert_chroma_subsampling - get the vertical chroma subsampling factor
++ * @format: pixel format (DRM_FORMAT_*)
++ *
++ * RETURNS:
++ * The vertical chroma subsampling factor for the
++ * specified pixel format.
++ */
++int drm_format_vert_chroma_subsampling(uint32_t format)
++{
++	switch (format) {
++	case DRM_FORMAT_YUV410:
++	case DRM_FORMAT_YVU410:
++		return 4;
++	case DRM_FORMAT_YUV420:
++	case DRM_FORMAT_YVU420:
++	case DRM_FORMAT_NV12:
++	case DRM_FORMAT_NV21:
++		return 2;
++	default:
++		return 1;
++	}
++}
++EXPORT_SYMBOL(drm_format_vert_chroma_subsampling);
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 2d128eb..2d63a02 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -1028,5 +1028,7 @@ extern void drm_fb_get_bpp_depth(uint32_t format, unsigned int *depth,
+ 				 int *bpp);
+ extern int drm_format_num_planes(uint32_t format);
+ extern int drm_format_plane_cpp(uint32_t format, int plane);
++extern int drm_format_horz_chroma_subsampling(uint32_t format);
++extern int drm_format_vert_chroma_subsampling(uint32_t format);
+ 
+ #endif /* __DRM_CRTC_H__ */
+-- 
+1.8.3.2
+

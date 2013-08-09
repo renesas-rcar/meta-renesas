@@ -1,0 +1,44 @@
+From 45bbf6a2fa0dbfa14520ac45dfc764e319fb99dc Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 26 Jul 2013 10:25:29 +0900
+Subject: [PATCH 1043/1083] drm: Add live source object
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit bc9d212e31c060f9d1f2f280a75e38e7ea916495)
+
+[horms+renesas@verge.net.au: This is a partial backport to add a hunk
+ missed from the previous backport of this change]
+Reported-by: 片岡亮 <ryo.kataoka.wt@renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	drivers/gpu/drm/drm_crtc.c
+	drivers/gpu/drm/drm_drv.c
+	include/drm/drm_crtc.h
+	include/uapi/drm/drm.h
+	include/uapi/drm/drm_mode.h
+(cherry picked from commit 9a114931f54368abebe0d23fb99803c42cd018ee)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_crtc.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 91aa04f..31441fc 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -1195,6 +1195,7 @@ void drm_mode_config_init(struct drm_device *dev)
+ 	INIT_LIST_HEAD(&dev->mode_config.property_list);
+ 	INIT_LIST_HEAD(&dev->mode_config.property_blob_list);
+ 	INIT_LIST_HEAD(&dev->mode_config.plane_list);
++	INIT_LIST_HEAD(&dev->mode_config.live_source_list);
+ 	idr_init(&dev->mode_config.crtc_idr);
+ 
+ 	drm_modeset_lock_all(dev);
+-- 
+1.8.3.2
+

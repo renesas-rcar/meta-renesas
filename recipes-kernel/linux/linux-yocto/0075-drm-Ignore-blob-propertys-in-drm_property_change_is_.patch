@@ -1,0 +1,40 @@
+From 58a3eeea4609d0b90fb084da4eb5f243ba0001d2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
+Date: Thu, 25 Oct 2012 18:05:06 +0000
+Subject: [PATCH 0075/1083] drm: Ignore blob propertys in
+ drm_property_change_is_valid()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+In case of a blob property drm_property_change_is_valid() can't
+tell whether the change is valid or not. So just return true
+for all blob properties, and leave it up to someone else to
+check it.
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit c4a56750ecbf2421ebd39f0fec562e1869a38d53)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_crtc.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index b094abe..54eca93 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -3213,6 +3213,9 @@ static bool drm_property_change_is_valid(struct drm_property *property,
+ 		for (i = 0; i < property->num_values; i++)
+ 			valid_mask |= (1ULL << property->values[i]);
+ 		return !(value & ~valid_mask);
++	} else if (property->flags & DRM_MODE_PROP_BLOB) {
++		/* Only the driver knows */
++		return true;
+ 	} else {
+ 		int i;
+ 		for (i = 0; i < property->num_values; i++)
+-- 
+1.8.3.2
+

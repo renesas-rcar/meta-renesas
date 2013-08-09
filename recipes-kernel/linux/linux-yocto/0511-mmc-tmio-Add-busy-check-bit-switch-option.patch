@@ -1,0 +1,67 @@
+From 82a97038348cfa11330d38a361ba0ce0930b98be Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Fri, 14 Jun 2013 15:02:10 +0900
+Subject: [PATCH 0511/1083] mmc: tmio: Add busy check bit switch option
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit bd4bbe0a6bf03f7127b60ea01cf1bd6c7b64e44d)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c | 18 +++++++++++++++---
+ include/linux/mfd/tmio.h        |  3 +++
+ 2 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index d05482b..7575473 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -470,6 +470,7 @@ void tmio_mmc_do_data_irq(struct tmio_mmc_host *host)
+ static void tmio_mmc_data_irq(struct tmio_mmc_host *host)
+ {
+ 	struct mmc_data *data;
++	struct tmio_mmc_data *pdata = host->pdata;
+ 	spin_lock(&host->lock);
+ 	data = host->data;
+ 
+@@ -485,9 +486,20 @@ static void tmio_mmc_data_irq(struct tmio_mmc_host *host)
+ 		 * DATAEND interrupt with the BUSY bit set, in this cases
+ 		 * waiting for one more interrupt fixes the problem.
+ 		 */
+-		if (!(sd_ctrl_read32(host, CTL_STATUS) & TMIO_STAT_CMD_BUSY)) {
+-			tmio_mmc_disable_mmc_irqs(host, TMIO_STAT_DATAEND);
+-			tasklet_schedule(&host->dma_complete);
++		if (pdata->flags & TMIO_MMC_CHECK_ILL_FUNC) {
++			if ((sd_ctrl_read32(host, CTL_STATUS)
++			& TMIO_STAT_ILL_FUNC)) {
++				tmio_mmc_disable_mmc_irqs(host,
++					TMIO_STAT_DATAEND);
++				tasklet_schedule(&host->dma_complete);
++			}
++		} else {
++			if (!(sd_ctrl_read32(host, CTL_STATUS)
++			& TMIO_STAT_CMD_BUSY)) {
++				tmio_mmc_disable_mmc_irqs(host,
++					TMIO_STAT_DATAEND);
++				tasklet_schedule(&host->dma_complete);
++			}
+ 		}
+ 	} else if (host->chan_rx && (data->flags & MMC_DATA_READ) && !host->force_pio) {
+ 		tmio_mmc_disable_mmc_irqs(host, TMIO_STAT_DATAEND);
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index 79d8a56..b1254b0 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -91,6 +91,9 @@
+ /* CTL_CLK_AND_WAIT_CTL register don't work. */
+ #define TMIO_MMC_NO_CTL_CLK_AND_WAIT_CTL	(1 << 8)
+ 
++/* Some controllers check the ILL_FUNC bit. */
++#define TMIO_MMC_CHECK_ILL_FUNC		(1 << 9)
++
+ int tmio_core_mmc_enable(void __iomem *cnf, int shift, unsigned long base);
+ int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
+ void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
+-- 
+1.8.3.2
+

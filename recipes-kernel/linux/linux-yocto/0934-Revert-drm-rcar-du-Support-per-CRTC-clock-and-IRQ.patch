@@ -1,0 +1,414 @@
+From 3bdd3313d2b765966de345ef651cba22588a340d Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:17 +0900
+Subject: [PATCH 0934/1083] Revert "drm/rcar-du: Support per-CRTC clock and
+ IRQ"
+
+This reverts commit 196e35f07df18886bf8df196ae4818daa2db6895.
+(cherry picked from commit 98911de2905dd7b64e1deaeb154f62e1a60423c6)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 120 ++++++++-------------------------
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h |   2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c  |  51 ++++++++++++--
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h  |   3 +-
+ 4 files changed, 75 insertions(+), 101 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 0da4b97..8538a0e 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -69,30 +69,6 @@ static void rcar_du_crtc_clr_set(struct rcar_du_crtc *rcrtc, u32 reg,
+ 	rcar_du_write(rcdu, rcrtc->mmio_offset + reg, (value & ~clr) | set);
+ }
+ 
+-static int rcar_du_crtc_get(struct rcar_du_crtc *rcrtc)
+-{
+-	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
+-	int ret;
+-
+-	ret = clk_prepare_enable(rcrtc->clock);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = rcar_du_get(rcdu);
+-	if (ret < 0)
+-		clk_disable_unprepare(rcrtc->clock);
+-
+-	return ret;
+-}
+-
+-static void rcar_du_crtc_put(struct rcar_du_crtc *rcrtc)
+-{
+-	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
+-
+-	rcar_du_put(rcdu);
+-	clk_disable_unprepare(rcrtc->clock);
+-}
+-
+ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ {
+ 	struct drm_crtc *crtc = &rcrtc->crtc;
+@@ -103,7 +79,7 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	u32 div;
+ 
+ 	/* Dot clock */
+-	clk = clk_get_rate(rcrtc->clock);
++	clk = clk_get_rate(rcdu->clock);
+ 	div = DIV_ROUND_CLOSEST(clk, mode->clock * 1000);
+ 	div = clamp(div, 1U, 64U) - 1;
+ 
+@@ -337,16 +313,20 @@ static void rcar_du_crtc_stop(struct rcar_du_crtc *rcrtc)
+ 
+ void rcar_du_crtc_suspend(struct rcar_du_crtc *rcrtc)
+ {
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
+ 	rcar_du_crtc_stop(rcrtc);
+-	rcar_du_crtc_put(rcrtc);
++	rcar_du_put(rcdu);
+ }
+ 
+ void rcar_du_crtc_resume(struct rcar_du_crtc *rcrtc)
+ {
++	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
++
+ 	if (rcrtc->dpms != DRM_MODE_DPMS_ON)
+ 		return;
+ 
+-	rcar_du_crtc_get(rcrtc);
++	rcar_du_get(rcdu);
+ 	rcar_du_crtc_start(rcrtc);
+ }
+ 
+@@ -360,17 +340,18 @@ static void rcar_du_crtc_update_base(struct rcar_du_crtc *rcrtc)
+ 
+ static void rcar_du_crtc_dpms(struct drm_crtc *crtc, int mode)
+ {
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+ 
+ 	if (rcrtc->dpms == mode)
+ 		return;
+ 
+ 	if (mode == DRM_MODE_DPMS_ON) {
+-		rcar_du_crtc_get(rcrtc);
++		rcar_du_get(rcdu);
+ 		rcar_du_crtc_start(rcrtc);
+ 	} else {
+ 		rcar_du_crtc_stop(rcrtc);
+-		rcar_du_crtc_put(rcrtc);
++		rcar_du_put(rcdu);
+ 	}
+ 
+ 	rcrtc->dpms = mode;
+@@ -386,12 +367,13 @@ static bool rcar_du_crtc_mode_fixup(struct drm_crtc *crtc,
+ 
+ static void rcar_du_crtc_mode_prepare(struct drm_crtc *crtc)
+ {
++	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+ 
+ 	/* We need to access the hardware during mode set, acquire a reference
+-	 * to the CRTC.
++	 * to the DU.
+ 	 */
+-	rcar_du_crtc_get(rcrtc);
++	rcar_du_get(rcdu);
+ 
+ 	/* Stop the CRTC and release the plane. Force the DPMS mode to off as a
+ 	 * result.
+@@ -441,10 +423,10 @@ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+ 
+ error:
+ 	/* There's no rollback/abort operation to clean up in case of error. We
+-	 * thus need to release the reference to the CRTC acquired in prepare()
++	 * thus need to release the reference to the DU acquired in prepare()
+ 	 * here.
+ 	 */
+-	rcar_du_crtc_put(rcrtc);
++	rcar_du_put(rcdu);
+ 	return ret;
+ }
+ 
+@@ -537,24 +519,6 @@ static void rcar_du_crtc_finish_page_flip(struct rcar_du_crtc *rcrtc)
+ 	drm_vblank_put(dev, rcrtc->index);
+ }
+ 
+-static irqreturn_t rcar_du_crtc_irq(int irq, void *arg)
+-{
+-	struct rcar_du_crtc *rcrtc = arg;
+-	irqreturn_t ret = IRQ_NONE;
+-	u32 status;
+-
+-	status = rcar_du_crtc_read(rcrtc, DSSR);
+-	rcar_du_crtc_write(rcrtc, DSRCR, status & DSRCR_MASK);
+-
+-	if (status & DSSR_VBK) {
+-		drm_handle_vblank(rcrtc->crtc.dev, rcrtc->index);
+-		rcar_du_crtc_finish_page_flip(rcrtc);
+-		ret = IRQ_HANDLED;
+-	}
+-
+-	return ret;
+-}
+-
+ static int rcar_du_crtc_page_flip(struct drm_crtc *crtc,
+ 				  struct drm_framebuffer *fb,
+ 				  struct drm_pending_vblank_event *event)
+@@ -592,29 +556,10 @@ static const struct drm_crtc_funcs crtc_funcs = {
+ 
+ int rcar_du_crtc_create(struct rcar_du_device *rcdu, unsigned int index)
+ {
+-	struct platform_device *pdev = to_platform_device(rcdu->dev);
+ 	struct rcar_du_crtc *rcrtc = &rcdu->crtcs[index];
+ 	struct drm_crtc *crtc = &rcrtc->crtc;
+-	unsigned int irqflags;
+-	char clk_name[5];
+-	char *name;
+-	int irq;
+ 	int ret;
+ 
+-	/* Get the CRTC clock. */
+-	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_CRTC_IRQ_CLOCK)) {
+-		sprintf(clk_name, "du.%u", index);
+-		name = clk_name;
+-	} else {
+-		name = NULL;
+-	}
+-
+-	rcrtc->clock = devm_clk_get(rcdu->dev, name);
+-	if (IS_ERR(rcrtc->clock)) {
+-		dev_err(rcdu->dev, "no clock for CRTC %u\n", index);
+-		return PTR_ERR(rcrtc->clock);
+-	}
+-
+ 	rcrtc->mmio_offset = index ? DISP2_REG_OFFSET : 0;
+ 	rcrtc->index = index;
+ 	rcrtc->dpms = DRM_MODE_DPMS_OFF;
+@@ -628,28 +573,6 @@ int rcar_du_crtc_create(struct rcar_du_device *rcdu, unsigned int index)
+ 
+ 	drm_crtc_helper_add(crtc, &crtc_helper_funcs);
+ 
+-	/* Register the interrupt handler. */
+-	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_CRTC_IRQ_CLOCK)) {
+-		irq = platform_get_irq(pdev, index);
+-		irqflags = 0;
+-	} else {
+-		irq = platform_get_irq(pdev, 0);
+-		irqflags = IRQF_SHARED;
+-	}
+-
+-	if (irq < 0) {
+-		dev_err(rcdu->dev, "no IRQ for CRTC %u\n", index);
+-		return ret;
+-	}
+-
+-	ret = devm_request_irq(rcdu->dev, irq, rcar_du_crtc_irq, irqflags,
+-			       dev_name(rcdu->dev), rcrtc);
+-	if (ret < 0) {
+-		dev_err(rcdu->dev,
+-			"failed to register IRQ for CRTC %u\n", index);
+-		return ret;
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -662,3 +585,16 @@ void rcar_du_crtc_enable_vblank(struct rcar_du_crtc *rcrtc, bool enable)
+ 		rcar_du_crtc_clr(rcrtc, DIER, DIER_VBE);
+ 	}
+ }
++
++void rcar_du_crtc_irq(struct rcar_du_crtc *rcrtc)
++{
++	u32 status;
++
++	status = rcar_du_crtc_read(rcrtc, DSSR);
++	rcar_du_crtc_write(rcrtc, DSRCR, status & DSRCR_MASK);
++
++	if (status & DSSR_VBK) {
++		drm_handle_vblank(rcrtc->crtc.dev, rcrtc->index);
++		rcar_du_crtc_finish_page_flip(rcrtc);
++	}
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+index 5b69e98..2a0365b 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+@@ -25,7 +25,6 @@ struct rcar_du_plane;
+ struct rcar_du_crtc {
+ 	struct drm_crtc crtc;
+ 
+-	struct clk *clock;
+ 	unsigned int mmio_offset;
+ 	unsigned int index;
+ 	bool started;
+@@ -39,6 +38,7 @@ struct rcar_du_crtc {
+ 
+ int rcar_du_crtc_create(struct rcar_du_device *rcdu, unsigned int index);
+ void rcar_du_crtc_enable_vblank(struct rcar_du_crtc *rcrtc, bool enable);
++void rcar_du_crtc_irq(struct rcar_du_crtc *rcrtc);
+ void rcar_du_crtc_cancel_page_flip(struct rcar_du_crtc *rcrtc,
+ 				   struct drm_file *file);
+ void rcar_du_crtc_suspend(struct rcar_du_crtc *rcrtc);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index d4ba800..69bd77a 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -36,8 +36,8 @@
+ /*
+  * rcar_du_get - Acquire a reference to the DU
+  *
+- * Acquiring the first  reference setups core registers. A reference must be
+- * held before accessing any hardware registers.
++ * Acquiring a reference enables the device clock and setup core registers. A
++ * reference must be held before accessing any hardware registers.
+  *
+  * This function must be called with the DRM mode_config lock held.
+  *
+@@ -45,9 +45,16 @@
+  */
+ int rcar_du_get(struct rcar_du_device *rcdu)
+ {
++	int ret;
++
+ 	if (rcdu->use_count)
+ 		goto done;
+ 
++	/* Enable clocks before accessing the hardware. */
++	ret = clk_prepare_enable(rcdu->clock);
++	if (ret < 0)
++		return ret;
++
+ 	/* Enable extended features */
+ 	rcar_du_write(rcdu, DEFR, DEFR_CODE | DEFR_DEFE);
+ 	rcar_du_write(rcdu, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
+@@ -68,11 +75,16 @@ done:
+ /*
+  * rcar_du_put - Release a reference to the DU
+  *
++ * Releasing the last reference disables the device clock.
++ *
+  * This function must be called with the DRM mode_config lock held.
+  */
+ void rcar_du_put(struct rcar_du_device *rcdu)
+ {
+-	--rcdu->use_count;
++	if (--rcdu->use_count)
++		return;
++
++	clk_disable_unprepare(rcdu->clock);
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -89,6 +101,7 @@ static int rcar_du_unload(struct drm_device *dev)
+ 	drm_kms_helper_poll_fini(dev);
+ 	drm_mode_config_cleanup(dev);
+ 	drm_vblank_cleanup(dev);
++	drm_irq_uninstall(dev);
+ 
+ 	dev->dev_private = NULL;
+ 
+@@ -120,7 +133,7 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 	rcdu->ddev = dev;
+ 	dev->dev_private = rcdu;
+ 
+-	/* I/O resources */
++	/* I/O resources and clocks */
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (mem == NULL) {
+ 		dev_err(&pdev->dev, "failed to get memory resource\n");
+@@ -133,6 +146,12 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 		return -ENOMEM;
+ 	}
+ 
++	rcdu->clock = devm_clk_get(&pdev->dev, NULL);
++	if (IS_ERR(rcdu->clock)) {
++		dev_err(&pdev->dev, "failed to get clock\n");
++		return -ENOENT;
++	}
++
+ 	/* DRM/KMS objects */
+ 	ret = rcar_du_modeset_init(rcdu);
+ 	if (ret < 0) {
+@@ -140,13 +159,19 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 		goto done;
+ 	}
+ 
+-	/* vblank handling */
++	/* IRQ and vblank handling */
+ 	ret = drm_vblank_init(dev, (1 << rcdu->num_crtcs) - 1);
+ 	if (ret < 0) {
+ 		dev_err(&pdev->dev, "failed to initialize vblank\n");
+ 		goto done;
+ 	}
+ 
++	ret = drm_irq_install(dev);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "failed to install IRQ handler\n");
++		goto done;
++	}
++
+ 	platform_set_drvdata(pdev, rcdu);
+ 
+ done:
+@@ -172,6 +197,18 @@ static void rcar_du_lastclose(struct drm_device *dev)
+ 	drm_fbdev_cma_restore_mode(rcdu->fbdev);
+ }
+ 
++static irqreturn_t rcar_du_irq(int irq, void *arg)
++{
++	struct drm_device *dev = arg;
++	struct rcar_du_device *rcdu = dev->dev_private;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i)
++		rcar_du_crtc_irq(&rcdu->crtcs[i]);
++
++	return IRQ_HANDLED;
++}
++
+ static int rcar_du_enable_vblank(struct drm_device *dev, int crtc)
+ {
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+@@ -204,11 +241,13 @@ static const struct file_operations rcar_du_fops = {
+ };
+ 
+ static struct drm_driver rcar_du_driver = {
+-	.driver_features	= DRIVER_GEM | DRIVER_MODESET | DRIVER_PRIME,
++	.driver_features	= DRIVER_HAVE_IRQ | DRIVER_GEM | DRIVER_MODESET
++				| DRIVER_PRIME,
+ 	.load			= rcar_du_load,
+ 	.unload			= rcar_du_unload,
+ 	.preclose		= rcar_du_preclose,
+ 	.lastclose		= rcar_du_lastclose,
++	.irq_handler		= rcar_du_irq,
+ 	.get_vblank_counter	= drm_vblank_count,
+ 	.enable_vblank		= rcar_du_enable_vblank,
+ 	.disable_vblank		= rcar_du_disable_vblank,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index 460fabf..ba8dd73 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -26,8 +26,6 @@ struct device;
+ struct drm_device;
+ struct drm_fbdev_cma;
+ 
+-#define RCAR_DU_FEATURE_CRTC_IRQ_CLOCK	(1 << 0)	/* Per-CRTC IRQ and clock */
+-
+ /*
+  * struct rcar_du_device_info - DU model-specific information
+  * @features: device features (RCAR_DU_FEATURE_*)
+@@ -42,6 +40,7 @@ struct rcar_du_device {
+ 	const struct rcar_du_device_info *info;
+ 
+ 	void __iomem *mmio;
++	struct clk *clock;
+ 	unsigned int use_count;
+ 
+ 	struct drm_device *ddev;
+-- 
+1.8.3.2
+

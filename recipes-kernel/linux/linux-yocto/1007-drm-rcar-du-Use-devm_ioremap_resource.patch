@@ -1,0 +1,62 @@
+From 6c76476639a544672c5e0d2282fed69b3c54206a Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 17 Jun 2013 02:29:07 +0200
+Subject: [PATCH 1007/1083] drm/rcar-du: Use devm_ioremap_resource()
+
+Replace the devm_request_mem_region() and devm_ioremap_nocache() calls
+with devm_ioremap_resource().
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 0a1a8312171d0be0f44274b42b7250a33c92516b)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit fd1a2e514cd319c688a0b394db1edeb8983e4b44)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 22 +++-------------------
+ 1 file changed, 3 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index ff82877..910c1e1 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -107,7 +107,6 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 	struct platform_device *pdev = dev->platformdev;
+ 	struct rcar_du_platform_data *pdata = pdev->dev.platform_data;
+ 	struct rcar_du_device *rcdu;
+-	struct resource *ioarea;
+ 	struct resource *mem;
+ 	int ret;
+ 
+@@ -129,24 +128,9 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 
+ 	/* I/O resources and clocks */
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	if (mem == NULL) {
+-		dev_err(&pdev->dev, "failed to get memory resource\n");
+-		return -EINVAL;
+-	}
+-
+-	ioarea = devm_request_mem_region(&pdev->dev, mem->start,
+-					 resource_size(mem), pdev->name);
+-	if (ioarea == NULL) {
+-		dev_err(&pdev->dev, "failed to request memory region\n");
+-		return -EBUSY;
+-	}
+-
+-	rcdu->mmio = devm_ioremap_nocache(&pdev->dev, ioarea->start,
+-					  resource_size(ioarea));
+-	if (rcdu->mmio == NULL) {
+-		dev_err(&pdev->dev, "failed to remap memory resource\n");
+-		return -ENOMEM;
+-	}
++	rcdu->mmio = devm_ioremap_resource(&pdev->dev, mem);
++	if (IS_ERR(rcdu->mmio))
++		return PTR_ERR(rcdu->mmio);
+ 
+ 	rcdu->clock = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(rcdu->clock)) {
+-- 
+1.8.3.2
+

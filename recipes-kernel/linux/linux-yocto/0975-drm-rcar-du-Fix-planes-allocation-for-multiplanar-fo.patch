@@ -1,0 +1,37 @@
+From 69e08af9bb4dd6cbfe4639f71975810a9600bcc7 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Tue, 19 Feb 2013 18:14:29 +0100
+Subject: [PATCH 0975/1083] drm/rcar-du: Fix planes allocation for multiplanar
+ formats
+
+When more than one hardware plane need to be reserved an extraneous
+break statement potentially caused the allocator to use an already
+allocated plane. Fix it.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit e4384aa8eff0364516e7bc150cc7084059ab264f)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit e7ae08117bee113c75eeceac127edb761a4f3d96)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 8dbe7db..98e587f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -49,8 +49,6 @@ int rcar_du_plane_reserve(struct rcar_du_plane *plane)
+ 		if (plane->format->planes == 1 ||
+ 		    rcdu->planes.free & (1 << ((i + 1) % 8)))
+ 			break;
+-
+-		break;
+ 	}
+ 
+ 	if (i == ARRAY_SIZE(rcdu->planes.planes))
+-- 
+1.8.3.2
+

@@ -1,0 +1,46 @@
+From 4ce335c7097d5c77df6192cac37c6af1d30c5d50 Mon Sep 17 00:00:00 2001
+From: Alexandre Courbot <acourbot@nvidia.com>
+Date: Sun, 3 Feb 2013 01:29:25 +0900
+Subject: [PATCH 0268/1083] gpiolib: use gpio_chips list in gpiolib_sysfs_init
+
+Use the small list of GPIO chips instead of parsing the whole GPIO
+number space.
+
+Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+(cherry picked from commit 65493e3ac429623df021e0859d97691f4b42615a)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index 453ac77..c1d8f7b 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -974,7 +974,7 @@ static int __init gpiolib_sysfs_init(void)
+ {
+ 	int		status;
+ 	unsigned long	flags;
+-	unsigned	gpio;
++	struct gpio_chip *chip;
+ 
+ 	status = class_register(&gpio_class);
+ 	if (status < 0)
+@@ -987,10 +987,7 @@ static int __init gpiolib_sysfs_init(void)
+ 	 * registered, and so arch_initcall() can always gpio_export().
+ 	 */
+ 	spin_lock_irqsave(&gpio_lock, flags);
+-	for (gpio = 0; gpio < ARCH_NR_GPIOS; gpio++) {
+-		struct gpio_chip	*chip;
+-
+-		chip = gpio_desc[gpio].chip;
++	list_for_each_entry(chip, &gpio_chips, list) {
+ 		if (!chip || chip->exported)
+ 			continue;
+ 
+-- 
+1.8.3.2
+

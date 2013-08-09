@@ -1,0 +1,176 @@
+From f1d7c6c5221a78f62686325b63dc51be68407eae Mon Sep 17 00:00:00 2001
+From: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+Date: Mon, 29 Jul 2013 20:12:15 +0900
+Subject: [PATCH 0784/1083] ARM: shmobile: r8a7791: Add VIN driver support
+
+Signed-off-by: Nobuyuki HIRAI <nobuyuki.hirai.xe@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7791.c |  9 ++++
+ arch/arm/mach-shmobile/setup-r8a7791.c | 96 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 105 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
+index b3e1548..d1d34f4 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7791.c
++++ b/arch/arm/mach-shmobile/clock-r8a7791.c
+@@ -99,6 +99,7 @@ SH_FIXED_RATIO_CLK_SET(extal_div2_clk,		extal_clk,	1, 2);
+ SH_FIXED_RATIO_CLK_SET(cp_clk,			extal_clk,	1, 2);
+ 
+ SH_FIXED_RATIO_CLK_SET(pll1_div2_clk,		pll1_clk,	1, 2);
++SH_FIXED_RATIO_CLK_SET(zg_clk,			pll1_clk,	1, 3);
+ SH_FIXED_RATIO_CLK_SET(hp_clk,			pll1_clk,	1, 12);
+ SH_FIXED_RATIO_CLK_SET(p_clk,			pll1_clk,	1, 24);
+ 
+@@ -121,6 +122,7 @@ static struct clk *main_clks[] = {
+ 	&pll1_clk,
+ 	&pll1_div2_clk,
+ 	&pll3_clk,
++	&zg_clk,
+ 	&qspi_clk,
+ 	&hp_clk,
+ 	&p_clk,
+@@ -149,6 +151,7 @@ enum {
+ 	MSTP721, MSTP720,
+ 	MSTP719, MSTP718, MSTP715, MSTP714,
+ 	MSTP815, MSTP814,
++	MSTP811, MSTP810, MSTP809,
+ 	MSTP216, MSTP207, MSTP206,
+ 	MSTP204, MSTP203, MSTP202, MSTP1105, MSTP1106, MSTP1107,
+ 	MSTP704, MSTP703, MSTP328,
+@@ -172,6 +175,9 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP714] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 14, 0), /* SCIF5 */
+ 	[MSTP815] = SH_CLK_MSTP32(&sata0_clk, SMSTPCR8, 15, 0),
+ 	[MSTP814] = SH_CLK_MSTP32(&sata1_clk, SMSTPCR8, 14, 0),
++	[MSTP811] = SH_CLK_MSTP32(&zg_clk, SMSTPCR8, 11, 0),
++	[MSTP810] = SH_CLK_MSTP32(&zg_clk, SMSTPCR8, 10, 0),
++	[MSTP809] = SH_CLK_MSTP32(&zg_clk, SMSTPCR8,  9, 0),
+ 	[MSTP216] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 16, 0), /* SCIFB2 */
+ 	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
+ 	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
+@@ -252,6 +258,9 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh_mmcif.0", &mstp_clks[MSTP315]),
+ 	CLKDEV_DEV_ID("sata_rcar.0", &mstp_clks[MSTP815]),
+ 	CLKDEV_DEV_ID("sata_rcar.1", &mstp_clks[MSTP814]),
++	CLKDEV_DEV_ID("vin.0", &mstp_clks[MSTP811]),
++	CLKDEV_DEV_ID("vin.1", &mstp_clks[MSTP810]),
++	CLKDEV_DEV_ID("vin.2", &mstp_clks[MSTP809]),
+ };
+ 
+ #define R8A7791_CLOCK_ROOT(e, m, p0, p1, p30, p31)		\
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index 48ff9ea..09e1b2c 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -1314,6 +1314,99 @@ static struct platform_device sata1_device = {
+ 	},
+ };
+ 
++/* VIN */
++static struct resource vin0_resources[] = {
++	[0] = {
++		.name = "VIN0",
++		.start = 0xe6ef0000,
++		.end = 0xe6ef0fff,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = gic_spi(188),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++
++static struct resource vin1_resources[] = {
++	[0] = {
++		.name = "VIN1",
++		.start = 0xe6ef1000,
++		.end = 0xe6ef1fff,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = gic_spi(189),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++
++static struct resource vin2_resources[] = {
++	[0] = {
++		.name = "VIN2",
++		.start = 0xe6ef3000,
++		.end = 0xe6ef3fff,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = gic_spi(190),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++
++static struct vin_info vin_info[] = {
++	[0] = {
++		.input = VIN_INPUT_ITUR_BT709_24BIT,
++		.flags = 0,
++	},
++	[1] = {
++		.input = VIN_INPUT_ITUR_BT656_8BIT,
++		.flags = 0,
++	},
++	[2] = {
++		.input = VIN_INPUT_UNDEFINED,
++		.flags = 0,
++	},
++};
++
++static u64 vin_dmamask = DMA_BIT_MASK(32);
++
++static struct platform_device vin0_device = {
++	.name  = "vin",
++	.id = 0,
++	.num_resources = ARRAY_SIZE(vin0_resources),
++	.resource  = vin0_resources,
++	.dev  = {
++		.dma_mask = &vin_dmamask,
++		.platform_data = &vin_info[0],
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static struct platform_device vin1_device = {
++	.name  = "vin",
++	.id = 1,
++	.num_resources = ARRAY_SIZE(vin1_resources),
++	.resource  = vin1_resources,
++	.dev  = {
++		.dma_mask = &vin_dmamask,
++		.platform_data = &vin_info[1],
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static struct platform_device vin2_device = {
++	.name  = "vin",
++	.id = 2,
++	.num_resources = ARRAY_SIZE(vin2_resources),
++	.resource  = vin2_resources,
++	.dev  = {
++		.dma_mask = &vin_dmamask,
++		.platform_data = &vin_info[2],
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
+ static struct platform_device *r8a7791_early_devices[] __initdata = {
+ 	&eth_device,
+ 	&ehci0_device,
+@@ -1342,6 +1435,9 @@ static struct platform_device *r8a7791_early_devices[] __initdata = {
+ 	&mmc_device,
+ 	&sata0_device,
+ 	&sata1_device,
++	&vin0_device,
++	&vin1_device,
++	&vin2_device,
+ };
+ 
+ static struct renesas_irqc_config irqc0_data = {
+-- 
+1.8.3.2
+

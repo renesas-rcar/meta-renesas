@@ -1,0 +1,89 @@
+From d9a8c0991e9ec3c632503b7011d0ecd3b7d18498 Mon Sep 17 00:00:00 2001
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Date: Wed, 30 Jan 2013 23:49:57 +0000
+Subject: [PATCH 0189/1083] ARM: GIC: fix GIC cpumask initialization
+
+Punit Agrawal reports:
+> I was trying to boot 3.8-rc5 on Realview EB 11MPCore using
+> realview-smp_defconfig as a starting point but the kernel failed to
+> progress past the log below (config attached).
+>
+> Pawel suggested I try reverting 384a290283f - "ARM: gic: use a private
+> mapping for CPU target interfaces" that you've authored. With this
+> commit reverted the kernel boots.
+>
+> I am not quite sure why the commit breaks 11MPCore but Pawel (cc'd)
+> might be able to shed light on that.
+
+Some early GIC implementations return zero for the first distributor
+CPU routing register.  This means we can't rely on that telling us
+which CPU interface we're connected to.  We know that these platforms
+implement PPIs for IRQs 29-31 - but we shouldn't assume that these
+will always be populated.
+
+So, instead, scan for a non-zero CPU routing register in the first
+32 IRQs and use that as our CPU mask.
+
+Reported-by: Punit Agrawal <punit.agrawal@arm.com>
+Reviewed-by: Nicolas Pitre <nico@linaro.org>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit 2bb3135166abcd59979cfcdd3696ba840b6b9d45)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/common/gic.c | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
+index 36ae03a..87dfa90 100644
+--- a/arch/arm/common/gic.c
++++ b/arch/arm/common/gic.c
+@@ -351,6 +351,25 @@ void __init gic_cascade_irq(unsigned int gic_nr, unsigned int irq)
+ 	irq_set_chained_handler(irq, gic_handle_cascade_irq);
+ }
+ 
++static u8 gic_get_cpumask(struct gic_chip_data *gic)
++{
++	void __iomem *base = gic_data_dist_base(gic);
++	u32 mask, i;
++
++	for (i = mask = 0; i < 32; i += 4) {
++		mask = readl_relaxed(base + GIC_DIST_TARGET + i);
++		mask |= mask >> 16;
++		mask |= mask >> 8;
++		if (mask)
++			break;
++	}
++
++	if (!mask)
++		pr_crit("GIC CPU mask not found - kernel will fail to boot.\n");
++
++	return mask;
++}
++
+ static void __init gic_dist_init(struct gic_chip_data *gic)
+ {
+ 	unsigned int i;
+@@ -369,7 +388,9 @@ static void __init gic_dist_init(struct gic_chip_data *gic)
+ 	/*
+ 	 * Set all global interrupts to this CPU only.
+ 	 */
+-	cpumask = readl_relaxed(base + GIC_DIST_TARGET + 0);
++	cpumask = gic_get_cpumask(gic);
++	cpumask |= cpumask << 8;
++	cpumask |= cpumask << 16;
+ 	for (i = 32; i < gic_irqs; i += 4)
+ 		writel_relaxed(cpumask, base + GIC_DIST_TARGET + i * 4 / 4);
+ 
+@@ -400,7 +421,7 @@ static void __cpuinit gic_cpu_init(struct gic_chip_data *gic)
+ 	 * Get what the GIC says our CPU mask is.
+ 	 */
+ 	BUG_ON(cpu >= NR_GIC_CPU_IF);
+-	cpu_mask = readl_relaxed(dist_base + GIC_DIST_TARGET + 0);
++	cpu_mask = gic_get_cpumask(gic);
+ 	gic_cpu_map[cpu] = cpu_mask;
+ 
+ 	/*
+-- 
+1.8.3.2
+

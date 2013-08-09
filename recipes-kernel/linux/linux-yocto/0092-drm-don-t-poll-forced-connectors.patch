@@ -1,0 +1,37 @@
+From e1cfe0d577d97524584c8b18edd4f3dc3f0f3824 Mon Sep 17 00:00:00 2001
+From: Daniel Vetter <daniel.vetter@ffwll.ch>
+Date: Tue, 23 Oct 2012 18:23:38 +0000
+Subject: [PATCH 0092/1083] drm: don't poll forced connectors
+
+Otherwise if the detect callback reports a different state than what
+the user forced (rather likely), we continously annoy userspace about
+a hotplug uevent.
+
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 11e686855c81c2e5e647b3dcfabd2a4e473c46f0)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_crtc_helper.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
+index e0804cd..47ace7c 100644
+--- a/drivers/gpu/drm/drm_crtc_helper.c
++++ b/drivers/gpu/drm/drm_crtc_helper.c
+@@ -965,6 +965,10 @@ static void output_poll_execute(struct work_struct *work)
+ 	mutex_lock(&dev->mode_config.mutex);
+ 	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
+ 
++		/* Ignore forced connectors. */
++		if (connector->force)
++			continue;
++
+ 		/* Ignore HPD capable connectors and connectors where we don't
+ 		 * want any hotplug detection at all for polling. */
+ 		if (!connector->polled || connector->polled == DRM_CONNECTOR_POLL_HPD)
+-- 
+1.8.3.2
+

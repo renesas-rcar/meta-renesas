@@ -1,0 +1,35 @@
+From 2bc3948b1bd4336c8f33a26bd2a25d51732824e6 Mon Sep 17 00:00:00 2001
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Date: Wed, 1 Aug 2012 17:15:32 +0530
+Subject: [PATCH 0056/1083] drm: Add misssing static storage class specifier in
+ drm_fb_helper.c file
+
+Fixes the following sparse warning:
+drivers/gpu/drm/drm_fb_helper.c:239:6: warning:
+symbol 'drm_fb_helper_force_kernel_mode' was not declared. Should it be static?
+
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 78b9c3537e9c88ea3be2224343d2d08d4d2d4e4d)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_fb_helper.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 4ecc869..eb79515 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -236,7 +236,7 @@ bool drm_fb_helper_restore_fbdev_mode(struct drm_fb_helper *fb_helper)
+ }
+ EXPORT_SYMBOL(drm_fb_helper_restore_fbdev_mode);
+ 
+-bool drm_fb_helper_force_kernel_mode(void)
++static bool drm_fb_helper_force_kernel_mode(void)
+ {
+ 	bool ret, error = false;
+ 	struct drm_fb_helper *helper;
+-- 
+1.8.3.2
+

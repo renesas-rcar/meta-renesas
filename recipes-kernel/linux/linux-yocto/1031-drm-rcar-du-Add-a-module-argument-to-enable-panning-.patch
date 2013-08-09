@@ -1,0 +1,58 @@
+From 0d00fa14e7ee3b9dc18ec9ad93b7a39a6208a8fb Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Thu, 4 Apr 2013 00:40:43 +0200
+Subject: [PATCH 1031/1083] drm/rcar-du: Add a module argument to enable
+ panning in fbdev emulation
+
+When set to true, the fbdev_pan argument forces the driver to allocate a
+frame buffer for fbdev emulation twice as high as the screen size. This
+allows implementing page flipping through panning with the emulated
+fbdev device.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit a2cf79d282ddf1bb253cb6855c27e221d50645df)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 15bb6f818b04c3688175b244b5e130e1ba4ee6f7)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index e9d44b5..f54ac20 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -11,6 +11,8 @@
+  * (at your option) any later version.
+  */
+ 
++#include <linux/moduleparam.h>
++
+ #include <drm/drmP.h>
+ #include <drm/drm_crtc.h>
+ #include <drm/drm_crtc_helper.h>
+@@ -24,6 +26,9 @@
+ #include "rcar_du_lvdsenc.h"
+ #include "rcar_du_regs.h"
+ 
++static bool rcar_du_fbdev_pan = false;
++module_param_named(fb_cma_pan, rcar_du_fbdev_pan, bool, 0444);
++
+ /* -----------------------------------------------------------------------------
+  * Format helpers
+  */
+@@ -276,7 +281,8 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	drm_helper_disable_unused_functions(dev);
+ 
+ 	fbdev = drm_fbdev_cma_init(dev, 32, dev->mode_config.num_crtc,
+-				   dev->mode_config.num_connector, 1);
++				   dev->mode_config.num_connector,
++				   rcar_du_fbdev_pan ? 2 : 1);
+ 	if (IS_ERR(fbdev))
+ 		return PTR_ERR(fbdev);
+ 
+-- 
+1.8.3.2
+

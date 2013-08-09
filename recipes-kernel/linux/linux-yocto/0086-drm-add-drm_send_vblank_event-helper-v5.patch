@@ -1,0 +1,198 @@
+From 84666ca2573b491b8cf76fa0540e727e5b001c45 Mon Sep 17 00:00:00 2001
+From: Rob Clark <rob@ti.com>
+Date: Tue, 16 Oct 2012 22:48:40 +0000
+Subject: [PATCH 0086/1083] drm: add drm_send_vblank_event() helper (v5)
+
+A helper that drivers can use to send vblank event after a pageflip.
+If the driver doesn't support proper vblank irq based time/seqn then
+just pass -1 for the pipe # to get do_gettimestamp() behavior (since
+there are a lot of drivers that don't use drm_vblank_count_and_time())
+
+Also an internal send_vblank_event() helper for the various other code
+paths within drm_irq that also need to send vblank events.
+
+v1: original
+v2: add back 'vblwait->reply.sequence = seq' which should not have
+    been deleted
+v3: add WARN_ON() in case lock is not held and comments
+v4: use WARN_ON_SMP() instead to fix issue with !SMP && !DEBUG_SPINLOCK
+    as pointed out by Marcin Slusarz
+v5: update docbook
+
+Signed-off-by: Rob Clark <rob@ti.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit c6eefa1750ec0308956895027c3a79eee2ef9726)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ Documentation/DocBook/drm.tmpl | 20 +++---------
+ drivers/gpu/drm/drm_irq.c      | 74 +++++++++++++++++++++++++++++-------------
+ include/drm/drmP.h             |  2 ++
+ 3 files changed, 59 insertions(+), 37 deletions(-)
+
+diff --git a/Documentation/DocBook/drm.tmpl b/Documentation/DocBook/drm.tmpl
+index b030052..c9cbb3f 100644
+--- a/Documentation/DocBook/drm.tmpl
++++ b/Documentation/DocBook/drm.tmpl
+@@ -1141,23 +1141,13 @@ int max_width, max_height;</synopsis>
+             the <methodname>page_flip</methodname> operation will be called with a
+             non-NULL <parameter>event</parameter> argument pointing to a
+             <structname>drm_pending_vblank_event</structname> instance. Upon page
+-            flip completion the driver must fill the
+-            <parameter>event</parameter>::<structfield>event</structfield>
+-            <structfield>sequence</structfield>, <structfield>tv_sec</structfield>
+-            and <structfield>tv_usec</structfield> fields with the associated
+-            vertical blanking count and timestamp, add the event to the
+-            <parameter>drm_file</parameter> list of events to be signaled, and wake
+-            up any waiting process. This can be performed with
++            flip completion the driver must call <methodname>drm_send_vblank_event</methodname>
++            to fill in the event and send to wake up any waiting processes.
++            This can be performed with
+             <programlisting><![CDATA[
+-            struct timeval now;
+-
+-            event->event.sequence = drm_vblank_count_and_time(..., &now);
+-            event->event.tv_sec = now.tv_sec;
+-            event->event.tv_usec = now.tv_usec;
+-
+             spin_lock_irqsave(&dev->event_lock, flags);
+-            list_add_tail(&event->base.link, &event->base.file_priv->event_list);
+-            wake_up_interruptible(&event->base.file_priv->event_wait);
++            ...
++            drm_send_vblank_event(dev, pipe, event);
+             spin_unlock_irqrestore(&dev->event_lock, flags);
+             ]]></programlisting>
+           </para>
+diff --git a/drivers/gpu/drm/drm_irq.c b/drivers/gpu/drm/drm_irq.c
+index f6cdc35..b031fcd 100644
+--- a/drivers/gpu/drm/drm_irq.c
++++ b/drivers/gpu/drm/drm_irq.c
+@@ -802,6 +802,46 @@ u32 drm_vblank_count_and_time(struct drm_device *dev, int crtc,
+ }
+ EXPORT_SYMBOL(drm_vblank_count_and_time);
+ 
++static void send_vblank_event(struct drm_device *dev,
++		struct drm_pending_vblank_event *e,
++		unsigned long seq, struct timeval *now)
++{
++	WARN_ON_SMP(!spin_is_locked(&dev->event_lock));
++	e->event.sequence = seq;
++	e->event.tv_sec = now->tv_sec;
++	e->event.tv_usec = now->tv_usec;
++
++	list_add_tail(&e->base.link,
++		      &e->base.file_priv->event_list);
++	wake_up_interruptible(&e->base.file_priv->event_wait);
++	trace_drm_vblank_event_delivered(e->base.pid, e->pipe,
++					 e->event.sequence);
++}
++
++/**
++ * drm_send_vblank_event - helper to send vblank event after pageflip
++ * @dev: DRM device
++ * @crtc: CRTC in question
++ * @e: the event to send
++ *
++ * Updates sequence # and timestamp on event, and sends it to userspace.
++ * Caller must hold event lock.
++ */
++void drm_send_vblank_event(struct drm_device *dev, int crtc,
++		struct drm_pending_vblank_event *e)
++{
++	struct timeval now;
++	unsigned int seq;
++	if (crtc >= 0) {
++		seq = drm_vblank_count_and_time(dev, crtc, &now);
++	} else {
++		seq = 0;
++		do_gettimeofday(&now);
++	}
++	send_vblank_event(dev, e, seq, &now);
++}
++EXPORT_SYMBOL(drm_send_vblank_event);
++
+ /**
+  * drm_update_vblank_count - update the master vblank counter
+  * @dev: DRM device
+@@ -936,6 +976,13 @@ void drm_vblank_put(struct drm_device *dev, int crtc)
+ }
+ EXPORT_SYMBOL(drm_vblank_put);
+ 
++/**
++ * drm_vblank_off - disable vblank events on a CRTC
++ * @dev: DRM device
++ * @crtc: CRTC in question
++ *
++ * Caller must hold event lock.
++ */
+ void drm_vblank_off(struct drm_device *dev, int crtc)
+ {
+ 	struct drm_pending_vblank_event *e, *t;
+@@ -955,15 +1002,9 @@ void drm_vblank_off(struct drm_device *dev, int crtc)
+ 		DRM_DEBUG("Sending premature vblank event on disable: \
+ 			  wanted %d, current %d\n",
+ 			  e->event.sequence, seq);
+-
+-		e->event.sequence = seq;
+-		e->event.tv_sec = now.tv_sec;
+-		e->event.tv_usec = now.tv_usec;
++		list_del(&e->base.link);
+ 		drm_vblank_put(dev, e->pipe);
+-		list_move_tail(&e->base.link, &e->base.file_priv->event_list);
+-		wake_up_interruptible(&e->base.file_priv->event_wait);
+-		trace_drm_vblank_event_delivered(e->base.pid, e->pipe,
+-						 e->event.sequence);
++		send_vblank_event(dev, e, seq, &now);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&dev->vbl_lock, irqflags);
+@@ -1104,15 +1145,9 @@ static int drm_queue_vblank_event(struct drm_device *dev, int pipe,
+ 
+ 	e->event.sequence = vblwait->request.sequence;
+ 	if ((seq - vblwait->request.sequence) <= (1 << 23)) {
+-		e->event.sequence = seq;
+-		e->event.tv_sec = now.tv_sec;
+-		e->event.tv_usec = now.tv_usec;
+ 		drm_vblank_put(dev, pipe);
+-		list_add_tail(&e->base.link, &e->base.file_priv->event_list);
+-		wake_up_interruptible(&e->base.file_priv->event_wait);
++		send_vblank_event(dev, e, seq, &now);
+ 		vblwait->reply.sequence = seq;
+-		trace_drm_vblank_event_delivered(current->pid, pipe,
+-						 vblwait->request.sequence);
+ 	} else {
+ 		/* drm_handle_vblank_events will call drm_vblank_put */
+ 		list_add_tail(&e->base.link, &dev->vblank_event_list);
+@@ -1253,14 +1288,9 @@ void drm_handle_vblank_events(struct drm_device *dev, int crtc)
+ 		DRM_DEBUG("vblank event on %d, current %d\n",
+ 			  e->event.sequence, seq);
+ 
+-		e->event.sequence = seq;
+-		e->event.tv_sec = now.tv_sec;
+-		e->event.tv_usec = now.tv_usec;
++		list_del(&e->base.link);
+ 		drm_vblank_put(dev, e->pipe);
+-		list_move_tail(&e->base.link, &e->base.file_priv->event_list);
+-		wake_up_interruptible(&e->base.file_priv->event_wait);
+-		trace_drm_vblank_event_delivered(e->base.pid, e->pipe,
+-						 e->event.sequence);
++		send_vblank_event(dev, e, seq, &now);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&dev->event_lock, flags);
+diff --git a/include/drm/drmP.h b/include/drm/drmP.h
+index 3ed525b..5ba7417 100644
+--- a/include/drm/drmP.h
++++ b/include/drm/drmP.h
+@@ -1440,6 +1440,8 @@ extern int drm_vblank_wait(struct drm_device *dev, unsigned int *vbl_seq);
+ extern u32 drm_vblank_count(struct drm_device *dev, int crtc);
+ extern u32 drm_vblank_count_and_time(struct drm_device *dev, int crtc,
+ 				     struct timeval *vblanktime);
++extern void drm_send_vblank_event(struct drm_device *dev, int crtc,
++				     struct drm_pending_vblank_event *e);
+ extern bool drm_handle_vblank(struct drm_device *dev, int crtc);
+ extern int drm_vblank_get(struct drm_device *dev, int crtc);
+ extern void drm_vblank_put(struct drm_device *dev, int crtc);
+-- 
+1.8.3.2
+

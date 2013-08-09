@@ -1,0 +1,51 @@
+From dd538abc6b2ca10bbe6d578f1b35db66c0ded301 Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm@opensource.se>
+Date: Fri, 14 Dec 2012 14:53:32 +0900
+Subject: [PATCH 0900/1083] clocksource: sh_cmt: Take care of clk_put() when
+ setup_irq() fails
+
+Make sure clk_put() is called in case of failure in sh_cmt_setup().
+
+Signed-off-by: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
+Signed-off-by: Magnus Damm <damm@opensource.se>
+Acked-by: John Stultz <john.stultz@linaro.org>
+Tested-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 2fd61b32764c82b8410a4374d0ab3ec418ce37c7)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 58e708cfa78026ac707c98cf0edf9d04c4f8ace8)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/clocksource/sh_cmt.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clocksource/sh_cmt.c b/drivers/clocksource/sh_cmt.c
+index 48fb800..0958eae 100644
+--- a/drivers/clocksource/sh_cmt.c
++++ b/drivers/clocksource/sh_cmt.c
+@@ -668,16 +668,18 @@ static int sh_cmt_setup(struct sh_cmt_priv *p, struct platform_device *pdev)
+ 			      cfg->clocksource_rating);
+ 	if (ret) {
+ 		dev_err(&p->pdev->dev, "registration failed\n");
+-		goto err1;
++		goto err2;
+ 	}
+ 
+ 	ret = setup_irq(irq, &p->irqaction);
+ 	if (ret) {
+ 		dev_err(&p->pdev->dev, "failed to request irq %d\n", irq);
+-		goto err1;
++		goto err2;
+ 	}
+ 
+ 	return 0;
++err2:
++	clk_put(p->clk);
+ 
+ err1:
+ 	iounmap(p->mapbase);
+-- 
+1.8.3.2
+

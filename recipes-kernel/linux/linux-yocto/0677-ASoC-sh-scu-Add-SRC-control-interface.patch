@@ -1,0 +1,218 @@
+From a77c719ceb18bc41cec32fbe7e6bd28a0dea278f Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Thu, 27 Jun 2013 16:43:19 +0900
+Subject: [PATCH 0677/1083] ASoC: sh: scu: Add SRC control interface
+
+Add the following Control.
+	PCM Playback Sampling Rate
+	PCM Capture Sampling Rate
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit d3771e3da67eb3aef78e390ff4a99605abafd297)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ include/sound/sh_scu.h |   8 ++++
+ sound/soc/sh/scu_dai.c | 124 +++++++++++++++++++++++++++++++++++++++++++------
+ sound/soc/sh/scu_pcm.c |   4 ++
+ 3 files changed, 122 insertions(+), 14 deletions(-)
+
+diff --git a/include/sound/sh_scu.h b/include/sound/sh_scu.h
+index 620e2ed..ec8005f 100644
+--- a/include/sound/sh_scu.h
++++ b/include/sound/sh_scu.h
+@@ -65,6 +65,12 @@
+ #define	MAXCH_SSI	10
+ #define	MAXCH_SSIDATA	22	/* SSI0,1,2,9=4ch, SSI3-8=1ch */
+ 
++/* DAI Control */
++#define CTRL_PLAYBACK	0
++#define CTRL_CAPTURE	1
++/*  rate  */
++#define	RATE_MAX	0x7fffffff
++
+ /*
+  *	SCU
+  */
+@@ -2106,6 +2112,7 @@ struct scu_audio_info {
+ 	struct scu_route_info routeinfo;
+ 	struct scu_clock_info clockinfo;
+ 	spinlock_t scu_lock;		/* for common register */
++	unsigned int rate[2];
+ };
+ 
+ struct scu_pcm_info {
+@@ -2155,5 +2162,6 @@ extern void scu_deinit_src1_dvc1(void);
+ extern void scu_deinit_dvc1(void);
+ 
+ extern int scu_check_route(int dir, struct scu_route_info *routeinfo);
++extern int scu_dai_add_control(struct snd_card *card);
+ 
+ #endif /* SH_SCU_H */
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index dc67693..7ccf0b4 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -288,13 +288,10 @@ static void scu_src_control(int src_ch, unsigned int rate, unsigned int sync_sw)
+ 	writel(1, (u32 *)&rinfo->srcreg[src_ch]->ifscr);
+ 
+ 	/* SRC_IFSVR INTIFS calculation */
+-#ifdef CONVERT_48KHZ
+-	/* Convert example (48kHz) */
+-	val = div_u64(SRC_IFS_FSO * rate, SRC_IFS_48KHZ);
+-#else
+-	/* Not convert example (CODEC driver converts by itself) */
+-	val = SRC_IFS_FSO;
+-#endif
++	if (ainfo->rate[src_ch])
++		val = div_u64(SRC_IFS_FSO * rate, ainfo->rate[src_ch]);
++	else /* not convert */
++		val = SRC_IFS_FSO;
+ 	writel((u32)val, (u32 *)&rinfo->srcreg[src_ch]->ifsvr);
+ 
+ 	/* SRC_SRCCR */
+@@ -306,13 +303,10 @@ static void scu_src_control(int src_ch, unsigned int rate, unsigned int sync_sw)
+ 	writel(val, (u32 *)&rinfo->srcreg[src_ch]->mnfsr);
+ 
+ 	/* FSO/FSI(*100) */
+-#ifdef CONVERT_48KHZ
+-	/* Convert example (48kHz) */
+-	val = (SRC_IFS_48KHZ * 100) / rate;
+-#else
+-	/* Not convert example (CODEC driver converts by itself) */
+-	val = 100;
+-#endif
++	if (ainfo->rate[src_ch])
++		val = (ainfo->rate[src_ch] * 100) / rate;
++	else /* not convert */
++		val = 100;
+ 
+ 	/* SRC_BSDSR (FSO/FSI Ratio is 6-1/6) */
+ 	reg = scu_src_calc_bsdsr((u32)val);
+@@ -725,6 +719,108 @@ static struct snd_pcm_hardware scu_dai_pcm_hw = {
+ 	.periods_max		= SCU_PERIODS_MAX,
+ };
+ 
++static int scu_dai_info_rate(struct snd_kcontrol *kctrl,
++			       struct snd_ctl_elem_info *uinfo)
++{
++	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
++	uinfo->count = 1;
++	uinfo->value.integer.min = 0;
++	uinfo->value.integer.max = RATE_MAX;
++
++	return 0;
++}
++
++static int scu_dai_get_rate(struct snd_kcontrol *kctrl,
++			      struct snd_ctl_elem_value *ucontrol)
++{
++	struct scu_audio_info *ainfo = snd_kcontrol_chip(kctrl);
++
++	switch (kctrl->private_value) {
++	case CTRL_PLAYBACK:
++		ucontrol->value.integer.value[0] = ainfo->rate[0];
++		break;
++	case CTRL_CAPTURE:
++		ucontrol->value.integer.value[0] = ainfo->rate[1];
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int scu_dai_put_rate(struct snd_kcontrol *kctrl,
++			      struct snd_ctl_elem_value *ucontrol)
++{
++	struct scu_audio_info *ainfo = snd_kcontrol_chip(kctrl);
++	int change = 0;
++
++	switch (kctrl->private_value) {
++	case CTRL_PLAYBACK:
++		change |= (ainfo->rate[0] != ucontrol->value.integer.value[0]);
++		if (change)
++			ainfo->rate[0] = ucontrol->value.integer.value[0];
++		break;
++	case CTRL_CAPTURE:
++		change |= (ainfo->rate[1] != ucontrol->value.integer.value[0]);
++		if (change)
++			ainfo->rate[1] = ucontrol->value.integer.value[0];
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return change;
++}
++
++static struct snd_kcontrol_new playback_rate_controls = {
++	.iface		= SNDRV_CTL_ELEM_IFACE_MIXER,
++	.name		= "PCM Playback Sampling Rate",
++	.index		= 0,
++	.info		= scu_dai_info_rate,
++	.get		= scu_dai_get_rate,
++	.put		= scu_dai_put_rate,
++	.private_value	= CTRL_PLAYBACK,
++};
++
++static struct snd_kcontrol_new capture_rate_controls = {
++	.iface		= SNDRV_CTL_ELEM_IFACE_MIXER,
++	.name		= "PCM Capture Sampling Rate",
++	.index		= 0,
++	.info		= scu_dai_info_rate,
++	.get		= scu_dai_get_rate,
++	.put		= scu_dai_put_rate,
++	.private_value	= CTRL_CAPTURE,
++};
++
++int scu_dai_add_control(struct snd_card *card)
++{
++	struct device *dev = card->dev;
++	struct snd_kcontrol *kctrl;
++	int i, ret;
++
++	/* initial value */
++	for (i = 0; i < 2; i++)
++		ainfo->rate[i] = 0;
++
++	kctrl = snd_ctl_new1(&playback_rate_controls, ainfo);
++	ret = snd_ctl_add(card, kctrl);
++	if (ret < 0) {
++		dev_err(dev, "failed to add playback rate err=%d\n", ret);
++		return ret;
++	}
++
++	kctrl = snd_ctl_new1(&capture_rate_controls, ainfo);
++	ret = snd_ctl_add(card, kctrl);
++	if (ret < 0) {
++		dev_err(dev, "failed to add capture rate err=%d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(scu_dai_add_control);
++
+ static int scu_dai_startup(struct snd_pcm_substream *substream,
+ 			   struct snd_soc_dai *dai)
+ {
+diff --git a/sound/soc/sh/scu_pcm.c b/sound/soc/sh/scu_pcm.c
+index 5971200..53a8328 100644
+--- a/sound/soc/sh/scu_pcm.c
++++ b/sound/soc/sh/scu_pcm.c
+@@ -784,6 +784,10 @@ static int scu_pcm_new(struct snd_soc_pcm_runtime *rtd)
+ 	struct snd_card *card = rtd->card->snd_card;
+ 
+ 	FNC_ENTRY
++	ret = scu_dai_add_control(card);
++	if (ret)
++		return ret;
++
+ 	if (!card->dev->dma_mask)
+ 		card->dev->dma_mask = &dma_mask;
+ 
+-- 
+1.8.3.2
+

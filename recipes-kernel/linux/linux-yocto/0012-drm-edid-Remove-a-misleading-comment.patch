@@ -1,0 +1,36 @@
+From d165199db25bf8bd516e74233d813c22aba51abc Mon Sep 17 00:00:00 2001
+From: Adam Jackson <ajax@redhat.com>
+Date: Fri, 13 Apr 2012 16:33:32 -0400
+Subject: [PATCH 0012/1083] drm/edid: Remove a misleading comment
+
+mode_in_range() handles what this was warning about.
+
+Signed-off-by: Adam Jackson <ajax@redhat.com>
+Tested-by: Takashi Iwai <tiwai@suse.de>
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+(cherry picked from commit 9a225c9ce2b03ed70c13fc49ee8ee332cefe4e3a)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpu/drm/drm_edid.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index ad24ccd..4ddc0e5 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -1016,10 +1016,6 @@ mode_in_range(const struct drm_display_mode *mode, struct edid *edid,
+ 	return true;
+ }
+ 
+-/*
+- * XXX If drm_dmt_modes ever regrows the CVT-R modes (and it will) this will
+- * need to account for them.
+- */
+ static int
+ drm_gtf_modes_for_range(struct drm_connector *connector, struct edid *edid,
+ 			struct detailed_timing *timing)
+-- 
+1.8.3.2
+

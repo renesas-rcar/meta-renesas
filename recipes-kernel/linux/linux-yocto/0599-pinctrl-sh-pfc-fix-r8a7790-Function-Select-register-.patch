@@ -1,0 +1,67 @@
+From 3c9e8ae99cf967ce4c3b02df1a83cf3cb659d148 Mon Sep 17 00:00:00 2001
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Date: Wed, 15 May 2013 10:46:49 +0000
+Subject: [PATCH 0599/1083] pinctrl: sh-pfc: fix r8a7790 Function Select
+ register tables
+
+Fix several errors in Peripheral Function Select register tables for
+r8a7790, which prevent various function pins from being correctly
+configured.
+
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski+renesas@gmail.com>
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 17babad61d7be374cbcaaeff22408912833cc316)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 41be54f5867ed8b84d2ada69011deaff890afed4)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7790.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
+index 5a633f4..7d39902 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7790.c
+@@ -3481,7 +3481,7 @@ static struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 		FN_SIM0_D_B, 0, 0, 0, 0, 0, 0, 0, }
+ 	},
+ 	{ PINMUX_CFG_REG_VAR("IPSR11", 0xE606004C, 32,
+-			     2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3) {
++			     2, 3, 3, 2, 4, 3, 2, 2, 2, 2, 2, 1, 4) {
+ 		/* IP11_31_30 [2] */
+ 		FN_SSI_SCK0129, FN_CAN_CLK_B, FN_MOUT0, 0,
+ 		/* IP11_29_27 [3] */
+@@ -3747,12 +3747,10 @@ static struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 		FN_SEL_SOF0_0, FN_SEL_SOF0_1, }
+ 	},
+ 	{ PINMUX_CFG_REG_VAR("MOD_SEL2", 0xE6060094, 32,
+-			     2, 1, 1, 1, 1, 2, 1, 2, 1,
+-			     2, 1, 1, 1, 3, 3, 2, 3, 2, 2) {
+-		/* RESEVED [2] */
++			     3, 1, 1, 1, 2, 1, 2, 1, 2,
++			     1, 1, 1, 3, 3, 2, 3, 2, 2) {
++		/* RESEVED [3] */
+ 		0, 0, 0, 0, 0, 0, 0, 0,
+-		/* RESEVED [1] */
+-		0, 0,
+ 		/* SEL_TMU1 [1] */
+ 		FN_SEL_TMU1_0, FN_SEL_TMU1_1,
+ 		/* SEL_HSCIF1 [1] */
+@@ -3768,8 +3766,8 @@ static struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 		/* SEL_CAN1 [1] */
+ 		FN_SEL_CAN1_0, FN_SEL_CAN1_1,
+ 		/* RESEVED [2] */
+-		0, 0, 0, 0, 0, 0, 0, 0,
+-		/* RESEVED [1] */
++		0, 0, 0, 0,
++		/* RESEVED [1] (actually TX2, RX2 vs. TX2_B, RX2_B of SCIF2) */
+ 		0, 0,
+ 		/* SEL_ADI [1] */
+ 		FN_SEL_ADI_0, FN_SEL_ADI_1,
+-- 
+1.8.3.2
+

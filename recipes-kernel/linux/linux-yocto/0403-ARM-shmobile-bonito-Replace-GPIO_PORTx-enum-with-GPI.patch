@@ -1,0 +1,46 @@
+From fbdf7d60e2968262cdee0d7c40cd2c08a39750a1 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 16 Feb 2013 07:38:50 +0100
+Subject: [PATCH 0403/1083] ARM: shmobile: bonito: Replace GPIO_PORTx enum with
+ GPIO port numbers
+
+The PFC GPIO API implementation moved to using port numbers. Replace all
+GPIO_PORTx enum usage with the corresponding port number. The GPIO_PORTx
+enum values are identical to the port number on this platform.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 8c2a141eece6196ee5f236cf0ac13c6e2828b0a8)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/board-bonito.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bonito.c b/arch/arm/mach-shmobile/board-bonito.c
+index 5f2e56b..22011cd 100644
+--- a/arch/arm/mach-shmobile/board-bonito.c
++++ b/arch/arm/mach-shmobile/board-bonito.c
+@@ -382,8 +382,8 @@ static void __init bonito_init(void)
+ 	/*
+ 	 * base board settings
+ 	 */
+-	gpio_request_one(GPIO_PORT176, GPIOF_IN, NULL);
+-	if (!gpio_get_value(GPIO_PORT176)) {
++	gpio_request_one(176, GPIOF_IN, NULL);
++	if (!gpio_get_value(176)) {
+ 		u16 bsw2;
+ 		u16 bsw3;
+ 		u16 bsw4;
+@@ -451,7 +451,7 @@ static void __init bonito_init(void)
+ 			gpio_request(GPIO_FN_LCD0_DISP,		NULL);
+ 			gpio_request(GPIO_FN_LCD0_LCLK_PORT165,	NULL);
+ 
+-			gpio_request_one(GPIO_PORT61, GPIOF_OUT_INIT_HIGH,
++			gpio_request_one(61, GPIOF_OUT_INIT_HIGH,
+ 					 NULL); /* LCDDON */
+ 
+ 			/* backlight on */
+-- 
+1.8.3.2
+

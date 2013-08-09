@@ -1,0 +1,109 @@
+From 4d1d8d52c258e27af4bec63ca3ab5a56c0a74885 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 27 Mar 2013 11:55:35 +0100
+Subject: [PATCH 0634/1083] ARM: shmobile: r8a7779: Add DU support
+
+Add a function to register the DU device with board-specific platform
+data. The DU device is named rcar-du-r8a7779, fix the clock entry
+accordingly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 3029c6b3dcd27672df77de1bc5028ce4f17fb3eb)
+
+Conflicts:
+	arch/arm/mach-shmobile/include/mach/r8a7779.h
+	arch/arm/mach-shmobile/setup-r8a7779.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 2fe07e9558f5915ef0ca00170db725cc2f271e2b)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7779.c        |  2 +-
+ arch/arm/mach-shmobile/include/mach/r8a7779.h |  2 ++
+ arch/arm/mach-shmobile/setup-r8a7779.c        | 22 ++++++++++++++++++++++
+ 3 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
+index f88c07b..725bebb 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7779.c
++++ b/arch/arm/mach-shmobile/clock-r8a7779.c
+@@ -184,7 +184,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.1", &mstp_clks[MSTP322]), /* SDHI1 */
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.2", &mstp_clks[MSTP321]), /* SDHI2 */
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.3", &mstp_clks[MSTP320]), /* SDHI3 */
+-	CLKDEV_DEV_ID("rcar-du.0", &mstp_clks[MSTP103]), /* DU */
++	CLKDEV_DEV_ID("rcar-du-r8a7779", &mstp_clks[MSTP103]), /* DU */
+ };
+ 
+ void __init r8a7779_clock_init(void)
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7779.h b/arch/arm/mach-shmobile/include/mach/r8a7779.h
+index bb9a671..effc73b 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7779.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7779.h
+@@ -5,6 +5,7 @@
+ #include <linux/pm_domain.h>
+ 
+ struct platform_device;
++struct rcar_du_platform_data;
+ 
+ struct r8a7779_pm_ch {
+ 	unsigned long chan_offs;
+@@ -22,6 +23,7 @@ static inline struct r8a7779_pm_ch *to_r8a7779_ch(struct generic_pm_domain *d)
+ 	return &container_of(d, struct r8a7779_pm_domain, genpd)->ch;
+ }
+ 
++extern void r8a7779_add_du_device(struct rcar_du_platform_data *pdata);
+ extern int r8a7779_sysc_power_down(struct r8a7779_pm_ch *r8a7779_ch);
+ extern int r8a7779_sysc_power_up(struct r8a7779_pm_ch *r8a7779_ch);
+ 
+diff --git a/arch/arm/mach-shmobile/setup-r8a7779.c b/arch/arm/mach-shmobile/setup-r8a7779.c
+index 96bd203..19c258d0 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7779.c
++++ b/arch/arm/mach-shmobile/setup-r8a7779.c
+@@ -22,6 +22,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/platform_data/gpio-rcar.h>
++#include <linux/platform_data/rcar-du.h>
+ #include <linux/platform_device.h>
+ #include <linux/delay.h>
+ #include <linux/input.h>
+@@ -398,6 +399,12 @@ static struct platform_device sata_device = {
+ 	},
+ };
+ 
++/* DU */
++static struct resource du_resources[] = {
++	DEFINE_RES_MEM(0xfff80000, 0x40000),
++	DEFINE_RES_IRQ(gic_iid(0x3f)),
++};
++
+ static struct platform_device *r8a7779_early_devices[] __initdata = {
+ 	&scif0_device,
+ 	&scif1_device,
+@@ -436,6 +443,21 @@ void __init r8a7779_add_standard_devices(void)
+ 			    ARRAY_SIZE(r8a7779_late_devices));
+ }
+ 
++void __init r8a7779_add_du_device(struct rcar_du_platform_data *pdata)
++{
++	struct platform_device_info info = {
++		.name = "rcar-du-r8a7779",
++		.id = -1,
++		.res = du_resources,
++		.num_res = ARRAY_SIZE(du_resources),
++		.data = pdata,
++		.size_data = sizeof(*pdata),
++		.dma_mask = DMA_BIT_MASK(32),
++	};
++
++	platform_device_register_full(&info);
++}
++
+ /* do nothing for !CONFIG_SMP or !CONFIG_HAVE_TWD */
+ void __init __weak r8a7779_register_twd(void) { }
+ 
+-- 
+1.8.3.2
+

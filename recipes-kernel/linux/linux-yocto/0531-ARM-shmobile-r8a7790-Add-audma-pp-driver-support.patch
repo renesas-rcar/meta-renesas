@@ -1,0 +1,196 @@
+From 683195cf956fa657aac236e2e5aef6963f06f6d6 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Thu, 13 Jun 2013 14:23:28 +0900
+Subject: [PATCH 0531/1083] ARM: shmobile: r8a7790: Add audma-pp driver support
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit 2894be4665405d171ad5822dc0e59a958473c1f2)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig           |  2 +
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  4 ++
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 80 +++++++++++++++++++++++++++
+ 3 files changed, 86 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index c71a862..46e4ba3 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -166,6 +166,8 @@ CONFIG_DMADEVICES=y
+ CONFIG_SH_DMAE_BASE=y
+ CONFIG_SH_DMAE=y
+ CONFIG_SH_DMAE_DESC=y
++CONFIG_SH_DMAEPP_BASE=y
++CONFIG_SH_DMAEPP_AUPP=y
+ CONFIG_UIO=y
+ CONFIG_UIO_PDRV_GENIRQ=y
+ # CONFIG_DNOTIFY is not set
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+index 5a66b1d..af2e50d 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7790.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+@@ -202,6 +202,7 @@ extern void r8a7790_add_device_to_domain(struct r8a7790_pm_domain *r8a7790_pd,
+ enum {
+ 	SHDMA_DEVID_AUDIO_LO,
+ 	SHDMA_DEVID_AUDIO_UP,
++	SHDMA_DEVID_AUDIOPP,
+ 	SHDMA_DEVID_SYS_LO,
+ 	SHDMA_DEVID_SYS_UP,
+ };
+@@ -214,6 +215,9 @@ enum {
+ 	SHDMA_SLAVE_PCM_SSI1_MEM,
+ 	SHDMA_SLAVE_PCM_SRC1_MEM,
+ 	SHDMA_SLAVE_PCM_CMD1_MEM,
++	SHDMA_SLAVE_PCM_SRC0_SSI0,
++	SHDMA_SLAVE_PCM_CMD0_SSI0,
++	SHDMA_SLAVE_PCM_SSI1_SRC1,
+ 	SHDMA_SLAVE_PCM_MAX,
+ };
+ 
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index caa21a1..624e595 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -28,6 +28,7 @@
+ #include <linux/sh_eth.h>
+ #include <linux/i2c/i2c-rcar.h>
+ #include <linux/sh_dma-desc.h>
++#include <linux/sh_audma-pp.h>
+ #include <linux/platform_data/gpio-rcar.h>
+ #include <linux/platform_data/irq-renesas-irqc.h>
+ #include <linux/platform_data/rcar-du.h>
+@@ -937,9 +938,15 @@ static struct platform_device i2c3_device = {
+ 	.chclr_offset	= c	\
+ }
+ 
++#define AUDMAPP_CHANNEL(a)	\
++{				\
++	.offset		= a,	\
++}
++
+ /* Audio-DMA */
+ /*  audmal  : Audio-DMAC lower (ch0-12)  */
+ /*  audmau  : Audio-DMAC upper (ch13-25) */
++/*  audmapp : Audio-DMAC-pp (ch0-28)     */
+ static struct clk *audma_clk_get(struct platform_device *pdev)
+ {
+ 	if (pdev->id == SHDMA_DEVID_AUDIO_LO)
+@@ -974,6 +981,20 @@ static const struct sh_dmadesc_slave_config r8a7790_audma_slaves[] = {
+ 	},
+ };
+ 
++static const struct sh_audmapp_slave_config r8a7790_audmapp_slaves[] = {
++	{
++		.slave_id	= SHDMA_SLAVE_PCM_SRC0_SSI0,
++		.sar		= 0xec304000,
++		.dar		= 0xec400000,
++		.chcr		= 0x2d000000,
++	}, {
++		.slave_id	= SHDMA_SLAVE_PCM_SSI1_SRC1,
++		.sar		= 0xec401000,
++		.dar		= 0xec300400,
++		.chcr		= 0x042e0000,
++	},
++};
++
+ static const struct sh_dmadesc_channel r8a7790_audma_channels[] = {
+ 	DMA_CHANNEL(0x00008000, 0x40, 0x00000080),
+ 	DMA_CHANNEL(0x00008080, 0x40, 0x00000080),
+@@ -990,6 +1011,38 @@ static const struct sh_dmadesc_channel r8a7790_audma_channels[] = {
+ 	DMA_CHANNEL(0x00008600, 0x40, 0x00000080),
+ };
+ 
++static const struct sh_audmapp_channel r8a7790_audmapp_channels[] = {
++	AUDMAPP_CHANNEL(0x0000),
++	AUDMAPP_CHANNEL(0x0010),
++	AUDMAPP_CHANNEL(0x0020),
++	AUDMAPP_CHANNEL(0x0030),
++	AUDMAPP_CHANNEL(0x0040),
++	AUDMAPP_CHANNEL(0x0050),
++	AUDMAPP_CHANNEL(0x0060),
++	AUDMAPP_CHANNEL(0x0070),
++	AUDMAPP_CHANNEL(0x0080),
++	AUDMAPP_CHANNEL(0x0090),
++	AUDMAPP_CHANNEL(0x00a0),
++	AUDMAPP_CHANNEL(0x00b0),
++	AUDMAPP_CHANNEL(0x00c0),
++	AUDMAPP_CHANNEL(0x00d0),
++	AUDMAPP_CHANNEL(0x00e0),
++	AUDMAPP_CHANNEL(0x00f0),
++	AUDMAPP_CHANNEL(0x0100),
++	AUDMAPP_CHANNEL(0x0110),
++	AUDMAPP_CHANNEL(0x0120),
++	AUDMAPP_CHANNEL(0x0130),
++	AUDMAPP_CHANNEL(0x0140),
++	AUDMAPP_CHANNEL(0x0150),
++	AUDMAPP_CHANNEL(0x0160),
++	AUDMAPP_CHANNEL(0x0170),
++	AUDMAPP_CHANNEL(0x0180),
++	AUDMAPP_CHANNEL(0x0190),
++	AUDMAPP_CHANNEL(0x01a0),
++	AUDMAPP_CHANNEL(0x01b0),
++	AUDMAPP_CHANNEL(0x01c0),
++};
++
+ static struct sh_dmadesc_pdata audma_platform_data = {
+ 	.slave		= r8a7790_audma_slaves,
+ 	.slave_num	= ARRAY_SIZE(r8a7790_audma_slaves),
+@@ -1006,6 +1059,13 @@ static struct sh_dmadesc_pdata audma_platform_data = {
+ 	.clk_get	= audma_clk_get,
+ };
+ 
++static struct sh_audmapp_pdata audmapp_platform_data = {
++	.slave		= r8a7790_audmapp_slaves,
++	.slave_num	= ARRAY_SIZE(r8a7790_audmapp_slaves),
++	.channel	= r8a7790_audmapp_channels,
++	.channel_num	= ARRAY_SIZE(r8a7790_audmapp_channels),
++};
++
+ static struct resource r8a7790_audmal_resources[] = {
+ 	{
+ 		.start	= 0xec700000,
+@@ -1046,6 +1106,15 @@ static struct resource r8a7790_audmau_resources[] = {
+ 	},
+ };
+ 
++static struct resource r8a7790_audmapp_resources[] = {
++	{
++		/* channel registers (0-28) */
++		.start	= 0xec740020,
++		.end	= 0xec7401ef,
++		.flags	= IORESOURCE_MEM,
++	},
++};
++
+ static struct platform_device audmal_device = {
+ 	.name		= "sh-dmadesc-engine",
+ 	.id		= SHDMA_DEVID_AUDIO_LO,
+@@ -1066,6 +1135,16 @@ static struct platform_device audmau_device = {
+ 	},
+ };
+ 
++static struct platform_device audmapp_device = {
++	.name		= "sh-audmapp-engine",
++	.id		= SHDMA_DEVID_AUDIOPP,
++	.resource	= r8a7790_audmapp_resources,
++	.num_resources	= ARRAY_SIZE(r8a7790_audmapp_resources),
++	.dev		= {
++		.platform_data	= &audmapp_platform_data,
++	},
++};
++
+ /* SYS-DMA */
+ static bool sysdma_filter(struct platform_device *pdev)
+ {
+@@ -1240,6 +1319,7 @@ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&i2c3_device,
+ 	&audmal_device,
+ 	&audmau_device,
++	&audmapp_device,
+ 	&sysdmau_device,
+ };
+ 
+-- 
+1.8.3.2
+

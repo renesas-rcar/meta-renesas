@@ -1,0 +1,55 @@
+From 54e8ec43bf0555410855a41f717551fc8316ec97 Mon Sep 17 00:00:00 2001
+From: Ulrich Hecht <ulrich.hecht@gmail.com>
+Date: Fri, 31 May 2013 17:57:02 +0200
+Subject: [PATCH 0644/1083] ARM: shmobile: r8a7790: HSCIF support
+
+Adds support for HSCIF0 and HSCIF1 on the r8a7790.
+
+Signed-off-by: Ulrich Hecht <ulrich.hecht@gmail.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 729cb826d45cc2e58bb0256b66f1a8e42173bf54)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit aa96583a2f6f4af4ba84e2649f1e612dc09395c9)
+
+Conflicts:
+	arch/arm/mach-shmobile/clock-r8a7790.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7790.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
+index 225fa05..2cc6618 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7790.c
++++ b/arch/arm/mach-shmobile/clock-r8a7790.c
+@@ -186,6 +186,7 @@ static struct clk div6_clks[DIV6_NR] = {
+ /* MSTP */
+ enum {
+ 	MSTP726, MSTP725, MSTP724, MSTP723, MSTP721, MSTP720,
++	MSTP717, MSTP716,
+ 	MSTP314, MSTP313, MSTP312, MSTP311, MSTP304,
+ 	MSTP216, MSTP207, MSTP206, MSTP204, MSTP203, MSTP202,
+ 	MSTP112,
+@@ -215,6 +216,8 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP204] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 4, 0), /* SCIFA0 */
+ 	[MSTP203] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 3, 0), /* SCIFA1 */
+ 	[MSTP202] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 2, 0), /* SCIFA2 */
++	[MSTP717] = SH_CLK_MSTP32(&zs_clk, SMSTPCR7, 17, 0), /* HSCIF0 */
++	[MSTP716] = SH_CLK_MSTP32(&zs_clk, SMSTPCR7, 16, 0), /* HSCIF1 */
+ 	[MSTP112] = SH_CLK_MSTP32(&zg_clk, SMSTPCR1, 12, 0),
+ 	[MSTP502] = SH_CLK_MSTP32(&hp_clk, SMSTPCR5, 2, 0),
+ 	[MSTP501] = SH_CLK_MSTP32(&hp_clk, SMSTPCR5, 1, 0),
+@@ -295,6 +298,8 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh-sci.5", &mstp_clks[MSTP202]),
+ 	CLKDEV_DEV_ID("sh-sci.6", &mstp_clks[MSTP721]),
+ 	CLKDEV_DEV_ID("sh-sci.7", &mstp_clks[MSTP720]),
++	CLKDEV_DEV_ID("sh-sci.8", &mstp_clks[MSTP717]),
++	CLKDEV_DEV_ID("sh-sci.9", &mstp_clks[MSTP716]),
+ 	CLKDEV_CON_ID("hs_usb", &mstp_clks[MSTP704]),
+ 	CLKDEV_CON_ID("usb_fck", &mstp_clks[MSTP703]),
+ 	CLKDEV_DEV_ID("qspi.0", &mstp_clks[MSTP917]),
+-- 
+1.8.3.2
+

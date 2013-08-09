@@ -1,0 +1,300 @@
+From 630547df0c30c61e0fbe49d439e0c5ebd4fa5056 Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Tue, 28 Aug 2012 12:54:42 -0500
+Subject: [PATCH 0292/1083] ARM: shmobile: move custom gpio functions to
+ sh-gpio.h
+
+Move custom shmobile gpio code to a sh-gpio.h to remove the dependency
+on mach/gpio.h. shmobile always uses gpiolib, so we can remove
+__GPIOLIB_COMPLEX define from mach/gpio.h.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Paul Mundt <lethal@linux-sh.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+(cherry picked from commit 6679185909e79df85bd44fd964f80f36899d0880)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/board-ap4evb.c          |  2 +
+ arch/arm/mach-shmobile/board-armadillo800eva.c |  2 +
+ arch/arm/mach-shmobile/board-g4evm.c           |  2 +
+ arch/arm/mach-shmobile/board-mackerel.c        |  2 +
+ arch/arm/mach-shmobile/include/mach/gpio.h     | 63 +-------------------------
+ arch/arm/mach-shmobile/pfc-r8a7740.c           |  2 +-
+ arch/arm/mach-shmobile/pfc-r8a7779.c           |  2 +-
+ arch/arm/mach-shmobile/pfc-sh7367.c            |  2 +-
+ arch/arm/mach-shmobile/pfc-sh7372.c            |  2 +-
+ arch/arm/mach-shmobile/pfc-sh7377.c            |  2 +-
+ arch/arm/mach-shmobile/pfc-sh73a0.c            |  2 +-
+ arch/arm/mach-shmobile/sh-gpio.h               | 48 ++++++++++++++++++++
+ drivers/sh/pfc/gpio.c                          |  1 +
+ 13 files changed, 64 insertions(+), 68 deletions(-)
+ create mode 100644 arch/arm/mach-shmobile/sh-gpio.h
+
+diff --git a/arch/arm/mach-shmobile/board-ap4evb.c b/arch/arm/mach-shmobile/board-ap4evb.c
+index fd9ad7c..59b3044 100644
+--- a/arch/arm/mach-shmobile/board-ap4evb.c
++++ b/arch/arm/mach-shmobile/board-ap4evb.c
+@@ -64,6 +64,8 @@
+ #include <asm/mach/arch.h>
+ #include <asm/setup.h>
+ 
++#include "sh-gpio.h"
++
+ /*
+  * Address	Interface		BusWidth	note
+  * ------------------------------------------------------------------
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index 72690cd..fdc7518 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -55,6 +55,8 @@
+ #include <sound/sh_fsi.h>
+ #include <sound/simple_card.h>
+ 
++#include "sh-gpio.h"
++
+ /*
+  * CON1		Camera Module
+  * CON2		Extension Bus
+diff --git a/arch/arm/mach-shmobile/board-g4evm.c b/arch/arm/mach-shmobile/board-g4evm.c
+index f125732..44c7858 100644
+--- a/arch/arm/mach-shmobile/board-g4evm.c
++++ b/arch/arm/mach-shmobile/board-g4evm.c
+@@ -40,6 +40,8 @@
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ 
++#include "sh-gpio.h"
++
+ /*
+  * SDHI
+  *
+diff --git a/arch/arm/mach-shmobile/board-mackerel.c b/arch/arm/mach-shmobile/board-mackerel.c
+index 29763ce6..8969a03 100644
+--- a/arch/arm/mach-shmobile/board-mackerel.c
++++ b/arch/arm/mach-shmobile/board-mackerel.c
+@@ -62,6 +62,8 @@
+ #include <asm/mach/arch.h>
+ #include <asm/mach-types.h>
+ 
++#include "sh-gpio.h"
++
+ /*
+  * Address	Interface		BusWidth	note
+  * ------------------------------------------------------------------
+diff --git a/arch/arm/mach-shmobile/include/mach/gpio.h b/arch/arm/mach-shmobile/include/mach/gpio.h
+index 844507d..40a8c17 100644
+--- a/arch/arm/mach-shmobile/include/mach/gpio.h
++++ b/arch/arm/mach-shmobile/include/mach/gpio.h
+@@ -1,62 +1 @@
+-/*
+- * Generic GPIO API and pinmux table support
+- *
+- * Copyright (c) 2008  Magnus Damm
+- *
+- * This file is subject to the terms and conditions of the GNU General Public
+- * License.  See the file "COPYING" in the main directory of this archive
+- * for more details.
+- */
+-#ifndef __ASM_ARCH_GPIO_H
+-#define __ASM_ARCH_GPIO_H
+-
+-#include <linux/kernel.h>
+-#include <linux/errno.h>
+-#include <linux/sh_pfc.h>
+-#include <linux/io.h>
+-
+-#ifdef CONFIG_GPIOLIB
+-
+-static inline int irq_to_gpio(unsigned int irq)
+-{
+-	return -ENOSYS;
+-}
+-
+-#else
+-
+-#define __ARM_GPIOLIB_COMPLEX
+-
+-#endif /* CONFIG_GPIOLIB */
+-
+-/*
+- * FIXME !!
+- *
+- * current gpio frame work doesn't have
+- * the method to control only pull up/down/free.
+- * this function should be replaced by correct gpio function
+- */
+-static inline void __init gpio_direction_none(u32 addr)
+-{
+-	__raw_writeb(0x00, addr);
+-}
+-
+-static inline void __init gpio_request_pullup(u32 addr)
+-{
+-	u8 data = __raw_readb(addr);
+-
+-	data &= 0x0F;
+-	data |= 0xC0;
+-	__raw_writeb(data, addr);
+-}
+-
+-static inline void __init gpio_request_pulldown(u32 addr)
+-{
+-	u8 data = __raw_readb(addr);
+-
+-	data &= 0x0F;
+-	data |= 0xA0;
+-
+-	__raw_writeb(data, addr);
+-}
+-
+-#endif /* __ASM_ARCH_GPIO_H */
++/* empty */
+diff --git a/arch/arm/mach-shmobile/pfc-r8a7740.c b/arch/arm/mach-shmobile/pfc-r8a7740.c
+index ce9e7fa..134d1b9 100644
+--- a/arch/arm/mach-shmobile/pfc-r8a7740.c
++++ b/arch/arm/mach-shmobile/pfc-r8a7740.c
+@@ -20,7 +20,7 @@
+  */
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+-#include <linux/gpio.h>
++#include <linux/sh_pfc.h>
+ #include <mach/r8a7740.h>
+ #include <mach/irqs.h>
+ 
+diff --git a/arch/arm/mach-shmobile/pfc-r8a7779.c b/arch/arm/mach-shmobile/pfc-r8a7779.c
+index d14c9b0..cbc26ba 100644
+--- a/arch/arm/mach-shmobile/pfc-r8a7779.c
++++ b/arch/arm/mach-shmobile/pfc-r8a7779.c
+@@ -19,7 +19,7 @@
+  */
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+-#include <linux/gpio.h>
++#include <linux/sh_pfc.h>
+ #include <linux/ioport.h>
+ #include <mach/r8a7779.h>
+ 
+diff --git a/arch/arm/mach-shmobile/pfc-sh7367.c b/arch/arm/mach-shmobile/pfc-sh7367.c
+index e6e5246..c0c137f 100644
+--- a/arch/arm/mach-shmobile/pfc-sh7367.c
++++ b/arch/arm/mach-shmobile/pfc-sh7367.c
+@@ -18,7 +18,7 @@
+  */
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+-#include <linux/gpio.h>
++#include <linux/sh_pfc.h>
+ #include <mach/sh7367.h>
+ 
+ #define CPU_ALL_PORT(fn, pfx, sfx)				\
+diff --git a/arch/arm/mach-shmobile/pfc-sh7372.c b/arch/arm/mach-shmobile/pfc-sh7372.c
+index 336093f..7a1525f 100644
+--- a/arch/arm/mach-shmobile/pfc-sh7372.c
++++ b/arch/arm/mach-shmobile/pfc-sh7372.c
+@@ -22,7 +22,7 @@
+  */
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+-#include <linux/gpio.h>
++#include <linux/sh_pfc.h>
+ #include <mach/irqs.h>
+ #include <mach/sh7372.h>
+ 
+diff --git a/arch/arm/mach-shmobile/pfc-sh7377.c b/arch/arm/mach-shmobile/pfc-sh7377.c
+index 2f10511..f3117f6 100644
+--- a/arch/arm/mach-shmobile/pfc-sh7377.c
++++ b/arch/arm/mach-shmobile/pfc-sh7377.c
+@@ -19,7 +19,7 @@
+  */
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+-#include <linux/gpio.h>
++#include <linux/sh_pfc.h>
+ #include <mach/sh7377.h>
+ 
+ #define CPU_ALL_PORT(fn, pfx, sfx)				\
+diff --git a/arch/arm/mach-shmobile/pfc-sh73a0.c b/arch/arm/mach-shmobile/pfc-sh73a0.c
+index 4a547b8..b442f9d 100644
+--- a/arch/arm/mach-shmobile/pfc-sh73a0.c
++++ b/arch/arm/mach-shmobile/pfc-sh73a0.c
+@@ -20,7 +20,7 @@
+  */
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+-#include <linux/gpio.h>
++#include <linux/sh_pfc.h>
+ #include <mach/sh73a0.h>
+ #include <mach/irqs.h>
+ 
+diff --git a/arch/arm/mach-shmobile/sh-gpio.h b/arch/arm/mach-shmobile/sh-gpio.h
+new file mode 100644
+index 0000000..7ba1877
+--- /dev/null
++++ b/arch/arm/mach-shmobile/sh-gpio.h
+@@ -0,0 +1,48 @@
++/*
++ * Generic GPIO API and pinmux table support
++ *
++ * Copyright (c) 2008  Magnus Damm
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ */
++#ifndef __ASM_ARCH_GPIO_H
++#define __ASM_ARCH_GPIO_H
++
++#include <linux/kernel.h>
++#include <linux/errno.h>
++#include <linux/io.h>
++
++/*
++ * FIXME !!
++ *
++ * current gpio frame work doesn't have
++ * the method to control only pull up/down/free.
++ * this function should be replaced by correct gpio function
++ */
++static inline void __init gpio_direction_none(u32 addr)
++{
++	__raw_writeb(0x00, addr);
++}
++
++static inline void __init gpio_request_pullup(u32 addr)
++{
++	u8 data = __raw_readb(addr);
++
++	data &= 0x0F;
++	data |= 0xC0;
++	__raw_writeb(data, addr);
++}
++
++static inline void __init gpio_request_pulldown(u32 addr)
++{
++	u8 data = __raw_readb(addr);
++
++	data &= 0x0F;
++	data |= 0xA0;
++
++	__raw_writeb(data, addr);
++}
++
++#endif /* __ASM_ARCH_GPIO_H */
+diff --git a/drivers/sh/pfc/gpio.c b/drivers/sh/pfc/gpio.c
+index 62bca98..038fa07 100644
+--- a/drivers/sh/pfc/gpio.c
++++ b/drivers/sh/pfc/gpio.c
+@@ -17,6 +17,7 @@
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/pinctrl/consumer.h>
++#include <linux/sh_pfc.h>
+ 
+ struct sh_pfc_chip {
+ 	struct sh_pfc		*pfc;
+-- 
+1.8.3.2
+

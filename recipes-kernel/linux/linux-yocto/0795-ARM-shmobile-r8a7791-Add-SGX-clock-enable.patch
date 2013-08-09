@@ -1,0 +1,41 @@
+From 4b9aa333019b93807874826904a40ec535388c88 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 30 Jul 2013 18:47:28 +0900
+Subject: [PATCH 0795/1083] ARM: shmobile: r8a7791: Add SGX clock enable
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7791.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
+index 914700d..7ac579a 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7791.c
++++ b/arch/arm/mach-shmobile/clock-r8a7791.c
+@@ -143,6 +143,7 @@ static struct clk div6_clks[DIV6_NR] = {
+ 
+ /* MSTP */
+ enum {
++	MSTP112,
+ 	MSTP219, MSTP218,
+ 	MSTP315,
+ 	MSTP502, MSTP501,
+@@ -171,6 +172,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP718] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 18, 0), /* SCIF3 */
+ 	[MSTP715] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 15, 0), /* SCIF4 */
+ 	[MSTP714] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 14, 0), /* SCIF5 */
++	[MSTP112] = SH_CLK_MSTP32(&zg_clk, SMSTPCR1, 12, 0),
+ 	[MSTP815] = SH_CLK_MSTP32(&sata0_clk, SMSTPCR8, 15, 0),
+ 	[MSTP814] = SH_CLK_MSTP32(&sata1_clk, SMSTPCR8, 14, 0),
+ 	[MSTP811] = SH_CLK_MSTP32(&zg_clk, SMSTPCR8, 11, 0),
+@@ -220,6 +222,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("mmc.0", &div6_clks[DIV6_MMC]),
+ 
+ 	/* MSTP */
++	CLKDEV_DEV_ID("pvrsrvkm", &mstp_clks[MSTP112]),
+ 	CLKDEV_CON_ID("sysdmac_lo", &mstp_clks[MSTP219]),
+ 	CLKDEV_CON_ID("sysdmac_up", &mstp_clks[MSTP218]),
+ 	CLKDEV_CON_ID("audmac_lo", &mstp_clks[MSTP502]),
+-- 
+1.8.3.2
+

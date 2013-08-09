@@ -1,0 +1,39 @@
+From c056a198c4edca8f007e50df01317f455d3e571a Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Wed, 26 Jun 2013 13:33:51 +0900
+Subject: [PATCH 0671/1083] ASoC: sh: scu: Fix SRC timing signal select for
+ recording
+
+Add the setting of the SRC timing signal of ADG for the capture process.
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+(cherry picked from commit f39445f92e57177c4d76d328c8601eff1ea30db6)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ sound/soc/sh/scu_dai.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index 95fe501..e3ddb72 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -105,11 +105,13 @@ static void adg_init(void)
+ 		(u32 *)(rinfo->adgreg + ADG_AUDIO_CLK_SEL0));
+ 
+ 	/* SRC Input Timing */
+-	scu_or_writel(ADG_SRCIN0_SRC0_DIVCLK_SSI_WS0,
++	scu_or_writel((ADG_SRCIN0_SRC1_DIVCLK_SSI_WS0 |
++		ADG_SRCIN0_SRC0_DIVCLK_SSI_WS0),
+ 		(u32 *)(rinfo->adgreg + ADG_SRCIN_TIMSEL0));
+ 
+ 	/* SRC Output Timing */
+-	scu_or_writel(ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS0,
++	scu_or_writel((ADG_SRCOUT0_SRC1_DIVCLK_SSI_WS0 |
++		ADG_SRCOUT0_SRC0_DIVCLK_SSI_WS0),
+ 		(u32 *)(rinfo->adgreg + ADG_SRCOUT_TIMSEL0));
+ 
+ 	/* CMD Output Timing */
+-- 
+1.8.3.2
+

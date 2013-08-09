@@ -1,0 +1,88 @@
+From df29b6907998ef235d6e4309cf8797f30369b7d9 Mon Sep 17 00:00:00 2001
+From: Will Deacon <will.deacon@arm.com>
+Date: Fri, 6 Jul 2012 15:46:45 +0100
+Subject: [PATCH 0150/1083] ARM: 7451/1: arch timer: implement
+ read_current_timer and get_cycles
+
+This patch implements read_current_timer using the architected timers
+when they are selected via CONFIG_ARM_ARCH_TIMER. If they are detected
+not to be usable at runtime, we return -ENXIO to the caller.
+
+Furthermore, if read_current_timer is exported then we can implement
+get_cycles in terms of it for use as both an entropy source and for
+implementing __udelay and friends.
+
+Tested-by: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
+Reviewed-by: Stephen Boyd <sboyd@codeaurora.org>
+Signed-off-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+(cherry picked from commit 923df96b9f31b7d08d8438ff9677326d9537accf)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/include/asm/arch_timer.h |  3 +++
+ arch/arm/include/asm/timex.h      | 10 ++++++----
+ arch/arm/kernel/arch_timer.c      |  8 ++++++++
+ 3 files changed, 17 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/include/asm/arch_timer.h b/arch/arm/include/asm/arch_timer.h
+index ed2e95d..62e7547 100644
+--- a/arch/arm/include/asm/arch_timer.h
++++ b/arch/arm/include/asm/arch_timer.h
+@@ -1,7 +1,10 @@
+ #ifndef __ASMARM_ARCH_TIMER_H
+ #define __ASMARM_ARCH_TIMER_H
+ 
++#include <asm/errno.h>
++
+ #ifdef CONFIG_ARM_ARCH_TIMER
++#define ARCH_HAS_READ_CURRENT_TIMER
+ int arch_timer_of_register(void);
+ int arch_timer_sched_clock_init(void);
+ #else
+diff --git a/arch/arm/include/asm/timex.h b/arch/arm/include/asm/timex.h
+index 3be8de3..ce11944 100644
+--- a/arch/arm/include/asm/timex.h
++++ b/arch/arm/include/asm/timex.h
+@@ -12,13 +12,15 @@
+ #ifndef _ASMARM_TIMEX_H
+ #define _ASMARM_TIMEX_H
+ 
++#include <asm/arch_timer.h>
+ #include <mach/timex.h>
+ 
+ typedef unsigned long cycles_t;
+ 
+-static inline cycles_t get_cycles (void)
+-{
+-	return 0;
+-}
++#ifdef ARCH_HAS_READ_CURRENT_TIMER
++#define get_cycles()	({ cycles_t c; read_current_timer(&c) ? 0 : c; })
++#else
++#define get_cycles()	(0)
++#endif
+ 
+ #endif
+diff --git a/arch/arm/kernel/arch_timer.c b/arch/arm/kernel/arch_timer.c
+index dd58035..dbbeec4 100644
+--- a/arch/arm/kernel/arch_timer.c
++++ b/arch/arm/kernel/arch_timer.c
+@@ -223,6 +223,14 @@ static cycle_t arch_counter_read(struct clocksource *cs)
+ 	return arch_counter_get_cntpct();
+ }
+ 
++int read_current_timer(unsigned long *timer_val)
++{
++	if (!arch_timer_rate)
++		return -ENXIO;
++	*timer_val = arch_counter_get_cntpct();
++	return 0;
++}
++
+ static struct clocksource clocksource_counter = {
+ 	.name	= "arch_sys_counter",
+ 	.rating	= 400,
+-- 
+1.8.3.2
+

@@ -1,0 +1,26 @@
+From 70a0a1a6a8025ef4f67ae70d193362f8add32923 Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Fri, 26 Jul 2013 11:37:58 +0900
+Subject: [PATCH 0804/1083] ASoC: sh: scu: Fix return value of mute setting
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ sound/soc/sh/scu_dai.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/sh/scu_dai.c b/sound/soc/sh/scu_dai.c
+index 757381c..9cdfbf7 100644
+--- a/sound/soc/sh/scu_dai.c
++++ b/sound/soc/sh/scu_dai.c
+@@ -941,7 +941,7 @@ static int scu_dai_put_mute(struct snd_kcontrol *kctrl,
+ 		writel(mute, (u32 *)&rinfo->dvcreg[0]->zcmcr);
+ 	}
+ 
+-	return 0;
++	return change;
+ }
+ 
+ static struct snd_kcontrol_new playback_mute_controls = {
+-- 
+1.8.3.2
+

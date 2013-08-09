@@ -1,0 +1,144 @@
+From d4b6a405213bc3756ad44dde881a65b106f55328 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 11 Jun 2013 15:24:10 +0900
+Subject: [PATCH 0480/1083] ARM: shmobile: r8a7790: Remove static memory map
+ region
+
+The static I/O memory map region is removed because memtester command
+failed. You can use ioremap function instead of the static map.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+(cherry picked from commit 1aae7b2cac3bf1707f85ba8a0f284305693a4e29)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c | 17 -----------------
+ arch/arm/mach-shmobile/smp-r8a7790.c | 37 +++++++++++++++++++++---------------
+ 2 files changed, 22 insertions(+), 32 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index 447ae46..d68051c 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -26,10 +26,8 @@
+ #include <linux/platform_device.h>
+ #include <mach/common.h>
+ #include <mach/r8a7790.h>
+-#include <asm/page.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+-#include <asm/mach/map.h>
+ 
+ static const struct pinctrl_map lager_pinctrl_map[] = {
+ 	/* SCIF0 (CN19: DEBUG SERIAL0) */
+@@ -40,20 +38,6 @@ static const struct pinctrl_map lager_pinctrl_map[] = {
+ 				  "scif1_data", "scif1"),
+ };
+ 
+-static struct map_desc lager_io_desc[] __initdata = {
+-	{
+-		.virtual	= 0xe6000000,
+-		.pfn		= __phys_to_pfn(0xe6000000),
+-		.length		= SZ_16M,
+-		.type		= MT_DEVICE_NONSHARED,
+-	},
+-};
+-
+-static void __init lager_map_io(void)
+-{
+-	iotable_init(lager_io_desc, ARRAY_SIZE(lager_io_desc));
+-}
+-
+ static void __init lager_add_standard_devices(void)
+ {
+ 	r8a7790_clock_init();
+@@ -72,7 +56,6 @@ static const char *lager_boards_compat_dt[] __initdata = {
+ 
+ DT_MACHINE_START(LAGER_DT, "lager")
+ 	.init_irq	= r8a7790_init_irq,
+-	.map_io		= lager_map_io,
+ 	.timer		= &r8a7790_timer,
+ 	.init_machine	= lager_add_standard_devices,
+ 	.dt_compat	= lager_boards_compat_dt,
+diff --git a/arch/arm/mach-shmobile/smp-r8a7790.c b/arch/arm/mach-shmobile/smp-r8a7790.c
+index da96e5a..261a7c0 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7790.c
++++ b/arch/arm/mach-shmobile/smp-r8a7790.c
+@@ -36,12 +36,13 @@ unsigned int r8a7790_get_core_count(void)
+ 	return CONFIG_NR_CPUS;
+ }
+ 
+-#define CA15BAR	0xe6166020
+-#define CA15RESCNT	0xe6160040
+-#define RESCNT	0xe6160050
+-#define CA15WUPCR	0xe6154010
+-#define SYSCSR	0xe6180000
+-#define MERAM	0xe8080000
++#define IO_BASE		0xe6150000
++#define CA15BAR		0x016020
++#define CA15RESCNT	0x010040
++#define RESCNT		0x010050
++#define CA15WUPCR	0x004010
++#define SYSCSR		0x030000
++#define MERAM		0xe8080000
+ #define CCI_BASE	0xf0190000
+ #define CCI_SLAVE3	0x4000
+ #define CCI_SLAVE4	0x5000
+@@ -62,9 +63,11 @@ void __init r8a7790_smp_prepare_cpus(unsigned int max_cpus)
+ 	memcpy(p, r8a7790_secondary_cpu_entry, 16);
+ 	iounmap(p);
+ 
++	p = ioremap_nocache(IO_BASE, 0x40000);
+ 	bar = (MERAM >> 8) & 0xfffffc00;
+-	__raw_writel(bar, CA15BAR);
+-	__raw_writel(bar | 0x10, CA15BAR);
++	__raw_writel(bar, (int)p + CA15BAR);
++	__raw_writel(bar | 0x10, (int)p + CA15BAR);
++	iounmap(p);
+ }
+ 
+ void __cpuinit r8a7790_secondary_init(unsigned int cpu)
+@@ -75,29 +78,33 @@ void __cpuinit r8a7790_secondary_init(unsigned int cpu)
+ int __cpuinit r8a7790_boot_secondary(unsigned int cpu)
+ {
+ 	u32 val;
++	void __iomem *p;
+ 
+ 	cpu = cpu_logical_map(cpu);
+ 
+-	__raw_writel(1 << (cpu & 3), CA15WUPCR);
++	p = ioremap_nocache(IO_BASE, 0x40000);
+ 
+-	while ((__raw_readl(SYSCSR) & 0x3) != 0x3)
++	__raw_writel(1 << (cpu & 3), (int)p + CA15WUPCR);
++
++	while ((__raw_readl((int)p + SYSCSR) & 0x3) != 0x3)
+ 		;
+-	while (__raw_readl(CA15WUPCR) != 0x0)
++	while (__raw_readl((int)p + CA15WUPCR) != 0x0)
+ 		;
+ 
+-	val = __raw_readl(CA15RESCNT);
++	val = __raw_readl((int)p + CA15RESCNT);
+ 	val |= 0xa5a50000;
+ 	switch (cpu & 3) {
+ 	case 1:
+-		__raw_writel(val & ~0x4, CA15RESCNT);
++		__raw_writel(val & ~0x4, (int)p + CA15RESCNT);
+ 		break;
+ 	case 2:
+-		__raw_writel(val & ~0x2, CA15RESCNT);
++		__raw_writel(val & ~0x2, (int)p + CA15RESCNT);
+ 		break;
+ 	case 3:
+-		__raw_writel(val & ~0x1, CA15RESCNT);
++		__raw_writel(val & ~0x1, (int)p + CA15RESCNT);
+ 		break;
+ 	}
+ 
++	iounmap(p);
+ 	return 0;
+ }
+-- 
+1.8.3.2
+

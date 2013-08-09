@@ -1,0 +1,40 @@
+From c6a31b6ab88f768bce558a5e7e53c8b3e0ec91bf Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Fri, 14 Jun 2013 14:12:25 +0200
+Subject: [PATCH 1004/1083] drm/rcar-du: Don't ignore rcar_du_crtc_create()
+ return value
+
+Handle error cases correctly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 4687dabe7d90b0fd08c54c804b27999b6623780f)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 49e831cf67f651372e57b144ff5deb385dfef471)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 9c63f39..06cacf6 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -191,8 +191,11 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i)
+-		rcar_du_crtc_create(rcdu, i);
++	for (i = 0; i < ARRAY_SIZE(rcdu->crtcs); ++i) {
++		ret = rcar_du_crtc_create(rcdu, i);
++		if (ret < 0)
++			return ret;
++	}
+ 
+ 	rcdu->used_crtcs = 0;
+ 	rcdu->num_crtcs = i;
+-- 
+1.8.3.2
+

@@ -1,0 +1,109 @@
+From 734e40693396f18f8c37dc1f3603f97796d96de0 Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm@opensource.se>
+Date: Fri, 28 Jun 2013 20:27:04 +0900
+Subject: [PATCH 0896/1083] ARM: shmobile: Add r8a7790 CMT00 clock event
+
+Add clock event support for CMT0 timer channel 0
+to the r8a7790 SoC code. On most ARM mach-shmobile
+the CMT is hooked up to a 32KHz clock but on r8a7790
+a 31.7KHz clock is instead used.
+
+Signed-off-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 6fd8c6ca4a12587d594b870f919b71a34d7f4ae6)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Conflicts:
+	arch/arm/mach-shmobile/clock-r8a7790.c
+	arch/arm/mach-shmobile/setup-r8a7790.c
+(cherry picked from commit 5f6eb3b77e5084fed75bff302e07bb87ad321716)
+
+Conflicts:
+	arch/arm/mach-shmobile/clock-r8a7790.c
+	arch/arm/mach-shmobile/setup-r8a7790.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7790.c |  3 +++
+ arch/arm/mach-shmobile/setup-r8a7790.c | 22 ++++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
+index 03a685c..429169e 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7790.c
++++ b/arch/arm/mach-shmobile/clock-r8a7790.c
+@@ -206,6 +206,7 @@ enum {
+ 	MSTP328, MSTP315, MSTP314, MSTP313, MSTP312, MSTP311, MSTP305, MSTP304,
+ 	MSTP216, MSTP207, MSTP206, MSTP204, MSTP203, MSTP202,
+ 	MSTP131, MSTP130, MSTP128, MSTP127,
++	MSTP124,
+ 	MSTP112,
+ 	MSTP000, MSTP208, MSTP205, MSTP215,
+ 	MSTP219, MSTP218,
+@@ -252,6 +253,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP130] = SH_CLK_MSTP32_STS(&zg_clk, SMSTPCR1, 30, MSTPSR1, 0), /* VSP1 (RT) */
+ 	[MSTP128] = SH_CLK_MSTP32_STS(&zg_clk, SMSTPCR1, 28, MSTPSR1, 0), /* VSP1 (DU0) */
+ 	[MSTP127] = SH_CLK_MSTP32_STS(&zg_clk, SMSTPCR1, 27, MSTPSR1, 0), /* VSP1 (DU1) */
++	[MSTP124] = SH_CLK_MSTP32(&rclk_clk, SMSTPCR1, 24, 0), /* CMT0 */
+ 	[MSTP112] = SH_CLK_MSTP32(&zg_clk, SMSTPCR1, 12, 0),
+ 	[MSTP219] = SH_CLK_MSTP32(&hp_clk, SMSTPCR2, 19, 0),
+ 	[MSTP218] = SH_CLK_MSTP32(&hp_clk, SMSTPCR2, 18, 0),
+@@ -359,6 +361,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("vsp1.1", &mstp_clks[MSTP130]),
+ 	CLKDEV_DEV_ID("vsp1.2", &mstp_clks[MSTP128]),
+ 	CLKDEV_DEV_ID("vsp1.3", &mstp_clks[MSTP127]),
++	CLKDEV_DEV_ID("sh_cmt.0", &mstp_clks[MSTP124]),
+ 	CLKDEV_CON_ID("mmc.1", &div6_clks[DIV6_MMC1]),
+ 	CLKDEV_CON_ID("hs_usb", &mstp_clks[MSTP704]),
+ 	CLKDEV_CON_ID("usb_fck", &mstp_clks[MSTP703]),
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 3f5703d..df589c8 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -35,6 +35,8 @@
+ #include <linux/platform_data/rcar-du.h>
+ #include <linux/platform_data/irq-renesas-irqc.h>
+ #include <linux/platform_data/vsp1.h>
++#include <linux/serial_sci.h>
++#include <linux/sh_timer.h>
+ #include <linux/platform_data/rcar-du.h>
+ #include <linux/clk.h>
+ #include <linux/usb/ehci_pdriver.h>
+@@ -1769,6 +1771,25 @@ static struct resource thermal_resources[] __initdata = {
+ 					thermal_resources,		\
+ 					ARRAY_SIZE(thermal_resources))
+ 
++static struct sh_timer_config cmt00_platform_data = {
++	.name = "CMT00",
++	.timer_bit = 0,
++	.clockevent_rating = 80,
++};
++
++static struct resource cmt00_resources[] = {
++	DEFINE_RES_MEM(0xffca0510, 0x0c),
++	DEFINE_RES_MEM(0xffca0500, 0x04),
++	DEFINE_RES_IRQ(gic_spi(142)), /* CMT0_0 */
++};
++
++#define r8a7790_register_cmt(idx)					\
++	platform_device_register_resndata(&platform_bus, "sh_cmt",	\
++					  idx, cmt##idx##_resources,	\
++					  ARRAY_SIZE(cmt##idx##_resources), \
++					  &cmt##idx##_platform_data,	\
++					  sizeof(struct sh_timer_config))
++
+ void __init r8a7790_add_standard_devices(void)
+ {
+ 	r8a7790_pm_init();
+@@ -1806,6 +1827,7 @@ void __init r8a7790_add_standard_devices(void)
+ 	r8a7790_add_device_to_domain(&r8a7790_rgx, &powervr_device);
+ 
+ 	r8a7790_register_thermal();
++	r8a7790_register_cmt(00);
+ }
+ 
+ void __init r8a7790_timer_init(void)
+-- 
+1.8.3.2
+

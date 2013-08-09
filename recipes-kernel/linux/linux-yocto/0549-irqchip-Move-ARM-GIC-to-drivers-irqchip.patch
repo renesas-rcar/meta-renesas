@@ -1,0 +1,42 @@
+From fce6707ce3ec4081f5c9a32309a903796604daa9 Mon Sep 17 00:00:00 2001
+From: Rob Herring <rob.herring@calxeda.com>
+Date: Tue, 20 Nov 2012 21:21:40 -0600
+Subject: [PATCH 0549/1083] irqchip: Move ARM GIC to drivers/irqchip
+
+Now that we have drivers/irqchip, move GIC irqchip to drivers/irqchip. This
+is necessary to share the GIC with arm and arm64.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+(cherry picked from commit 81243e444c6e9d1625073e4a3d3bc244c8a545f0)
+
+Conflicts:
+	arch/arm/common/Kconfig
+	drivers/irqchip/Kconfig
+	drivers/irqchip/Makefile
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit e428aff59a47355ff5f26f0582656116163e8b62)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/irqchip/irq-gic.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 3507a60..4978a44 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -47,6 +47,8 @@
+ 
+ #include "irqchip.h"
+ 
++#include "irqchip.h"
++
+ union gic_base {
+ 	void __iomem *common_base;
+ 	void __percpu __iomem **percpu_base;
+-- 
+1.8.3.2
+

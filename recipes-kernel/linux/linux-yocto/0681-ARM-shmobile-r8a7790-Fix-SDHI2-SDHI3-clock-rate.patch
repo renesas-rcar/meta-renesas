@@ -1,0 +1,63 @@
+From 2982b8a62b033811411dacadb254ba840792b4bd Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Tue, 25 Jun 2013 20:19:19 +0900
+Subject: [PATCH 0681/1083] ARM: shmobile: r8a7790: Fix SDHI2/SDHI3 clock rate
+
+Clock rate is set to 97.5MHz.
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit 2290b1da433e3b3ee5b8db43330c7d06bcc19472)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7790.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
+index 33b9a5e..f4728f3 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7790.c
++++ b/arch/arm/mach-shmobile/clock-r8a7790.c
+@@ -298,6 +298,8 @@ static struct clk_lookup lookups[] = {
+ 	/* DIV6 */
+ 	CLKDEV_CON_ID("ssp",		&div6_clks[DIV6_SSP]),
+ 	CLKDEV_CON_ID("ssprs",		&div6_clks[DIV6_SSPRS]),
++	CLKDEV_CON_ID("sdhi2",		&div6_clks[DIV6_SD2]),
++	CLKDEV_CON_ID("sdhi3",		&div6_clks[DIV6_SD3]),
+ 
+ 	/* MSTP */
+ 	CLKDEV_DEV_ID("pvrsrvkm", &mstp_clks[MSTP112]),
+@@ -376,6 +378,25 @@ static void __init r8a7790_rgx_control_init(void)
+ 		SH_CLK_SET_RATIO(&pll3_clk_ratio, p30, 1)
+ 
+ 
++static void __init r8a7790_sdhi_clock_init(void)
++{
++	struct clk *sdhi2_clk, *sdhi3_clk;
++
++	/* set SDHI2 clock to 97.5 MHz */
++	sdhi2_clk = clk_get(NULL, "sdhi2");
++	if (!IS_ERR(sdhi2_clk)) {
++		clk_set_rate(sdhi2_clk, 97500000);
++		clk_put(sdhi2_clk);
++	}
++
++	/* set SDHI3 clock to 97.5 MHz */
++	sdhi3_clk = clk_get(NULL, "sdhi3");
++	if (!IS_ERR(sdhi3_clk)) {
++		clk_set_rate(sdhi3_clk, 97500000);
++		clk_put(sdhi3_clk);
++	}
++}
++
+ void __init r8a7790_clock_init(void)
+ {
+ 	void __iomem *modemr = ioremap_nocache(MODEMR, PAGE_SIZE);
+@@ -431,4 +452,5 @@ void __init r8a7790_clock_init(void)
+ 		panic("failed to setup r8a7790 clocks\n");
+ 
+ 	r8a7790_rgx_control_init();
++	r8a7790_sdhi_clock_init();
+ }
+-- 
+1.8.3.2
+

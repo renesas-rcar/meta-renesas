@@ -1,0 +1,63 @@
+From 5eb379cc16cad5ba7ac3acdab6c950f89bfe9f38 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 17 Apr 2013 10:58:09 +0200
+Subject: [PATCH 0999/1083] drm/rcar-du: Don't clean up mode setting if it
+ hasn't been initialized
+
+When no error cleanup is required return the error code directly. This
+fixes a crash in the error path.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 6ba58f449d09d5f996208e532b5a0474927d4053)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 6bd23e86e28d159b6cffa5f24e0be123086f9a5c)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 0fb82bf..8423d49 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -130,31 +130,27 @@ static int rcar_du_load(struct drm_device *dev, unsigned long flags)
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (mem == NULL) {
+ 		dev_err(&pdev->dev, "failed to get memory resource\n");
+-		ret = -EINVAL;
+-		goto done;
++		return -EINVAL;
+ 	}
+ 
+ 	ioarea = devm_request_mem_region(&pdev->dev, mem->start,
+ 					 resource_size(mem), pdev->name);
+ 	if (ioarea == NULL) {
+ 		dev_err(&pdev->dev, "failed to request memory region\n");
+-		ret = -EBUSY;
+-		goto done;
++		return -EBUSY;
+ 	}
+ 
+ 	rcdu->mmio = devm_ioremap_nocache(&pdev->dev, ioarea->start,
+ 					  resource_size(ioarea));
+ 	if (rcdu->mmio == NULL) {
+ 		dev_err(&pdev->dev, "failed to remap memory resource\n");
+-		ret = -ENOMEM;
+-		goto done;
++		return -ENOMEM;
+ 	}
+ 
+ 	rcdu->clock = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(rcdu->clock)) {
+ 		dev_err(&pdev->dev, "failed to get clock\n");
+-		ret = -ENOENT;
+-		goto done;
++		return -ENOENT;
+ 	}
+ 
+ 	/* DRM/KMS objects */
+-- 
+1.8.3.2
+

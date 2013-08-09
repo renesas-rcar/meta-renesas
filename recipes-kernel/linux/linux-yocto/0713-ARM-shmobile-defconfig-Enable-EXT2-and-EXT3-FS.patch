@@ -1,0 +1,38 @@
+From 3fb935b11f3fdf161c5e35310d4f0603f2d2dc7c Mon Sep 17 00:00:00 2001
+From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+Date: Fri, 28 Jun 2013 22:34:27 +0900
+Subject: [PATCH 0713/1083] ARM: shmobile: defconfig: Enable EXT2 and EXT3 FS
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 3ebee99..d55ac24 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -54,6 +54,20 @@ CONFIG_INET=y
+ CONFIG_IP_PNP=y
+ CONFIG_IP_PNP_DHCP=y
+ CONFIG_EXT2_FS=y
++CONFIG_EXT2_FS_XATTR=y
++CONFIG_EXT2_FS_POSIX_ACL=y
++CONFIG_EXT2_FS_SECURITY=y
++CONFIG_EXT2_FS_XIP=y
++CONFIG_EXT3_FS=y
++CONFIG_EXT3_DEFAULTS_TO_ORDERED=y
++CONFIG_EXT3_FS_XATTR=y
++CONFIG_EXT3_FS_POSIX_ACL=y
++CONFIG_EXT3_FS_SECURITY=y
++# CONFIG_EXT4_FS is not set
++CONFIG_FS_XIP=y
++CONFIG_JBD=y
++CONFIG_FS_MBCACHE=y
++CONFIG_FS_POSIX_ACL=y
+ # CONFIG_INET_XFRM_MODE_TRANSPORT is not set
+ # CONFIG_INET_XFRM_MODE_TUNNEL is not set
+ # CONFIG_INET_XFRM_MODE_BEET is not set
+-- 
+1.8.3.2
+

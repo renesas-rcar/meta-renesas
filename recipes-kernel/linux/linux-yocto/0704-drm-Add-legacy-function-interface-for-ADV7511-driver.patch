@@ -1,0 +1,151 @@
+From bfd8a732eb0f0c29bfdcc23cb973ff57d9a9536d Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 26 Jun 2013 14:46:35 +0900
+Subject: [PATCH 0704/1083] drm: Add legacy function interface for ADV7511
+ driver
+
+The legacy drm_do_get_edid function interface was added.
+It is used by ADV7511 driver of Analog Devices company.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit 6e3ec6be368123ab73a6b2ea37c11666227cad1f)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_edid.c | 44 ++++++++++++++++++++++++++++++++++++++++----
+ include/drm/drm_crtc.h     |  4 ++++
+ 2 files changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index dbad86a..66a9520 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -255,9 +255,17 @@ EXPORT_SYMBOL(drm_edid_is_valid);
+  * Try to fetch EDID information by calling i2c driver function.
+  */
+ static int
+-drm_do_probe_ddc_edid(struct i2c_adapter *adapter, unsigned char *buf,
++#if defined(CONFIG_DRM_ADV7511)
++drm_do_probe_ddc_edid(void *data, unsigned char *buf,
+ 		      int block, int len)
++#else
++drm_do_probe_ddc_edid(struct i2c_adapter *adapter, unsigned char *buf,
++			int block, int len)
++#endif
+ {
++#if defined(CONFIG_DRM_ADV7511)
++	struct i2c_adapter *adapter = data;
++#endif
+ 	unsigned char start = block * EDID_LENGTH;
+ 	unsigned char segment = block >> 1;
+ 	unsigned char xfers = segment ? 3 : 2;
+@@ -313,8 +321,13 @@ static bool drm_edid_is_zero(u8 *in_edid, int length)
+ 	return true;
+ }
+ 
++#if defined(CONFIG_DRM_ADV7511)
++struct edid *drm_do_get_edid(struct drm_connector *connector,
++	int (*get_edid_block)(void *, unsigned char *buf, int, int), void *data)
++#else
+ static u8 *
+ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
++#endif
+ {
+ 	int i, j = 0, valid_extensions = 0;
+ 	u8 *block, *new;
+@@ -325,7 +338,11 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ 
+ 	/* base block fetch */
+ 	for (i = 0; i < 4; i++) {
++#if defined(CONFIG_DRM_ADV7511)
++		if (get_edid_block(data, block, 0, EDID_LENGTH))
++#else
+ 		if (drm_do_probe_ddc_edid(adapter, block, 0, EDID_LENGTH))
++#endif
+ 			goto out;
+ 		if (drm_edid_block_valid(block, 0, print_bad_edid))
+ 			break;
+@@ -339,8 +356,11 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ 
+ 	/* if there's no extensions, we're done */
+ 	if (block[0x7e] == 0)
++#if defined(CONFIG_DRM_ADV7511)
++		return (struct edid *)block;
++#else
+ 		return block;
+-
++#endif
+ 	new = krealloc(block, (block[0x7e] + 1) * EDID_LENGTH, GFP_KERNEL);
+ 	if (!new)
+ 		goto out;
+@@ -348,9 +368,15 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ 
+ 	for (j = 1; j <= block[0x7e]; j++) {
+ 		for (i = 0; i < 4; i++) {
++#if defined(CONFIG_DRM_ADV7511)
++			if (get_edid_block(data,
++				  block + (valid_extensions + 1) * EDID_LENGTH,
++				  j, EDID_LENGTH))
++#else
+ 			if (drm_do_probe_ddc_edid(adapter,
+ 				  block + (valid_extensions + 1) * EDID_LENGTH,
+ 				  j, EDID_LENGTH))
++#endif
+ 				goto out;
+ 			if (drm_edid_block_valid(block + (valid_extensions + 1) * EDID_LENGTH, j, print_bad_edid)) {
+ 				valid_extensions++;
+@@ -372,8 +398,11 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ 		block = new;
+ 	}
+ 
++#if defined(CONFIG_DRM_ADV7511)
++	return (struct edid *)block;
++#else
+ 	return block;
+-
++#endif
+ carp:
+ 	if (print_bad_edid) {
+ 		dev_warn(connector->dev->dev, "%s: EDID block %d invalid.\n",
+@@ -385,6 +414,9 @@ out:
+ 	kfree(block);
+ 	return NULL;
+ }
++#if defined(CONFIG_DRM_ADV7511)
++EXPORT_SYMBOL_GPL(drm_do_get_edid);
++#endif
+ 
+ /**
+  * Probe DDC presence.
+@@ -417,8 +449,12 @@ struct edid *drm_get_edid(struct drm_connector *connector,
+ 	struct edid *edid = NULL;
+ 
+ 	if (drm_probe_ddc(adapter))
++#if defined(CONFIG_DRM_ADV7511)
++		edid = drm_do_get_edid(connector,
++				 drm_do_probe_ddc_edid, adapter);
++#else
+ 		edid = (struct edid *)drm_do_get_edid(connector, adapter);
+-
++#endif
+ 	return edid;
+ }
+ EXPORT_SYMBOL(drm_get_edid);
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 00d78b5..afcdbe7 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -1050,6 +1050,10 @@ extern int drm_add_modes_noedid(struct drm_connector *connector,
+ extern uint8_t drm_mode_cea_vic(const struct drm_display_mode *mode);
+ 
+ extern int drm_edid_header_is_valid(const u8 *raw_edid);
++#if defined(CONFIG_DRM_ADV7511)
++extern struct edid *drm_do_get_edid(struct drm_connector *connector,
++int (*get_edid_block)(void *, unsigned char *buf, int, int), void *data);
++#endif
+ extern bool drm_edid_block_valid(u8 *raw_edid, int block, bool print_bad_edid);
+ extern bool drm_edid_is_valid(struct edid *edid);
+ struct drm_display_mode *drm_mode_find_dmt(struct drm_device *dev,
+-- 
+1.8.3.2
+

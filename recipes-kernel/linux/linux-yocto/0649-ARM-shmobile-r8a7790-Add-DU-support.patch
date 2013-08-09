@@ -1,0 +1,94 @@
+From e6cdd769bfb11c0e7b1fc44c7e4958a7910ac1f8 Mon Sep 17 00:00:00 2001
+From: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+Date: Fri, 21 Jun 2013 18:11:51 +0900
+Subject: [PATCH 0649/1083] ARM: shmobile: r8a7790: Add DU support
+
+Add a function to register the DU device with board-specific platform
+data.
+
+The DU device is named rcar-du, fix the clock entry accordingly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit a06a2281a47315b68f68ce7d4edd55ef140ca4be)
+
+Conflicts:
+	arch/arm/mach-shmobile/include/mach/r8a7790.h
+	arch/arm/mach-shmobile/setup-r8a7790.c
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit dc08cf3baef2be6c8cf7d167418bc0a833667340)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/include/mach/r8a7790.h |  3 +++
+ arch/arm/mach-shmobile/setup-r8a7790.c        | 25 +++++++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7790.h b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+index af2e50d..a1f112e 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7790.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7790.h
+@@ -6,7 +6,10 @@
+ 
+ struct platform_device;
+ 
++struct rcar_du_platform_data;
++
+ void r8a7790_add_standard_devices(void);
++void r8a7790_add_du_device(struct rcar_du_platform_data *pdata);
+ void r8a7790_clock_init(void);
+ void r8a7790_pinmux_init(void);
+ 
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 18e6fb8..05d41d7 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -19,6 +19,7 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <linux/dma-mapping.h>
+ #include <linux/irq.h>
+ #include <linux/irqchip.h>
+ #include <linux/kernel.h>
+@@ -30,6 +31,7 @@
+ #include <linux/sh_dma-desc.h>
+ #include <linux/sh_audma-pp.h>
+ #include <linux/platform_data/gpio-rcar.h>
++#include <linux/platform_data/rcar-du.h>
+ #include <linux/platform_data/irq-renesas-irqc.h>
+ #include <linux/platform_data/rcar-du.h>
+ #include <linux/clk.h>
+@@ -93,6 +95,29 @@ void __init r8a7790_pinmux_init(void)
+ 	r8a7790_register_gpio(5);
+ }
+ 
++/* DU */
++static const struct resource du_resources[] = {
++	DEFINE_RES_MEM(0xfeb00000, 0x70000),
++	DEFINE_RES_IRQ(gic_spi(256)),
++	DEFINE_RES_IRQ(gic_spi(268)),
++	DEFINE_RES_IRQ(gic_spi(269)),
++};
++
++void __init r8a7790_add_du_device(struct rcar_du_platform_data *pdata)
++{
++	struct platform_device_info info = {
++		.name = "rcar-du-r8a7790",
++		.id = -1,
++		.res = du_resources,
++		.num_res = ARRAY_SIZE(du_resources),
++		.data = pdata,
++		.size_data = sizeof(*pdata),
++		.dma_mask = DMA_BIT_MASK(32),
++	};
++
++	platform_device_register_full(&info);
++}
++
+ #define SCIF_COMMON(scif_type, baseaddr, irq)			\
+ 	.type		= scif_type,				\
+ 	.mapbase	= baseaddr,				\
+-- 
+1.8.3.2
+

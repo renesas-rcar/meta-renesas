@@ -1,0 +1,28 @@
+From b9a3b1533ab15eaa30d2ee506cf1af663eb32b7a Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Fri, 26 Jul 2013 16:38:21 +0900
+Subject: [PATCH 0757/1083] dma: shdma-desc: Fix verbose calculation of channel
+ address
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ drivers/dma/sh/shdma-desc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/dma/sh/shdma-desc.c b/drivers/dma/sh/shdma-desc.c
+index 8ea52bc..396b68a 100644
+--- a/drivers/dma/sh/shdma-desc.c
++++ b/drivers/dma/sh/shdma-desc.c
+@@ -312,8 +312,7 @@ static int dmae_set_dmars(struct sh_dmadesc_chan *sh_chan, u16 val)
+ 
+ 	/* in the case of a missing DMARS resource use first memory window */
+ 	if (!addr)
+-		addr = (u16 __iomem *)shdev->chan_reg +
+-				chan_pdata->offset / sizeof(u16);
++		addr = (u16 __iomem *)sh_chan->base;
+ 	addr += chan_pdata->dmars / sizeof(u16);
+ 	__raw_writew(val, addr);
+ 
+-- 
+1.8.3.2
+

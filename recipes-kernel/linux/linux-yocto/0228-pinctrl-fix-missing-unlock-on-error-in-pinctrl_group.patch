@@ -1,0 +1,38 @@
+From 9950cc25c178a7e34236addf63b6e67b558d77f2 Mon Sep 17 00:00:00 2001
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Date: Mon, 22 Oct 2012 12:58:09 +0800
+Subject: [PATCH 0228/1083] pinctrl: fix missing unlock on error in
+ pinctrl_groups_show()
+
+Add the missing unlock on the error handle path in function
+pinctrl_groups_show().
+
+Cc: stable@kernel.org
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit b4dd784ba8af03bf1f9ee5118c792d7abd4919bd)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pinctrl/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
+index 3fa50fe..009efd8 100644
+--- a/drivers/pinctrl/core.c
++++ b/drivers/pinctrl/core.c
+@@ -1061,8 +1061,10 @@ static int pinctrl_groups_show(struct seq_file *s, void *what)
+ 			seq_printf(s, "group: %s\n", gname);
+ 			for (i = 0; i < num_pins; i++) {
+ 				pname = pin_get_name(pctldev, pins[i]);
+-				if (WARN_ON(!pname))
++				if (WARN_ON(!pname)) {
++					mutex_unlock(&pinctrl_mutex);
+ 					return -EINVAL;
++				}
+ 				seq_printf(s, "pin %d (%s)\n", pins[i], pname);
+ 			}
+ 			seq_puts(s, "\n");
+-- 
+1.8.3.2
+

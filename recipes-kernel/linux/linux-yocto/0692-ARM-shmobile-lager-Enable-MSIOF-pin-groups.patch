@@ -1,0 +1,37 @@
+From ae9c65a2aef4e0d3b6c8a935b659ffacdaa419ec Mon Sep 17 00:00:00 2001
+From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+Date: Fri, 28 Jun 2013 09:37:47 +0900
+Subject: [PATCH 0692/1083] ARM: shmobile: lager: Enable MSIOF pin groups
+
+Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+(cherry picked from commit e87815c4f682554193c41adf9bc79d64951ade66)
+
+Conflicts:
+	arch/arm/mach-shmobile/board-lager.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index bc49e0f..f1d6b7b 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -156,6 +156,13 @@ static const struct pinctrl_map lager_pinctrl_map[] = {
+ 				  "mmc1_data8", "mmc1"),
+ 	PIN_MAP_MUX_GROUP_DEFAULT("sh_mmcif.1", "pfc-r8a7790",
+ 				  "mmc1_ctrl", "mmc1"),
++	/* MSIOF1 */
++	PIN_MAP_MUX_GROUP_DEFAULT("spi_sh_msiof.1", "pfc-r8a7790",
++				  "msiof1_clk", "msiof1"),
++	PIN_MAP_MUX_GROUP_DEFAULT("spi_sh_msiof.1", "pfc-r8a7790",
++				  "msiof1_ctrl", "msiof1"),
++	PIN_MAP_MUX_GROUP_DEFAULT("spi_sh_msiof.1", "pfc-r8a7790",
++				  "msiof1_data", "msiof1"),
+ };
+ 
+ static void __init lager_add_standard_devices(void)
+-- 
+1.8.3.2
+

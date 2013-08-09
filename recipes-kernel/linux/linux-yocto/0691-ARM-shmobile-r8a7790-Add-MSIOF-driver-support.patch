@@ -1,0 +1,210 @@
+From 721ba0a0e6f018ded81b683f0623f081733e4356 Mon Sep 17 00:00:00 2001
+From: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+Date: Fri, 28 Jun 2013 09:37:19 +0900
+Subject: [PATCH 0691/1083] ARM: shmobile: r8a7790: Add MSIOF driver support
+
+Signed-off-by: Kunihito Higashiyama <kunihito.higashiyama.ur@renesas.com>
+(cherry picked from commit 4aea14288128eb258aa0f003156ae09f16577611)
+
+Conflicts:
+	arch/arm/mach-shmobile/clock-r8a7790.c
+	arch/arm/mach-shmobile/setup-r8a7790.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig    |   3 +
+ arch/arm/mach-shmobile/clock-r8a7790.c |   4 +-
+ arch/arm/mach-shmobile/setup-r8a7790.c | 113 +++++++++++++++++++++++++++++++++
+ 3 files changed, 119 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 1f73a35..fc0aff3 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -124,6 +124,9 @@ CONFIG_DRM_RCAR_DU=y
+ CONFIG_SPI=y
+ CONFIG_SPI_MASTER=y
+ CONFIG_SPI_QSPI=y
++CONFIG_SPI_BITBANG=y
++CONFIG_SPI_SH_MSIOF=y
++CONFIG_SPI_SPIDEV=y
+ # CONFIG_HWMON is not set
+ CONFIG_REGULATOR=y
+ CONFIG_MEDIA_SUPPORT=y
+diff --git a/arch/arm/mach-shmobile/clock-r8a7790.c b/arch/arm/mach-shmobile/clock-r8a7790.c
+index dfca726..f482328 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7790.c
++++ b/arch/arm/mach-shmobile/clock-r8a7790.c
+@@ -201,7 +201,7 @@ enum {
+ 	MSTP726, MSTP725, MSTP724, MSTP723, MSTP722, MSTP721, MSTP720,
+ 	MSTP717, MSTP716,
+ 	MSTP328, MSTP315, MSTP314, MSTP313, MSTP312, MSTP311, MSTP305, MSTP304,
+-	MSTP216, MSTP207, MSTP206, MSTP204, MSTP203, MSTP202,
++	MSTP216, MSTP208, MSTP207, MSTP206, MSTP204, MSTP203, MSTP202,
+ 	MSTP112,
+ 	MSTP219, MSTP218,
+ 	MSTP502, MSTP501,
+@@ -230,6 +230,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP305] = SH_CLK_MSTP32(&div6_clks[DIV6_MMC1], SMSTPCR3, 5, 0), /* MMC1 */
+ 	[MSTP304] = SH_CLK_MSTP32(&cp_clk, SMSTPCR3, 4, 0), /* TPU0 */
+ 	[MSTP216] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 16, 0), /* SCIFB2 */
++	[MSTP208] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 8, 0), /* MSIOF1 */
+ 	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
+ 	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
+ 	[MSTP204] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 4, 0), /* SCIFA0 */
+@@ -340,6 +341,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("usb_fck", &mstp_clks[MSTP703]),
+ 	CLKDEV_CON_ID("ss_usb", &mstp_clks[MSTP328]),
+ 	CLKDEV_DEV_ID("qspi.0", &mstp_clks[MSTP917]),
++	CLKDEV_DEV_ID("spi_sh_msiof.1", &mstp_clks[MSTP208]),
+ 	CLKDEV_DEV_ID("i2c-rcar.0", &mstp_clks[MSTP931]),
+ 	CLKDEV_DEV_ID("i2c-rcar.1", &mstp_clks[MSTP930]),
+ 	CLKDEV_DEV_ID("i2c-rcar.2", &mstp_clks[MSTP929]),
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 526afef..ca5e85b 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -47,6 +47,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/spi/flash.h>
+ #include <linux/dma-mapping.h>
++#include <linux/spi/sh_msiof.h>
+ #include <mach/common.h>
+ #include <mach/irqs.h>
+ #include <mach/r8a7790.h>
+@@ -855,6 +856,111 @@ static struct spi_board_info spi_info[] __initdata = {
+ 	},
+ };
+ 
++/* MSIOF */
++static struct sh_msiof_spi_info sh_msiof_info = {
++	.rx_fifo_override	= 256,
++	.num_chipselect		= 1,
++};
++
++static struct resource sh_msiof0_resources[] = {
++	[0] = {
++		.start	= 0xe6e20000,
++		.end	= 0xe6e20064,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(156),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct resource sh_msiof1_resources[] = {
++	[0] = {
++		.start	= 0xe6e10000,
++		.end	= 0xe6e10064,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(157),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct resource sh_msiof2_resources[] = {
++	[0] = {
++		.start	= 0xe6e00000,
++		.end	= 0xe6e00064,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(158),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct resource sh_msiof3_resources[] = {
++	[0] = {
++		.start	= 0xe6c90000,
++		.end	= 0xe6c90064,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(159),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device sh_msiof0_device = {
++	.name		= "spi_sh_msiof",
++	.id		= 0,
++	.dev		= {
++		.platform_data	= &sh_msiof_info,
++	},
++	.num_resources	= ARRAY_SIZE(sh_msiof0_resources),
++	.resource	= sh_msiof0_resources,
++};
++
++static struct platform_device sh_msiof1_device = {
++	.name		= "spi_sh_msiof",
++	.id		= 1,
++	.dev		= {
++		.platform_data	= &sh_msiof_info,
++	},
++	.num_resources	= ARRAY_SIZE(sh_msiof1_resources),
++	.resource	= sh_msiof1_resources,
++};
++
++static struct platform_device sh_msiof2_device = {
++	.name		= "spi_sh_msiof",
++	.id		= 2,
++	.dev		= {
++		.platform_data	= &sh_msiof_info,
++	},
++	.num_resources	= ARRAY_SIZE(sh_msiof2_resources),
++	.resource	= sh_msiof2_resources,
++};
++
++static struct platform_device sh_msiof3_device = {
++	.name		= "spi_sh_msiof",
++	.id		= 3,
++	.dev		= {
++		.platform_data	= &sh_msiof_info,
++	},
++	.num_resources	= ARRAY_SIZE(sh_msiof3_resources),
++	.resource	= sh_msiof3_resources,
++};
++
++/* spidev for MSIOF */
++static struct spi_board_info spi_bus[] __initdata = {
++	{
++		.modalias	= "spidev",
++		.max_speed_hz	= 6000000,
++		.mode		= SPI_MODE_3,
++		.bus_num	= 1,
++		.chip_select	= 0,
++	},
++};
++
+ /* I2C */
+ static struct i2c_rcar_platform_data i2c_pd[] = {
+ 	{
+@@ -1581,6 +1687,10 @@ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&sdhi2_device,
+ 	&sdhi3_device,
+ 	&qspi_device,
++	&sh_msiof0_device,
++	&sh_msiof1_device,
++	&sh_msiof2_device,
++	&sh_msiof3_device,
+ 	&i2c0_device,
+ 	&i2c1_device,
+ 	&i2c2_device,
+@@ -1655,6 +1765,9 @@ void __init r8a7790_add_standard_devices(void)
+ 
+ 	/* QSPI flash memory */
+ 	spi_register_board_info(spi_info, ARRAY_SIZE(spi_info));
++
++	/* spidev for MSIOF */
++	spi_register_board_info(spi_bus, ARRAY_SIZE(spi_bus));
+ }
+ 
+ void __init r8a7790_timer_init(void)
+-- 
+1.8.3.2
+

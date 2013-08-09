@@ -1,0 +1,41 @@
+From 0a713e4360ca5f9723f30b3e86f56da2b71d5b5f Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Tue, 30 Jul 2013 14:03:33 +0900
+Subject: [PATCH 0788/1083] ARM: shmobile: r8a7790: Fix USB clock check
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7790.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 0478162..b9457af 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -553,20 +553,20 @@ static int __init usbh_init(void)
+ 
+ 	clk_hs = clk_get(NULL, "hs_usb");
+ 	if (IS_ERR(clk_hs))
+-		clk_hs = NULL;
++		return PTR_ERR(clk_hs);
+ 
+ 	clk_enable(clk_hs);
+ 
+ 	clk_ehci = clk_get(NULL, "usb_fck");
+ 	if (IS_ERR(clk_ehci))
+-		clk_ehci = NULL;
++		return PTR_ERR(clk_ehci);
+ 
+ 	clk_enable(clk_ehci);
+ 
+ #if defined(CONFIG_USB_XHCI_HCD)
+ 	clk_xhci = clk_get(NULL, "ss_usb");
+ 	if (IS_ERR(clk_xhci))
+-		clk_xhci = NULL;
++		return PTR_ERR(clk_xhci);
+ 
+ 	clk_enable(clk_xhci);
+ 
+-- 
+1.8.3.2
+

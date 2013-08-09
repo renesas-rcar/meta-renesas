@@ -1,0 +1,69 @@
+From 1e4c0fb4f49e4648eaf69176f2c8ebc23da424d4 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 30 Jul 2013 19:28:33 +0900
+Subject: [PATCH 0797/1083] ARM: shmobile: r8a7791: Add power management
+ support for SGX
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ arch/arm/mach-shmobile/include/mach/r8a7791.h | 2 +-
+ arch/arm/mach-shmobile/pm-r8a7791.c           | 7 +++++++
+ arch/arm/mach-shmobile/setup-r8a7791.c        | 4 ++++
+ 3 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7791.h b/arch/arm/mach-shmobile/include/mach/r8a7791.h
+index b06b411..853b816 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7791.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7791.h
+@@ -36,7 +36,7 @@ extern int r8a7791_sysc_power_down(struct r8a7791_pm_ch *r8a7791_ch);
+ extern int r8a7791_sysc_power_up(struct r8a7791_pm_ch *r8a7791_ch);
+ 
+ #ifdef CONFIG_PM
+-extern struct r8a7791_pm_domain r8a7791_rgx;
++extern struct r8a7791_pm_domain r8a7791_sgx;
+ 
+ extern void r8a7791_init_pm_domain(struct r8a7791_pm_domain *r8a7791_pd);
+ extern void r8a7791_add_device_to_domain(struct r8a7791_pm_domain *r8a7791_pd,
+diff --git a/arch/arm/mach-shmobile/pm-r8a7791.c b/arch/arm/mach-shmobile/pm-r8a7791.c
+index e764b5b..691b476 100644
+--- a/arch/arm/mach-shmobile/pm-r8a7791.c
++++ b/arch/arm/mach-shmobile/pm-r8a7791.c
+@@ -214,6 +214,13 @@ void r8a7791_add_device_to_domain(struct r8a7791_pm_domain *r8a7791_pd,
+ 		pm_clk_add(dev, NULL);
+ }
+ 
++struct r8a7791_pm_domain r8a7791_sgx = {
++	.ch = {
++		.chan_offs = 0xc0, /* PWRSR2 .. PWRER2 */
++		.isr_bit = 20, /* RGX */
++	}
++};
++
+ #endif /* CONFIG_PM */
+ 
+ void __init r8a7791_pm_init(void)
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index 84121ef..c80b3f6 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -1481,6 +1481,8 @@ void __init r8a7791_add_standard_devices(void)
+ {
+ 	r8a7791_pm_init();
+ 
++	r8a7791_init_pm_domain(&r8a7791_sgx);
++
+ 	r8a7791_register_scif(SCIFA0);
+ 	r8a7791_register_scif(SCIFA1);
+ 	r8a7791_register_scif(SCIFB0);
+@@ -1500,6 +1502,8 @@ void __init r8a7791_add_standard_devices(void)
+ 	usbh_init();
+ 	platform_add_devices(r8a7791_early_devices,
+ 			     ARRAY_SIZE(r8a7791_early_devices));
++
++	r8a7791_add_device_to_domain(&r8a7791_sgx, &powervr_device);
+ }
+ 
+ void __init r8a7791_timer_init(void)
+-- 
+1.8.3.2
+

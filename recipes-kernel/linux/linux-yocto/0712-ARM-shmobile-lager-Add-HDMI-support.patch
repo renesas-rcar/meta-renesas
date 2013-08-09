@@ -1,0 +1,47 @@
+From f9d62a49525393ba2b9a95080943f20740a2a9b0 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 26 Jun 2013 14:51:40 +0900
+Subject: [PATCH 0712/1083] ARM: shmobile: lager: Add HDMI support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit ee41c01a13f51f43e2f99db1d5fd58114a09250e)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/mach-shmobile/board-lager.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-lager.c b/arch/arm/mach-shmobile/board-lager.c
+index d43357f..b62217a 100644
+--- a/arch/arm/mach-shmobile/board-lager.c
++++ b/arch/arm/mach-shmobile/board-lager.c
+@@ -42,10 +42,13 @@ static struct i2c_board_info lager_i2c_devices[] = {
+ 
+ /* DU */
+ static struct rcar_du_encoder_data lager_du_encoders[] = {
++#if defined(CONFIG_DRM_ADV7511)
++	{
++		.type = RCAR_DU_ENCODER_HDMI,
++		.output = RCAR_DU_OUTPUT_LVDS0,
++	},
++#endif
+ 	{
+-		.type = RCAR_DU_ENCODER_VGA,
+-		.output = RCAR_DU_OUTPUT_DPAD0,
+-	}, {
+ 		.type = RCAR_DU_ENCODER_NONE,
+ 		.output = RCAR_DU_OUTPUT_LVDS1,
+ 		.connector.lvds.panel = {
+@@ -64,6 +67,9 @@ static struct rcar_du_encoder_data lager_du_encoders[] = {
+ 				.flags = 0,
+ 			},
+ 		},
++	}, {
++		.type = RCAR_DU_ENCODER_VGA,
++		.output = RCAR_DU_OUTPUT_DPAD0,
+ 	},
+ };
+ 
+-- 
+1.8.3.2
+

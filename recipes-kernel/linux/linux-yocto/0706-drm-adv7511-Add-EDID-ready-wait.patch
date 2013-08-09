@@ -1,0 +1,35 @@
+From a8f8c1ee3f93318dc55d1d83fe67ae6399fac39d Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Thu, 27 Jun 2013 17:29:28 +0900
+Subject: [PATCH 0706/1083] drm: adv7511: Add EDID ready wait
+
+To active status of EDID ready, power up of ADV7511 and
+mdelay are inserted in initialization.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit cb9ce45357e43c4f49d4e7069c6b48f8a733f467)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/i2c/adv7511_core.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/gpu/drm/i2c/adv7511_core.c b/drivers/gpu/drm/i2c/adv7511_core.c
+index 10bdf8b..6e26ffc 100644
+--- a/drivers/gpu/drm/i2c/adv7511_core.c
++++ b/drivers/gpu/drm/i2c/adv7511_core.c
+@@ -907,6 +907,11 @@ static int adv7511_probe(struct i2c_client *i2c,
+ 	regmap_update_bits(adv7511->regmap, ADV7511_REG_POWER,
+ 			ADV7511_POWER_POWER_DOWN, ADV7511_POWER_POWER_DOWN);
+ 
++	/* For active status of EDID ready */
++	regmap_update_bits(adv7511->regmap, ADV7511_REG_POWER,
++			ADV7511_POWER_POWER_DOWN, 0);
++	mdelay(100);
++
+ 	adv7511->current_edid_segment = -1;
+ 
+ 	i2c_set_clientdata(i2c, adv7511);
+-- 
+1.8.3.2
+

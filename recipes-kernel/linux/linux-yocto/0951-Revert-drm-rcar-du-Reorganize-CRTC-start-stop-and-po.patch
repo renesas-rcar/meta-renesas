@@ -1,0 +1,147 @@
+From 2fecd4672457f6305a0c90e799fb0eef00831e88 Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:23 +0900
+Subject: [PATCH 0951/1083] Revert "drm/rcar-du: Reorganize CRTC start/stop and
+ power management code"
+
+This reverts commit 0c34275ae02933afb6c6c88f56f147d1217d3ead.
+(cherry picked from commit ce25079f9658561388e47a23221f4f2a92cc34ab)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 53 +++++++---------------------------
+ 1 file changed, 10 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 98c54ff..0e5eab1 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -232,6 +232,8 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 	if (WARN_ON(rcrtc->plane->format == NULL))
+ 		return;
+ 
++	rcar_du_get(rcdu);
++
+ 	/* Set display off and background to black */
+ 	rcar_du_crtc_write(rcrtc, DOOR, DOOR_RGB(0, 0, 0));
+ 	rcar_du_crtc_write(rcrtc, BPOR, BPOR_RGB(0, 0, 0));
+@@ -288,25 +290,21 @@ static void rcar_du_crtc_stop(struct rcar_du_crtc *rcrtc)
+ 
+ 	rcar_du_start_stop(rcdu, false);
+ 
++	rcar_du_put(rcdu);
++
+ 	rcrtc->started = false;
+ }
+ 
+ void rcar_du_crtc_suspend(struct rcar_du_crtc *rcrtc)
+ {
+-	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
+-
+ 	rcar_du_crtc_stop(rcrtc);
+-	rcar_du_put(rcdu);
+ }
+ 
+ void rcar_du_crtc_resume(struct rcar_du_crtc *rcrtc)
+ {
+-	struct rcar_du_device *rcdu = rcrtc->crtc.dev->dev_private;
+-
+ 	if (rcrtc->dpms != DRM_MODE_DPMS_ON)
+ 		return;
+ 
+-	rcar_du_get(rcdu);
+ 	rcar_du_crtc_start(rcrtc);
+ }
+ 
+@@ -320,19 +318,15 @@ static void rcar_du_crtc_update_base(struct rcar_du_crtc *rcrtc)
+ 
+ static void rcar_du_crtc_dpms(struct drm_crtc *crtc, int mode)
+ {
+-	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+ 
+ 	if (rcrtc->dpms == mode)
+ 		return;
+ 
+-	if (mode == DRM_MODE_DPMS_ON) {
+-		rcar_du_get(rcdu);
++	if (mode == DRM_MODE_DPMS_ON)
+ 		rcar_du_crtc_start(rcrtc);
+-	} else {
++	else
+ 		rcar_du_crtc_stop(rcrtc);
+-		rcar_du_put(rcdu);
+-	}
+ 
+ 	rcrtc->dpms = mode;
+ }
+@@ -347,21 +341,10 @@ static bool rcar_du_crtc_mode_fixup(struct drm_crtc *crtc,
+ 
+ static void rcar_du_crtc_mode_prepare(struct drm_crtc *crtc)
+ {
+-	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+ 
+-	/* We need to access the hardware during mode set, acquire a reference
+-	 * to the DU.
+-	 */
+-	rcar_du_get(rcdu);
+-
+-	/* Stop the CRTC and release the plane. Force the DPMS mode to off as a
+-	 * result.
+-	 */
+-	rcar_du_crtc_stop(rcrtc);
++	rcar_du_crtc_dpms(crtc, DRM_MODE_DPMS_OFF);
+ 	rcar_du_plane_release(rcrtc->plane);
+-
+-	rcrtc->dpms = DRM_MODE_DPMS_OFF;
+ }
+ 
+ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+@@ -379,13 +362,12 @@ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+ 	if (format == NULL) {
+ 		dev_dbg(rcdu->dev, "mode_set: unsupported format %08x\n",
+ 			crtc->fb->pixel_format);
+-		ret = -EINVAL;
+-		goto error;
++		return -EINVAL;
+ 	}
+ 
+ 	ret = rcar_du_plane_reserve(rcrtc->plane, format);
+ 	if (ret < 0)
+-		goto error;
++		return ret;
+ 
+ 	rcrtc->plane->format = format;
+ 	rcrtc->plane->pitch = crtc->fb->pitches[0];
+@@ -398,26 +380,11 @@ static int rcar_du_crtc_mode_set(struct drm_crtc *crtc,
+ 	rcar_du_plane_compute_base(rcrtc->plane, crtc->fb);
+ 
+ 	return 0;
+-
+-error:
+-	/* There's no rollback/abort operation to clean up in case of error. We
+-	 * thus need to release the reference to the DU acquired in prepare()
+-	 * here.
+-	 */
+-	rcar_du_put(rcdu);
+-	return ret;
+ }
+ 
+ static void rcar_du_crtc_mode_commit(struct drm_crtc *crtc)
+ {
+-	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+-
+-	/* We're done, restart the CRTC and set the DPMS mode to on. The
+-	 * reference to the DU acquired at prepare() time will thus be released
+-	 * by the DPMS handler (possibly called by the disable() handler).
+-	 */
+-	rcar_du_crtc_start(rcrtc);
+-	rcrtc->dpms = DRM_MODE_DPMS_ON;
++	rcar_du_crtc_dpms(crtc, DRM_MODE_DPMS_ON);
+ }
+ 
+ static int rcar_du_crtc_mode_set_base(struct drm_crtc *crtc, int x, int y,
+-- 
+1.8.3.2
+

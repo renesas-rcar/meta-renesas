@@ -1,0 +1,112 @@
+From 01e6650efd6f38deb424c85923ca9ae81f90386c Mon Sep 17 00:00:00 2001
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Wed, 21 Nov 2012 08:48:09 +0100
+Subject: [PATCH 0260/1083] gpiolib: rename pin range arguments
+
+To be crystal clear on what the arguments mean in this
+funtion dealing with both GPIO and PIN ranges with confusing
+naming, we now have gpio_offset and pin_offset and we are
+on the clear that these are offsets into the specific GPIO
+and pin controller respectively. The GPIO chip itself will
+of course keep track of the base offset into the global
+GPIO number space.
+
+Reviewed-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 316511c0134acec8f4ea730bd1897c7a1124a7c1)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib.c     | 19 ++++++++++---------
+ include/asm-generic/gpio.h |  4 ++--
+ include/linux/gpio.h       |  2 +-
+ 3 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index 2c57e4c..71e14ad 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1228,13 +1228,13 @@ EXPORT_SYMBOL_GPL(gpiochip_find);
+  * gpiochip_add_pin_range() - add a range for GPIO <-> pin mapping
+  * @chip: the gpiochip to add the range for
+  * @pinctrl_name: the dev_name() of the pin controller to map to
+- * @offset: the start offset in the current gpio_chip number space
+- * @pin_base: the start offset in the pin controller number space
++ * @gpio_offset: the start offset in the current gpio_chip number space
++ * @pin_offset: the start offset in the pin controller number space
+  * @npins: the number of pins from the offset of each pin space (GPIO and
+  *	pin controller) to accumulate in this range
+  */
+ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+-			   unsigned int offset, unsigned int pin_base,
++			   unsigned int gpio_offset, unsigned int pin_offset,
+ 			   unsigned int npins)
+ {
+ 	struct gpio_pin_range *pin_range;
+@@ -1247,11 +1247,11 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+ 	}
+ 
+ 	/* Use local offset as range ID */
+-	pin_range->range.id = offset;
++	pin_range->range.id = gpio_offset;
+ 	pin_range->range.gc = chip;
+ 	pin_range->range.name = chip->label;
+-	pin_range->range.base = chip->base + offset;
+-	pin_range->range.pin_base = pin_base;
++	pin_range->range.base = chip->base + gpio_offset;
++	pin_range->range.pin_base = pin_offset;
+ 	pin_range->range.npins = npins;
+ 	pin_range->pctldev = pinctrl_find_and_add_gpio_range(pinctl_name,
+ 			&pin_range->range);
+@@ -1261,9 +1261,10 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+ 		kfree(pin_range);
+ 		return PTR_ERR(pin_range->pctldev);
+ 	}
+-	pr_debug("%s: GPIO chip: created GPIO range %d->%d ==> PIN %d->%d\n",
+-		 chip->label, offset, offset + npins - 1,
+-		 pin_base, pin_base + npins - 1);
++	pr_debug("GPIO chip %s: created GPIO range %d->%d ==> %s PIN %d->%d\n",
++		 chip->label, gpio_offset, gpio_offset + npins - 1,
++		 pinctl_name,
++		 pin_offset, pin_offset + npins - 1);
+ 
+ 	list_add_tail(&pin_range->node, &chip->pin_ranges);
+ 
+diff --git a/include/asm-generic/gpio.h b/include/asm-generic/gpio.h
+index 4a606e5..20ca766 100644
+--- a/include/asm-generic/gpio.h
++++ b/include/asm-generic/gpio.h
+@@ -286,7 +286,7 @@ struct gpio_pin_range {
+ };
+ 
+ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+-			   unsigned int offset, unsigned int pin_base,
++			   unsigned int gpio_offset, unsigned int pin_offset,
+ 			   unsigned int npins);
+ void gpiochip_remove_pin_ranges(struct gpio_chip *chip);
+ 
+@@ -294,7 +294,7 @@ void gpiochip_remove_pin_ranges(struct gpio_chip *chip);
+ 
+ static inline int
+ gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+-		       unsigned int offset, unsigned int pin_base,
++		       unsigned int gpio_offset, unsigned int pin_offset,
+ 		       unsigned int npins)
+ {
+ 	return 0;
+diff --git a/include/linux/gpio.h b/include/linux/gpio.h
+index a7eb740..3221142 100644
+--- a/include/linux/gpio.h
++++ b/include/linux/gpio.h
+@@ -185,7 +185,7 @@ static inline int irq_to_gpio(unsigned irq)
+ 
+ static inline int
+ gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+-		       unsigned int offset, unsigned int pin_base,
++		       unsigned int gpio_offset, unsigned int pin_offset,
+ 		       unsigned int npins)
+ {
+ 	WARN_ON(1);
+-- 
+1.8.3.2
+

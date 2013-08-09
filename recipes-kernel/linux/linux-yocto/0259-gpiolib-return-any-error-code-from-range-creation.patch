@@ -1,0 +1,40 @@
+From 567a52ca8764041028be6eefc3c6e290e213ab62 Mon Sep 17 00:00:00 2001
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 20 Nov 2012 14:56:25 +0100
+Subject: [PATCH 0259/1083] gpiolib: return any error code from range creation
+
+If we try to create a range for a certain GPIO chip and the
+target pin controller is not yet available it may return
+a probe deferral error code, so handle this all the way
+our by checking the error code.
+
+Reviewed-by: Stephen Warren <swarren@nvidia.com>
+Reviewed-by: Viresh Kumar <viresh.kumar@linaro.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(cherry picked from commit 8f23ca1a73a096f21e6618d8e23df613daa5e532)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/gpio/gpiolib.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index a2a5119..2c57e4c 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1255,10 +1255,11 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
+ 	pin_range->range.npins = npins;
+ 	pin_range->pctldev = pinctrl_find_and_add_gpio_range(pinctl_name,
+ 			&pin_range->range);
+-	if (!pin_range->pctldev) {
++	if (IS_ERR(pin_range->pctldev)) {
+ 		pr_err("%s: GPIO chip: could not create pin range\n",
+ 		       chip->label);
+ 		kfree(pin_range);
++		return PTR_ERR(pin_range->pctldev);
+ 	}
+ 	pr_debug("%s: GPIO chip: created GPIO range %d->%d ==> PIN %d->%d\n",
+ 		 chip->label, offset, offset + npins - 1,
+-- 
+1.8.3.2
+

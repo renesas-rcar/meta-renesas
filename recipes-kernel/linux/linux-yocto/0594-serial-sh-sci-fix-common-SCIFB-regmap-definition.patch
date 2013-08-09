@@ -1,0 +1,53 @@
+From 195edd1e12f45351d5fcdc0f2dfb818b1fce9979 Mon Sep 17 00:00:00 2001
+From: Takashi Yoshii <takashi.yoshii.zj@renesas.com>
+Date: Fri, 16 Nov 2012 10:53:31 +0900
+Subject: [PATCH 0594/1083] serial: sh-sci: fix common SCIFB regmap definition
+
+About FIFO count, there are two variants of SCIFs which show
+a) TX count in upper, RX count in lower byte of FDR register
+b) TX count in TFDR register, RX count in RFDR register
+
+Common SCIFB regmap in current source code is defined as "a".
+At least 7372 and 73a0 HW manual say their SICFB are "b".
+
+This patch alters the definition to "b", considering the current
+one has come from a mistake. The reason is as follows.
+
+The flag SCIFB sh-sci driver means it has 256 byte FIFO.
+The count is from 0(empty) to 256(full), that makes 9-bit.
+Because FDR is 16-bit register, it can not hold two 9-bits.
+That's why, SCIFB can not be "a".
+
+Signed-off-by: Takashi Yoshii <takashi.yoshii.zj@renesas.com>
+Signed-off-by: Shinya Kuribayashi <shinya.kuribayashi.px@renesas.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit 8c66d6d2a1a572768616ddca2c3863384b14d846)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit d0f06e7e4c517eb61874688131fbf02303663c49)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/tty/serial/sh-sci.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 63a3bd0..502fa47 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -196,9 +196,9 @@ static struct plat_sci_reg sci_regmap[SCIx_NR_REGTYPES][SCIx_NR_REGS] = {
+ 		[SCxSR]		= { 0x14, 16 },
+ 		[SCxRDR]	= { 0x60,  8 },
+ 		[SCFCR]		= { 0x18, 16 },
+-		[SCFDR]		= { 0x1c, 16 },
+-		[SCTFDR]	= sci_reg_invalid,
+-		[SCRFDR]	= sci_reg_invalid,
++		[SCFDR]		= sci_reg_invalid,
++		[SCTFDR]	= { 0x38, 16 },
++		[SCRFDR]	= { 0x3c, 16 },
+ 		[SCSPTR]	= sci_reg_invalid,
+ 		[SCLSR]		= sci_reg_invalid,
+ 	},
+-- 
+1.8.3.2
+

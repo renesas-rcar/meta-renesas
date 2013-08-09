@@ -1,0 +1,46 @@
+From d3a78004f8b548433c231b2a16e3ceac90b8078f Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <w.sang@pengutronix.de>
+Date: Tue, 13 Nov 2012 11:24:15 +0100
+Subject: [PATCH 0109/1083] i2c: rcar: fix section mismatch
+
+Give the driver struct a name according to the 'standard' to fix:
+
+WARNING: vmlinux.o(.data+0x11798): Section mismatch in reference from the variable rcar_i2c_drv to the function .devinit.text:rcar_i2c_probe()
+...
+WARNING: vmlinux.o(.data+0x1179c): Section mismatch in reference from the variable rcar_i2c_drv to the function .devexit.text:rcar_i2c_remove()
+
+Reported-by: Simon Horman <horms@verge.net.au>
+Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+Cc: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+(cherry picked from commit 45fd5e4ad2052101b4ceda5fdf4b003c428ebdfc)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/i2c/busses/i2c-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 2bce56d..72a8071 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -693,7 +693,7 @@ static int __devexit rcar_i2c_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static struct platform_driver rcar_i2c_drv = {
++static struct platform_driver rcar_i2c_driver = {
+ 	.driver	= {
+ 		.name	= "i2c-rcar",
+ 		.owner	= THIS_MODULE,
+@@ -702,7 +702,7 @@ static struct platform_driver rcar_i2c_drv = {
+ 	.remove		= __devexit_p(rcar_i2c_remove),
+ };
+ 
+-module_platform_driver(rcar_i2c_drv);
++module_platform_driver(rcar_i2c_driver);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Renesas R-Car I2C bus driver");
+-- 
+1.8.3.2
+

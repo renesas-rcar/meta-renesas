@@ -1,0 +1,26 @@
+From c1f19cc2617c110eb0a22455ff4a6ee99d02634e Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Fri, 26 Jul 2013 16:32:11 +0900
+Subject: [PATCH 0756/1083] dma: shdma-desc: Fix max channel number
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ drivers/dma/sh/shdma-desc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/dma/sh/shdma-desc.h b/drivers/dma/sh/shdma-desc.h
+index 2e33b3f..44329ed 100644
+--- a/drivers/dma/sh/shdma-desc.h
++++ b/drivers/dma/sh/shdma-desc.h
+@@ -26,7 +26,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/list.h>
+ 
+-#define SHDESC_DMAE_MAX_CHANNELS 26
++#define SHDESC_DMAE_MAX_CHANNELS 15	/* Max channel of SYS-DMAC */
+ #define SHDESC_DMAE_TCR_MAX 0x00FFFFFF	/* 16MB */
+ 
+ struct device;
+-- 
+1.8.3.2
+

@@ -1,0 +1,37 @@
+From d3b775eef7c8cd03a46f9707a659f278867ebacc Mon Sep 17 00:00:00 2001
+From: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+Date: Mon, 29 Jul 2013 16:33:03 +0900
+Subject: [PATCH 0810/1083] ASoC: sh: scu: Add codec powerup wait
+
+The module parameter is created in below.
+/sys/module/snd_soc_scu/parameters/codec_powerup_wait
+
+Signed-off-by: Shunsuke Kataoka <shunsuke.kataoka.df@renesas.com>
+---
+ sound/soc/sh/scu_pcm.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sound/soc/sh/scu_pcm.c b/sound/soc/sh/scu_pcm.c
+index 9573de7..541717f 100644
+--- a/sound/soc/sh/scu_pcm.c
++++ b/sound/soc/sh/scu_pcm.c
+@@ -54,6 +54,8 @@
+ #endif /* DEBUG */
+ 
+ static u64 dma_mask = DMA_BIT_MASK(32);
++static unsigned int codec_powerup_wait;
++module_param(codec_powerup_wait, uint, 0644);
+ 
+ static struct snd_soc_dai *scu_get_dai(struct snd_pcm_substream *ss)
+ {
+@@ -573,6 +575,7 @@ static int scu_audio_start(struct snd_pcm_substream *ss)
+ 	/* PCM 1st process */
+ 	pcminfo->flag_first = 1;
+ 
++	mdelay(codec_powerup_wait);
+ 	queue_work(pcminfo->workq, &pcminfo->work);
+ 
+ 	FNC_EXIT
+-- 
+1.8.3.2
+

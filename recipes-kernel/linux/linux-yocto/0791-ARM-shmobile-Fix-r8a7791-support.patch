@@ -1,0 +1,391 @@
+From 5c057caf9be2ff181e454d420892a894b564fffe Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Tue, 30 Jul 2013 15:41:13 +0900
+Subject: [PATCH 0791/1083] ARM: shmobile: Fix r8a7791 support
+
+r8a7791 support is changed not to depend on r8a7790 file.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ arch/arm/mach-shmobile/Makefile               |   4 +-
+ arch/arm/mach-shmobile/board-koelsch.c        |   6 +-
+ arch/arm/mach-shmobile/clock-r8a7791.c        |   2 -
+ arch/arm/mach-shmobile/include/mach/common.h  |   2 +
+ arch/arm/mach-shmobile/include/mach/r8a7791.h |  30 +++---
+ arch/arm/mach-shmobile/intc-r8a7791.c         |  48 +++++++++
+ arch/arm/mach-shmobile/setup-r8a7791.c        |   2 -
+ arch/arm/mach-shmobile/smp-r8a7790.c          |   2 +-
+ arch/arm/mach-shmobile/smp-r8a7791.c          | 143 ++++++++++++++++++++++++++
+ 9 files changed, 213 insertions(+), 26 deletions(-)
+ create mode 100644 arch/arm/mach-shmobile/intc-r8a7791.c
+ create mode 100644 arch/arm/mach-shmobile/smp-r8a7791.c
+
+diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
+index 6b89cfd..126a378 100644
+--- a/arch/arm/mach-shmobile/Makefile
++++ b/arch/arm/mach-shmobile/Makefile
+@@ -11,7 +11,7 @@ obj-$(CONFIG_ARCH_SH73A0)	+= setup-sh73a0.o clock-sh73a0.o intc-sh73a0.o
+ obj-$(CONFIG_ARCH_R8A7740)	+= setup-r8a7740.o clock-r8a7740.o intc-r8a7740.o
+ obj-$(CONFIG_ARCH_R8A7779)	+= setup-r8a7779.o clock-r8a7779.o intc-r8a7779.o
+ obj-$(CONFIG_ARCH_R8A7790)	+= setup-r8a7790.o clock-r8a7790.o intc-r8a7790.o
+-obj-$(CONFIG_ARCH_R8A7791)	+= setup-r8a7791.o clock-r8a7791.o intc-r8a7790.o
++obj-$(CONFIG_ARCH_R8A7791)	+= setup-r8a7791.o clock-r8a7791.o intc-r8a7791.o
+ obj-$(CONFIG_ARCH_EMEV2)	+= setup-emev2.o clock-emev2.o
+ 
+ # SMP objects
+@@ -21,7 +21,7 @@ smp-$(CONFIG_ARCH_SH73A0)	+= smp-sh73a0.o
+ smp-$(CONFIG_ARCH_R8A7779)	+= smp-r8a7779.o
+ smp-$(CONFIG_ARCH_EMEV2)	+= smp-emev2.o
+ smp-$(CONFIG_ARCH_R8A7790)	+= smp-r8a7790.o
+-smp-$(CONFIG_ARCH_R8A7791)	+= smp-r8a7790.o
++smp-$(CONFIG_ARCH_R8A7791)	+= smp-r8a7791.o
+ 
+ # IRQ objects
+ obj-$(CONFIG_ARCH_SH7372)	+= entry-intc.o
+diff --git a/arch/arm/mach-shmobile/board-koelsch.c b/arch/arm/mach-shmobile/board-koelsch.c
+index 50eecdb..0d2a1a6 100644
+--- a/arch/arm/mach-shmobile/board-koelsch.c
++++ b/arch/arm/mach-shmobile/board-koelsch.c
+@@ -2,8 +2,6 @@
+  * Koelsch board support
+  *
+  * Copyright (C) 2013 Renesas Electronics Corporation
+- * Copyright (C) 2013  Renesas Solutions Corp.
+- * Copyright (C) 2013  Magnus Damm
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -241,8 +239,8 @@ static const char *koelsch_boards_compat_dt[] __initdata = {
+ };
+ 
+ DT_MACHINE_START(KOELSCH_DT, "koelsch")
+-	.smp		= smp_ops(r8a7790_smp_ops),
+-	.init_irq	= r8a7790_init_irq,
++	.smp		= smp_ops(r8a7791_smp_ops),
++	.init_irq	= r8a7791_init_irq,
+ 	.timer		= &r8a7791_timer,
+ 	.init_machine	= koelsch_add_standard_devices,
+ 	.dt_compat	= koelsch_boards_compat_dt,
+diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
+index d1d34f4..914700d 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7791.c
++++ b/arch/arm/mach-shmobile/clock-r8a7791.c
+@@ -2,8 +2,6 @@
+  * r8a7791 clock framework support
+  *
+  * Copyright (C) 2013  Renesas Electronics Corporation
+- * Copyright (C) 2013  Renesas Solutions Corp.
+- * Copyright (C) 2013  Magnus Damm
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+diff --git a/arch/arm/mach-shmobile/include/mach/common.h b/arch/arm/mach-shmobile/include/mach/common.h
+index c973154..44f558c 100644
+--- a/arch/arm/mach-shmobile/include/mach/common.h
++++ b/arch/arm/mach-shmobile/include/mach/common.h
+@@ -69,10 +69,12 @@ extern void r8a7790_clock_init(void);
+ extern void r8a7790_pinmux_init(void);
+ extern void r8a7790_pm_init(void);
+ 
++extern void r8a7791_init_irq(void);
+ extern void r8a7791_add_early_devices(void);
+ extern void r8a7791_add_standard_devices(void);
+ extern void r8a7791_clock_init(void);
+ extern void r8a7791_pinmux_init(void);
++extern void r8a7791_pm_init(void);
+ 
+ extern void shmobile_init_late(void);
+ 
+diff --git a/arch/arm/mach-shmobile/include/mach/r8a7791.h b/arch/arm/mach-shmobile/include/mach/r8a7791.h
+index 47a22f1..b06b411 100644
+--- a/arch/arm/mach-shmobile/include/mach/r8a7791.h
++++ b/arch/arm/mach-shmobile/include/mach/r8a7791.h
+@@ -9,41 +9,41 @@ struct platform_device;
+ struct rcar_du_platform_data;
+ 
+ void r8a7791_add_standard_devices(void);
+-void r8a7790_add_du_device(struct rcar_du_platform_data *pdata);
+-void r8a7790_clock_init(void);
++void r8a7791_add_du_device(struct rcar_du_platform_data *pdata);
++void r8a7791_clock_init(void);
+ void r8a7791_pinmux_init(void);
+ 
+ extern struct sys_timer r8a7791_timer;
+-extern struct smp_operations r8a7790_smp_ops;
++extern struct smp_operations r8a7791_smp_ops;
+ 
+-struct r8a7790_pm_ch {
++struct r8a7791_pm_ch {
+ 	unsigned long chan_offs;
+ 	unsigned int chan_bit;
+ 	unsigned int isr_bit;
+ };
+ 
+-struct r8a7790_pm_domain {
++struct r8a7791_pm_domain {
+ 	struct generic_pm_domain genpd;
+-	struct r8a7790_pm_ch ch;
++	struct r8a7791_pm_ch ch;
+ };
+ 
+-static inline struct r8a7790_pm_ch *to_r8a7790_ch(struct generic_pm_domain *d)
++static inline struct r8a7791_pm_ch *to_r8a7791_ch(struct generic_pm_domain *d)
+ {
+-	return &container_of(d, struct r8a7790_pm_domain, genpd)->ch;
++	return &container_of(d, struct r8a7791_pm_domain, genpd)->ch;
+ }
+ 
+-extern int r8a7790_sysc_power_down(struct r8a7790_pm_ch *r8a7790_ch);
+-extern int r8a7790_sysc_power_up(struct r8a7790_pm_ch *r8a7790_ch);
++extern int r8a7791_sysc_power_down(struct r8a7791_pm_ch *r8a7791_ch);
++extern int r8a7791_sysc_power_up(struct r8a7791_pm_ch *r8a7791_ch);
+ 
+ #ifdef CONFIG_PM
+-extern struct r8a7790_pm_domain r8a7790_rgx;
++extern struct r8a7791_pm_domain r8a7791_rgx;
+ 
+-extern void r8a7790_init_pm_domain(struct r8a7790_pm_domain *r8a7790_pd);
+-extern void r8a7790_add_device_to_domain(struct r8a7790_pm_domain *r8a7790_pd,
++extern void r8a7791_init_pm_domain(struct r8a7791_pm_domain *r8a7791_pd);
++extern void r8a7791_add_device_to_domain(struct r8a7791_pm_domain *r8a7791_pd,
+ 					 struct platform_device *pdev);
+ #else
+-#define r8a7790_init_pm_domain(pd) do { } while (0)
+-#define r8a7790_add_device_to_domain(pd, pdev) do { } while (0)
++#define r8a7791_init_pm_domain(pd) do { } while (0)
++#define r8a7791_add_device_to_domain(pd, pdev) do { } while (0)
+ #endif /* CONFIG_PM */
+ 
+ /* USB Host */
+diff --git a/arch/arm/mach-shmobile/intc-r8a7791.c b/arch/arm/mach-shmobile/intc-r8a7791.c
+new file mode 100644
+index 0000000..a04b61a
+--- /dev/null
++++ b/arch/arm/mach-shmobile/intc-r8a7791.c
+@@ -0,0 +1,48 @@
++/*
++ * arch/arm/mach-shmobile/intc-r8a7791.c
++ *     r8a7791 processor support - INTC hardware block
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/irq.h>
++#include <linux/of_irq.h>
++#include <linux/of_address.h>
++#include <asm/io.h>
++#include <asm/mach/irq.h>
++#include <mach/irqs.h>
++#include <mach/r8a7791.h>
++
++extern struct irq_chip gic_arch_extn;
++int gic_of_init(struct device_node *node, struct device_node *parent);
++
++static int r8a7791_set_wake(struct irq_data *data, unsigned int on)
++{
++	return 0;
++}
++
++static  struct of_device_id r8a7791_irq_match[] __initdata = {
++	{ .compatible = "arm,cortex-a15-gic", .data = gic_of_init, },
++	{}
++};
++
++void __init r8a7791_init_irq(void)
++{
++	of_irq_init(r8a7791_irq_match);
++	gic_arch_extn.irq_set_wake = r8a7791_set_wake;
++}
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index a838909..2a834ad 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -2,8 +2,6 @@
+  * r8a7791 processor support
+  *
+  * Copyright (C) 2013  Renesas Electronics Corporation
+- * Copyright (C) 2013  Renesas Solutions Corp.
+- * Copyright (C) 2013  Magnus Damm
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+diff --git a/arch/arm/mach-shmobile/smp-r8a7790.c b/arch/arm/mach-shmobile/smp-r8a7790.c
+index 2d12618..d921def 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7790.c
++++ b/arch/arm/mach-shmobile/smp-r8a7790.c
+@@ -36,7 +36,7 @@
+ #define RESCNT		0x010050
+ #define CA15WUPCR	0x004010
+ #define SYSCSR		0x030000
+-#define MERAM		0xe6300000
++#define MERAM		0xe8080000
+ #define CCI_BASE	0xf0190000
+ #define CCI_SLAVE3	0x4000
+ #define CCI_SLAVE4	0x5000
+diff --git a/arch/arm/mach-shmobile/smp-r8a7791.c b/arch/arm/mach-shmobile/smp-r8a7791.c
+new file mode 100644
+index 0000000..46c4024
+--- /dev/null
++++ b/arch/arm/mach-shmobile/smp-r8a7791.c
+@@ -0,0 +1,143 @@
++/*
++ * arch/arm/mach-shmobile/smp-r8a7791.c
++ *     SMP support for R-Mobile / SH-Mobile - r8a7791 portion
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <linux/jiffies.h>
++#include <linux/irqchip/arm-gic.h>
++#include <linux/smp.h>
++#include <asm/cacheflush.h>
++#include <asm/io.h>
++#include <asm/smp_plat.h>
++#include <mach/common.h>
++#include <mach/hardware.h>
++
++#define IO_BASE		0xe6150000
++#define CA15BAR		0x016020
++#define CA15RESCNT	0x010040
++#define RESCNT		0x010050
++#define CA15WUPCR	0x004010
++#define SYSCSR		0x030000
++#define SECRAM		0xe6300000
++#define CCI_BASE	0xf0190000
++#define CCI_SLAVE3	0x4000
++#define CCI_SLAVE4	0x5000
++#define CCI_SNOOP	0x0000
++#define CCI_STATUS	0x000c
++
++static unsigned int r8a7791_get_core_count(void)
++{
++	return CONFIG_NR_CPUS;
++}
++
++static void __init r8a7791_smp_init_cpus(void)
++{
++	unsigned int ncores = r8a7791_get_core_count();
++
++	shmobile_smp_init_cpus(ncores);
++}
++
++static void __init r8a7791_smp_prepare_cpus(unsigned int max_cpus)
++{
++	u32 bar;
++	void __iomem *p;
++
++	/* SECRAM for jump stub, because BAR requires 256KB aligned address */
++	p = ioremap_nocache(SECRAM, 16);
++	memcpy(p, shmobile_secondary_vector, 16);
++	iounmap(p);
++
++	p = ioremap_nocache(IO_BASE, 0x40000);
++	bar = (SECRAM >> 8) & 0xfffffc00;
++	__raw_writel(bar, (int)p + CA15BAR);
++	__raw_writel(bar | 0x10, (int)p + CA15BAR);
++	iounmap(p);
++}
++
++static void __cpuinit r8a7791_secondary_init(unsigned int cpu)
++{
++	gic_secondary_init(0);
++}
++
++static int __cpuinit r8a7791_boot_secondary(unsigned int cpu,
++					    struct task_struct *idle)
++{
++	u32 val;
++	void __iomem *p;
++
++	cpu = cpu_logical_map(cpu);
++
++	p = ioremap_nocache(IO_BASE, 0x40000);
++
++	__raw_writel(1 << (cpu & 3), (int)p + CA15WUPCR);
++
++	while ((__raw_readl((int)p + SYSCSR) & 0x3) != 0x3)
++		;
++	while (__raw_readl((int)p + CA15WUPCR) != 0x0)
++		;
++
++	val = __raw_readl((int)p + CA15RESCNT);
++	val |= 0xa5a50000;
++	switch (cpu & 3) {
++	case 1:
++		__raw_writel(val & ~0x4, (int)p + CA15RESCNT);
++		break;
++	case 2:
++		__raw_writel(val & ~0x2, (int)p + CA15RESCNT);
++		break;
++	case 3:
++		__raw_writel(val & ~0x1, (int)p + CA15RESCNT);
++		break;
++	}
++
++	iounmap(p);
++	return 0;
++}
++
++static int __maybe_unused r8a7791_cpu_kill(unsigned int cpu)
++{
++	int k;
++
++	/* this function is running on another CPU than the offline target,
++	 * here we need wait for shutdown code in platform_cpu_die() to
++	 * finish before asking SoC-specific code to power off the CPU core.
++	 */
++	for (k = 0; k < 1000; k++) {
++		if (shmobile_cpu_is_dead(cpu))
++			return 1;
++
++		mdelay(1);
++	}
++
++	return 0;
++}
++
++struct smp_operations r8a7791_smp_ops  __initdata = {
++	.smp_init_cpus		= r8a7791_smp_init_cpus,
++	.smp_prepare_cpus	= r8a7791_smp_prepare_cpus,
++	.smp_secondary_init	= r8a7791_secondary_init,
++	.smp_boot_secondary	= r8a7791_boot_secondary,
++#ifdef CONFIG_HOTPLUG_CPU
++	.cpu_kill		= r8a7791_cpu_kill,
++	.cpu_die		= shmobile_cpu_die,
++	.cpu_disable		= shmobile_cpu_disable,
++#endif
++};
+-- 
+1.8.3.2
+

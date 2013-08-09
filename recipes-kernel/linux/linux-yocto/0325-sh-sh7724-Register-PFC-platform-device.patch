@@ -1,0 +1,55 @@
+From 0e19a4f399c714b52186cb38aef9083edfec0f2a Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Dec 2012 23:51:11 +0100
+Subject: [PATCH 0325/1083] sh: sh7724: Register PFC platform device
+
+Add arch code to register the PFC platform device instead of calling the
+driver directly. Platform device registration in the sh-pfc driver will
+be removed.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 18ebd2288419952fe908aa78ccf531f12d0ddfd8)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/sh/Kconfig                         | 1 +
+ arch/sh/kernel/cpu/sh4a/pinmux-sh7724.c | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index f0908a9..5fda42b 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -427,6 +427,7 @@ config CPU_SUBTYPE_SH7724
+ 	select ARCH_SPARSEMEM_ENABLE
+ 	select SYS_SUPPORTS_CMT
+ 	select ARCH_WANT_OPTIONAL_GPIOLIB
++	select PINCTRL
+ 	help
+ 	  Select SH7724 if you have an SH-MobileR2R CPU.
+ 
+diff --git a/arch/sh/kernel/cpu/sh4a/pinmux-sh7724.c b/arch/sh/kernel/cpu/sh4a/pinmux-sh7724.c
+index 1af0f95..51000f9 100644
+--- a/arch/sh/kernel/cpu/sh4a/pinmux-sh7724.c
++++ b/arch/sh/kernel/cpu/sh4a/pinmux-sh7724.c
+@@ -16,6 +16,7 @@
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/gpio.h>
++#include <cpu/pfc.h>
+ #include <cpu/sh7724.h>
+ 
+ enum {
+@@ -2225,6 +2226,6 @@ static struct pinmux_info sh7724_pinmux_info = {
+ 
+ static int __init plat_pinmux_setup(void)
+ {
+-	return register_pinmux(&sh7724_pinmux_info);
++	return sh_pfc_register_info(NULL, NULL, 0, &sh7724_pinmux_info);
+ }
+ arch_initcall(plat_pinmux_setup);
+-- 
+1.8.3.2
+

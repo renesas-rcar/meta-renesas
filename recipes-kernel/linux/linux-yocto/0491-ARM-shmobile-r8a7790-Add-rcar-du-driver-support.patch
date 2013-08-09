@@ -1,0 +1,121 @@
+From 5c445b7a3a48959d693675638f9862164916bad4 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 17 Jun 2013 10:35:15 +0900
+Subject: [PATCH 0491/1083] ARM: shmobile: r8a7790: Add rcar-du driver support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit dbc5c7f30f21a86ec9424e96dc3fe40cb3cfd393)
+
+Conflicts:
+	arch/arm/mach-shmobile/setup-r8a7790.c
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig    |  2 +
+ arch/arm/mach-shmobile/setup-r8a7790.c | 67 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 69 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 6aed48c..f666d87 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -106,6 +106,8 @@ CONFIG_I2C=y
+ CONFIG_I2C_GPIO=y
+ CONFIG_I2C_SH_MOBILE=y
+ CONFIG_GPIO_EM=y
++CONFIG_DRM=y
++CONFIG_DRM_RCAR_DU=y
+ # CONFIG_HWMON is not set
+ CONFIG_REGULATOR=y
+ CONFIG_MEDIA_SUPPORT=y
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 73d4b8f..6b196fa 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -27,6 +27,7 @@
+ #include <linux/sh_eth.h>
+ #include <linux/platform_data/gpio-rcar.h>
+ #include <linux/platform_data/irq-renesas-irqc.h>
++#include <linux/platform_data/rcar-du.h>
+ #include <mach/common.h>
+ #include <mach/irqs.h>
+ #include <mach/r8a7790.h>
+@@ -169,9 +170,75 @@ static struct platform_device powervr_device = {
+ 	.num_resources  = ARRAY_SIZE(powervr_resources),
+ };
+ 
++static struct resource rcar_du_resources[] = {
++	[0] = {
++		.name	= "Display Unit",
++		.start	= 0xfeb00000,
++		.end	= 0xfeb6002c,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= 0xfeb90000,
++		.end	= 0xfeb9001c,
++		.flags	= IORESOURCE_MEM,
++	},
++	[2] = {
++		.start	= 0xfeb94000,
++		.end	= 0xfeb9401c,
++		.flags	= IORESOURCE_MEM,
++	},
++	[3] = {
++		.start	= gic_spi(256),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_du_encoder_data rcar_du_encoders[] = {
++	{
++		.encoder = RCAR_DU_ENCODER_VGA,
++		.output = 0,
++	},
++	{
++		.encoder = RCAR_DU_ENCODER_LVDS,
++		.output = 1,
++		.u.lvds.panel = {
++			.width_mm = 210,
++			.height_mm = 158,
++			.mode = {
++				.clock = 65000,
++				.hdisplay = 1024,
++				.hsync_start = 1048,
++				.hsync_end = 1184,
++				.htotal = 1344,
++				.vdisplay = 768,
++				.vsync_start = 771,
++				.vsync_end = 777,
++				.vtotal = 806,
++				.flags = 0,
++			},
++		},
++	},
++};
++
++static struct rcar_du_platform_data rcar_du_pdata = {
++	.encoders = rcar_du_encoders,
++	.num_encoders = ARRAY_SIZE(rcar_du_encoders),
++};
++
++static struct platform_device rcar_du_device = {
++	.name		= "rcar-du",
++	.num_resources	= ARRAY_SIZE(rcar_du_resources),
++	.resource	= rcar_du_resources,
++	.dev	= {
++		.platform_data = &rcar_du_pdata,
++		.coherent_dma_mask = ~0,
++	},
++};
++
+ static struct platform_device *r8a7790_early_devices[] __initdata = {
+ 	&eth_device,
+ 	&powervr_device,
++	&rcar_du_device,
+ };
+ 
+ static struct renesas_irqc_config irqc0_data = {
+-- 
+1.8.3.2
+

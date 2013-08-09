@@ -1,0 +1,107 @@
+From 0206af1f4068cffc48e92906b20daf2f88c874cd Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 17 Jun 2013 10:40:19 +0900
+Subject: [PATCH 0496/1083] drm: cma-helper: Support double-buffering through
+ fbdev panning
+
+The fbdev API implements double-buffering through fbdev panning instead
+of page flipping. This requires a frame buffer twice as big as the
+output resolution.
+
+Add a fb_size_mult argument to the drm_fbdev_cma_init() function. The
+helper will allocate a frame buffer with a vertical size multiplied by
+the fb_size_mult value.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit 1553c009560f6dbb512dd576a36675bdb1a8689b)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_fb_cma_helper.c   | 10 +++++++---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c |  2 +-
+ include/drm/drm_fb_cma_helper.h       |  2 +-
+ 3 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_fb_cma_helper.c b/drivers/gpu/drm/drm_fb_cma_helper.c
+index 09e11a5..180b2c3 100644
+--- a/drivers/gpu/drm/drm_fb_cma_helper.c
++++ b/drivers/gpu/drm/drm_fb_cma_helper.c
+@@ -33,6 +33,7 @@ struct drm_fb_cma {
+ struct drm_fbdev_cma {
+ 	struct drm_fb_helper	fb_helper;
+ 	struct drm_fb_cma	*fb;
++	unsigned int		fb_size_mult;
+ };
+ 
+ static inline struct drm_fbdev_cma *to_fbdev_cma(struct drm_fb_helper *helper)
+@@ -213,7 +214,7 @@ static int drm_fbdev_cma_create(struct drm_fb_helper *helper,
+ 	bytes_per_pixel = DIV_ROUND_UP(sizes->surface_bpp, 8);
+ 
+ 	mode_cmd.width = sizes->surface_width;
+-	mode_cmd.height = sizes->surface_height;
++	mode_cmd.height = sizes->surface_height * fbdev_cma->fb_size_mult;
+ 	mode_cmd.pitches[0] = sizes->surface_width * bytes_per_pixel;
+ 	mode_cmd.pixel_format = drm_mode_legacy_fb_format(sizes->surface_bpp,
+ 		sizes->surface_depth);
+@@ -252,7 +253,8 @@ static int drm_fbdev_cma_create(struct drm_fb_helper *helper,
+ 	}
+ 
+ 	drm_fb_helper_fill_fix(fbi, fb->pitches[0], fb->depth);
+-	drm_fb_helper_fill_var(fbi, helper, fb->width, fb->height);
++	drm_fb_helper_fill_var(fbi, helper, sizes->surface_width,
++			       sizes->surface_height);
+ 
+ 	offset = fbi->var.xoffset * bytes_per_pixel;
+ 	offset += fbi->var.yoffset * fb->pitches[0];
+@@ -299,12 +301,13 @@ static struct drm_fb_helper_funcs drm_fb_cma_helper_funcs = {
+  * @preferred_bpp: Preferred bits per pixel for the device
+  * @num_crtc: Number of CRTCs
+  * @max_conn_count: Maximum number of connectors
++ * @fb_size_mult: Frame buffer height size multiplier
+  *
+  * Returns a newly allocated drm_fbdev_cma struct or a ERR_PTR.
+  */
+ struct drm_fbdev_cma *drm_fbdev_cma_init(struct drm_device *dev,
+ 	unsigned int preferred_bpp, unsigned int num_crtc,
+-	unsigned int max_conn_count)
++	unsigned int max_conn_count, unsigned int fb_size_mult)
+ {
+ 	struct drm_fbdev_cma *fbdev_cma;
+ 	struct drm_fb_helper *helper;
+@@ -316,6 +319,7 @@ struct drm_fbdev_cma *drm_fbdev_cma_init(struct drm_device *dev,
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
++	fbdev_cma->fb_size_mult = fb_size_mult;
+ 	fbdev_cma->fb_helper.funcs = &drm_fb_cma_helper_funcs;
+ 	helper = &fbdev_cma->fb_helper;
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 1cc27bb..70f6116 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -245,7 +245,7 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	drm_helper_disable_unused_functions(dev);
+ 
+ 	fbdev = drm_fbdev_cma_init(dev, 32, dev->mode_config.num_crtc,
+-				   dev->mode_config.num_connector);
++				   dev->mode_config.num_connector, 1);
+ 	if (IS_ERR(fbdev))
+ 		return PTR_ERR(fbdev);
+ 
+diff --git a/include/drm/drm_fb_cma_helper.h b/include/drm/drm_fb_cma_helper.h
+index 76c7098..e31a936 100644
+--- a/include/drm/drm_fb_cma_helper.h
++++ b/include/drm/drm_fb_cma_helper.h
+@@ -11,7 +11,7 @@ struct drm_mode_fb_cmd2;
+ 
+ struct drm_fbdev_cma *drm_fbdev_cma_init(struct drm_device *dev,
+ 	unsigned int preferred_bpp, unsigned int num_crtc,
+-	unsigned int max_conn_count);
++	unsigned int max_conn_count, unsigned int fb_size_mult);
+ void drm_fbdev_cma_fini(struct drm_fbdev_cma *fbdev_cma);
+ 
+ void drm_fbdev_cma_restore_mode(struct drm_fbdev_cma *fbdev_cma);
+-- 
+1.8.3.2
+

@@ -1,0 +1,29 @@
+From b100f32865d2415b53e2361581c3a0bfd4409333 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 17 Jun 2013 10:44:16 +0900
+Subject: [PATCH 0500/1083] drm: Fix FBIOPAN_DISPLAY ywrapstep
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+(cherry picked from commit eed5d53a27d636cfab0132e3234bb3f1f146bea4)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/drm_fb_helper.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 698039b..d82be0f 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -881,7 +881,7 @@ void drm_fb_helper_fill_fix(struct fb_info *info, uint32_t pitch,
+ 	info->fix.type_aux = 0;
+ 	info->fix.xpanstep = 1; /* doing it in hw */
+ 	info->fix.ypanstep = 1; /* doing it in hw */
+-	info->fix.ywrapstep = 0;
++	info->fix.ywrapstep = 1;
+ 	info->fix.accel = FB_ACCEL_NONE;
+ 	info->fix.type_aux = 0;
+ 
+-- 
+1.8.3.2
+

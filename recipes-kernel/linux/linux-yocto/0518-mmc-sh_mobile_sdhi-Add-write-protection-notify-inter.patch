@@ -1,0 +1,85 @@
+From 10e37bfabbaea36a65bd474c6c80aebd3d00e39c Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Fri, 14 Jun 2013 15:36:02 +0900
+Subject: [PATCH 0518/1083] mmc: sh_mobile_sdhi: Add write protection notify
+ interface
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit 5c71e99042f20988dea7a74dbf40ca976c0bd654)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/mmc/host/sh_mobile_sdhi.c  | 10 ++++++++++
+ drivers/mmc/host/tmio_mmc_pio.c    |  2 ++
+ include/linux/mfd/tmio.h           |  1 +
+ include/linux/mmc/sh_mobile_sdhi.h |  1 +
+ 4 files changed, 14 insertions(+)
+
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index 335933a..7349e02 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -76,6 +76,14 @@ static int sh_mobile_sdhi_get_cd(struct platform_device *pdev)
+ 	return p->get_cd(pdev);
+ }
+ 
++static int sh_mobile_sdhi_get_ro(struct platform_device *pdev)
++{
++	struct sh_mobile_sdhi_info *p = pdev->dev.platform_data;
++
++	return p->get_ro(pdev);
++
++}
++
+ static int sh_mobile_sdhi_wait_idle(struct tmio_mmc_host *host)
+ {
+ 	int timeout = 1000;
+@@ -168,6 +176,8 @@ static int __devinit sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 			mmc_data->set_pwr = sh_mobile_sdhi_set_pwr;
+ 		if (p->get_cd)
+ 			mmc_data->get_cd = sh_mobile_sdhi_get_cd;
++		if (p->get_ro)
++			mmc_data->get_ro = sh_mobile_sdhi_get_ro;
+ 
+ 		if (p->dma_slave_tx > 0 && p->dma_slave_rx > 0) {
+ 			priv->param_tx.shdma_slave.slave_id = p->dma_slave_tx;
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 67df17b..8f9acf8 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -907,6 +907,8 @@ static int tmio_mmc_get_ro(struct mmc_host *mmc)
+ 	int ret = mmc_gpio_get_ro(mmc);
+ 	if (ret >= 0)
+ 		return ret;
++	if (pdata->get_ro)
++		return pdata->get_ro(host->pdev);
+ 
+ 	return !((pdata->flags & TMIO_MMC_WRPROTECT_DISABLE) ||
+ 		 (sd_ctrl_read32(host, CTL_STATUS) & TMIO_STAT_WRPROTECT));
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index c8f6407..52c888b 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -125,6 +125,7 @@ struct tmio_mmc_data {
+ 	void (*set_pwr)(struct platform_device *host, int state);
+ 	void (*set_clk_div)(struct platform_device *host, int state);
+ 	int (*get_cd)(struct platform_device *host);
++	int (*get_ro)(struct platform_device *host);
+ 	int (*write16_hook)(struct tmio_mmc_host *host, int addr);
+ 	/* clock management callbacks */
+ 	int (*clk_enable)(struct platform_device *pdev, unsigned int *f);
+diff --git a/include/linux/mmc/sh_mobile_sdhi.h b/include/linux/mmc/sh_mobile_sdhi.h
+index b65679f..8c89212 100644
+--- a/include/linux/mmc/sh_mobile_sdhi.h
++++ b/include/linux/mmc/sh_mobile_sdhi.h
+@@ -29,6 +29,7 @@ struct sh_mobile_sdhi_info {
+ 	struct tmio_mmc_data *pdata;
+ 	void (*set_pwr)(struct platform_device *pdev, int state);
+ 	int (*get_cd)(struct platform_device *pdev);
++	int (*get_ro)(struct platform_device *pdev);
+ 
+ 	/* callbacks for board specific setup code */
+ 	int (*init)(struct platform_device *pdev,
+-- 
+1.8.3.2
+

@@ -1,0 +1,665 @@
+From b54505833369a732d9074aab6313e6e711dadf2c Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:15 +0900
+Subject: [PATCH 0929/1083] Revert "drm/rcar-du: Merge LVDS and VGA encoder
+ code"
+
+This reverts commit 606a5a31e335e6d4d26376e34ede7c81fb4039bb.
+(cherry picked from commit 8b7d41b586deef48bdbee9d7aff2816c21045d98)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/Makefile          |   3 +-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |   2 +
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c | 148 ------------------------------
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h |  45 ---------
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     |  49 ++++++++--
+ drivers/gpu/drm/rcar-du/rcar_du_kms.h     |  29 +++++-
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.c    | 100 ++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvds.h    |  24 +++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c |   1 -
+ drivers/gpu/drm/rcar-du/rcar_du_vga.c     |  67 ++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vga.h     |  24 +++++
+ drivers/gpu/drm/rcar-du/rcar_du_vgacon.c  |   1 -
+ 12 files changed, 288 insertions(+), 205 deletions(-)
+ delete mode 100644 drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+ delete mode 100644 drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvds.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_vga.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_vga.h
+
+diff --git a/drivers/gpu/drm/rcar-du/Makefile b/drivers/gpu/drm/rcar-du/Makefile
+index 57b0fe1..45a8479 100644
+--- a/drivers/gpu/drm/rcar-du/Makefile
++++ b/drivers/gpu/drm/rcar-du/Makefile
+@@ -1,9 +1,10 @@
+ rcar-du-drm-y := rcar_du_crtc.o \
+ 		 rcar_du_drv.o \
+-		 rcar_du_encoder.o \
+ 		 rcar_du_kms.o \
++		 rcar_du_lvds.o \
+ 		 rcar_du_lvdscon.o \
+ 		 rcar_du_plane.o \
++		 rcar_du_vga.o \
+ 		 rcar_du_vgacon.o
+ 
+ obj-$(CONFIG_DRM_RCAR_DU)	+= rcar-du-drm.o
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index f81bced..0da4b97 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -23,8 +23,10 @@
+ #include "rcar_du_crtc.h"
+ #include "rcar_du_drv.h"
+ #include "rcar_du_kms.h"
++#include "rcar_du_lvds.h"
+ #include "rcar_du_plane.h"
+ #include "rcar_du_regs.h"
++#include "rcar_du_vga.h"
+ 
+ #define to_rcar_crtc(c)	container_of(c, struct rcar_du_crtc, crtc)
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+deleted file mode 100644
+index 15a5643..0000000
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ /dev/null
+@@ -1,148 +0,0 @@
+-/*
+- * rcar_du_encoder.c  --  R-Car Display Unit Encoder
+- *
+- * Copyright (C) 2013 Renesas Corporation
+- *
+- * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- */
+-
+-#include <drm/drmP.h>
+-#include <drm/drm_crtc.h>
+-#include <drm/drm_crtc_helper.h>
+-
+-#include "rcar_du_drv.h"
+-#include "rcar_du_encoder.h"
+-#include "rcar_du_kms.h"
+-#include "rcar_du_lvdscon.h"
+-#include "rcar_du_vgacon.h"
+-
+-/* -----------------------------------------------------------------------------
+- * Common connector functions
+- */
+-
+-struct drm_encoder *
+-rcar_du_connector_best_encoder(struct drm_connector *connector)
+-{
+-	struct rcar_du_connector *rcon = to_rcar_connector(connector);
+-
+-	return &rcon->encoder->encoder;
+-}
+-
+-/* -----------------------------------------------------------------------------
+- * Encoder
+- */
+-
+-static void rcar_du_encoder_dpms(struct drm_encoder *encoder, int mode)
+-{
+-}
+-
+-static bool rcar_du_encoder_mode_fixup(struct drm_encoder *encoder,
+-				       const struct drm_display_mode *mode,
+-				       struct drm_display_mode *adjusted_mode)
+-{
+-	const struct drm_display_mode *panel_mode;
+-	struct drm_device *dev = encoder->dev;
+-	struct drm_connector *connector;
+-	bool found = false;
+-
+-	/* DAC encoders have currently no restriction on the mode. */
+-	if (encoder->encoder_type == DRM_MODE_ENCODER_DAC)
+-		return true;
+-
+-	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
+-		if (connector->encoder == encoder) {
+-			found = true;
+-			break;
+-		}
+-	}
+-
+-	if (!found) {
+-		dev_dbg(dev->dev, "mode_fixup: no connector found\n");
+-		return false;
+-	}
+-
+-	if (list_empty(&connector->modes)) {
+-		dev_dbg(dev->dev, "mode_fixup: empty modes list\n");
+-		return false;
+-	}
+-
+-	panel_mode = list_first_entry(&connector->modes,
+-				      struct drm_display_mode, head);
+-
+-	/* We're not allowed to modify the resolution. */
+-	if (mode->hdisplay != panel_mode->hdisplay ||
+-	    mode->vdisplay != panel_mode->vdisplay)
+-		return false;
+-
+-	/* The flat panel mode is fixed, just copy it to the adjusted mode. */
+-	drm_mode_copy(adjusted_mode, panel_mode);
+-
+-	return true;
+-}
+-
+-static void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder)
+-{
+-}
+-
+-static void rcar_du_encoder_mode_commit(struct drm_encoder *encoder)
+-{
+-}
+-
+-static void rcar_du_encoder_mode_set(struct drm_encoder *encoder,
+-				     struct drm_display_mode *mode,
+-				     struct drm_display_mode *adjusted_mode)
+-{
+-	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
+-
+-	rcar_du_crtc_route_output(encoder->crtc, renc->output);
+-}
+-
+-static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
+-	.dpms = rcar_du_encoder_dpms,
+-	.mode_fixup = rcar_du_encoder_mode_fixup,
+-	.prepare = rcar_du_encoder_mode_prepare,
+-	.commit = rcar_du_encoder_mode_commit,
+-	.mode_set = rcar_du_encoder_mode_set,
+-};
+-
+-static const struct drm_encoder_funcs encoder_funcs = {
+-	.destroy = drm_encoder_cleanup,
+-};
+-
+-int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+-			 enum rcar_du_encoder_type type, unsigned int output,
+-			 const struct rcar_du_encoder_data *data)
+-{
+-	struct rcar_du_encoder *renc;
+-	int ret;
+-
+-	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
+-	if (renc == NULL)
+-		return -ENOMEM;
+-
+-	renc->output = output;
+-
+-	ret = drm_encoder_init(rcdu->ddev, &renc->encoder, &encoder_funcs,
+-			       type);
+-	if (ret < 0)
+-		return ret;
+-
+-	drm_encoder_helper_add(&renc->encoder, &encoder_helper_funcs);
+-
+-	switch (type) {
+-	case RCAR_DU_ENCODER_LVDS:
+-		return rcar_du_lvds_connector_init(rcdu, renc,
+-						   &data->u.lvds.panel);
+-
+-	case RCAR_DU_ENCODER_VGA:
+-		return rcar_du_vga_connector_init(rcdu, renc);
+-
+-	default:
+-		return -EINVAL;
+-	}
+-}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h b/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+deleted file mode 100644
+index 4f76e16..0000000
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
++++ /dev/null
+@@ -1,45 +0,0 @@
+-/*
+- * rcar_du_encoder.h  --  R-Car Display Unit Encoder
+- *
+- * Copyright (C) 2013 Renesas Corporation
+- *
+- * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- */
+-
+-#ifndef __RCAR_DU_ENCODER_H__
+-#define __RCAR_DU_ENCODER_H__
+-
+-#include <drm/drm_crtc.h>
+-
+-struct rcar_du_device;
+-struct rcar_du_encoder_data;
+-
+-struct rcar_du_encoder {
+-	struct drm_encoder encoder;
+-	unsigned int output;
+-};
+-
+-#define to_rcar_encoder(e) \
+-	container_of(e, struct rcar_du_encoder, encoder)
+-
+-struct rcar_du_connector {
+-	struct drm_connector connector;
+-	struct rcar_du_encoder *encoder;
+-};
+-
+-#define to_rcar_connector(c) \
+-	container_of(c, struct rcar_du_connector, connector)
+-
+-struct drm_encoder *
+-rcar_du_connector_best_encoder(struct drm_connector *connector);
+-
+-int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+-			 enum rcar_du_encoder_type type, unsigned int output,
+-			 const struct rcar_du_encoder_data *data);
+-
+-#endif /* __RCAR_DU_ENCODER_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 43c8317..606e090 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -19,9 +19,10 @@
+ 
+ #include "rcar_du_crtc.h"
+ #include "rcar_du_drv.h"
+-#include "rcar_du_encoder.h"
+ #include "rcar_du_kms.h"
++#include "rcar_du_lvds.h"
+ #include "rcar_du_regs.h"
++#include "rcar_du_vga.h"
+ 
+ /* -----------------------------------------------------------------------------
+  * Format helpers
+@@ -105,6 +106,35 @@ const struct rcar_du_format_info *rcar_du_format_info(u32 fourcc)
+ }
+ 
+ /* -----------------------------------------------------------------------------
++ * Common connector and encoder functions
++ */
++
++struct drm_encoder *
++rcar_du_connector_best_encoder(struct drm_connector *connector)
++{
++	struct rcar_du_connector *rcon = to_rcar_connector(connector);
++
++	return &rcon->encoder->encoder;
++}
++
++void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder)
++{
++}
++
++void rcar_du_encoder_mode_set(struct drm_encoder *encoder,
++			      struct drm_display_mode *mode,
++			      struct drm_display_mode *adjusted_mode)
++{
++	struct rcar_du_encoder *renc = to_rcar_encoder(encoder);
++
++	rcar_du_crtc_route_output(encoder->crtc, renc->output);
++}
++
++void rcar_du_encoder_mode_commit(struct drm_encoder *encoder)
++{
++}
++
++/* -----------------------------------------------------------------------------
+  * Frame buffer
+  */
+ 
+@@ -200,9 +230,6 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 		const struct rcar_du_encoder_data *pdata =
+ 			&rcdu->pdata->encoders[i];
+ 
+-		if (pdata->encoder == RCAR_DU_ENCODER_UNUSED)
+-			continue;
+-
+ 		if (pdata->output >= ARRAY_SIZE(rcdu->crtcs)) {
+ 			dev_warn(rcdu->dev,
+ 				 "encoder %u references unexisting output %u, skipping\n",
+@@ -210,8 +237,18 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 			continue;
+ 		}
+ 
+-		rcar_du_encoder_init(rcdu, pdata->encoder, pdata->output,
+-				     pdata);
++		switch (pdata->encoder) {
++		case RCAR_DU_ENCODER_VGA:
++			rcar_du_vga_init(rcdu, &pdata->u.vga, pdata->output);
++			break;
++
++		case RCAR_DU_ENCODER_LVDS:
++			rcar_du_lvds_init(rcdu, &pdata->u.lvds, pdata->output);
++			break;
++
++		default:
++			break;
++		}
+ 	}
+ 
+ 	/* Set the possible CRTCs and possible clones. All encoders can be
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.h b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+index 5750e6a..dba4722 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.h
+@@ -16,9 +16,8 @@
+ 
+ #include <linux/types.h>
+ 
+-struct drm_file;
+-struct drm_device;
+-struct drm_mode_create_dumb;
++#include <drm/drm_crtc.h>
++
+ struct rcar_du_device;
+ 
+ struct rcar_du_format_info {
+@@ -29,8 +28,32 @@ struct rcar_du_format_info {
+ 	unsigned int edf;
+ };
+ 
++struct rcar_du_encoder {
++	struct drm_encoder encoder;
++	unsigned int output;
++};
++
++#define to_rcar_encoder(e) \
++	container_of(e, struct rcar_du_encoder, encoder)
++
++struct rcar_du_connector {
++	struct drm_connector connector;
++	struct rcar_du_encoder *encoder;
++};
++
++#define to_rcar_connector(c) \
++	container_of(c, struct rcar_du_connector, connector)
++
+ const struct rcar_du_format_info *rcar_du_format_info(u32 fourcc);
+ 
++struct drm_encoder *
++rcar_du_connector_best_encoder(struct drm_connector *connector);
++void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder);
++void rcar_du_encoder_mode_set(struct drm_encoder *encoder,
++			      struct drm_display_mode *mode,
++			      struct drm_display_mode *adjusted_mode);
++void rcar_du_encoder_mode_commit(struct drm_encoder *encoder);
++
+ int rcar_du_modeset_init(struct rcar_du_device *rcdu);
+ 
+ int rcar_du_dumb_create(struct drm_file *file, struct drm_device *dev,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.c b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+new file mode 100644
+index 0000000..82e5157
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvds.c
+@@ -0,0 +1,100 @@
++/*
++ * rcar_du_lvds.c  --  R-Car Display Unit LVDS Encoder
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_lvds.h"
++#include "rcar_du_lvdscon.h"
++
++static void rcar_du_lvds_encoder_dpms(struct drm_encoder *encoder, int mode)
++{
++}
++
++static bool rcar_du_lvds_encoder_mode_fixup(struct drm_encoder *encoder,
++					   const struct drm_display_mode *mode,
++					   struct drm_display_mode *adjusted_mode)
++{
++	const struct drm_display_mode *panel_mode;
++	struct drm_device *dev = encoder->dev;
++	struct drm_connector *connector;
++	bool found = false;
++
++	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
++		if (connector->encoder == encoder) {
++			found = true;
++			break;
++		}
++	}
++
++	if (!found) {
++		dev_dbg(dev->dev, "mode_fixup: no connector found\n");
++		return false;
++	}
++
++	if (list_empty(&connector->modes)) {
++		dev_dbg(dev->dev, "mode_fixup: empty modes list\n");
++		return false;
++	}
++
++	panel_mode = list_first_entry(&connector->modes,
++				      struct drm_display_mode, head);
++
++	/* We're not allowed to modify the resolution. */
++	if (mode->hdisplay != panel_mode->hdisplay ||
++	    mode->vdisplay != panel_mode->vdisplay)
++		return false;
++
++	/* The flat panel mode is fixed, just copy it to the adjusted mode. */
++	drm_mode_copy(adjusted_mode, panel_mode);
++
++	return true;
++}
++
++static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
++	.dpms = rcar_du_lvds_encoder_dpms,
++	.mode_fixup = rcar_du_lvds_encoder_mode_fixup,
++	.prepare = rcar_du_encoder_mode_prepare,
++	.commit = rcar_du_encoder_mode_commit,
++	.mode_set = rcar_du_encoder_mode_set,
++};
++
++static const struct drm_encoder_funcs encoder_funcs = {
++	.destroy = drm_encoder_cleanup,
++};
++
++int rcar_du_lvds_init(struct rcar_du_device *rcdu,
++		      const struct rcar_du_encoder_lvds_data *data,
++		      unsigned int output)
++{
++	struct rcar_du_encoder *renc;
++	int ret;
++
++	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
++	if (renc == NULL)
++		return -ENOMEM;
++
++	renc->output = output;
++
++	ret = drm_encoder_init(rcdu->ddev, &renc->encoder, &encoder_funcs,
++			       DRM_MODE_ENCODER_LVDS);
++	if (ret < 0)
++		return ret;
++
++	drm_encoder_helper_add(&renc->encoder, &encoder_helper_funcs);
++
++	return rcar_du_lvds_connector_init(rcdu, renc, &data->panel);
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvds.h b/drivers/gpu/drm/rcar-du/rcar_du_lvds.h
+new file mode 100644
+index 0000000..b47f832
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvds.h
+@@ -0,0 +1,24 @@
++/*
++ * rcar_du_lvds.h  --  R-Car Display Unit LVDS Encoder and Connector
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_LVDS_H__
++#define __RCAR_DU_LVDS_H__
++
++struct rcar_du_device;
++struct rcar_du_encoder_lvds_data;
++
++int rcar_du_lvds_init(struct rcar_du_device *rcdu,
++		      const struct rcar_du_encoder_lvds_data *data,
++		      unsigned int output);
++
++#endif /* __RCAR_DU_LVDS_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
+index 628a744..b563e86 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
+@@ -16,7 +16,6 @@
+ #include <drm/drm_crtc_helper.h>
+ 
+ #include "rcar_du_drv.h"
+-#include "rcar_du_encoder.h"
+ #include "rcar_du_kms.h"
+ #include "rcar_du_lvdscon.h"
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.c b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+new file mode 100644
+index 0000000..369ab32
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.c
+@@ -0,0 +1,67 @@
++/*
++ * rcar_du_vga.c  --  R-Car Display Unit VGA DAC
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_vga.h"
++#include "rcar_du_vgacon.h"
++
++static void rcar_du_vga_encoder_dpms(struct drm_encoder *encoder, int mode)
++{
++}
++
++static bool rcar_du_vga_encoder_mode_fixup(struct drm_encoder *encoder,
++					   const struct drm_display_mode *mode,
++					   struct drm_display_mode *adjusted_mode)
++{
++	return true;
++}
++
++static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
++	.dpms = rcar_du_vga_encoder_dpms,
++	.mode_fixup = rcar_du_vga_encoder_mode_fixup,
++	.prepare = rcar_du_encoder_mode_prepare,
++	.commit = rcar_du_encoder_mode_commit,
++	.mode_set = rcar_du_encoder_mode_set,
++};
++
++static const struct drm_encoder_funcs encoder_funcs = {
++	.destroy = drm_encoder_cleanup,
++};
++
++int rcar_du_vga_init(struct rcar_du_device *rcdu,
++		     const struct rcar_du_encoder_vga_data *data,
++		     unsigned int output)
++{
++	struct rcar_du_encoder *renc;
++	int ret;
++
++	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
++	if (renc == NULL)
++		return -ENOMEM;
++
++	renc->output = output;
++
++	ret = drm_encoder_init(rcdu->ddev, &renc->encoder, &encoder_funcs,
++			       DRM_MODE_ENCODER_DAC);
++	if (ret < 0)
++		return ret;
++
++	drm_encoder_helper_add(&renc->encoder, &encoder_helper_funcs);
++
++	return rcar_du_vga_connector_init(rcdu, renc);
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vga.h b/drivers/gpu/drm/rcar-du/rcar_du_vga.h
+new file mode 100644
+index 0000000..b969b20
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vga.h
+@@ -0,0 +1,24 @@
++/*
++ * rcar_du_vga.h  --  R-Car Display Unit VGA DAC
++ *
++ * Copyright (C) 2013 Renesas Corporation
++ *
++ * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_VGA_H__
++#define __RCAR_DU_VGA_H__
++
++struct rcar_du_device;
++struct rcar_du_encoder_vga_data;
++
++int rcar_du_vga_init(struct rcar_du_device *rcdu,
++		     const struct rcar_du_encoder_vga_data *data,
++		     unsigned int output);
++
++#endif /* __RCAR_DU_VGA_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c b/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c
+index 72312f7..b799b68 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vgacon.c
+@@ -16,7 +16,6 @@
+ #include <drm/drm_crtc_helper.h>
+ 
+ #include "rcar_du_drv.h"
+-#include "rcar_du_encoder.h"
+ #include "rcar_du_kms.h"
+ #include "rcar_du_vgacon.h"
+ 
+-- 
+1.8.3.2
+

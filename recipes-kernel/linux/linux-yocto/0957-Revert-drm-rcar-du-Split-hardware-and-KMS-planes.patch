@@ -1,0 +1,171 @@
+From 3a06e28851fabe3ceea98d7818ae50fc0276ed2f Mon Sep 17 00:00:00 2001
+From: Simon Horman <horms+renesas@verge.net.au>
+Date: Wed, 3 Jul 2013 13:38:26 +0900
+Subject: [PATCH 0957/1083] Revert "drm/rcar-du: Split hardware and KMS planes"
+
+This reverts commit 87e8d96f3ec13e2ecd69d94ed6045c239531de01.
+(cherry picked from commit a5d4f321afa7cbdaa83a7da49162f2261205a8c9)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  | 11 +++++-----
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   |  4 ----
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 39 ++++++---------------------------
+ drivers/gpu/drm/rcar-du/rcar_du_plane.h |  9 ++++++--
+ 4 files changed, 20 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index f23830a..4906a7f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -173,7 +173,7 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ {
+ 	struct drm_crtc *crtc = &rcrtc->crtc;
+ 	struct rcar_du_device *rcdu = crtc->dev->dev_private;
+-	unsigned int i;
++	struct drm_plane *plane;
+ 
+ 	if (rcrtc->started)
+ 		return;
+@@ -198,6 +198,7 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 	rcar_du_write(rcdu, DORCR, DORCR_DPRS);
+ 
+ 	rcar_du_crtc_set_display_timing(rcrtc);
++	rcar_du_plane_setup(rcrtc->plane);
+ 
+ 	mutex_lock(&rcdu->planes.lock);
+ 	rcrtc->plane->enabled = true;
+@@ -205,13 +206,13 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 	mutex_unlock(&rcdu->planes.lock);
+ 
+ 	/* Setup planes. */
+-	for (i = 0; i < ARRAY_SIZE(rcdu->planes.planes); ++i) {
+-		struct rcar_du_plane *plane = &rcdu->planes.planes[i];
++	list_for_each_entry(plane, &rcdu->ddev->mode_config.plane_list, head) {
++		struct rcar_du_plane *rplane = to_rcar_plane(plane);
+ 
+-		if (plane->crtc != crtc || !plane->enabled)
++		if (plane->crtc != crtc)
+ 			continue;
+ 
+-		rcar_du_plane_setup(plane);
++		rcar_du_plane_setup(rplane);
+ 	}
+ 
+ 	rcar_du_crtc_start_stop(rcrtc, true);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 5c665f4..976823e 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -155,10 +155,6 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	for (i = 0; i < ARRAY_SIZE(rcdu->crtc); ++i)
+ 		rcar_du_crtc_create(rcdu, i);
+ 
+-	ret = rcar_du_plane_register(rcdu);
+-	if (ret < 0)
+-		return ret;
+-
+ 	drm_kms_helper_poll_init(rcdu->ddev);
+ 
+ 	drm_helper_disable_unused_functions(rcdu->ddev);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 7a4d9f0..3684de3 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -26,16 +26,6 @@
+ #define RCAR_DU_COLORKEY_SOURCE		(1 << 24)
+ #define RCAR_DU_COLORKEY_MASK		(1 << 24)
+ 
+-struct rcar_du_kms_plane {
+-	struct drm_plane plane;
+-	struct rcar_du_plane *hwplane;
+-};
+-
+-static inline struct rcar_du_plane *to_rcar_plane(struct drm_plane *plane)
+-{
+-	return container_of(plane, struct rcar_du_kms_plane, plane)->hwplane;
+-}
+-
+ static u32 rcar_du_plane_read(struct rcar_du_device *rcdu,
+ 			      unsigned int index, u32 reg)
+ {
+@@ -399,6 +389,7 @@ static const uint32_t formats[] = {
+ int rcar_du_plane_init(struct rcar_du_device *rcdu)
+ {
+ 	unsigned int i;
++	int ret;
+ 
+ 	mutex_init(&rcdu->planes.lock);
+ 	rcdu->planes.free = 0xff;
+@@ -426,29 +417,13 @@ int rcar_du_plane_init(struct rcar_du_device *rcdu)
+ 		plane->dev = rcdu;
+ 		plane->hwindex = -1;
+ 		plane->colorkey = RCAR_DU_COLORKEY_NONE;
+-		plane->zpos = 0;
+-	}
+-
+-	return 0;
+-}
++		plane->zpos = 1;
+ 
+-int rcar_du_plane_register(struct rcar_du_device *rcdu)
+-{
+-	unsigned int i;
+-	int ret;
+-
+-	/* As at least one hardware plane will always be used by one of the
+-	 * CRTCs only register N-1 KMS planes.
+-	 */
+-	for (i = 0; i < ARRAY_SIZE(rcdu->planes.planes) - 1; ++i) {
+-		struct rcar_du_kms_plane *plane;
+-
+-		plane = devm_kzalloc(rcdu->dev, sizeof(*plane), GFP_KERNEL);
+-		if (plane == NULL)
+-			return -ENOMEM;
+-
+-		plane->hwplane = &rcdu->planes.planes[i + 1];
+-		plane->hwplane->zpos = 1;
++		/* Reserve one plane per CRTC */
++		if (i < ARRAY_SIZE(rcdu->crtc)) {
++			plane->zpos = 0;
++			continue;
++		}
+ 
+ 		ret = drm_plane_init(rcdu->ddev, &plane->plane, 1,
+ 				     &rcar_du_plane_funcs, formats,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.h b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+index 2044d60..e8d2a26 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.h
+@@ -14,12 +14,16 @@
+ #ifndef __RCAR_DU_PLANE_H__
+ #define __RCAR_DU_PLANE_H__
+ 
+-struct drm_crtc;
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++
+ struct drm_framebuffer;
+ struct rcar_du_device;
+ struct rcar_du_format_info;
+ 
+ struct rcar_du_plane {
++	struct drm_plane plane;
++
+ 	struct rcar_du_device *dev;
+ 	struct drm_crtc *crtc;
+ 
+@@ -43,8 +47,9 @@ struct rcar_du_plane {
+ 	unsigned int dst_y;
+ };
+ 
++#define to_rcar_plane(p)	container_of(p, struct rcar_du_plane, plane)
++
+ int rcar_du_plane_init(struct rcar_du_device *rcdu);
+-int rcar_du_plane_register(struct rcar_du_device *rcdu);
+ void rcar_du_plane_setup(struct rcar_du_plane *plane);
+ void rcar_du_plane_update_base(struct rcar_du_plane *plane);
+ void rcar_du_plane_compute_base(struct rcar_du_plane *plane,
+-- 
+1.8.3.2
+

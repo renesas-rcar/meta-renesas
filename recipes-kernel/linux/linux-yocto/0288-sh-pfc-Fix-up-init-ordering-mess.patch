@@ -1,0 +1,92 @@
+From 0b57eab67dfa6560d0d614071c578e34c82d8f42 Mon Sep 17 00:00:00 2001
+From: Paul Mundt <lethal@linux-sh.org>
+Date: Wed, 1 Aug 2012 16:27:38 +0900
+Subject: [PATCH 0288/1083] sh: pfc: Fix up init ordering mess.
+
+Commit ca5481c68e9fbcea62bb3c78ae6cccf99ca8fb73 ("sh: pfc: Rudimentary
+pinctrl-backed GPIO support.") introduced a regression for platforms that
+were doing early GPIO API calls (from arch_initcall() or earlier),
+leading to a situation where our two-stage registration logic would trip
+itself up and we'd -ENODEV out of the pinctrl registration path,
+resulting in endless -EPROBE_DEFER errors. Further lack of checking any
+sort of errors from gpio_request() resulted in boot time warnings,
+tripping on the FLAG_REQUESTED test-and-set in gpio_ensure_requested().
+
+As it turns out there's no particular need to bother with the two-stage
+registration, as the platform bus is already available at the point that
+we have to start caring. As such, it's easiest to simply fold these
+together in to a single init path, the ordering of which is ensured
+through the platform's mux registration, as usual.
+
+Reported-by: Rafael J. Wysocki <rjw@sisk.pl>
+Reported-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+(cherry picked from commit 1e32dfe323d156d5d7b25b9feffe015d19713db2)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/sh/pfc/pinctrl.c | 32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/sh/pfc/pinctrl.c b/drivers/sh/pfc/pinctrl.c
+index 814b292..2804eaa 100644
+--- a/drivers/sh/pfc/pinctrl.c
++++ b/drivers/sh/pfc/pinctrl.c
+@@ -325,20 +325,6 @@ static struct pinctrl_desc sh_pfc_pinctrl_desc = {
+ 	.confops	= &sh_pfc_pinconf_ops,
+ };
+ 
+-int sh_pfc_register_pinctrl(struct sh_pfc *pfc)
+-{
+-	sh_pfc_pmx = kzalloc(sizeof(struct sh_pfc_pinctrl), GFP_KERNEL);
+-	if (unlikely(!sh_pfc_pmx))
+-		return -ENOMEM;
+-
+-	spin_lock_init(&sh_pfc_pmx->lock);
+-
+-	sh_pfc_pmx->pfc = pfc;
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(sh_pfc_register_pinctrl);
+-
+ static inline void __devinit sh_pfc_map_one_gpio(struct sh_pfc *pfc,
+ 						 struct sh_pfc_pinctrl *pmx,
+ 						 struct pinmux_gpio *gpio,
+@@ -505,7 +491,7 @@ static struct platform_device sh_pfc_pinctrl_device = {
+ 	.id		= -1,
+ };
+ 
+-static int __init sh_pfc_pinctrl_init(void)
++static int sh_pfc_pinctrl_init(void)
+ {
+ 	int rc;
+ 
+@@ -519,10 +505,22 @@ static int __init sh_pfc_pinctrl_init(void)
+ 	return rc;
+ }
+ 
++int sh_pfc_register_pinctrl(struct sh_pfc *pfc)
++{
++	sh_pfc_pmx = kzalloc(sizeof(struct sh_pfc_pinctrl), GFP_KERNEL);
++	if (unlikely(!sh_pfc_pmx))
++		return -ENOMEM;
++
++	spin_lock_init(&sh_pfc_pmx->lock);
++
++	sh_pfc_pmx->pfc = pfc;
++
++	return sh_pfc_pinctrl_init();
++}
++EXPORT_SYMBOL_GPL(sh_pfc_register_pinctrl);
++
+ static void __exit sh_pfc_pinctrl_exit(void)
+ {
+ 	platform_driver_unregister(&sh_pfc_pinctrl_driver);
+ }
+-
+-subsys_initcall(sh_pfc_pinctrl_init);
+ module_exit(sh_pfc_pinctrl_exit);
+-- 
+1.8.3.2
+

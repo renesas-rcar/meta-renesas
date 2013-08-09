@@ -1,0 +1,62 @@
+From f9f079dd14d196faf918dfce6ecf901c5161d4b9 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sat, 15 Jun 2013 02:40:57 +0200
+Subject: [PATCH 1024/1083] drm/rcar-du: Add support for DEFR8 register
+
+The R8A7790 DU has a new extended function control register. Support it.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+(cherry picked from commit 52f131ff76b94b0fc815f17d5131804089589b0c)
+
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 09fe0cfa8fc589a45ed1336563ec1329d4e556cb)
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c   | 3 ++-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h   | 1 +
+ drivers/gpu/drm/rcar-du/rcar_du_group.c | 2 ++
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index f3a2b52..f99aa52 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -217,7 +217,8 @@ static const struct rcar_du_device_info rcar_du_r8a7779_info = {
+ };
+ 
+ static const struct rcar_du_device_info rcar_du_r8a7790_info = {
+-	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK | RCAR_DU_FEATURE_ALIGN_128B,
++	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK | RCAR_DU_FEATURE_ALIGN_128B
++		  | RCAR_DU_FEATURE_DEFR8,
+ 	.num_crtcs = 3,
+ };
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index 160e5eb..70c335f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -27,6 +27,7 @@ struct rcar_du_device;
+ 
+ #define RCAR_DU_FEATURE_CRTC_IRQ_CLOCK	(1 << 0)	/* Per-CRTC IRQ and clock */
+ #define RCAR_DU_FEATURE_ALIGN_128B	(1 << 1)	/* Align pitches to 128 bytes */
++#define RCAR_DU_FEATURE_DEFR8		(1 << 2)	/* Has DEFR8 register */
+ 
+ /*
+  * struct rcar_du_device_info - DU model-specific information
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.c b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+index 0eb106e..f3ba0ca 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+@@ -51,6 +51,8 @@ static void rcar_du_group_setup(struct rcar_du_group *rgrp)
+ 	rcar_du_group_write(rgrp, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
+ 	rcar_du_group_write(rgrp, DEFR4, DEFR4_CODE);
+ 	rcar_du_group_write(rgrp, DEFR5, DEFR5_CODE | DEFR5_DEFE5);
++	if (rcar_du_has(rgrp->dev, RCAR_DU_FEATURE_DEFR8))
++		rcar_du_group_write(rgrp, DEFR8, DEFR8_CODE | DEFR8_DEFE8);
+ 
+ 	/* Use DS1PR and DS2PR to configure planes priorities and connects the
+ 	 * superposition 0 to DU0 pins. DU1 pins will be configured dynamically.
+-- 
+1.8.3.2
+
