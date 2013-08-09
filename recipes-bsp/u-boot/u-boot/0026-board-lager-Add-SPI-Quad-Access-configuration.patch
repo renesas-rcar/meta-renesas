@@ -1,0 +1,25 @@
+From ca011e481d24c617c1b50b7bd81717b87f241501 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Mon, 29 Jul 2013 13:28:37 +0900
+Subject: [PATCH 26/28] board: lager: Add SPI Quad Access configuration
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ include/configs/lager.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/configs/lager.h b/include/configs/lager.h
+index 3799330..0466318 100644
+--- a/include/configs/lager.h
++++ b/include/configs/lager.h
+@@ -145,6 +145,7 @@
+ #define CONFIG_SH_QSPI
+ #define CONFIG_SPI_FLASH
+ #define CONFIG_SPI_FLASH_SPANSION
++#define CONFIG_SPI_FLASH_QUAD
+ #define CONFIG_SYS_NO_FLASH
+ #define CONFIG_SH_QSPI_BASE	0xE6B10000
+ #endif
+-- 
+1.8.3.2
+

@@ -1,0 +1,141 @@
+From e016d3796f4b6ba3128ebeb80a461eddd5c5ba83 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Thu, 16 May 2013 14:57:10 +0900
+Subject: [PATCH 04/28] sh: lib: Modify sh_timer for linaro compiler
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+---
+ arch/sh/lib/time.c          | 71 +++++++++++++++++++++++++++++++++++++++++++++
+ board/renesas/lager/lager.c |  2 +-
+ 2 files changed, 72 insertions(+), 1 deletion(-)
+
+diff --git a/arch/sh/lib/time.c b/arch/sh/lib/time.c
+index 1b69531..f3937fc 100644
+--- a/arch/sh/lib/time.c
++++ b/arch/sh/lib/time.c
+@@ -35,17 +35,41 @@
+ #include <asm/io.h>
+ #include <sh_tmu.h>
+ 
++#if defined(CONFIG_R8A7790)
++
++DECLARE_GLOBAL_DATA_PTR;
++
++#endif
++
+ static struct tmu_regs *tmu = (struct tmu_regs *)TMU_BASE;
+ 
+ static u16 bit;
+ static unsigned long last_tcnt;
+ static unsigned long long overflow_ticks;
+ 
++#if defined(CONFIG_R8A7790)
++
++unsigned long get_tbclk(void)
++{
++	if (gd->flags & GD_FLG_RELOC)
++		return get_tmu0_clk_rate() >> ((bit + 1) * 2);
++	else {
++		u16 bit;
++
++		bit = (ffs(CONFIG_SYS_TMU_CLK_DIV) >> 1) - 1;
++		return get_tmu0_clk_rate() >> ((bit + 1) * 2);
++	}
++}
++
++#else
++
+ unsigned long get_tbclk(void)
+ {
+ 	return get_tmu0_clk_rate() >> ((bit + 1) * 2);
+ }
+ 
++#endif
++
+ static inline unsigned long long tick_to_time(unsigned long long tick)
+ {
+ 	tick *= CONFIG_SYS_HZ;
+@@ -76,6 +100,30 @@ static void tmu_timer_stop(unsigned int timer)
+ 	writeb(readb(&tmu->tstr) & ~(1 << timer), &tmu->tstr);
+ }
+ 
++#if defined(CONFIG_R8A7790)
++
++int sh_timer_init(void)
++{
++	bit = (ffs(CONFIG_SYS_TMU_CLK_DIV) >> 1) - 1;
++	writew((readw(&tmu->tcr0) & ~0x7) | bit, &tmu->tcr0);
++
++	tmu_timer_stop(0);
++	tmu_timer_start(0);
++
++	last_tcnt = 0;
++	overflow_ticks = 0;
++
++	return 0;
++}
++
++int timer_init(void)
++{
++	tmu_timer_stop(0);
++	tmu_timer_start(0);
++}
++
++#else
++
+ int timer_init(void)
+ {
+ 	bit = (ffs(CONFIG_SYS_TMU_CLK_DIV) >> 1) - 1;
+@@ -90,6 +138,27 @@ int timer_init(void)
+ 	return 0;
+ }
+ 
++#endif
++
++#if defined(CONFIG_R8A7790)
++
++unsigned long long get_ticks(void)
++{
++	unsigned long tcnt = 0 - readl(&tmu->tcnt0);
++
++	if (gd->flags & GD_FLG_RELOC) {
++		if (last_tcnt > tcnt) /* overflow */
++			overflow_ticks++;
++		last_tcnt = tcnt;
++
++		return (overflow_ticks << 32) | tcnt;
++	}
++	else
++		return tcnt;
++}
++
++#else
++
+ unsigned long long get_ticks(void)
+ {
+ 	unsigned long tcnt = 0 - readl(&tmu->tcnt0);
+@@ -101,6 +170,8 @@ unsigned long long get_ticks(void)
+ 	return (overflow_ticks << 32) | tcnt;
+ }
+ 
++#endif
++
+ void __udelay(unsigned long usec)
+ {
+ 	unsigned long long tmp;
+diff --git a/board/renesas/lager/lager.c b/board/renesas/lager/lager.c
+index 71936ed..7b5d10d 100644
+--- a/board/renesas/lager/lager.c
++++ b/board/renesas/lager/lager.c
+@@ -270,7 +270,7 @@ int board_init(void)
+ 	gpio_request(GPIO_FN_ETH_MDC, NULL);
+ 	gpio_request(GPIO_FN_IRQ0, NULL);
+ 
+-	timer_init();
++	sh_timer_init();
+ 
+ 	gpio_request(GPIO_GP_5_31, NULL);	/* PHY_RST */
+ 	gpio_direction_output(GPIO_GP_5_31, 0);
+-- 
+1.8.3.2
+

@@ -1,0 +1,318 @@
+From 51d540289f5e414535b0576d40ed3389b3936a9f Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Mon, 29 Jul 2013 15:24:12 +0900
+Subject: [PATCH 25/28] spi: sh_qspi: Add Quad Access
+
+SPI Quad Access is added to QSPI driver.
+QSPI driver is supported to Read Quad Out and Quad Page Program command.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ drivers/spi/sh_qspi.c | 195 ++++++++++++++++++++++++++++++++++++++++++--------
+ drivers/spi/sh_qspi.h |   4 ++
+ include/spi.h         |   6 ++
+ 3 files changed, 174 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/spi/sh_qspi.c b/drivers/spi/sh_qspi.c
+index 3e65992..d388f6e 100644
+--- a/drivers/spi/sh_qspi.c
++++ b/drivers/spi/sh_qspi.c
+@@ -78,7 +78,7 @@ struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
+ 	sh_qspi_writeb(0x08, &ss->regs->spcr);
+ 	sh_qspi_writeb(0x00, &ss->regs->sslp);
+ 	sh_qspi_writeb(0x06, &ss->regs->sppcr);
+-	sh_qspi_writeb(0x01, &ss->regs->spbr);
++	sh_qspi_writeb(0x02, &ss->regs->spbr);
+ 	sh_qspi_writeb(0x00, &ss->regs->spdcr);
+ 	sh_qspi_writeb(0x00, &ss->regs->spckd);
+ 	sh_qspi_writeb(0x00, &ss->regs->sslnd);
+@@ -86,7 +86,7 @@ struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
+ 	sh_qspi_writew(0xe084, &ss->regs->spcmd0);
+ 	sh_qspi_writew(0x8084, &ss->regs->spcmd0);
+ 	sh_qspi_writeb(0xc0, &ss->regs->spbfcr);
+-	sh_qspi_writeb(0x00, &ss->regs->spbfcr);
++	sh_qspi_writeb(0x30, &ss->regs->spbfcr);
+ 	sh_qspi_writeb(0x00, &ss->regs->spscr);
+ 	sh_qspi_writeb(0x48, &ss->regs->spcr);
+ 
+@@ -109,10 +109,9 @@ void spi_release_bus(struct spi_slave *slave)
+ {
+ }
+ 
+-static int sh_qspi_xfer(struct sh_qspi *ss, unsigned char *tdata,
+-			unsigned char *rdata, unsigned long flags)
++static int sh_qspi_send(
++	struct sh_qspi *ss, unsigned char *tdata, unsigned long flags)
+ {
+-
+ 	while (!(sh_qspi_readb(&ss->regs->spsr) & SH_QSPI_SPTEF)) {
+ 		if (ctrlc())
+ 			return 1;
+@@ -121,16 +120,36 @@ static int sh_qspi_xfer(struct sh_qspi *ss, unsigned char *tdata,
+ 
+ 	sh_qspi_writeb(*tdata, (unsigned char *)(&ss->regs->spdr));
+ 
+-	while ((sh_qspi_readw(&ss->regs->spbdcr) != 0x01)) {
++	return 0;
++}
++
++static int sh_qspi_recv(
++	struct sh_qspi *ss, unsigned char *tdata, unsigned long flags)
++{
++	while (!(sh_qspi_readb(&ss->regs->spsr) & SH_QSPI_SPRFF)) {
+ 		if (ctrlc())
+ 			return 1;
+-		{
+-			int i = 100;
+-			while (i--)
+-				;
+-		}
++		udelay(10);
+ 	}
+ 
++	*tdata = sh_qspi_readb((unsigned char *)(&ss->regs->spdr));
++
++	return 0;
++}
++
++static int sh_qspi_xfer(
++	struct sh_qspi *ss, unsigned char *tdata,
++	unsigned char *rdata, unsigned long flags)
++{
++
++	while (!(sh_qspi_readb(&ss->regs->spsr) & SH_QSPI_SPTEF)) {
++		if (ctrlc())
++			return 1;
++		udelay(10);
++	}
++
++	sh_qspi_writeb(*tdata, (unsigned char *)(&ss->regs->spdr));
++
+ 	while (!(sh_qspi_readb(&ss->regs->spsr) & SH_QSPI_SPRFF)) {
+ 		if (ctrlc())
+ 			return 1;
+@@ -142,43 +161,99 @@ static int sh_qspi_xfer(struct sh_qspi *ss, unsigned char *tdata,
+ 	return 0;
+ }
+ 
+-int spi_xfer(struct spi_slave *slave, unsigned int bitlen, const void *dout,
+-	     void *din, unsigned long flags)
++int sh_qspi_xfer_quad(
++	struct spi_slave *slave, unsigned int cbyte, const void *cmd,
++	unsigned int dbyte, const void *dout, void *din, unsigned long flags)
+ {
+ 	struct sh_qspi *ss = to_sh_qspi(slave);
+-	unsigned int nbyte;
++	unsigned char *tdata, ddata = 0;
+ 	int ret = 0;
+-	unsigned char *tdata, *rdata, dtdata = 0, drdata;
+ 
+-	if (dout == NULL && din == NULL) {
+-		if (flags & SPI_XFER_END)
+-			sh_qspi_writeb(0x08, &ss->regs->spcr);
+-		return 0;
+-	}
++	sh_qspi_writeb(0x08, &ss->regs->spcr);
++	sh_qspi_writew(0xe084, &ss->regs->spcmd0);
++	sh_qspi_writew(0xe084, &ss->regs->spcmd1);
+ 
+-	if (bitlen % 8) {
+-		printf("spi_xfer: bitlen is not 8bit alined %d", bitlen);
++	if (dout != NULL)
++		sh_qspi_writew(0xe044, &ss->regs->spcmd2);
++	else
++		sh_qspi_writew(0xe051, &ss->regs->spcmd2);
++
++	sh_qspi_writeb(0xc0, &ss->regs->spbfcr);
++	sh_qspi_writeb(0x00, &ss->regs->spbfcr);
++	sh_qspi_writeb(0x02, &ss->regs->spscr);
++	sh_qspi_writel(1, &ss->regs->spbmul0);
++	sh_qspi_writel(cbyte - 1, &ss->regs->spbmul1);
++	sh_qspi_writel(dbyte, &ss->regs->spbmul2);
++	sh_qspi_writeb(0x48, &ss->regs->spcr);
++
++	/* command transfer */
++	if (cmd != NULL)
++		tdata = (unsigned char *)cmd;
++	else
+ 		return 1;
++
++	while (cbyte > 0) {
++		ret = sh_qspi_xfer(ss, tdata, &ddata, flags);
++		if (ret)
++			break;
++		tdata++;
++		cbyte--;
+ 	}
+ 
+-	nbyte = bitlen / 8;
++	/* data transfer */
++	if (dout != NULL && din != NULL)
++		printf("sh_qspi_xfer_qread: " \
++		       "full duplex is no supported\n");
+ 
+-	if (flags & SPI_XFER_BEGIN) {
+-		sh_qspi_writeb(0x08, &ss->regs->spcr);
++	if (dout != NULL) {
++		tdata = (unsigned char *)dout;
+ 
+-		sh_qspi_writew(0xe084, &ss->regs->spcmd0);
++		while (dbyte > 0) {
++			ret = sh_qspi_send(ss, tdata, flags);
++			if (ret)
++				break;
++			tdata++;
++			dbyte--;
++		}
++		while ((sh_qspi_readw(&ss->regs->spbdcr) & 0x3f00)) {
++			if (ctrlc())
++				return 1;
++			udelay(10);
++		}
++	} else if (din != NULL) {
++		tdata = (unsigned char *)din;
+ 
+-		if (flags & SPI_XFER_END)
+-			sh_qspi_writel(nbyte, &ss->regs->spbmul0);
+-		else
+-			sh_qspi_writel(0x100000, &ss->regs->spbmul0);
++		while (dbyte > 0) {
++			ret = sh_qspi_recv(ss, tdata, flags);
++			if (ret)
++				break;
++			tdata++;
++			dbyte--;
++		}
++	}
+ 
++	return ret;
++}
++
++int sh_qspi_xfer_fast(
++	struct spi_slave *slave, unsigned int nbyte, const void *dout,
++	void *din, unsigned long flags)
++{
++	struct sh_qspi *ss = to_sh_qspi(slave);
++	unsigned char *tdata, *rdata, dtdata = 0, drdata;
++	int ret = 0;
++
++	if (flags & SPI_XFER_BEGIN) {
++		sh_qspi_writeb(0x08, &ss->regs->spcr);
++		sh_qspi_writew(0xe084, &ss->regs->spcmd0);
+ 		sh_qspi_writeb(0xc0, &ss->regs->spbfcr);
+ 		sh_qspi_writeb(0x00, &ss->regs->spbfcr);
+ 		sh_qspi_writeb(0x00, &ss->regs->spscr);
+-		sh_qspi_writeb(0x48, &ss->regs->spcr);
+ 	}
+ 
++	sh_qspi_writel(nbyte, &ss->regs->spbmul0);
++	sh_qspi_writeb(0x48, &ss->regs->spcr);
++
+ 	if (dout != NULL)
+ 		tdata = (unsigned char *)dout;
+ 	else
+@@ -209,6 +284,64 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen, const void *dout,
+ 	return ret;
+ }
+ 
++int spi_xfer_quad(
++	struct spi_slave *slave, unsigned int cmdlen, const void *cmd,
++	unsigned int datalen, const void *dout, void *din, unsigned long flags)
++{
++	struct sh_qspi *ss = to_sh_qspi(slave);
++	unsigned int cbyte, dbyte;
++	int ret = 0;
++
++	if (dout == NULL && din == NULL) {
++		if (flags & SPI_XFER_END)
++			sh_qspi_writeb(0x08, &ss->regs->spcr);
++		return 0;
++	}
++
++	if (cmdlen % 8) {
++		printf("spi_xfer_quad: cmdlen is not 8bit alined %d", cmdlen);
++		return 1;
++	}
++
++	if (datalen % 8) {
++		printf("spi_xfer_quad: datalen is not 8bit alined %d", datalen);
++		return 1;
++	}
++
++	cbyte = cmdlen / 8;
++	dbyte = datalen / 8;
++
++	ret = sh_qspi_xfer_quad(slave, cbyte, cmd, dbyte, dout, din, flags);
++
++	return ret;
++}
++
++int spi_xfer(
++	struct spi_slave *slave, unsigned int bitlen, const void *dout,
++	void *din, unsigned long flags)
++{
++	struct sh_qspi *ss = to_sh_qspi(slave);
++	unsigned int nbyte;
++	int ret = 0;
++
++	if (dout == NULL && din == NULL) {
++		if (flags & SPI_XFER_END)
++			sh_qspi_writeb(0x08, &ss->regs->spcr);
++		return 0;
++	}
++
++	if (bitlen % 8) {
++		printf("spi_xfer: bitlen is not 8bit alined %d", bitlen);
++		return 1;
++	}
++
++	nbyte = bitlen / 8;
++
++	ret = sh_qspi_xfer_fast(slave, nbyte, dout, din, flags);
++
++	return ret;
++}
++
+ int  spi_cs_is_valid(unsigned int bus, unsigned int cs)
+ {
+ 	return 1;
+diff --git a/drivers/spi/sh_qspi.h b/drivers/spi/sh_qspi.h
+index 3f69e48..4352336 100644
+--- a/drivers/spi/sh_qspi.h
++++ b/drivers/spi/sh_qspi.h
+@@ -57,6 +57,7 @@ struct sh_qspi_regs {
+ struct sh_qspi {
+ 	struct spi_slave	slave;
+ 	struct sh_qspi_regs	*regs;
++/*	unsigned char cmd;*/
+ };
+ 
+ static inline struct sh_qspi *to_sh_qspi(struct spi_slave *slave)
+@@ -64,4 +65,7 @@ static inline struct sh_qspi *to_sh_qspi(struct spi_slave *slave)
+ 	return container_of(slave, struct sh_qspi, slave);
+ }
+ 
++/* SPI COMMAND */
++/*#define CMD_READ_ARRAY_QUAD		0x6b*/
++
+ #endif
+diff --git a/include/spi.h b/include/spi.h
+index 60e85db..63c259a 100644
+--- a/include/spi.h
++++ b/include/spi.h
+@@ -140,6 +140,12 @@ void spi_release_bus(struct spi_slave *slave);
+ int  spi_xfer(struct spi_slave *slave, unsigned int bitlen, const void *dout,
+ 		void *din, unsigned long flags);
+ 
++#ifdef CONFIG_SPI_FLASH_QUAD
++int  spi_xfer_quad(
++	struct spi_slave *slave, unsigned int cmdlen, const void *cmd,
++	unsigned int datalen, const void *dout, void *din, unsigned long flags);
++#endif
++
+ /*-----------------------------------------------------------------------
+  * Determine if a SPI chipselect is valid.
+  * This function is provided by the board if the low-level SPI driver
+-- 
+1.8.3.2
+

@@ -1,0 +1,54 @@
+From a8b5b22798e58a4ce2ba93e37898ab5f7335fc79 Mon Sep 17 00:00:00 2001
+From: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Date: Fri, 21 Jun 2013 09:13:49 +0900
+Subject: [PATCH 12/28] board: lager: Fix to display board memory size
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+---
+ board/renesas/lager/lager.c | 6 ++++++
+ include/configs/lager.h     | 5 +++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/board/renesas/lager/lager.c b/board/renesas/lager/lager.c
+index e2da793..8472f86 100644
+--- a/board/renesas/lager/lager.c
++++ b/board/renesas/lager/lager.c
+@@ -320,6 +320,12 @@ const struct rmobile_sysinfo sysinfo = {
+ 	CONFIG_RMOBILE_BOARD_STRING
+ };
+ 
++void dram_init_banksize(void)
++{
++	gd->bd->bi_dram[0].start = LAGER_SDRAM_BASE;
++	gd->bd->bi_dram[0].size = LAGER_SDRAM_SIZE;
++}
++
+ int board_late_init(void)
+ {
+ 	return 0;
+diff --git a/include/configs/lager.h b/include/configs/lager.h
+index 566284e..550bce4 100644
+--- a/include/configs/lager.h
++++ b/include/configs/lager.h
+@@ -82,7 +82,8 @@
+ 
+ /* MEMORY */
+ #define LAGER_SDRAM_BASE	0x40000000
+-#define LAGER_SDRAM_SIZE	(512 * 1024 * 1024)
++#define LAGER_SDRAM_SIZE	(2048 * 1024 * 1024)
++#define LAGER_UBOOT_SDRAM_SIZE	(512 * 1024 * 1024)
+ 
+ #define CONFIG_SYS_LONGHELP
+ #define CONFIG_SYS_PROMPT		"=> "
+@@ -108,7 +109,7 @@
+ #undef	CONFIG_SYS_LOADS_BAUD_CHANGE
+ 
+ #define CONFIG_SYS_SDRAM_BASE		(LAGER_SDRAM_BASE)
+-#define CONFIG_SYS_SDRAM_SIZE		(LAGER_SDRAM_SIZE)
++#define CONFIG_SYS_SDRAM_SIZE		(LAGER_UBOOT_SDRAM_SIZE)
+ #define CONFIG_SYS_LOAD_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x7fc0)
+ #define CONFIG_NR_DRAM_BANKS		1
+ 
+-- 
+1.8.3.2
+
