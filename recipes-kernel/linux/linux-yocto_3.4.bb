@@ -8,7 +8,8 @@ PR = "r3"
 PV_append = "+git${SRCREV}"
 
 SRCREV = "77d929639b4354d660fd3b6d808603ab625f69c5"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.25/rcar-gen2-4"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.25/rcar-gen2-4 \
+	file://0001-lager-CMA-Update-CMA_SIZE_MBYTES-to-64.patch"
 
 S = "${WORKDIR}/git"
 
