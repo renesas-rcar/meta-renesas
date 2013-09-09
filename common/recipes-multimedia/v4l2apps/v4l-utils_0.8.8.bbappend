@@ -1,2 +1,2 @@
-DEPENDS_bockw += "libxcb"
-PRINC := "${@int(PRINC) + 1}"
+#DEPENDS_bockw += "libxcb"
+#PRINC := "${@int(PRINC) + 1}"

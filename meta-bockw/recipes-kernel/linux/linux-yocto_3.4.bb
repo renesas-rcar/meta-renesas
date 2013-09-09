@@ -3,10 +3,9 @@ require linux-dtb.inc
 require linux-dtb-append.inc
 
 DESCRIPTION = "Linux kernel for the bockw board"
-COMPATIBLE_MACHINE = "bockw"
+COMPATIBLE_MACHINE_bockw = "bockw"
 
-
-FILESEXTRAPATHS_prepend_bockw := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 LINUX_VERSION = "3.4.46"
 PR = "r3"
