@@ -11,7 +11,7 @@ SRC_URI += "file://fix-compilation-with-zlib.patch \
             file://directfbrc \
             "
 
-SRCREV = "35b675d6e88057e43243b20631cace2467d5fd27"
+SRCREV = "b5301bba8c0878d86cb5a1901ccc587ecea20673"
 
 EXTRA_OECONF = "\
   --enable-freetype \
