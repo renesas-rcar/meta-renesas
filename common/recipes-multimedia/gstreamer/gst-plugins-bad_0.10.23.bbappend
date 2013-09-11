@@ -125,6 +125,8 @@ SRC_URI += " \
     file://0001-ext-dfbvideosink-move-meram-set-up-function-in-order.patch \
     file://0002-dfb-video-example-clear-sigaction-structure-instance.patch \
     file://0003-dfb-video-example-drop-out-of-audio-pipeline-creatio.patch \
+    file://0001-ext-dfbvideosink-invoke-the-flush-method-after-clear.patch \
+    file://0002-dfb-video-example-add-a-new-option-that-allows-to-se.patch \
     "
 
 do_install_append () {
