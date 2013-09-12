@@ -1,0 +1,146 @@
+From e50ade9fd8915889a4fd06863df5fea7aa4f0091 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 10 Sep 2013 13:36:58 +0900
+Subject: [PATCH 3/4] ARM: shmobile: bockw: add USB DMA support
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c           |    2 ++
+ arch/arm/mach-shmobile/hpb-dmae.c              |   18 ++++++++++++++++++
+ arch/arm/mach-shmobile/include/mach/hpb-dmae.h |    3 +++
+ drivers/usb/renesas_usbhs/fifo.c               |   12 ++++++------
+ drivers/usb/renesas_usbhs/fifo.h               |    5 +++--
+ 5 files changed, 32 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 9d30750..b8c1bae 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -437,6 +437,8 @@ static struct platform_device ak4554_ssi78_device = {
+ 		},
+ 		.driver_param = {
+ 			.buswait_bwait	= 4,
++			.d0_tx_id	= HPBDMA_SLAVE_USB_FUNC_TX,
++			.d1_rx_id	= HPBDMA_SLAVE_USB_FUNC_RX,
+ 		},
+ 	};
+ 
+diff --git a/arch/arm/mach-shmobile/hpb-dmae.c b/arch/arm/mach-shmobile/hpb-dmae.c
+index 0a0ccb1..9880198 100644
+--- a/arch/arm/mach-shmobile/hpb-dmae.c
++++ b/arch/arm/mach-shmobile/hpb-dmae.c
+@@ -84,6 +84,20 @@ static const struct hpb_dmae_slave_config rcar_dmae_slaves[] = {
+ 	{
+ 		.id	= HPBDMA_DUMMY,
+ 	}, {
++		.id	= HPBDMA_SLAVE_USB_FUNC_TX,
++		.addr	= 0xFFE60018,
++		.dcr	= SPDS_32BIT | DMDL | DPDS_32BIT,
++		.port	= 0x0000,
++		.flags	= 0,
++		.dma_ch	= 14,
++	}, {
++		.id	= HPBDMA_SLAVE_USB_FUNC_RX,
++		.addr	= 0xFFE6001C,
++		.dcr	= SMDL | SPDS_32BIT | DPDS_32BIT,
++		.port	= 0x0101,
++		.flags	= 0,
++		.dma_ch	= 15,
++	}, {
+ 		.id	= HPBDMA_SLAVE_SDHI0_TX,
+ 		.addr	= 0xffe4c000 + 0x30,
+ 		.dcr	= SPDS_16BIT | DMDL | DPDS_16BIT,
+@@ -158,6 +172,10 @@ static const struct hpb_dmae_slave_config rcar_dmae_slaves[] = {
+ static const struct hpb_dmae_channel rcar_dmae_channels[] = {
+ 	DMAE_CHANNEL(0, IRQ_DMAC_H(0), HPBDMA_DUMMY),
+ 
++	/* ch.14, 15 */
++	DMAE_CHANNEL(0x380, IRQ_DMAC_H(14), HPBDMA_SLAVE_USB_FUNC_TX),
++	DMAE_CHANNEL(0x3c0, IRQ_DMAC_H(15), HPBDMA_SLAVE_USB_FUNC_RX),
++
+ 	/* ch.21 SD0 */
+ 	DMAE_CHANNEL(0x540, IRQ_DMAC_H(21), HPBDMA_SLAVE_SDHI0_TX),
+ 	/* ch.22 SD0 */
+diff --git a/arch/arm/mach-shmobile/include/mach/hpb-dmae.h b/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
+index 2572d4b..6a2267b 100644
+--- a/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
++++ b/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
+@@ -26,6 +26,9 @@ extern struct platform_device rcar_dma_device;
+ enum {
+ 	HPBDMA_DUMMY,
+ 
++	HPBDMA_SLAVE_USB_FUNC_TX,
++	HPBDMA_SLAVE_USB_FUNC_RX,
++
+ 	HPBDMA_SLAVE_SDHI0_TX,		/*Ch.21*/
+ 	HPBDMA_SLAVE_SDHI0_RX,		/*Ch.22*/
+ 
+diff --git a/drivers/usb/renesas_usbhs/fifo.c b/drivers/usb/renesas_usbhs/fifo.c
+index fc597a4..03ad567 100644
+--- a/drivers/usb/renesas_usbhs/fifo.c
++++ b/drivers/usb/renesas_usbhs/fifo.c
+@@ -987,14 +987,14 @@ struct usbhs_pkt_handle usbhs_fifo_dma_pop_handler = {
+  */
+ static bool usbhsf_dma_filter(struct dma_chan *chan, void *param)
+ {
+-	struct sh_dmae_slave *slave = param;
++	struct hpb_dmae_slave *slave = param;
+ 
+ 	/*
+ 	 * FIXME
+ 	 *
+ 	 * usbhs doesn't recognize id = 0 as valid DMA
+ 	 */
+-	if (0 == slave->shdma_slave.slave_id)
++	if (0 == slave->slave_id)
+ 		return false;
+ 
+ 	chan->private = slave;
+@@ -1173,8 +1173,8 @@ int usbhs_fifo_probe(struct usbhs_priv *priv)
+ 	fifo->port	= D0FIFO;
+ 	fifo->sel	= D0FIFOSEL;
+ 	fifo->ctr	= D0FIFOCTR;
+-	fifo->tx_slave.shdma_slave.slave_id	= usbhs_get_dparam(priv, d0_tx_id);
+-	fifo->rx_slave.shdma_slave.slave_id	= usbhs_get_dparam(priv, d0_rx_id);
++	fifo->tx_slave.slave_id	= usbhs_get_dparam(priv, d0_tx_id);
++	fifo->rx_slave.slave_id	= usbhs_get_dparam(priv, d0_rx_id);
+ 
+ 	/* D1FIFO */
+ 	fifo = usbhsf_get_d1fifo(priv);
+@@ -1182,8 +1182,8 @@ int usbhs_fifo_probe(struct usbhs_priv *priv)
+ 	fifo->port	= D1FIFO;
+ 	fifo->sel	= D1FIFOSEL;
+ 	fifo->ctr	= D1FIFOCTR;
+-	fifo->tx_slave.shdma_slave.slave_id	= usbhs_get_dparam(priv, d1_tx_id);
+-	fifo->rx_slave.shdma_slave.slave_id	= usbhs_get_dparam(priv, d1_rx_id);
++	fifo->tx_slave.slave_id	= usbhs_get_dparam(priv, d1_tx_id);
++	fifo->rx_slave.slave_id	= usbhs_get_dparam(priv, d1_rx_id);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/usb/renesas_usbhs/fifo.h b/drivers/usb/renesas_usbhs/fifo.h
+index c31731a..7dc5c92 100644
+--- a/drivers/usb/renesas_usbhs/fifo.h
++++ b/drivers/usb/renesas_usbhs/fifo.h
+@@ -20,6 +20,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/sh_dma.h>
+ #include <linux/workqueue.h>
++#include <linux/rcar-hpbdma.h>
+ #include <asm/dma.h>
+ #include "pipe.h"
+ 
+@@ -36,8 +37,8 @@ struct usbhs_fifo {
+ 	struct dma_chan		*tx_chan;
+ 	struct dma_chan		*rx_chan;
+ 
+-	struct sh_dmae_slave	tx_slave;
+-	struct sh_dmae_slave	rx_slave;
++	struct hpb_dmae_slave	tx_slave;
++	struct hpb_dmae_slave	rx_slave;
+ };
+ 
+ struct usbhs_fifo_info {
+-- 
+1.7.9.5
+
