@@ -1,7 +1,7 @@
 require directfb_git.inc
 
-RV = "1.7-0"
-PR = "r4"
+RV = "1.8-0"
+PR = "r5"
 S = "${WORKDIR}/git"
 
 DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion khronos-headers"
@@ -60,5 +60,5 @@ do_install_append () {
 	rm -rf ${D}/usr/lib/nm-n.*
 }
 
-LEAD_SONAME = "libdirectfb-1.7.so.0"
+LEAD_SONAME = "libdirectfb-1.8.so.0"
 
