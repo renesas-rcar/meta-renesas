@@ -692,6 +692,11 @@ SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.
 	file://0673-ARM-shmobile-r8a7778-fixup-sound-register-function.patch \
 	file://0674-ARM-shmobile-add-SSI-DMA-support.patch \
 	file://0675-ARM-shmobile-bockw-add-SSI-DMA-transfer-support.patch \
+	file://0676-Local-Add-support-SDHI0-DMAC.patch \
+	file://0677-hpb-dma-tidyup-dummy-channel.patch \
+	file://0678-ASoC-rsnd-care-hpb-dmac.patch \
+	file://0679-ARM-shmobile-bockw-add-USB-DMA-support.patch \
+	file://0680-hpb-dmac-tidyup-dma-channel-number.patch \
 	file://add_gp2d_drm_kbuild.patch \
 	"
 

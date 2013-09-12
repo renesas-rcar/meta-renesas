@@ -1,0 +1,25 @@
+From 136a3544f87b1444476482a5083ee985b04b6dfc Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Tue, 10 Sep 2013 13:27:59 +0900
+Subject: [PATCH 4/4] hpb-dmac: tidyup dma channel number
+
+---
+ include/linux/rcar-hpbdma.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/rcar-hpbdma.h b/include/linux/rcar-hpbdma.h
+index 651abf7..f75c77e 100644
+--- a/include/linux/rcar-hpbdma.h
++++ b/include/linux/rcar-hpbdma.h
+@@ -160,7 +160,7 @@
+ #define HPB_DMA_USE_START_CH 20
+ #define HPB_DMA_USE_END_CH (HPB_DMA_MAXCH - 1)
+ 
+-#define HPB_DMAC_USE_CHANNELS (HPB_DMA_USE_END_CH - HPB_DMA_USE_START_CH + 1)
++#define HPB_DMAC_USE_CHANNELS 256
+ #define HPB_DMA_SLAVE_NUMBER 256
+ #define HPB_DMA_TCR_MAX 0x03FFFFFF	/* 64MB */
+ 
+-- 
+1.7.9.5
+

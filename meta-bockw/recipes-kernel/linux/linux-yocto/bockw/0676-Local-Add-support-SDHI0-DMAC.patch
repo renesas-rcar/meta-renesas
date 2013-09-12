@@ -1,0 +1,40 @@
+From 211c1fbceb7f4e94173d083a5c361c565b6deecc Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Tue, 3 Sep 2013 15:49:17 +0900
+Subject: [PATCH 1/5] Local: Add support SDHI0 DMAC
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm/mach-shmobile/board-bockw.c           | 2 ++
+ arch/arm/mach-shmobile/include/mach/hpb-dmae.h | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-bockw.c b/arch/arm/mach-shmobile/board-bockw.c
+index 8eee0c0..53ae711 100644
+--- a/arch/arm/mach-shmobile/board-bockw.c
++++ b/arch/arm/mach-shmobile/board-bockw.c
+@@ -122,6 +122,8 @@ static struct resource smsc911x_resources[] = {
+ 
+ /* SDHI */
+ static struct sh_mobile_sdhi_info sdhi0_info = {
++	.dma_slave_tx	= HPBDMA_SLAVE_SDHI0_TX,
++	.dma_slave_rx	= HPBDMA_SLAVE_SDHI0_RX,
+ 	.tmio_caps	= MMC_CAP_SD_HIGHSPEED,
+ 	.tmio_ocr_mask	= MMC_VDD_165_195 | MMC_VDD_32_33 | MMC_VDD_33_34,
+ 	.tmio_flags	= TMIO_MMC_HAS_IDLE_WAIT,
+diff --git a/arch/arm/mach-shmobile/include/mach/hpb-dmae.h b/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
+index 9419c50..4c6744e 100644
+--- a/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
++++ b/arch/arm/mach-shmobile/include/mach/hpb-dmae.h
+@@ -24,6 +24,8 @@ extern struct platform_device rcar_dma_device;
+ 
+ /* DMA slave IDs */
+ enum {
++	HPBDMA_DUMMY,
++
+ 	HPBDMA_SLAVE_SDHI0_TX,		/*Ch.21*/
+ 	HPBDMA_SLAVE_SDHI0_RX,		/*Ch.22*/
+ 
+-- 
+1.8.2
+
