@@ -1,0 +1,65 @@
+From f2ceec7fb2e1b7a182eb737216fe3214a743247d Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Wed, 14 Mar 2012 21:19:31 +0900
+Subject: [PATCH 01/31] sys/v4l2/gstv4l2: fix the depth value for RGB32
+
+The 'depth' value for RGB32 must be 24 rather than 32.
+This changes conversion code between color format
+representaion in caps and V4L2 definition.
+---
+ sys/v4l2/gstv4l2object.c |   17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 81d1cb7..2c1bde4 100644
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -1208,14 +1208,16 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
+           b_mask = 0xff0000;
+           break;
+         case V4L2_PIX_FMT_RGB32:
+-          bpp = depth = 32;
++          bpp = 32;
++          depth = 24;
+           endianness = G_BIG_ENDIAN;
+           r_mask = 0xff000000;
+           g_mask = 0x00ff0000;
+           b_mask = 0x0000ff00;
+           break;
+         case V4L2_PIX_FMT_BGR32:
+-          bpp = depth = 32;
++          bpp = 32;
++          depth = 24;
+           endianness = G_BIG_ENDIAN;
+           r_mask = 0x000000ff;
+           g_mask = 0x0000ff00;
+@@ -1480,9 +1482,10 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
+ #endif
+     }
+   } else if (!strcmp (mimetype, "video/x-raw-rgb")) {
+-    gint depth, endianness, r_mask;
++    gint bpp, depth, endianness, r_mask;
+ 
+     gst_structure_get_int (structure, "depth", &depth);
++    gst_structure_get_int (structure, "bpp", &bpp);
+     gst_structure_get_int (structure, "endianness", &endianness);
+     gst_structure_get_int (structure, "red_mask", &r_mask);
+ 
+@@ -1499,10 +1502,10 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
+             V4L2_PIX_FMT_RGB565 : V4L2_PIX_FMT_RGB565X;
+         break;
+       case 24:
+-        fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR24 : V4L2_PIX_FMT_RGB24;
+-        break;
+-      case 32:
+-        fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR32 : V4L2_PIX_FMT_RGB32;
++        if (bpp == 24)
++          fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR24 : V4L2_PIX_FMT_RGB24;
++        else if (bpp == 32)
++          fourcc = (r_mask == 0xFF) ? V4L2_PIX_FMT_BGR32 : V4L2_PIX_FMT_RGB32;
+         break;
+     }
+   } else if (strcmp (mimetype, "video/x-dv") == 0) {
+-- 
+1.7.9.5
+

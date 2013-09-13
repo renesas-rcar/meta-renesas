@@ -1,0 +1,27 @@
+From 8945fb73e15e70b2b0d282b35dfceeccff633c49 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 5 Jul 2012 10:37:08 +0900
+Subject: [PATCH 38/97] Revert "ext/dfbvideosink: ignore alpha channel in
+ source data"
+
+This reverts commit c32772d62f500c7bfca0524cc34ea206715d83a2.
+---
+ ext/directfb/dfbvideosink.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 30e081f..87841c2 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1871,8 +1871,6 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     viosurface[0].bpitchc = 0;
+     viosurface[0].bpitcha = 0;
+     viosurface[0].format = dfb2shvio_format (src_format);
+-    if (viosurface[0].format == REN_ARGB32)
+-      viosurface[0].format = REN_XRGB32;        /* WORKAROUND: ignore the alpha channel */
+     if (viosurface[0].format == REN_UNKNOWN) {
+       GST_WARNING_OBJECT (dfbvideosink, "Pixel format %s unsupported",
+           gst_dfbvideosink_get_format_name (src_format));
+-- 
+1.7.10.4
+

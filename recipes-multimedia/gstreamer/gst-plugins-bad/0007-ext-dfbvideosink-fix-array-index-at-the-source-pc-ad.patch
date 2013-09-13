@@ -1,0 +1,26 @@
+From 9ff8ed0a66fc17fab08606b2e1b41110d7b1f863 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Fri, 6 Apr 2012 15:18:24 +0900
+Subject: [PATCH 07/97] ext/dfbvideosink: fix array index at the source pc
+ address setting.
+
+---
+ ext/directfb/dfbvideosink.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 1409a7a..95b3438 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1737,7 +1737,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+     if (is_ycbcr_planar (viosurface[0].format))
+       viosurface[0].pc = viosurface[0].py + src_pitch * src.h;
+     else
+-      viosurface[1].pc = 0;
++      viosurface[0].pc = 0;
+     viosurface[0].pa = 0;
+ 
+     /* Set up destination viosurface */
+-- 
+1.7.10.4
+

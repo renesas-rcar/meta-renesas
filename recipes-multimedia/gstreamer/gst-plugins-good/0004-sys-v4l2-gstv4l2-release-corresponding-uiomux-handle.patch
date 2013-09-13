@@ -1,0 +1,31 @@
+From c856d711cc54856dac5410aac6bf35330e5f8394 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Mon, 7 May 2012 10:11:38 +0900
+Subject: [PATCH 04/31] sys/v4l2/gstv4l2: release corresponding uiomux handle
+ whenever a buffer pool destroyed
+
+This change could avoid memory leaks and unnecessary file descriptor
+consumption.
+---
+ sys/v4l2/gstv4l2bufferpool.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index a2800aa..90ce3b3 100644
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -513,6 +513,11 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
+       gst_buffer_unref (buf);
+   }
+ 
++#if defined(HAVE_UIOMUX)
++  if (pool->uiomux)
++    uiomux_close (pool->uiomux);
++#endif
++
+   gst_mini_object_unref (GST_MINI_OBJECT (pool));
+ }
+ 
+-- 
+1.7.9.5
+

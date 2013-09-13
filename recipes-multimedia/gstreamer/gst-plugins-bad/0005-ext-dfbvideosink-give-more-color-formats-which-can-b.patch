@@ -1,0 +1,38 @@
+From 96eeec1ef6d6ccb14f37b1b92e012c624d0cfe80 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Wed, 14 Mar 2012 16:39:20 +0900
+Subject: [PATCH 05/97] ext/dfbvideosink: give more color formats which can be
+ converted by libshvio in getcaps()
+
+---
+ ext/directfb/dfbvideosink.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index eea2831..8a26356 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1227,6 +1227,20 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
+         accelerated = !accelerated;
+       } while (accelerated == FALSE);
+     }
++#if defined(HAVE_SHVIO)
++    /* append color formats which can be converted by libshvio */
++    if (dfbvideosink->vio) {
++      gst_caps_append (caps,
++          gst_dfbvideosink_get_caps_from_format (DSPF_RGB16));
++      gst_caps_append (caps,
++          gst_dfbvideosink_get_caps_from_format (DSPF_RGB24));
++      gst_caps_append (caps,
++          gst_dfbvideosink_get_caps_from_format (DSPF_RGB32));
++      gst_caps_append (caps, gst_dfbvideosink_get_caps_from_format (DSPF_UYVY));
++      gst_caps_append (caps, gst_dfbvideosink_get_caps_from_format (DSPF_YV12));
++      gst_caps_append (caps, gst_dfbvideosink_get_caps_from_format (DSPF_ARGB));
++    }
++#endif /* defined(HAVE_SHVIO) */
+   }
+ 
+   for (i = 0; i < gst_caps_get_size (caps); i++) {
+-- 
+1.7.10.4
+

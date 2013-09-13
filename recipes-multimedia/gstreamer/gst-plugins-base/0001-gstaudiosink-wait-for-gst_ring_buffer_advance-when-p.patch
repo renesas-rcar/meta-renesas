@@ -1,0 +1,79 @@
+From d46fff879acb78b6cd42937864f80e22389e3acb Mon Sep 17 00:00:00 2001
+From: Hideki EIRAKU <hdk@igel.co.jp>
+Date: Fri, 18 May 2012 19:30:27 +0900
+Subject: [PATCH] gstaudiosink: wait for gst_ring_buffer_advance when pausing
+
+If gst_ring_buffer_advance is called after paused, the time of
+audio sink is updated and the base_time will be increased when resuming.
+The base_time change makes a cleared buffer play.
+Gstaudiosrc may have the same problem.
+---
+ gst-libs/gst/audio/gstaudiosink.c |    9 +++++++++
+ gst-libs/gst/audio/gstaudiosink.h |    3 +++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/gst-libs/gst/audio/gstaudiosink.c b/gst-libs/gst/audio/gstaudiosink.c
+index c5fec73..72984bf 100644
+--- a/gst-libs/gst/audio/gstaudiosink.c
++++ b/gst-libs/gst/audio/gstaudiosink.c
+@@ -265,6 +265,8 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
+       gst_ring_buffer_advance (buf, 1);
+     } else {
+       GST_OBJECT_LOCK (abuf);
++      sink->buffer_running = FALSE;
++      g_cond_signal (sink->pause_cond);
+       if (!abuf->running)
+         goto stop_running;
+       if (G_UNLIKELY (g_atomic_int_get (&buf->state) ==
+@@ -280,6 +282,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
+       if (!abuf->running)
+         goto stop_running;
+       GST_DEBUG_OBJECT (sink, "continue running");
++      sink->buffer_running = TRUE;
+       GST_OBJECT_UNLOCK (abuf);
+     }
+   }
+@@ -429,6 +432,8 @@ gst_audioringbuffer_activate (GstRingBuffer * buf, gboolean active)
+ 
+     GST_DEBUG_OBJECT (sink, "starting thread");
+ 
++    sink->pause_cond = g_cond_new ();
++    sink->buffer_running = TRUE;
+ #if !GLIB_CHECK_VERSION (2, 31, 0)
+     sink->thread =
+         g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,
+@@ -454,6 +459,7 @@ gst_audioringbuffer_activate (GstRingBuffer * buf, gboolean active)
+ 
+     /* join the thread */
+     g_thread_join (sink->thread);
++    g_cond_free (sink->pause_cond);
+ 
+     GST_OBJECT_LOCK (buf);
+   }
+@@ -531,6 +537,9 @@ gst_audioringbuffer_pause (GstRingBuffer * buf)
+     GST_DEBUG_OBJECT (sink, "reset done");
+   }
+ 
++  if (sink->buffer_running)
++    g_cond_wait (sink->pause_cond, GST_OBJECT_GET_LOCK (buf));
++
+   return TRUE;
+ }
+ 
+diff --git a/gst-libs/gst/audio/gstaudiosink.h b/gst-libs/gst/audio/gstaudiosink.h
+index 83a4e95..8c32d5a 100644
+--- a/gst-libs/gst/audio/gstaudiosink.h
++++ b/gst-libs/gst/audio/gstaudiosink.h
+@@ -49,6 +49,9 @@ struct _GstAudioSink {
+   /*< private >*/ /* with LOCK */
+   GThread   *thread;
+ 
++  GCond *pause_cond;
++  gboolean buffer_running;
++
+   /*< private >*/
+   gpointer _gst_reserved[GST_PADDING];
+ };
+-- 
+1.7.10.4
+

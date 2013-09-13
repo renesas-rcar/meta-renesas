@@ -1,0 +1,262 @@
+From c3fe71c65f87b32351e58969becb30102d3ddb05 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Fri, 6 Apr 2012 16:51:08 +0900
+Subject: [PATCH 03/31] sys/v4l2/gstv4l2: register uiomux memory regions via
+ USERPTR
+
+This patch enables to register uiomux memory regions via USERPTR
+for capture buffers. This may reduce memory-copy overhead with
+sharing the buffer between source and sink element.
+---
+ configure.ac                 |    8 ++++++
+ sys/v4l2/Makefile.am         |    2 ++
+ sys/v4l2/gstv4l2bufferpool.c |   55 ++++++++++++++++++++++++++++++++++++++++++
+ sys/v4l2/gstv4l2bufferpool.h |    8 ++++++
+ sys/v4l2/gstv4l2src.c        |   15 ++++++++----
+ 5 files changed, 83 insertions(+), 5 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 8a43fda..5bfddfe 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -572,6 +572,14 @@ return 0;
+       AC_DEFINE(GST_V4L2_MISSING_BUFDECL, 1, [struct v4l2_buffer missing])
+     fi
+ 
++    dnl check for libuiomux
++    PKG_CHECK_MODULES(UIOMUX, uiomux >= 1.6.2, HAVE_UIOMUX="yes", [
++    HAVE_UIOMUX="no"
++    ])
++    if test $HAVE_UIOMUX = "yes"; then
++      AC_DEFINE(HAVE_UIOMUX, 1, [Define if we have libuiomux])
++    fi
++
+     dnl check for XOverlay libraries
+     AG_GST_CHECK_XV
+   fi
+diff --git a/sys/v4l2/Makefile.am b/sys/v4l2/Makefile.am
+index a7a99de..c4b55d2 100644
+--- a/sys/v4l2/Makefile.am
++++ b/sys/v4l2/Makefile.am
+@@ -28,6 +28,7 @@ libgstvideo4linux2_la_CFLAGS =   $(GST_PLUGINS_BASE_CFLAGS) \
+ 				 $(GST_BASE_CFLAGS) \
+ 				 $(GST_CONTROLLER_CFLAGS) \
+ 				 $(GST_CFLAGS) \
++				 $(UIOMUX_CFLAGS) \
+ 				 $(X_CFLAGS) \
+ 				 $(LIBV4L2_CFLAGS) \
+ 				 $(GUDEV_CFLAGS)
+@@ -42,6 +43,7 @@ libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
+ 				 -lgstvideo-$(GST_MAJORMINOR) \
+ 				 -lgstinterfaces-$(GST_MAJORMINOR) \
+ 				 $(GST_LIBS) \
++				 $(UIOMUX_LIBS) \
+ 				 $(xv_libs) \
+ 				 $(LIBV4L2_LIBS) \
+ 				 $(GUDEV_LIBS)
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index b81c6a4..a2800aa 100644
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -108,7 +108,12 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
+         "buffer %p (data %p, len %u) not recovered, unmapping",
+         buffer, GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
+     gst_mini_object_unref (GST_MINI_OBJECT (pool));
++#if defined(HAVE_UIOMUX)
++    uiomux_free (pool->uiomux, pool->uiores, (void *) GST_BUFFER_DATA (buffer),
++        buffer->vbuffer.length);
++#else
+     v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
++#endif
+ 
+     GST_MINI_OBJECT_CLASS (v4l2buffer_parent_class)->finalize (GST_MINI_OBJECT
+         (buffer));
+@@ -166,7 +171,11 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
+ 
+   ret->vbuffer.index = index;
+   ret->vbuffer.type = pool->type;
++#if defined(HAVE_UIOMUX)
++  ret->vbuffer.memory = V4L2_MEMORY_USERPTR;
++#else
+   ret->vbuffer.memory = V4L2_MEMORY_MMAP;
++#endif
+ 
+   if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &ret->vbuffer) < 0)
+     goto querybuf_failed;
+@@ -183,12 +192,21 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
+   GST_LOG_OBJECT (pool->v4l2elem, "  length:    %u", ret->vbuffer.length);
+   GST_LOG_OBJECT (pool->v4l2elem, "  input:     %u", ret->vbuffer.input);
+ 
++#if defined(HAVE_UIOMUX)
++  data = uiomux_malloc (pool->uiomux, pool->uiores, ret->vbuffer.length, 32);
++  if (data == NULL)
++    goto malloc_failed;
++
++  memset (data, 0, ret->vbuffer.length);
++  ret->vbuffer.m.userptr = (unsigned long) data;
++#else
+   data = (guint8 *) v4l2_mmap (0, ret->vbuffer.length,
+       PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
+       ret->vbuffer.m.offset);
+ 
+   if (data == MAP_FAILED)
+     goto mmap_failed;
++#endif
+ 
+   GST_BUFFER_DATA (ret) = data;
+   GST_BUFFER_SIZE (ret) = ret->vbuffer.length;
+@@ -209,6 +227,17 @@ querybuf_failed:
+     errno = errnosave;
+     return NULL;
+   }
++#if defined(HAVE_UIOMUX)
++malloc_failed:
++  {
++    gint errnosave = errno;
++
++    GST_WARNING ("Failed uiomux_malloc: %s", g_strerror (errnosave));
++    gst_buffer_unref (GST_BUFFER (ret));
++    errno = errnosave;
++    return NULL;
++  }
++#else
+ mmap_failed:
+   {
+     gint errnosave = errno;
+@@ -218,6 +247,7 @@ mmap_failed:
+     errno = errnosave;
+     return NULL;
+   }
++#endif /* defined(HAVE_UIOMUX) */
+ }
+ 
+ 
+@@ -335,6 +365,9 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
+   GstV4l2BufferPool *pool;
+   gint n;
+   struct v4l2_requestbuffers breq;
++#if defined(HAVE_UIOMUX)
++  const char *blocks[2] = { "VIO", NULL };
++#endif
+ 
+   pool = (GstV4l2BufferPool *) gst_mini_object_new (GST_TYPE_V4L2_BUFFER_POOL);
+ 
+@@ -342,6 +375,12 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
+   if (pool->video_fd < 0)
+     goto dup_failed;
+ 
++#if defined(HAVE_UIOMUX)
++  pool->uiores = 1 << 0;
++  pool->uiomux = uiomux_open_named (blocks);
++  if (pool->uiomux == NULL)
++    goto uiomux_failed;
++#endif
+ 
+   /* first, lets request buffers, and see how many we can get: */
+   GST_DEBUG_OBJECT (v4l2elem, "STREAMING, requesting %d MMAP buffers",
+@@ -350,7 +389,11 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
+   memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
+   breq.type = type;
+   breq.count = num_buffers;
++#if defined(HAVE_UIOMUX)
++  breq.memory = V4L2_MEMORY_USERPTR;
++#else
+   breq.memory = V4L2_MEMORY_MMAP;
++#endif
+ 
+   if (v4l2_ioctl (fd, VIDIOC_REQBUFS, &breq) < 0)
+     goto reqbufs_failed;
+@@ -396,6 +439,14 @@ dup_failed:
+ 
+     return NULL;
+   }
++#if defined(HAVE_UIOMUX)
++uiomux_failed:
++  {
++    GST_ELEMENT_ERROR (v4l2elem, RESOURCE, READ,
++        (_("Failed uiomux_open")), (NULL));
++    return NULL;
++  }
++#endif /* defined(HAVE_UIOMUX) */
+ reqbufs_failed:
+   {
+     GstV4l2Object *v4l2object = get_v4l2_object (v4l2elem);
+@@ -540,7 +591,11 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
+ 
+   memset (&buffer, 0x00, sizeof (buffer));
+   buffer.type = pool->type;
++#if defined(HAVE_UIOMUX)
++  buffer.memory = V4L2_MEMORY_USERPTR;
++#else
+   buffer.memory = V4L2_MEMORY_MMAP;
++#endif
+ 
+ 
+   if (v4l2_ioctl (pool->video_fd, VIDIOC_DQBUF, &buffer) >= 0) {
+diff --git a/sys/v4l2/gstv4l2bufferpool.h b/sys/v4l2/gstv4l2bufferpool.h
+index caad9ac..6fb3067 100644
+--- a/sys/v4l2/gstv4l2bufferpool.h
++++ b/sys/v4l2/gstv4l2bufferpool.h
+@@ -27,6 +27,9 @@
+ 
+ #include <gst/gst.h>
+ #include "v4l2_calls.h"
++#if defined(HAVE_UIOMUX)
++#include "uiomux/uiomux.h"
++#endif
+ 
+ GST_DEBUG_CATEGORY_EXTERN (v4l2buffer_debug);
+ 
+@@ -53,6 +56,11 @@ struct _GstV4l2BufferPool
+ {
+   GstMiniObject parent;
+ 
++#if defined(HAVE_UIOMUX)
++  UIOMux *uiomux;	     /* uiomux handle */
++  uiomux_resource_t uiores;  /* uiomux resource flag */
++#endif /* defined(HAVE_UIOMUX) */
++
+   GstElement *v4l2elem;      /* the v4l2 src/sink that owns us.. maybe we should be owned by v4l2object? */
+   gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
+   enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index f8ae09c..d3f9a3c 100644
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -63,8 +63,13 @@
+ GST_DEBUG_CATEGORY (v4l2src_debug);
+ #define GST_CAT_DEFAULT v4l2src_debug
+ 
++#if defined(HAVE_UIOMUX)
++#define PROP_DEF_QUEUE_SIZE         4
++#define PROP_DEF_ALWAYS_COPY        FALSE
++#else
+ #define PROP_DEF_QUEUE_SIZE         2
+ #define PROP_DEF_ALWAYS_COPY        TRUE
++#endif
+ #define PROP_DEF_DECIMATE           1
+ 
+ #define DEFAULT_PROP_DEVICE   "/dev/video0"
+@@ -96,14 +101,14 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
+ 
+ #ifdef HAVE_XVIDEO
+   if (!(iface_type == GST_TYPE_TUNER ||
+-        iface_type == GST_TYPE_X_OVERLAY ||
+-        iface_type == GST_TYPE_COLOR_BALANCE ||
+-        iface_type == GST_TYPE_VIDEO_ORIENTATION))
++          iface_type == GST_TYPE_X_OVERLAY ||
++          iface_type == GST_TYPE_COLOR_BALANCE ||
++          iface_type == GST_TYPE_VIDEO_ORIENTATION))
+     return FALSE;
+ #else
+   if (!(iface_type == GST_TYPE_TUNER ||
+-        iface_type == GST_TYPE_COLOR_BALANCE ||
+-        iface_type == GST_TYPE_VIDEO_ORIENTATION))
++          iface_type == GST_TYPE_COLOR_BALANCE ||
++          iface_type == GST_TYPE_VIDEO_ORIENTATION))
+     return FALSE;
+ #endif
+ 
+-- 
+1.7.9.5
+

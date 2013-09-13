@@ -1,0 +1,202 @@
+From 4cfbacaf187b037667f1d84b203a46f6f2f52093 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 6 Nov 2012 19:10:47 +0900
+Subject: [PATCH 80/97] ext/dfbvideosink: add a function that sets up MERAM
+ when a caps object is set
+
+This patch groups setting up MERAM in gst_dfbvideosink_setcaps()
+into gst_dfbvideosink_setup_meram().
+---
+ ext/directfb/dfbvideosink.c |  148 ++++++++++++++++++++++++-------------------
+ 1 file changed, 83 insertions(+), 65 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index f7cbd38..6b1529c 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -1564,17 +1564,11 @@ beach:
+   return caps;
+ }
+ 
+-static gboolean
+-gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
++#if defined(HAVE_SHMERAM)
++static void
++gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
++    gint video_width, gint video_height)
+ {
+-  GstDfbVideoSink *dfbvideosink;
+-  GstStructure *structure;
+-  gboolean res, interlaced, result = FALSE;
+-  const gchar *layout = NULL;
+-  gint video_width, video_height;
+-  const GValue *framerate;
+-  DFBSurfacePixelFormat pixel_format = DSPF_UNKNOWN;
+-#if defined(HAVE_SHVIO) && defined(HAVE_SHMERAM)
+   IDirectFBSurface *surface;
+   gint stride;
+   gint sliceheight;
+@@ -1583,74 +1577,27 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+   gulong val;
+   gulong sbsize;
+   gpointer data;
+-#endif
++  GstStructure *structure;
++  DFBSurfacePixelFormat pixel_format = DSPF_UNKNOWN;
+ 
+-  dfbvideosink = GST_DFBVIDEOSINK (bsink);
++  if (video_width <= 0 || video_height <= 0)
++    /* Deinitializing may be done in this case */
++    return;
+ 
+   structure = gst_caps_get_structure (caps, 0);
+-  res = gst_structure_get_int (structure, "width", &video_width);
+-  res &= gst_structure_get_int (structure, "height", &video_height);
+-  framerate = gst_structure_get_value (structure, "framerate");
+-  res &= (framerate != NULL);
+-  if (!res) {
+-    goto beach;
++  if (!gst_structure_get_int (structure, "tile-width", &tilewidth)) {
++    GST_LOG_OBJECT (dfbvideosink, "can't get tile width from caps");
++    tilewidth = 0;
+   }
+-  dfbvideosink->fps_n = gst_value_get_fraction_numerator (framerate);
+-  dfbvideosink->fps_d = gst_value_get_fraction_denominator (framerate);
+ 
+   pixel_format = gst_dfbvideosink_get_format_from_caps (caps);
+ 
+-  GST_DEBUG_OBJECT (dfbvideosink, "setcaps called with %" GST_PTR_FORMAT, caps);
+-  GST_DEBUG_OBJECT (dfbvideosink, "our format is: %dx%d %s video at %d/%d fps",
+-      video_width, video_height,
+-      gst_dfbvideosink_get_format_name (pixel_format), dfbvideosink->fps_n,
+-      dfbvideosink->fps_d);
+-
+-#if defined(HAVE_SHVIO)
+-  if (!gst_structure_get_int (structure, "rowstride", &dfbvideosink->rowstride))
+-    GST_LOG_OBJECT (dfbvideosink, "can't get rowstride from caps");
+-  if (!gst_structure_get_int (structure, "chroma_byte_offset",
+-          &dfbvideosink->chroma_byte_offset))
+-    GST_LOG_OBJECT (dfbvideosink, "can't get chroma_byte_offset from caps");
+-
+-  if (gst_structure_get_boolean (structure, "interlaced", &interlaced) &&
+-      (interlaced == TRUE) &&
+-      ((layout = gst_structure_get_string (structure, "field-layout")) != NULL)
+-      && (strcmp (layout, "sequential") == 0)) {
+-    dfbvideosink->interlaced = TRUE;
+-  } else {
+-    dfbvideosink->interlaced = FALSE;
+-  }
+-
+-  if (!gst_structure_get_int (structure, "next_field_offset",
+-          &dfbvideosink->next_field_offset) && dfbvideosink->interlaced) {
+-    GST_ERROR_OBJECT (dfbvideosink,
+-        "failed to get next-field-offset from caps in despite of interlaced being set");
+-    goto beach;
+-  }
+-#if defined(HAVE_SHMERAM)
+-  if (!gst_structure_get_int (structure, "tile_boundary_y_offset",
+-          &dfbvideosink->tile_boundary_y_offset)) {
+-    dfbvideosink->tile_boundary_y_offset = 0;
+-    GST_LOG_OBJECT (dfbvideosink, "can't get tile_boundary_y_offset from caps");
+-  }
+-
+-  if (!gst_structure_get_int (structure, "tile_boundary_c_offset",
+-          &dfbvideosink->tile_boundary_c_offset)) {
+-    dfbvideosink->tile_boundary_c_offset = 0;
+-    GST_LOG_OBJECT (dfbvideosink, "can't get tile_boundary_c_offset from caps");
+-  }
+-
+   stride =
+       (dfbvideosink->rowstride >
+       0) ? dfbvideosink->rowstride : pixel2byte (video_width, pixel_format);
+   sliceheight =
+       (dfbvideosink->chroma_byte_offset >
+       0) ? dfbvideosink->chroma_byte_offset / stride : video_height;
+-  if (!gst_structure_get_int (structure, "tile-width", &tilewidth)) {
+-    GST_LOG_OBJECT (dfbvideosink, "can't get tile width from caps");
+-    tilewidth = 0;
+-  }
+ 
+   /* set up a readahead icb for Y plane
+      4 lines / block-line, 8 lines held, 16 lines allocated */
+@@ -1736,6 +1683,77 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+   if (dfbvideosink->icbc[DST])
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[DST], MExxSBSIZE,
+         stride);
++}
++#endif /* defined(HAVE_SHMERAM) */
++
++static gboolean
++gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
++{
++  GstDfbVideoSink *dfbvideosink;
++  GstStructure *structure;
++  gboolean res, interlaced, result = FALSE;
++  const gchar *layout = NULL;
++  gint video_width, video_height;
++  const GValue *framerate;
++  DFBSurfacePixelFormat pixel_format = DSPF_UNKNOWN;
++
++  dfbvideosink = GST_DFBVIDEOSINK (bsink);
++
++  structure = gst_caps_get_structure (caps, 0);
++  res = gst_structure_get_int (structure, "width", &video_width);
++  res &= gst_structure_get_int (structure, "height", &video_height);
++  framerate = gst_structure_get_value (structure, "framerate");
++  res &= (framerate != NULL);
++  if (!res) {
++    goto beach;
++  }
++  dfbvideosink->fps_n = gst_value_get_fraction_numerator (framerate);
++  dfbvideosink->fps_d = gst_value_get_fraction_denominator (framerate);
++
++  pixel_format = gst_dfbvideosink_get_format_from_caps (caps);
++
++  GST_DEBUG_OBJECT (dfbvideosink, "setcaps called with %" GST_PTR_FORMAT, caps);
++  GST_DEBUG_OBJECT (dfbvideosink, "our format is: %dx%d %s video at %d/%d fps",
++      video_width, video_height,
++      gst_dfbvideosink_get_format_name (pixel_format), dfbvideosink->fps_n,
++      dfbvideosink->fps_d);
++
++#if defined(HAVE_SHVIO)
++  if (!gst_structure_get_int (structure, "rowstride", &dfbvideosink->rowstride))
++    GST_LOG_OBJECT (dfbvideosink, "can't get rowstride from caps");
++  if (!gst_structure_get_int (structure, "chroma_byte_offset",
++          &dfbvideosink->chroma_byte_offset))
++    GST_LOG_OBJECT (dfbvideosink, "can't get chroma_byte_offset from caps");
++
++  if (gst_structure_get_boolean (structure, "interlaced", &interlaced) &&
++      (interlaced == TRUE) &&
++      ((layout = gst_structure_get_string (structure, "field-layout")) != NULL)
++      && (strcmp (layout, "sequential") == 0)) {
++    dfbvideosink->interlaced = TRUE;
++  } else {
++    dfbvideosink->interlaced = FALSE;
++  }
++
++  if (!gst_structure_get_int (structure, "next_field_offset",
++          &dfbvideosink->next_field_offset) && dfbvideosink->interlaced) {
++    GST_ERROR_OBJECT (dfbvideosink,
++        "failed to get next-field-offset from caps in despite of interlaced being set");
++    goto beach;
++  }
++#if defined(HAVE_SHMERAM)
++  if (!gst_structure_get_int (structure, "tile_boundary_y_offset",
++          &dfbvideosink->tile_boundary_y_offset)) {
++    dfbvideosink->tile_boundary_y_offset = 0;
++    GST_LOG_OBJECT (dfbvideosink, "can't get tile_boundary_y_offset from caps");
++  }
++
++  if (!gst_structure_get_int (structure, "tile_boundary_c_offset",
++          &dfbvideosink->tile_boundary_c_offset)) {
++    dfbvideosink->tile_boundary_c_offset = 0;
++    GST_LOG_OBJECT (dfbvideosink, "can't get tile_boundary_c_offset from caps");
++  }
++
++  gst_dfbvideosink_setup_meram (dfbvideosink, caps, video_width, video_height);
+ #endif /* defined(HAVE_SHMERAM) */
+ #endif /* defined(HAVE_SHVIO) */
+ 
+-- 
+1.7.10.4
+

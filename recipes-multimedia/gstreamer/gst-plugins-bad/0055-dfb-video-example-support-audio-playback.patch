@@ -1,0 +1,101 @@
+From 89b1efaa7a9161fdf9c089cb112a72812274a8de Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 3 Sep 2012 19:08:54 +0900
+Subject: [PATCH 55/97] dfb-video-example: support audio playback
+
+This patch adds support for AAC and MP3 audio streams.
+---
+ ext/directfb/dfb-video-example.c |   70 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/ext/directfb/dfb-video-example.c b/ext/directfb/dfb-video-example.c
+index d466bcf..44d4050 100644
+--- a/ext/directfb/dfb-video-example.c
++++ b/ext/directfb/dfb-video-example.c
+@@ -117,6 +117,74 @@ create_video_pipeline (GstPad * pad, gpointer data)
+ }
+ 
+ static void
++create_audio_pipeline (GstPad * pad)
++{
++  GstPad *sinkpad;
++  GstCaps *caps;
++  GstStructure *structure;
++  const gchar *mime;
++  GstElement *decoder, *sink;
++  static GstElement *queue;
++
++  if (queue) {
++    /* If queue plugin has been already created, demuxer plugin just gets
++       a link to a peer pad. This route is passed when the state is changed. */
++    sinkpad = gst_element_get_static_pad (queue, "sink");
++    gst_pad_link (pad, sinkpad);
++    gst_object_unref (sinkpad);
++    return;
++  }
++
++  caps = GST_PAD_CAPS (pad);
++  structure = gst_caps_get_structure (caps, 0);
++
++  mime = gst_structure_get_name (structure);
++  if (strcmp (mime, "audio/mpeg") == 0) {       /* AAC or MP3 */
++    gint ver = 0, layer = 0;
++
++    gst_structure_get_int (structure, "mpegversion", &ver);
++    gst_structure_get_int (structure, "layer", &layer);
++    /* This test to determine is based on "http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/section-types-definitions.html". */
++    if (ver == 4 || ver == 2) { /* AAC */
++      printf ("codec type video/mpeg mpegversion=%d\n", ver);
++      decoder = gst_element_factory_make ("faad", NULL);
++      if (!decoder) {
++        printf ("faad plugin wasn't found\n");
++        return;
++      }
++    } else if (ver == 1 && layer == 3) {        /* MP3 */
++      printf ("codec type video/mpeg mpegversion=1\n");
++      decoder = gst_element_factory_make ("mad", NULL);
++      if (!decoder) {
++        printf ("mad plugin wasn't found\n");
++        return;
++      }
++    } else {
++      printf ("unsupported format\n");
++      return;
++    }
++  } else {
++    printf ("%s isn't supported.\n", mime);
++    return;
++  }
++
++  queue = gst_element_factory_make ("queue", NULL);
++  g_assert (queue);
++  sink = gst_element_factory_make ("alsasink", NULL);
++  g_assert (sink);
++
++  gst_bin_add_many (GST_BIN (pipeline), queue, decoder, sink, NULL);
++  sinkpad = gst_element_get_static_pad (queue, "sink");
++  gst_pad_link (pad, sinkpad);
++  gst_element_link_many (queue, decoder, sink, NULL);
++  gst_object_unref (sinkpad);
++
++  gst_element_set_state (queue, GST_STATE_PLAYING);
++  gst_element_set_state (decoder, GST_STATE_PLAYING);
++  gst_element_set_state (sink, GST_STATE_PLAYING);
++}
++
++static void
+ on_pad_added (GstElement * element, GstPad * pad, gpointer data)
+ {
+   /* We can now link this pad with the gst-omx decoder or h264parse sink pad */
+@@ -124,6 +192,8 @@ on_pad_added (GstElement * element, GstPad * pad, gpointer data)
+ 
+   if (strcmp (gst_pad_get_name (pad), "video_00") == 0)
+     create_video_pipeline (pad, data);
++  else if (strcmp (gst_pad_get_name (pad), "audio_00") == 0)
++    create_audio_pipeline (pad);
+   else
+     printf ("%s isn't acceptable.\n", gst_pad_get_name (pad));
+ }
+-- 
+1.7.10.4
+

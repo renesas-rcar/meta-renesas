@@ -1,0 +1,54 @@
+From b277004b3d876418fc7a75118af8da255c3ab3b9 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Wed, 12 Sep 2012 19:28:19 +0900
+Subject: [PATCH 59/97] ext/dfbvideosink: handle the query of
+ tladdressing-supported
+
+The query of tladdressing-supported is sent for asking whether
+dealing with T/L (tiled-linear) addressing for input buffer
+address is supported.
+This patch adds the handler for receiving this query.
+---
+ ext/directfb/dfbvideosink.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 8912499..31c66f7 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -2858,13 +2858,14 @@ gst_dfbvideosink_handle_sink_query (GstPad * pad, GstQuery * query)
+ {
+   gboolean res = FALSE;
+   GstDfbVideoSink *dfbvideosink;
+-  GstQueryType query_type_stride;
++  GstQueryType query_type_stride, query_type_tladdr;
+ 
+   dfbvideosink = GST_DFBVIDEOSINK (gst_pad_get_parent (pad));
+ 
+   GST_LOG_OBJECT (dfbvideosink, "%s query", GST_QUERY_TYPE_NAME (query));
+ 
+   query_type_stride = gst_query_type_get_by_nick ("stride-supported");
++  query_type_tladdr = gst_query_type_get_by_nick ("tladdressing-supported");
+   if (query_type_stride == GST_QUERY_TYPE (query)) {
+     GstStructure *structure = gst_query_get_structure (query);
+ #if defined(HAVE_SHVIO)
+@@ -2875,6 +2876,16 @@ gst_dfbvideosink_handle_sink_query (GstPad * pad, GstQuery * query)
+         NULL);
+ #endif
+     res = TRUE;
++  } else if (query_type_tladdr == GST_QUERY_TYPE (query)) {
++    GstStructure *structure = gst_query_get_structure (query);
++#if defined(HAVE_SHVIO) && defined(HAVE_SHMERAM)
++    gst_structure_set (structure, "tladdressing-supported", G_TYPE_BOOLEAN,
++        TRUE, NULL);
++#else
++    gst_structure_set (structure, "tladdressing-supported", G_TYPE_BOOLEAN,
++        FALSE, NULL);
++#endif
++    res = TRUE;
+   } else {
+     res = gst_pad_query_default (pad, query);
+   }
+-- 
+1.7.10.4
+

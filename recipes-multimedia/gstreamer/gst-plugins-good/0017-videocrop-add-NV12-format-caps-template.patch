@@ -1,0 +1,25 @@
+From d2d5af3b3912ff588c613803f366984eca82c53f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 4 Oct 2012 12:11:38 +0900
+Subject: [PATCH 17/31] videocrop: add NV12 format caps template
+
+This is preliminary for NV12 zero-copy cropping.
+---
+ gst/videocrop/gstvideocrop.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index b6336da..df02302 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -102,6 +102,7 @@ enum
+   GST_VIDEO_CAPS_YUV ("Y800") ";"                \
+   GST_VIDEO_CAPS_YUV ("I420") ";"                \
+   GST_VIDEO_CAPS_YUV ("YV12") ";"                \
++  GST_VIDEO_CAPS_YUV ("NV12") ";"                \
+   GST_VIDEO_CAPS_RGB_16 ";"                      \
+   GST_VIDEO_CAPS_RGB_15 ";"			 \
+   GST_VIDEO_CAPS_GRAY
+-- 
+1.7.9.5
+

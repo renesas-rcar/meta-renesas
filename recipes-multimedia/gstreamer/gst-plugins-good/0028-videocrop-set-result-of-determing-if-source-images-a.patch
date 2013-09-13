@@ -1,0 +1,35 @@
+From d9e4f81f59fea3a0b4342e7c6b3312384d479827 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 29 Oct 2012 14:53:32 +0900
+Subject: [PATCH 28/31] videocrop: set result of determing if source images
+ are interlaced at the head of transform_caps
+
+---
+ gst/videocrop/gstvideocrop.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gst/videocrop/gstvideocrop.c b/gst/videocrop/gstvideocrop.c
+index d02948d..93d6512 100644
+--- a/gst/videocrop/gstvideocrop.c
++++ b/gst/videocrop/gstvideocrop.c
+@@ -642,6 +642,8 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+   GST_LOG_OBJECT (vcrop, "l=%d,r=%d,b=%d,t=%d",
+       vcrop->crop_left, vcrop->crop_right, vcrop->crop_bottom, vcrop->crop_top);
+ 
++  vcrop->interlaced = gst_video_crop_is_interlaced (caps);
++
+   if (direction == GST_PAD_SRC) {
+     dx = vcrop->crop_left + vcrop->crop_right;
+     dy = vcrop->crop_top + vcrop->crop_bottom;
+@@ -710,8 +712,6 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
+ 
+       structure = gst_caps_get_structure (caps, 0);
+ 
+-      vcrop->interlaced = gst_video_crop_is_interlaced (caps);
+-
+       rowstride = img_details.stride;
+       /* Y plane / UV plane */
+       ratio_y_c = img_details.uv_off / (img_details.size - img_details.uv_off);
+-- 
+1.7.9.5
+

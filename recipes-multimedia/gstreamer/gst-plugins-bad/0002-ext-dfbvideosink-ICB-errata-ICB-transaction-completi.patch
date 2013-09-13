@@ -1,0 +1,107 @@
+From 2e8f8be47655e5b050e2d41f6296e27717c60260 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 23 Apr 2013 16:02:02 +0900
+Subject: [PATCH 2/9] ext/dfbvideosink: ICB errata: ICB transaction completion
+
+Implement a new sequence for read and write transaction completion.
+This workaround is required when finalizing write or read transaction
+in addition to setting WF or RF bits in MExxCTRL.
+---
+ ext/directfb/dfbvideosink.c | 55 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 99f8e2d..33b225a 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -2136,6 +2136,57 @@ gst_dfbvideosink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
+   }
+ }
+ 
++#if defined(HAVE_SHMERAM)
++static void
++gst_dfbvideosink_clear_icb (GstDfbVideoSink * dfbvideosink, GstDfbIcb * icb)
++{
++  MERAM_REG *regs;
++  gulong val;
++  gulong tmp_ctrl;
++
++  /*
++   * This processing is a workaround regarding the ICB access.
++   * It must be invoked after finalizing write or read transaction
++   * by setting WF or RF bit to MExxCTRL.
++   */
++  /* Set read buffer mode */
++  meram_read_icb (dfbvideosink->meram, icb->handle, MExxCTRL, &val);
++  tmp_ctrl = val;               /* temporarily save original MExxCTRL value */
++  val = (val & ~0x00000007) | 0x00000701;
++  meram_write_icb (dfbvideosink->meram, icb->handle, MExxCTRL, val);
++
++  regs = meram_lock_reg (dfbvideosink->meram);
++
++  /* Set write direction */
++  meram_read_reg (dfbvideosink->meram, regs, MEVCR1, &val);
++  val |= 0x40000000;
++  meram_write_reg (dfbvideosink->meram, regs, MEVCR1, val);
++
++  /* Set inactive status */
++  meram_read_reg (dfbvideosink->meram, regs, MEACTS, &val);
++  val |= 0x00000001 << (icb->index % 32);
++  meram_write_reg (dfbvideosink->meram, regs, MEACTS, val);
++
++  /* Set WBF and RF bits */
++  meram_read_icb (dfbvideosink->meram, icb->handle, MExxCTRL, &val);
++  val = (val & ~0x00000077) | 0x00000751;
++  meram_write_icb (dfbvideosink->meram, icb->handle, MExxCTRL, val);
++
++  /* Clear write direction */
++  meram_read_reg (dfbvideosink->meram, regs, MEVCR1, &val);
++  val &= ~0x40000000;
++  meram_write_reg (dfbvideosink->meram, regs, MEVCR1, val);
++
++  meram_unlock_reg (dfbvideosink->meram, regs);
++
++  /* set back to original MExxCTRL value */
++  meram_read_icb (dfbvideosink->meram, icb->handle, MExxCTRL, &val);
++  /* 0x00000700: WD[1:0] and WS must be all set to 1. */
++  meram_write_icb (dfbvideosink->meram, icb->handle, MExxCTRL,
++      tmp_ctrl | 0x00000700);
++}
++#endif /* defined(HAVE_SHMERAM) */
++
+ #if defined(HAVE_SHVIO)
+ static GstFlowReturn
+ gst_dfbvideosink_shvio_stretchblit (GstDfbVideoSink * dfbvideosink,
+@@ -2312,12 +2363,14 @@ gst_dfbvideosink_shvio_stretchblit (GstDfbVideoSink * dfbvideosink,
+     val |= 1 << 4;              /* RF: flush data */
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC].handle,
+         MExxCTRL, val);
++    gst_dfbvideosink_clear_icb (dfbvideosink, &dfbvideosink->icby[SRC]);
+     if (dfbvideosink->icbc[SRC].handle) {
+       meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC].handle,
+           MExxCTRL, &val);
+       val |= 1 << 4;            /* RF: flush data */
+       meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC].handle,
+           MExxCTRL, val);
++      gst_dfbvideosink_clear_icb (dfbvideosink, &dfbvideosink->icbc[SRC]);
+     }
+   }
+   if (phys[DST]) {
+@@ -2327,12 +2380,14 @@ gst_dfbvideosink_shvio_stretchblit (GstDfbVideoSink * dfbvideosink,
+     val |= 1 << 5;              /* WF: flush data */
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST].handle,
+         MExxCTRL, val);
++    gst_dfbvideosink_clear_icb (dfbvideosink, &dfbvideosink->icby[DST]);
+     if (dfbvideosink->icbc[DST].handle) {
+       meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[DST].handle,
+           MExxCTRL, &val);
+       val |= 1 << 5;            /* WF: flush data */
+       meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[DST].handle,
+           MExxCTRL, val);
++      gst_dfbvideosink_clear_icb (dfbvideosink, &dfbvideosink->icbc[DST]);
+     }
+   }
+ #endif /* defined(HAVE_SHMERAM) */
+-- 
+1.8.1.2
+
