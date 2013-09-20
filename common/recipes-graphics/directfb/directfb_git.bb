@@ -1,13 +1,15 @@
 require directfb_git.inc
 
 RV = "1.8-0"
-PR = "r5"
+PR = "r6"
 S = "${WORKDIR}/git"
 
 DEPENDS += "flux-native sysfsutils libuiomux libdrm linux-fusion khronos-headers"
 
 SRC_URI += "file://fix-compilation-with-zlib.patch \
             file://directfbrc \
+            file://0001-drmkms-fix-property-to-check-when-setting-source-col.patch \
+            file://0002-drmkms-mute-plane-when-opacity-is-set-to-zero.patch \
             "
 
 SRCREV = "b5301bba8c0878d86cb5a1901ccc587ecea20673"
