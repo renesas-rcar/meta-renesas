@@ -1,0 +1,26 @@
+From 5bd208eb5e9d5e3e7f864e2e5d44060854fa40b4 Mon Sep 17 00:00:00 2001
+From: Takanari Hayama <taki@igel.co.jp>
+Date: Thu, 19 Sep 2013 18:55:03 +0900
+Subject: [PATCH 1/2] drmkms: fix property to check when setting source color
+ key.
+
+---
+ systems/drmkms/drmkms_layer.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/systems/drmkms/drmkms_layer.c b/systems/drmkms/drmkms_layer.c
+index bcae04f..a80d2e5 100644
+--- a/systems/drmkms/drmkms_layer.c
++++ b/systems/drmkms/drmkms_layer.c
+@@ -434,7 +434,7 @@ drmkmsPlaneSetRegion( CoreLayer                  *layer,
+ 
+      }
+ 
+-     if ((updated & (CLRCF_SRCKEY | CLRCF_OPTIONS)) && data->alpha_propid) {
++     if ((updated & (CLRCF_SRCKEY | CLRCF_OPTIONS)) && data->colorkey_propid) {
+           uint32_t drm_colorkey = config->src_key.r << 16 | config->src_key.g << 8 | config->src_key.b;
+ 
+           if (config->options & DLOP_SRC_COLORKEY)
+-- 
+1.7.9.5
+
