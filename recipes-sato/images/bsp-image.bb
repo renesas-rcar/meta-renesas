@@ -1,6 +1,7 @@
 require recipes-sato/images/core-image-sato.bb
 
 IMAGE_INSTALL += " \
+	gst-plugins-base-videorate \
 	gst-plugins-good \
 	gst-plugins-good-isomp4 \
 	gst-plugins-good-video4linux2 \
