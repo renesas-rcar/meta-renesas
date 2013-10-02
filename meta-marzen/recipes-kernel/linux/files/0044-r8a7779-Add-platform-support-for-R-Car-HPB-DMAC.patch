@@ -1,0 +1,219 @@
+From 5e114ce7b05625d4e9d852fb8dfd9108f2fb6de4 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Fri, 6 Jul 2012 11:19:18 +0100
+Subject: [PATCH 44/76] r8a7779: Add platform support for R-Car HPB DMAC
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/include/mach/irqs.h |    1 +
+ arch/arm/mach-shmobile/intc-r8a7779.c      |  145 ++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/setup-r8a7779.c     |    4 +
+ 3 files changed, 150 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/irqs.h b/arch/arm/mach-shmobile/include/mach/irqs.h
+index a4ca462..9657c97 100644
+--- a/arch/arm/mach-shmobile/include/mach/irqs.h
++++ b/arch/arm/mach-shmobile/include/mach/irqs.h
+@@ -15,6 +15,7 @@
+ #define IRQ_USBH_0_EHCI (209 + 1)
+ #define IRQ_USBH_1_OHCI (209 + 2)
+ #define IRQ_USBH_1_EHCI (209 + 3)
++
+ #define IRQ_DMAC_H(n)	(209 + 4 + (n))
+ 
+ #endif /* __ASM_MACH_IRQS_H */
+diff --git a/arch/arm/mach-shmobile/intc-r8a7779.c b/arch/arm/mach-shmobile/intc-r8a7779.c
+index 5cc4637..4e4aa95 100644
+--- a/arch/arm/mach-shmobile/intc-r8a7779.c
++++ b/arch/arm/mach-shmobile/intc-r8a7779.c
+@@ -23,6 +23,7 @@
+ #include <linux/irq.h>
+ #include <linux/io.h>
+ #include <mach/common.h>
++#include <mach/irqs.h>
+ #include <mach/intc.h>
+ #include <mach/irqs.h>
+ #include <mach/r8a7779.h>
+@@ -65,6 +66,78 @@ static struct intc2_child usbh1_child[] = {
+ };
+ 
+ /*
++ * HPB-DMAC children
++ */
++static struct intc2_child dmach00_10_child[] = {
++	{ (1<<0), IRQ_DMAC_H(0) },
++	{ (1<<1), IRQ_DMAC_H(1) },
++	{ (1<<2), IRQ_DMAC_H(2) },
++	{ (1<<3), IRQ_DMAC_H(3) },
++	{ (1<<4), IRQ_DMAC_H(4) },
++	{ (1<<5), IRQ_DMAC_H(5) },
++	{ (1<<6), IRQ_DMAC_H(6) },
++	{ (1<<7), IRQ_DMAC_H(7) },
++	{ (1<<8), IRQ_DMAC_H(8) },
++	{ (1<<9), IRQ_DMAC_H(9) },
++	{ (1<<10), IRQ_DMAC_H(10) },
++};
++static struct intc2_child dmach11_13_child[] = {
++	{ (1<<11), IRQ_DMAC_H(11) },
++	{ (1<<12), IRQ_DMAC_H(12) },
++	{ (1<<13), IRQ_DMAC_H(13) },
++};
++static struct intc2_child dmach14_15_child[] = {
++	{ (1<<14), IRQ_DMAC_H(14) },
++	{ (1<<15), IRQ_DMAC_H(15) },
++};
++static struct intc2_child dmach16_19_child[] = {
++	{ (1<<16), IRQ_DMAC_H(16) },
++	{ (1<<17), IRQ_DMAC_H(17) },
++	{ (1<<18), IRQ_DMAC_H(18) },
++	{ (1<<19), IRQ_DMAC_H(19) },
++};
++static struct intc2_child dmach20_child[] = {
++	{ (1<<20), IRQ_DMAC_H(20) },
++};
++static struct intc2_child dmach21_23_child[] = {
++	{ (1<<21), IRQ_DMAC_H(21) },
++	{ (1<<22), IRQ_DMAC_H(22) },
++	{ (1<<23), IRQ_DMAC_H(23) },
++};
++static struct intc2_child dmach24_child[] = {
++	{ (1<<24), IRQ_DMAC_H(24) },
++};
++static struct intc2_child dmach25_27_child[] = {
++	{ (1<<25), IRQ_DMAC_H(25) },
++	{ (1<<26), IRQ_DMAC_H(26) },
++	{ (1<<27), IRQ_DMAC_H(27) },
++};
++static struct intc2_child dmach28_36_child[] = {
++	{ (1<<0), IRQ_DMAC_H(28) },
++	{ (1<<1), IRQ_DMAC_H(29) },
++	{ (1<<2), IRQ_DMAC_H(30) },
++	{ (1<<3), IRQ_DMAC_H(31) },
++	{ (1<<4), IRQ_DMAC_H(32) },
++	{ (1<<5), IRQ_DMAC_H(33) },
++	{ (1<<6), IRQ_DMAC_H(34) },
++	{ (1<<7), IRQ_DMAC_H(35) },
++	{ (1<<8), IRQ_DMAC_H(36) },
++};
++static struct intc2_child dmach39_41_child[] = {
++	{ (1<<28), IRQ_DMAC_H(39) },
++	{ (1<<29), IRQ_DMAC_H(40) },
++	{ (1<<30), IRQ_DMAC_H(41) },
++};
++static struct intc2_child dmach37_38_42_child[] = {
++	{ (1<<9), IRQ_DMAC_H(37) },
++	{ (1<<10), IRQ_DMAC_H(38) },
++	{ (1<<11), IRQ_DMAC_H(42) },
++};
++static struct intc2_child dmach43_child[] = {
++	{ (1<<12), IRQ_DMAC_H(43) },
++};
++
++/*
+  * Parents
+  */
+ static struct intc2_parent intc2_parent_desc[] = {
+@@ -80,6 +153,78 @@ static struct intc2_parent intc2_parent_desc[] = {
+ 		ARRAY_SIZE(usbh1_child),
+ 		usbh1_child
+ 	},
++	{
++		gic_spi(110),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach00_10_child),
++		dmach00_10_child
++	},
++	{
++		gic_spi(111),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach11_13_child),
++		dmach11_13_child
++	},
++	{
++		gic_spi(112),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach14_15_child),
++		dmach14_15_child
++	},
++	{
++		gic_spi(113),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach16_19_child),
++		dmach16_19_child
++	},
++	{
++		gic_spi(114),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach20_child),
++		dmach20_child
++	},
++	{
++		gic_spi(115),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach21_23_child),
++		dmach21_23_child
++	},
++	{
++		gic_spi(116),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach24_child),
++		dmach24_child
++	},
++	{
++		gic_spi(117),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach25_27_child),
++		dmach25_27_child
++	},
++	{
++		gic_spi(118),
++		IOMEM(0xfe7820f0),
++		ARRAY_SIZE(dmach28_36_child),
++		dmach28_36_child
++	},
++	{
++		gic_spi(119),
++		IOMEM(0xfe782104),
++		ARRAY_SIZE(dmach39_41_child),
++		dmach39_41_child
++	},
++	{
++		gic_spi(120),
++		IOMEM(0xfe7820f0),
++		ARRAY_SIZE(dmach37_38_42_child),
++		dmach37_38_42_child
++	},
++	{
++		gic_spi(121),
++		IOMEM(0xfe7820f0),
++		ARRAY_SIZE(dmach43_child),
++		dmach43_child
++	},
+ };
+ 
+ static void intc2_demux(unsigned int irq, struct irq_desc *desc)
+diff --git a/arch/arm/mach-shmobile/setup-r8a7779.c b/arch/arm/mach-shmobile/setup-r8a7779.c
+index afcb7d4..70c90ef 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7779.c
++++ b/arch/arm/mach-shmobile/setup-r8a7779.c
+@@ -32,6 +32,7 @@
+ #include <mach/irqs.h>
+ #include <mach/r8a7779.h>
+ #include <mach/common.h>
++#include <mach/hpb-dmae.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/time.h>
+@@ -316,6 +317,9 @@ static struct platform_device *r8a7779_early_devices[] __initdata = {
+ 	&scif3_device,
+ 	&scif4_device,
+ 	&scif5_device,
++#ifdef CONFIG_RCAR_HPB_DMAE
++	&rcar_dma_device,
++#endif
+ 	&tmu00_device,
+ 	&tmu01_device,
+ 	&i2c0_device,
+-- 
+1.7.5.4
+

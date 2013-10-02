@@ -1,0 +1,46 @@
+From 122b1b68f389b20c7fbfc7b4437465720b6034a7 Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Fri, 6 Jan 2012 14:10:35 +0900
+Subject: [PATCH 06/10] arm: rch1: Add reboot support
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ board/renesas/marzen/lowlevel_init.S |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/board/renesas/marzen/lowlevel_init.S b/board/renesas/marzen/lowlevel_init.S
+index fb67211..aa1a9c4 100644
+--- a/board/renesas/marzen/lowlevel_init.S
++++ b/board/renesas/marzen/lowlevel_init.S
+@@ -23,6 +23,28 @@
+ 
+ 	.globl lowlevel_init
+ lowlevel_init:
++	mrc	p15, 0, r0, c0, c0, 5	@ Check of CPU ID #
++	ands	r0, r0, #0xf
++	beq	do_lowlevel_init	@ CPU ID #0
++	b	do_cpu_waiting		@ CPU ID #1-#3
++
++	.pool
++
++/*
++ * CPU ID #1-#3 come here
++ */
++	.align  4
++do_cpu_waiting:
++	wfi
++
++	b	do_cpu_waiting
++
++/*
++ * Only CPU ID #0 comes here
++ */
++	.align  4
++do_lowlevel_init:
++
+ 	ldr	r3, =0xfe798000
+ 	sub	sp, r3, #4
+ 	str	ip, [sp]
+-- 
+1.7.5.4
+

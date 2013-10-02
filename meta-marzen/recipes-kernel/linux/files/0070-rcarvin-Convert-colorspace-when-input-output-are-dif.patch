@@ -1,0 +1,83 @@
+From 335cfd9e558b294e20bd6799a2b7f18a9e216369 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Fri, 5 Oct 2012 09:46:32 +0100
+Subject: [PATCH 70/76] rcarvin: Convert colorspace when input & output are
+ different
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/media/video/rcarvin.c |   20 ++++++++++++++------
+ 1 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/video/rcarvin.c b/drivers/media/video/rcarvin.c
+index 3208b97..556b06d 100644
+--- a/drivers/media/video/rcarvin.c
++++ b/drivers/media/video/rcarvin.c
+@@ -351,6 +351,8 @@ static void rcar_vin_setup(struct rcar_vin_dev *pcdev)
+ 	struct rcar_vin_cam *cam = icd->host_priv;
+ 	u32 mc, dmr;
+ 	int progressive = 0;
++	int input_is_yuv = 0;
++	int output_is_yuv = 0;
+ 
+ 	/* field */
+ 	switch (pcdev->field) {
+@@ -395,8 +397,10 @@ static void rcar_vin_setup(struct rcar_vin_dev *pcdev)
+ 	case V4L2_MBUS_FMT_YUYV8_1X16:
+ 		/* BT.1358 16bit YCbCr-422 */
+ 		mc |= VIN_VNMC_INF_YUV16;
++		input_is_yuv = 1;
+ 		break;
+ 	case V4L2_MBUS_FMT_YUYV8_2X8:
++		input_is_yuv = 1;
+ 		/* BT.656 8bit YCbCr-422 */
+ 		if (pcdev->use_bt656)
+ 			mc |= VIN_VNMC_INF_YUV8_BT656;
+@@ -412,27 +416,24 @@ static void rcar_vin_setup(struct rcar_vin_dev *pcdev)
+ 		vin_write(pcdev, V0UVAOF,
+ 			  ((cam->width * cam->height) + 0x7f) & ~0x7f);
+ 		dmr = VIN_VNDMR_DTMD_YCSEP;
+-		mc |= VIN_VNMC_VUP | VIN_VNMC_BPS;
++		output_is_yuv = 1;
+ 		break;
+ 	case V4L2_PIX_FMT_YUYV:
+ 		dmr = VIN_VNDMR_BPSM;
+-		mc |= VIN_VNMC_VUP | VIN_VNMC_BPS;
++		output_is_yuv = 1;
+ 		break;
+ 	case V4L2_PIX_FMT_UYVY:
+ 		dmr = 0;
+-		mc |= VIN_VNMC_VUP | VIN_VNMC_BPS;
++		output_is_yuv = 1;
+ 		break;
+ 	case V4L2_PIX_FMT_RGB555X:
+ 		dmr = VIN_VNDMR_DTMD_ARGB1555;
+-		mc |= VIN_VNMC_VUP;
+ 		break;
+ 	case V4L2_PIX_FMT_RGB565:
+ 		dmr = 0;
+-		mc |= VIN_VNMC_VUP;
+ 		break;
+ 	case V4L2_PIX_FMT_RGB32:
+ 		dmr = VIN_VNDMR_EXRGB;
+-		mc |= VIN_VNMC_VUP | VIN_VNMC_BPS;
+ 		break;
+ 	default:
+ 		pr_alert("%s: Invalid fourcc format (0x%x)\n", __func__,
+@@ -442,6 +443,13 @@ static void rcar_vin_setup(struct rcar_vin_dev *pcdev)
+ 		break;
+ 	}
+ 
++	/* Always update on field change */
++	mc |= VIN_VNMC_VUP;
++
++	/* If input and output use the same colorspace, use bypass mode */
++	if (input_is_yuv == output_is_yuv)
++		mc |= VIN_VNMC_BPS;
++
+ 	/* enable interrupt */
+ 	if (progressive)
+ 		vin_write(pcdev, V0IE, VIN_VNIE_MASK_PROGRESSIVE);
+-- 
+1.7.5.4
+

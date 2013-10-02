@@ -1,0 +1,75 @@
+From f662276dd055f969fe2d5facd9232d3efddf398c Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Thu, 12 Jul 2012 10:27:50 +0100
+Subject: [PATCH 39/76] r8a7779: Add interrupt support for USBH
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/include/mach/irqs.h |    6 ++++++
+ arch/arm/mach-shmobile/intc-r8a7779.c      |   25 +++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/include/mach/irqs.h b/arch/arm/mach-shmobile/include/mach/irqs.h
+index 4e686cc2..a4ca462 100644
+--- a/arch/arm/mach-shmobile/include/mach/irqs.h
++++ b/arch/arm/mach-shmobile/include/mach/irqs.h
+@@ -11,4 +11,10 @@
+ #define INTCS_VECT(n, vect)	INTC_VECT((n), INTCS_VECT_BASE + (vect))
+ #define intcs_evt2irq(evt)	evt2irq(INTCS_VECT_BASE + (evt))
+ 
++#define IRQ_USBH_0_OHCI (209 + 0)
++#define IRQ_USBH_0_EHCI (209 + 1)
++#define IRQ_USBH_1_OHCI (209 + 2)
++#define IRQ_USBH_1_EHCI (209 + 3)
++#define IRQ_DMAC_H(n)	(209 + 4 + (n))
++
+ #endif /* __ASM_MACH_IRQS_H */
+diff --git a/arch/arm/mach-shmobile/intc-r8a7779.c b/arch/arm/mach-shmobile/intc-r8a7779.c
+index 15d604b..5cc4637 100644
+--- a/arch/arm/mach-shmobile/intc-r8a7779.c
++++ b/arch/arm/mach-shmobile/intc-r8a7779.c
+@@ -24,6 +24,7 @@
+ #include <linux/io.h>
+ #include <mach/common.h>
+ #include <mach/intc.h>
++#include <mach/irqs.h>
+ #include <mach/r8a7779.h>
+ #include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+@@ -52,9 +53,33 @@ struct intc2_parent {
+ };
+ 
+ /*
++ * USB Host children
++ */
++static struct intc2_child usbh0_child[] = {
++	{ (1<<1), IRQ_USBH_0_EHCI },
++	{ (1<<0), IRQ_USBH_0_OHCI },
++};
++static struct intc2_child usbh1_child[] = {
++	{ (1<<5), IRQ_USBH_1_EHCI },
++	{ (1<<4), IRQ_USBH_1_OHCI },
++};
++
++/*
+  * Parents
+  */
+ static struct intc2_parent intc2_parent_desc[] = {
++	{
++		gic_spi(44),
++		IOMEM(0xfe782058),
++		ARRAY_SIZE(usbh0_child),
++		usbh0_child
++	},
++	{
++		gic_spi(45),
++		IOMEM(0xfe782058),
++		ARRAY_SIZE(usbh1_child),
++		usbh1_child
++	},
+ };
+ 
+ static void intc2_demux(unsigned int irq, struct irq_desc *desc)
+-- 
+1.7.5.4
+

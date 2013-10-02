@@ -1,0 +1,190 @@
+From 572dc8be6953620e78886902ea6556ccd5527d5a Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 10 Jul 2012 08:43:55 +0100
+Subject: [PATCH 49/76] sound: soc: add glue for marzen/ak4643 sound card
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ sound/soc/rcar/Kconfig       |   14 +++++
+ sound/soc/rcar/Makefile      |    2 +
+ sound/soc/rcar/rcar_ak4643.c |  128 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 144 insertions(+), 0 deletions(-)
+ create mode 100644 sound/soc/rcar/rcar_ak4643.c
+
+diff --git a/sound/soc/rcar/Kconfig b/sound/soc/rcar/Kconfig
+index f7c9b0a..2711436 100644
+--- a/sound/soc/rcar/Kconfig
++++ b/sound/soc/rcar/Kconfig
+@@ -8,6 +8,7 @@ menu "SoC Audio support for R-Car"
+ config SND_SOC_RCAR
+ 	tristate "R-Car Marzen sound support"
+ 	select SND_HWDEP
++	select SND_RCAR_AK4643
+ 	help
+ 	  This option enables R-Car Marzen platform sound support
+ 
+@@ -18,4 +19,17 @@ config SND_SOC_RCAR
+ ## Boards
+ ##
+ 
++config SND_RCAR_AK4643
++	tristate "R-Car AK4643 sound support"
++	depends on SND_SOC_RCAR
++	select SND_SOC_AK4642
++	help
++	  This option enables the sound support for
++	  AK4643 unit of R-Car platform.
++
++config SND_SOC_AK4643_RCAR
++	bool
++	depends on SND_RCAR_AK4643
++	default y
++
+ endmenu
+diff --git a/sound/soc/rcar/Makefile b/sound/soc/rcar/Makefile
+index c7b81f2..7d5f9d5 100644
+--- a/sound/soc/rcar/Makefile
++++ b/sound/soc/rcar/Makefile
+@@ -3,3 +3,5 @@ snd-soc-rcar-objs		:= sru_pcm.o
+ obj-$(CONFIG_SND_SOC_RCAR)	+= snd-soc-rcar.o
+ 
+ ## boards
++snd-soc-rcar-ak4643-objs	:= rcar_ak4643.o
++obj-$(CONFIG_SND_RCAR_AK4643)	+= snd-soc-rcar-ak4643.o
+diff --git a/sound/soc/rcar/rcar_ak4643.c b/sound/soc/rcar/rcar_ak4643.c
+new file mode 100644
+index 0000000..76b0cab
+--- /dev/null
++++ b/sound/soc/rcar/rcar_ak4643.c
+@@ -0,0 +1,128 @@
++/*
++ * sound/soc/rcar/rcar_ak4643.c
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ *
++ * This file is based on the sound/soc/sh/fsi-ak4642.c
++ *
++ * FSI-AK464x sound support for ms7724se
++ *
++ * Copyright (C) 2009 Renesas Solutions Corp.
++ * Kuninori Morimoto <morimoto.kuninori@renesas.com>
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ */
++
++#include <linux/wait.h>
++#include <linux/module.h>
++#include <sound/core.h>
++#include <sound/pcm.h>
++#include <sound/soc.h>
++
++#undef DEBUG
++#ifdef DEBUG
++#define FNC_ENTRY	pr_info("entry:%s\n", __func__);
++#define FNC_EXIT	pr_info("exit:%s:%d\n", __func__, __LINE__);
++#define DBG_CHK_POINT()	pr_info("check:%s:%d\n", __func__, __LINE__);
++#define DBG_CHK_MSG(args...)	pr_info(args)
++#else  /* DEBUG */
++#define FNC_ENTRY
++#define FNC_EXIT
++#define DBG_CHK_POINT()
++#define DBG_CHK_MSG(args...)
++#endif /* DEBUG */
++
++/************************************************************************
++
++	CODEC#1 machine dependent function
++
++************************************************************************/
++static struct snd_soc_card rcar_codec1_soc_card;
++int sru_pcm_hwdep_new(struct snd_card *card, char *id);
++
++static int rcar_codec1_dai_init(struct snd_soc_pcm_runtime *rtd)
++{
++	int ret = 0;
++	struct snd_soc_dai *codec = rtd->codec_dai;
++
++	FNC_ENTRY
++
++	/* set PLL clock */
++	ret = snd_soc_dai_set_sysclk(codec, 0, 11289600, 0);
++	if (ret) {
++		pr_err("snd_soc_dai_set_sysclk err=%d\n", ret);
++		return ret;
++	}
++
++	ret = snd_soc_dai_set_fmt(codec, SND_SOC_DAIFMT_CBS_CFS |
++					 SND_SOC_DAIFMT_I2S);
++	if (ret) {
++		pr_err("snd_soc_dai_set_fmt err=%d\n", ret);
++		return ret;
++	}
++
++	ret = sru_pcm_hwdep_new(rtd->card->snd_card, "sru_pcm0");
++	if (ret)
++		pr_err("sru_pcm_hwdep_new err=%d\n", ret);
++
++	FNC_EXIT
++	return ret;
++}
++
++/************************************************************************
++
++	CODEC#1 machine driver ALSA SoC structure
++
++************************************************************************/
++static struct snd_soc_dai_link rcar_codec1_dai_link = {
++	.name		= "CODEC#1(AK4643)",
++	.stream_name	= "CODEC#1(AK4643)",
++	.cpu_dai_name	= "rcar_sru_codec1",
++	.codec_dai_name	= "ak4642-hifi",
++	.platform_name	= "rcar_sru.0",
++	.codec_name	= "ak4642-codec.0-0012",
++	.init		= rcar_codec1_dai_init,
++	.ops		= NULL,
++};
++
++static struct snd_soc_card rcar_codec1_soc_card  = {
++	.owner		= THIS_MODULE,
++	.name		= "RCAR_AK4643(CODEC#1)",
++	.dai_link	= &rcar_codec1_dai_link,
++	.num_links	= 1,
++};
++
++/************************************************************************
++
++	AK4643(CODEC#1) machine driver function
++
++************************************************************************/
++static int __devinit rcar_probe(struct platform_device *pdev)
++{
++	int ret = -ENOMEM;
++	FNC_ENTRY
++
++	rcar_codec1_soc_card.dev = &pdev->dev;
++	ret = snd_soc_register_card(&rcar_codec1_soc_card);
++	if (ret)
++		pr_err("Unable to register sourd card\n");
++
++	return ret;
++	FNC_EXIT
++}
++
++static struct platform_driver rcar_driver = {
++	.driver = {
++		.name = "rcar_alsa_soc_platform",
++		.owner = THIS_MODULE,
++	},
++	.probe = rcar_probe,
++};
++
++module_platform_driver(rcar_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("R-Car SRU-AK4643 sound card");
++MODULE_AUTHOR("Renesas Electronics");
+-- 
+1.7.5.4
+

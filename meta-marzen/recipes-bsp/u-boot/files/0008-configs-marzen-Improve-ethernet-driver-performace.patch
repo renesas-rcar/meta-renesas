@@ -1,0 +1,26 @@
+From ea18ab534a0fedeb2ad3f62cc02dd5bc19de3e22 Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Wed, 14 Mar 2012 13:11:38 +0900
+Subject: [PATCH 08/10] configs: marzen: Improve ethernet driver performace
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ include/configs/marzen.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/configs/marzen.h b/include/configs/marzen.h
+index 7760094..bbfc769 100644
+--- a/include/configs/marzen.h
++++ b/include/configs/marzen.h
+@@ -80,7 +80,7 @@
+ /* ethernet */
+ #define	CONFIG_NET_MULTI
+ #define	CONFIG_SMC911X		1
+-#define	CONFIG_SMC911X_16_BIT
++#define	CONFIG_SMC911X_32_BIT
+ #define	CONFIG_SMC911X_BASE	0x18000000
+ 
+ /* flash configuration */
+-- 
+1.7.5.4
+

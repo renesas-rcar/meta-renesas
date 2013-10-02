@@ -1,0 +1,26 @@
+From 6cdf9900eb20edf0276a5a69c879482a407ee29f Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Mon, 21 Nov 2011 15:10:35 +0900
+Subject: [PATCH 03/10] arm: rch1: Fix DBSC3 initialize
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ board/renesas/marzen/marzen.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/board/renesas/marzen/marzen.c b/board/renesas/marzen/marzen.c
+index 938c17b..358931d 100644
+--- a/board/renesas/marzen/marzen.c
++++ b/board/renesas/marzen/marzen.c
+@@ -312,7 +312,7 @@ void do_memc_init(u32 base)
+ 	MEMC_W(base, DBPDNCNF, 0x01005398);	/* DBPDCNF */
+ 	/* (34) */
+ 	MEMC_W(base, DBRFCNF0, 0xc8);		/* 200cycle */
+-	if (readw(MODEMR) & MD1) {
++	if (readl(MODEMR) & MD1) {
+ 		MEMC_W(base, DBRFCNF1, 0xdde);	/* 500MHz */
+ 	} else {
+ 		MEMC_W(base, DBRFCNF1, 0xaf0);	/* 375MHz */
+-- 
+1.7.5.4
+

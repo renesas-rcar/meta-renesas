@@ -1,0 +1,1346 @@
+From 8f98768e44f42191e7415b517011b3fe0d99d36e Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Mon, 21 Nov 2011 15:09:15 +0900
+Subject: [PATCH 01/10] arm: rch1: Add R-Car H1 and Marzen support
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ MAKEALL                              |    1 +
+ arch/arm/cpu/armv7/rch1/Makefile     |   43 +++++
+ arch/arm/cpu/armv7/rch1/cache.S      |   67 +++++++
+ arch/arm/cpu/armv7/rch1/config.mk    |   21 ++
+ arch/arm/cpu/armv7/rch1/cpu.c        |   42 ++++
+ arch/arm/cpu/armv7/rch1/timer.c      |   92 +++++++++
+ arch/arm/cpu/armv7/rch1/timer.h      |   25 +++
+ arch/arm/include/asm/arch-rch1/cpu.h |  208 +++++++++++++++++++++
+ arch/arm/include/asm/mach-types.h    |    1 +
+ board/renesas/marzen/Makefile        |   48 +++++
+ board/renesas/marzen/board.h         |   26 +++
+ board/renesas/marzen/config.mk       |   21 ++
+ board/renesas/marzen/lowlevel_init.S |   43 +++++
+ board/renesas/marzen/marzen.c        |  340 ++++++++++++++++++++++++++++++++++
+ boards.cfg                           |    1 +
+ drivers/net/smc911x.h                |    2 +
+ drivers/serial/serial_sh.c           |    5 +
+ drivers/serial/serial_sh.h           |   12 ++
+ include/configs/marzen.h             |  131 +++++++++++++
+ 19 files changed, 1129 insertions(+), 0 deletions(-)
+ create mode 100644 arch/arm/cpu/armv7/rch1/Makefile
+ create mode 100644 arch/arm/cpu/armv7/rch1/cache.S
+ create mode 100644 arch/arm/cpu/armv7/rch1/config.mk
+ create mode 100644 arch/arm/cpu/armv7/rch1/cpu.c
+ create mode 100644 arch/arm/cpu/armv7/rch1/timer.c
+ create mode 100644 arch/arm/cpu/armv7/rch1/timer.h
+ create mode 100644 arch/arm/include/asm/arch-rch1/cpu.h
+ create mode 100644 board/renesas/marzen/Makefile
+ create mode 100644 board/renesas/marzen/board.h
+ create mode 100644 board/renesas/marzen/config.mk
+ create mode 100644 board/renesas/marzen/lowlevel_init.S
+ create mode 100644 board/renesas/marzen/marzen.c
+ create mode 100644 include/configs/marzen.h
+
+diff --git a/MAKEALL b/MAKEALL
+index a732e6a..8bb9e05 100755
+--- a/MAKEALL
++++ b/MAKEALL
+@@ -435,6 +435,7 @@ LIST_ARMV7="		\
+ 	omap4_sdp4430		\
+ 	s5p_goni		\
+ 	smdkc100		\
++	marzen			\
+ "
+ 
+ #########################################################################
+diff --git a/arch/arm/cpu/armv7/rch1/Makefile b/arch/arm/cpu/armv7/rch1/Makefile
+new file mode 100644
+index 0000000..fbf1361
+--- /dev/null
++++ b/arch/arm/cpu/armv7/rch1/Makefile
+@@ -0,0 +1,43 @@
++#
++# arch/arm/cpu/armv7/rch1/Makefile
++#
++# Copyright(c) 2011 Renesas Electronics Corporation
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software Foundation,
++# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++#
++
++include $(TOPDIR)/config.mk
++
++LIB	= $(obj)lib$(SOC).o
++
++SOBJS	:= cache.o
++COBJS	:= timer.o cpu.o
++
++SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
++OBJS	:= $(addprefix $(obj),$(COBJS) $(SOBJS))
++
++all:	$(obj).depend $(LIB)
++
++$(LIB):	$(OBJS)
++	$(call cmd_link_o_target, $(OBJS))
++
++#########################################################################
++
++# defines $(obj).depend target
++include $(SRCTREE)/rules.mk
++
++sinclude $(obj).depend
++
++#########################################################################
+diff --git a/arch/arm/cpu/armv7/rch1/cache.S b/arch/arm/cpu/armv7/rch1/cache.S
+new file mode 100644
+index 0000000..c43a5e4
+--- /dev/null
++++ b/arch/arm/cpu/armv7/rch1/cache.S
+@@ -0,0 +1,67 @@
++/*
++ * arch/arm/cpu/armv7/rch1/cache.S
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++	.align	5
++	.global	invalidate_dcache
++/* invalidate dcache */
++invalidate_dcache:
++	stmfd   r13!, {r0 - r5, r7, r9 - r12, r14}
++	dmb
++	mrc	p15, 1, r0, c0, c0, 1	/* read clidr */
++	ands	r3, r0, #0x7000000	/* extract loc */
++	mov	r3, r3, lsr #23		/* cache level value */
++	beq	invd_done		/* if loc is 0, then no need */
++	mov	r10, #0			/* start at cache level 0 */
++invd_loop_level:
++	and	r2, r10, r10, lsr #1	/* work out 3x cache level */
++	mov	r1, r0, lsr r2		/* cache type for this level */
++	and	r1, r1, #7		/* get those 3 bits alone */
++	cmp	r1, #2
++	blt	invd_skip		/* no cache or just icache */
++	mcr	p15, 2, r10, c0, c0, 0	/* write csselr */
++	isb
++	mrc	p15, 1, r1, c0, c0, 0	/* read ccsidr */
++	and	r2, r1, #7		/* line length field */
++	add	r2, r2, #4		/* SetSFT */
++	ldr	r4, =0x3ff
++	ands	r4, r4, r1, lsr #3	/* maximum number of way size */
++	clz	r5, r4			/* WaySFT */
++	ldr	r7, =0x7fff		/* maximum number of index size */
++	ands	r7, r7, r1, lsr #13	/* set = max_set; */
++invd_loop_set:				/* do { */
++	mov	r9, r4			/*   way = max_way; */
++invd_loop_way:				/*   do { */
++	orr	r11, r10, r9, lsl r5	/*     val = (way << WaySFT) */
++	orr	r11, r11, r7, lsl r2	/*         | (set << SetSFT); */
++	mcr	p15, 0, r11, c7, c6, 2	/*     invalidate(val); */
++	subs	r9, r9, #1		/*     way--; */
++	bge	invd_loop_way		/*   while (way >= 0); */
++	subs	r7, r7, #1		/*   set--; */
++	bge	invd_loop_set		/* while (set >= 0); */
++invd_skip:
++	add	r10, r10, #2		/* increment cache number */
++	cmp	r3, r10
++	bgt	invd_loop_level
++invd_done:
++	mov	r10, #0			/* cache level 0 */
++	mcr	p15, 2, r10, c0, c0, 0	/* write csselr */
++	dsb
++	isb
++	ldmfd	r13!, {r0 - r5, r7, r9 - r12, pc}
+diff --git a/arch/arm/cpu/armv7/rch1/config.mk b/arch/arm/cpu/armv7/rch1/config.mk
+new file mode 100644
+index 0000000..4fe33eb
+--- /dev/null
++++ b/arch/arm/cpu/armv7/rch1/config.mk
+@@ -0,0 +1,21 @@
++#
++# arch/arm/cpu/armv7/rch1/config.mk
++#
++# Copyright(c) 2011 Renesas Electronics Corporation
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software Foundation,
++# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++#
++
++PLATFORM_CPPFLAGS += -march=armv7-a -fPIC
+diff --git a/arch/arm/cpu/armv7/rch1/cpu.c b/arch/arm/cpu/armv7/rch1/cpu.c
+new file mode 100644
+index 0000000..a181144
+--- /dev/null
++++ b/arch/arm/cpu/armv7/rch1/cpu.c
+@@ -0,0 +1,42 @@
++/*
++ * arch/arm/cpu/armv7/rch1/cpu.c
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <common.h>
++#include <asm/io.h>
++#include <asm/arch/cpu.h>
++
++void reset_cpu(ulong addr)
++{
++	board_reset();
++}
++
++int print_cpuinfo(void)
++{
++	unsigned int	md = readl(MODEMR);
++
++	printf("CPU  : R-CarH1 (md:0x%x)\n", md);
++	printf("       [CPU:%sMHz,SHwy:%sMHz,DDR:%sMHz,EXCLK:%sMHz]\n",
++			md & MD1 ? "1000" : "750",
++			md & MD1 ? "250" : "187.5",
++			md & MD1 ? "500" : "375",
++			md & MD2 ? md & MD1 ? "41.6" : "46.9" : "62.5");
++	timer_init();
++	return 0;
++}
+diff --git a/arch/arm/cpu/armv7/rch1/timer.c b/arch/arm/cpu/armv7/rch1/timer.c
+new file mode 100644
+index 0000000..52ee705
+--- /dev/null
++++ b/arch/arm/cpu/armv7/rch1/timer.c
+@@ -0,0 +1,92 @@
++/*
++ * arch/arm/cpu/armv7/rch1/timer.c
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <common.h>
++#include <asm/io.h>
++#include <asm/arch/cpu.h>
++#include "timer.h"
++
++DECLARE_GLOBAL_DATA_PTR;
++
++void reset_timer_masked(void)
++{
++	lastdec = READ_TIMER;
++	timestamp = 0;
++}
++
++ulong get_timer_timestamp(void)
++{
++	ulong	now = READ_TIMER;
++
++	if (lastdec > now)
++		timestamp += (lastdec - now);
++	else
++		timestamp += (TIMER_LOAD_VAL - now) + lastdec;
++	lastdec = now;
++	return timestamp;
++}
++
++ulong get_timer_masked(void)
++{
++	return get_timer_timestamp() / (gd->timer_rate_hz / CONFIG_SYS_HZ);
++}
++
++int timer_init(void)
++{
++	if (readl(MODEMR) & MD1)
++		gd->timer_rate_hz = 62500000 / 4;
++	else
++		gd->timer_rate_hz = 46875000 / 4;
++	writeb(readb(TBASE + TSTR0) & ~STR0,
++			TBASE + TSTR0);
++	writew(0x0, TBASE + TCR0);
++	writel(TIMER_LOAD_VAL, TBASE + TCOR0);
++	writel(TIMER_LOAD_VAL, TBASE + TCNT0);
++	writeb(readb(TBASE + TSTR0) | STR0,
++			TBASE + TSTR0);
++	reset_timer_masked();
++	return 0;
++}
++
++void reset_timer(void)
++{
++	reset_timer_masked();
++	return;
++}
++
++ulong get_timer(ulong base)
++{
++	return get_timer_masked() - base;
++}
++
++void __udelay(unsigned long usec)
++{
++	ulong	startcount, delaycount;
++	ulong	usecwait;
++
++	while (usec) {
++		startcount = get_timer_timestamp();
++		usecwait = (usec >= 100) ? 100 : usec;
++		delaycount = usecwait * gd->timer_rate_hz / 1000000;
++		while ((get_timer_timestamp() - startcount) < delaycount)
++			;
++		usec -= usecwait;
++	}
++}
+diff --git a/arch/arm/cpu/armv7/rch1/timer.h b/arch/arm/cpu/armv7/rch1/timer.h
+new file mode 100644
+index 0000000..1a05de5
+--- /dev/null
++++ b/arch/arm/cpu/armv7/rch1/timer.h
+@@ -0,0 +1,25 @@
++/*
++ * arch/arm/cpu/armv7/rch1/timer.h
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#define	TIMER_LOAD_VAL	0xffffffff
++#define	READ_TIMER	(readl(TBASE + TCNT0))
++
++#define timestamp (gd->tbl)
++#define lastdec (gd->lastinc)
+diff --git a/arch/arm/include/asm/arch-rch1/cpu.h b/arch/arm/include/asm/arch-rch1/cpu.h
+new file mode 100644
+index 0000000..a38a528
+--- /dev/null
++++ b/arch/arm/include/asm/arch-rch1/cpu.h
+@@ -0,0 +1,208 @@
++/*
++ * arch/arm/include/asm/arch-rch1/cpu.h
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++extern void board_reset(void);
++extern void invalidate_dcache(void);
++extern void wait_usec(int);
++
++#define	SetREG(x) \
++	writel((readl((x)->addr) & ~((x)->mask)) | ((x)->val), (x)->addr)
++#define	SetGuardREG(x) \
++{ \
++	u32	val; \
++	val = (readl((x)->addr) & ~((x)->mask)) | ((x)->val); \
++	writel(~val, PMMR); \
++	writel(val, (x)->addr); \
++}
++
++/* pfc */
++#define	PMMR		0xfffc0000
++#define	GPSR0		0xfffc0004
++#define	GPSR1		0xfffc0008
++#define	GPSR2		0xfffc000c
++#define	GPSR3		0xfffc0010
++#define	GPSR4		0xfffc0014
++#define	GPSR5		0xfffc0018
++#define	GPSR6		0xfffc001c
++#define	IPSR0		0xfffc0020
++#define	IPSR1		0xfffc0024
++#define	IPSR2		0xfffc0028
++#define	IPSR3		0xfffc002c
++#define	IPSR4		0xfffc0030
++#define	IPSR5		0xfffc0034
++#define	IPSR6		0xfffc0038
++#define	IPSR7		0xfffc003c
++#define	IPSR8		0xfffc0040
++#define	IPSR9		0xfffc0044
++#define	IPSR10		0xfffc0048
++#define	IPSR11		0xfffc004c
++#define	IPSR12		0xfffc0050
++#define	IOCTRL0		0xfffc0060
++#define	IOCTRL1		0xfffc0064
++#define	IOCTRL2		0xfffc0068
++#define	IOCTRL3		0xfffc006c
++#define	MOD_SEL		0xfffc0090
++#define	MOD_SEL2	0xfffc0094
++#define	PUPR0		0xfffc0100
++#define	PUPR1		0xfffc0104
++#define	PUPR2		0xfffc0108
++#define	PUPR3		0xfffc010c
++#define	PUPR4		0xfffc0110
++#define	PUPR5		0xfffc0114
++#define	PUPR6		0xfffc0118
++#define	ARMTREN		0xfffc0200
++#define	RGWD0		0xfffc0210
++#define	RGWD1		0xfffc0214
++#define	RGWD2		0xfffc0218
++#define	RGWD3		0xfffc021c
++#define	RGWD4		0xfffc0220
++#define	RGWD5		0xfffc0224
++#define	RGRD0		0xfffc0230
++#define	RGRD1		0xfffc0234
++#define	RGRD2		0xfffc0238
++
++/* reset/wdt */
++#define	MODEMR	0xffcc0020
++#define		MD1	(1 << 1)
++#define		MD2	(1 << 2)
++
++/* dbsc */
++#define	MEMC_BASE	0xfe800000
++#define	MEMC2_BASE	0xfec00000
++#define		DBSTATE1	0x00c
++#define		DBACEN		0x010
++#define		DBRFEN		0x014
++#define		DBCMD		0x018
++#define		DBWAIT		0x01c
++#define		DBKIND		0x020
++#define		DBCONF0		0x024
++#define		DBTR0		0x040
++#define		DBTR1		0x044
++#define		DBTR2		0x048
++#define		DBTR3		0x050
++#define		DBTR4		0x054
++#define		DBTR5		0x058
++#define		DBTR6		0x05c
++#define		DBTR7		0x060
++#define		DBTR8		0x064
++#define		DBTR9		0x068
++#define		DBTR10		0x06c
++#define		DBTR11		0x070
++#define		DBTR12		0x074
++#define		DBTR13		0x078
++#define		DBTR14		0x07c
++#define		DBTR15		0x080
++#define		DBTR16		0x084
++#define		DBTR17		0x088
++#define		DBTR18		0x08c
++#define		DBTR19		0x090
++#define		DBBL		0x0b0
++#define		DBADJ0		0x0c0
++#define		DBADJ1		0x0c4
++#define		DBADJ2		0x0c8
++#define		DBADJ3		0x0cc
++#define		DBRFCNF0	0x0e0
++#define		DBRFCNF1	0x0e4
++#define		DBRFCNF2	0x0e8
++#define		DBCALCNF	0x0f4
++#define		DBCALTR		0x0f8
++#define		DBRNK0		0x100
++#define		DBPDNCNF	0x180
++#define		DBPDCNT0	0x200
++#define		DBPDCNT1	0x204
++#define		DBPDCNT2	0x208
++#define		DBPDCNT3	0x20c
++#define		DBBS0CNT0	0x300
++#define		DBBS0CNT1	0x304
++#define	MEMC_W(base, offset, val)	writel(val, (base) + (offset))
++#define	MEMC_R(base, offset)		readl((base) + (offset))
++
++/* lbsc */
++#define	EXB_BASE	0xff800000
++#define		CS0CTRL		0x200
++#define		CS1CTRL		0x204
++#define		ECS0CTRL	0x208
++#define		ECS1CTRL	0x20c
++#define		ECS2CTRL	0x210
++#define		ECS3CTRL	0x214
++#define		ECS4CTRL	0x218
++#define		ECS5CTRL	0x21c
++#define		CS0CTRL2	0x220
++#define		CSWCR0		0x230
++#define		CSWCR1		0x234
++#define		ECSWCR0		0x238
++#define		ECSWCR1		0x23c
++#define		ECSWCR2		0x240
++#define		ECSWCR3		0x244
++#define		ECSWCR4		0x248
++#define		ECSWCR5		0x24c
++#define		EXDMAWCR0	0x250
++#define		EXDMAWCR1	0x254
++#define		EXDMAWCR2	0x258
++#define		CSPWCR0		0x280
++#define		CSPWCR1		0x284
++#define		EXSPWCR0	0x288
++#define		EXSPWCR1	0x28c
++#define		EXSPWCR2	0x290
++#define		EXSPWCR3	0x294
++#define		EXSPWCR4	0x298
++#define		EXSPWCR5	0x29c
++#define		EXWTSYNC	0x2a0
++#define		CS0BSTCTL	0x2b0
++#define		CS0BTPH		0x2b4
++#define		CS1GDST		0x2c0
++#define		ECS0GDST	0x2c4
++#define		ECS1GDST	0x2c8
++#define		ECS2GDST	0x2cc
++#define		ECS3GDST	0x2d0
++#define		ECS4GDST	0x2d4
++#define		ECS5GDST	0x2d8
++#define		EXDMASET0	0x2f0
++#define		EXDMASET1	0x2f4
++#define		EXDMASET2	0x2f8
++#define		EXDMACR0	0x310
++#define		EXDMACR1	0x314
++#define		EXDMACR2	0x318
++#define		BCINTSR		0x330
++#define		BCINTCR		0x334
++#define		BCINTMR		0x338
++#define		EXBATLV		0x340
++#define		EXWTSTS		0x344
++#define		ATACSCTRL	0x380
++#define	EXB_W(offset, val)	writel(val, EXB_BASE + (offset))
++
++/* tmu */
++#define	TBASE	CONFIG_SYS_TIMERBASE
++#define		TSTR0		0x04	/* timer start register (8bit) */
++#define		TCOR0		0x08	/* timer constant register (32bit) */
++#define		TCNT0		0x0c	/* timer counter (32bit) */
++#define		TCR0		0x10	/* timer control register (16bit) */
++#define	STR0	(1 << 0)	/* TSTR: start tcnt0 */
++#define	TCLOCK	67		/* for wait_usec */
++
++/* scif */
++#if defined(CONFIG_CONS_SCIF4)
++#define	SCIF_BASE	SCIF4_BASE
++#elif defined(CONFIG_CONS_SCIF2)
++#define	SCIF_BASE	SCIF2_BASE
++#endif
++#define		SCIF_DL		0x30
++#define		SCIF_CKS	0x34
++#define	CKS_EXTERNAL	0	/* CKS: external clock */
+diff --git a/arch/arm/include/asm/mach-types.h b/arch/arm/include/asm/mach-types.h
+index a1fd03a..16d28ea 100644
+--- a/arch/arm/include/asm/mach-types.h
++++ b/arch/arm/include/asm/mach-types.h
+@@ -3312,6 +3312,7 @@ extern unsigned int __machine_arch_type;
+ #define MACH_TYPE_T5388P               3336
+ #define MACH_TYPE_DINGO                3337
+ #define MACH_TYPE_GOFLEXHOME           3338
++#define MACH_TYPE_MARZEN               3790
+ 
+ #ifdef CONFIG_ARCH_EBSA110
+ # ifdef machine_arch_type
+diff --git a/board/renesas/marzen/Makefile b/board/renesas/marzen/Makefile
+new file mode 100644
+index 0000000..bcba973
+--- /dev/null
++++ b/board/renesas/marzen/Makefile
+@@ -0,0 +1,48 @@
++#
++# board/renesas/marzen/Makefile
++#
++# Copyright(c) 2011 Renesas Electronics Corporation
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software Foundation,
++# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++#
++
++include	$(TOPDIR)/config.mk
++
++LIB	= $(obj)lib$(BOARD).o
++
++COBJS	:= marzen.o
++SOBJS	:= lowlevel_init.o
++
++SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
++OBJS	:= $(addprefix $(obj),$(COBJS))
++SOBJS	:= $(addprefix $(obj),$(SOBJS))
++
++$(LIB): $(obj).depend $(OBJS) $(SOBJS)
++	$(call cmd_link_o_target, $(OBJS) $(SOBJS))
++
++clean:
++	rm -f $(SOBJS) $(OBJS)
++
++distclean:	clean
++	rm -f $(LIB) core *.bak $(obj).depend
++
++#########################################################################
++
++# defines $(obj).depend target
++include $(SRCTREE)/rules.mk
++
++sinclude $(obj).depend
++
++#########################################################################
+diff --git a/board/renesas/marzen/board.h b/board/renesas/marzen/board.h
+new file mode 100644
+index 0000000..9f30020
+--- /dev/null
++++ b/board/renesas/marzen/board.h
+@@ -0,0 +1,26 @@
++/*
++ * board/renesas/marzen/board.h
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/* for setting pin */
++struct pin_db {
++	u32	addr;	/* register address */
++	u32	mask;	/* mask value */
++	u32	val;	/* setting value */
++};
+diff --git a/board/renesas/marzen/config.mk b/board/renesas/marzen/config.mk
+new file mode 100644
+index 0000000..25d2d83
+--- /dev/null
++++ b/board/renesas/marzen/config.mk
+@@ -0,0 +1,21 @@
++#
++# board/renesas/marzen/config.mk
++#
++# Copyright(c) 2011 Renesas Electronics Corporation
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software Foundation,
++# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++#
++
++CONFIG_SYS_TEXT_BASE = 0
+diff --git a/board/renesas/marzen/lowlevel_init.S b/board/renesas/marzen/lowlevel_init.S
+new file mode 100644
+index 0000000..1bc1f8b
+--- /dev/null
++++ b/board/renesas/marzen/lowlevel_init.S
+@@ -0,0 +1,43 @@
++/*
++ * board/renesas/marzen/lowlevel_init.S
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <config.h>
++#include <version.h>
++
++	.globl lowlevel_init
++lowlevel_init:
++	ldr	r3, =0xfe798000
++	sub	sp, r3, #4
++	str	ip, [sp]
++	mov	ip, lr
++
++	/* select pin */
++	bl	pin_init
++
++	/* initialize exbus */
++	bl	exbus_init
++
++	/* initialize ddr */
++	bl	memc_init
++
++	ldr	ip, [sp]
++	mov	lr, ip
++	mov	pc, lr
++	nop
+diff --git a/board/renesas/marzen/marzen.c b/board/renesas/marzen/marzen.c
+new file mode 100644
+index 0000000..6bdf054
+--- /dev/null
++++ b/board/renesas/marzen/marzen.c
+@@ -0,0 +1,340 @@
++/*
++ * board/renesas/marzen/marzen.c
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <common.h>
++#include <asm/io.h>
++#include <netdev.h>
++#include <asm/arch/cpu.h>
++#include "board.h"
++
++DECLARE_GLOBAL_DATA_PTR;
++
++struct pin_db	pin_guard[] = {
++	{ MOD_SEL, 0x01c00000, 0x00800000 },
++	{ MOD_SEL2, 0x0c000000, 0x04000000 },
++	/* LBSC */
++	{ GPSR0, 0x007ffffc, 0x007ffffc },
++		/* RD/WR#, EX_CS5-0#, A25-A17, A0, CS1#, CS0#, BS# */
++	/*SCIF2_C*/
++	{ GPSR0, 0x80000000, 0x00000000 },	/* TX2_C */
++	{ IPSR3, 0xe0000000, 0x60000000 },
++	{ GPSR0, 0x00000000, 0x80000000 },
++	{ GPSR1, 0x00000002, 0x00000000 },	/* RX2_C */
++	{ IPSR4, 0x0000001c, 0x0000000c },
++	{ GPSR1, 0x00000000, 0x00000002 },
++	{ GPSR3, 0x0c000000, 0x00000000 },	/* TX4, RX4 */
++	{ IPSR1, 0x01e00000, 0x01400000 },
++	{ GPSR3, 0x00000000, 0x0c000000 },
++	{ GPSR4, 0x00000020, 0x00000000 },	/* SCIF_CLK_B */
++	{ IPSR6, 0x00038000, 0x00028000 },
++	{ GPSR4, 0x00000000, 0x00000020 },
++};
++
++struct pin_db	pin_tbl[] = {
++};
++
++void pin_init(void)
++{
++	struct pin_db	*db;
++
++	for (db = pin_guard; db < &pin_guard[sizeof(pin_guard) /
++			sizeof(struct pin_db)]; db++) {
++		SetGuardREG(db);
++	}
++	for (db = pin_tbl; db < &pin_tbl[sizeof(pin_tbl) /
++			sizeof(struct pin_db)]; db++) {
++		SetREG(db);
++	}
++}
++
++void exbus_init(void)
++{
++	EXB_W(CS0BSTCTL, 0);		/* none burst */
++	EXB_W(CS0BTPH, 0x000000f7);	/* a0h:0, a0w:15, a0b:7 */
++	EXB_W(CS0CTRL, 0x00008021);	/* little,64MB,16bit,BROM */
++	EXB_W(CS1CTRL, 0x00000020);	/* 16bit, SRAM */
++	EXB_W(ECS0CTRL, 0x00000920);	/* 9MB, 16bit, sram */
++	EXB_W(ECS1CTRL, 0x00000122);	/* 1MB, 16bit, ata */
++	EXB_W(ECS2CTRL, 0x00003620);	/* 54MB, 16bit, sram */
++
++	/* pulse control */
++	/* (write) setup, hold, pulse, (read) setup, hold, pulse */
++	EXB_W(CSWCR1, 0x02190338);	/* 2, 1, 9, 3, 3, 8 */
++	EXB_W(ECSWCR0, 0x00280028);	/* 0, 2, 8, 0, 2, 8 */
++	EXB_W(ECSWCR1, 0x077f077f);	/* 7, 7, 15, 7, 7, 15 */
++	EXB_W(ECSWCR2, 0x077f077f);	/* 7, 7, 15, 7, 7, 15 */
++
++	EXB_W(CSPWCR0, 0x00000000);	/* v:0, rv:0, winv:0, */
++					/* exwt2:0, wxwt1:0 exwt0:0 */
++	EXB_W(CSPWCR1, 0x00000000);	/* v:0, rv:0, winv:0, */
++					/* exwt2:0, wxwt1:0 exwt0:0 */
++	EXB_W(EXSPWCR0, 0x00000029);	/* v:1, rv:0, winv:1, */
++					/* exwt2:0, wxwt1:0 exwt0:1 */
++	EXB_W(EXSPWCR1, 0x00000029);	/* v:1, rv:0, winv:1, */
++					/* exwt2:0, wxwt1:0 exwt0:1 */
++	EXB_W(EXSPWCR2, 0x00000000);	/* v:0, rv:0, winv:0, */
++					/* exwt2:0, wxwt1:0 exwt0:0 */
++	EXB_W(EXWTSYNC, 0x00000000);	/* sync2:0, sync1:0, sync0:0 */
++
++	EXB_W(CS1GDST, 0x00000000);	/* cs1gd:0, timer_set:0 */
++	EXB_W(ECS0GDST, 0x00000000);	/* ecs0gd:0, timer_set:0 */
++	EXB_W(ECS1GDST, 0x00000000);	/* ecs1gd:0, timer_set:0 */
++	EXB_W(ECS2GDST, 0x00000000);	/* ecs2gd:0, timer_set:0 */
++
++	EXB_W(ATACSCTRL, 0x00000004);
++	EXB_W(EXDMASET0, 0x00000008);	/* DM0ECS1:1 */
++	EXB_W(EXDMACR0, 0x00001404);	/* dbst:1, exql:1, exal:1 */
++	EXB_W(EXDMACR1, 0x00000004);	/* exal:1 */
++	EXB_W(EXDMACR2, 0x00000004);	/* exal:1 */
++	EXB_W(BCINTMR, 0x00000000);	/* attem:0 */
++	EXB_W(EXBATLV, 0x00000000);	/* ex-blv: 0 */
++}
++
++static void exbus_late_init(void)
++{
++	EXB_W(CSWCR0, 0x02190338);	/* 2, 1, 9, 3, 3, 8 */
++}
++
++static void uart_init(void)
++{
++	writew(CONFIG_SYS_CLK_FREQ / CONFIG_BAUDRATE / 16,
++			SCIF_BASE + SCIF_DL);
++	writew(CKS_EXTERNAL, SCIF_BASE + SCIF_CKS);
++	wait_usec((1000000 + (CONFIG_BAUDRATE - 1))
++			/ CONFIG_BAUDRATE);	/* one bit interval */
++}
++
++int board_early_init_f(void)
++{
++	uart_init();
++
++	return 0;
++}
++
++int board_init(void)
++{
++	gd->bd->bi_arch_number = MACH_TYPE_MARZEN;
++	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
++
++	icache_enable();
++	invalidate_dcache();
++
++	return 0;
++}
++
++int board_late_init(void)
++{
++	/* This function is called after relocating. Now running in SDRAM. */
++	exbus_late_init();
++
++	return 0;
++}
++
++int board_eth_init(bd_t *bis)
++{
++	int	rc = 0;
++
++#if defined(CONFIG_SMC911X)
++	rc = smc911x_initialize(0, CONFIG_SMC911X_BASE);
++#endif
++	return rc;
++}
++
++int dram_init(void)
++{
++	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
++	gd->bd->bi_dram[0].size = CONFIG_SYS_SDRAM_SIZE;
++	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
++	return 0;
++}
++
++int checkboard(void)
++{
++	printf("BOARD: Marzen\n");
++
++	return 0;
++}
++
++void
++wait_usec(int usec)
++{
++	unsigned long	tick;
++
++	tick = usec * TCLOCK / 4 - 1;
++	writeb(readb(TBASE + TSTR0) & ~(1 << 0),
++			TBASE + TSTR0);
++	writew(0, TBASE + TCR0);
++	writel(tick, TBASE + TCOR0);
++	writel(tick, TBASE + TCNT0);
++	writeb(readb(TBASE + TSTR0) | (1 << 0),
++			TBASE + TSTR0);
++	while ((readw(TBASE + TCR0) & (1 << 8)) == 0)
++		;
++	writeb(readb(TBASE + TSTR0) & ~(1 << 0),
++			TBASE + TSTR0);
++}
++
++void do_memc_init(u32 base)
++{
++	u32	val;
++
++	/* (1) */
++	wait_usec(200);
++	/* (2) */
++	/* M0BKPRST#(M1BKPRST#)->high */
++	/* (3) */
++	MEMC_W(base, DBCMD, 0x20000000);	/* opc:RstL, arg:0 */
++	/* (4) */
++	MEMC_W(base, DBCMD, 0x1000C350);	/* opc:PDEn, arg:100us */
++	/* (5) */
++	/* M0SDBUP#(M1SDBUP#)->high */
++
++	/* dbsc3 setting-1 */
++	/* (6) */
++	MEMC_W(base, DBKIND, 0x7);		/* ddr3-sdram */
++	/* (7) */
++	MEMC_W(base, DBCONF0, 0x0e030a02);	/* RowAd:14, Bank:8, CoulumAd:10 */
++	MEMC_W(base, DBTR0, 0x7);		/* CL:7 */
++	MEMC_W(base, DBTR1, 0x6);		/* CWL:6 */
++	MEMC_W(base, DBTR2, 0);		/* AL:0 */
++	MEMC_W(base, DBTR3, 0x7);		/* TRCD:7 */
++	MEMC_W(base, DBTR4, 0x80007);		/* TRPA:8, TRP:7 */
++	MEMC_W(base, DBTR5, 0x19);		/* TRC:25 */
++	MEMC_W(base, DBTR6, 0x12);		/* TRAS:18 */
++	MEMC_W(base, DBTR7, 0x5);		/* TRRD:5 */
++	MEMC_W(base, DBTR8, 0x19);		/* TFAW:25 */
++	MEMC_W(base, DBTR9, 0x6);		/* TRDPR:6 */
++	MEMC_W(base, DBTR10, 0x8);		/* TWR:8 */
++	MEMC_W(base, DBTR11, 0x7);		/* TRDWR:7 */
++	MEMC_W(base, DBTR12, 0xe);		/* TWRRD:14 */
++	MEMC_W(base, DBTR13, 0x50);		/* TRFC:80 */
++	MEMC_W(base, DBTR14, 0xc0004);	/* DLL:12, TCKEH:4 */
++	MEMC_W(base, DBTR15, 0x4);		/* TCKEL:4 */
++	MEMC_W(base, DBTR16, 0x10171001);	/* DQL:23 */
++	MEMC_W(base, DBTR17, 0xc000c);	/* TMOD:12, TRDMR:12 */
++	MEMC_W(base, DBTR18, 0);		/* ODT */
++	MEMC_W(base, DBTR19, 0x40);		/* TZQCS */
++	MEMC_W(base, DBRNK0, 0);		/* initial value */
++	/* (8) */
++	MEMC_W(base, DBADJ0, 1);		/* CAMODE:1 */
++	/* (9) */
++	MEMC_W(base, DBADJ2, 0x0008);		/* ACAP0:8 */
++	/* (10) */
++	MEMC_W(base, DBADJ2, 0x2008);		/* ACAPC0:20 */
++
++	/* phy setting */
++	/* (11) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val | 0x100);	/* PTRRST:1 */
++	/* (12) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val & ~0x100);	/* PTRRST:0 */
++	/* (13) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val | 0x800);	/* CALMODE:1 */
++	/* (14) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val | 0x400);	/* CALEN:1 */
++	/* (15) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val | 0x01000000);	/* DLLRESET:1 */
++	/* (16) */
++	wait_usec(50);
++	/* (17) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val | 0x2000);	/* IO_ENABLE:1 */
++	/* (18) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val | 0x80000000);	/* PLL2_RESET:1 */
++	/* (19) */
++	wait_usec(100);
++	/* (20) */
++	val = MEMC_R(base, DBPDCNT3);
++	MEMC_W(base, DBPDCNT3, val | 0x30000000);	/* STBY[1]:1, STBY[0]:1 */
++	/* (21) */
++	val = MEMC_R(base, DBPDCNT0);
++	MEMC_W(base, DBPDCNT0, val | 0x80000000);	/* BW32:1 */
++	/* (22) */
++	MEMC_W(base, DBPDCNT0, 0x80000000);	/* OFFSET:0 */
++	/* (23) */
++	MEMC_W(base, DBPDCNT0, 0x80010000);	/* ODT:60ohm */
++	MEMC_W(base, DBPDCNT1, 0);		/* Drive:40ohm */
++	MEMC_W(base, DBPDCNT2, 0);		/* initial value */
++
++	/* ddr3-sdram setting */
++	/* (24) */
++	MEMC_W(base, DBCMD, 0x0000c350);	/* Wait, 100us */
++	/* (25) */
++	MEMC_W(base, DBCMD, 0x2100c350);	/* RstH, 100us */
++	/* (26) */
++	MEMC_W(base, DBCMD, 0x0000c350);	/* Wait, 100us */
++	MEMC_W(base, DBCMD, 0x0000c350);	/* Wait, 100us */
++	MEMC_W(base, DBCMD, 0x0000c350);	/* Wait, 100us */
++	MEMC_W(base, DBCMD, 0x0000c350);	/* Wait, 100us */
++	/* (27) */
++	MEMC_W(base, DBCMD, 0x11000055);	/* PDXt, 170ns */
++	/* (28) */
++	MEMC_W(base, DBCMD, 0x2a000008);	/* MR2, CWL:6 */
++	/* (29) */
++	MEMC_W(base, DBCMD, 0x2b000000);	/* MR3 */
++	/* (30) */
++	MEMC_W(base, DBCMD, 0x29000000);	/* MR1, AL:0, DLL:En, ODT=Dis,
++						ODS:40ohm */
++	/* (31) */
++	MEMC_W(base, DBCMD, 0x28000930);	/* MR0, Na, DLL_RES, BL:8, BT:Seque,
++						CL:7, WR:8 */
++	/* (32) */
++	MEMC_W(base, DBCMD, 0x03000200);	/* ZQCL, 512 */
++
++	/* dbsc3 setting-2 */
++	/* (33) */
++	MEMC_W(base, DBBS0CNT0, 0x00000000);	/* DBBS0CNT0 */
++	MEMC_W(base, DBBS0CNT1, 0x00000000);	/* DBBS0CNT1 */
++	MEMC_W(base, DBCALCNF, 0x01005398);	/* DBCALCNF */
++	MEMC_W(base, DBCALTR, 0x05dc05dc);	/* DBCALTR */
++	MEMC_W(base, DBPDNCNF, 0x01005398);	/* DBPDCNF */
++	/* (34) */
++	MEMC_W(base, DBRFCNF0, 0xc8);		/* 200cycle */
++	if (readw(MODEMR) & MD1) {
++		MEMC_W(base, DBRFCNF1, 0xdde);	/* 500MHz */
++	} else {
++		MEMC_W(base, DBRFCNF1, 0xaf0);	/* 375MHz */
++	}
++	MEMC_W(base, DBRFCNF2, 0);		/* REFINT:1/1 */
++	/* (35) */
++	MEMC_W(base, DBRFEN, 1);		/* DBRFEN. ARFEN */
++
++	/* (36) */
++	MEMC_W(base, DBACEN, 1);		/* DBACEN. ACCEN */
++	/* (37) */
++	MEMC_R(base, DBWAIT);			/* wait for done */
++}
++
++void memc_init(void)
++{
++	do_memc_init(MEMC_BASE);
++	do_memc_init(MEMC2_BASE);
++}
++
++void board_reset(void)
++{
++	while (1)
++		;
++}
+diff --git a/boards.cfg b/boards.cfg
+index 45c3102..8513e53 100644
+--- a/boards.cfg
++++ b/boards.cfg
+@@ -130,6 +130,7 @@ smdkc100                     arm         armv7       smdkc100            samsung
+ s5pc210_universal            arm         armv7       universal_c210      samsung        s5pc2xx
+ harmony                      arm         armv7       harmony             nvidia         tegra2
+ seaboard                     arm         armv7       seaboard            nvidia         tegra2
++marzen                       arm         armv7       marzen              renesas        rch1
+ actux1                       arm         ixp
+ actux2                       arm         ixp
+ actux3                       arm         ixp
+diff --git a/drivers/net/smc911x.h b/drivers/net/smc911x.h
+index 05e007c..467ec25 100644
+--- a/drivers/net/smc911x.h
++++ b/drivers/net/smc911x.h
+@@ -395,6 +395,7 @@ static inline void smc911x_reg_write(struct eth_device *dev,
+ #define CHIP_9218	0x118a
+ #define CHIP_9220	0x9220
+ #define CHIP_9221	0x9221
++#define CHIP_89218	0x218a
+ 
+ struct chip_id {
+ 	u16 id;
+@@ -413,6 +414,7 @@ static const struct chip_id chip_ids[] =  {
+ 	{ CHIP_9218, "LAN9218" },
+ 	{ CHIP_9220, "LAN9220" },
+ 	{ CHIP_9221, "LAN9221" },
++	{ CHIP_89218, "LAN89218" },
+ 	{ 0, NULL },
+ };
+ 
+diff --git a/drivers/serial/serial_sh.c b/drivers/serial/serial_sh.c
+index fcf69ab..94e7f9f 100644
+--- a/drivers/serial/serial_sh.c
++++ b/drivers/serial/serial_sh.c
+@@ -54,7 +54,12 @@ static struct uart_port sh_sci = {
+ void serial_setbrg(void)
+ {
+ 	DECLARE_GLOBAL_DATA_PTR;
++#if !defined(CONFIG_CPU_RCH1)
+ 	sci_out(&sh_sci, SCBRR, SCBRR_VALUE(gd->baudrate, CONFIG_SYS_CLK_FREQ));
++#else
++	sci_out(&sh_sci, DL, DL_VALUE(gd->baudrate, CONFIG_SYS_CLK_FREQ));
++	udelay((1000000 * 2 * 16 / CONFIG_SYS_CLK_FREQ) * 1000 + 1);
++#endif
+ }
+ 
+ int serial_init(void)
+diff --git a/drivers/serial/serial_sh.h b/drivers/serial/serial_sh.h
+index e19593c..dfcc4dc 100644
+--- a/drivers/serial/serial_sh.h
++++ b/drivers/serial/serial_sh.h
+@@ -202,6 +202,9 @@ struct uart_port {
+ # define SCSPTR3 0xffc60020		/* 16 bit SCIF */
+ # define SCIF_ORER 0x0001		/* Overrun error bit */
+ # define SCSCR_INIT(port)	0x38	/* TIE=0,RIE=0,TE=1,RE=1,REIE=1 */
++#elif defined(CONFIG_CPU_RCH1)
++# define SCIF_ORER	0x0001
++# define SCSCR_INIT(port)	0x32	/* TIE=0,RIE=0,TE=1,RE=1,REIE=0, */
+ #else
+ # error CPU subtype not defined
+ #endif
+@@ -273,6 +276,9 @@ struct uart_port {
+ /* SH7763 SCIF2 support */
+ # define SCIF2_RFDC_MASK 0x001f
+ # define SCIF2_TXROOM_MAX 16
++#elif defined(CONFIG_CPU_RCH1)
++# define SCIF_ERRORS (SCIF_PER | SCIF_FER | SCIF_ER | SCIF_BRK)
++# define SCIF_RFDC_MASK	0x003f
+ #else
+ # define SCIF_ERRORS (SCIF_PER | SCIF_FER | SCIF_ER | SCIF_BRK)
+ # define SCIF_RFDC_MASK 0x001f
+@@ -546,6 +552,10 @@ SCIF_FNS(SCSPTR,                        0,  0, 0, 0)
+ #else
+ SCIF_FNS(SCSPTR,                        0,  0, 0x20, 16)
+ #endif
++#if defined(CONFIG_CPU_RCH1)
++SCIF_FNS(DL,				0,  0, 0x30, 16)
++SCIF_FNS(CKS,				0,  0, 0x34, 16)
++#endif
+ SCIF_FNS(SCLSR,                         0,  0, 0x24, 16)
+ #endif
+ #endif
+@@ -685,6 +695,8 @@ static inline int scbrr_calc(struct uart_port port, int bps, int clk)
+ #define SCBRR_VALUE(bps, clk) scbrr_calc(sh_sci, bps, clk)
+ #elif defined(__H8300H__) || defined(__H8300S__)
+ #define SCBRR_VALUE(bps, clk) (((clk*1000/32)/bps)-1)
++#elif defined(CONFIG_CPU_RCH1)
++#define DL_VALUE(bps, clk)	(clk / bps / 16)
+ #else /* Generic SH */
+ #define SCBRR_VALUE(bps, clk) ((clk+16*bps)/(32*bps)-1)
+ #endif
+diff --git a/include/configs/marzen.h b/include/configs/marzen.h
+new file mode 100644
+index 0000000..a327111
+--- /dev/null
++++ b/include/configs/marzen.h
+@@ -0,0 +1,131 @@
++/*
++ * include/configs/marzen.h
++ *
++ * Copyright(c) 2011 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#ifndef	__CONFIG_H
++#define	__CONFIG_H
++
++/* commands to include */
++#define	CONFIG_CMD_EDITENV
++#define	CONFIG_CMD_SAVEENV
++#define	CONFIG_CMD_FLASH
++#define	CONFIG_CMD_MEMORY
++#define	CONFIG_CMD_MISC
++#define	CONFIG_CMD_NET
++#define	CONFIG_CMD_DHCP
++#define	CONFIG_CMD_PING
++#define	CONFIG_CMD_RUN
++
++#define	CONFIG_CMDLINE_TAG
++#define	CONFIG_SETUP_MEMORY_TAGS
++#define	CONFIG_INITRD_TAG
++#define	CONFIG_CMDLINE_EDITING
++
++/* autoboot */
++#define CONFIG_BOOTDELAY	3
++#define CONFIG_BOOTCOMMAND	"bootp; bootm"
++#define CONFIG_ZERO_BOOTDELAY_CHECK
++
++/* high level configuration options */
++#define	CONFIG_ARMV7	1
++#define	CONFIG_MARZEN
++
++/* keep l2 cache disabled */
++#define	CONFIG_L2_OFF	1
++
++/* ram memory map */
++#define	CONFIG_NR_DRAM_BANKS	1
++#define	CONFIG_SYS_SDRAM_BASE	0x60000000
++#define	CONFIG_SYS_SDRAM_SIZE	(1024 * 1024 * 1024)
++#define	CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + 16 * 1024)
++#define	CONFIG_SYS_INIT_SP_ADDR	(0xfe798000 - 0x104)
++#define	CONFIG_SYS_LOAD_ADDR	(CONFIG_SYS_SDRAM_BASE + 0x7fc0)
++
++#define	CONFIG_SYS_MEMTEST_START	CONFIG_SYS_SDRAM_BASE
++#define	CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_SDRAM_BASE + 0x01000000)
++#define	CONFIG_SYS_ALT_MEMTEST
++
++/* serial port */
++#define	CONFIG_BOARD_EARLY_INIT_F	1
++#define	CONFIG_SCIF_CONSOLE	1
++#define	CONFIG_SCIF_CHANNEL	0	/* SCIF channel: 0=SCIF2_C, 1=SCIF4 */
++#if (CONFIG_SCIF_CHANNEL == 0)
++#define	CONFIG_CONS_SCIF2	1
++#define	SCIF2_BASE		0xffe42000
++#elif (CONFIG_SCIF_CHANNEL == 1)
++#define	CONFIG_CONS_SCIF4	1
++#define	SCIF4_BASE		0xffe44000
++#endif
++#define	CONFIG_SYS_CLK_FREQ	14745600
++#define	CONFIG_CPU_RCH1		1
++
++#define	CONFIG_BAUDRATE	115200
++#define	CONFIG_SYS_BAUDRATE_TABLE	{ 115200 }
++
++/* ethernet */
++#define	CONFIG_NET_MULTI
++#define	CONFIG_SMC911X		1
++#define	CONFIG_SMC911X_16_BIT
++#define	CONFIG_SMC911X_BASE	0x18000000
++
++/* flash configuration */
++#define	CONFIG_SYS_FLASH_CFI
++#define	CONFIG_SYS_FLASH_CFI_WIDTH	FLASH_CFI_16BIT
++#define	CONFIG_FLASH_CFI_DRIVER
++#define	CONFIG_CFI_FLASH_USE_WEAK_ACCESSORS
++#define	CONFIG_FLASH_SHOW_PROGRESS	45
++#define	CONFIG_SYS_HZ		1000
++#define	CONFIG_SYS_TIMERBASE	0xffd80000
++#define	CONFIG_SYS_FLASH_BASE	0x00000000
++#define	CONFIG_SYS_FLASH_SIZE	0x04000000	/* 64 MB */
++#define	CONFIG_SYS_FLASH_BASE2	0x04000000
++#define	CONFIG_SYS_FLASH_SIZE2	0x04000000	/* 64 MB */
++#define	CONFIG_SYS_MAX_FLASH_BANKS	2
++#define	CONFIG_SYS_FLASH_BANKS_LIST \
++	{CONFIG_SYS_FLASH_BASE, CONFIG_SYS_FLASH_BASE2}
++#define	CONFIG_SYS_FLASH_BANKS_SIZES \
++	{CONFIG_SYS_FLASH_SIZE, CONFIG_SYS_FLASH_SIZE2}
++#define	CONFIG_SYS_FLASH_QUIET_TEST
++#define	CONFIG_SYS_MONITOR_BASE	CONFIG_SYS_FLASH_BASE
++#define	CONFIG_SYS_MAX_FLASH_SECT	1024	/* sectors per dev */
++#define	CONFIG_ENV_SECT_SIZE	0x40000
++#define	CONFIG_ENV_SIZE		CONFIG_ENV_SECT_SIZE
++#define	CONFIG_ENV_IS_IN_FLASH	1
++#define	CONFIG_ENV_OFFSET	0x00040000
++#define	CONFIG_ENV_ADDR	(CONFIG_SYS_FLASH_BASE + CONFIG_ENV_OFFSET)
++
++/* misc */
++#define	CONFIG_SYS_LONGHELP
++#define CONFIG_SYS_PROMPT       "$ "
++#define	CONFIG_SYS_CBSIZE	256
++#define	CONFIG_SYS_PBSIZE \
++	(CONFIG_SYS_CBSIZE + sizeof(CONFIG_SYS_PROMPT) + 16)
++#define	CONFIG_SYS_MAXARGS	16
++
++#define	CONFIG_DISPLAY_BOARDINFO
++#define	CONFIG_DISPLAY_CPUINFO
++#define	CONFIG_EXTRA_ENV_SETTINGS	\
++	"ethact=smc911x-0\0"		\
++	"stderr=serial\0"		\
++	"stdin=serial\0"		\
++	"stdout=serial\0"
++
++#define BOARD_LATE_INIT             /* call board_late_init during start up */
++
++#endif	/* __CONFIG_H */
+-- 
+1.7.5.4
+

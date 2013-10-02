@@ -1,0 +1,420 @@
+From 8647b3e854c97d6bd1bfef1ddfafff09796260f6 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 10 Jul 2012 09:56:50 +0100
+Subject: [PATCH 36/76] usb: host: Add USB host OHCI controller for R-Car
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/usb/host/ohci-rcar.c |  365 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/usb/rcar-usb.h |   27 +++
+ 2 files changed, 392 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/usb/host/ohci-rcar.c
+ create mode 100644 include/linux/usb/rcar-usb.h
+
+diff --git a/drivers/usb/host/ohci-rcar.c b/drivers/usb/host/ohci-rcar.c
+new file mode 100644
+index 0000000..069b335
+--- /dev/null
++++ b/drivers/usb/host/ohci-rcar.c
+@@ -0,0 +1,365 @@
++/*
++ * OHCI HCD (Host Controller Driver) for USB.
++ *
++ * Copyright (C) 2012 Renesas Electronics Corporation
++ *
++ * This file is based on ohci-sh.c
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ */
++
++#include <linux/signal.h>
++#include <linux/interrupt.h>
++#include <linux/jiffies.h>
++#include <linux/platform_device.h>
++#include <linux/usb/rcar-usb.h>
++
++#include <mach/hardware.h>
++#include <mach/irqs.h>
++#include <asm/mach/irq.h>
++
++
++static int ohci_rcar_start(struct usb_hcd *hcd)
++{
++	struct ohci_hcd	*ohci = hcd_to_ohci(hcd);
++
++	ohci_hcd_init(ohci);
++	ohci_init(ohci);
++	ohci_run(ohci);
++
++	return 0;
++}
++
++static int
++ohci_rcar_hub_status_data(struct usb_hcd *hcd, char *buf)
++{
++	struct ohci_hcd	*ohci = hcd_to_ohci(hcd);
++	int		i, changed = 0, length = 1;
++	int		any_connected = 0;
++	int		rhsc_status;
++	unsigned long	flags;
++	struct device *dev = hcd->self.controller;
++	struct rcar_usb_info *ru_info = dev->platform_data;
++
++	spin_lock_irqsave(&ohci->lock, flags);
++	if (!HCD_HW_ACCESSIBLE(hcd))
++		goto done;
++
++	/* undocumented erratum seen on at least rev D */
++	if ((ohci->flags & OHCI_QUIRK_AMD756)
++			&& (roothub_a(ohci) & RH_A_NDP) > MAX_ROOT_PORTS) {
++		ohci_warn(ohci, "bogus NDP, rereads as NDP=%d\n",
++			  ohci_readl(ohci, &ohci->regs->roothub.a) & RH_A_NDP);
++		/* retry later; "should not happen" */
++		goto done;
++	}
++
++	/* init status */
++	if (roothub_status(ohci) & (RH_HS_LPSC | RH_HS_OCIC))
++		buf[0] = changed = 1;
++	else
++		buf[0] = 0;
++	if (ohci->num_ports > 7) {
++		buf[1] = 0;
++		length++;
++	}
++
++	/* Clear the RHSC status flag before reading the port statuses */
++	ohci_writel(ohci, OHCI_INTR_RHSC, &ohci->regs->intrstatus);
++	rhsc_status = ohci_readl(ohci, &ohci->regs->intrstatus) &
++			OHCI_INTR_RHSC;
++
++	/* look at each port */
++	for (i = ru_info->port_offset; i < ohci->num_ports; i++) {
++		u32	status = roothub_portstatus(ohci, i);
++
++		/* can't autostop if ports are connected */
++		any_connected |= (status & RH_PS_CCS);
++
++		if (status & (RH_PS_CSC | RH_PS_PESC | RH_PS_PSSC
++				| RH_PS_OCIC | RH_PS_PRSC)) {
++			changed = 1;
++			if (i < 7)
++				buf[0] |= 1 << (i + 1);
++			else
++				buf[1] |= 1 << (i - 7);
++		}
++	}
++
++	if (ohci_root_hub_state_changes(ohci, changed,
++			any_connected, rhsc_status))
++		set_bit(HCD_FLAG_POLL_RH, &hcd->flags);
++	else
++		clear_bit(HCD_FLAG_POLL_RH, &hcd->flags);
++
++done:
++	spin_unlock_irqrestore(&ohci->lock, flags);
++
++	return changed ? length : 0;
++}
++
++static int ohci_rcar_hub_control(
++	struct usb_hcd	*hcd,
++	u16		typeReq,
++	u16		wValue,
++	u16		wIndex,
++	char		*buf,
++	u16		wLength
++) {
++	struct ohci_hcd	*ohci = hcd_to_ohci(hcd);
++	int		ports = ohci->num_ports;
++	u32		temp;
++	int		retval = 0;
++	struct device *dev = hcd->self.controller;
++	struct rcar_usb_info *ru_info = dev->platform_data;
++
++	if (unlikely(!HCD_HW_ACCESSIBLE(hcd)))
++		return -ESHUTDOWN;
++
++	switch (typeReq) {
++	case ClearHubFeature:
++		switch (wValue) {
++		case C_HUB_OVER_CURRENT:
++			ohci_writel(ohci, RH_HS_OCIC,
++					&ohci->regs->roothub.status);
++		case C_HUB_LOCAL_POWER:
++			break;
++		default:
++			goto error;
++		}
++		break;
++	case ClearPortFeature:
++		if (!wIndex || wIndex > ports)
++			goto error;
++		wIndex--;
++
++		switch (wValue) {
++		case USB_PORT_FEAT_ENABLE:
++			temp = RH_PS_CCS;
++			break;
++		case USB_PORT_FEAT_C_ENABLE:
++			temp = RH_PS_PESC;
++			break;
++		case USB_PORT_FEAT_SUSPEND:
++			temp = RH_PS_POCI;
++			break;
++		case USB_PORT_FEAT_C_SUSPEND:
++			temp = RH_PS_PSSC;
++			break;
++		case USB_PORT_FEAT_POWER:
++			temp = RH_PS_LSDA;
++			break;
++		case USB_PORT_FEAT_C_CONNECTION:
++			temp = RH_PS_CSC;
++			break;
++		case USB_PORT_FEAT_C_OVER_CURRENT:
++			temp = RH_PS_OCIC;
++			break;
++		case USB_PORT_FEAT_C_RESET:
++			temp = RH_PS_PRSC;
++			break;
++		default:
++			goto error;
++		}
++		ohci_writel(ohci, temp,
++				&ohci->regs->roothub.portstatus[wIndex]);
++		break;
++	case GetHubDescriptor:
++		ohci_hub_descriptor(ohci, (struct usb_hub_descriptor *) buf);
++		break;
++	case GetHubStatus:
++		temp = roothub_status(ohci) & ~(RH_HS_CRWE | RH_HS_DRWE);
++		put_unaligned_le32(temp, buf);
++		break;
++	case GetPortStatus:
++		if (!wIndex || wIndex <= ru_info->port_offset || wIndex > ports)
++			goto error;
++		wIndex--;
++		temp = roothub_portstatus(ohci, wIndex);
++		put_unaligned_le32(temp, buf);
++
++#ifndef	OHCI_VERBOSE_DEBUG
++	if (*(u16 *)(buf + 2))	/* only if wPortChange is interesting */
++#endif
++		dbg_port(ohci, "GetStatus", wIndex, temp);
++		break;
++	case SetHubFeature:
++		switch (wValue) {
++		case C_HUB_OVER_CURRENT:
++			// FIXME:  this can be cleared, yes?
++		case C_HUB_LOCAL_POWER:
++			break;
++		default:
++			goto error;
++		}
++		break;
++	case SetPortFeature:
++		if (!wIndex || wIndex > ports)
++			goto error;
++		wIndex--;
++		switch (wValue) {
++		case USB_PORT_FEAT_SUSPEND:
++#ifdef	CONFIG_USB_OTG
++			if (hcd->self.otg_port == (wIndex + 1)
++					&& hcd->self.b_hnp_enable)
++				ohci->start_hnp(ohci);
++			else
++#endif
++			ohci_writel(ohci, RH_PS_PSS,
++				&ohci->regs->roothub.portstatus[wIndex]);
++			break;
++		case USB_PORT_FEAT_POWER:
++			ohci_writel(ohci, RH_PS_PPS,
++				&ohci->regs->roothub.portstatus[wIndex]);
++			break;
++		case USB_PORT_FEAT_RESET:
++			retval = root_port_reset(ohci, wIndex);
++			break;
++		default:
++			goto error;
++		}
++		break;
++
++	default:
++error:
++		/* "protocol stall" on error */
++		retval = -EPIPE;
++	}
++	return retval;
++}
++
++/*-------------------------------------------------------------------------*/
++
++static const struct hc_driver ohci_rcar_hc_driver = {
++	.description =		hcd_name,
++	.product_desc =		"RCar OHCI",
++	.hcd_priv_size =	sizeof(struct ohci_hcd),
++
++	/*
++	 * generic hardware linkage
++	 */
++	.irq =			ohci_irq,
++	.flags =		HCD_USB11 | HCD_MEMORY,
++
++	/*
++	 * basic lifecycle operations
++	 */
++	.start =		ohci_rcar_start,
++	.stop =			ohci_stop,
++	.shutdown =		ohci_shutdown,
++
++	/*
++	 * managing i/o requests and associated device resources
++	 */
++	.urb_enqueue =		ohci_urb_enqueue,
++	.urb_dequeue =		ohci_urb_dequeue,
++	.endpoint_disable =	ohci_endpoint_disable,
++
++	/*
++	 * scheduling support
++	 */
++	.get_frame_number =	ohci_get_frame,
++
++	/*
++	 * root hub support
++	 */
++	.hub_status_data =	ohci_rcar_hub_status_data,
++	.hub_control =		ohci_rcar_hub_control,
++#ifdef	CONFIG_PM
++	.bus_suspend =		ohci_bus_suspend,
++	.bus_resume =		ohci_bus_resume,
++#endif
++	.start_port_reset =	ohci_start_port_reset,
++};
++
++/*-------------------------------------------------------------------------*/
++
++static int ohci_hcd_rcar_probe(struct platform_device *dev)
++{
++	struct resource *res = NULL;
++	struct usb_hcd *hcd = NULL;
++	int irq = -1;
++	int ret;
++
++	if (usb_disabled())
++		return -ENODEV;
++
++	res = platform_get_resource(dev, IORESOURCE_MEM, 0);
++	if (!res) {
++		dev_err(&dev->dev, "platform_get_resource error.");
++		return -ENODEV;
++	}
++
++	irq = platform_get_irq(dev, 0);
++	if (irq < 0) {
++		dev_err(&dev->dev, "platform_get_irq error.");
++		return -ENODEV;
++	}
++
++	/* initialize hcd */
++	hcd = usb_create_hcd(&ohci_rcar_hc_driver, &dev->dev,
++		(char *)hcd_name);
++	if (!hcd) {
++		dev_err(&dev->dev, "Failed to create hcd");
++		return -ENOMEM;
++	}
++
++	hcd->rsrc_start = res->start;
++	hcd->rsrc_len = resource_size(res);
++
++	if (!request_mem_region(hcd->rsrc_start, hcd->rsrc_len,
++		ohci_rcar_hc_driver.description)) {
++		dev_dbg(&dev->dev, "controller already in use\n");
++		ret = -EBUSY;
++		goto fail_request_resource;
++	}
++
++	hcd->regs = ioremap_nocache(hcd->rsrc_start, hcd->rsrc_len);
++	if (hcd->regs == NULL) {
++		dev_dbg(&dev->dev, "error mapping memory\n");
++		ret = -ENXIO;
++		goto fail_ioremap;
++	}
++
++	ret = usb_add_hcd(hcd, irq, IRQF_SHARED);
++	if (ret != 0) {
++		dev_err(&dev->dev, "Failed to add hcd");
++		usb_put_hcd(hcd);
++		return ret;
++	}
++
++	return ret;
++
++fail_ioremap:
++	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
++fail_request_resource:
++	usb_put_hcd(hcd);
++	dev_err(&dev->dev, "init %s fail, %d\n", dev_name(&dev->dev), ret);
++	return ret;
++}
++
++
++static int ohci_hcd_rcar_remove(struct platform_device *pdev)
++{
++	struct usb_hcd *hcd = platform_get_drvdata(pdev);
++
++	usb_remove_hcd(hcd);
++	iounmap(hcd->regs);
++	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
++	usb_put_hcd(hcd);
++
++	return 0;
++}
++
++static struct platform_driver rcar_ohci_driver = {
++	.probe		= ohci_hcd_rcar_probe,
++	.remove		= ohci_hcd_rcar_remove,
++	.shutdown	= usb_hcd_platform_shutdown,
++	.driver		= {
++		.name	= "rcar_ohci",
++		.owner	= THIS_MODULE,
++	},
++};
++MODULE_ALIAS("platform:rcar_ohci");
+diff --git a/include/linux/usb/rcar-usb.h b/include/linux/usb/rcar-usb.h
+new file mode 100644
+index 0000000..587b084
+--- /dev/null
++++ b/include/linux/usb/rcar-usb.h
+@@ -0,0 +1,27 @@
++/*
++ * include/linux/usb/rcar-usb.h
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#ifndef __LINUX_USB_RCAR_USB_H
++#define __LINUX_USB_RCAR_USB_H
++
++struct rcar_usb_info {
++	int port_offset;
++};
++
++#endif /* __LINUX_USB_RCAR_USB_H */
+-- 
+1.7.5.4
+

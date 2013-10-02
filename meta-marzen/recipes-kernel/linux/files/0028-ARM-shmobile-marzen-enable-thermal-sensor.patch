@@ -1,0 +1,61 @@
+From b02f88bb9922e1e5ebc955e774823ea39c9752aa Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 27 Aug 2012 19:00:15 -0700
+Subject: [PATCH 28/76] ARM: shmobile: marzen: enable thermal sensor
+
+Marzen board can measure its thermal by this patch.
+	cat /sys/class/thermal/thermal_zoneX/temp
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms@verge.net.au>
+---
+ arch/arm/configs/marzen_defconfig     |    2 ++
+ arch/arm/mach-shmobile/board-marzen.c |   16 ++++++++++++++++
+ 2 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
+index 737e498..53382b6 100644
+--- a/arch/arm/configs/marzen_defconfig
++++ b/arch/arm/configs/marzen_defconfig
+@@ -71,6 +71,8 @@ CONFIG_SERIAL_SH_SCI_CONSOLE=y
+ # CONFIG_HW_RANDOM is not set
+ CONFIG_GPIO_SYSFS=y
+ # CONFIG_HWMON is not set
++CONFIG_THERMAL=y
++CONFIG_RCAR_THERMAL=y
+ CONFIG_SSB=y
+ # CONFIG_USB_SUPPORT is not set
+ CONFIG_MMC=y
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index 9f53f30..800ec1b 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -111,9 +111,25 @@ static struct platform_device sdhi0_device = {
+ 	}
+ };
+ 
++/* Thermal */
++static struct resource thermal_resources[] = {
++	[0] = {
++		.start		= 0xFFC48000,
++		.end		= 0xFFC48038 - 1,
++		.flags		= IORESOURCE_MEM,
++	},
++};
++
++static struct platform_device thermal_device = {
++	.name		= "rcar_thermal",
++	.resource	= thermal_resources,
++	.num_resources	= ARRAY_SIZE(thermal_resources),
++};
++
+ static struct platform_device *marzen_devices[] __initdata = {
+ 	&eth_device,
+ 	&sdhi0_device,
++	&thermal_device,
+ };
+ 
+ static void __init marzen_init(void)
+-- 
+1.7.5.4
+

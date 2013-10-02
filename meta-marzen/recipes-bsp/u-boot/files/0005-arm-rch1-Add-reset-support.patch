@@ -1,0 +1,72 @@
+From ff682140d240061d3a1e6af388c7832905ea8863 Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Fri, 6 Jan 2012 14:09:24 +0900
+Subject: [PATCH 05/10] arm: rch1: Add reset support
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ arch/arm/include/asm/arch-rch1/cpu.h |   11 +++++++++++
+ board/renesas/marzen/lowlevel_init.S |    3 +++
+ board/renesas/marzen/marzen.c        |    8 ++++++++
+ 3 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/include/asm/arch-rch1/cpu.h b/arch/arm/include/asm/arch-rch1/cpu.h
+index a38a528..c6ec528 100644
+--- a/arch/arm/include/asm/arch-rch1/cpu.h
++++ b/arch/arm/include/asm/arch-rch1/cpu.h
+@@ -83,6 +83,17 @@ extern void wait_usec(int);
+ #define		MD1	(1 << 1)
+ #define		MD2	(1 << 2)
+ 
++#define WDT_BASE	0xffcc0000
++#define		WDTST		0x000
++#define		WDTCSR		0x004
++#define		WDTST		0x000
++
++#define	WDTST_CODE	0x5a000000
++
++#define	WDTCSR_CODE	0xa5000000
++#define	WDTCSR_WT	(WDTCSR_CODE | 0x40)
++#define	WDTCSR_TME	(WDTCSR_CODE | 0x80)
++
+ /* dbsc */
+ #define	MEMC_BASE	0xfe800000
+ #define	MEMC2_BASE	0xfec00000
+diff --git a/board/renesas/marzen/lowlevel_init.S b/board/renesas/marzen/lowlevel_init.S
+index 1bc1f8b..fb67211 100644
+--- a/board/renesas/marzen/lowlevel_init.S
++++ b/board/renesas/marzen/lowlevel_init.S
+@@ -28,6 +28,9 @@ lowlevel_init:
+ 	str	ip, [sp]
+ 	mov	ip, lr
+ 
++	/* initialize wdt */
++	bl	wdt_init
++
+ 	/* select pin */
+ 	bl	pin_init
+ 
+diff --git a/board/renesas/marzen/marzen.c b/board/renesas/marzen/marzen.c
+index 358931d..e63cc7b 100644
+--- a/board/renesas/marzen/marzen.c
++++ b/board/renesas/marzen/marzen.c
+@@ -333,8 +333,16 @@ void memc_init(void)
+ 	do_memc_init(MEMC2_BASE);
+ }
+ 
++void wdt_init(void)
++{
++	writel(WDTCSR_CODE, WDT_BASE + WDTCSR);
++}
++
+ void board_reset(void)
+ {
++	writel(WDTST_CODE | 0x1, WDT_BASE + WDTST);
++	writel(WDTCSR_WT, WDT_BASE + WDTCSR);
++	writel((WDTCSR_TME | WDTCSR_WT), WDT_BASE + WDTCSR);
+ 	while (1)
+ 		;
+ }
+-- 
+1.7.5.4
+

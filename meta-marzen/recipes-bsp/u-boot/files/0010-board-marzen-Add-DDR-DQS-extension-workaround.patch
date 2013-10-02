@@ -1,0 +1,51 @@
+From 1308825420a0c1f37d38bce4e3858ebcd4777d08 Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Tue, 15 May 2012 09:09:18 +0900
+Subject: [PATCH 10/10] board: marzen: Add DDR DQS extension workaround
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ board/renesas/marzen/marzen.c |   12 ++++++++++++
+ include/configs/marzen.h      |    3 +++
+ 2 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/board/renesas/marzen/marzen.c b/board/renesas/marzen/marzen.c
+index d0a96cf..fe3b05c 100644
+--- a/board/renesas/marzen/marzen.c
++++ b/board/renesas/marzen/marzen.c
+@@ -279,6 +279,18 @@ void do_memc_init(u32 base)
+ 	MEMC_W(base, DBPDCNT1, 0);		/* Drive:40ohm */
+ 	MEMC_W(base, DBPDCNT2, 0);		/* initial value */
+ 
++#ifdef CONFIG_DDR_DQS_EXTENSION
++	/* Extend a period of recieving Data Strobe from DRAM */
++	MEMC_W(base, 0x280, 0x0000a55a);
++	MEMC_W(base, 0x290, 0x00000000);
++	MEMC_W(base, 0x2a0, 0xa5390000);
++	MEMC_W(base, 0x290, 0x00000022);
++	MEMC_W(base, 0x2a0, 0x00481846);
++	MEMC_W(base, 0x290, 0x00000023);
++	MEMC_W(base, 0x2a0, 0x00481546);
++	MEMC_W(base, 0x280, 0x00000000);
++#endif /* CONFIG_DDR_DQS_EXTENSION */
++
+ 	/* ddr3-sdram setting */
+ 	/* (24) */
+ 	MEMC_W(base, DBCMD, 0x0000c350);	/* Wait, 100us */
+diff --git a/include/configs/marzen.h b/include/configs/marzen.h
+index 72066f4..3fe1b65 100644
+--- a/include/configs/marzen.h
++++ b/include/configs/marzen.h
+@@ -49,6 +49,9 @@
+ /* keep l2 cache disabled */
+ #define	CONFIG_L2_OFF	1
+ 
++/* ddr configuration */
++#define	CONFIG_DDR_DQS_EXTENSION
++
+ /* ram memory map */
+ #define	CONFIG_NR_DRAM_BANKS	1
+ #define	CONFIG_SYS_SDRAM_BASE	0x60000000
+-- 
+1.7.5.4
+

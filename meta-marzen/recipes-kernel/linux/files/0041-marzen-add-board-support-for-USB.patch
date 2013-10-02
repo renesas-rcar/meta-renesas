@@ -1,0 +1,304 @@
+From af8b1ddfb78af4289704827fe0b544ac7838614d Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Thu, 12 Jul 2012 10:34:00 +0100
+Subject: [PATCH 41/76] marzen: add board support for USB
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/board-marzen.c |  259 +++++++++++++++++++++++++++++++++
+ 1 files changed, 259 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index 6a1a661..365cdb7 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -34,6 +34,7 @@
+ #include <linux/spi/sh_hspi.h>
+ #include <linux/mmc/sh_mobile_sdhi.h>
+ #include <linux/mfd/tmio.h>
++#include <linux/usb/rcar-usb.h>
+ #include <mach/hardware.h>
+ #include <mach/r8a7779.h>
+ #include <mach/common.h>
+@@ -144,11 +145,262 @@ static struct platform_device hspi_device = {
+ 	.num_resources	= ARRAY_SIZE(hspi_resources),
+ };
+ 
++static u64 usb_dmamask = ~(u32)0;
++
++static struct resource ehci0_resources[] = {
++	[0] = {
++		.start	= 0xffe70000,
++		.end	= 0xffe70000 + 0x3ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= IRQ_USBH_0_EHCI,
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_usb_info ehci0_info = {
++	.port_offset = 0,
++};
++
++struct platform_device ehci0_device = {
++	.name	= "rcar_ehci",
++	.id	= 0,
++	.dev	= {
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++		.platform_data		= &ehci0_info,
++	},
++	.num_resources	= ARRAY_SIZE(ehci0_resources),
++	.resource	= ehci0_resources,
++};
++
++static struct resource ohci0_resources[] = {
++	[0] = {
++		.start	= 0xffe70400,
++		.end	= 0xffe70400 + 0x3ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= IRQ_USBH_0_OHCI,
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_usb_info ohci0_info = {
++	.port_offset = 0,
++};
++
++struct platform_device ohci0_device = {
++	.name	= "rcar_ohci",
++	.id	= 0,
++	.dev	= {
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++		.platform_data		= &ohci0_info,
++	},
++	.num_resources	= ARRAY_SIZE(ohci0_resources),
++	.resource	= ohci0_resources,
++};
++
++static struct resource ehci1_resources[] = {
++	[0] = {
++		.start	= 0xfff70000,
++		.end	= 0xfff70000 + 0x3ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= IRQ_USBH_1_EHCI,
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_usb_info ehci1_info = {
++	.port_offset = 1,
++};
++
++struct platform_device ehci1_device = {
++	.name	= "rcar_ehci",
++	.id	= 1,
++	.dev	= {
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++		.platform_data		= &ehci1_info,
++	},
++	.num_resources	= ARRAY_SIZE(ehci1_resources),
++	.resource	= ehci1_resources,
++};
++
++static struct resource ohci1_resources[] = {
++	[0] = {
++		.start	= 0xfff70400,
++		.end	= 0xfff70400 + 0x3ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= IRQ_USBH_1_OHCI,
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_usb_info ohci1_info = {
++	.port_offset = 1,
++};
++
++struct platform_device ohci1_device = {
++	.name	= "rcar_ohci",
++	.id	= 1,
++	.dev	= {
++		.dma_mask		= &usb_dmamask,
++		.coherent_dma_mask	= 0xffffffff,
++		.platform_data		= &ohci1_info,
++	},
++	.num_resources	= ARRAY_SIZE(ohci1_resources),
++	.resource	= ohci1_resources,
++};
++
++#define RC_USBH0_BASE 0xffe70000
++#define RC_USBH1_BASE 0xfff70000
++
++/* USBH common register */
++#define USBPCTRL0		0x0800
++#define USBPCTRL1		0x0804
++#define USBST			0x0808
++#define USBEH0			0x080C
++#define USBOH0			0x081C
++#define USBCTL0			0x0858
++#define EIIBC1			0x0094
++#define EIIBC2			0x009C
++
++/* bit field of Port Control 0 register */
++#define	USBPCTRL0_PORT1		0x00000001
++#define	USBPCTRL0_OVC1		0x00000002
++#define	USBPCTRL0_OVC0		0x00000008
++#define	USBPCTRL0_PENC		0x00000010
++#define	USBPCTRL0_PORT0		0x00000100
++#define	USBPCTRL0_OVC1_VBUS1	0x00000200
++
++/* bit field of Port Control 1 register */
++#define	USBPCTRL1_PHYENB	0x00000001
++#define	USBPCTRL1_PLLENB	0x00000002
++#define	USBPCTRL1_PHYRST	0x00000004
++#define	USBPCTRL1_RST		0x80000000
++
++/* bit field of USB Status register */
++#define	USBST_PLL		0x40000000
++#define	USBST_ACT		0x80000000
++
++/* bit field of USB Control0 register */
++#define	USBCTL0_CLKSEL		0x00000080
++
++/* bit field of EHCI IP Buffer Control register 2 */
++#define	EIIBC2_BUF_EN		0x00000001
++
++/* other */
++#define EHCI_IP_BUF		0x00FF0040
++#define SWAP_NONE		0x00000000
++#define SWAP_BYTE		0x00000001
++#define SWAP_WORD		0x00000002
++#define SWAP_WORD_BYTE		0x00000003
++
++static int __init rcar_usbh_start(void)
++{
++	u32 val;
++	int timeout;
++	struct clk *clk, *clk2;
++
++	void __iomem *usb_base = ioremap_nocache(RC_USBH0_BASE, 0x900);
++	void __iomem *usb_base1 = ioremap_nocache(RC_USBH1_BASE, 0x900);
++
++	/* enable clocks USB0/1 and 2 */
++	clk = clk_get(NULL, "usb_fck");
++	if (IS_ERR(clk)) {
++		printk(KERN_ERR "Can't get usb clock\n");
++		return -1;
++	}
++	clk_enable(clk);
++
++	clk2 = clk_get(NULL, "usb_fck2");
++	if (IS_ERR(clk2)) {
++		printk(KERN_ERR "Can't get usb clock 2\n");
++		return -1;
++	}
++	clk_enable(clk2);
++
++	/*
++	 * Port Control 1 Setting
++	 */
++	/* clear stand-by */
++	iowrite32(USBPCTRL1_PHYENB, (usb_base + USBPCTRL1));
++
++	/* start PLL */
++	iowrite32((USBPCTRL1_PLLENB | USBPCTRL1_PHYENB),
++		(usb_base + USBPCTRL1));
++
++	/* check status */
++	timeout = 100; /* about 100ms */
++	do {
++		msleep(1);
++		val = ioread32(usb_base + USBST);
++		if ((val & USBST_ACT) && (val & USBST_PLL))
++			break;
++	} while (--timeout > 0);
++	if (timeout == 0) {
++		printk(KERN_ERR "USB is not ready. [%08x]\n", val);
++		return -1;
++	}
++
++	/* clear reset */
++	iowrite32((USBPCTRL1_PHYRST | USBPCTRL1_PLLENB | USBPCTRL1_PHYENB),
++		(usb_base + USBPCTRL1));
++
++	/*
++	 * Port Control 0 Setting
++	 */
++	iowrite32(0, (usb_base + USBPCTRL0));
++
++	/*
++	 * EHCI IP Internal Buffer Setting
++	 */
++	iowrite32(EHCI_IP_BUF, (usb_base + EIIBC1));
++	iowrite32(EIIBC2_BUF_EN, (usb_base + EIIBC2));
++
++	iowrite32(EHCI_IP_BUF, (usb_base1 + EIIBC1));
++	iowrite32(EIIBC2_BUF_EN, (usb_base1 + EIIBC2));
++
++	/*
++	 * Bus Alignment Setting
++	 */
++	iowrite32(SWAP_NONE, (usb_base + USBEH0));
++	iowrite32(SWAP_NONE, (usb_base + USBOH0));
++
++	iounmap(usb_base);
++	iounmap(usb_base1);
++
++	return 0;
++}
++
++static int __init rcar_usbh_init(void)
++{
++	if (rcar_usbh_start()) {
++		platform_device_unregister(&ehci0_device);
++		platform_device_unregister(&ohci0_device);
++		platform_device_unregister(&ehci1_device);
++		platform_device_unregister(&ohci1_device);
++	}
++
++	return 0;
++}
++
+ static struct platform_device *marzen_devices[] __initdata = {
+ 	&eth_device,
+ 	&sdhi0_device,
+ 	&thermal_device,
+ 	&hspi_device,
++	&ehci0_device,
++	&ohci0_device,
++	&ehci1_device,
++	&ohci1_device,
+ };
+ 
+ static void __init marzen_init(void)
+@@ -188,8 +440,15 @@ static void __init marzen_init(void)
+ 	gpio_request(GPIO_FN_HSPI_TX0,	NULL);
+ 	gpio_request(GPIO_FN_HSPI_RX0,	NULL);
+ 
++	/* USB (CN21) */
++	gpio_request(GPIO_FN_USB_OVC0, NULL);
++	gpio_request(GPIO_FN_USB_OVC1, NULL);
++	gpio_request(GPIO_FN_USB_OVC2, NULL);
++
+ 	r8a7779_add_standard_devices();
+ 	platform_add_devices(marzen_devices, ARRAY_SIZE(marzen_devices));
++
++	rcar_usbh_init();
+ }
+ 
+ MACHINE_START(MARZEN, "marzen")
+-- 
+1.7.5.4
+

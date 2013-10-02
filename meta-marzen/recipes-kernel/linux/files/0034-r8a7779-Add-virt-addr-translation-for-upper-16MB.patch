@@ -1,0 +1,31 @@
+From da0c549927e931efb36553b3aabd34e13c4413b2 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 11 Jun 2012 11:08:08 +0100
+Subject: [PATCH 34/76] r8a7779: Add virt addr translation for upper 16MB
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7779.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7779.c b/arch/arm/mach-shmobile/setup-r8a7779.c
+index 472f4ef..afcb7d4 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7779.c
++++ b/arch/arm/mach-shmobile/setup-r8a7779.c
+@@ -53,6 +53,13 @@ static struct map_desc r8a7779_io_desc[] __initdata = {
+ 		.length		= SZ_16M,
+ 		.type		= MT_DEVICE_NONSHARED
+ 	},
++	/* 16M entity map for 0xffxxxxxx */
++	{
++		.virtual	= 0xf8000000,
++		.pfn		= __phys_to_pfn(0xff000000),
++		.length		= SZ_16M,
++		.type		= MT_DEVICE_NONSHARED
++	},
+ };
+ 
+ void __init r8a7779_map_io(void)
+-- 
+1.7.5.4
+

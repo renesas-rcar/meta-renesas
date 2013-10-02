@@ -1,0 +1,56 @@
+From 9929a8c24edc514e74e8f28a4ea8e2ee63cf3b10 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 31 May 2012 11:46:22 +0900
+Subject: [PATCH 65/76] mediabus: add new 32 bits data formats on the media
+ bus
+
+This adds the following RGB data formats which mean each pixel
+data is extended from 18/24 to 32 bits; V4L2_MBUS_FMT_RGB666_1X18_LE,
+V4L2_MBUS_FMT_RGB888_1X24_LE, and V4L2_MBUS_FMT_RGB888_2X12_LE.
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/media/video/soc_mediabus.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/media/video/soc_mediabus.c b/drivers/media/video/soc_mediabus.c
+index 5bd830f..126cfe7 100644
+--- a/drivers/media/video/soc_mediabus.c
++++ b/drivers/media/video/soc_mediabus.c
+@@ -89,6 +89,33 @@ static const struct soc_mbus_lookup mbus_fmt[] = {
+ 		.order			= SOC_MBUS_ORDER_LE,
+ 	},
+ }, {
++	.code = V4L2_MBUS_FMT_RGB666_1X18_LE,
++	.fmt = {
++		.fourcc			= V4L2_PIX_FMT_RGB32,
++		.name			= "RGB666/32bpp",
++		.bits_per_sample	= 18,
++		.packing		= SOC_MBUS_PACKING_EXTEND32,
++		.order			= SOC_MBUS_ORDER_LE,
++	},
++}, {
++	.code = V4L2_MBUS_FMT_RGB888_1X24_LE,
++	.fmt = {
++		.fourcc			= V4L2_PIX_FMT_RGB32,
++		.name			= "RGB888/32bpp",
++		.bits_per_sample	= 24,
++		.packing		= SOC_MBUS_PACKING_EXTEND32,
++		.order			= SOC_MBUS_ORDER_LE,
++	},
++}, {
++	.code = V4L2_MBUS_FMT_RGB888_2X12_LE,
++	.fmt = {
++		.fourcc			= V4L2_PIX_FMT_RGB32,
++		.name			= "RGB888/32bpp",
++		.bits_per_sample	= 12,
++		.packing		= SOC_MBUS_PACKING_EXTEND32,
++		.order			= SOC_MBUS_ORDER_LE,
++	},
++}, {
+ 	.code = V4L2_MBUS_FMT_SBGGR8_1X8,
+ 	.fmt = {
+ 		.fourcc			= V4L2_PIX_FMT_SBGGR8,
+-- 
+1.7.5.4
+

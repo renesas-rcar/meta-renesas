@@ -1,0 +1,2073 @@
+From a207d103b2a18b0ee56c1ab8a4d4e13a4a6feff7 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 10 Jul 2012 10:03:56 +0100
+Subject: [PATCH 48/76] sound: soc: add support for rcar sru device
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ include/sound/rcar.h     |   76 ++++
+ sound/soc/Kconfig        |    1 +
+ sound/soc/Makefile       |    1 +
+ sound/soc/rcar/Kconfig   |   21 +
+ sound/soc/rcar/Makefile  |    5 +
+ sound/soc/rcar/sru_pcm.c |  903 ++++++++++++++++++++++++++++++++++++++++++
+ sound/soc/rcar/sru_pcm.h |  990 ++++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 1997 insertions(+), 0 deletions(-)
+ create mode 100644 include/sound/rcar.h
+ create mode 100644 sound/soc/rcar/Kconfig
+ create mode 100644 sound/soc/rcar/Makefile
+ create mode 100644 sound/soc/rcar/sru_pcm.c
+ create mode 100644 sound/soc/rcar/sru_pcm.h
+
+diff --git a/include/sound/rcar.h b/include/sound/rcar.h
+new file mode 100644
+index 0000000..16f13c2
+--- /dev/null
++++ b/include/sound/rcar.h
+@@ -0,0 +1,76 @@
++/*
++ * include/sound/rcar.h
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#ifndef __SOUND_RCAR_H__
++#define __SOUND_RCAR_H__
++
++/************************************************************************
++
++	define
++
++************************************************************************/
++/* direction */
++#define	PLAY			0
++#define	CAPT			1
++
++/* mode */
++#define SSI_MODE_MASTER		0	/* master mode	*/
++#define SSI_MODE_SLAVE		1	/* slave mode	*/
++#define CODEC_MODE_MASTER	0	/* master mode	*/
++#define CODEC_MODE_SLAVE	1	/* slave mode	*/
++
++/* channel */
++#define	STEREO			2
++#define	MONO			1
++
++/************************************************************************
++
++	structure
++
++************************************************************************/
++struct rcar_ssi_ctrl {
++	unsigned char	m_s;	/* master/slave */
++};
++#define rcar_ssi_ctrl_t		struct rcar_ssi_ctrl
++
++struct rcar_codec_ctrl {
++	unsigned char	m_s;	/* master/slave */
++};
++#define rcar_codec_ctrl_t	struct rcar_codec_ctrl
++
++struct rcar_pcm_ctrl {
++	rcar_ssi_ctrl_t		ssi0;		/* not use */
++	rcar_ssi_ctrl_t		ssi1;		/* not use */
++	rcar_ssi_ctrl_t		ssi2;		/* not use */
++	rcar_ssi_ctrl_t		ssi3;
++	rcar_ssi_ctrl_t		ssi4;
++	rcar_ssi_ctrl_t		ssi5;
++	rcar_ssi_ctrl_t		ssi6;
++	rcar_ssi_ctrl_t		ssi7;
++	rcar_ssi_ctrl_t		ssi8;
++	rcar_codec_ctrl_t	codec1;		/* AK4643 */
++	rcar_codec_ctrl_t	codec2;		/* AK4554 */
++	rcar_codec_ctrl_t	codec3;		/* AK4554 */
++};
++#define rcar_pcm_ctrl_t	struct rcar_pcm_ctrl
++
++#define SNDRV_RCAR_IOCTL_SET_PCM _IOW('H', 0x00, struct rcar_pcm_ctrl)
++#define SNDRV_RCAR_IOCTL_GET_PCM _IOR('H', 0x01, struct rcar_pcm_ctrl)
++
++#endif	/* __SOUND_RCAR_H__ */
+diff --git a/sound/soc/Kconfig b/sound/soc/Kconfig
+index 91c9855..06fdfa6 100644
+--- a/sound/soc/Kconfig
++++ b/sound/soc/Kconfig
+@@ -43,6 +43,7 @@ source "sound/soc/kirkwood/Kconfig"
+ source "sound/soc/mid-x86/Kconfig"
+ source "sound/soc/mxs/Kconfig"
+ source "sound/soc/pxa/Kconfig"
++source "sound/soc/rcar/Kconfig"
+ source "sound/soc/samsung/Kconfig"
+ source "sound/soc/s6000/Kconfig"
+ source "sound/soc/sh/Kconfig"
+diff --git a/sound/soc/Makefile b/sound/soc/Makefile
+index 2feaf37..46cdabe 100644
+--- a/sound/soc/Makefile
++++ b/sound/soc/Makefile
+@@ -20,6 +20,7 @@ obj-$(CONFIG_SND_SOC)	+= nuc900/
+ obj-$(CONFIG_SND_SOC)	+= omap/
+ obj-$(CONFIG_SND_SOC)	+= kirkwood/
+ obj-$(CONFIG_SND_SOC)	+= pxa/
++obj-$(CONFIG_SND_SOC)	+= rcar/
+ obj-$(CONFIG_SND_SOC)	+= samsung/
+ obj-$(CONFIG_SND_SOC)	+= s6000/
+ obj-$(CONFIG_SND_SOC)	+= sh/
+diff --git a/sound/soc/rcar/Kconfig b/sound/soc/rcar/Kconfig
+new file mode 100644
+index 0000000..f7c9b0a
+--- /dev/null
++++ b/sound/soc/rcar/Kconfig
+@@ -0,0 +1,21 @@
++menu "SoC Audio support for R-Car"
++	depends on ARCH_RCAR || MACH_MARZEN
++
++##
++## Audio unit modules
++##
++
++config SND_SOC_RCAR
++	tristate "R-Car Marzen sound support"
++	select SND_HWDEP
++	help
++	  This option enables R-Car Marzen platform sound support
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called snd_soc_rcar.
++
++##
++## Boards
++##
++
++endmenu
+diff --git a/sound/soc/rcar/Makefile b/sound/soc/rcar/Makefile
+new file mode 100644
+index 0000000..c7b81f2
+--- /dev/null
++++ b/sound/soc/rcar/Makefile
+@@ -0,0 +1,5 @@
++## audio units found on R-Car
++snd-soc-rcar-objs		:= sru_pcm.o
++obj-$(CONFIG_SND_SOC_RCAR)	+= snd-soc-rcar.o
++
++## boards
+diff --git a/sound/soc/rcar/sru_pcm.c b/sound/soc/rcar/sru_pcm.c
+new file mode 100644
+index 0000000..b53d082
+--- /dev/null
++++ b/sound/soc/rcar/sru_pcm.c
+@@ -0,0 +1,903 @@
++/*
++ *  sound/soc/rcar/sru_pcm.c
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/export.h>
++#include <linux/clk.h>
++#include <linux/dma-mapping.h>
++#include <sound/soc.h>
++#include <sound/hwdep.h>
++#include <sound/rcar.h>
++
++#include "sru_pcm.h"
++
++#undef DEBUG
++#ifdef DEBUG
++#define FNC_ENTRY	pr_info("entry:%s\n", __func__);
++#define FNC_EXIT	pr_info("exit:%s:%d\n", __func__, __LINE__);
++#define DBG_CHK_POINT()	pr_info("check:%s:%d\n", __func__, __LINE__);
++#define DBG_CHK_MSG(args...)	pr_info(args)
++#else  /* DEBUG */
++#define FNC_ENTRY
++#define FNC_EXIT
++#define DBG_CHK_POINT()
++#define DBG_CHK_MSG(args...)
++#endif /* DEBUG */
++
++static struct rcar_audio_info audioinfo;
++static spinlock_t sru_lock;	/* for sru common register  */
++static struct clk *ssi0_clk;
++static struct clk *ssi1_clk;
++static struct clk *sru_clk;
++
++static void __iomem *adg_io;
++
++static u64 dma_mask = DMA_BIT_MASK(32);
++
++/************************************************************************
++
++	callback functions for snd_hwdep_ops structure
++
++************************************************************************/
++static int sru_pcm_hwdep_open(struct snd_hwdep *hw, struct file *file)
++{
++	return 0;
++}
++
++static int sru_pcm_hwdep_release(struct snd_hwdep *hw, struct file *file)
++{
++	return 0;
++}
++
++static int sru_pcm_hwdep_ioctl(struct snd_hwdep *hw, struct file *file,
++			       unsigned int cmd, unsigned long arg)
++{
++	struct rcar_pcm_ctrl *info = hw->private_data;
++	struct rcar_pcm_ctrl pset;
++	int ret = 0;
++
++	FNC_ENTRY
++	switch (cmd) {
++	case SNDRV_RCAR_IOCTL_SET_PCM:
++		ret = copy_from_user(&pset, (struct rcar_pcm_ctrl *)arg,
++				     sizeof(pset));
++		if (ret != 0)
++			return -EFAULT;
++
++		*info = pset;
++
++		/* If you want to set to Hardware Dependant Interface,
++		please implement here. (SSI & CODEC) */
++
++		break;
++	case SNDRV_RCAR_IOCTL_GET_PCM:
++		pset = *info;
++		ret = copy_to_user((void *)arg, &pset, sizeof(pset));
++		if (ret != 0)
++			return -EFAULT;
++		break;
++	default:
++		pr_warn("not supported cmd=0x%08x\n", cmd);
++		ret = -EINVAL;
++		break;
++	}
++
++	FNC_EXIT
++	return ret;
++}
++
++int sru_pcm_hwdep_new(struct snd_card *card, char *id)
++{
++	struct snd_hwdep *hw;
++	int ret = 0;
++
++	FNC_ENTRY
++	/* Add the new hwdep instance *//* 3rd argument is always 0 */
++	ret = snd_hwdep_new(card, id, 0, &hw);
++	if (ret < 0)
++		return ret;
++
++	hw->private_data = NULL;
++	hw->ops.open     = sru_pcm_hwdep_open;
++	hw->ops.ioctl    = sru_pcm_hwdep_ioctl;
++	hw->ops.release  = sru_pcm_hwdep_release;
++
++	FNC_EXIT
++	return ret;
++}
++EXPORT_SYMBOL(sru_pcm_hwdep_new);
++
++/************************************************************************
++
++	basic function
++
++************************************************************************/
++static void sru_or_writel(u32 data, u32 *reg)
++{
++	u32 val;
++
++	spin_lock(&sru_lock);
++	val = readl(reg);
++	writel((val | data), reg);
++	spin_unlock(&sru_lock);
++}
++
++static int adg_init(void)
++{
++	FNC_ENTRY
++
++	/* BRGA/BRGB clock select */
++	sru_or_writel((ADG_SSICK_CLKOUT_BRGA |
++		ADG_SSICK_BRGA_AUDIO_CLKA | ADG_SSICK_BRGB_AUDIO_CLKA),
++		(u32 *)(adg_io + ADG_SSICKR));
++
++	/* SSI clock setting */
++	sru_or_writel((ADG_SEL0_SSI1_DIVCLK_CLKA |
++		ADG_SEL0_SSI0_DIVCLK_CLKA),
++		(u32 *)(adg_io + ADG_AUDIO_CLK_SEL0));
++
++	FNC_EXIT
++	return 0;
++}
++
++static int sru_ssi_init(void)
++{
++	FNC_ENTRY
++
++	/* SSI setting for slave */
++	writel(SSICR_P4643_ST, &audioinfo.ssireg[PLAY]->cr);
++	writel(SSIWS_ST, &audioinfo.ssireg[PLAY]->wsr);
++	writel(SSICR_C4643_ST, &audioinfo.ssireg[CAPT]->cr);
++
++	FNC_EXIT
++	return 0;
++}
++
++static int sru_ssi_control(struct snd_pcm_substream *substream)
++{
++	struct snd_pcm_runtime *runtime = substream->runtime;
++	int dir = substream->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int ret = 0;
++
++	FNC_ENTRY
++	/* channel(stereo/mono) INDEPENDANT control */
++	if (!dir) {	/* playback */
++		if (runtime->channels == STEREO) {
++			writel(SSICR_P4643_ST,
++				&audioinfo.ssireg[PLAY]->cr);
++			writel(SSIWS_ST,
++				&audioinfo.ssireg[PLAY]->wsr);
++		} else if (runtime->channels == MONO) {
++			writel(SSICR_P4643_MN,
++				&audioinfo.ssireg[PLAY]->cr);
++			writel(SSIWS_MN,
++				&audioinfo.ssireg[PLAY]->wsr);
++		} else {
++			pr_err("channel is valid.\n");
++			ret = -EINVAL;
++		}
++	} else {	/* capture */
++		if (runtime->channels == STEREO) {
++			writel(SSICR_C4643_ST,
++				&audioinfo.ssireg[CAPT]->cr);
++		} else if (runtime->channels == MONO) {
++			writel(SSICR_C4643_MN,
++				&audioinfo.ssireg[CAPT]->cr);
++		} else {
++			pr_err("channel is valid.\n");
++			ret = -EINVAL;
++		}
++	}
++
++	FNC_EXIT
++	return ret;
++}
++
++static void sru_ssi_start(struct snd_pcm_substream *substream)
++{
++	int dir = substream->stream == SNDRV_PCM_STREAM_CAPTURE;
++	u32 val;
++
++	FNC_ENTRY
++	val = readl(&audioinfo.ssireg[dir]->cr);
++	val |= (SSICR_DMEN | SSICR_UIEN | SSICR_UIEN | SSICR_ENABLE);
++	writel(val, &audioinfo.ssireg[dir]->cr);
++	FNC_EXIT
++}
++
++static void sru_ssi_stop(struct snd_pcm_substream *substream)
++{
++	int dir = substream->stream == SNDRV_PCM_STREAM_CAPTURE;
++	u32 val;
++
++	FNC_ENTRY
++	val = readl(&audioinfo.ssireg[dir]->cr);
++	val &= ~(SSICR_DMEN | SSICR_UIEN | SSICR_UIEN | SSICR_ENABLE);
++	writel(val, &audioinfo.ssireg[dir]->cr);
++	FNC_EXIT
++}
++
++static int sru_init(void)
++{
++	FNC_ENTRY
++
++	/* ADG setting */
++	adg_init();
++
++	/* SSI setting */
++	sru_ssi_init();
++
++	/* SSI_MODE0 setting (SSI independant) */
++	sru_or_writel((SSI_MODE0_IND0 | SSI_MODE0_IND1),
++			&audioinfo.srureg->ssi_mode0);
++
++	/* SSI_MODE1 setting */
++	sru_or_writel(SSI_MODE1_SSI1_MASTER,
++			&audioinfo.srureg->ssi_mode1);
++
++	FNC_EXIT
++	return 0;
++}
++
++static bool sru_dmae_filter(struct dma_chan *chan, void *slave)
++{
++	struct hpb_dmae_slave *param = slave;
++
++	pr_debug("%s: slave ID %d\n", __func__, param->slave_id);
++
++	chan->private = param;
++
++	return true;
++}
++
++/* get dma slave id */
++static int sru_dmae_slave_id(struct snd_pcm_substream *substream)
++{
++	struct snd_pcm_runtime *runtime = substream->runtime;
++	int dir = substream->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int sid;		/* dma slave id */
++
++	if (!dir) { /* playback */
++		if (runtime->channels == STEREO)
++			sid = HPBDMA_SLAVE_SSI0_TX_ST;
++		else /* MONO */
++			sid = HPBDMA_SLAVE_SSI0_TX_MN;
++	} else { /* capture */
++		if (runtime->channels == STEREO)
++			sid = HPBDMA_SLAVE_SSI1_RX_ST;
++		else /* MONO */
++			sid = HPBDMA_SLAVE_SSI1_RX_MN;
++	}
++
++	return sid;
++}
++
++static void sru_dma_callback(struct snd_pcm_substream *substream)
++{
++	struct rcar_pcm_info *pcminfo = substream->runtime->private_data;
++
++	FNC_ENTRY
++
++	pcminfo->tran_period++;
++
++	/* Notify alsa: a period is done */
++	snd_pcm_period_elapsed(substream);
++
++	/* stop dma */
++	if (pcminfo->de_start == 0)
++		return;
++
++	/* call sru_io_tasklet() with tasklet */
++	tasklet_schedule(&pcminfo->de_tasklet);
++
++	FNC_EXIT
++}
++
++static int sru_dmae_start(struct snd_pcm_substream *substream)
++{
++	int dir = substream->stream == SNDRV_PCM_STREAM_CAPTURE;
++	int pingpong;
++	struct snd_pcm_runtime *runtime = substream->runtime;
++	struct rcar_pcm_info *pcminfo = runtime->private_data;
++	struct device *dev = substream->pcm->card->dev;
++	struct dma_async_tx_descriptor *desc;
++	struct scatterlist sg;
++	dma_cookie_t cookie;
++	u32 dma_size;
++	u32 dma_paddr;
++
++	pr_debug("%s: done period #%d (%u/%u bytes), cookie %d\n",
++		__func__, pcminfo->period,
++		(u_int)(pcminfo->period * runtime->period_size * 4),
++		(u_int)(runtime->buffer_size * 4), pcminfo->de_cookie);
++
++	/* Ping-Pong control */
++	pingpong = pcminfo->period & (PERIODS_MAX - 1);
++
++	/* DMA size */
++	dma_size = frames_to_bytes(runtime, runtime->period_size);
++
++	/* DMA physical adddress */
++	dma_paddr = runtime->dma_addr + (pingpong * dma_size);
++
++	sg_init_table(&sg, 1);
++	sg_set_page(&sg, pfn_to_page(PFN_DOWN(dma_paddr)),
++		    dma_size, offset_in_page(dma_paddr));
++	sg_dma_address(&sg) = dma_paddr;
++
++	desc = pcminfo->de_chan->device->device_prep_slave_sg(
++		pcminfo->de_chan,
++		&sg, 1, DMA_DIR(dir), (DMA_PREP_INTERRUPT | DMA_CTRL_ACK),
++		NULL);
++
++	if (!desc) {
++		dev_err(dev, "Failed to allocate a dma descriptor\n");
++		return -ENOMEM;
++	}
++
++	desc->callback = (dma_async_tx_callback)sru_dma_callback;
++	desc->callback_param = substream;
++	cookie = desc->tx_submit(desc);
++
++	if (cookie < 0) {
++		dev_err(dev, "Failed to submit a dma transfer\n");
++		return cookie;
++	}
++
++	pcminfo->de_desc = desc;
++	pcminfo->de_cookie = cookie;
++	dma_async_issue_pending(pcminfo->de_chan);
++
++	/* Update period */
++	pcminfo->period++;
++
++	return 0;
++}
++
++static void sru_io_tasklet(unsigned long data)
++{
++	struct snd_pcm_substream *substream = (struct snd_pcm_substream *)data;
++	struct rcar_pcm_info *pcminfo = substream->runtime->private_data;
++	struct hpb_dmae_slave *param = &pcminfo->de_param;
++	dma_cap_mask_t mask;
++
++	FNC_ENTRY
++	if (pcminfo->de_first == 1) {
++		dma_cap_zero(mask);
++		dma_cap_set(DMA_SLAVE, mask);
++
++		/* get dma slave id */
++		param->slave_id = sru_dmae_slave_id(substream);
++
++		/* request dma channel */
++		if (pcminfo->de_chan == NULL) {
++			pcminfo->de_chan =
++			    dma_request_channel(mask, sru_dmae_filter, param);
++			if (!pcminfo->de_chan)
++				pr_err("DMA channel request error\n");
++		}
++
++		/* 1st dma setting */
++		sru_dmae_start(substream);
++		sru_ssi_start(substream);
++		pcminfo->de_first = 0;
++	}
++
++	/* next dma setting */
++	sru_dmae_start(substream);
++
++	FNC_EXIT
++}
++
++static int sru_audio_start(struct snd_pcm_substream *substream)
++{
++	struct rcar_pcm_info *pcminfo = substream->runtime->private_data;
++	int ret = 0;
++
++	FNC_ENTRY
++
++	/* control SSI channel(stereo/mono) */
++	ret = sru_ssi_control(substream);
++	if (ret) {
++		pr_err("sru_ssi_control : err=%d\n", ret);
++		return ret;
++	}
++
++	/* start dma */
++	pcminfo->de_start = 1;
++
++	/* request dma first time */
++	pcminfo->de_first = 1;
++	tasklet_schedule(&pcminfo->de_tasklet);
++
++	FNC_EXIT
++	return ret;
++}
++
++static int sru_audio_stop(struct snd_pcm_substream *substream)
++{
++	int ret = 0;
++	struct rcar_pcm_info *pcminfo = substream->runtime->private_data;
++
++	FNC_ENTRY
++	/* stop dma */
++	pcminfo->de_start = 0;
++
++	/* src, ssi disable *//* wait for the last DMA transfer */
++	sru_ssi_stop(substream);
++
++	FNC_EXIT
++	return ret;
++}
++
++static struct rcar_pcm_info *sru_pcm_new_stream(void)
++{
++	struct rcar_pcm_info *pcminfo;
++
++	FNC_ENTRY
++	/* allocate rcar_pcm_info structure */
++	pcminfo = kzalloc(sizeof(struct rcar_pcm_info), GFP_KERNEL);
++	if (!pcminfo)
++		return pcminfo;
++
++	/* initialize rcar_pcm_info structure */
++	pcminfo->period      = 0;
++	pcminfo->tran_period = 0;
++	pcminfo->ainfo       = &audioinfo;
++	pcminfo->de_chan     = NULL;
++	spin_lock_init(&pcminfo->pcm_lock);
++
++	FNC_EXIT
++	return pcminfo;
++}
++
++static void sru_pcm_free_stream(struct snd_pcm_runtime *runtime)
++{
++	struct rcar_pcm_info *pcminfo = runtime->private_data;
++
++	FNC_ENTRY
++
++	/* post process */
++	tasklet_kill(&pcminfo->de_tasklet);
++	kfree(runtime->private_data);	/* free pcminfo structure */
++
++	FNC_EXIT
++	return;
++}
++
++
++/************************************************************************
++
++	dai ops
++
++************************************************************************/
++static int sru_dai_startup(struct snd_pcm_substream *substream,
++			   struct snd_soc_dai *dai)
++{
++	struct snd_pcm_runtime *runtime = substream->runtime;
++	struct rcar_pcm_info *pcminfo;
++	int ret = 0;
++
++	FNC_ENTRY
++	pcminfo = sru_pcm_new_stream();
++	if (pcminfo == NULL)
++		return -ENOMEM;
++
++	runtime->private_data = pcminfo;
++	runtime->private_free = sru_pcm_free_stream;
++
++	tasklet_init(&pcminfo->de_tasklet, sru_io_tasklet,
++			(unsigned long)substream);
++
++	FNC_EXIT
++	return ret;
++}
++
++static void sru_dai_shutdown(struct snd_pcm_substream *substream,
++			     struct snd_soc_dai *dai)
++{
++	struct rcar_pcm_info *pcminfo = substream->runtime->private_data;
++
++	if (pcminfo->de_chan) {
++		dma_release_channel(pcminfo->de_chan);
++		pcminfo->de_chan = NULL;
++	}
++
++	return;
++}
++
++static int sru_dai_trigger(struct snd_pcm_substream *substream, int cmd,
++			   struct snd_soc_dai *dai)
++{
++	struct snd_pcm_runtime *runtime = substream->runtime;
++	struct rcar_pcm_info *pcminfo = runtime->private_data;
++	int ret = 0;
++
++	spin_lock(&pcminfo->pcm_lock);
++
++	FNC_ENTRY
++	switch (cmd) {
++	case SNDRV_PCM_TRIGGER_START:
++		ret = sru_audio_start(substream);
++		break;
++	case SNDRV_PCM_TRIGGER_STOP:
++		ret = sru_audio_stop(substream);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++	spin_unlock(&pcminfo->pcm_lock);
++
++	FNC_EXIT
++	return ret;
++}
++
++static struct snd_soc_dai_ops sru_dai_ops = {
++	.startup	= sru_dai_startup,
++	.shutdown	= sru_dai_shutdown,
++	.trigger	= sru_dai_trigger,
++};
++
++/************************************************************************
++
++	pcm ops
++
++************************************************************************/
++static struct snd_pcm_hardware sru_pcm_hardware = {
++	.info			= (SNDRV_PCM_INFO_INTERLEAVED	|
++				   SNDRV_PCM_INFO_MMAP		|
++				   SNDRV_PCM_INFO_MMAP_VALID	|
++				   SNDRV_PCM_INFO_PAUSE),
++	.formats		= SNDRV_PCM_FMTBIT_S16_LE,
++	.rates			= SNDRV_PCM_RATE_8000_48000,
++	.rate_min		= 8000,
++	.rate_max		= 48000,
++	.channels_min		= 1,
++	.channels_max		= 2,
++	.buffer_bytes_max	= BUFFER_BYTES_MAX,
++	.period_bytes_min	= PERIOD_BYTES_MIN,
++	.period_bytes_max	= PERIOD_BYTES_MAX,
++	.periods_min		= PERIODS_MIN,
++	.periods_max		= PERIODS_MAX,
++};
++
++static int sru_pcm_open(struct snd_pcm_substream *substream)
++{
++	int ret = 0;
++
++	FNC_ENTRY
++	ret = snd_soc_set_runtime_hwparams(substream, &sru_pcm_hardware);
++
++	FNC_EXIT
++	return ret;
++}
++
++static int sru_pcm_close(struct snd_pcm_substream *substream)
++{
++	int ret = 0;
++
++	FNC_ENTRY
++	FNC_EXIT
++	return ret;
++}
++
++static int sru_hw_params(struct snd_pcm_substream *substream,
++			 struct snd_pcm_hw_params *hw_params)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return snd_pcm_lib_malloc_pages(substream,
++					params_buffer_bytes(hw_params));
++}
++
++static int sru_hw_free(struct snd_pcm_substream *substream)
++{
++	FNC_ENTRY
++	FNC_EXIT
++	return snd_pcm_lib_free_pages(substream);
++}
++
++static snd_pcm_uframes_t sru_pointer(struct snd_pcm_substream *substream)
++{
++	struct snd_pcm_runtime *runtime = substream->runtime;
++	struct rcar_pcm_info *pcminfo = runtime->private_data;
++	snd_pcm_uframes_t position = 0;
++
++	position = runtime->period_size *
++			(pcminfo->tran_period & (PERIODS_MAX - 1));
++
++	DBG_CHK_MSG("\tposition = %d\n", (u32)position);
++
++	return position;
++}
++
++static struct snd_pcm_ops sru_pcm_ops = {
++	.open		= sru_pcm_open,
++	.close		= sru_pcm_close,
++	.ioctl		= snd_pcm_lib_ioctl,
++	.hw_params	= sru_hw_params,
++	.hw_free	= sru_hw_free,
++	.pointer	= sru_pointer,
++};
++
++/************************************************************************
++
++	snd_soc_platform
++
++************************************************************************/
++static int sru_pcm_new(struct snd_soc_pcm_runtime *rtd)
++{
++	int ret = 0;
++
++	struct snd_card *card = rtd->card->snd_card;
++
++	if (!card->dev->dma_mask)
++		card->dev->dma_mask = &dma_mask;
++
++	if (!card->dev->coherent_dma_mask)
++		card->dev->coherent_dma_mask = DMA_BIT_MASK(32);
++
++	FNC_ENTRY
++	ret = snd_pcm_lib_preallocate_pages_for_all(
++		rtd->pcm,
++		SNDRV_DMA_TYPE_DEV,
++		rtd->card->snd_card->dev,
++		BUFFER_BYTES_MAX, BUFFER_BYTES_MAX);
++
++	FNC_EXIT
++	return ret;
++}
++
++static void sru_pcm_free(struct snd_pcm *pcm)
++{
++	FNC_ENTRY
++
++	/* free dma buffer */
++	snd_pcm_lib_preallocate_free_for_all(pcm);
++
++	FNC_EXIT
++}
++
++/************************************************************************
++
++
++		alsa struct
++
++
++************************************************************************/
++struct snd_soc_dai_driver sru_soc_dai[] = {
++	{
++		.name			= "rcar_sru_codec1",
++		.id			= 0,
++		.playback = {
++			.rates		= SNDRV_PCM_RATE_8000_48000,
++			.formats	= SNDRV_PCM_FMTBIT_S16_LE,
++			.channels_min	= 1,
++			.channels_max	= 2,
++		},
++		.capture = {
++			.rates		= SNDRV_PCM_RATE_8000_48000,
++			.formats	= SNDRV_PCM_FMTBIT_S16_LE,
++			.channels_min	= 1,
++			.channels_max	= 2,
++		},
++		.ops = &sru_dai_ops,
++	},
++};
++EXPORT_SYMBOL_GPL(sru_soc_dai);
++
++static struct snd_soc_platform_driver sru_soc_platform = {
++	.pcm_new	= sru_pcm_new,
++	.pcm_free	= sru_pcm_free,
++	.ops	= &sru_pcm_ops,
++};
++EXPORT_SYMBOL_GPL(sru_soc_platform);
++
++/************************************************************************
++
++
++		platform function
++
++
++************************************************************************/
++static int sru_probe(struct platform_device *pdev)
++{
++	int ret = 0;
++	struct resource *sru_res;
++	struct resource *sru_region;
++	struct resource *adg_res;
++	struct resource *adg_region = NULL;
++	void __iomem *mem;
++
++	FNC_ENTRY
++	if (pdev->id != 0) {
++		dev_err(&pdev->dev, "current sru support id 0 only now\n");
++		return -ENODEV;
++	}
++
++	/* request clocks */
++	ssi0_clk = clk_get(&pdev->dev, "ssi0");
++	if (IS_ERR(ssi0_clk)) {
++		dev_err(&pdev->dev, "Unable to get ssi0 clock\n");
++		ret = PTR_ERR(ssi0_clk);
++		goto error_clk_put;
++	}
++
++	ssi1_clk = clk_get(&pdev->dev, "ssi1");
++	if (IS_ERR(ssi1_clk)) {
++		dev_err(&pdev->dev, "Unable to get ssi1 clock\n");
++		ret = PTR_ERR(ssi1_clk);
++		goto error_clk_put;
++	}
++
++	sru_clk = clk_get(&pdev->dev, "sru");
++	if (IS_ERR(sru_clk)) {
++		dev_err(&pdev->dev, "Unable to get ssi2 clock\n");
++		ret = PTR_ERR(sru_clk);
++		goto error_clk_put;
++	}
++
++	sru_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!sru_res) {
++		dev_err(&pdev->dev, "No memory (0) resource\n");
++		ret = -ENODEV;
++		goto error_clk_put;
++	}
++
++	adg_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (!sru_res) {
++		dev_err(&pdev->dev, "No memory (1) resource\n");
++		ret = -ENODEV;
++		goto error_clk_put;
++	}
++
++	sru_region = request_mem_region(sru_res->start, resource_size(sru_res),
++			pdev->name);
++	if (!sru_region) {
++		dev_err(&pdev->dev, "SRU region already claimed\n");
++		ret = -EBUSY;
++		goto error_release;
++	}
++
++	adg_region = request_mem_region(adg_res->start, resource_size(adg_res),
++			pdev->name);
++	if (!adg_region) {
++		dev_err(&pdev->dev, "ADG region already claimed\n");
++		ret = -EBUSY;
++		goto error_release;
++	}
++
++	mem = ioremap_nocache(sru_res->start, resource_size(sru_res));
++	if (!mem) {
++		dev_err(&pdev->dev, "ioremap failed for sru\n");
++		ret = -ENOMEM;
++		goto error_unmap;
++	}
++
++	adg_io = ioremap_nocache(adg_res->start, resource_size(adg_res));
++	if (!adg_io) {
++		dev_err(&pdev->dev, "ioremap failed for adg\n");
++		ret = -ENOMEM;
++		goto error_unmap;
++	}
++
++	clk_enable(ssi0_clk);
++	clk_enable(ssi1_clk);
++	clk_enable(sru_clk);
++
++	audioinfo.srureg = (struct sru_regs *)mem;
++
++	/* CODEC#1 setting */
++	audioinfo.ssireg[PLAY] =
++		(struct ssi_regs *)(mem + SSI0_BASE);
++	audioinfo.ssireg[CAPT] =
++		(struct ssi_regs *)(mem + SSI1_BASE);
++
++	ret = snd_soc_register_platform(&pdev->dev, &sru_soc_platform);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "cannot snd soc register\n");
++		goto error_unmap;
++	}
++
++	ret = snd_soc_register_dais(&pdev->dev, sru_soc_dai,
++		ARRAY_SIZE(sru_soc_dai));
++	if (ret < 0) {
++		dev_err(&pdev->dev, "cannot snd soc dais register\n");
++		goto error_unregister;
++	}
++
++	sru_init();
++
++	FNC_EXIT
++	return ret;
++
++error_unregister:
++	snd_soc_unregister_platform(&pdev->dev);
++
++error_unmap:
++	if (audioinfo.srureg)
++		iounmap(audioinfo.srureg);
++	if (adg_io)
++		iounmap(adg_io);
++
++
++error_release:
++	if (sru_region)
++		release_mem_region(sru_res->start, resource_size(sru_res));
++	if (adg_region)
++		release_mem_region(adg_res->start, resource_size(adg_res));
++
++error_clk_put:
++	if (!IS_ERR(sru_clk))
++		clk_put(sru_clk);
++	if (!IS_ERR(ssi0_clk))
++		clk_put(ssi0_clk);
++	if (!IS_ERR(ssi1_clk))
++		clk_put(ssi1_clk);
++
++	return ret;
++}
++
++static int sru_remove(struct platform_device *pdev)
++{
++	FNC_ENTRY
++
++	clk_disable(ssi0_clk);
++	clk_disable(ssi1_clk);
++	clk_disable(sru_clk);
++
++	FNC_EXIT
++	return 0;
++}
++
++static struct platform_driver sru_driver = {
++	.driver		= {
++		.name	= "rcar_sru",
++	},
++	.probe		= sru_probe,
++	.remove		= sru_remove,
++};
++
++static int __init sru_modinit(void)
++{
++	FNC_ENTRY
++
++	spin_lock_init(&sru_lock);
++
++	FNC_EXIT
++	return platform_driver_register(&sru_driver);
++}
++module_init(sru_modinit);
++
++static void __exit sru_modexit(void)
++{
++	FNC_ENTRY
++
++	/* un-regist audio driver */
++	platform_driver_unregister(&sru_driver);
++
++	FNC_EXIT
++}
++module_exit(sru_modexit);
++
++MODULE_LICENSE("GPL v2");
++MODULE_DESCRIPTION("R-Car SRU driver");
++MODULE_AUTHOR("Renesas Electronics");
+diff --git a/sound/soc/rcar/sru_pcm.h b/sound/soc/rcar/sru_pcm.h
+new file mode 100644
+index 0000000..dd9268f
+--- /dev/null
++++ b/sound/soc/rcar/sru_pcm.h
+@@ -0,0 +1,990 @@
++/*
++ *  sound/soc/rcar/sru_pcm.h
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#ifndef __SRU_PCM_H__
++#define __SRU_PCM_H__
++
++#include <linux/rcar-hpbdma.h>
++#include <mach/hpb-dmae.h>
++
++/************************************************************************
++
++	define
++
++************************************************************************/
++/* buffer information */
++#define PERIOD_BYTES_MIN	(4 * 1024)
++#define PERIOD_BYTES_MAX	(4 * 1024)
++#define PERIODS_MIN		16
++#define PERIODS_MAX		16
++#define BUFFER_BYTES_MAX	(PERIOD_BYTES_MAX * PERIODS_MAX)
++
++/* dma direction */
++#define	DMA_DIR(d)	((d == 0) ? DMA_TO_DEVICE : DMA_FROM_DEVICE)
++
++/* DMA information */
++#define	DMACH_SSI0	28
++#define	DMACH_SSI1	29
++#define	DMACH_SSI2	30
++#define	DMACH_SSI3	31
++#define	DMACH_SSI4	32
++#define	DMACH_SSI5	33
++#define	DMACH_SSI6	34
++#define	DMACH_SSI7	35
++#define	DMACH_SSI8	36
++#define	DMACH_SSI9	42
++
++#define	CODEC1_PCH	DMACH_SSI0	/* playback */
++#define	CODEC1_CCH	DMACH_SSI1	/* capture  */
++
++/* base address */
++#define	RC_SRU_BASE	IOMEM(RC_BASE_SRU)		/* 0xffd90000 */
++#define	RC_ADG_BASE	IOMEM(RC_BASE_ADG)		/* 0xfffe0000 */
++
++/* HPBIF data register */
++#define	HPBIF0_DATA	0xffda0000
++#define	HPBIF1_DATA	0xffda1000
++#define	HPBIF2_DATA	0xffda2000
++#define	HPBIF3_DATA	0xffda3000
++#define	HPBIF4_DATA	0xffda4000
++#define	HPBIF5_DATA	0xffda5000
++#define	HPBIF6_DATA	0xffda6000
++#define	HPBIF7_DATA	0xffda7000
++#define	HPBIF8_DATA	0xffda8000
++
++/* SRU register offset */
++#define	SRC0_BASE		0x00000200
++#define	SRC1_BASE		0x00000240
++#define	SRC2_BASE		0x00000280
++#define	SRC3_BASE		0x000002c0
++#define	SRC4_BASE		0x00000300
++#define	SRC5_BASE		0x00000340
++#define	SRC6_BASE		0x00000380
++#define	SRC7_BASE		0x000003c0
++#define	SRC8_BASE		0x00000400
++#define	CTU00_BASE		0x00000500
++#define	CTU01_BASE		0x00000600
++#define	CTU02_BASE		0x00000700
++#define	CTU03_BASE		0x00000800
++#define	CTU10_BASE		0x00000900
++#define	CTU11_BASE		0x00000a00
++#define	CTU12_BASE		0x00000b00
++#define	CTU13_BASE		0x00000c00
++#define	MIX0_BASE		0x00000d00
++#define	MIX1_BASE		0x00000d40
++#define	DVC0_BASE		0x00000e00
++#define	DVC1_BASE		0x00000f00
++#define	SSI0_BASE		0x00001000
++#define	SSI1_BASE		0x00001040
++#define	SSI2_BASE		0x00001080
++#define	SSI3_BASE		0x000010c0
++#define	SSI4_BASE		0x00001100
++#define	SSI5_BASE		0x00001140
++#define	SSI6_BASE		0x00001180
++#define	SSI7_BASE		0x000011c0
++#define	SSI8_BASE		0x00001200
++
++/* SRC_ROUTE_SELECT bit */
++#define	RTSEL_SRC0_PLAY	(1<<0)	/* HPBIF0 -> SRC0 -> SSI0 */
++#define	RTSEL_SRC0_CAPT	(2<<0)	/* SSI0 -> SRC0 -> HPBIF0 */
++#define	RTSEL_SRC1_PLAY	(1<<4)	/* HPBIF1 -> SRC1 -> SSI1 */
++#define	RTSEL_SRC1_CAPT	(2<<4)	/* SSI1 -> SRC1 -> HPBIF1 */
++#define	RTSEL_SRC2_PLAY	(1<<8)	/* HPBIF2 -> SRC2 -> SSI2 */
++#define	RTSEL_SRC2_CAPT	(2<<8)	/* SSI2 -> SRC2 -> HPBIF2 */
++#define	RTSEL_SRC3_PLAY	(1<<12)	/* HPBIF3 -> SRC3 -> SSI3 */
++#define	RTSEL_SRC3_CAPT	(2<<12)	/* SSI3 -> SRC3 -> HPBIF3 */
++#define	RTSEL_SRC4_PLAY	(1<<16)	/* HPBIF4 -> SRC4 -> SSI4 */
++#define	RTSEL_SRC4_CAPT	(2<<16)	/* SSI4 -> SRC4 -> HPBIF4 */
++#define	RTSEL_SRC5_PLAY	(1<<20)	/* HPBIF5 -> SRC5 -> SSI5 */
++#define	RTSEL_SRC5_CAPT	(2<<20)	/* SSI5 -> SRC5 -> HPBIF5 */
++#define	RTSEL_SRC6_PLAY	(1<<24)	/* HPBIF6 -> SRC6 -> SSI6 */
++#define	RTSEL_SRC6_CAPT	(2<<24)	/* SSI6 -> SRC6 -> HPBIF6 */
++#define	RTSEL_SRC7_PLAY	(1<<28)	/* HPBIF7 -> SRC7 -> SSI7 */
++#define	RTSEL_SRC7_CAPT	(2<<28)	/* SSI7 -> SRC7 -> HPBIF7 */
++#define	RTSEL_SRC8_PLAY	(1<<30)	/* HPBIF8 -> SRC8 -> SSI8 */
++#define	RTSEL_SRC8_CAPT	(2<<30)	/* SSI8 -> SRC8 -> HPBIF8 */
++
++/* SRC_TIMING_SELECT0 */
++#define	TMGSEL0_HPBIF0_ADG	(0<<0)
++#define	TMGSEL0_HPBIF0_SSI0_WS	(1<<0)
++#define	TMGSEL0_HPBIF0_SSI1_WS	(2<<0)
++#define	TMGSEL0_HPBIF0_SSI2_WS	(3<<0)
++#define	TMGSEL0_HPBIF0_SSI3_WS	(4<<0)
++#define	TMGSEL0_HPBIF0_SSI4_WS	(5<<0)
++#define	TMGSEL0_HPBIF0_SSI5_WS	(6<<0)
++#define	TMGSEL0_HPBIF0_SSI6_WS	(7<<0)
++#define	TMGSEL0_HPBIF0_SSI7_WS	(8<<0)
++#define	TMGSEL0_HPBIF0_MIMLCP0	(9<<0)
++#define	TMGSEL0_HPBIF0_MIMLCP1	(10<<0)
++#define	TMGSEL0_HPBIF0_MIMLCP2	(11<<0)
++#define	TMGSEL0_HPBIF0_MIMLCP3	(12<<0)
++#define	TMGSEL0_HPBIF0_MIMLCP4	(13<<0)
++#define	TMGSEL0_HPBIF0_MIMLCP5	(14<<0)
++#define	TMGSEL0_HPBIF0_MIMLCP6	(15<<0)
++#define	TMGSEL0_HPBIF1_ADG	(0<<8)
++#define	TMGSEL0_HPBIF1_SSI0_WS	(1<<8)
++#define	TMGSEL0_HPBIF1_SSI1_WS	(2<<8)
++#define	TMGSEL0_HPBIF1_SSI2_WS	(3<<8)
++#define	TMGSEL0_HPBIF1_SSI3_WS	(4<<8)
++#define	TMGSEL0_HPBIF1_SSI4_WS	(5<<8)
++#define	TMGSEL0_HPBIF1_SSI5_WS	(6<<8)
++#define	TMGSEL0_HPBIF1_SSI6_WS	(7<<8)
++#define	TMGSEL0_HPBIF1_SSI7_WS	(8<<8)
++#define	TMGSEL0_HPBIF1_MIMLCP0	(9<<8)
++#define	TMGSEL0_HPBIF1_MIMLCP1	(10<<8)
++#define	TMGSEL0_HPBIF1_MIMLCP2	(11<<8)
++#define	TMGSEL0_HPBIF1_MIMLCP3	(12<<8)
++#define	TMGSEL0_HPBIF1_MIMLCP4	(13<<8)
++#define	TMGSEL0_HPBIF1_MIMLCP5	(14<<8)
++#define	TMGSEL0_HPBIF1_MIMLCP6	(15<<8)
++#define	TMGSEL0_HPBIF2_ADG	(0<<16)
++#define	TMGSEL0_HPBIF2_SSI0_WS	(1<<16)
++#define	TMGSEL0_HPBIF2_SSI1_WS	(2<<16)
++#define	TMGSEL0_HPBIF2_SSI2_WS	(3<<16)
++#define	TMGSEL0_HPBIF2_SSI3_WS	(4<<16)
++#define	TMGSEL0_HPBIF2_SSI4_WS	(5<<16)
++#define	TMGSEL0_HPBIF2_SSI5_WS	(6<<16)
++#define	TMGSEL0_HPBIF2_SSI6_WS	(7<<16)
++#define	TMGSEL0_HPBIF2_SSI7_WS	(8<<16)
++#define	TMGSEL0_HPBIF2_MIMLCP0	(9<<16)
++#define	TMGSEL0_HPBIF2_MIMLCP1	(10<<16)
++#define	TMGSEL0_HPBIF2_MIMLCP2	(11<<16)
++#define	TMGSEL0_HPBIF2_MIMLCP3	(12<<16)
++#define	TMGSEL0_HPBIF2_MIMLCP4	(13<<16)
++#define	TMGSEL0_HPBIF2_MIMLCP5	(14<<16)
++#define	TMGSEL0_HPBIF2_MIMLCP6	(15<<16)
++#define	TMGSEL0_HPBIF3_ADG	(0<<24)
++#define	TMGSEL0_HPBIF3_SSI0_WS	(1<<24)
++#define	TMGSEL0_HPBIF3_SSI1_WS	(2<<24)
++#define	TMGSEL0_HPBIF3_SSI2_WS	(3<<24)
++#define	TMGSEL0_HPBIF3_SSI3_WS	(4<<24)
++#define	TMGSEL0_HPBIF3_SSI4_WS	(5<<24)
++#define	TMGSEL0_HPBIF3_SSI5_WS	(6<<24)
++#define	TMGSEL0_HPBIF3_SSI6_WS	(7<<24)
++#define	TMGSEL0_HPBIF3_SSI7_WS	(8<<24)
++#define	TMGSEL0_HPBIF3_MIMLCP0	(9<<24)
++#define	TMGSEL0_HPBIF3_MIMLCP1	(10<<24)
++#define	TMGSEL0_HPBIF3_MIMLCP2	(11<<24)
++#define	TMGSEL0_HPBIF3_MIMLCP3	(12<<24)
++#define	TMGSEL0_HPBIF3_MIMLCP4	(13<<24)
++#define	TMGSEL0_HPBIF3_MIMLCP5	(14<<24)
++#define	TMGSEL0_HPBIF3_MIMLCP6	(15<<24)
++
++/* SRC_TIMING_SELECT1 */
++#define	TMGSEL1_HPBIF4_ADG	(0<<0)
++#define	TMGSEL1_HPBIF4_SSI0_WS	(1<<0)
++#define	TMGSEL1_HPBIF4_SSI1_WS	(2<<0)
++#define	TMGSEL1_HPBIF4_SSI2_WS	(3<<0)
++#define	TMGSEL1_HPBIF4_SSI3_WS	(4<<0)
++#define	TMGSEL1_HPBIF4_SSI4_WS	(5<<0)
++#define	TMGSEL1_HPBIF4_SSI5_WS	(6<<0)
++#define	TMGSEL1_HPBIF4_SSI6_WS	(7<<0)
++#define	TMGSEL1_HPBIF4_SSI7_WS	(8<<0)
++#define	TMGSEL1_HPBIF4_MIMLCP0	(9<<0)
++#define	TMGSEL1_HPBIF4_MIMLCP1	(10<<0)
++#define	TMGSEL1_HPBIF4_MIMLCP2	(11<<0)
++#define	TMGSEL1_HPBIF4_MIMLCP3	(12<<0)
++#define	TMGSEL1_HPBIF4_MIMLCP4	(13<<0)
++#define	TMGSEL1_HPBIF4_MIMLCP5	(14<<0)
++#define	TMGSEL1_HPBIF4_MIMLCP6	(15<<0)
++#define	TMGSEL1_HPBIF5_ADG	(0<<8)
++#define	TMGSEL1_HPBIF5_SSI0_WS	(1<<8)
++#define	TMGSEL1_HPBIF5_SSI1_WS	(2<<8)
++#define	TMGSEL1_HPBIF5_SSI2_WS	(3<<8)
++#define	TMGSEL1_HPBIF5_SSI3_WS	(4<<8)
++#define	TMGSEL1_HPBIF5_SSI4_WS	(5<<8)
++#define	TMGSEL1_HPBIF5_SSI5_WS	(6<<8)
++#define	TMGSEL1_HPBIF5_SSI6_WS	(7<<8)
++#define	TMGSEL1_HPBIF5_SSI7_WS	(8<<8)
++#define	TMGSEL1_HPBIF5_MIMLCP0	(9<<8)
++#define	TMGSEL1_HPBIF5_MIMLCP1	(10<<8)
++#define	TMGSEL1_HPBIF5_MIMLCP2	(11<<8)
++#define	TMGSEL1_HPBIF5_MIMLCP3	(12<<8)
++#define	TMGSEL1_HPBIF5_MIMLCP4	(13<<8)
++#define	TMGSEL1_HPBIF5_MIMLCP5	(14<<8)
++#define	TMGSEL1_HPBIF5_MIMLCP6	(15<<8)
++#define	TMGSEL1_HPBIF6_ADG	(0<<16)
++#define	TMGSEL1_HPBIF6_SSI0_WS	(1<<16)
++#define	TMGSEL1_HPBIF6_SSI1_WS	(2<<16)
++#define	TMGSEL1_HPBIF6_SSI2_WS	(3<<16)
++#define	TMGSEL1_HPBIF6_SSI3_WS	(4<<16)
++#define	TMGSEL1_HPBIF6_SSI4_WS	(5<<16)
++#define	TMGSEL1_HPBIF6_SSI5_WS	(6<<16)
++#define	TMGSEL1_HPBIF6_SSI6_WS	(7<<16)
++#define	TMGSEL1_HPBIF6_SSI7_WS	(8<<16)
++#define	TMGSEL1_HPBIF6_MIMLCP0	(9<<16)
++#define	TMGSEL1_HPBIF6_MIMLCP1	(10<<16)
++#define	TMGSEL1_HPBIF6_MIMLCP2	(11<<16)
++#define	TMGSEL1_HPBIF6_MIMLCP3	(12<<16)
++#define	TMGSEL1_HPBIF6_MIMLCP4	(13<<16)
++#define	TMGSEL1_HPBIF6_MIMLCP5	(14<<16)
++#define	TMGSEL1_HPBIF6_MIMLCP6	(15<<16)
++#define	TMGSEL1_HPBIF7_ADG	(0<<24)
++#define	TMGSEL1_HPBIF7_SSI0_WS	(1<<24)
++#define	TMGSEL1_HPBIF7_SSI1_WS	(2<<24)
++#define	TMGSEL1_HPBIF7_SSI2_WS	(3<<24)
++#define	TMGSEL1_HPBIF7_SSI3_WS	(4<<24)
++#define	TMGSEL1_HPBIF7_SSI4_WS	(5<<24)
++#define	TMGSEL1_HPBIF7_SSI5_WS	(6<<24)
++#define	TMGSEL1_HPBIF7_SSI6_WS	(7<<24)
++#define	TMGSEL1_HPBIF7_SSI7_WS	(8<<24)
++#define	TMGSEL1_HPBIF7_MIMLCP0	(9<<24)
++#define	TMGSEL1_HPBIF7_MIMLCP1	(10<<24)
++#define	TMGSEL1_HPBIF7_MIMLCP2	(11<<24)
++#define	TMGSEL1_HPBIF7_MIMLCP3	(12<<24)
++#define	TMGSEL1_HPBIF7_MIMLCP4	(13<<24)
++#define	TMGSEL1_HPBIF7_MIMLCP5	(14<<24)
++#define	TMGSEL1_HPBIF7_MIMLCP6	(15<<24)
++
++/* SRC_TIMING_SELECT2 */
++#define	TMGSEL2_HPBIF8_ADG	(0<<0)
++#define	TMGSEL2_HPBIF8_SSI0_WS	(1<<0)
++#define	TMGSEL2_HPBIF8_SSI1_WS	(2<<0)
++#define	TMGSEL2_HPBIF8_SSI2_WS	(3<<0)
++#define	TMGSEL2_HPBIF8_SSI3_WS	(4<<0)
++#define	TMGSEL2_HPBIF8_SSI4_WS	(5<<0)
++#define	TMGSEL2_HPBIF8_SSI5_WS	(6<<0)
++#define	TMGSEL2_HPBIF8_SSI6_WS	(7<<0)
++#define	TMGSEL2_HPBIF8_SSI7_WS	(8<<0)
++#define	TMGSEL2_HPBIF8_MIMLCP0	(9<<0)
++#define	TMGSEL2_HPBIF8_MIMLCP1	(10<<0)
++#define	TMGSEL2_HPBIF8_MIMLCP2	(11<<0)
++#define	TMGSEL2_HPBIF8_MIMLCP3	(12<<0)
++#define	TMGSEL2_HPBIF8_MIMLCP4	(13<<0)
++#define	TMGSEL2_HPBIF8_MIMLCP5	(14<<0)
++#define	TMGSEL2_HPBIF8_MIMLCP6	(15<<0)
++
++/* SRC_TIMING_SELECT3 */
++#define	TMGSEL3_SRCOUT0_SSI3_WS	(0<<0)
++#define	TMGSEL3_SRCOUT0_SSI4_WS	(1<<0)
++#define	TMGSEL3_SRCOUT0_MIMLCP3	(2<<0)
++#define	TMGSEL3_SRCOUT0_MIMLCP4	(3<<0)
++#define	TMGSEL3_SRCOUT1_SSI3_WS	(0<<4)
++#define	TMGSEL3_SRCOUT1_SSI4_WS	(1<<4)
++#define	TMGSEL3_SRCOUT1_MIMLCP3	(2<<4)
++#define	TMGSEL3_SRCOUT1_MIMLCP4	(3<<4)
++#define	TMGSEL3_SRCOUT2_SSI3_WS	(0<<8)
++#define	TMGSEL3_SRCOUT2_SSI4_WS	(1<<8)
++#define	TMGSEL3_SRCOUT2_MIMLCP3	(2<<8)
++#define	TMGSEL3_SRCOUT2_MIMLCP4	(3<<8)
++#define	TMGSEL3_SRCOUT3_SSI3_WS	(0<<12)
++#define	TMGSEL3_SRCOUT3_SSI4_WS	(1<<12)
++#define	TMGSEL3_SRCOUT3_MIMLCP3	(2<<12)
++#define	TMGSEL3_SRCOUT3_MIMLCP4	(3<<12)
++#define	TMGSEL3_SRCOUT4_SSI3_WS	(0<<16)
++#define	TMGSEL3_SRCOUT4_SSI4_WS	(1<<16)
++#define	TMGSEL3_SRCOUT4_MIMLCP3	(2<<16)
++#define	TMGSEL3_SRCOUT4_MIMLCP4	(3<<16)
++
++/* HPBIF_MODE */
++#define	HPBIF_MD_ACCESS_PIO	(0<<0)
++#define	HPBIF_MD_ACCESS_DMA	(1<<0)
++#define	HPBIF_MD_WORDSWAP	(1<<8)
++#define	HPBIF_MD_SFTNUM_BIT0	(0<<16)
++#define	HPBIF_MD_SFTNUM_BIT1	(1<<16)
++#define	HPBIF_MD_SFTNUM_BIT2	(2<<16)
++#define	HPBIF_MD_SFTNUM_BIT3	(3<<16)
++#define	HPBIF_MD_SFTNUM_BIT4	(4<<16)
++#define	HPBIF_MD_SFTNUM_BIT5	(5<<16)
++#define	HPBIF_MD_SFTNUM_BIT6	(6<<16)
++#define	HPBIF_MD_SFTNUM_BIT7	(7<<16)
++#define	HPBIF_MD_SFTNUM_BIT8	(8<<16)
++#define	HPBIF_MD_SFTNUM_BIT9	(9<<16)
++#define	HPBIF_MD_SFTNUM_BIT10	(10<<16)
++#define	HPBIF_MD_SFTNUM_BIT11	(11<<16)
++#define	HPBIF_MD_SFTNUM_BIT12	(12<<16)
++#define	HPBIF_MD_SFTNUM_BIT13	(13<<16)
++#define	HPBIF_MD_SFTNUM_BIT14	(14<<16)
++#define	HPBIF_MD_SFTNUM_BIT15	(15<<16)
++#define	HPBIF_MD_SFTDIR_LEFT	(0<<20)
++#define	HPBIF_MD_SFTDIR_RIGHT	(1<<20)
++
++/* SRC_ROUTE_MODE0 */
++#define	SRCRT_MD_SRC_DISABLE	(0<<0)
++#define	SRCRT_MD_SRC_ENABLE	(1<<0)
++#define	SRCRT_MD_UF_ALL0	(1<<16)
++
++/* SRC_ROUTE_CONTROL */
++#define	SRCRT_CTRL_START0	(1<<0)
++#define	SRCRT_CTRL_START1	(1<<1)
++#define	SRCRT_CTRL_START2	(1<<2)
++#define	SRCRT_CTRL_START3	(1<<3)
++#define	SRCRT_CTRL_START4	(1<<4)
++#define	SRCRT_CTRL_START5	(1<<5)
++#define	SRCRT_CTRL_START6	(1<<6)
++#define	SRCRT_CTRL_START7	(1<<7)
++#define	SRCRT_CTRL_START8	(1<<8)
++#define	SRCRT_CTRL_START30	(1<<16)
++#define	SRCRT_CTRL_START41	(1<<17)
++
++/* SSI_MODE0 bit */
++#define	SSI_MODE0_IND0	(1<<0)
++#define	SSI_MODE0_IND1	(1<<1)
++#define	SSI_MODE0_IND2	(1<<2)
++#define	SSI_MODE0_IND3	(1<<3)
++#define	SSI_MODE0_IND4	(1<<4)
++#define	SSI_MODE0_IND5	(1<<5)
++#define	SSI_MODE0_IND6	(1<<6)
++#define	SSI_MODE0_IND7	(1<<7)
++#define	SSI_MODE0_IND8	(1<<8)
++#define	SSI_MODE0_SWAP0	(1<<16)
++#define	SSI_MODE0_SWAP1	(1<<17)
++#define	SSI_MODE0_SWAP2	(1<<18)
++#define	SSI_MODE0_SWAP3	(1<<19)
++#define	SSI_MODE0_SWAP4	(1<<20)
++#define	SSI_MODE0_SWAP5	(1<<21)
++#define	SSI_MODE0_SWAP6	(1<<22)
++#define	SSI_MODE0_SWAP7	(1<<23)
++#define	SSI_MODE0_SWAP8	(1<<24)
++
++/* SSI_MODE1 bit */
++#define	SSI_MODE1_SSI1_IND	(0<<0)	/* SSI1 independent        */
++#define	SSI_MODE1_SSI1_SLAVE	(1<<0)	/* SSI1 slave, SSI0 slave  */
++#define	SSI_MODE1_SSI1_MASTER	(2<<0)	/* SSI1 slave, SSI0 master */
++#define	SSI_MODE1_SSI2_IND	(0<<2)	/* SSI2 independent        */
++#define	SSI_MODE1_SSI2_SLAVE	(1<<2)	/* SSI2 slave, SSI0 slave  */
++#define	SSI_MODE1_SSI2_MASTER	(2<<2)	/* SSI2 slave, SSI0 master */
++#define	SSI_MODE1_SSI012_3MOD	(1<<4)
++#define	SSI_MODE1_SSI4_IND	(0<<16)	/* SSI4 independent        */
++#define	SSI_MODE1_SSI4_SLAVE	(1<<16)	/* SSI4 slave, SSI3 slave  */
++#define	SSI_MODE1_SSI4_MASTER	(2<<16)	/* SSI4 slave, SSI3 master */
++#define	SSI_MODE1_SSI34_SYNC	(1<<20)
++
++/* SRC_ADINR */
++#define	SRCAI_CHNUM_0		(0<<0)
++#define	SRCAI_CHNUM_1		(1<<0)
++#define	SRCAI_CHNUM_2		(2<<0)
++#define	SRCAI_CHNUM_4		(4<<0)
++#define	SRCAI_CHNUM_6		(6<<0)
++#define	SRCAI_CHNUM_8		(8<<0)
++#define	SRCAI_OTBL_24BIT	(0<<16)
++#define	SRCAI_OTBL_22BIT	(2<<16)
++#define	SRCAI_OTBL_20BIT	(4<<16)
++#define	SRCAI_OTBL_18BIT	(6<<16)
++#define	SRCAI_OTBL_16BIT	(8<<16)
++
++/* SRC_IFSVR */
++#define	SRC_IFS_FSO	0x00400000ULL	/* 2^22 */
++#define	SRC_IFS_44KHZ	44100ULL
++#define	SRC_IFS_48KHZ	48000ULL
++
++/* SSICRn bit */
++#define	SSICR_EN	(1<<0)
++#define	SSICR_TRMD_RX	(0<<1)
++#define	SSICR_TRMD_TX	(1<<1)
++#define	SSICR_CPEN	(1<<2)
++#define	SSICR_MUEN	(1<<3)
++#define	SSICR_CKDV_1	(0<<4)
++#define	SSICR_CKDV_2	(1<<4)
++#define	SSICR_CKDV_4	(2<<4)
++#define	SSICR_CKDV_8	(3<<4)
++#define	SSICR_CKDV_16	(4<<4)
++#define	SSICR_CKDV_6	(5<<4)
++#define	SSICR_CKDV_12	(6<<4)
++#define	SSICR_BREN	(1<<7)
++#define	SSICR_DEL	(1<<8)
++#define	SSICR_PDTA	(1<<9)
++#define	SSICR_SDTA	(1<<10)
++#define	SSICR_SPDP	(1<<11)
++#define	SSICR_SWSP	(1<<12)
++#define	SSICR_SCKP	(1<<13)
++#define	SSICR_M_SLAVE	(0<<14)
++#define	SSICR_M_MASTER	(3<<14)
++#define	SSICR_SWSD	(1<<14)
++#define	SSICR_SCKD	(1<<15)
++#define	SSICR_SWL_ST8	(0<<16)
++#define	SSICR_SWL_ST16	(1<<16)
++#define	SSICR_SWL_ST24	(2<<16)
++#define	SSICR_SWL_ST32	(3<<16)
++#define	SSICR_SWL_ST48	(4<<16)
++#define	SSICR_SWL_ST64	(5<<16)
++#define	SSICR_SWL_ST128	(6<<16)
++#define	SSICR_SWL_ST256	(7<<16)
++#define	SSICR_SWL_MN16	(0<<16)
++#define	SSICR_SWL_MN32	(1<<16)
++#define	SSICR_SWL_MN48	(2<<16)
++#define	SSICR_SWL_MN64	(3<<16)
++#define	SSICR_SWL_MN96	(4<<16)
++#define	SSICR_SWL_MN128	(5<<16)
++#define	SSICR_SWL_MN256	(6<<16)
++#define	SSICR_SWL_MN512	(7<<16)
++#define	SSICR_DWL_ST8	(0<<19)
++#define	SSICR_DWL_ST16	(1<<19)
++#define	SSICR_DWL_ST18	(2<<19)
++#define	SSICR_DWL_ST20	(3<<19)
++#define	SSICR_DWL_ST22	(4<<19)
++#define	SSICR_DWL_ST24	(5<<19)
++#define	SSICR_DWL_ST32	(6<<19)
++#define	SSICR_DWL_MN8	(0<<19)
++#define	SSICR_DWL_MN16	(1<<19)
++#define	SSICR_CHNL_ST1	(0<<22)
++#define	SSICR_CHNL_ST2	(1<<22)
++#define	SSICR_CHNL_ST3	(2<<22)
++#define	SSICR_CHNL_ST4	(3<<22)
++#define	SSICR_CHNL_MN	(0<<22)
++#define	SSICR_DIEN	(1<<24)
++#define	SSICR_IIEN	(1<<25)
++#define	SSICR_OIEN	(1<<26)
++#define	SSICR_UIEN	(1<<27)
++#define	SSICR_DMEN	(1<<28)
++#define	SSICR_FORCE	(1<<31)
++
++/*
++ * SSICR setting for AK4643
++ *   playback, master, 16bit, stereo
++ *   SCLK=256fs(MCLK)/8=32fs
++ */
++#define	SSICR_P4643_ST	(SSICR_FORCE    | \
++			 SSICR_CHNL_ST1 | \
++			 SSICR_DWL_ST16 | \
++			 SSICR_SWL_ST16 | \
++			 SSICR_M_MASTER | \
++			 SSICR_SWSP     | \
++			 SSICR_DEL      | \
++			 SSICR_CKDV_8   | \
++			 SSICR_TRMD_TX)
++
++/*
++ * SSICR setting for AK4643
++ *   playback, master, 16bit, mono(system word=32bit)
++ *   SCLK=256fs(MCLK)/8=32fs
++ */
++#define	SSICR_P4643_MN	(SSICR_FORCE    | \
++			 SSICR_CHNL_MN  | \
++			 SSICR_DWL_MN16 | \
++			 SSICR_SWL_MN32 | \
++			 SSICR_M_MASTER | \
++			 SSICR_DEL      | \
++			 SSICR_CKDV_8  | \
++			 SSICR_TRMD_TX)
++
++/*
++ * SSICR setting for AK4643
++ *   capture, slave, 16bit, stereo
++ *   SCLK=256fs(MCLK)/8=32fs
++ */
++#define	SSICR_C4643_ST	(SSICR_FORCE    | \
++			 SSICR_CHNL_ST1 | \
++			 SSICR_DWL_ST16 | \
++			 SSICR_SWL_ST16 | \
++			 SSICR_M_SLAVE  | \
++			 SSICR_SWSP     | \
++			 SSICR_DEL      | \
++			 SSICR_TRMD_RX)
++
++/*
++ * SSICR setting for AK4643
++ *   capture, slave, 16bit, mono(system word=32bit)
++ *   SCLK=256fs(MCLK)/8=32fs
++ */
++#define	SSICR_C4643_MN	(SSICR_FORCE    | \
++			 SSICR_CHNL_MN  | \
++			 SSICR_DWL_MN16 | \
++			 SSICR_SWL_MN32 | \
++			 SSICR_M_SLAVE  | \
++			 SSICR_DEL      | \
++			 SSICR_TRMD_RX)
++
++/* for SSI start */
++#define	SSICR_ENABLE	(SSICR_EN	| \
++			 SSICR_OIEN	| \
++			 SSICR_UIEN	| \
++			 SSICR_DMEN)
++
++/* SSISRn bit */
++#define	SSISR_IDST	(1<<0)
++#define	SSISR_SWNO	(1<<1)
++#define	SSISR_CHNO0	(1<<2)
++#define	SSISR_CHNO1	(1<<3)
++#define	SSISR_DIRQ	(1<<24)
++#define	SSISR_IIRQ	(1<<25)
++#define	SSISR_OIRQ	(1<<26)
++#define	SSISR_UIRQ	(1<<27)
++#define	SSISR_DMRQ	(1<<28)
++
++/* SSIWSRn bit */
++#define	SSIWSR_MODE_ST	(0<<0)
++#define	SSIWSR_MODE_MN	(1<<0)
++#define	SSIWSR_MONO	(1<<1)
++#define	SSIWSR_CONT	(1<<8)
++#define	SSIWSR_WIDTH_1	(1<<16)
++#define	SSIWSR_WIDTH_2	(2<<16)
++#define	SSIWSR_WIDTH_3	(3<<16)
++#define	SSIWSR_WIDTH_4	(4<<16)
++#define	SSIWSR_WIDTH_5	(5<<16)
++#define	SSIWSR_WIDTH_6	(6<<16)
++#define	SSIWSR_WIDTH_7	(7<<16)
++#define	SSIWSR_WIDTH_8	(8<<16)
++#define	SSIWSR_WIDTH_9	(9<<16)
++#define	SSIWSR_WIDTH_10	(10<<16)
++#define	SSIWSR_WIDTH_11	(11<<16)
++#define	SSIWSR_WIDTH_12	(12<<16)
++#define	SSIWSR_WIDTH_13	(13<<16)
++#define	SSIWSR_WIDTH_14	(14<<16)
++#define	SSIWSR_WIDTH_15	(15<<16)
++#define	SSIWSR_WIDTH_16	(16<<16)
++#define	SSIWSR_WIDTH_17	(17<<16)
++#define	SSIWSR_WIDTH_18	(18<<16)
++#define	SSIWSR_WIDTH_19	(19<<16)
++#define	SSIWSR_WIDTH_20	(20<<16)
++#define	SSIWSR_WIDTH_21	(21<<16)
++#define	SSIWSR_WIDTH_22	(22<<16)
++#define	SSIWSR_WIDTH_23	(23<<16)
++#define	SSIWSR_WIDTH_24	(24<<16)
++#define	SSIWSR_WIDTH_25	(25<<16)
++#define	SSIWSR_WIDTH_26	(26<<16)
++#define	SSIWSR_WIDTH_27	(27<<16)
++#define	SSIWSR_WIDTH_28	(28<<16)
++#define	SSIWSR_WIDTH_29	(29<<16)
++#define	SSIWSR_WIDTH_30	(30<<16)
++#define	SSIWSR_WIDTH_31	(31<<16)
++
++/*
++ * SSIWS setting
++ *   playback(master) only, 16bit, stereo
++ */
++#define	SSIWS_ST	SSIWSR_CONT
++
++/*
++ * SSIWS setting
++ *   playback(master) only, 16bit, mono(system word=32bit)
++ *   SYNC pulse=16bit
++ */
++#define	SSIWS_MN	(SSIWSR_WIDTH_16 | \
++			 SSIWSR_CONT	 | \
++			 SSIWSR_MONO	 | \
++			 SSIWSR_MODE_MN)
++
++/* ADG information */
++#define	ADG_BRRA		0x0000	/* BRGA baud rate set register   */
++#define	ADG_BRRB		0x0004	/* BRGB baud rate set register   */
++#define	ADG_SSICKR		0x0008	/* clock select register         */
++#define	ADG_AUDIO_CLK_SEL0	0x000c	/* AUDIO CLOCK select 0 register */
++#define	ADG_AUDIO_CLK_SEL1	0x0010	/* AUDIO CLOCK select 1 register */
++#define	ADG_AUDIO_CLK_SEL3	0x0018	/* AUDIO CLOCK select 3 register */
++#define	ADG_AUDIO_CLK_SEL4	0x001c	/* AUDIO CLOCK select 4 register */
++#define	ADG_AUDIO_CLK_SEL5	0x0020	/* AUDIO CLOCK select 5 register */
++
++/* ADG BRRA bit */
++#define	ADG_BRRA_CKS_ACLKA		(0<<8)
++#define	ADG_BRRA_CKS_ACLKA_DIV4		(1<<8)
++#define	ADG_BRRA_CKS_ACLKA_DIV16	(2<<8)
++#define	ADG_BRRA_CKS_ACLKA_DIV64	(3<<8)
++
++/* ADG BRRB bit */
++#define	ADG_BRRB_CKS_ACLKB		(0<<8)
++#define	ADG_BRRB_CKS_ACLKB_DIV4		(1<<8)
++#define	ADG_BRRB_CKS_ACLKB_DIV16	(2<<8)
++#define	ADG_BRRB_CKS_ACLKB_DIV64	(3<<8)
++
++/* ADG SSICKR bit */
++#define	ADG_SSICK_CLKOUT_BRGA		(0<<31)
++#define	ADG_SSICK_CLKOUT_BRGB		(1<<31)
++#define	ADG_SSICK_BRGA_AUDIO_CLKA	(0<<20)
++#define	ADG_SSICK_BRGA_AUDIO_CLKB	(1<<20)
++#define	ADG_SSICK_BRGA_AUDIO_CLKC	(4<<20)
++#define	ADG_SSICK_BRGB_AUDIO_CLKA	(0<<16)
++#define	ADG_SSICK_BRGB_AUDIO_CLKB	(1<<16)
++#define	ADG_SSICK_BRGB_AUDIO_CLKC	(4<<16)
++
++/* ADG AUDIO_CLK_SEL0 bit */
++#define	ADG_SEL0_SSI3_DIV1		(0<<30)
++#define	ADG_SEL0_SSI3_DIV2		(1<<30)
++#define	ADG_SEL0_SSI3_DIV4		(2<<30)
++#define	ADG_SEL0_SSI3_ACLK_DIV		(0<<28)
++#define	ADG_SEL0_SSI3_ACLK_BRGA		(1<<28)
++#define	ADG_SEL0_SSI3_ACLK_BRGB		(2<<28)
++#define	ADG_SEL0_SSI3_DIVCLK_FIX	(0<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_CLKA	(1<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_CLKB	(2<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_CLKC	(3<<24)
++#define	ADG_SEL0_SSI3_DIVCLK_MLBCLK	(4<<24)
++#define	ADG_SEL0_SSI2_DIV1		(0<<22)
++#define	ADG_SEL0_SSI2_DIV2		(1<<22)
++#define	ADG_SEL0_SSI2_DIV4		(2<<22)
++#define	ADG_SEL0_SSI2_ACLK_DIV		(0<<20)
++#define	ADG_SEL0_SSI2_ACLK_BRGA		(1<<20)
++#define	ADG_SEL0_SSI2_ACLK_BRGB		(2<<20)
++#define	ADG_SEL0_SSI2_DIVCLK_FIX	(0<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_CLKA	(1<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_CLKB	(2<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_CLKC	(3<<16)
++#define	ADG_SEL0_SSI2_DIVCLK_MLBCLK	(4<<16)
++#define	ADG_SEL0_SSI1_DIV1		(0<<14)
++#define	ADG_SEL0_SSI1_DIV2		(1<<14)
++#define	ADG_SEL0_SSI1_DIV4		(2<<14)
++#define	ADG_SEL0_SSI1_ACLK_DIV		(0<<12)
++#define	ADG_SEL0_SSI1_ACLK_BRGA		(1<<12)
++#define	ADG_SEL0_SSI1_ACLK_BRGB		(2<<12)
++#define	ADG_SEL0_SSI1_DIVCLK_FIX	(0<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_CLKA	(1<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_CLKB	(2<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_CLKC	(3<<8)
++#define	ADG_SEL0_SSI1_DIVCLK_MLBCLK	(4<<8)
++#define	ADG_SEL0_SSI0_DIV1		(0<<6)
++#define	ADG_SEL0_SSI0_DIV2		(1<<6)
++#define	ADG_SEL0_SSI0_DIV4		(2<<6)
++#define	ADG_SEL0_SSI0_ACLK_DIV		(0<<4)
++#define	ADG_SEL0_SSI0_ACLK_BRGA		(1<<4)
++#define	ADG_SEL0_SSI0_ACLK_BRGB		(2<<4)
++#define	ADG_SEL0_SSI0_DIVCLK_FIX	(0<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_CLKA	(1<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_CLKB	(2<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_CLKC	(3<<0)
++#define	ADG_SEL0_SSI0_DIVCLK_MLBCLK	(4<<0)
++
++/* ADG AUDIO_CLK_SEL1 bit */
++#define	ADG_SEL1_SSI7_DIV1		(0<<30)
++#define	ADG_SEL1_SSI7_DIV2		(1<<30)
++#define	ADG_SEL1_SSI7_DIV4		(2<<30)
++#define	ADG_SEL1_SSI7_ACLK_DIV		(0<<28)
++#define	ADG_SEL1_SSI7_ACLK_BRGA		(1<<28)
++#define	ADG_SEL1_SSI7_ACLK_BRGB		(2<<28)
++#define	ADG_SEL1_SSI7_DIVCLK_FIX	(0<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_CLKA	(1<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_CLKB	(2<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_CLKC	(3<<24)
++#define	ADG_SEL1_SSI7_DIVCLK_MLBCLK	(4<<24)
++#define	ADG_SEL1_SSI6_DIV1		(0<<22)
++#define	ADG_SEL1_SSI6_DIV2		(1<<22)
++#define	ADG_SEL1_SSI6_DIV4		(2<<22)
++#define	ADG_SEL1_SSI6_ACLK_DIV		(0<<20)
++#define	ADG_SEL1_SSI6_ACLK_BRGA		(1<<20)
++#define	ADG_SEL1_SSI6_ACLK_BRGB		(2<<20)
++#define	ADG_SEL1_SSI6_DIVCLK_FIX	(0<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_CLKA	(1<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_CLKB	(2<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_CLKC	(3<<16)
++#define	ADG_SEL1_SSI6_DIVCLK_MLBCLK	(4<<16)
++#define	ADG_SEL1_SSI5_DIV1		(0<<14)
++#define	ADG_SEL1_SSI5_DIV2		(1<<14)
++#define	ADG_SEL1_SSI5_DIV4		(2<<14)
++#define	ADG_SEL1_SSI5_ACLK_DIV		(0<<12)
++#define	ADG_SEL1_SSI5_ACLK_BRGA		(1<<12)
++#define	ADG_SEL1_SSI5_ACLK_BRGB		(2<<12)
++#define	ADG_SEL1_SSI5_DIVCLK_FIX	(0<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_CLKA	(1<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_CLKB	(2<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_CLKC	(3<<8)
++#define	ADG_SEL1_SSI5_DIVCLK_MLBCLK	(4<<8)
++#define	ADG_SEL1_SSI4_DIV1		(0<<6)
++#define	ADG_SEL1_SSI4_DIV2		(1<<6)
++#define	ADG_SEL1_SSI4_DIV4		(2<<6)
++#define	ADG_SEL1_SSI4_ACLK_DIV		(0<<4)
++#define	ADG_SEL1_SSI4_ACLK_BRGA		(1<<4)
++#define	ADG_SEL1_SSI4_ACLK_BRGB		(2<<4)
++#define	ADG_SEL1_SSI4_DIVCLK_FIX	(0<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_CLKA	(1<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_CLKB	(2<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_CLKC	(3<<0)
++#define	ADG_SEL1_SSI4_DIVCLK_MLBCLK	(4<<0)
++
++/* ADG AUDIO_CLK_SEL3 bit */
++#define	ADG_SEL3_HPBIF3_DIV128		(0<<28)
++#define	ADG_SEL3_HPBIF3_DIV256		(1<<28)
++#define	ADG_SEL3_HPBIF3_DIV512		(2<<28)
++#define	ADG_SEL3_HPBIF3_DIV1024		(3<<28)
++#define	ADG_SEL3_HPBIF3_DIV2048		(4<<28)
++#define	ADG_SEL3_HPBIF3_CLK_CLKA	(0<<24)
++#define	ADG_SEL3_HPBIF3_CLK_CLKB	(1<<24)
++#define	ADG_SEL3_HPBIF3_CLK_CLKC	(2<<24)
++#define	ADG_SEL3_HPBIF3_CLK_MLBCLK	(3<<24)
++#define	ADG_SEL3_HPBIF3_CLK_BRGA	(4<<24)
++#define	ADG_SEL3_HPBIF3_CLK_BRGB	(5<<24)
++#define	ADG_SEL3_HPBIF2_DIV128		(0<<20)
++#define	ADG_SEL3_HPBIF2_DIV256		(1<<20)
++#define	ADG_SEL3_HPBIF2_DIV512		(2<<20)
++#define	ADG_SEL3_HPBIF2_DIV1024		(3<<20)
++#define	ADG_SEL3_HPBIF2_DIV2048		(4<<20)
++#define	ADG_SEL3_HPBIF2_CLK_CLKA	(0<<16)
++#define	ADG_SEL3_HPBIF2_CLK_CLKB	(1<<16)
++#define	ADG_SEL3_HPBIF2_CLK_CLKC	(2<<16)
++#define	ADG_SEL3_HPBIF2_CLK_MLBCLK	(3<<16)
++#define	ADG_SEL3_HPBIF2_CLK_BRGA	(4<<16)
++#define	ADG_SEL3_HPBIF2_CLK_BRGB	(5<<16)
++#define	ADG_SEL3_HPBIF1_DIV128		(0<<12)
++#define	ADG_SEL3_HPBIF1_DIV256		(1<<12)
++#define	ADG_SEL3_HPBIF1_DIV512		(2<<12)
++#define	ADG_SEL3_HPBIF1_DIV1024		(3<<12)
++#define	ADG_SEL3_HPBIF1_DIV2048		(4<<12)
++#define	ADG_SEL3_HPBIF1_CLK_CLKA	(0<<8)
++#define	ADG_SEL3_HPBIF1_CLK_CLKB	(1<<8)
++#define	ADG_SEL3_HPBIF1_CLK_CLKC	(2<<8)
++#define	ADG_SEL3_HPBIF1_CLK_MLBCLK	(3<<8)
++#define	ADG_SEL3_HPBIF1_CLK_BRGA	(4<<8)
++#define	ADG_SEL3_HPBIF1_CLK_BRGB	(5<<8)
++#define	ADG_SEL3_HPBIF0_DIV128		(0<<4)
++#define	ADG_SEL3_HPBIF0_DIV256		(1<<4)
++#define	ADG_SEL3_HPBIF0_DIV512		(2<<4)
++#define	ADG_SEL3_HPBIF0_DIV1024		(3<<4)
++#define	ADG_SEL3_HPBIF0_DIV2048		(4<<4)
++#define	ADG_SEL3_HPBIF0_CLK_CLKA	(0<<0)
++#define	ADG_SEL3_HPBIF0_CLK_CLKB	(1<<0)
++#define	ADG_SEL3_HPBIF0_CLK_CLKC	(2<<0)
++#define	ADG_SEL3_HPBIF0_CLK_MLBCLK	(3<<0)
++#define	ADG_SEL3_HPBIF0_CLK_BRGA	(4<<0)
++#define	ADG_SEL3_HPBIF0_CLK_BRGB	(5<<0)
++
++/* ADG AUDIO_CLK_SEL4 bit */
++#define	ADG_SEL4_HPBIF7_DIV128		(0<<28)
++#define	ADG_SEL4_HPBIF7_DIV256		(1<<28)
++#define	ADG_SEL4_HPBIF7_DIV512		(2<<28)
++#define	ADG_SEL4_HPBIF7_DIV1024		(3<<28)
++#define	ADG_SEL4_HPBIF7_DIV2048		(4<<28)
++#define	ADG_SEL4_HPBIF7_CLK_CLKA	(0<<24)
++#define	ADG_SEL4_HPBIF7_CLK_CLKB	(1<<24)
++#define	ADG_SEL4_HPBIF7_CLK_CLKC	(2<<24)
++#define	ADG_SEL4_HPBIF7_CLK_MLBCLK	(3<<24)
++#define	ADG_SEL4_HPBIF7_CLK_BRGA	(4<<24)
++#define	ADG_SEL4_HPBIF7_CLK_BRGB	(5<<24)
++#define	ADG_SEL4_HPBIF6_DIV128		(0<<20)
++#define	ADG_SEL4_HPBIF6_DIV256		(1<<20)
++#define	ADG_SEL4_HPBIF6_DIV512		(2<<20)
++#define	ADG_SEL4_HPBIF6_DIV1024		(3<<20)
++#define	ADG_SEL4_HPBIF6_DIV2048		(4<<20)
++#define	ADG_SEL4_HPBIF6_CLK_CLKA	(0<<16)
++#define	ADG_SEL4_HPBIF6_CLK_CLKB	(1<<16)
++#define	ADG_SEL4_HPBIF6_CLK_CLKC	(2<<16)
++#define	ADG_SEL4_HPBIF6_CLK_MLBCLK	(3<<16)
++#define	ADG_SEL4_HPBIF6_CLK_BRGA	(4<<16)
++#define	ADG_SEL4_HPBIF6_CLK_BRGB	(5<<16)
++#define	ADG_SEL4_HPBIF5_DIV128		(0<<12)
++#define	ADG_SEL4_HPBIF5_DIV256		(1<<12)
++#define	ADG_SEL4_HPBIF5_DIV512		(2<<12)
++#define	ADG_SEL4_HPBIF5_DIV1024		(3<<12)
++#define	ADG_SEL4_HPBIF5_DIV2048		(4<<12)
++#define	ADG_SEL4_HPBIF5_CLK_CLKA	(0<<8)
++#define	ADG_SEL4_HPBIF5_CLK_CLKB	(1<<8)
++#define	ADG_SEL4_HPBIF5_CLK_CLKC	(2<<8)
++#define	ADG_SEL4_HPBIF5_CLK_MLBCLK	(3<<8)
++#define	ADG_SEL4_HPBIF5_CLK_BRGA	(4<<8)
++#define	ADG_SEL4_HPBIF5_CLK_BRGB	(5<<8)
++#define	ADG_SEL4_HPBIF4_DIV128		(0<<4)
++#define	ADG_SEL4_HPBIF4_DIV256		(1<<4)
++#define	ADG_SEL4_HPBIF4_DIV512		(2<<4)
++#define	ADG_SEL4_HPBIF4_DIV1024		(3<<4)
++#define	ADG_SEL4_HPBIF4_DIV2048		(4<<4)
++#define	ADG_SEL4_HPBIF4_CLK_CLKA	(0<<0)
++#define	ADG_SEL4_HPBIF4_CLK_CLKB	(1<<0)
++#define	ADG_SEL4_HPBIF4_CLK_CLKC	(2<<0)
++#define	ADG_SEL4_HPBIF4_CLK_MLBCLK	(3<<0)
++#define	ADG_SEL4_HPBIF4_CLK_BRGA	(4<<0)
++#define	ADG_SEL4_HPBIF4_CLK_BRGB	(5<<0)
++
++/* ADG AUDIO_CLK_SEL5 bit */
++#define	ADG_SEL5_HPBIF8_DIV128		(0<<4)
++#define	ADG_SEL5_HPBIF8_DIV256		(1<<4)
++#define	ADG_SEL5_HPBIF8_DIV512		(2<<4)
++#define	ADG_SEL5_HPBIF8_DIV1024		(3<<4)
++#define	ADG_SEL5_HPBIF8_DIV2048		(4<<4)
++#define	ADG_SEL5_HPBIF8_CLK_CLKA	(0<<0)
++#define	ADG_SEL5_HPBIF8_CLK_CLKB	(1<<0)
++#define	ADG_SEL5_HPBIF8_CLK_CLKC	(2<<0)
++#define	ADG_SEL5_HPBIF8_CLK_MLBCLK	(3<<0)
++#define	ADG_SEL5_HPBIF8_CLK_BRGA	(4<<0)
++#define	ADG_SEL5_HPBIF8_CLK_BRGB	(5<<0)
++
++/************************************************************************
++
++	structure
++
++************************************************************************/
++struct sru_regs {
++	u32	src_route_select;
++	u32	cmd_route_select;
++	u32	src_timing_select0;
++	u32	src_timing_select1;
++	u32	src_timing_select2;
++	u32	src_timing_select3;
++	u32	rsv1[2];
++	u32	hpbif_mode0;
++	u32	hpbif_mode1;
++	u32	hpbif_mode2;
++	u32	hpbif_mode3;
++	u32	hpbif_mode4;
++	u32	hpbif_mode5;
++	u32	hpbif_mode6;
++	u32	hpbif_mode7;
++	u32	hpbif_mode8;
++	u32	rsv2[3];
++	u32	src_route0_mode0;
++	u32	src_route0_mode1;
++	u32	src_route1_mode0;
++	u32	src_route1_mode1;
++	u32	src_route2_mode0;
++	u32	src_route2_mode1;
++	u32	src_route3_mode0;
++	u32	src_route3_mode1;
++	u32	src_route4_mode0;
++	u32	src_route4_mode1;
++	u32	src_route5_mode0;
++	u32	src_route5_mode1;
++	u32	src_route6_mode0;
++	u32	src_route6_mode1;
++	u32	src_route7_mode0;
++	u32	src_route7_mode1;
++	u32	src_route8_mode0;
++	u32	src_route8_mode1;
++	u32	cmd_route0_mode;
++	u32	cmd_route1_mode;
++	u32	rsv3[8];
++	u32	src_route_control;
++	u32	rsv4[3];
++	u32	ssi_mode0;
++	u32	ssi_mode1;
++	u32	ssi_control;
++	u32	rsv5;
++	u32	hpbif_status;
++	u32	hpbif_int_enable;
++	u32	system_status0;
++	u32	system_int_enable0;
++};
++
++struct src_regs {
++	u32	swrsr;
++	u32	srcir;
++	u32	rsv1[3];	/* reserved */
++	u32	adinr;
++	u32	rsv2;		/* reserved */
++	u32	ifscr;
++	u32	ifsvr;
++	u32	srccr;
++	u32	mnfsr;
++	u32	bfssr;
++};
++
++struct ctu_regs {
++	u32	swrsr;
++	u32	ctuir;
++	u32	adinr;
++	u32	rsv;		/* reserved */
++	u32	cpmdr;
++	u32	scmdr;
++	u32	sv00r;
++	u32	sv01r;
++	u32	sv02r;
++	u32	sv03r;
++	u32	sv04r;
++	u32	sv05r;
++	u32	sv06r;
++	u32	sv07r;
++	u32	sv10r;
++	u32	sv11r;
++	u32	sv12r;
++	u32	sv13r;
++	u32	sv14r;
++	u32	sv15r;
++	u32	sv16r;
++	u32	sv17r;
++	u32	sv20r;
++	u32	sv21r;
++	u32	sv22r;
++	u32	sv23r;
++	u32	sv24r;
++	u32	sv25r;
++	u32	sv26r;
++	u32	sv27r;
++	u32	sv30r;
++	u32	sv31r;
++	u32	sv32r;
++	u32	sv33r;
++	u32	sv34r;
++	u32	sv35r;
++	u32	sv36r;
++	u32	sv37r;
++};
++
++struct mix_regs {
++	u32	swrsr;
++	u32	mixir;
++	u32	adinr;
++	u32	rsv;		/* reserved */
++	u32	mixmr;
++	u32	mvpdr;
++	u32	mdbar;
++	u32	mdbbr;
++	u32	mdbcr;
++	u32	mdbdr;
++	u32	mdber;
++	u32	mixsr;
++};
++
++struct dvc_regs {
++	u32	swrsr;
++	u32	dvuir;
++	u32	adinr;
++	u32	rsv;		/* reserved */
++	u32	dvucr;
++	u32	zcmcr;
++	u32	vrctr;
++	u32	vrpdr;
++	u32	vrdbr;
++	u32	vrwtr;
++	u32	vol0r;
++	u32	vol1r;
++	u32	vol2r;
++	u32	vol3r;
++	u32	vol4r;
++	u32	vol5r;
++	u32	vol6r;
++	u32	vol7r;
++	u32	dvuer;
++};
++
++struct ssi_regs {
++	u32	cr;	/* control register */
++	u32	sr;	/* status register */
++	u32	tdr;	/* transmit data register */
++	u32	rdr;	/* receive data register */
++	u32	rsv[4];	/* reserved */
++	u32	wsr;	/* WS mode register */
++};
++
++struct rcar_pcm_info {
++	int id;				/* DAI ID */
++	int de_first;			/* for DMA 1st setting */
++	int de_start;			/* for DMA start */
++	unsigned int period;		/* for ping-pong control */
++	unsigned int tran_period;	/* A number of transffered period */
++	spinlock_t pcm_lock;		/* for trigger process */
++	struct dma_chan *de_chan;
++	struct dma_async_tx_descriptor *de_desc;
++	dma_cookie_t de_cookie;
++	struct hpb_dmae_slave de_param;
++	struct tasklet_struct de_tasklet;
++	struct rcar_audio_info *ainfo;
++	struct rcar_mixer *minfo;
++};
++
++struct rcar_audio_info {
++	struct sru_regs *srureg;	/* sru common register      */
++	struct src_regs *srcreg[2];	/* [0]:playback [1]:capture */
++	struct ssi_regs *ssireg[2];	/* [0]:playback [1]:capture */
++	struct hpbdma_pregs *dmareg[2];	/* [0]:playback [1]:capture */
++};
++
++/************************************************************************
++	external prototype declaration
++************************************************************************/
++extern struct snd_soc_dai_driver sru_soc_dai[];
++
++extern int sru_pcm_hwdep_new(struct snd_card *card, char *id);
++extern void rcar_audio_init(int codec_id);
++
++#endif	/* __SRU_PCM_H__ */
+-- 
+1.7.5.4
+

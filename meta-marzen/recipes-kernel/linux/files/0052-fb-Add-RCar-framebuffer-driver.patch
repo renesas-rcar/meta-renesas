@@ -1,0 +1,1743 @@
+From 1f63cbe6da4252fbfa4f2310ed64cea9f3b6a787 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Thu, 31 May 2012 21:25:16 +0100
+Subject: [PATCH 52/76] fb: Add RCar framebuffer driver
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/video/Kconfig  |   13 +
+ drivers/video/Makefile |    1 +
+ drivers/video/rcarfb.c |  973 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/video/rcarfb.h |  704 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 1691 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/video/rcarfb.c
+ create mode 100644 include/video/rcarfb.h
+
+diff --git a/drivers/video/Kconfig b/drivers/video/Kconfig
+index a290be5..1aa031a 100644
+--- a/drivers/video/Kconfig
++++ b/drivers/video/Kconfig
+@@ -2013,6 +2013,19 @@ config FB_SH_MOBILE_HDMI
+ 	---help---
+ 	  Driver for the on-chip SH-Mobile HDMI controller.
+ 
++config FB_RCAR
++        bool "R-CarFB"
++	depends on FB && ARCH_SHMOBILE
++	select FB_SYS_FILLRECT
++	select FB_SYS_COPYAREA
++	select FB_SYS_IMAGEBLIT
++	select FB_SYS_FOPS
++	---help---
++	  Frame buffer driver for the Renesas R-Car series Display Unit
++	  controller. The native resolution is 640x480, up to 1280x768
++	  pixels. This module supports RGB565 and RGB888 pixel format
++	  for input.
++
+ config FB_TMIO
+ 	tristate "Toshiba Mobile IO FrameBuffer support"
+ 	depends on FB && MFD_CORE
+diff --git a/drivers/video/Makefile b/drivers/video/Makefile
+index 9356add..7ecedec 100644
+--- a/drivers/video/Makefile
++++ b/drivers/video/Makefile
+@@ -137,6 +137,7 @@ obj-$(CONFIG_SH_MIPI_DSI)	  += sh_mipi_dsi.o
+ obj-$(CONFIG_FB_SH_MOBILE_HDMI)	  += sh_mobile_hdmi.o
+ obj-$(CONFIG_FB_SH_MOBILE_MERAM)  += sh_mobile_meram.o
+ obj-$(CONFIG_FB_SH_MOBILE_LCDC)	  += sh_mobile_lcdcfb.o
++obj-$(CONFIG_FB_RCAR)		  += rcarfb.o
+ obj-$(CONFIG_FB_OMAP)             += omap/
+ obj-y                             += omap2/
+ obj-$(CONFIG_XEN_FBDEV_FRONTEND)  += xen-fbfront.o
+diff --git a/drivers/video/rcarfb.c b/drivers/video/rcarfb.c
+new file mode 100644
+index 0000000..75494ff
+--- /dev/null
++++ b/drivers/video/rcarfb.c
+@@ -0,0 +1,973 @@
++/*
++ * Renesas Display Unit Framebuffer
++ *
++ * Copyright (C) 2012 Renesas Electronics Corporation
++ *
++ * This file is based on the sh_mobile_lcdcfb.c
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ */
++
++#include <linux/atomic.h>
++#include <linux/clk.h>
++#include <linux/console.h>
++#include <linux/dma-mapping.h>
++#include <linux/delay.h>
++#include <linux/init.h>
++#include <linux/interrupt.h>
++#include <linux/ioctl.h>
++#include <linux/kernel.h>
++#include <linux/mm.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/slab.h>
++#include <linux/vmalloc.h>
++#include <linux/uaccess.h> /* for copy_from_user() */
++#include <video/rcarfb.h>
++
++#include <mach/hardware.h>
++
++#include <video/rcarfb.h>
++
++#define PALETTE_NR	256
++#define DEV_NAME	"rcarfb"
++#define PLANE_NUM	2
++
++static char __devinitdata *mode_option[2] = { "640x480-16", "640x480-16" };
++
++struct rcar_pos_param {
++	unsigned long	px;	/* position of x */
++	unsigned long	py;	/* position of y */
++};
++
++struct rcar_size_param {
++	unsigned long	sx;	/* size of x */
++	unsigned long	sy;	/* size of y */
++};
++
++struct rcar_plane_param {
++	unsigned long mwx;		/* MWR:plane memory width */
++	unsigned long alpha;		/* ALPHA:blending rasio */
++	struct rcar_size_param disp;	/* DSXR,DSYR:display size x/y */
++	struct rcar_pos_param moni;	/* DPXR,DPYR:display position x/y */
++	unsigned long disp_area0_base;	/* DSA0:display area start address0 */
++	unsigned long disp_area1_base;	/* DSA1:display area start address1 */
++	struct rcar_pos_param mem;	/* SPX,SPY:start pixel position x/y */
++	unsigned long	waspr;		/* WASPR:wrap around start position */
++	unsigned long	wamwr;		/* WAMWR:wrap around memory width */
++	unsigned long	btr;		/* BTR:plane n blinking time */
++	unsigned long	mlr;		/* MLR:plan n memory length */
++	int plane_pixel;		/* plan n bit per pixel */
++	int disp_area;		/* use plan number flag */
++};
++
++struct rcar_du_priv {
++	struct device *dev;
++	void __iomem *base;
++	int		irq;
++	int		du_channel;
++	unsigned long	reg_offset;
++
++	u32 pseudo_palette[PALETTE_NR];
++	struct fb_info *info;
++	dma_addr_t	dma_handle;
++
++	int		bit_per_pixel;
++	struct rcar_size_param pan_offset;
++	int		blanked;
++	unsigned long	plane_area;
++	struct rcar_plane_param plane[8];
++	struct clk *duclk;
++	int		clock_rate;
++	struct fb_videomode current_mode;
++	struct rcar_reso_info *dispdev;
++	wait_queue_head_t vsync_wait;
++	int		vsync_flag;
++};
++
++static struct fb_fix_screeninfo rcar_du_fix  = {
++	.id =		"R-Car DU",
++	.type =		FB_TYPE_PACKED_PIXELS,
++	.visual =	FB_VISUAL_TRUECOLOR,
++	.accel =	FB_ACCEL_NONE,
++	.xpanstep =	0,
++	.ypanstep =	0,
++	.ywrapstep =	0,
++	.smem_start =	0,
++};
++
++static void du_write(struct rcar_du_priv *priv,
++		       unsigned long reg_offs, unsigned long data)
++{
++	iowrite32(data, priv->base + reg_offs);
++}
++
++static void du_write_ch(struct rcar_du_priv *priv,
++		       unsigned long reg_offs, unsigned long data)
++{
++	iowrite32(data, priv->base + priv->reg_offset + reg_offs);
++}
++
++static unsigned long du_read(struct rcar_du_priv *priv,
++			       unsigned long reg_offs)
++{
++	return ioread32(priv->base + reg_offs);
++}
++
++static unsigned long du_read_ch(struct rcar_du_priv *priv,
++			       unsigned long reg_offs)
++{
++	return ioread32(priv->base + priv->reg_offset + reg_offs);
++}
++
++static int du_check_disp_mode(unsigned long xres, unsigned long yres)
++{
++	if ((xres > MAX_XRES) || (yres > MAX_YRES))
++		return -1;
++
++	return 0;
++}
++
++static void du_set_plane(struct rcar_du_priv *priv, unsigned long plane_no)
++{
++	struct rcar_plane_param *pl;
++	struct rcar_pos_param moni, mem;
++	struct rcar_size_param disp;
++
++	pl = &priv->plane[plane_no];
++	moni = pl->moni;
++	mem = pl->mem;
++	disp = pl->disp;
++
++	if (priv->plane[plane_no].plane_pixel == BITPARPIXEL_16) {
++		/* 16bpp */
++		du_write(priv, P1DDCR4 + (plane_no * PLANE_OFF),
++		 CODE_DDCR4 | (du_read(priv, P1DDCR4 +
++		  (plane_no * PLANE_OFF)) & ~P1EDF_MASK));
++	} else {
++		/* 32bpp */
++		du_write(priv, P1DDCR4 + (plane_no * PLANE_OFF),
++			 CODE_DDCR4 | ((du_read(priv, P1DDCR4 +
++			 (plane_no * PLANE_OFF))) & ~P1EDF_MASK)
++			  | P1DDCR4_ARGB8888);
++	}
++
++	/* for plane */
++	du_write(priv, P1MR + (plane_no * PLANE_OFF), MODE_16BPP_32BPP_PnMR);
++	du_write(priv, P1MWR + (plane_no * PLANE_OFF), disp.sx);
++	du_write(priv, P1ALPHAR + (plane_no * PLANE_OFF), pl->alpha);
++	du_write(priv, P1DSXR + (plane_no * PLANE_OFF), disp.sx);
++	du_write(priv, P1DSYR + (plane_no * PLANE_OFF), disp.sy);
++	du_write(priv, P1DPXR + (plane_no * PLANE_OFF), moni.px);
++	du_write(priv, P1DPYR + (plane_no * PLANE_OFF), moni.py);
++	du_write(priv, P1DSA0R + (plane_no * PLANE_OFF),
++		 pl->disp_area0_base);
++	du_write(priv, P1SPXR + (plane_no * PLANE_OFF), mem.px);
++	du_write(priv, P1SPYR + (plane_no * PLANE_OFF), mem.py);
++	du_write(priv, P1WASPR + (plane_no * PLANE_OFF), pl->waspr);
++	du_write(priv, P1WAMWR + (plane_no * PLANE_OFF), pl->wamwr);
++	du_write(priv, P1BTR + (plane_no * PLANE_OFF), pl->btr);
++	du_write(priv, P1MLR + (plane_no * PLANE_OFF), pl->mlr);
++}
++
++static void du_set_plane_mode(struct rcar_du_priv *priv,
++				struct fb_info *info, unsigned long plane_no)
++{
++	unsigned long offset;
++
++	offset = info->var.xres * info->var.yres * info->var.bits_per_pixel / 8;
++
++	du_write(priv, DEFR4, BPP16_DEFR4);
++
++	if (priv->du_channel == 0) {
++		du_write(priv, DS1PR,
++			((plane_no + 1) << (28 - (4 * plane_no))));
++	} else {
++		du_write(priv, DS2PR,
++			((plane_no + 1) << (28 - (4 * plane_no))));
++	}
++
++	/* set plane param */
++	priv->plane[plane_no].plane_pixel = info->var.bits_per_pixel;
++	priv->plane[plane_no].alpha = DEFAULT_PnALPHAR;
++	priv->plane[plane_no].disp.sx = info->var.xres;
++	priv->plane[plane_no].disp.sy = info->var.yres;
++	priv->plane[plane_no].moni.px = DEFAULT_PnDPXR;
++	priv->plane[plane_no].moni.py = DEFAULT_PnDPYR;
++
++	priv->plane[plane_no].disp_area0_base =
++		(info->fix.smem_start & PnDSA_MASK);
++	priv->plane[plane_no].disp_area1_base =
++		((info->fix.smem_start + offset) & PnDSA_MASK);
++
++	priv->plane[plane_no].mem.px = DEFAULT_PnSPXR;
++	priv->plane[plane_no].mem.py = DEFAULT_PnSPYR;
++	priv->plane[plane_no].waspr = DEFAULT_PnWASPR;
++	priv->plane[plane_no].wamwr = DEFAULT_PnWAMWR;
++	priv->plane[plane_no].btr = DEFAULT_PnBTR;
++	priv->plane[plane_no].mlr = DEFAULT_PnMLR;
++
++	/* set register */
++	du_set_plane(priv, plane_no);
++
++	return;
++}
++
++static irqreturn_t rcar_du_irq(int irq, void *data)
++{
++	struct rcar_du_priv *priv = data;
++	unsigned long intr = 0;
++
++	/* acknowledge interrupt */
++	intr = du_read_ch(priv, DSSR);
++	/* clear interrupt */
++	du_write_ch(priv, DSRCR, intr);
++
++	if (intr & VBK_DSSR) {
++		priv->vsync_flag = priv->du_channel;
++		wake_up_interruptible(&priv->vsync_wait);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static void rcar_du_start_stop(struct rcar_du_priv *priv, int start)
++{
++	unsigned long tmp = du_read(priv, DSYSR);
++
++	tmp &= ~(DRES_DSYSR | DEN_DSYSR | MASTER_DSYSR_MASK);
++	/* start or stop the DU */
++	if (start == DU_START) {
++		/* Request DU Clock Operation */
++		clk_enable(priv->duclk);
++		if (priv->du_channel != 0) {
++			du_write(priv, D2SYSR, SYNC_ENABLE_D2SYSR);
++
++			/* Disable DU */
++			du_write(priv, DSYSR, tmp | DRES_DSYSR);
++			/* Enable DU */
++			du_write(priv, DSYSR, tmp | DEN_DSYSR);
++		}
++		du_write(priv, DSYSR, tmp | DEN_DSYSR);
++	} else {
++		/* Stanby DU Clock Operation */
++		du_write(priv, DSYSR, tmp | DRES_DSYSR);
++		clk_disable(priv->duclk);
++	}
++}
++
++static void rcar_du_stop(struct rcar_du_priv *priv)
++{
++	/* stop the lcdc */
++	rcar_du_start_stop(priv, DU_STOP);
++}
++
++static int rcar_du_setup_clocks(struct rcar_du_priv *priv,
++				int clks, struct fb_videomode *mode)
++{
++	unsigned long hc;
++	unsigned long vc;
++	unsigned long pclk;
++	unsigned long tmp;
++
++	/* DU Functionality expansion */
++	du_write(priv, DEFR, DEFAULT_DEFR);
++	du_write(priv, DEFR2, DEFAULT_DEFR2);
++	du_write(priv, DEFR3, DEFAULT_DEFR3);
++
++	/* Operate T-CON for DU1 */
++	du_write(priv, DEFR6, DEFAULT_DEFR6);
++	/* Use DS1PR or DS2PR */
++	du_write(priv, DORCR,
++		 PG2T_DORCR | DK2S_DORCR | PG2D_DS2_DORCR | DPRS_DORCR);
++
++	/* Calculate pixel clock */
++	hc = mode->hsync_len + mode->left_margin + mode->xres
++		+ mode->right_margin;
++	vc = mode->upper_margin + mode->yres + mode->lower_margin
++		+ mode->vsync_len;
++	pclk = hc * vc * mode->refresh;
++	tmp = (((clks / (pclk / 2)) + 1) / 2) - 1;
++
++	if (priv->du_channel == 0) {
++		tmp |= CLKS_ESCR;
++		du_write(priv, ESCR, tmp);
++		du_write(priv, OTAR, DEFAULT_OTAR);
++	} else {
++		/* Use Dot clock generation part 2 in DU1 */
++		du_write(priv, DPTSR,
++			 (DPTSR_P1DK | DPTSR_P1TS) << priv->plane_area);
++		tmp |= CLKS_ESCR2;
++		du_write(priv, ESCR2, tmp);
++		du_write(priv, OTAR2, DEFAULT_OTAR2);
++	}
++
++	return 0;
++}
++
++static int du_set_disp_timing(struct rcar_du_priv *priv,
++	struct fb_videomode *mode)
++{
++	int ret;
++
++	/* set dotclock */
++	ret = rcar_du_setup_clocks(priv, priv->clock_rate, mode);
++	if (ret)
++		return ret;
++
++	du_write_ch(priv, HDSR, mode->hsync_len + mode->left_margin - 19);
++	du_write_ch(priv, HDER, mode->hsync_len + mode->left_margin - 19
++				+ mode->xres);
++	du_write_ch(priv, HSWR, mode->hsync_len - 2);
++	du_write_ch(priv, HCR,  mode->hsync_len + mode->left_margin
++				+ mode->xres + mode->right_margin);
++
++	du_write_ch(priv, VDSR, mode->upper_margin - 2);
++	du_write_ch(priv, VDER, mode->upper_margin - 2 + mode->yres);
++	du_write_ch(priv, VSPR, mode->upper_margin + mode->yres
++				+ mode->lower_margin - 1);
++	du_write_ch(priv, VCR,  mode->upper_margin + mode->yres
++				+ mode->lower_margin + mode->vsync_len - 1);
++
++	/* Display Off mode Output */
++	du_write_ch(priv, BPOR, DEFAULT_BPOR);
++	/* Background Plane Output */
++	du_write_ch(priv, DOOR, DEFAULT_DOOR);
++
++	return 0;
++}
++
++static int rcar_du_start(struct rcar_du_priv *priv)
++{
++	struct fb_info *info;
++
++	/* Request DU Clock Operation */
++	clk_enable(priv->duclk);
++
++	info = priv->info;
++	/* setting the display timing create register */
++	du_set_disp_timing(priv, &priv->current_mode);
++
++	/* set priv param */
++	priv->pan_offset.sx = 0;
++	priv->pan_offset.sy = 0;
++	priv->bit_per_pixel = info->var.bits_per_pixel;
++
++	/* plane setting */
++	du_set_plane_mode(priv, info, priv->plane_area);
++
++	/* Clear VBK interrupt */
++	du_write_ch(priv, DSRCR, VBK_DSSR);
++	/* Enable VBK interrupt */
++	du_write_ch(priv, DIER, VBK_DSSR);
++
++	/* start the DU */
++	rcar_du_start_stop(priv, DU_START);
++
++	return 0;
++}
++
++static int rcar_du_setcolreg(u_int regno,
++			     u_int red, u_int green, u_int blue,
++			     u_int transp, struct fb_info *info)
++{
++	u32 *palette = info->pseudo_palette;
++
++	if (regno >= PALETTE_NR)
++		return -EINVAL;
++
++	switch (info->var.bits_per_pixel) {
++	case BITPARPIXEL_16:
++		palette = info->pseudo_palette;
++		palette[regno] = (red & 0xf800) |
++				((green & 0xfc00) >> 5) |
++				((blue & 0xf800) >> 11);
++		break;
++	case BITPARPIXEL_24:
++	case BITPARPIXEL_32:
++		if (regno >= 256)
++			return 1;
++
++		palette = info->pseudo_palette;
++		palette[regno] = ((transp & 0xff00) << 16) |
++				((red & 0xff00) << 8) |
++				(green & 0xff00) |
++				((blue & 0xff00) >> 8);
++		break;
++	default:
++		return 1;
++	}
++
++	return 0;
++}
++
++static int rcar_du_blank(int blank_mode, struct fb_info *info)
++{
++#if RCARFB_SUPPORTBLANK
++	struct rcar_du_priv *priv = info->par;
++	unsigned long tmp = readl(IO_ADDRESS(RC_BASE_DISPLAY + DSYSR));
++	unsigned long cpg_du_st, cpg_du_mask;
++
++	tmp &= ~(DRES_DSYSR | DEN_DSYSR | MASTER_DSYSR_MASK);
++
++	pr_info("%s: %s mode=%d\n", DEV_NAME, __func__, blank_mode);
++
++	if ((blank_mode != FB_BLANK_UNBLANK) && (!priv->blanked)) {
++		/* Display Reset */
++		writel(tmp | DRES_DSYSR, IO_ADDRESS(RC_BASE_DISPLAY + DSYSR));
++		if (priv->du_channel != 0) {
++			writel(SYNC_DISABLE_D2SYSR,
++				 IO_ADDRESS(RC_BASE_DISPLAY + D2SYSR));
++		}
++		/* Stanby DU Clock Operation */
++		clk_disable(priv->duclk);
++		priv->blanked = 1;
++	} else if (priv->blanked) {
++		/* Request DU Clock Operation */
++		clk_enable(priv->duclk);
++		/* Display start */
++		writel(tmp | DEN_DSYSR, IO_ADDRESS(RC_BASE_DISPLAY + DSYSR));
++		if (priv->du_channel != 0) {
++			writel(SYNC_ENABLE_D2SYSR,
++				 IO_ADDRESS(RC_BASE_DISPLAY + D2SYSR));
++		}
++		priv->blanked = 0;
++	}
++#endif
++	return 0;
++
++}
++
++static int rcar_du_pan_display(struct fb_var_screeninfo *var,
++			       struct fb_info *info)
++{
++	struct rcar_du_priv *priv = info->par;
++
++	unsigned long plane_no = priv->plane_area;
++
++	if (var->xoffset != priv->pan_offset.sx ||
++		 var->yoffset != priv->pan_offset.sy) {
++		if ((var->xoffset == 0) && (var->yoffset == 0)) {
++			du_write(priv, P1DSA0R + (plane_no * PLANE_OFF),
++				 priv->plane[plane_no].disp_area0_base);
++		} else if (var->yoffset == info->var.yres) {
++			du_write(priv, P1DSA0R + (plane_no * PLANE_OFF),
++				 priv->plane[plane_no].disp_area1_base);
++		} else {
++			return -EINVAL;
++		}
++		/* display the area0 */
++		priv->pan_offset.sx = var->xoffset;
++		priv->pan_offset.sy = var->yoffset;
++	}
++
++	return 0;
++}
++
++static int rcar_du_check_var(struct fb_var_screeninfo *var,
++	 struct fb_info *info)
++{
++	switch (var->bits_per_pixel) {
++	case BITPARPIXEL_16:	/* RGB 565 */
++		var->red.offset    = 11;
++		var->red.length    = 5;
++		var->green.offset  = 5;
++		var->green.length  = 6;
++		var->blue.offset   = 0;
++		var->blue.length   = 5;
++		var->transp.offset = 0;
++		var->transp.length = 0;
++		break;
++	case BITPARPIXEL_24:	/* RGB888 */
++	case BITPARPIXEL_32:	/* ARGB 8888 */
++		var->red.offset    = 16;
++		var->red.length    = 8;
++		var->green.offset  = 8;
++		var->green.length  = 8;
++		var->blue.offset   = 0;
++		var->blue.length   = 8;
++		var->transp.offset = 24;
++		var->transp.length = 8;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int rcar_du_set_par(struct fb_info *info)
++{
++	struct rcar_du_priv *priv = info->par;
++	struct fb_var_screeninfo *var;
++	struct fb_videomode mode;
++	char modestr[20];
++	int ret = 0;
++
++	/* check the resolution */
++	if (du_check_disp_mode(info->var.xres, info->var.yres))
++		return -EINVAL;
++
++	/* Note: this doesn't change any of the the timing related fields.
++	   We need to look up the mode using fb_find_mode */
++	fb_var_to_videomode(&mode, &info->var);
++
++	if (fb_mode_is_equal(&priv->current_mode, &mode))
++		return ret;
++
++	var = &info->var;
++
++	/* Create string for resolution & depth */
++	if (var->bits_per_pixel == BITPARPIXEL_16)
++		snprintf(modestr, 20, "%dx%d-16", mode.xres, mode.yres);
++	else if (var->bits_per_pixel == BITPARPIXEL_24 ||
++		var->bits_per_pixel == BITPARPIXEL_32)
++		snprintf(modestr, 20, "%dx%d-32", mode.xres, mode.yres);
++	else
++		return -EINVAL;
++
++	/* Platform specific video modes */
++	if (priv->dispdev->modes) {
++		ret = fb_find_mode(&info->var, info, modestr,
++			priv->dispdev->modes, priv->dispdev->num_modes,
++			NULL, 16);
++	}
++
++	if (!ret) {
++		/* Standard modes */
++		ret = fb_find_mode(&info->var, info, modestr,
++			NULL, 0, NULL, 16);
++	}
++
++	if (!ret)
++		return -EINVAL;
++
++	fb_var_to_videomode(&mode, &info->var);
++
++	ret = du_set_disp_timing(priv, &mode);
++	if (ret)
++		goto err1;
++
++	/* update param */
++	info->fix.ypanstep = var->yres;
++
++	/* check the BPP */
++	ret = rcar_du_check_var(var, info);
++	if (ret)
++		goto err1;
++
++	du_set_plane_mode(priv, info, priv->plane_area);
++
++	/* update param */
++	priv->bit_per_pixel = var->bits_per_pixel;
++	info->fix.line_length = info->var.xres *
++		(info->var.bits_per_pixel / 8);
++
++	/* start the DU */
++	rcar_du_start_stop(priv, DU_START);
++
++	return ret;
++
++err1:
++	memset(info->screen_base, 0,
++		MAX_XRES * MAX_YRES * FB_BYTES * PLANE_NUM);
++
++	return ret;
++}
++static int rcar_du_set_pixfmt(struct fb_info *info, unsigned long pixfmt)
++{
++	int PixData;
++	int ret = 0;
++	struct rcar_du_priv *priv = info->par;
++
++	if ((pixfmt < RCAR_PIXFMT_ARGB8888) || (pixfmt > RCAR_PIXFMT_YUYV)) {
++		ret = -EINVAL;
++		goto error_end;
++	}
++
++	if ((pixfmt == RCAR_PIXFMT_ARGB8888) ||
++		 (pixfmt == RCAR_PIXFMT_ARGB0565)) {
++		PixData = 0x01;
++	} else if ((pixfmt == RCAR_PIXFMT_ARGB1555) ||
++		 (pixfmt == RCAR_PIXFMT_RGB888)) {
++		PixData = 0x02;
++	} else if ((pixfmt == RCAR_PIXFMT_UYVY) ||
++		 (pixfmt == RCAR_PIXFMT_YUYV) ||
++		 (pixfmt == RCAR_PIXFMT_RGB666)) {
++		PixData = 0x03;
++	} else {
++		ret = -EINVAL;
++		goto error_end;
++	}
++
++	if ((pixfmt == RCAR_PIXFMT_ARGB1555) ||
++		 (pixfmt == RCAR_PIXFMT_ARGB0565) ||
++		 (pixfmt == RCAR_PIXFMT_UYVY) ||
++		 (pixfmt == RCAR_PIXFMT_YUYV)) {
++		if (pixfmt == RCAR_PIXFMT_YUYV) {
++			/* YUYV */
++			du_write(priv, (P1MR + (PLANE_OFF * priv->plane_area)),
++				((du_read(priv, P1MR +
++				(PLANE_OFF * priv->plane_area))
++				 & (~PnYCDF_YUYV_PnMR)) | (PnYCDF_YUYV_PnMR)));
++		} else {
++			/* UYVY */
++			du_write(priv, (P1MR + (PLANE_OFF * priv->plane_area)),
++				 (du_read(priv, P1MR +
++				  (PLANE_OFF * priv->plane_area))
++				  & (~PnYCDF_YUYV_PnMR)));
++		}
++		du_write(priv, (P1DDCR4 + (PLANE_OFF * priv->plane_area)),
++			 CODE_DDCR4 | (du_read(priv, P1DDCR4 +
++			 (PLANE_OFF * priv->plane_area)) & ~P1EDF_MASK));
++		du_write(priv, (P1MR + (PLANE_OFF * priv->plane_area)),
++			 ((du_read(priv, P1MR + (PLANE_OFF * priv->plane_area))
++			  & ~PnDDDF_MASK) | PixData));
++	} else {
++		du_write(priv, (P1DDCR4 + (PLANE_OFF * priv->plane_area)),
++			 CODE_DDCR4 | ((du_read(priv, P1DDCR4 +
++			 (PLANE_OFF * priv->plane_area)) & ~P1EDF_MASK)
++			  | PixData));
++		du_write(priv, (P1MR + (PLANE_OFF * priv->plane_area)),
++			 ((du_read(priv, P1MR + (PLANE_OFF * priv->plane_area))
++			  & ~PnDDDF_MASK) | PnDDDF_16BPP_32BPP_PnMR));
++	}
++
++error_end:
++	return ret;
++}
++
++static int rcar_du_get_pixfmt(struct fb_info *info, unsigned long *pixfmt)
++{
++	int temp;
++	int ret = 0;
++	struct rcar_du_priv *priv = info->par;
++
++	if (pixfmt == NULL) {
++		pr_info("%s error.(pixfmt=NULL)\n", __func__);
++		ret = -EINVAL;
++		goto error_end;
++	}
++
++	temp = du_read(priv, P1DDCR4 + (PLANE_OFF * priv->plane_area))
++		 & P1EDF_MASK;
++
++	if (temp) {
++		if (temp == P1DDCR4_ARGB8888) {
++			*pixfmt = RCAR_PIXFMT_ARGB8888;
++		} else if (temp == P1DDCR4_RGB888) {
++			*pixfmt = RCAR_PIXFMT_RGB888;
++		} else if (temp == P1DDCR4_RGB666) {
++			*pixfmt = RCAR_PIXFMT_RGB666;
++		} else {
++			ret = -EINVAL;
++			goto error_end;
++		}
++	} else {
++		temp = du_read(priv, P1MR +
++			 (PLANE_OFF * priv->plane_area)) & PnDDDF_MASK;
++		if (temp == PnDDDF_16BPP_32BPP_PnMR) {
++			*pixfmt = RCAR_PIXFMT_ARGB0565;
++		} else if (temp == PnDDDF_ARGB_PnMR) {
++			*pixfmt = RCAR_PIXFMT_ARGB1555;
++		} else if (temp == PnDDDF_YC_PnMR) {
++			if ((du_read(priv, P1MR +
++				 (PLANE_OFF * priv->plane_area))
++			 & PnYCDF_YUYV_PnMR) == PnYCDF_YUYV_PnMR)
++				*pixfmt = RCAR_PIXFMT_YUYV;
++			else
++				*pixfmt = RCAR_PIXFMT_UYVY;
++		} else {
++			ret = -EINVAL;
++			goto error_end;
++		}
++	}
++
++error_end:
++	return ret;
++}
++
++static int rcar_du_wait_for_vsync(struct fb_info *info)
++{
++	struct rcar_du_priv *priv = info->par;
++	int ret;
++
++	priv->vsync_flag = -1;
++	ret = wait_event_interruptible_timeout(priv->vsync_wait,
++			priv->vsync_flag == priv->du_channel,
++			msecs_to_jiffies(100));
++
++	if (!ret)
++		return -ETIMEDOUT;
++
++	return 0;
++}
++
++static int rcar_du_ioctl(struct fb_info *info, unsigned int cmd,
++			 unsigned long arg)
++{
++	int retval;
++	struct RCARFB_PIXFMT rcar_fmt;
++
++	switch (cmd) {
++	case FBIO_WAITFORVSYNC:
++		retval = rcar_du_wait_for_vsync(info);
++		break;
++
++	case FBIOCS_PIXFMT:
++		if (copy_from_user(&rcar_fmt, (void __user *)arg,
++				sizeof(struct RCARFB_PIXFMT))) {
++			pr_info("copy_from_user error. (FBIOCS_PIXFMT)\n");
++			retval = -EFAULT;
++			break;
++		}
++		retval = rcar_du_set_pixfmt(info, rcar_fmt.pixfmt);
++		break;
++
++	case FBIOCG_PIXFMT:
++		retval = rcar_du_get_pixfmt(info, &rcar_fmt.pixfmt);
++		if (copy_to_user((void __user *)arg, &rcar_fmt,
++				sizeof(struct RCARFB_PIXFMT))) {
++			pr_info("copy_to_user error. (FBIOCG_PIXFMT)\n");
++			retval = -EFAULT;
++		}
++		break;
++
++	default:
++		retval = -ENOIOCTLCMD;
++		break;
++	}
++
++	return retval;
++}
++
++static struct fb_ops rcar_du_ops = {
++	.owner          = THIS_MODULE,
++	.fb_check_var	= rcar_du_check_var,
++	.fb_set_par	= rcar_du_set_par,
++	.fb_setcolreg	= rcar_du_setcolreg,
++	.fb_blank	= rcar_du_blank,
++	.fb_read        = fb_sys_read,
++	.fb_write       = fb_sys_write,
++	.fb_fillrect	= sys_fillrect,
++	.fb_copyarea	= sys_copyarea,
++	.fb_imageblit	= sys_imageblit,
++	.fb_pan_display = rcar_du_pan_display,
++	.fb_ioctl	= rcar_du_ioctl,
++};
++
++static int rcar_du_remove(struct platform_device *pdev);
++
++static int __devinit rcar_du_probe(struct platform_device *pdev)
++{
++	struct fb_info *info;
++	struct rcar_du_priv *priv;
++	struct resource *res;
++	int error;
++	void *buf;
++	int i;
++	int ret = 0;
++
++	if (!pdev->dev.platform_data) {
++		dev_err(&pdev->dev, "no platform data defined\n");
++		return -EINVAL;
++	}
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	i = platform_get_irq(pdev, 0);
++	if (!res || i < 0) {
++		dev_err(&pdev->dev, "cannot get platform resources\n");
++		return -ENOENT;
++	}
++
++	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
++	if (!priv) {
++		dev_err(&pdev->dev, "cannot allocate device data\n");
++		return -ENOMEM;
++	}
++
++	platform_set_drvdata(pdev, priv);
++
++	init_waitqueue_head(&priv->vsync_wait);
++
++	error = request_irq(i, rcar_du_irq, IRQF_SHARED,
++			    dev_name(&pdev->dev), priv);
++	if (error) {
++		dev_err(&pdev->dev, "unable to request irq\n");
++		goto err1;
++	}
++
++	priv->irq = i;
++	priv->base = ioremap_nocache(res->start, resource_size(res));
++	if (!priv->base)
++		goto err1;
++
++	priv->dispdev = pdev->dev.platform_data;
++
++	if (pdev->id == 0)
++		priv->plane_area = DISP0_PLANE_NUM;
++	else
++		priv->plane_area = DISP1_PLANE_NUM;
++
++	info = framebuffer_alloc(0, &pdev->dev);
++	if (!info) {
++		dev_err(&pdev->dev, "unable to allocate fb_info\n");
++		error = -ENOMEM;
++		goto err1;
++	}
++
++	priv->duclk = clk_get(&pdev->dev, NULL);
++	if (IS_ERR(priv->duclk)) {
++		dev_err(&pdev->dev, "cannot get clock\n");
++		return -ENOENT;
++		goto err1;
++	}
++	priv->clock_rate = clk_get_rate(priv->duclk);
++
++	priv->info = info;
++	info->fbops = &rcar_du_ops;
++
++	/* setting resolution parameter  */
++	info->var.xres = DEFAULT_XRES;
++	info->var.yres = DEFAULT_YRES;
++
++	/* setting pixel format */
++	info->var.bits_per_pixel = priv->bit_per_pixel = DEFAULT_BITPARPIXEL;
++
++	info->var.width = -1;
++	info->var.height = -1;
++	info->var.activate = FB_ACTIVATE_NOW;
++
++	priv->du_channel = pdev->id;
++	if (pdev->id == 0)
++		priv->reg_offset = 0;
++	else
++		priv->reg_offset = DISP2_REG_OFFSET;
++
++	if (mode_option[pdev->id]) {
++		/* Platform specific video modes */
++		if (priv->dispdev->modes) {
++			ret = fb_find_mode(&info->var, info,
++				mode_option[pdev->id], priv->dispdev->modes,
++				priv->dispdev->num_modes, NULL, 16);
++		}
++
++		if (ret != 1) {
++			/* Standard modes */
++			ret = fb_find_mode(&info->var, info,
++				mode_option[pdev->id], NULL, 0, NULL, 16);
++		}
++	}
++
++	fb_var_to_videomode(&priv->current_mode, &info->var);
++
++	info->var.xres_virtual = info->var.xres;
++	info->var.yres_virtual = info->var.yres * 2; /* for double buffer */
++
++	error = rcar_du_check_var(&info->var, info);
++	if (error)
++		goto err1;
++
++	info->fix = rcar_du_fix;
++	info->fix.line_length = info->var.xres *
++			(info->var.bits_per_pixel / 8);
++	info->fix.ypanstep = info->var.yres;
++	info->fix.smem_len = MAX_XRES * MAX_YRES * FB_BYTES * PLANE_NUM;
++
++	buf = dma_alloc_coherent(&pdev->dev, info->fix.smem_len,
++				 &priv->dma_handle, GFP_KERNEL);
++	if (!buf) {
++		dev_err(&pdev->dev, "unable to allocate buffer\n");
++		error = -ENOMEM;
++		goto err1;
++	}
++
++	info->pseudo_palette = &priv->pseudo_palette;
++	info->flags = FBINFO_FLAG_DEFAULT;
++
++	error = fb_alloc_cmap(&info->cmap, PALETTE_NR, 0);
++	if (error < 0) {
++		dev_err(&pdev->dev, "unable to allocate cmap\n");
++		dma_free_coherent(&pdev->dev, info->fix.smem_len,
++				  buf, priv->dma_handle);
++		goto err1;
++	}
++
++	memset(buf, 0, info->fix.smem_len);
++	info->fix.smem_start = priv->dma_handle;
++	info->screen_base = buf;
++	info->device = &pdev->dev;
++	info->par = priv;
++
++	if (error)
++		goto err1;
++
++	error = rcar_du_start(priv);
++	if (error) {
++		dev_err(&pdev->dev, "unable to start hardware\n");
++		goto err1;
++	}
++
++	error = register_framebuffer(info);
++	if (error < 0)
++		goto err1;
++
++	dev_info(info->dev,
++		 "registered %s/%s as %dx%d %dbpp.\n",
++		 pdev->name,
++		 "display unit",
++		 (int) info->var.xres,
++		 (int) info->var.yres,
++		 info->var.bits_per_pixel);
++
++	return 0;
++err1:
++	rcar_du_remove(pdev);
++
++	return error;
++}
++
++static int rcar_du_remove(struct platform_device *pdev)
++{
++	struct rcar_du_priv *priv = platform_get_drvdata(pdev);
++	struct fb_info *info = priv->info;
++
++	unregister_framebuffer(info);
++
++	/* Interrupt VBK Disable */
++	du_write_ch(priv, DIER, 0);
++
++	rcar_du_stop(priv);
++
++	if (info->screen_base) {
++		dma_free_coherent(&pdev->dev, info->fix.smem_len,
++				  info->screen_base, priv->dma_handle);
++	}
++	fb_dealloc_cmap(&info->cmap);
++	framebuffer_release(info);
++
++	if (priv->base)
++		iounmap(priv->base);
++
++	if (priv->irq)
++		free_irq(priv->irq, priv);
++	kfree(priv);
++	return 0;
++}
++
++static struct platform_driver rcar_du_driver = {
++	.driver		= {
++		.name		= DEV_NAME,
++		.owner		= THIS_MODULE,
++	},
++	.probe		= rcar_du_probe,
++	.remove		= rcar_du_remove,
++};
++
++module_platform_driver(rcar_du_driver);
++
++MODULE_DESCRIPTION("R-Car Display Unit Framebuffer driver");
++MODULE_LICENSE("GPL v2");
+diff --git a/include/video/rcarfb.h b/include/video/rcarfb.h
+new file mode 100644
+index 0000000..db6257f
+--- /dev/null
++++ b/include/video/rcarfb.h
+@@ -0,0 +1,704 @@
++/*
++ * include/video/rcarfb.h
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __ASM_RCARFB_H__
++#define __ASM_RCARFB_H__
++
++#include <linux/fb.h>
++
++struct rcar_reso_info {
++	int num_modes;
++	const struct fb_videomode *modes;
++};
++
++#define DISP_PLANE1	0
++#define DISP_PLANE2	1
++#define DISP_PLANE3	2
++#define DISP_PLANE4	3
++#define DISP_PLANE5	4
++#define DISP_PLANE6	5
++#define DISP_PLANE7	6
++#define DISP_PLANE8	7
++#define DISP0_PLANE_NUM	DISP_PLANE1
++#define DISP1_PLANE_NUM	DISP_PLANE2
++
++#define RCARFB_SUPPORTBLANK	0
++
++#define BITPARPIXEL_8	8
++#define BITPARPIXEL_16	16
++#define BITPARPIXEL_24	24
++#define BITPARPIXEL_32	32
++#define DEFAULT_BITPARPIXEL	BITPARPIXEL_16
++#define BYTEPIXEL	8
++
++#define	RCAR_PIXFMT_ARGB8888	0
++#define	RCAR_PIXFMT_ARGB0565	1
++#define	RCAR_PIXFMT_ARGB4444	2 /* Not Support */
++#define	RCAR_PIXFMT_ARGB1555	3
++#define	RCAR_PIXFMT_RGB888	4
++#define	RCAR_PIXFMT_RGB666	5
++#define	RCAR_PIXFMT_UYVY	6
++#define	RCAR_PIXFMT_YUYV	7
++
++#define DEFAULT_XRES	640
++#define DEFAULT_YRES	480
++
++#define MAX_XRES	1280
++#define MAX_YRES	800
++
++#define FB_BYTES	4
++
++#define DOT_CLK_DCLKIN	0x00000000
++#define DOT_CLK_CLKS	(1 << 20)
++#define DOT_CLK_MASK	DOT_CLK_CLKS
++
++#define DU_START	1
++#define DU_STOP		0
++
++#define MODE_CHG_ON	1
++#define MODE_CHG_OFF	0
++
++#define DISPLAY_AREA0	0
++#define DISPLAY_AREA1	1
++
++struct RCARFB_PIXFMT {
++	unsigned long pixfmt;
++};
++
++#define FBIOCS_PIXFMT	_IOW(0xFA, 0x00, struct RCARFB_PIXFMT)
++#define FBIOCG_PIXFMT	_IOR(0xFA, 0x01, struct RCARFB_PIXFMT)
++
++/***** R-Car Display Unit Register Definitons *****/
++/* Display control register offset definitions */
++#define DSYSR		0x00000	/* display 1 */
++#define ILTS_DSYSR	(1<<29)
++#define DSEC_DSYSR	(1<<20)
++#define IUPD_DSYSR	(1<<16)
++#define DRES_DSYSR	(1<<9)
++#define DEN_DSYSR	(1<<8)
++#define MASTER_DSYSR	(0<<6)
++#define MASTER_DSYSR_MASK	(3<<6)
++#define SYNC_CHG_DSYSR	(1<<6)
++#define TV_SYNC_DSYSR	(2<<6)
++#define N_INTR_DSYSR	(0<<4)
++#define INTR_SYNC_DSYSR	(2<<4)
++#define INTR_VIDEO_DSYSR	(3<<4)
++
++#define DSMR		0x00004
++
++#define DSSR		0x00008
++#define TVR_DSSR	(1<<15)
++#define VC1FB_DSA0_DSSR	(0<<30)
++#define VC1FB_DSA1_DSSR	(1<<30)
++#define VC1FB_DSA2_DSSR	(2<<30)
++#define VC1FB_INIT_DSSR	(3<<30)
++#define VC0FB_DSA0_DSSR	(0<<28)
++#define VC0FB_DSA1_DSSR	(1<<28)
++#define VC0FB_DSA2_DSSR	(2<<28)
++#define VC0FB_INIT_DSSR	(3<<28)
++#define DFB10_DSSR	(1<<25)
++#define DFB9_DSSR	(1<<24)
++#define DFB8_DSSR	(1<<23)
++#define DFB7_DSSR	(1<<22)
++#define DFB6_DSSR	(1<<21)
++#define DFB5_DSSR	(1<<20)
++#define DFB4_DSSR	(1<<19)
++#define DFB3_DSSR	(1<<18)
++#define DFB2_DSSR	(1<<17)
++#define DFB1_DSSR	(1<<16)
++#define TVR_DSSR	(1<<15)
++#define FRM_DSSR	(1<<14)
++#define VBK_DSSR	(1<<11)
++#define RINT_DSSR	(1<<9)
++#define HBK_DSSR	(1<<8)
++#define DU1_INT_ALL	(TVR_DSSR | FRM_DSSR | VBK_DSSR | RINT_DSSR | HBK_DSSR)
++
++#define DSRCR		0x0000c
++#define DIER		0x00010
++#define CPCR		0x00014
++
++#define DPPR		0x00018
++#define DPE		(1<<3)	/* Display plane enable */
++#define DPS1		(0)	/* Display plane select */
++#define DPS2		(1)
++#define DPS3		(2)
++#define DPS4		(3)
++#define DPS5		(4)
++#define DPS6		(5)
++#define DPS7		(6)
++#define DPS8		(7)
++#define SHIFT_PRI8	(28)
++#define SHIFT_PRI7	(24)
++#define SHIFT_PRI6	(20)
++#define SHIFT_PRI5	(16)
++#define SHIFT_PRI4	(12)
++#define SHIFT_PRI3	(8)
++#define SHIFT_PRI2	(4)
++#define SHIFT_PRI1	(0)
++#define ALL_DPE		(DPE<<28 | DPE<<24 | DPE<<20 | DPE<<16 | DPE<<12 | \
++			DPE<<8 | DPE<<4 | DPE<<0)
++#define BPP16_DPPR	((DPE | DPS1) << SHIFT_PRI8)		/* plane1 */
++#define BPP32_P1	((DPE | DPS1) << SHIFT_PRI7)
++#define BPP32_P2	((DPE | DPS2) << SHIFT_PRI8)
++#define BPP32_DPPR	(BPP32_P1 | BPP32_P2)			/* plane1 & 2 */
++
++#define DPS1_MASK	(0x7 << SHIFT_PRI1)
++#define DPS2_MASK	(0x7 << SHIFT_PRI2)
++#define DPS3_MASK	(0x7 << SHIFT_PRI3)
++#define DPS4_MASK	(0x7 << SHIFT_PRI4)
++#define DPS5_MASK	(0x7 << SHIFT_PRI5)
++#define DPS6_MASK	(0x7 << SHIFT_PRI6)
++#define DPS7_MASK	(0x7 << SHIFT_PRI7)
++#define DPS8_MASK	(0x7 << SHIFT_PRI8)
++
++#define DEFR		0x00020
++#define CODE_DEFR	(0x7773<<16)
++#define EXSL_DEFR	(1<<12)
++#define EXVL_DEFR	(1<<11)
++#define EXUP_DEFR	(1<<5)
++#define VCUP_DEFR	(1<<4)
++#define DEFE_DEFR	(1<<0)
++#define DEFAULT_DEFR	(CODE_DEFR | DEFE_DEFR)
++
++#define DAPCR		0x00024
++
++#define DEFR2		0x00034
++#define CODE_DEFR2	(0x7775<<16)
++#define DEFE2_DEFR2	(1<<0)
++#define DEFAULT_DEFR2	(CODE_DEFR2 | DEFE2_DEFR2)
++
++#define DEFR3		0x00038
++#define CODE_DEFR3	(0x7776<<16)
++#define EVDA_DEFR3	(1<<14)
++#define EVDM_1_DEFR3	(1<<12)
++#define EVDM_2_DEFR3	(2<<12)
++#define EVDM_3_DEFR3	(3<<12)
++#define VMSM2_EMA_DEFR3	(1<<6)
++#define VMSM1_ENA_DEFR3	(1<<4)
++#define DEFE3_DEFR3	(1<<0)
++#define DEFAULT_DEFR3	(CODE_DEFR3 | DEFE3_DEFR3)
++
++#define DEFR4		0x0003c
++#define CODE_DEFR4	(0x7777<<16)
++#define LRUO_DEFR4	(0<<5)
++#define PRI_DEFR4	(1<<5)
++#define SPCD_DEFR4	(0<<4)
++#define SPCE_DEFR4	(1<<4)
++#define BPP16_DEFR4	(CODE_DEFR4 | LRUO_DEFR4 | SPCD_DEFR4)
++#define BPP32_DEFR4	(CODE_DEFR4 | PRI_DEFR4 | SPCD_DEFR4)
++
++#define DVCSR		0x000d0
++
++#define DEFR5		0x000e0
++#define DDLTR		0x000e4
++#define DEFR6		0x000e8
++#define CODE_DEFR6	(0x7778<<16)
++#define TCNE2_DEFR6	(0x01 << 6)
++#define DEFAULT_DEFR6	(CODE_DEFR6 | TCNE2_DEFR6)
++
++#define D2SYSR		0x30000	/* display 2 */
++#define ILTS_D2SYSR	(1<<29)
++#define DSEC_D2SYSR	(1<<20)
++#define IUPD_D2SYSR	(1<<16)
++#define DRES_D2SYSR	(1<<9)
++#define DEN_D2SYSR	(1<<8)
++#define MASTER_D2SYSR	(0<<6)
++#define MASTER_D2SYSR_MASK	(3<<6)
++#define SYNC_ENABLE_D2SYSR	(0<<6)
++#define SYNC_DISABLE_D2SYSR	(2<<6)
++#define SYNC_CHG_D2SYSR	(1<<6)
++#define TV_SYNC_D2SYSR	(2<<6)
++#define N_INTR_D2SYSR	(0<<4)
++#define INTR_SYNC_D2SYSR	(2<<4)
++#define INTR_VIDEO_D2SYSR	(3<<4)
++
++#define D2SMR		0x30004
++
++#define D2SRCR		0x3000c
++
++#define D2EFR		0x30020
++#define CODE_D2EFR	(0x7773<<16)
++#define EXSL_D2EFR	(1<<12)
++#define EXVL_D2EFR	(1<<11)
++#define EXUP_D2EFR	(1<<5)
++#define VCUP_D2EFR	(1<<4)
++#define DEFE_D2EFR	(1<<0)
++#define DEFAULT_D2EFR	(CODE_D2EFR | DEFE_D2EFR)
++
++#define D2EFR2		0x30034
++#define CODE_D2EFR2	(0x7775<<16)
++#define DEFE2_D2EFR2	(1<<0)
++#define DEFAULT_D2EFR2	(CODE_D2EFR2 | DEFE2_D2EFR2)
++
++#define D2EFR3		0x30038
++#define CODE_D2EFR3	(0x7776<<16)
++#define EVDA_D2EFR3	(1<<14)
++#define EVDM_1_D2EFR3	(1<<12)
++#define EVDM_2_D2EFR3	(2<<12)
++#define EVDM_3_D2EFR3	(3<<12)
++#define VMSM2_EMA_D2EFR3	(1<<6)
++#define VMSM1_ENA_D2EFR3	(1<<4)
++#define DEFE3_D2EFR3	(1<<0)
++#define DEFAULT_D2EFR3	(CODE_D2EFR3 | DEFE3_D2EFR3)
++
++#define D2EFR4		0x3003c
++#define CODE_D2EFR4	(0x7777<<16)
++#define LRUO_D2EFR4	(0<<5)
++#define PRI_D2EFR4	(1<<5)
++#define SPCD_D2EFR4	(0<<4)
++#define SPCE_D2EFR4	(1<<4)
++#define BPP16_D2EFR4	(CODE_D2EFR4 | LRUO_D2EFR4 | SPCD_D2EFR4)
++#define BPP32_D2EFR4	(CODE_D2EFR4 | PRI_D2EFR4 | SPCD_D2EFR4)
++
++/* Display timing generation register offset definitions */
++#define HDSR		0x00040	/* display 1 */
++#define HDER		0x00044
++#define VDSR		0x00048
++#define VDER		0x0004c
++#define HCR		0x00050
++#define HSWR		0x00054
++#define VCR		0x00058
++#define VSPR		0x0005c
++#define EQWR		0x00060
++#define SPWR		0x00064
++#define CLAMPSR		0x00070
++#define CLAMPWR		0x00074
++#define DESR		0x00078
++#define DEWR		0x0007c
++
++#define DISP2_REG_OFFSET 0x30000
++
++/* Display attribute register offset definitions */
++#define CP1TR		0x00080	/* display 1 */
++#define CP2TR		0x00084
++#define CP3TR		0x00088
++#define CP4TR		0x0008c
++
++#define DOOR		0x00090
++#define DEFAULT_DOOR	(0x0)	/* Output color is black */
++
++#define CDER		0x00094
++
++#define BPOR		0x00098
++#define DEFAULT_BPOR	(0x0)	/* Background color is black */
++
++#define RINTOFSR	0x0009c
++
++#define DSHPR		0x000c8
++#define CODE_DSHPR	(0x7776<<16)
++#define PRIH_DSHPR	(0xa<<4)
++#define BPP16_PRIL_DSHPR	(CODE_DSHPR | PRIH_DSHPR | 0x8)
++#define BPP32_PRIL_DSHPR	(CODE_DSHPR | PRIH_DSHPR | 0x9)
++#define MASK_PRIL	0xffffff00
++
++/* Display plane register offset definitions */
++#define P1MR		0x00100 /* plane 1 */
++#define PnDDDF_8BPP_PnMR	(0<<0)	/* 8bit */
++#define PnDDDF_16BPP_32BPP_PnMR	(1<<0)	/* 16bit or 32bit */
++#define PnDDDF_ARGB_PnMR	(2<<0)	/* ARGB */
++#define PnDDDF_YC_PnMR		(3<<0)	/* YC */
++#define PnDDDF_MASK		(3<<0)	/* PnDDF_MASK */
++#define PnBM_MD_PnMR		(0<<4)	/* Manual display change mode */
++#define PnBM_AR_PnMR		(1<<4)	/* Auto rendering mode */
++#define PnBM_AD_PnMR		(2<<4)	/* Auto display change mode */
++#define PnBM_VC_PnMR		(3<<4)	/* Video Capture Mode */
++#define PnDC_ON_PnMR		(1<<7)	/* Display area change */
++#define PnCPSL_CP1_PnMR		(0<<8)	/* Color pallet selected 1 */
++#define PnCPSL_CP2_PnMR		(1<<8)	/* Color pallet selected 2 */
++#define PnCPSL_CP3_PnMR		(2<<8)	/* Color pallet selected 3 */
++#define PnCPSL_CP4_PnMR		(3<<8)	/* Color pallet selected 4 */
++#define PnSPIM_TPON_PnMR	(0<<12)	/* Transparent Color on */
++#define PnSPIM_ALPON_PnMR	(1<<12)	/* Alphar blend on */
++#define PnSPIM_EORON_PnMR	(2<<12)	/* EOR on */
++#define PnSPIM_TPOFF_PnMR	(4<<12)	/* Transparent Color off */
++#define PnSPIM_ALPOFF_PnMR	(5<<12)	/* Alphar blend off */
++#define PnSPIM_EOROFF_PnMR	(6<<12)	/* EOR off */
++#define PnWAE_ON_PnMR		(1<<16)	/* Wrap around Enable */
++#define PnTC_R_PnMR			(0<<17)	/* Tranparent color is PnTC1R */
++#define PnTC_CP_PnMR		(1<<17)	/* Tranparent color is color pallet */
++#define PnYCDF_UYVY_PnMR	(0<<20)	/* UYVY format */
++#define PnYCDF_YUYV_PnMR	(1<<20)	/* YUYV format */
++#define PnVISL_VIN0_PnMR	(0<<26)	/* use Video Input 0 */
++#define PnVISL_VIN1_PnMR	(1<<26)	/* use Video Input 1 */
++#define MODE_16BPP_32BPP_PnMR	(PnDDDF_16BPP_32BPP_PnMR \
++							| PnBM_MD_PnMR | \
++							 PnSPIM_TPOFF_PnMR)
++#define MODE_RGB_PnMR		(PnDDDF_ARGB_PnMR | PnBM_MD_PnMR | \
++							 PnSPIM_TPOFF_PnMR)
++
++#define P1MWR		0x00104
++
++#define P1ALPHAR	0x00108
++#define DEFAULT_PnALPHAR		(0x000000ff)
++
++#define P1DSXR		0x00110
++#define P1DSYR		0x00114
++
++#define P1DPXR		0x00118
++#define DEFAULT_PnDPXR	(0x0)
++
++#define P1DPYR		0x0011c
++#define DEFAULT_PnDPYR	(0x0)
++
++#define P1DSA0R		0x00120
++#define P1DSA1R		0x00124
++#define P1DSA2R		0x00128
++#define PnDSA_MASK	(0xfffffff0)
++
++#define P1SPXR		0x00130
++#define DEFAULT_PnSPXR	(0x0)
++
++#define P1SPYR		0x00134
++#define DEFAULT_PnSPYR	(0x0)
++
++#define P1WASPR		0x00138
++#define DEFAULT_PnWASPR	(0x0)
++
++#define P1WAMWR		0x0013c
++#define DEFAULT_PnWAMWR	(4095)
++
++#define P1BTR		0x00140
++#define DEFAULT_PnBTR	(0x0)
++
++#define P1TC1R		0x00144
++#define P1TC2R		0x00148
++#define P1TC3R		0x0014c
++
++#define P1MLR		0x00150
++#define DEFAULT_PnMLR	(0x0)
++
++#define P1SWAPR		0x00180
++
++#define P1DDCR		0x00184
++#define CODE_DDCR	(0x7775<<16)
++#define PnLRGB1_DDCR	(1<<11)
++#define PnLRGB0_DDCR	(1<<10)
++#define BPP16_DDCR		(CODE_DDCR)
++#define BPP32AR_DDCR	(CODE_DDCR | PnLRGB0_DDCR)
++#define BPP32GB_DDCR	(CODE_DDCR | PnLRGB1_DDCR)
++
++#define P1DDCR2		0x00188
++#define CODE_DDCR2	(0x7775<<16)
++#define PnNV21_DDCR2	(1<<5)
++#define PnY420_DDCR2	(1<<4)
++#define PnDIVU_DDCR2	(1<<1)
++#define PnDIVY_DDCR2	(1<<0)
++
++#define P1DDCR4		0x00190
++#define CODE_DDCR4	(0x7766<<16)
++#define P1EDF_MASK	0x07
++#define P1DDCR4_ARGB8888	0x01
++#define P1DDCR4_RGB888		0x02
++#define P1DDCR4_RGB666		0x03
++
++#define PLANE_OFF	0x00100
++#define PLANE1		0x0
++#define PLANE2		0x1
++#define PLANE3		0x2
++#define PLANE4		0x3
++#define PLANE5		0x4
++#define PLANE6		0x5
++#define PLANE7		0x6
++#define PLANE8		0x7
++
++#define P2MR		0x00200 /* plane 2 */
++#define P2MWR		0x00204
++#define P2ALPHAR	0x00208
++#define P2DSXR		0x00210
++#define P2DSYR		0x00214
++#define P2DPXR		0x00218
++#define P2DPYR		0x0021c
++#define P2DSA0R		0x00220
++#define P2DSA1R		0x00224
++#define P2DSA2R		0x00228
++#define P2SPXR		0x00230
++#define P2SPYR		0x00234
++#define P2WASPR		0x00238
++#define P2WAMWR		0x0023c
++#define P2BTR		0x00240
++#define P2TC1R		0x00244
++#define P2TC2R		0x00248
++#define P2TC3R		0x0024c
++#define P2MLR		0x00250
++#define P2SWAPR		0x00280
++#define P2DDCR		0x00284
++#define P2DDCR2		0x00288
++#define P2DDCR4		0x00290
++
++#define P3MR		0x00300 /* plane 3 */
++#define P3MWR		0x00304
++#define P3ALPHAR	0x00308
++#define P3DSXR		0x00310
++#define P3DSYR		0x00314
++#define P3DPXR		0x00318
++#define P3DPYR		0x0031c
++#define P3DSA0R		0x00320
++#define P3DSA1R		0x00324
++#define P3DSA2R		0x00328
++#define P3SPXR		0x00330
++#define P3SPYR		0x00334
++#define P3WASPR		0x00338
++#define P3WAMWR		0x0033c
++#define P3BTR		0x00340
++#define P3TC1R		0x00344
++#define P3TC2R		0x00348
++#define P3TC3R		0x0034c
++#define P3MLR		0x00350
++#define P3SWAPR		0x00380
++#define P3DDCR		0x00384
++#define P3DDCR2		0x00388
++#define P3DDCR4		0x00390
++
++#define P4MR		0x00400 /* plane 4 */
++#define P4MWR		0x00404
++#define P4ALPHAR	0x00408
++#define P4DSXR		0x00410
++#define P4DSYR		0x00414
++#define P4DPXR		0x00418
++#define P4DPYR		0x0041c
++#define P4DSA0R		0x00420
++#define P4DSA1R		0x00424
++#define P4DSA2R		0x00428
++#define P4SPXR		0x00430
++#define P4SPYR		0x00434
++#define P4WASPR		0x00438
++#define P4WAMWR		0x0043c
++#define P4BTR		0x00440
++#define P4TC1R		0x00444
++#define P4TC2R		0x00448
++#define P4TC3R		0x0044c
++#define P4MLR		0x00450
++#define P4SWAPR		0x00480
++#define P4DDCR		0x00484
++#define P4DDCR2		0x00488
++#define P4DDCR4		0x00490
++
++#define P5MR		0x00500 /* plane 5 */
++#define P5MWR		0x00504
++#define P5ALPHAR	0x00508
++#define P5DSXR		0x00510
++#define P5DSYR		0x00514
++#define P5DPXR		0x00518
++#define P5DPYR		0x0051c
++#define P5DSA0R		0x00520
++#define P5DSA1R		0x00524
++#define P5DSA2R		0x00528
++#define P5SPXR		0x00530
++#define P5SPYR		0x00534
++#define P5WASPR		0x00538
++#define P5WAMWR		0x0053c
++#define P5BTR		0x00540
++#define P5TC1R		0x00544
++#define P5TC2R		0x00548
++#define P5TC3R		0x0054c
++#define P5MLR		0x00550
++#define P5SWAPR		0x00580
++#define P5DDCR		0x00584
++#define P5DDCR2		0x00588
++#define P5DDCR4		0x00590
++
++#define P6MR		0x00600 /* plane 6 */
++#define P6MWR		0x00604
++#define P6ALPHAR	0x00608
++#define P6DSXR		0x00610
++#define P6DSYR		0x00614
++#define P6DPXR		0x00618
++#define P6DPYR		0x0061c
++#define P6DSA0R		0x00620
++#define P6DSA1R		0x00624
++#define P6DSA2R		0x00628
++#define P6SPXR		0x00630
++#define P6SPYR		0x00634
++#define P6WASPR		0x00638
++#define P6WAMWR		0x0063c
++#define P6BTR		0x00640
++#define P6TC1R		0x00644
++#define P6TC2R		0x00648
++#define P6TC3R		0x0064c
++#define P6MLR		0x00650
++#define P6SWAPR		0x00680
++#define P6DDCR		0x00684
++#define P6DDCR2		0x00688
++#define P6DDCR4		0x00690
++
++#define P7MR		0x00700 /* plane 7 */
++#define P7MWR		0x00704
++#define P7ALPHAR	0x00708
++#define P7DSXR		0x00710
++#define P7DSYR		0x00714
++#define P7DPXR		0x00718
++#define P7DPYR		0x0071c
++#define P7DSA0R		0x00720
++#define P7DSA1R		0x00724
++#define P7DSA2R		0x00728
++#define P7SPXR		0x00730
++#define P7SPYR		0x00734
++#define P7WASPR		0x00738
++#define P7WAMWR		0x0073c
++#define P7BTR		0x00740
++#define P7TC1R		0x00744
++#define P7TC2R		0x00748
++#define P7TC3R		0x0074c
++#define P7MLR		0x00750
++#define P7SWAPR		0x00780
++#define P7DDCR		0x00784
++#define P7DDCR2		0x00788
++#define P7DDCR4		0x00790
++
++#define P8MR		0x00800 /* plane 8 */
++#define P8MWR		0x00804
++#define P8ALPHAR	0x00808
++#define P8DSXR		0x00810
++#define P8DSYR		0x00814
++#define P8DPXR		0x00818
++#define P8DPYR		0x0081c
++#define P8DSA0R		0x00820
++#define P8DSA1R		0x00824
++#define P8DSA2R		0x00828
++#define P8SPXR		0x00830
++#define P8SPYR		0x00834
++#define P8WASPR		0x00838
++#define P8WAMWR		0x0083c
++#define P8BTR		0x00840
++#define P8TC1R		0x00844
++#define P8TC2R		0x00848
++#define P8TC3R		0x0084c
++#define P8MLR		0x00850
++#define P8SWAPR		0x00880
++#define P8DDCR		0x00884
++#define P8DDCR2		0x00888
++#define P8DDCR4		0x00890
++
++#define AP1MR		0x0a100 /* alpha plane 1 */
++#define AP1MWR		0x0a104
++#define AP1DSXR		0x0a110
++#define AP1DSYR		0x0a114
++#define AP1DPXR		0x0a118
++#define AP1DPYR		0x0a11c
++#define AP1DSA0R	0x0a120
++#define AP1DSA1R	0x0a124
++#define AP1DSA2R	0x0a128
++#define AP1SPXR		0x0a130
++#define AP1SPYR		0x0a134
++#define AP1WASPR	0x0a138
++#define AP1WAMWR	0x0a13c
++#define AP1BTR		0x0a140
++#define AP1MLR		0x0a150
++#define AP1SWAPR	0x0a180
++#define AP1DDCR4	0x0a190
++
++#define AP2MR		0x0a200 /* alpha plane 2 */
++#define AP2MWR		0x0a204
++#define AP2DSXR		0x0a210
++#define AP2DSYR		0x0a214
++#define AP2DPXR		0x0a218
++#define AP2DPYR		0x0a21c
++#define AP2DSA0R	0x0a220
++#define AP2DSA1R	0x0a224
++#define AP2DSA2R	0x0a228
++#define AP2SPXR		0x0a230
++#define AP2SPYR		0x0a234
++#define AP2WASPR	0x0a238
++#define AP2WAMWR	0x0a23c
++#define AP2BTR		0x0a240
++#define AP2MLR		0x0a250
++#define AP2SWAPR	0x0a280
++#define AP2DDCR4	0x0a290
++
++/* Display capture register offset definitions */
++#define DCMWR		0x0c104
++#define DCSAR		0x0c120
++#define DCMLR		0x0c150
++#define DC2MWR		0x0c204
++#define DC2SAR		0x0c220
++#define DC2MLR		0x0c250
++
++/* Color palette */
++#define CP1_000R	0x01000
++#define CP1_255R	0x013fc
++#define CP2_000R	0x02000
++#define CP2_255R	0x023fc
++#define CP3_000R	0x03000
++#define CP3_255R	0x033fc
++#define CP4_000R	0x04000
++#define CP4_255R	0x043fc
++
++/* External synchronization control register offset definitions */
++#define ESCR		0x10000
++#define DCLKIN_ESCR	(0<<20)
++#define CLKS_ESCR	(1<<20)
++#define DCLKDIS_ESCR	(1<<16)
++#define SYNCSEL_OFF_ESCR	(0<<8)
++#define SYNCSEL_EXVSYNC_ESCR	(2<<8)
++#define SYNCSEL_EXHSYNC_ESCR	(3<<8)
++
++#define OTAR		0x10004
++#define DEFAULT_OTAR	(0)
++
++#define ESCR2		0x31000
++#define DCLKIN_ESCR2	(0<<20)
++#define CLKS_ESCR2	(1<<20)
++#define DCLKDIS_ESCR2	(1<<16)
++#define SYNCSEL_OFF_ESCR2	(0<<8)
++#define SYNCSEL_EXVSYNC_ESCR2	(2<<8)
++#define SYNCSEL_EXHSYNC_ESCR2	(3<<8)
++#define OTAR2		0x31004
++#define DEFAULT_OTAR2	(0)
++
++/* Output control of two display systems register offset definitions */
++#define DORCR		0x11000
++#define PG2T_DORCR	(1<<30)
++#define DK2S_DORCR	(1<<28)
++#define PG2D_DS1_DORCR	(0<<24)
++#define PG2D_DS2_DORCR	(1<<24)
++#define PG2D_FIX0_DORCR	(2<<24)
++#define PG2D_DOOR_DORCR	(3<<24)
++#define DR1D_DORCR	(1<<21)
++#define PG1D_DS1_DORCR	(0<<16)
++#define PG1D_DS2_DORCR	(1<<16)
++#define PG1D_FIX0_DORCR	(2<<16)
++#define PG1D_DOOR_DORCR	(3<<16)
++#define RGPV_DORCR	(1<<4)
++#define DPRS_DORCR	(1<<0)
++#define DU0_SINGLE_DORCR	(0)
++
++#define DPTSR		0x11004
++#define DPTSR_P2DK	(0x01 << 17)
++#define DPTSR_P1DK	(0x01 << 16)
++#define DPTSR_P2TS	(0x01 << 1)
++#define DPTSR_P1TS	(0x01 << 0)
++#define DPTSR_ALL2	0x00ff00ff
++
++#define DAPTSR		0x11008
++#define DS1PR		0x11020
++#define DS2PR		0x11024
++#define S2S2_2		(0x02 << 4)
++#define S2S1_1		(0x01 << 0)
++#define S2S8_1		(0x01 << 28)
++
++/* YC-RGB conversion coefficient register offset definitions */
++#define YNCR		0x11080
++#define YNOR		0x11084
++#define CRNOR		0x11088
++#define CBNOR		0x1108c
++#define RCRCR		0x11090
++#define GCRCR		0x11094
++#define GCBCR		0x11098
++#define BCBCR		0x1109c
++
++#endif /* __ASM_RCARFB_H__ */
+-- 
+1.7.5.4
+

@@ -1,0 +1,26 @@
+From 842fba14c484be87182a0e056d8d88c76d457be1 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Wed, 26 Sep 2012 16:07:55 +0100
+Subject: [PATCH 67/76] rcarvin: Allow data widths > 16bits
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/media/video/rcarvin.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/media/video/rcarvin.c b/drivers/media/video/rcarvin.c
+index 077d929..ca8c3a2 100644
+--- a/drivers/media/video/rcarvin.c
++++ b/drivers/media/video/rcarvin.c
+@@ -998,7 +998,7 @@ static int rcar_vin_try_bus_param(struct soc_camera_device *icd,
+ 	else if (ret != -ENOIOCTLCMD)
+ 		return ret;
+ 
+-	if (!common_flags || buswidth > 16)
++	if (!common_flags)
+ 		return -EINVAL;
+ 
+ 	return 0;
+-- 
+1.7.5.4
+

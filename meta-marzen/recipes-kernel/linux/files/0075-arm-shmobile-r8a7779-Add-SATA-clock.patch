@@ -1,0 +1,41 @@
+From 775fed7cb853b77eeb92234d5fd7219e4b0b581f Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Thu, 18 Oct 2012 16:04:04 +0100
+Subject: [PATCH 75/76] arm: shmobile: r8a7779: Add SATA clock
+
+---
+ arch/arm/mach-shmobile/clock-r8a7779.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
+index 7303b73..ca92157 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7779.c
++++ b/arch/arm/mach-shmobile/clock-r8a7779.c
+@@ -87,7 +87,7 @@ static struct clk div4_clks[DIV4_NR] = {
+ };
+ 
+ enum { MSTP323, MSTP322, MSTP321, MSTP320,
+-	MSTP120, MSTP114, MSTP110, MSTP109,
++	MSTP120, MSTP115, MSTP114, MSTP110, MSTP109,
+ 	MSTP108, MSTP105, MSTP103, MSTP101, MSTP100,
+ 	MSTP030, MSTP029, MSTP028, MSTP027, MSTP026, MSTP025, MSTP024, MSTP023,
+ 	MSTP022, MSTP021, MSTP016, MSTP015, MSTP014, MSTP012, MSTP011, MSTP008,
+@@ -100,6 +100,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP321] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR3, 21, 0), /* SDHI2 */
+ 	[MSTP320] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR3, 20, 0), /* SDHI3 */
+ 	[MSTP120] = SH_CLK_MSTP32(&div4_clks[DIV4_S], MSTPCR1, 20, 0), /* VIN3 */
++	[MSTP115] = SH_CLK_MSTP32(&div4_clks[DIV4_S], MSTPCR1, 15, 0), /* SATA */
+ 	[MSTP114] = SH_CLK_MSTP32(&div4_clks[DIV4_P], MSTPCR1, 14, CLK_ENABLE_ON_INIT), /* ETH */
+ 	[MSTP110] = SH_CLK_MSTP32(&div4_clks[DIV4_S], MSTPCR1, 10, 0), /* VIN0 */
+ 	[MSTP109] = SH_CLK_MSTP32(&div4_clks[DIV4_S], MSTPCR1,  9, 0), /* VIN1 */
+@@ -187,6 +188,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.3", &mstp_clks[MSTP320]), /* SDHI3 */
+ 	CLKDEV_DEV_ID("sh-eth", &mstp_clks[MSTP114]),
+ 	CLKDEV_DEV_ID("rcar_vin.3", &mstp_clks[MSTP120]), /* VIN3 */
++	CLKDEV_CON_ID("sata", &mstp_clks[MSTP115]), /* SATA */
+ 	CLKDEV_DEV_ID("rcar_vin.0", &mstp_clks[MSTP110]), /* VIN0 */
+ 	CLKDEV_DEV_ID("rcar_vin.1", &mstp_clks[MSTP109]), /* VIN1 */
+ 	CLKDEV_DEV_ID("rcar_vin.2", &mstp_clks[MSTP108]), /* VIN2 */
+-- 
+1.7.5.4
+

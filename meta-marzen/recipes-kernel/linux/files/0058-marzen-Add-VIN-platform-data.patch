@@ -1,0 +1,232 @@
+From efb751903098d46f8ff007f2342c2b9aad2a7cb6 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 11 Jun 2012 18:08:57 +0100
+Subject: [PATCH 58/76] marzen: Add VIN platform data
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/board-marzen.c |  187 +++++++++++++++++++++++++++++++++
+ 1 files changed, 187 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index 0d56031..1ce8eb6 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -37,6 +37,7 @@
+ #include <linux/usb/rcar-usb.h>
+ #include <mach/hpb-dmae.h>
+ #include <video/rcarfb.h>
++#include <media/rcarvin.h>
+ #include <mach/hardware.h>
+ #include <mach/r8a7779.h>
+ #include <mach/common.h>
+@@ -473,6 +474,164 @@ static struct platform_device sru_device = {
+ 	.resource	= sru_resources,
+ };
+ 
++static struct resource rcar_vin0_resources[] = {
++	[0] = {
++		.name = "VIN0",
++		.start = 0xffc50000,
++		.end = 0xffc50fff,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = gic_spi(63),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++static struct resource rcar_vin1_resources[] = {
++	[0] = {
++		.name = "VIN1",
++		.start = 0xffc51000,
++		.end = 0xffc51fff,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = gic_spi(64),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++static struct resource rcar_vin2_resources[] = {
++	[0] = {
++		.name = "VIN2",
++		.start = 0xffc52000,
++		.end = 0xffc52fff,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = gic_spi(65),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++static struct resource rcar_vin3_resources[] = {
++	[0] = {
++		.name = "VIN3",
++		.start = 0xffc53000,
++		.end = 0xffc53fff,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = gic_spi(66),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++
++static struct rcar_vin_info rcar_vin_info = {};
++static u64 rcarvin_dmamask = DMA_BIT_MASK(32);
++
++static struct platform_device rcar_vin0_device = {
++	.name  = "rcar_vin",
++	.id = 0,
++	.num_resources = ARRAY_SIZE(rcar_vin0_resources),
++	.resource  = rcar_vin0_resources,
++	.dev  = {
++		.dma_mask = &rcarvin_dmamask,
++		.platform_data = &rcar_vin_info,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static struct platform_device rcar_vin1_device = {
++	.name  = "rcar_vin",
++	.id = 1,
++	.num_resources = ARRAY_SIZE(rcar_vin1_resources),
++	.resource  = rcar_vin1_resources,
++	.dev  = {
++		.dma_mask = &rcarvin_dmamask,
++		.platform_data = &rcar_vin_info,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static struct platform_device rcar_vin2_device = {
++	.name  = "rcar_vin",
++	.id = 2,
++	.num_resources = ARRAY_SIZE(rcar_vin2_resources),
++	.resource  = rcar_vin2_resources,
++	.dev  = {
++		.dma_mask = &rcarvin_dmamask,
++		.platform_data = &rcar_vin_info,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static struct platform_device rcar_vin3_device = {
++	.name  = "rcar_vin",
++	.id = 3,
++	.num_resources = ARRAY_SIZE(rcar_vin3_resources),
++	.resource  = rcar_vin3_resources,
++	.dev  = {
++		.dma_mask = &rcarvin_dmamask,
++		.platform_data = &rcar_vin_info,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static struct i2c_board_info marzen_i2c_camera[] = {
++	{ I2C_BOARD_INFO("adv7180", 0x20), },
++	{ I2C_BOARD_INFO("adv7180", 0x21), },
++};
++
++static void camera_power_on(void)
++{
++	return;
++}
++
++static void camera_power_off(void)
++{
++	return;
++}
++
++static int adv7180_power(struct device *dev, int mode)
++{
++	if (mode)
++		camera_power_on();
++	else
++		camera_power_off();
++
++	return 0;
++}
++
++static struct soc_camera_link adv7180_ch1_link = {
++	.bus_id = 1,
++	.power  = adv7180_power,
++	.board_info = &marzen_i2c_camera[0],
++	.i2c_adapter_id = 0,
++	.module_name = "adv7180",
++};
++
++static struct soc_camera_link adv7180_ch3_link = {
++	.bus_id = 3,
++	.power  = adv7180_power,
++	.board_info = &marzen_i2c_camera[1],
++	.i2c_adapter_id = 0,
++	.module_name = "adv7180",
++};
++
++static struct platform_device rcar_camera[] = {
++	{
++		.name = "soc-camera-pdrv",
++		.id = 0,
++		.dev = {
++			.platform_data = &adv7180_ch1_link,
++		},
++	},
++	{
++		.name = "soc-camera-pdrv",
++		.id = 1,
++		.dev = {
++			.platform_data = &adv7180_ch3_link,
++		},
++	},
++};
++
+ static struct platform_device *marzen_devices[] __initdata = {
+ 	&eth_device,
+ 	&sdhi0_device,
+@@ -485,6 +644,12 @@ static struct platform_device *marzen_devices[] __initdata = {
+ 	&alsa_soc_platform_device,
+ 	&sru_device,
+ 	&rcar_display_device,
++	&rcar_vin0_device,
++	&rcar_vin1_device,
++	&rcar_vin2_device,
++	&rcar_vin3_device,
++	&rcar_camera[0],
++	&rcar_camera[1],
+ };
+ 
+ static void __init marzen_init(void)
+@@ -573,6 +738,28 @@ static void __init marzen_init(void)
+ 	/* Audio Clock */
+ 	gpio_request(GPIO_FN_AUDIO_CLKA, NULL);
+ 
++	/* VIN1 */
++	gpio_request(GPIO_FN_VI1_CLK, NULL);
++	gpio_request(GPIO_FN_VI1_DATA7_VI1_B7, NULL);
++	gpio_request(GPIO_FN_VI1_DATA6_VI1_B6, NULL);
++	gpio_request(GPIO_FN_VI1_DATA5_VI1_B5, NULL);
++	gpio_request(GPIO_FN_VI1_DATA4_VI1_B4, NULL);
++	gpio_request(GPIO_FN_VI1_DATA3_VI1_B3, NULL);
++	gpio_request(GPIO_FN_VI1_DATA2_VI1_B2, NULL);
++	gpio_request(GPIO_FN_VI1_DATA1_VI1_B1, NULL);
++	gpio_request(GPIO_FN_VI1_DATA0_VI1_B0, NULL);
++
++	/* VIN3 */
++	gpio_request(GPIO_FN_VI3_CLK, NULL);
++	gpio_request(GPIO_FN_VI3_DATA7, NULL);
++	gpio_request(GPIO_FN_VI3_DATA6, NULL);
++	gpio_request(GPIO_FN_VI3_DATA5, NULL);
++	gpio_request(GPIO_FN_VI3_DATA4, NULL);
++	gpio_request(GPIO_FN_VI3_DATA3, NULL);
++	gpio_request(GPIO_FN_VI3_DATA2, NULL);
++	gpio_request(GPIO_FN_VI3_DATA1, NULL);
++	gpio_request(GPIO_FN_VI3_DATA0, NULL);
++
+ 	r8a7779_add_standard_devices();
+ 	platform_add_devices(marzen_devices, ARRAY_SIZE(marzen_devices));
+ 
+-- 
+1.7.5.4
+

@@ -1,0 +1,26 @@
+From f4020ab142c5a7c4c358bdd49c0e343b068dc295 Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Mon, 21 Nov 2011 15:12:04 +0900
+Subject: [PATCH 04/10] arm: rch1: Fix bootm value
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ include/configs/marzen.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/configs/marzen.h b/include/configs/marzen.h
+index a327111..1b559a5 100644
+--- a/include/configs/marzen.h
++++ b/include/configs/marzen.h
+@@ -39,7 +39,7 @@
+ 
+ /* autoboot */
+ #define CONFIG_BOOTDELAY	3
+-#define CONFIG_BOOTCOMMAND	"bootp; bootm"
++#define CONFIG_BOOTCOMMAND	"cp.l 0x00200000 0x60007fc0 0x100000; bootm 0x60007fc0"
+ #define CONFIG_ZERO_BOOTDELAY_CHECK
+ 
+ /* high level configuration options */
+-- 
+1.7.5.4
+

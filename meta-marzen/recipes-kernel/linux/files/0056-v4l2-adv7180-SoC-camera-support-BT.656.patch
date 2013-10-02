@@ -1,0 +1,396 @@
+From 97f9f655069392391883f527d23c54840b6c170b Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Fri, 10 Aug 2012 10:30:43 +0100
+Subject: [PATCH 56/76] v4l2: adv7180: SoC camera support (BT.656)
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/media/video/adv7180.c |  317 ++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 312 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/video/adv7180.c b/drivers/media/video/adv7180.c
+index 45ecf8d..4dcdc8f 100644
+--- a/drivers/media/video/adv7180.c
++++ b/drivers/media/video/adv7180.c
+@@ -1,6 +1,7 @@
+ /*
+  * adv7180.c Analog Devices ADV7180 video decoder driver
+  * Copyright (c) 2009 Intel Corporation
++ * Copyright (c) 2012 Renesas Electronics
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -29,6 +30,7 @@
+ #include <media/v4l2-ctrls.h>
+ #include <media/v4l2-chip-ident.h>
+ #include <linux/mutex.h>
++#include <media/soc_camera.h>
+ 
+ #define ADV7180_INPUT_CONTROL_REG			0x00
+ #define ADV7180_INPUT_CONTROL_AD_PAL_BG_NTSC_J_SECAM	0x00
+@@ -89,10 +91,22 @@
+ #define ADV7180_STATUS1_AUTOD_SECAM	0x50
+ #define ADV7180_STATUS1_AUTOD_PAL_COMB	0x60
+ #define ADV7180_STATUS1_AUTOD_SECAM_525	0x70
++#define ADV7180_STATUS1_COL_KILL	0x80
++#define ADV7180_STATUS1_PAL_SIGNAL	(ADV7180_STATUS1_AUTOD_PAL_M | \
++					ADV7180_STATUS1_AUTOD_PAL_60 | \
++					ADV7180_STATUS1_AUTOD_PAL_B_G | \
++					ADV7180_STATUS1_AUTOD_PAL_COMB)
+ 
+ #define ADV7180_IDENT_REG 0x11
+ #define ADV7180_ID_7180 0x18
+ 
++#define ADV7180_MISC_GAIN_CONTROL			0x2B
++#define ADV7180_MISC_GAIN_CKE				0x40
++#define ADV7180_MISC_GAIN_PW_UPD			0x01
++
++#define ADV7180_MAN_WIN_CONTROL_REG			0x3D
++#define ADV7180_CKILLTHR_MASK				0x70
++
+ #define ADV7180_ICONF1_ADI		0x40
+ #define ADV7180_ICONF1_ACTIVE_LOW	0x01
+ #define ADV7180_ICONF1_PSYNC_ONLY	0x10
+@@ -119,6 +133,13 @@
+ #define ADV7180_NTSC_V_BIT_END_REG	0xE6
+ #define ADV7180_NTSC_V_BIT_END_MANUAL_NVEND	0x4F
+ 
++#define VGA_WIDTH   640
++#define VGA_HEIGHT  480
++#define QVGA_WIDTH  320
++#define QVGA_HEIGHT 240
++#define MAX_WIDTH   VGA_WIDTH
++#define MAX_HEIGHT  VGA_HEIGHT
++
+ struct adv7180_state {
+ 	struct v4l2_ctrl_handler ctrl_hdl;
+ 	struct v4l2_subdev	sd;
+@@ -128,11 +149,200 @@ struct adv7180_state {
+ 	v4l2_std_id		curr_norm;
+ 	bool			autodetect;
+ 	u8			input;
++	struct v4l2_ctrl_handler		hdl;
++	const struct adv7180_color_format	*cfmt;
++	const struct adv7180_win_size		*win;
+ };
+ #define to_adv7180_sd(_ctrl) (&container_of(_ctrl->handler,		\
+ 					    struct adv7180_state,	\
+ 					    ctrl_hdl)->sd)
+ 
++struct regval_list {
++	unsigned char reg_num;
++	unsigned char value;
++};
++
++struct adv7180_color_format {
++	enum v4l2_mbus_pixelcode code;
++	enum v4l2_colorspace colorspace;
++};
++
++struct adv7180_win_size {
++	char				*name;
++	__u32				width;
++	__u32				height;
++	const struct regval_list	*regs;
++};
++
++#define ENDMARKER { 0xff, 0xff }
++
++/*
++ * register setting for window size
++ */
++static const struct regval_list adv7180_qvga_regs[] = {
++	ENDMARKER,
++};
++
++static const struct regval_list adv7180_vga_regs[] = {
++	ENDMARKER,
++};
++
++/*
++ * supported color format list
++ */
++static const struct adv7180_color_format adv7180_cfmts[] = {
++	{
++		.code		= V4L2_MBUS_FMT_YUYV8_2X8,
++		.colorspace	= V4L2_COLORSPACE_JPEG,
++	},
++	{
++		.code		= V4L2_MBUS_FMT_UYVY8_2X8,
++		.colorspace	= V4L2_COLORSPACE_JPEG,
++	},
++	{
++		.code		= V4L2_MBUS_FMT_RGB565_2X8_LE,
++		.colorspace	= V4L2_COLORSPACE_SRGB,
++	},
++};
++
++static const struct adv7180_win_size adv7180_win_vga = {
++	.name     = "VGA",
++	.width    = VGA_WIDTH,
++	.height   = VGA_HEIGHT,
++	.regs     = adv7180_vga_regs,
++};
++
++static const struct adv7180_win_size adv7180_win_qvga = {
++	.name     = "QVGA",
++	.width    = QVGA_WIDTH,
++	.height   = QVGA_HEIGHT,
++	.regs     = adv7180_qvga_regs,
++};
++
++static inline struct adv7180_state *to_state(struct v4l2_subdev *sd)
++{
++	return container_of(sd, struct adv7180_state, sd);
++}
++
++static int adv7180_s_stream(struct v4l2_subdev *sd, int enable)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct adv7180_state *state = to_state(sd);
++
++	dev_dbg(&client->dev, "format %d, win %s\n",
++		state->cfmt->code, state->win->name);
++
++	return 0;
++}
++
++static int adv7180_g_mbus_config(struct v4l2_subdev *sd,
++					struct v4l2_mbus_config *cfg)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct soc_camera_link *icl = soc_camera_i2c_to_link(client);
++
++	cfg->flags = V4L2_MBUS_PCLK_SAMPLE_RISING | V4L2_MBUS_MASTER |
++		V4L2_MBUS_VSYNC_ACTIVE_LOW | V4L2_MBUS_HSYNC_ACTIVE_LOW |
++		V4L2_MBUS_DATA_ACTIVE_HIGH;
++	cfg->type = V4L2_MBUS_BT656;
++	cfg->flags = soc_camera_apply_board_flags(icl, cfg);
++	return 0;
++}
++
++static int adv7180_g_crop(struct v4l2_subdev *sd, struct v4l2_crop *a)
++{
++	a->c.left	= 0;
++	a->c.top	= 0;
++	a->c.width	= VGA_WIDTH;
++	a->c.height	= VGA_HEIGHT;
++	a->type		= V4L2_BUF_TYPE_VIDEO_CAPTURE;
++
++	return 0;
++}
++
++static int adv7180_cropcap(struct v4l2_subdev *sd, struct v4l2_cropcap *a)
++{
++	a->bounds.left			= 0;
++	a->bounds.top			= 0;
++	a->bounds.width			= VGA_WIDTH;
++	a->bounds.height		= VGA_HEIGHT;
++	a->defrect			= a->bounds;
++	a->type				= V4L2_BUF_TYPE_VIDEO_CAPTURE;
++	a->pixelaspect.numerator	= 1;
++	a->pixelaspect.denominator	= 1;
++
++	return 0;
++}
++
++static const struct adv7180_win_size *adv7180_select_win(u32 width,
++			     u32 height)
++{
++	__u32 diff;
++	const struct adv7180_win_size *win;
++
++	/* default is QVGA */
++	diff = abs(width - adv7180_win_qvga.width) +
++		abs(height - adv7180_win_qvga.height);
++	win = &adv7180_win_qvga;
++
++	/* VGA */
++	if (diff >
++	    abs(width  - adv7180_win_vga.width) +
++	    abs(height - adv7180_win_vga.height))
++		win = &adv7180_win_vga;
++
++	return win;
++}
++
++static int adv7180_try_fmt(struct v4l2_subdev *sd,
++			  struct v4l2_mbus_framefmt *mf)
++{
++	struct adv7180_state *state = to_state(sd);
++	const struct adv7180_win_size *win;
++	int i;
++
++	/*
++	 * select suitable win
++	 */
++	win = adv7180_select_win(mf->width, mf->height);
++
++	mf->width	= win->width;
++	mf->height	= win->height;
++
++	for (i = 0; i < ARRAY_SIZE(adv7180_cfmts); i++)
++		if (mf->code == adv7180_cfmts[i].code)
++			break;
++
++	if (i == ARRAY_SIZE(adv7180_cfmts)) {
++		/* Unsupported format requested. Propose either */
++		if (state->cfmt) {
++			/* the current one or */
++			mf->colorspace = state->cfmt->colorspace;
++			mf->code = state->cfmt->code;
++		} else {
++			/* the default one */
++			mf->colorspace = adv7180_cfmts[0].colorspace;
++			mf->code = adv7180_cfmts[0].code;
++		}
++	} else {
++		/* Also return the colorspace */
++		mf->colorspace	= adv7180_cfmts[i].colorspace;
++	}
++
++	return 0;
++}
++
++static int adv7180_enum_fmt(struct v4l2_subdev *sd, unsigned int index,
++			   enum v4l2_mbus_pixelcode *code)
++{
++	if (index >= ARRAY_SIZE(adv7180_cfmts))
++		return -EINVAL;
++
++	*code = adv7180_cfmts[index].code;
++
++	return 0;
++}
++
+ static v4l2_std_id adv7180_std_to_v4l2(u8 status1)
+ {
+ 	switch (status1 & ADV7180_STATUS1_AUTOD_MASK) {
+@@ -204,11 +414,6 @@ static int __adv7180_status(struct i2c_client *client, u32 *status,
+ 	return 0;
+ }
+ 
+-static inline struct adv7180_state *to_state(struct v4l2_subdev *sd)
+-{
+-	return container_of(sd, struct adv7180_state, sd);
+-}
+-
+ static int adv7180_querystd(struct v4l2_subdev *sd, v4l2_std_id *std)
+ {
+ 	struct adv7180_state *state = to_state(sd);
+@@ -393,10 +598,112 @@ static void adv7180_exit_controls(struct adv7180_state *state)
+ 	v4l2_ctrl_handler_free(&state->ctrl_hdl);
+ }
+ 
++static int adv7180_set_params(struct i2c_client *client, u32 *width,
++			     u32 *height,
++			     enum v4l2_mbus_pixelcode code)
++{
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct adv7180_state *state = to_state(sd);
++	int ret = -EINVAL;
++	int i;
++	unsigned long status;
++
++	/*
++	 * select format
++	 */
++	state->cfmt = NULL;
++	for (i = 0; i < ARRAY_SIZE(adv7180_cfmts); i++) {
++		if (code == adv7180_cfmts[i].code) {
++			state->cfmt = adv7180_cfmts + i;
++			break;
++		}
++	}
++	if (!state->cfmt)
++		goto adv7180_set_fmt_error;
++
++	/*
++	 * select win
++	 */
++	state->win = adv7180_select_win(*width, *height);
++
++	status = i2c_smbus_read_byte_data(client, ADV7180_STATUS1_REG);
++	if (status & ADV7180_STATUS1_IN_LOCK) {
++		if (((status & ADV7180_STATUS1_AUTOD_NTSC_4_43) \
++			 == ADV7180_STATUS1_AUTOD_NTSC_4_43) || \
++			  ((status & ADV7180_STATUS1_AUTOD_MASK) \
++			  == ADV7180_STATUS1_AUTOD_NTSM_M_J)) {
++			dev_info(&client->dev,
++				"Detected the NTSC video input signal\n");
++		} else if (status & ADV7180_STATUS1_PAL_SIGNAL) {
++			dev_info(&client->dev,
++				"Detected the PAL video input signal\n");
++		}
++	} else
++		dev_info(&client->dev, "Not detect any video input signal\n");
++
++	*width = state->win->width;
++	*height = state->win->height;
++
++	return 0;
++
++adv7180_set_fmt_error:
++	state->win = NULL;
++	state->cfmt = NULL;
++
++	return ret;
++}
++
++static int adv7180_g_fmt(struct v4l2_subdev *sd,
++			struct v4l2_mbus_framefmt *mf)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct adv7180_state *state = to_state(sd);
++
++	u32 width = VGA_WIDTH, height = VGA_HEIGHT;
++	int ret = adv7180_set_params(client, &width, &height,
++				    V4L2_MBUS_FMT_YUYV8_2X8);
++	if (ret < 0)
++		return ret;
++
++	mf->width	= state->win->width;
++	mf->height	= state->win->height;
++	mf->code	= state->cfmt->code;
++	mf->colorspace	= state->cfmt->colorspace;
++	mf->field	= V4L2_FIELD_NONE;
++
++
++	return 0;
++}
++
++static int adv7180_s_fmt(struct v4l2_subdev *sd,
++			struct v4l2_mbus_framefmt *mf)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct adv7180_state *state = to_state(sd);
++	int ret;
++
++	ret = adv7180_set_params(client, &mf->width, &mf->height,
++				    mf->code);
++
++	if (!ret)
++		mf->colorspace = state->cfmt->colorspace;
++
++
++	return ret;
++}
++
+ static const struct v4l2_subdev_video_ops adv7180_video_ops = {
+ 	.querystd = adv7180_querystd,
+ 	.g_input_status = adv7180_g_input_status,
+ 	.s_routing = adv7180_s_routing,
++	.s_stream	= adv7180_s_stream,
++	.g_mbus_fmt	= adv7180_g_fmt,
++	.s_mbus_fmt	= adv7180_s_fmt,
++	.try_mbus_fmt	= adv7180_try_fmt,
++	.cropcap	= adv7180_cropcap,
++	.g_crop		= adv7180_g_crop,
++	.enum_mbus_fmt	= adv7180_enum_fmt,
++	.g_mbus_config	= adv7180_g_mbus_config,
+ };
+ 
+ static const struct v4l2_subdev_core_ops adv7180_core_ops = {
+-- 
+1.7.5.4
+

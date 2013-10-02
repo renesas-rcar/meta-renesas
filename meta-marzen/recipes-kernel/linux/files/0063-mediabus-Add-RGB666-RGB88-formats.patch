@@ -1,0 +1,27 @@
+From 9783d724930ab0542732cce0aed79150a07ead7f Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 8 Oct 2012 12:41:57 +0100
+Subject: [PATCH 63/76] mediabus: Add RGB666 & RGB88 formats
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ include/linux/v4l2-mediabus.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/v4l2-mediabus.h b/include/linux/v4l2-mediabus.h
+index 5ea7f75..de15959 100644
+--- a/include/linux/v4l2-mediabus.h
++++ b/include/linux/v4l2-mediabus.h
+@@ -46,6 +46,9 @@ enum v4l2_mbus_pixelcode {
+ 	V4L2_MBUS_FMT_BGR565_2X8_LE = 0x1006,
+ 	V4L2_MBUS_FMT_RGB565_2X8_BE = 0x1007,
+ 	V4L2_MBUS_FMT_RGB565_2X8_LE = 0x1008,
++	V4L2_MBUS_FMT_RGB666_1X18_LE = 0x1009,
++	V4L2_MBUS_FMT_RGB888_1X24_LE = 0x100a,
++	V4L2_MBUS_FMT_RGB888_2X12_LE = 0x100b,
+ 
+ 	/* YUV (including grey) - next is 0x2014 */
+ 	V4L2_MBUS_FMT_Y8_1X8 = 0x2001,
+-- 
+1.7.5.4
+

@@ -1,0 +1,120 @@
+From 6e531ec72e317a932a41b9021488287bc1aefa6a Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 10 Jul 2012 09:52:29 +0100
+Subject: [PATCH 35/76] r8a7779: Add INTC2 chained interrupt handler
+
+This handles shared interrupts from on-chip peripherals.
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/intc-r8a7779.c |   75 +++++++++++++++++++++++++++++++++
+ 1 files changed, 75 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/intc-r8a7779.c b/arch/arm/mach-shmobile/intc-r8a7779.c
+index f04fad4..15d604b 100644
+--- a/arch/arm/mach-shmobile/intc-r8a7779.c
++++ b/arch/arm/mach-shmobile/intc-r8a7779.c
+@@ -28,6 +28,7 @@
+ #include <asm/hardware/gic.h>
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
++#include <asm/mach/irq.h>
+ 
+ #define INT2SMSKCR0 0xfe7822a0
+ #define INT2SMSKCR1 0xfe7822a4
+@@ -38,6 +39,56 @@
+ #define INT2NTSR0 0xfe700060
+ #define INT2NTSR1 0xfe700064
+ 
++struct intc2_child {
++	unsigned long	mask;
++	unsigned int	irq;
++};
++
++struct intc2_parent {
++	unsigned int		irq;
++	void __iomem		*reg;
++	unsigned int		num_child;
++	struct intc2_child	*child;
++};
++
++/*
++ * Parents
++ */
++static struct intc2_parent intc2_parent_desc[] = {
++};
++
++static void intc2_demux(unsigned int irq, struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_get_chip(irq);
++	struct intc2_parent *parent =
++		(struct intc2_parent *)irq_get_handler_data(irq);
++	unsigned int intr_stat = readl(parent->reg);
++	struct intc2_child *child;
++	int i;
++
++	chained_irq_enter(chip, desc);
++
++	child = parent->child;
++	for (i = 0; i < parent->num_child; i++) {
++		if (intr_stat & child->mask)
++			generic_handle_irq(child->irq);
++		child++;
++	}
++
++	chained_irq_exit(chip, desc);
++}
++
++static void intc2_irq_ack(struct irq_data *data) {}
++static void intc2_irq_mask(struct irq_data *data) {}
++static void intc2_irq_unmask(struct irq_data *data) {}
++
++static struct irq_chip intc2_chip = {
++	.name		= "INTC2",
++	.irq_ack	= intc2_irq_ack,
++	.irq_mask	= intc2_irq_mask,
++	.irq_unmask	= intc2_irq_unmask,
++};
++
+ static int r8a7779_set_wake(struct irq_data *data, unsigned int on)
+ {
+ 	return 0; /* always allow wakeup */
+@@ -47,11 +98,35 @@ void __init r8a7779_init_irq(void)
+ {
+ 	void __iomem *gic_dist_base = IOMEM(0xf0001000);
+ 	void __iomem *gic_cpu_base = IOMEM(0xf0000100);
++	struct intc2_parent *parent;
++	struct intc2_child *child;
++	unsigned int irq;
++	int i, j;
++
++	gic_dist_base = IOMEM(0xf0001000);
++	gic_cpu_base = IOMEM(0xf0000100);
+ 
+ 	/* use GIC to handle interrupts */
+ 	gic_init(0, 29, gic_dist_base, gic_cpu_base);
++
+ 	gic_arch_extn.irq_set_wake = r8a7779_set_wake;
+ 
++	parent = intc2_parent_desc;
++	for (i = 0; i < ARRAY_SIZE(intc2_parent_desc); i++) {
++		child = parent->child;
++		for (j = 0; j < parent->num_child; j++) {
++			irq = child->irq;
++			irq_set_chip_and_handler(irq, &intc2_chip,
++				handle_simple_irq);
++			set_irq_flags(irq, IRQF_VALID);
++			child++;
++		}
++		irq = parent->irq;
++		irq_set_handler_data(irq, (void *)parent);
++		irq_set_chained_handler(irq, intc2_demux);
++		parent++;
++	}
++
+ 	/* route all interrupts to ARM */
+ 	__raw_writel(0xffffffff, INT2NTSR0);
+ 	__raw_writel(0x3fffffff, INT2NTSR1);
+-- 
+1.7.5.4
+

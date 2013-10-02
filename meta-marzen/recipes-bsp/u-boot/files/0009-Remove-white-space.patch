@@ -1,0 +1,106 @@
+From 212a157b6022c0531b8948a9a1cd8e2bc3e5321d Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Wed, 14 Mar 2012 13:12:14 +0900
+Subject: [PATCH 09/10] Remove white-space
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ board/renesas/marzen/marzen.c |   16 +++++++++-------
+ drivers/net/smc911x.h         |    2 +-
+ drivers/serial/serial_sh.c    |    2 +-
+ include/configs/marzen.h      |    3 ++-
+ 4 files changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/board/renesas/marzen/marzen.c b/board/renesas/marzen/marzen.c
+index 81a75b0..d0a96cf 100644
+--- a/board/renesas/marzen/marzen.c
++++ b/board/renesas/marzen/marzen.c
+@@ -209,7 +209,8 @@ void do_memc_init(u32 base)
+ 	/* (6) */
+ 	MEMC_W(base, DBKIND, 0x7);		/* ddr3-sdram */
+ 	/* (7) */
+-	MEMC_W(base, DBCONF0, 0x0e030a02);	/* RowAd:14, Bank:8, CoulumAd:10 */
++	MEMC_W(base, DBCONF0, 0x0e030a02);	/* RowAd:14, Bank:8,
++						CoulumAd:10 */
+ 	MEMC_W(base, DBTR0, 0x7);		/* CL:7 */
+ 	MEMC_W(base, DBTR1, 0x6);		/* CWL:6 */
+ 	MEMC_W(base, DBTR2, 0);		/* AL:0 */
+@@ -266,7 +267,8 @@ void do_memc_init(u32 base)
+ 	wait_usec(100);
+ 	/* (20) */
+ 	val = MEMC_R(base, DBPDCNT3);
+-	MEMC_W(base, DBPDCNT3, val | 0x30000000);	/* STBY[1]:1, STBY[0]:1 */
++	MEMC_W(base, DBPDCNT3, val | 0x30000000);	/* STBY[1]:1,
++							STBY[0]:1 */
+ 	/* (21) */
+ 	val = MEMC_R(base, DBPDCNT0);
+ 	MEMC_W(base, DBPDCNT0, val | 0x80000000);	/* BW32:1 */
+@@ -297,8 +299,8 @@ void do_memc_init(u32 base)
+ 	MEMC_W(base, DBCMD, 0x29000000);	/* MR1, AL:0, DLL:En, ODT=Dis,
+ 						ODS:40ohm */
+ 	/* (31) */
+-	MEMC_W(base, DBCMD, 0x28000930);	/* MR0, Na, DLL_RES, BL:8, BT:Seque,
+-						CL:7, WR:8 */
++	MEMC_W(base, DBCMD, 0x28000930);	/* MR0, Na, DLL_RES, BL:8,
++						BT:Seque, CL:7, WR:8 */
+ 	/* (32) */
+ 	MEMC_W(base, DBCMD, 0x03000200);	/* ZQCL, 512 */
+ 
+@@ -311,11 +313,11 @@ void do_memc_init(u32 base)
+ 	MEMC_W(base, DBPDNCNF, 0x01005398);	/* DBPDCNF */
+ 	/* (34) */
+ 	MEMC_W(base, DBRFCNF0, 0xc8);		/* 200cycle */
+-	if (readl(MODEMR) & MD1) {
++	if (readl(MODEMR) & MD1)
+ 		MEMC_W(base, DBRFCNF1, 0xdde);	/* 500MHz */
+-	} else {
++	else
+ 		MEMC_W(base, DBRFCNF1, 0xaf0);	/* 375MHz */
+-	}
++
+ 	MEMC_W(base, DBRFCNF2, 0);		/* REFINT:1/1 */
+ 	/* (35) */
+ 	MEMC_W(base, DBRFEN, 1);		/* DBRFEN. ARFEN */
+diff --git a/drivers/net/smc911x.h b/drivers/net/smc911x.h
+index 904a940..3b8fc88 100644
+--- a/drivers/net/smc911x.h
++++ b/drivers/net/smc911x.h
+@@ -2,7 +2,7 @@
+  * drivers/net/smc911x.h
+  *
+  * Copyright (C) 2011-2012 Renesas Electronics Corporation
+- * 
++ *
+  * SMSC LAN9[12]1[567] Network driver
+  *
+  * (c) 2007 Pengutronix, Sascha Hauer <s.hauer@pengutronix.de>
+diff --git a/drivers/serial/serial_sh.c b/drivers/serial/serial_sh.c
+index 3161dc3..ef624aa 100644
+--- a/drivers/serial/serial_sh.c
++++ b/drivers/serial/serial_sh.c
+@@ -2,7 +2,7 @@
+  * drivers/serial/serial_sh.c
+  *
+  * Copyright (C) 2011-2012 Renesas Electronics Corporation
+- * 
++ *
+  * SuperH SCIF device driver.
+  * Copyright (C) 2007,2008,2010 Nobuhiro Iwamatsu
+  * Copyright (C) 2002 - 2008  Paul Mundt
+diff --git a/include/configs/marzen.h b/include/configs/marzen.h
+index bbfc769..72066f4 100644
+--- a/include/configs/marzen.h
++++ b/include/configs/marzen.h
+@@ -38,7 +38,8 @@
+ 
+ /* autoboot */
+ #define CONFIG_BOOTDELAY	3
+-#define CONFIG_BOOTCOMMAND	"cp.l 0x00200000 0x60007fc0 0x100000; bootm 0x60007fc0"
++#define CONFIG_BOOTCOMMAND	\
++	"cp.l 0x00200000 0x60007fc0 0x100000; bootm 0x60007fc0"
+ #define CONFIG_ZERO_BOOTDELAY_CHECK
+ 
+ /* high level configuration options */
+-- 
+1.7.5.4
+

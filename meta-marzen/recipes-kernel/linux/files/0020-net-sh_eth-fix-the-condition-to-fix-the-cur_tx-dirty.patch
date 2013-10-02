@@ -1,0 +1,63 @@
+From 23ff40585633ed259620e795f8eb8e071bba04ae Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Wed, 20 Jun 2012 15:26:34 +0000
+Subject: [PATCH 20/76] net: sh_eth: fix the condition to fix the
+ cur_tx/dirty_rx
+
+The following commit couldn't work if the RMCR is not set to 1.
+
+"net: sh_eth: fix the rxdesc pointer when rx descriptor empty happens"
+commit id 79fba9f51755c704c0a7d7b7f0df10874dc0a744
+
+If RMCR is not set, the controller will clear the EDRRR after it received
+a frame. In this case, the driver doesn't need to fix the value of
+cur_rx/dirty_rx. The driver only needs it when the controll detects
+receive descriptors are empty.
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Tested-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/ethernet/renesas/sh_eth.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index 667169b..79bf09b 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -1011,7 +1011,7 @@ static int sh_eth_txfree(struct net_device *ndev)
+ }
+ 
+ /* Packet receive function */
+-static int sh_eth_rx(struct net_device *ndev)
++static int sh_eth_rx(struct net_device *ndev, u32 intr_status)
+ {
+ 	struct sh_eth_private *mdp = netdev_priv(ndev);
+ 	struct sh_eth_rxdesc *rxdesc;
+@@ -1102,9 +1102,11 @@ static int sh_eth_rx(struct net_device *ndev)
+ 	/* Restart Rx engine if stopped. */
+ 	/* If we don't need to check status, don't. -KDU */
+ 	if (!(sh_eth_read(ndev, EDRRR) & EDRRR_R)) {
+-		/* fix the values for the next receiving */
+-		mdp->cur_rx = mdp->dirty_rx = (sh_eth_read(ndev, RDFAR) -
+-					       sh_eth_read(ndev, RDLAR)) >> 4;
++		/* fix the values for the next receiving if RDE is set */
++		if (intr_status & EESR_RDE)
++			mdp->cur_rx = mdp->dirty_rx =
++				(sh_eth_read(ndev, RDFAR) -
++				 sh_eth_read(ndev, RDLAR)) >> 4;
+ 		sh_eth_write(ndev, EDRRR_R, EDRRR);
+ 	}
+ 
+@@ -1273,7 +1275,7 @@ static irqreturn_t sh_eth_interrupt(int irq, void *netdev)
+ 			EESR_RTSF | /* short frame recv */
+ 			EESR_PRE  | /* PHY-LSI recv error */
+ 			EESR_CERF)){ /* recv frame CRC error */
+-		sh_eth_rx(ndev);
++		sh_eth_rx(ndev, intr_status);
+ 	}
+ 
+ 	/* Tx Check */
+-- 
+1.7.5.4
+

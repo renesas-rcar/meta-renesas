@@ -1,0 +1,132 @@
+From 10ef8f27bc6e390c3456608dc5fb1bcf0d070920 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Wed, 11 Jul 2012 16:27:16 +0100
+Subject: [PATCH 53/76] marzen: Add Display Unit
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/board-marzen.c |   80 +++++++++++++++++++++++++++++++++
+ 1 files changed, 80 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index 56a3ce7..0d56031 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -35,6 +35,8 @@
+ #include <linux/mmc/sh_mobile_sdhi.h>
+ #include <linux/mfd/tmio.h>
+ #include <linux/usb/rcar-usb.h>
++#include <mach/hpb-dmae.h>
++#include <video/rcarfb.h>
+ #include <mach/hardware.h>
+ #include <mach/r8a7779.h>
+ #include <mach/common.h>
+@@ -151,6 +153,51 @@ static struct platform_device hspi_device = {
+ 	.num_resources	= ARRAY_SIZE(hspi_resources),
+ };
+ 
++static struct resource rcar_du0_resources[] = {
++	[0] = {
++		.name	= "Display Unit 0",
++		.start	= 0xfff80000,
++		.end	= 0xfffb1007,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		.start	= gic_spi(31),
++		.flags	= IORESOURCE_IRQ,
++	},
++};
++
++static const struct fb_videomode extra_video_modes[] = {
++	/* 640x480-60 VESA */
++	{ NULL, 60, 640, 480, 39682,  48, 16, 33, 10, 96, 2, 0, 0 },
++	/* 800x600-56 VESA */
++	{ NULL, 56, 800, 600, 27777, 128, 24, 22, 01, 72, 2, 0, 0 },
++	/* 1024x768-60 VESA */
++	{ NULL, 60, 1024, 768, 15384, 160, 24, 29, 3, 136, 6, 0, 0 },
++	/* 800x480 */
++	{ NULL, 75, 800, 480, 23922, 128, 24, 33, 10, 96, 2, 0, 0 },
++	/* 1024x600 */
++	{ NULL, 60, 1024, 600, 11764, 120, 25, 100, 65, 220, 36, 0, 0 },
++	/* 1280x768 */
++	{ NULL, 50, 1280, 768, 11764, 97, 131, 59, 63, 122, 21, 0, 0 },
++	/* 1280x720p @ 50Hz */
++	{ NULL, 50, 1280, 720, 13468, 220, 440, 20, 5, 40, 5, 0, 0 },
++};
++
++static struct rcar_reso_info rcar_reso_par_0 = {
++	.num_modes = ARRAY_SIZE(extra_video_modes),
++	.modes = extra_video_modes,
++};
++
++static struct platform_device rcar_display_device = {
++	.name		= "rcarfb",
++	.num_resources	= ARRAY_SIZE(rcar_du0_resources),
++	.resource		= rcar_du0_resources,
++	.dev	= {
++		.platform_data = &rcar_reso_par_0,
++		.coherent_dma_mask = ~0,
++	},
++};
++
+ static u64 usb_dmamask = ~(u32)0;
+ 
+ static struct resource ehci0_resources[] = {
+@@ -165,6 +212,7 @@ static struct resource ehci0_resources[] = {
+ 	},
+ };
+ 
++
+ static struct rcar_usb_info ehci0_info = {
+ 	.port_offset = 0,
+ };
+@@ -436,6 +484,7 @@ static struct platform_device *marzen_devices[] __initdata = {
+ 	&ohci1_device,
+ 	&alsa_soc_platform_device,
+ 	&sru_device,
++	&rcar_display_device,
+ };
+ 
+ static void __init marzen_init(void)
+@@ -480,6 +529,37 @@ static void __init marzen_init(void)
+ 	gpio_request(GPIO_FN_USB_OVC1, NULL);
+ 	gpio_request(GPIO_FN_USB_OVC2, NULL);
+ 
++	/* Display Unit 0 (CN10: ARGB0) */
++	gpio_request(GPIO_FN_DU0_DR7, NULL);
++	gpio_request(GPIO_FN_DU0_DR6, NULL);
++	gpio_request(GPIO_FN_DU0_DR5, NULL);
++	gpio_request(GPIO_FN_DU0_DR4, NULL);
++	gpio_request(GPIO_FN_DU0_DR3, NULL);
++	gpio_request(GPIO_FN_DU0_DR2, NULL);
++	gpio_request(GPIO_FN_DU0_DR1, NULL);
++	gpio_request(GPIO_FN_DU0_DR0, NULL);
++	gpio_request(GPIO_FN_DU0_DG7, NULL);
++	gpio_request(GPIO_FN_DU0_DG6, NULL);
++	gpio_request(GPIO_FN_DU0_DG5, NULL);
++	gpio_request(GPIO_FN_DU0_DG4, NULL);
++	gpio_request(GPIO_FN_DU0_DG3, NULL);
++	gpio_request(GPIO_FN_DU0_DG2, NULL);
++	gpio_request(GPIO_FN_DU0_DG1, NULL);
++	gpio_request(GPIO_FN_DU0_DG0, NULL);
++	gpio_request(GPIO_FN_DU0_DB7, NULL);
++	gpio_request(GPIO_FN_DU0_DB6, NULL);
++	gpio_request(GPIO_FN_DU0_DB5, NULL);
++	gpio_request(GPIO_FN_DU0_DB4, NULL);
++	gpio_request(GPIO_FN_DU0_DB3, NULL);
++	gpio_request(GPIO_FN_DU0_DB2, NULL);
++	gpio_request(GPIO_FN_DU0_DB1, NULL);
++	gpio_request(GPIO_FN_DU0_DB0, NULL);
++	gpio_request(GPIO_FN_DU0_EXVSYNC_DU0_VSYNC, NULL);
++	gpio_request(GPIO_FN_DU0_EXHSYNC_DU0_HSYNC, NULL);
++	gpio_request(GPIO_FN_DU0_DOTCLKOUT0, NULL);
++	gpio_request(GPIO_FN_DU0_DOTCLKOUT1, NULL);
++	gpio_request(GPIO_FN_DU0_DISP, NULL);
++
+ 	/* I2C 0 */
+ 	gpio_request(GPIO_FN_SCL1, NULL);
+ 	gpio_request(GPIO_FN_SDA1, NULL);
+-- 
+1.7.5.4
+

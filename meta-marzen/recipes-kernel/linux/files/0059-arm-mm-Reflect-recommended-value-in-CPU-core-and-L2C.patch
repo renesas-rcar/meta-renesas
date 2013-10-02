@@ -1,0 +1,421 @@
+From 8352bd87435ff986b3322a21c16524b6a0f6a693 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Thu, 12 Jul 2012 15:26:19 +0100
+Subject: [PATCH 59/76] arm: mm: Reflect recommended value in CPU core and
+ L2Cache
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/include/asm/hardware/cache-l2x0.h |    1 +
+ arch/arm/mach-shmobile/board-marzen.c      |    6 ++
+ arch/arm/mach-shmobile/smp-r8a7779.c       |   11 +++
+ arch/arm/mm/Kconfig                        |  111 ++++++++++++++++++++++++++++
+ arch/arm/mm/cache-l2x0.c                   |   99 ++++++++++++++++++++++++-
+ arch/arm/mm/proc-v7.S                      |   22 ++++++
+ 6 files changed, 246 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/include/asm/hardware/cache-l2x0.h b/arch/arm/include/asm/hardware/cache-l2x0.h
+index c4c87bc..0e48243 100644
+--- a/arch/arm/include/asm/hardware/cache-l2x0.h
++++ b/arch/arm/include/asm/hardware/cache-l2x0.h
+@@ -104,6 +104,7 @@
+ 
+ #ifndef __ASSEMBLY__
+ extern void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask);
++extern void cache_ca9_full_line_of_zero(void *ignored);
+ #if defined(CONFIG_CACHE_L2X0) && defined(CONFIG_OF)
+ extern int l2x0_of_init(u32 aux_val, u32 aux_mask);
+ #else
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index 1ce8eb6..2c50eb1 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -45,6 +45,7 @@
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/hardware/gic.h>
++#include <asm/hardware/cache-l2x0.h>
+ #include <asm/traps.h>
+ 
+ static struct i2c_board_info marzen_i2c_devices[] = {
+@@ -659,6 +660,11 @@ static void __init marzen_init(void)
+ 	regulator_register_fixed(0, dummy_supplies,
+ 				ARRAY_SIZE(dummy_supplies));
+ 
++#ifdef CONFIG_CACHE_L2X0
++	/* Early BRESP enable, 64K*16way */
++	l2x0_init(IOMEM(0xf0100000), 0x40070000, 0x82000fff);
++#endif
++
+ 	r8a7779_pinmux_init();
+ 
+ 	/* SCIF2 (CN18: DEBUG0) */
+diff --git a/arch/arm/mach-shmobile/smp-r8a7779.c b/arch/arm/mach-shmobile/smp-r8a7779.c
+index 6d1d023..0c091f1 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7779.c
++++ b/arch/arm/mach-shmobile/smp-r8a7779.c
+@@ -29,6 +29,9 @@
+ #include <asm/smp_scu.h>
+ #include <asm/smp_twd.h>
+ #include <asm/hardware/gic.h>
++#ifdef CONFIG_CACHE_PL310_FULL_LINE_OF_ZERO
++#include <asm/hardware/cache-l2x0.h>
++#endif
+ 
+ #define AVECR IOMEM(0xfe700040)
+ 
+@@ -116,6 +119,14 @@ int r8a7779_platform_cpu_kill(unsigned int cpu)
+ void __cpuinit r8a7779_secondary_init(unsigned int cpu)
+ {
+ 	gic_secondary_init(0);
++
++	/* Enable Write full line of zeros feature in the Cortex-A9
++	 * at booting by cpu hotplug, because this feature setting in
++	 * R-Car H1 has been cleared by cpu power off.
++	 */
++#ifdef CONFIG_CACHE_PL310_FULL_LINE_OF_ZERO
++	cache_ca9_full_line_of_zero(NULL);
++#endif
+ }
+ 
+ int __cpuinit r8a7779_boot_secondary(unsigned int cpu)
+diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
+index 7c8a7d8..e115b5e 100644
+--- a/arch/arm/mm/Kconfig
++++ b/arch/arm/mm/Kconfig
+@@ -764,6 +764,20 @@ config CPU_DCACHE_WRITETHROUGH
+ 	  Say Y here to use the data cache in writethrough mode. Unless you
+ 	  specifically require this or are unsure, say N.
+ 
++config CPU_DCACHE_PREFETCH
++	bool "Enable D-cache data prefetching"
++	depends on CPU_V7
++	help
++	  Say Y here if you activate an automatic prefetcher implemented
++	  in the Cortex-A9 data cache, that can monitor and prefetch
++	  two independent data stream.
++
++	  Note that when the software issues a PLD instruction the PLD
++	  prefetch unit always takes precedence over requests from the
++	  data prefetch mechanism.  Prefetched lines in the speculative
++	  prefetcher can be dropped before they are allocated.  PLD
++	  instruction are always executed and never dropped.
++
+ config CPU_CACHE_ROUND_ROBIN
+ 	bool "Round robin I and D cache replacement algorithm"
+ 	depends on (CPU_ARM926T || CPU_ARM946E || CPU_ARM1020) && (!CPU_ICACHE_DISABLE || !CPU_DCACHE_DISABLE)
+@@ -777,6 +791,15 @@ config CPU_BPREDICT_DISABLE
+ 	help
+ 	  Say Y here to disable branch prediction.  If unsure, say N.
+ 
++config CPU_SWP_INSTRUCTION_DISABLE
++	bool "Disable SWP/SWPB instructions"
++	depends on CPU_V7
++	help
++	  Say Y here to disable the use of the SWP and SWPB instructions.
++	  And these instructions are treated as Undefined Instruction.
++	  From ARMv6, the use of these instructions is deprecated.
++	  If you need to use these instructions, say N.
++
+ config TLS_REG_EMUL
+ 	bool
+ 	help
+@@ -864,6 +887,94 @@ config CACHE_PL310
+ 	  This option enables optimisations for the PL310 cache
+ 	  controller.
+ 
++config CACHE_PL310_PREFETCH
++	bool
++	depends on CACHE_PL310
++	default y if CACHE_PL310_INSN_PREFETCH || CACHE_PL310_DATA_PREFETCH
++	help
++	  The prefetch operation is the capability of attempting to fetch
++	  cache lines from L3 in advance, to improve system performance.
++	  The following functionalities are available in the PL310:
++	  - Internal instruction and data prefetch engine
++	  - Double linefill issuing
++	  - Prefetch dropping
++
++config CACHE_PL310_INSN_PREFETCH
++	bool "PL310: Instruction prefetch"
++	depends on CACHE_PL310
++	help
++	  Say Y here to enable the PL310 instruction prefetch feature.
++
++config CACHE_PL310_DATA_PREFETCH
++	bool "PL310: Data prefetch"
++	depends on CACHE_PL310
++	help
++	  Say Y here to enable the PL310 data prefetch feature.
++
++config CACHE_PL310_PREFETCH_DOUBLE_LINEFILL
++	bool "prefetch feature: Double linefill issuing"
++	depends on CACHE_PL310 && CACHE_PL310_PREFETCH
++	help
++	  The L2C-310 cache line length is 32-byte. Therefore, by default,
++	  on each L2 cache miss, L2C-310 issues 32-byte linefills, 4 x 64-bit
++	  read bursts, to the L3 memory system.  L2C-310 can issue 64-byte
++	  linefills, 8 x 64-bit read bursts, on an L2 cache miss.  When
++	  the L2C-310 is waiting for the data from L3, it performs a lookup
++	  on the second cache line targeted by the 64-byte linefill.  If it
++	  misses, data corresponding to the second cache line are allocated
++	  to the L2 cache.  If it hits, data corresponding to the second
++	  cache line are discarded.
++
++	  Note:
++	  - Double linefills are not issued for prefetch reads if you enable
++	    exclusive cache configuration
++	  - Double linefills are not launched when crossing a 4KB boundary.
++
++config CACHE_PL310_PREFETCH_DROP
++	bool "prefetch feature: Prefetch dropping"
++	depends on CACHE_PL310 && CACHE_PL310_PREFETCH
++	help
++	  Prefetch accesses can use a large amount of the address slots
++	  present in the L2C-310 master ports.  This option prevents
++	  non-prefetch accesses being serviced, and affects performance.
++	  To counter this effect, L2C-310 can drop prefetch accesses.
++
++	  When enabled, if a resource conflict exists between prefetch
++	  and non-prefetch accesses in the L2C-310 master ports, prefetch
++	  accesses are dropped.  When data corresponding to these dropped
++	  prefetch accesses return from L3, they are discarded, and not
++	  allocated into the L2 cache.
++
++config CACHE_PL310_SHARED_ATTRIBUTE_OVERRIDE
++	bool "PL310: Shared attribute override"
++	depends on CACHE_PL310
++	help
++	  This option enables that the L2C-PL310 cache controller ignores
++	  the shareable attribute internally. The default behavior of the
++	  L2C-PL310 with respect to the shareable attribute is to transform
++	  Normal Memory Non-cacheable transactions into:
++	  - cacheable no allocate for reads
++	  - write through no write allocate for writes.
++
++config CACHE_PL310_DYNAMIC_CLOCK_GATING
++	bool "PL310: Dynamic clock gating"
++	depends on CACHE_PL310
++	help
++	  When you enable the dynamic high-level clock-gating feature,
++	  the cache controller stops its clock when it is idle.  It does
++	  not stop the clock immediately when it is idle, but after it
++	  counts several clock cycles.
++
++config CACHE_PL310_FULL_LINE_OF_ZERO
++	bool "PL310: Enable full line of write zero"
++	depends on CACHE_PL310
++	help
++	  This option enables Write full line of zeros feature in both
++	  the Cortex-A9 processor and the L2C-310 cache controller.
++	  When this feature is enabled, the Cortex-A9 processor can write
++	  entire non-coherent cache lines full of zero to the L2C-310 cache
++	  controller with a single request.
++
+ config CACHE_TAUROS2
+ 	bool "Enable the Tauros2 L2 cache controller"
+ 	depends on (ARCH_DOVE || ARCH_MMP || CPU_PJ4)
+diff --git a/arch/arm/mm/cache-l2x0.c b/arch/arm/mm/cache-l2x0.c
+index 2a8e380..6a1348f 100644
+--- a/arch/arm/mm/cache-l2x0.c
++++ b/arch/arm/mm/cache-l2x0.c
+@@ -1,6 +1,7 @@
+ /*
+  * arch/arm/mm/cache-l2x0.c - L210/L220 cache controller support
+  *
++ * Copyright (C) 2012 Renesas Electronics Corporation
+  * Copyright (C) 2007 ARM Limited
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -22,6 +23,9 @@
+ #include <linux/io.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
++#ifdef CONFIG_CACHE_PL310_FULL_LINE_OF_ZERO
++#include <linux/smp.h>
++#endif
+ 
+ #include <asm/cacheflush.h>
+ #include <asm/hardware/cache-l2x0.h>
+@@ -36,6 +40,33 @@ static unsigned long sync_reg_offset = L2X0_CACHE_SYNC;
+ 
+ struct l2x0_regs l2x0_saved_regs;
+ 
++#ifdef CONFIG_CACHE_PL310_FULL_LINE_OF_ZERO
++/*
++ * cache_ca9_full_line_of_zero() performs to enable Write full line of zeros
++ * feature in the Cortex-A9 processor. This function must be called after
++ * enabling this feature in the L2C-310 cache controller.
++ */
++void cache_ca9_full_line_of_zero(void *ignored)
++{
++	unsigned long actlr;
++
++	/* If L2C-310 is not enabled, don't have to enable it in Cortex-A9. */
++	if (!l2x0_base)
++		return;
++	if (!(readl_relaxed(l2x0_base + L2X0_CTRL) & 1))
++		return;
++
++	/* Enable Write full line of zeros. */
++	asm volatile(
++	"	mrc	p15, 0, %0, c1, c0, 1\n"
++	"	orr	%0, %0, #1 << 3\n"
++	"	mcr	p15, 0, %0, c1, c0, 1\n"
++	  : "=&r" (actlr)
++	  :
++	  : "cc");
++}
++#endif
++
+ struct l2x0_of_data {
+ 	void (*setup)(const struct device_node *, u32 *, u32 *);
+ 	void (*save)(void);
+@@ -310,6 +341,8 @@ void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask)
+ {
+ 	u32 aux;
+ 	u32 cache_id;
++	u32 prefetch, prefetch_val = 0;
++	u32 power;
+ 	u32 way_size = 0;
+ 	int ways;
+ 	const char *type;
+@@ -319,8 +352,8 @@ void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask)
+ 	cache_id = readl_relaxed(l2x0_base + L2X0_CACHE_ID);
+ 	aux = readl_relaxed(l2x0_base + L2X0_AUX_CTRL);
+ 
+-	aux &= aux_mask;
+-	aux |= aux_val;
++	prefetch = readl_relaxed(l2x0_base + L2X0_PREFETCH_CTRL);
++	power = readl_relaxed(l2x0_base + L2X0_POWER_CTRL);
+ 
+ 	/* Determine the number of ways */
+ 	switch (cache_id & L2X0_CACHE_ID_PART_MASK) {
+@@ -330,6 +363,52 @@ void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask)
+ 		else
+ 			ways = 8;
+ 		type = "L310";
++
++		/*
++		 * Set bit 22 in the auxiliary control register. If this bit
++		 * is cleared, PL310 treats Normal Shared Non-cacheable
++		 * accesses as Cacheable no-allocate.
++		 */
++#ifdef CONFIG_CACHE_PL310_SHARED_ATTRIBUTE_OVERRIDE
++		aux_val |= 1 << 22;
++#endif
++		/*
++		 * Enable internal instruction and data prefetching engine
++		 * if configured.
++		 */
++#ifdef CONFIG_CACHE_PL310_INSN_PREFETCH
++		aux_val |= 1 << 29;
++		prefetch_val |= 1 << 29;
++#endif
++#ifdef CONFIG_CACHE_PL310_DATA_PREFETCH
++		aux_val |= 1 << 28;
++		prefetch_val |= 1 << 28;
++#endif
++		/*
++		 * Enable prefetch-related features that can improve system
++		 * performance.  All bits in the prefetch control register
++		 * are set to zero by default, and we assume here that no
++		 * preceding softwares such as bootloaders set up these bits.
++		 */
++#ifdef CONFIG_CACHE_PL310_PREFETCH_DOUBLE_LINEFILL
++		/* safely available in r3p2 or later */
++		if ((cache_id & 0x3f) > 0x6) {
++			prefetch_val |= 1 << 30;
++			prefetch_val |= 1 << 23;
++			/* bit 27 is 0 */
++		}
++#endif
++#ifdef CONFIG_CACHE_PL310_PREFETCH_DROP
++		/* safely available in r3p1 or later */
++		if ((cache_id & 0x3f) > 0x5)
++			prefetch_val |= 1 << 24;
++#endif
++#ifdef CONFIG_CACHE_PL310_DYNAMIC_CLOCK_GATING
++		power |= 1 << 1;
++#endif
++#ifdef CONFIG_CACHE_PL310_FULL_LINE_OF_ZERO
++		aux_val |= 1 << 0;
++#endif
+ #ifdef CONFIG_PL310_ERRATA_753970
+ 		/* Unmapped register. */
+ 		sync_reg_offset = L2X0_DUMMY_REG;
+@@ -365,8 +444,14 @@ void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask)
+ 		/* Make sure that I&D is not locked down when starting */
+ 		l2x0_unlock(cache_id);
+ 
++		aux &= aux_mask;
++		aux |= aux_val;
++		prefetch |= prefetch_val;
++
+ 		/* l2x0 controller is disabled */
+ 		writel_relaxed(aux, l2x0_base + L2X0_AUX_CTRL);
++		writel_relaxed(prefetch, l2x0_base + L2X0_PREFETCH_CTRL);
++		writel_relaxed(power, l2x0_base + L2X0_POWER_CTRL);
+ 
+ 		l2x0_saved_regs.aux_ctrl = aux;
+ 
+@@ -376,6 +461,11 @@ void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask)
+ 		writel_relaxed(1, l2x0_base + L2X0_CTRL);
+ 	}
+ 
++#ifdef CONFIG_CACHE_PL310_FULL_LINE_OF_ZERO
++	/* Enable Write full line of zeros feature on each cpus. */
++	on_each_cpu(cache_ca9_full_line_of_zero, NULL, 1);
++#endif
++
+ 	outer_cache.inv_range = l2x0_inv_range;
+ 	outer_cache.clean_range = l2x0_clean_range;
+ 	outer_cache.flush_range = l2x0_flush_range;
+@@ -385,8 +475,9 @@ void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask)
+ 	outer_cache.disable = l2x0_disable;
+ 
+ 	printk(KERN_INFO "%s cache controller enabled\n", type);
+-	printk(KERN_INFO "l2x0: %d ways, CACHE_ID 0x%08x, AUX_CTRL 0x%08x, Cache size: %d B\n",
+-			ways, cache_id, aux, l2x0_size);
++	printk(KERN_INFO "l2x0: %d ways, CACHE_ID 0x%08x, AUX_CTRL 0x%08x, "
++			 "PREFETCH_CTRL 0x%08x, Cache size: %d B\n",
++			ways, cache_id, aux, prefetch, l2x0_size);
+ }
+ 
+ #ifdef CONFIG_OF
+diff --git a/arch/arm/mm/proc-v7.S b/arch/arm/mm/proc-v7.S
+index c2e2b66..811c0ce 100644
+--- a/arch/arm/mm/proc-v7.S
++++ b/arch/arm/mm/proc-v7.S
+@@ -208,6 +208,28 @@ __v7_setup:
+ 	orreq	r10, r10, #(1 << 22)		@ set the Write Allocate disable bit
+ 	mcreq	p15, 1, r10, c9, c0, 2		@ write the L2 cache aux ctrl register
+ #endif
++#ifdef CONFIG_CPU_DCACHE_PREFETCH
++	/*
++	 * TODO: This should be disabled for all r0, r1 and r2 revisions
++	 * due to the 751473 Cortex-A9 erratum.
++	 */
++	mrc	p15, 0, r10, c1, c0, 1		@ read aux control register
++	orr	r10, r10, #1 << 2		@ set L1 prefetch enable bit
++	mcr	p15, 0, r10, c1, c0, 1		@ write aux control register
++#ifdef CONFIG_SMP
++	/*
++	 * When Cortex-A9 MPCore is configured to run in SMP mode,
++	 * the automatic data prefetchers issue special read accesses
++	 * to the L2CC(L2C-310), called Prefetch Hints.
++	 *
++	 * This feature should be enabled only when all the conditions
++	 * are satisfied.
++	 */
++	mrc	p15, 0, r10, c1, c0, 1		@ read aux control register
++	orr	r10, r10, #1 << 1		@ set L2 prefetch hint enable
++	mcr	p15, 0, r10, c1, c0, 1		@ write aux control register
++#endif
++#endif
+ 	b	3f
+ 
+ 	/* Cortex-A9 Errata */
+-- 
+1.7.5.4
+

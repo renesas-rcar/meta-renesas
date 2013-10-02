@@ -1,0 +1,63 @@
+From fded0a4881b2ffcd8f14ca12463ac14625158255 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 31 May 2012 11:26:55 +0900
+Subject: [PATCH 64/76] mediabus: add a new data packing type 'EXTEND32' on
+ the media-bus
+
+A new data packing type 'SOC_MBUS_PACKING_EXTEND32' means that
+sample width (e.g., 24 bits) has to be extended to 32 bits.
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/media/video/soc_mediabus.c |    6 ++++++
+ include/media/soc_mediabus.h       |    3 +++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/media/video/soc_mediabus.c b/drivers/media/video/soc_mediabus.c
+index cf7f219..5bd830f 100644
+--- a/drivers/media/video/soc_mediabus.c
++++ b/drivers/media/video/soc_mediabus.c
+@@ -325,6 +325,10 @@ int soc_mbus_samples_per_pixel(const struct soc_mbus_pixelfmt *mf,
+ 		*numerator = 1;
+ 		*denominator = 1;
+ 		return 0;
++	case SOC_MBUS_PACKING_EXTEND32:
++		*numerator = 1;
++		*denominator = 1;
++		return 0;
+ 	case SOC_MBUS_PACKING_2X8_PADHI:
+ 	case SOC_MBUS_PACKING_2X8_PADLO:
+ 		*numerator = 2;
+@@ -356,6 +360,8 @@ s32 soc_mbus_bytes_per_line(u32 width, const struct soc_mbus_pixelfmt *mf)
+ 		return width * 3 / 2;
+ 	case SOC_MBUS_PACKING_VARIABLE:
+ 		return 0;
++	case SOC_MBUS_PACKING_EXTEND32:
++		return width * 4;
+ 	}
+ 	return -EINVAL;
+ }
+diff --git a/include/media/soc_mediabus.h b/include/media/soc_mediabus.h
+index 73f1e7e..6a022ab 100644
+--- a/include/media/soc_mediabus.h
++++ b/include/media/soc_mediabus.h
+@@ -26,6 +26,8 @@
+  * @SOC_MBUS_PACKING_VARIABLE:	compressed formats with variable packing
+  * @SOC_MBUS_PACKING_1_5X8:	used for packed YUV 4:2:0 formats, where 4
+  *				pixels occupy 6 bytes in RAM
++ * @SOC_MBUS_PACKING_EXTEND32:  sample width (e.g., 24 bits) has to be extended
++ *				to 32 bits
+  */
+ enum soc_mbus_packing {
+ 	SOC_MBUS_PACKING_NONE,
+@@ -34,6 +36,7 @@ enum soc_mbus_packing {
+ 	SOC_MBUS_PACKING_EXTEND16,
+ 	SOC_MBUS_PACKING_VARIABLE,
+ 	SOC_MBUS_PACKING_1_5X8,
++	SOC_MBUS_PACKING_EXTEND32,
+ };
+ 
+ /**
+-- 
+1.7.5.4
+

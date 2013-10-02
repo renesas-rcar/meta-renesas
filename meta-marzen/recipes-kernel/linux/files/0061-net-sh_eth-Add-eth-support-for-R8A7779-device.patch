@@ -1,0 +1,67 @@
+From 07522493f55a906f377b34f17b3ab8f1fc1e735e Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 13 Aug 2012 07:52:59 +0100
+Subject: [PATCH 61/76] net: sh_eth: Add eth support for R8A7779 device
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ drivers/net/ethernet/renesas/Kconfig  |    4 ++--
+ drivers/net/ethernet/renesas/sh_eth.c |   11 ++++++++---
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/Kconfig b/drivers/net/ethernet/renesas/Kconfig
+index 46df3a0..24c2305 100644
+--- a/drivers/net/ethernet/renesas/Kconfig
++++ b/drivers/net/ethernet/renesas/Kconfig
+@@ -8,7 +8,7 @@ config SH_ETH
+ 		(CPU_SUBTYPE_SH7710 || CPU_SUBTYPE_SH7712 || \
+ 		 CPU_SUBTYPE_SH7763 || CPU_SUBTYPE_SH7619 || \
+ 		 CPU_SUBTYPE_SH7724 || CPU_SUBTYPE_SH7734 || \
+-		 CPU_SUBTYPE_SH7757 || ARCH_R8A7740)
++		 CPU_SUBTYPE_SH7757 || ARCH_R8A7740 || ARCH_R8A7779)
+ 	select CRC32
+ 	select NET_CORE
+ 	select MII
+@@ -18,4 +18,4 @@ config SH_ETH
+ 	  Renesas SuperH Ethernet device driver.
+ 	  This driver supporting CPUs are:
+ 		- SH7619, SH7710, SH7712, SH7724, SH7734, SH7763, SH7757,
+-		  and R8A7740.
++		  R8A7740 and R8A7779.
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index 79bf09b..46ec0dc 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -50,7 +50,7 @@
+ 		NETIF_MSG_TX_ERR)
+ 
+ /* There is CPU dependent code */
+-#if defined(CONFIG_CPU_SUBTYPE_SH7724)
++#if defined(CONFIG_CPU_SUBTYPE_SH7724) || defined(CONFIG_ARCH_R8A7779)
+ #define SH_ETH_RESET_DEFAULT	1
+ static void sh_eth_set_duplex(struct net_device *ndev)
+ {
+@@ -65,13 +65,18 @@ static void sh_eth_set_duplex(struct net_device *ndev)
+ static void sh_eth_set_rate(struct net_device *ndev)
+ {
+ 	struct sh_eth_private *mdp = netdev_priv(ndev);
++	unsigned int bits = ECMR_RTM;
++
++#if defined(CONFIG_ARCH_R8A7779)
++	bits |= ECMR_ELB;
++#endif
+ 
+ 	switch (mdp->speed) {
+ 	case 10: /* 10BASE */
+-		sh_eth_write(ndev, sh_eth_read(ndev, ECMR) & ~ECMR_RTM, ECMR);
++		sh_eth_write(ndev, sh_eth_read(ndev, ECMR) & ~bits, ECMR);
+ 		break;
+ 	case 100:/* 100BASE */
+-		sh_eth_write(ndev, sh_eth_read(ndev, ECMR) | ECMR_RTM, ECMR);
++		sh_eth_write(ndev, sh_eth_read(ndev, ECMR) | bits, ECMR);
+ 		break;
+ 	default:
+ 		break;
+-- 
+1.7.5.4
+

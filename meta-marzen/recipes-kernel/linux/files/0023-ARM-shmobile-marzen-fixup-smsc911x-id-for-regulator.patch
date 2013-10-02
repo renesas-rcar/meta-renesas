@@ -1,0 +1,30 @@
+From 9a073e3393462050f0758b74d38a20dee7b4d2ec Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 29 Aug 2012 18:58:01 -0700
+Subject: [PATCH 23/76] ARM: shmobile: marzen: fixup smsc911x id for regulator
+
+dummy_supplies for smsc911x are registered as "smsc911x".
+smsc911x driver needs id = -1
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms@verge.net.au>
+---
+ arch/arm/mach-shmobile/board-marzen.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index bc12cbc..7f6ae7b 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -67,7 +67,7 @@ static struct smsc911x_platform_config smsc911x_platdata = {
+ 
+ static struct platform_device eth_device = {
+ 	.name		= "smsc911x",
+-	.id		= 0,
++	.id		= -1,
+ 	.dev  = {
+ 		.platform_data = &smsc911x_platdata,
+ 	},
+-- 
+1.7.5.4
+

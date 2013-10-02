@@ -1,0 +1,430 @@
+From 11792b7b0561cd2aff79c27706017177dd0f7a74 Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Fri, 6 Jan 2012 14:11:33 +0900
+Subject: [PATCH 07/10] Fix copyright description
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ arch/arm/cpu/armv7/rch1/Makefile     |    9 ++++-----
+ arch/arm/cpu/armv7/rch1/cache.S      |    9 ++++-----
+ arch/arm/cpu/armv7/rch1/config.mk    |    9 ++++-----
+ arch/arm/cpu/armv7/rch1/cpu.c        |    9 ++++-----
+ arch/arm/cpu/armv7/rch1/timer.c      |    9 ++++-----
+ arch/arm/cpu/armv7/rch1/timer.h      |    9 ++++-----
+ arch/arm/include/asm/arch-rch1/cpu.h |    9 ++++-----
+ board/renesas/marzen/Makefile        |    9 ++++-----
+ board/renesas/marzen/board.h         |    9 ++++-----
+ board/renesas/marzen/config.mk       |    9 ++++-----
+ board/renesas/marzen/lowlevel_init.S |    9 ++++-----
+ board/renesas/marzen/marzen.c        |    9 ++++-----
+ drivers/net/smc911x.h                |    4 ++++
+ drivers/serial/serial_sh.c           |    4 ++++
+ include/configs/marzen.h             |    9 ++++-----
+ 15 files changed, 60 insertions(+), 65 deletions(-)
+
+diff --git a/arch/arm/cpu/armv7/rch1/Makefile b/arch/arm/cpu/armv7/rch1/Makefile
+index fbf1361..07337cf 100644
+--- a/arch/arm/cpu/armv7/rch1/Makefile
++++ b/arch/arm/cpu/armv7/rch1/Makefile
+@@ -1,12 +1,11 @@
+ #
+ # arch/arm/cpu/armv7/rch1/Makefile
+ #
+-# Copyright(c) 2011 Renesas Electronics Corporation
++# Copyright (C) 2011-2012 Renesas Electronics Corporation
+ #
+ # This program is free software; you can redistribute it and/or modify
+-# it under the terms of the GNU General Public License as published by
+-# the Free Software Foundation; either version 2 of the License, or
+-# (at your option) any later version.
++# it under the terms of the GNU General Public License version 2
++# as published by the Free Software Foundation.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with this program; if not, write to the Free Software Foundation,
+-# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ #
+ 
+ include $(TOPDIR)/config.mk
+diff --git a/arch/arm/cpu/armv7/rch1/cache.S b/arch/arm/cpu/armv7/rch1/cache.S
+index c43a5e4..0cbf121 100644
+--- a/arch/arm/cpu/armv7/rch1/cache.S
++++ b/arch/arm/cpu/armv7/rch1/cache.S
+@@ -1,12 +1,11 @@
+ /*
+  * arch/arm/cpu/armv7/rch1/cache.S
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ 	.align	5
+diff --git a/arch/arm/cpu/armv7/rch1/config.mk b/arch/arm/cpu/armv7/rch1/config.mk
+index 4fe33eb..bce433f 100644
+--- a/arch/arm/cpu/armv7/rch1/config.mk
++++ b/arch/arm/cpu/armv7/rch1/config.mk
+@@ -1,12 +1,11 @@
+ #
+ # arch/arm/cpu/armv7/rch1/config.mk
+ #
+-# Copyright(c) 2011 Renesas Electronics Corporation
++# Copyright (C) 2011-2012 Renesas Electronics Corporation
+ #
+ # This program is free software; you can redistribute it and/or modify
+-# it under the terms of the GNU General Public License as published by
+-# the Free Software Foundation; either version 2 of the License, or
+-# (at your option) any later version.
++# it under the terms of the GNU General Public License version 2
++# as published by the Free Software Foundation.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with this program; if not, write to the Free Software Foundation,
+-# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ #
+ 
+ PLATFORM_CPPFLAGS += -march=armv7-a -fPIC
+diff --git a/arch/arm/cpu/armv7/rch1/cpu.c b/arch/arm/cpu/armv7/rch1/cpu.c
+index a181144..d2bdc6f 100644
+--- a/arch/arm/cpu/armv7/rch1/cpu.c
++++ b/arch/arm/cpu/armv7/rch1/cpu.c
+@@ -1,12 +1,11 @@
+ /*
+  * arch/arm/cpu/armv7/rch1/cpu.c
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ #include <common.h>
+diff --git a/arch/arm/cpu/armv7/rch1/timer.c b/arch/arm/cpu/armv7/rch1/timer.c
+index 52ee705..89948ab 100644
+--- a/arch/arm/cpu/armv7/rch1/timer.c
++++ b/arch/arm/cpu/armv7/rch1/timer.c
+@@ -1,12 +1,11 @@
+ /*
+  * arch/arm/cpu/armv7/rch1/timer.c
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ #include <common.h>
+diff --git a/arch/arm/cpu/armv7/rch1/timer.h b/arch/arm/cpu/armv7/rch1/timer.h
+index 1a05de5..4913639 100644
+--- a/arch/arm/cpu/armv7/rch1/timer.h
++++ b/arch/arm/cpu/armv7/rch1/timer.h
+@@ -1,12 +1,11 @@
+ /*
+  * arch/arm/cpu/armv7/rch1/timer.h
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ #define	TIMER_LOAD_VAL	0xffffffff
+diff --git a/arch/arm/include/asm/arch-rch1/cpu.h b/arch/arm/include/asm/arch-rch1/cpu.h
+index c6ec528..3c561d1 100644
+--- a/arch/arm/include/asm/arch-rch1/cpu.h
++++ b/arch/arm/include/asm/arch-rch1/cpu.h
+@@ -1,12 +1,11 @@
+ /*
+  * arch/arm/include/asm/arch-rch1/cpu.h
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ extern void board_reset(void);
+diff --git a/board/renesas/marzen/Makefile b/board/renesas/marzen/Makefile
+index bcba973..803fecc 100644
+--- a/board/renesas/marzen/Makefile
++++ b/board/renesas/marzen/Makefile
+@@ -1,12 +1,11 @@
+ #
+ # board/renesas/marzen/Makefile
+ #
+-# Copyright(c) 2011 Renesas Electronics Corporation
++# Copyright (C) 2011-2012 Renesas Electronics Corporation
+ #
+ # This program is free software; you can redistribute it and/or modify
+-# it under the terms of the GNU General Public License as published by
+-# the Free Software Foundation; either version 2 of the License, or
+-# (at your option) any later version.
++# it under the terms of the GNU General Public License version 2
++# as published by the Free Software Foundation.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with this program; if not, write to the Free Software Foundation,
+-# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ #
+ 
+ include	$(TOPDIR)/config.mk
+diff --git a/board/renesas/marzen/board.h b/board/renesas/marzen/board.h
+index 9f30020..716ee02 100644
+--- a/board/renesas/marzen/board.h
++++ b/board/renesas/marzen/board.h
+@@ -1,12 +1,11 @@
+ /*
+  * board/renesas/marzen/board.h
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ /* for setting pin */
+diff --git a/board/renesas/marzen/config.mk b/board/renesas/marzen/config.mk
+index 25d2d83..c85d94a 100644
+--- a/board/renesas/marzen/config.mk
++++ b/board/renesas/marzen/config.mk
+@@ -1,12 +1,11 @@
+ #
+ # board/renesas/marzen/config.mk
+ #
+-# Copyright(c) 2011 Renesas Electronics Corporation
++# Copyright (C) 2011-2012 Renesas Electronics Corporation
+ #
+ # This program is free software; you can redistribute it and/or modify
+-# it under the terms of the GNU General Public License as published by
+-# the Free Software Foundation; either version 2 of the License, or
+-# (at your option) any later version.
++# it under the terms of the GNU General Public License version 2
++# as published by the Free Software Foundation.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with this program; if not, write to the Free Software Foundation,
+-# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ #
+ 
+ CONFIG_SYS_TEXT_BASE = 0
+diff --git a/board/renesas/marzen/lowlevel_init.S b/board/renesas/marzen/lowlevel_init.S
+index aa1a9c4..40afe01 100644
+--- a/board/renesas/marzen/lowlevel_init.S
++++ b/board/renesas/marzen/lowlevel_init.S
+@@ -1,12 +1,11 @@
+ /*
+  * board/renesas/marzen/lowlevel_init.S
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ #include <config.h>
+diff --git a/board/renesas/marzen/marzen.c b/board/renesas/marzen/marzen.c
+index e63cc7b..81a75b0 100644
+--- a/board/renesas/marzen/marzen.c
++++ b/board/renesas/marzen/marzen.c
+@@ -1,12 +1,11 @@
+ /*
+  * board/renesas/marzen/marzen.c
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ #include <common.h>
+diff --git a/drivers/net/smc911x.h b/drivers/net/smc911x.h
+index 467ec25..904a940 100644
+--- a/drivers/net/smc911x.h
++++ b/drivers/net/smc911x.h
+@@ -1,4 +1,8 @@
+ /*
++ * drivers/net/smc911x.h
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ * 
+  * SMSC LAN9[12]1[567] Network driver
+  *
+  * (c) 2007 Pengutronix, Sascha Hauer <s.hauer@pengutronix.de>
+diff --git a/drivers/serial/serial_sh.c b/drivers/serial/serial_sh.c
+index 94e7f9f..3161dc3 100644
+--- a/drivers/serial/serial_sh.c
++++ b/drivers/serial/serial_sh.c
+@@ -1,4 +1,8 @@
+ /*
++ * drivers/serial/serial_sh.c
++ *
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
++ * 
+  * SuperH SCIF device driver.
+  * Copyright (C) 2007,2008,2010 Nobuhiro Iwamatsu
+  * Copyright (C) 2002 - 2008  Paul Mundt
+diff --git a/include/configs/marzen.h b/include/configs/marzen.h
+index 1b559a5..7760094 100644
+--- a/include/configs/marzen.h
++++ b/include/configs/marzen.h
+@@ -1,12 +1,11 @@
+ /*
+  * include/configs/marzen.h
+  *
+- * Copyright(c) 2011 Renesas Electronics Corporation
++ * Copyright (C) 2011-2012 Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -15,7 +14,7 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software Foundation,
+- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ 
+ #ifndef	__CONFIG_H
+-- 
+1.7.5.4
+

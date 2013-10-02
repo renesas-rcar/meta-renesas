@@ -1,0 +1,37 @@
+From 7c46d8978e106234445ccc5dfd356210ada5f75c Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+Date: Mon, 21 Nov 2011 15:10:04 +0900
+Subject: [PATCH 02/10] arm: rch1: Fix LBSC CSWCR setting value
+
+Signed-off-by: Kouei Abe <kouei.abe.cp@rms.renesas.com>
+---
+ board/renesas/marzen/marzen.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/board/renesas/marzen/marzen.c b/board/renesas/marzen/marzen.c
+index 6bdf054..938c17b 100644
+--- a/board/renesas/marzen/marzen.c
++++ b/board/renesas/marzen/marzen.c
+@@ -76,8 +76,8 @@ void exbus_init(void)
+ 
+ 	/* pulse control */
+ 	/* (write) setup, hold, pulse, (read) setup, hold, pulse */
+-	EXB_W(CSWCR1, 0x02190338);	/* 2, 1, 9, 3, 3, 8 */
+-	EXB_W(ECSWCR0, 0x00280028);	/* 0, 2, 8, 0, 2, 8 */
++	EXB_W(CSWCR1, 0x02140326);	/* 2, 1, 4, 3, 2, 6 */
++	EXB_W(ECSWCR0, 0x01130114);	/* 1, 1, 3, 1, 1, 4 */
+ 	EXB_W(ECSWCR1, 0x077f077f);	/* 7, 7, 15, 7, 7, 15 */
+ 	EXB_W(ECSWCR2, 0x077f077f);	/* 7, 7, 15, 7, 7, 15 */
+ 
+@@ -109,7 +109,7 @@ void exbus_init(void)
+ 
+ static void exbus_late_init(void)
+ {
+-	EXB_W(CSWCR0, 0x02190338);	/* 2, 1, 9, 3, 3, 8 */
++	EXB_W(CSWCR0, 0x02140326);	/* 2, 1, 4, 3, 2, 6 */
+ }
+ 
+ static void uart_init(void)
+-- 
+1.7.5.4
+

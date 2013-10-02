@@ -1,0 +1,81 @@
+From 35cdef3f3a728f514813fd0ce1e196ab5284c6b8 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 10 Oct 2012 19:57:02 -0700
+Subject: [PATCH 33/76] ARM: shmobile: marzen: add HSPI support
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/configs/marzen_defconfig     |    2 ++
+ arch/arm/mach-shmobile/board-marzen.c |   25 +++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/configs/marzen_defconfig b/arch/arm/configs/marzen_defconfig
+index f79b55c..5b8215f 100644
+--- a/arch/arm/configs/marzen_defconfig
++++ b/arch/arm/configs/marzen_defconfig
+@@ -71,6 +71,8 @@ CONFIG_SERIAL_SH_SCI_CONSOLE=y
+ # CONFIG_HW_RANDOM is not set
+ CONFIG_I2C=y
+ CONFIG_I2C_RCAR=y
++CONFIG_SPI=y
++CONFIG_SPI_SH_HSPI=y
+ CONFIG_GPIO_SYSFS=y
+ # CONFIG_HWMON is not set
+ CONFIG_THERMAL=y
+diff --git a/arch/arm/mach-shmobile/board-marzen.c b/arch/arm/mach-shmobile/board-marzen.c
+index 800ec1b..6a1a661 100644
+--- a/arch/arm/mach-shmobile/board-marzen.c
++++ b/arch/arm/mach-shmobile/board-marzen.c
+@@ -30,6 +30,8 @@
+ #include <linux/regulator/fixed.h>
+ #include <linux/regulator/machine.h>
+ #include <linux/smsc911x.h>
++#include <linux/spi/spi.h>
++#include <linux/spi/sh_hspi.h>
+ #include <linux/mmc/sh_mobile_sdhi.h>
+ #include <linux/mfd/tmio.h>
+ #include <mach/hardware.h>
+@@ -126,10 +128,27 @@ static struct platform_device thermal_device = {
+ 	.num_resources	= ARRAY_SIZE(thermal_resources),
+ };
+ 
++/* HSPI */
++static struct resource hspi_resources[] = {
++	[0] = {
++		.start		= 0xFFFC7000,
++		.end		= 0xFFFC7018 - 1,
++		.flags		= IORESOURCE_MEM,
++	},
++};
++
++static struct platform_device hspi_device = {
++	.name	= "sh-hspi",
++	.id	= 0,
++	.resource	= hspi_resources,
++	.num_resources	= ARRAY_SIZE(hspi_resources),
++};
++
+ static struct platform_device *marzen_devices[] __initdata = {
+ 	&eth_device,
+ 	&sdhi0_device,
+ 	&thermal_device,
++	&hspi_device,
+ };
+ 
+ static void __init marzen_init(void)
+@@ -163,6 +182,12 @@ static void __init marzen_init(void)
+ 	gpio_request(GPIO_FN_SD0_CD, NULL);
+ 	gpio_request(GPIO_FN_SD0_WP, NULL);
+ 
++	/* HSPI 0 */
++	gpio_request(GPIO_FN_HSPI_CLK0,	NULL);
++	gpio_request(GPIO_FN_HSPI_CS0,	NULL);
++	gpio_request(GPIO_FN_HSPI_TX0,	NULL);
++	gpio_request(GPIO_FN_HSPI_RX0,	NULL);
++
+ 	r8a7779_add_standard_devices();
+ 	platform_add_devices(marzen_devices, ARRAY_SIZE(marzen_devices));
+ }
+-- 
+1.7.5.4
+

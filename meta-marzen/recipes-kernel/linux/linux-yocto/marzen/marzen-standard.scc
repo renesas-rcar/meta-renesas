@@ -1,8 +1,0 @@
-define KMACHINE marzen
-define KTYPE standard
-define KARCH arm
-
-include ktypes/standard
-branch marzen
-
-include marzen.scc

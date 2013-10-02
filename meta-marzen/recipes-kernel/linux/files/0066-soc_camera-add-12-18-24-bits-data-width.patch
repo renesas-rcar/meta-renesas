@@ -1,0 +1,33 @@
+From 651f2fb03f933849c63a6f31ee4e12e221fa6132 Mon Sep 17 00:00:00 2001
+From: Katsuya Matsubara <matsu@igel.co.jp>
+Date: Thu, 31 May 2012 12:36:42 +0900
+Subject: [PATCH 66/76] soc_camera: add 12/18/24 bits data width
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ include/media/soc_camera.h |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/include/media/soc_camera.h b/include/media/soc_camera.h
+index cad374b..8321372 100644
+--- a/include/media/soc_camera.h
++++ b/include/media/soc_camera.h
+@@ -225,10 +225,14 @@ struct soc_camera_sense {
+ #define SOCAM_DATAWIDTH_10	SOCAM_DATAWIDTH(10)
+ #define SOCAM_DATAWIDTH_15	SOCAM_DATAWIDTH(15)
+ #define SOCAM_DATAWIDTH_16	SOCAM_DATAWIDTH(16)
++#define SOCAM_DATAWIDTH_18	SOCAM_DATAWIDTH(18)
++#define SOCAM_DATAWIDTH_24	SOCAM_DATAWIDTH(24)
+ 
+ #define SOCAM_DATAWIDTH_MASK (SOCAM_DATAWIDTH_4 | SOCAM_DATAWIDTH_8 | \
+ 			      SOCAM_DATAWIDTH_9 | SOCAM_DATAWIDTH_10 | \
+-			      SOCAM_DATAWIDTH_15 | SOCAM_DATAWIDTH_16)
++			      SOCAM_DATAWIDTH_12 | SOCAM_DATAWIDTH_15 | \
++			      SOCAM_DATAWIDTH_16 | SOCAM_DATAWIDTH_18 | \
++			      SOCAM_DATAWIDTH_24)
+ 
+ static inline void soc_camera_limit_side(int *start, int *length,
+ 		unsigned int start_min,
+-- 
+1.7.5.4
+
