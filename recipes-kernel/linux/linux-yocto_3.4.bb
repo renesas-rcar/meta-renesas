@@ -4,11 +4,11 @@ require linux-dtb.inc
 DESCRIPTION = "Linux kernel for the koelsch board"
 COMPATIBLE_MACHINE = "koelsch"
 
-PR = "r1"
+PR = "r2"
 PV_append = "+git${SRCREV}"
 
-SRCREV = "77d929639b4354d660fd3b6d808603ab625f69c5"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.25/rcar-gen2-4"
+SRCREV = "f49d2c9098ac09ebfe174564259c287f9644fd7f"                                                                                                                                         
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.25/rcar-gen2-5"
 
 S = "${WORKDIR}/git"
 
