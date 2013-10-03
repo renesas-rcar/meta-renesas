@@ -1,6 +1,6 @@
-From 9406928860536c62eb3ec870614e6252010a7d0a Mon Sep 17 00:00:00 2001
+From 9b0112e7bc2e530350b2b49f4b32689f8fb1198d Mon Sep 17 00:00:00 2001
 From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-Date: Wed, 28 Aug 2013 16:25:12 +0900
+Date: Thu, 3 Oct 2013 14:52:16 +0900
 Subject: [PATCH] lager: CMA: Update CMA_SIZE_MBYTES to 64
 
 Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
@@ -9,18 +9,18 @@ Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/configs/lager_defconfig b/arch/arm/configs/lager_defconfig
-index e534b6e..a810d0c 100644
+index 51afca9..db934b5 100644
 --- a/arch/arm/configs/lager_defconfig
 +++ b/arch/arm/configs/lager_defconfig
-@@ -82,7 +82,7 @@ CONFIG_DEVTMPFS=y
+@@ -66,7 +66,7 @@ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_DEVTMPFS=y
  CONFIG_DEVTMPFS_MOUNT=y
- CONFIG_REGMAP_SPI=y
  CONFIG_CMA=y
 -CONFIG_CMA_SIZE_MBYTES=32
 +CONFIG_CMA_SIZE_MBYTES=64
- CONFIG_CMA_SIZE_SEL_MBYTES=y
- CONFIG_CMA_ALIGNMENT=8
- CONFIG_CMA_AREAS=7
+ CONFIG_MTD=y
+ CONFIG_MTD_CHAR=y
+ CONFIG_MTD_BLOCK=y
 -- 
 1.7.9.5
 
