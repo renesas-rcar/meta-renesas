@@ -1,8 +1,0 @@
-define KMACHINE rbsr
-define KTYPE standard
-define KARCH arm
-
-include ktypes/standard
-branch rbsr
-
-include rbsr.scc
