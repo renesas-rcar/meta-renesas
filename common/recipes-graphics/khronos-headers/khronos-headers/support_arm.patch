@@ -1,0 +1,12 @@
+diff -urN a/EGL/eglplatform.h b/EGL/eglplatform.h
+--- b/EGL/eglplatform.h	2010-08-19 15:46:25.000000000 +0900
++++ a/EGL/eglplatform.h	2010-11-02 19:40:45.000000000 +0900
+@@ -72,7 +72,7 @@
+ typedef HBITMAP EGLNativePixmapType;
+ typedef HWND    EGLNativeWindowType;
+ 
+-#elif defined(__WINSCW__) || defined(__SYMBIAN32__)  /* Symbian */
++#elif defined(__WINSCW__) || defined(__SYMBIAN32__) || defined(__arm__) /* Symbian */
+ 
+ typedef int   EGLNativeDisplayType;
+ typedef void *EGLNativeWindowType;
