@@ -2,6 +2,7 @@ DEPENDS += "gstreamer directfb faad2 libxml2 libuiomux libshvio"
 
 EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
 EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-experimental', '--enable-experimental')}"
+PACKAGECONFIG += "faad"
 
 EXTRA_OECONF += "--with-plugins=h264parse"
 
