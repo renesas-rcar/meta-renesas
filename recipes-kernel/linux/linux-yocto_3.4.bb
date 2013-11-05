@@ -8,7 +8,7 @@ PR = "r3"
 PV_append = "+git${SRCREV}"
 
 SRCREV = "6250e5a61a718dbb5a2d8b4dd40a57d1d1b6fe96"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.25/rcar-gen2-5;tag=rcar-gen2-5/v0.5.1"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.25/rcar-gen2-5"
 
 S = "${WORKDIR}/git"
 
