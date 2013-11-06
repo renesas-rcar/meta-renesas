@@ -1,3 +1,5 @@
+DEFAULT_PREFERENCE = "-1"
+
 require directfb_git.inc
 
 RV = "1.8-0"
