@@ -1,17 +1,19 @@
-DEPENDS += "gstreamer directfb faad2 libxml2 libuiomux libshvio"
+DEPENDS += "gstreamer faad2 libxml2"
+DEPENDS_bockw += "directfb libuiomux libshvio"
 
-EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
+# bockw uses directfb
+EXTRA_OECONF_bockw := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
 EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-experimental', '--enable-experimental')}"
 PACKAGECONFIG += "faad"
 
-EXTRA_OECONF += "--with-plugins=h264parse"
+EXTRA_OECONF += "--with-plugins=h264parse,asfmux,videoparsers"
 
 TARGET_CFLAGS += "-D_GNU_SOURCE"
 
 PRINC := "${@int(PRINC) + 5}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-SRC_URI += " \
+SRC_URI_bockw += " \
     file://0001-directfb-trick-hardware-acceleration-check.patch \
     file://0002-rawparse-set-a-frame-number-when-beginning-playback.patch \
     file://0003-rawparse-send-the-seek-event-without-check-if-backwa.patch \
@@ -130,7 +132,7 @@ SRC_URI += " \
     file://0002-dfb-video-example-add-a-new-option-that-allows-to-se.patch \
     "
 
-do_install_append () {
+do_install_append_bockw () {
         install -d ${D}${bindir}
         install -m 0755 ${WORKDIR}/build/ext/directfb/dfb-video-example ${D}${bindir}
 }
