@@ -2,6 +2,7 @@ DESCRIPTION = "GStreamer plug-in that allows communication with OpenMAX IL compo
 AUTHOR = "Katsuya Matsubara <matsu@igel.co.jp>"
 BUGTRACKER = ""
 
+DEFAULT_PREFERENCE = "-1"
 inherit gettext
 require gst-plugins.inc
 DEPENDS += "gst-plugins-base"
