@@ -1,10 +1,11 @@
 require linux.inc
 require linux-dtb.inc
+require linux-dtb-append.inc
 
 DESCRIPTION = "Linux kernel for the lager board"
 COMPATIBLE_MACHINE = "lager"
 
-PR = "r7"
+PR = "r8"
 PV_append = "+git${SRCREV}"
 
 SRCREV = "33b4bbf492ee0cf39ea830a38a12e3c2565c12d5"
