@@ -1,10 +1,11 @@
 require linux.inc
 require linux-dtb.inc
+require linux-dtb-append.inc
 
 DESCRIPTION = "Linux kernel for the koelsch board"
 COMPATIBLE_MACHINE = "koelsch"
 
-PR = "r5"
+PR = "r6"
 PV_append = "+git${SRCREV}"
 
 SRCREV = "33b4bbf492ee0cf39ea830a38a12e3c2565c12d5"
