@@ -1,0 +1,5 @@
+kconf hardware koelsch.cfg
+include features/usb-net/usb-net.scc
+
+kconf hardware koelsch-user-config.cfg
+include koelsch-user-patches.scc
