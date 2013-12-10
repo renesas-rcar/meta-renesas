@@ -1,0 +1,5 @@
+kconf hardware lager.cfg
+include features/usb-net/usb-net.scc
+
+kconf hardware lager-user-config.cfg
+include lager-user-patches.scc
