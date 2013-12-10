@@ -1,0 +1,8 @@
+define KMACHINE lager
+define KTYPE standard
+define KARCH arm
+
+include ktypes/standard/standard.scc
+branch lager
+
+include lager.scc
