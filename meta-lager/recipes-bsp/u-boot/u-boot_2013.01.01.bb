@@ -15,9 +15,9 @@ LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=1707d6db1d42237583f50183a5651ecb"
 
 PV = "v2013.01.01+git${SRCPV}"
-PR = "r6"
+PR = "r7"
 
-SRCREV = "fb213ade2bdd7a20a74b34ef4effdfcaa74ae96c"
+SRCREV = "d68bac848b2167b8952988947a11d0b3f54a1c59"
 SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-5.4;protocol=git"
 
 S = "${WORKDIR}/git"
