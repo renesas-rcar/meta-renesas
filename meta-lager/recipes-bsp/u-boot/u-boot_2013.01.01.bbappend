@@ -1,4 +1,4 @@
-PRINC := "${@int(PRINC) + 8}"
+PRINC := "${@int(PRINC) + 9}"
 
-SRCREV = "d68bac848b2167b8952988947a11d0b3f54a1c59"
-SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-5.4;protocol=git"
+SRCREV = "046a4e936d519e154eb87b66dce08d11704e91b0"
+SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-5.5;protocol=git"
