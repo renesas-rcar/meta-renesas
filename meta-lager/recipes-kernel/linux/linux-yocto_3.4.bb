@@ -5,11 +5,11 @@ require linux-dtb-append.inc
 DESCRIPTION = "Linux kernel for the lager board"
 COMPATIBLE_MACHINE = "lager"
 
-PR = "r11"
+PR = "r12"
 PV_append = "+git${SRCREV}"
 
-SRCREV = "532ccfe3b810d848873f3b14cfb772563d51158a"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.46/rcar-gen2-5.5"
+SRCREV = "9f6604a1e9161150c39e637ff695328e15cc187d"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.46/rcar-gen2-5.6"
 
 S = "${WORKDIR}/git"
 
