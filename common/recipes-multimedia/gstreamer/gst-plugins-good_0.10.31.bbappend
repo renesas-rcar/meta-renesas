@@ -1,7 +1,9 @@
-PRINC := "${@int(PRINC) + 1}"
+PRINC := "${@int(PRINC) + 3}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-SRC_URI_bockw += " \
+PACKAGECONFIG_armadillo800eva += "v4l"
+
+SRC_URI += " \
     file://0001-sys-v4l2-gstv4l2-fix-the-depth-value-for-RGB32.patch \
     file://0002-Revert-sys-v4l2-gstv4l2-fix-the-depth-value-for-RGB3.patch \
     file://0003-sys-v4l2-gstv4l2-register-uiomux-memory-regions-via-.patch \
