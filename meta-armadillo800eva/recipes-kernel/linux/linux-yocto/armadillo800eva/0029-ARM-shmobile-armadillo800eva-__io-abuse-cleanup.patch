@@ -1,0 +1,34 @@
+From 5aebbf2660f25a986d94511039ae01ced1e59635 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Thu, 11 Oct 2012 21:59:17 -0700
+Subject: [PATCH 29/32] ARM: shmobile: armadillo800eva: __io abuse cleanup
+
+a2a47ca36642e3995e982957bc42678cf11ca6ac
+(ARM: __io abuse cleanup) cleanuped __io() -> IOMEM(),
+but armadillo800eva was a outside of a target,
+since "merge window" timing issue.
+This patch cleanup it.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms@verge.net.au>
+(cherry picked from commit bc8b2428e73ce19aecbf2aac3f5d4c844adb3216)
+---
+ arch/arm/mach-shmobile/board-armadillo800eva.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index f822577..33007f4 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -1140,7 +1140,7 @@ static void __init eva_init(void)
+ 
+ #ifdef CONFIG_CACHE_L2X0
+ 	/* Early BRESP enable, Shared attribute override enable, 32K*8way */
+-	l2x0_init(__io(0xf0002000), 0x40440000, 0x82000fff);
++	l2x0_init(IOMEM(0xf0002000), 0x40440000, 0x82000fff);
+ #endif
+ 
+ 	i2c_register_board_info(0, i2c0_devices, ARRAY_SIZE(i2c0_devices));
+-- 
+1.8.2
+

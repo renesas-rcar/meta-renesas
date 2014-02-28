@@ -1,0 +1,34 @@
+From e531d401813a823c53d8cc557858b0845643321e Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 10 Sep 2012 02:14:10 -0700
+Subject: [PATCH 02/32] ASoC: fsi: tidyup: remove un-necessary operation from
+ fsi_probe()
+
+struct fsi_master *master became member of struct fsi_priv from
+71f6e0645be42f93c0f90dfcc93b9d2d277c2ee6
+(ASoC: sh_fsi: avoid using global variable)
+
+So, master = NULL is not necessary on fsi_probe() now.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+(cherry picked from commit dbd4e51cd164e7d94b00c0c0dd3ac5517364a8fb)
+---
+ sound/soc/sh/fsi.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/sound/soc/sh/fsi.c b/sound/soc/sh/fsi.c
+index 74754d6..359840c 100644
+--- a/sound/soc/sh/fsi.c
++++ b/sound/soc/sh/fsi.c
+@@ -1739,7 +1739,6 @@ exit_iounmap:
+ 	iounmap(master->base);
+ exit_kfree:
+ 	kfree(master);
+-	master = NULL;
+ exit:
+ 	return ret;
+ }
+-- 
+1.8.2
+

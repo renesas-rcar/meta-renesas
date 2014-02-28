@@ -1,0 +1,102 @@
+From 5b0e06ab1f17e90995702830ee58d64311d144f3 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 26 Jul 2013 14:18:26 +0900
+Subject: [PATCH 22/32] dma: shdma: workaround: clear unnecessary irq flags
+
+SP (short packet) bit on USB-DMAC :: CHCR always valid somehow,
+even though it was TX channel, unused channel,
+and non short packet somehow.
+DMAC will be stall until this unnecessary bit was cleared.
+This patch solve above issue, but it is workaround at this point
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7740.c |  3 ++-
+ drivers/dma/sh/shdma.c                 | 15 +++++++++++++--
+ drivers/dma/sh/shdma.h                 |  1 +
+ include/linux/sh_dma.h                 |  1 +
+ 4 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7740.c b/arch/arm/mach-shmobile/setup-r8a7740.c
+index 1790a76..b0d2cb9 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7740.c
++++ b/arch/arm/mach-shmobile/setup-r8a7740.c
+@@ -716,7 +716,8 @@ static struct sh_dmae_pdata usb_dma_platform_data = {
+ 	.ts_shift_num	= ARRAY_SIZE(dma_usbts_shift),
+ 	.dmaor_init	= DMAOR_DME,
+ 	.chcr_offset	= 0x14,
+-	.chcr_ie_bit	= 1 << 5,
++	.chcr_ie_bit	= (1 << 5) | (1 << 2),
++	.chcr_clr_bit	= (1 << 2),
+ 	.dmaor_is_32bit	= 1,
+ 	.needs_tend_set	= 1,
+ 	.no_dmars	= 1,
+diff --git a/drivers/dma/sh/shdma.c b/drivers/dma/sh/shdma.c
+index f41bcc5..f7a55e2 100644
+--- a/drivers/dma/sh/shdma.c
++++ b/drivers/dma/sh/shdma.c
+@@ -210,7 +210,7 @@ static void dmae_start(struct sh_dmae_chan *sh_chan)
+ 		sh_dmae_writel(sh_chan, 0xFFFFFFFF, TEND);
+ 
+ 	chcr |= CHCR_DE | shdev->chcr_ie_bit;
+-	chcr_write(sh_chan, chcr & ~CHCR_TE);
++	chcr_write(sh_chan, chcr & ~(CHCR_TE | shdev->chcr_clr_bit));
+ }
+ 
+ static void dmae_init(struct sh_dmae_chan *sh_chan)
+@@ -371,9 +371,18 @@ static bool sh_dmae_chan_irq(struct shdma_chan *schan, int irq)
+ {
+ 	struct sh_dmae_chan *sh_chan = container_of(schan, struct sh_dmae_chan,
+ 						    shdma_chan);
++	u32 chcr = chcr_read(sh_chan);
++
++	if (!(chcr & CHCR_TE)) {
++		struct sh_dmae_device *shdev = to_sh_dev(sh_chan);
++
++		if (shdev->chcr_clr_bit) {
++			chcr &= ~shdev->chcr_clr_bit;
++			chcr_write(sh_chan, chcr);
++		}
+ 
+-	if (!(chcr_read(sh_chan) & CHCR_TE))
+ 		return false;
++	}
+ 
+ 	/* DMA stop */
+ 	dmae_halt(sh_chan);
+@@ -736,6 +745,8 @@ static int __devinit sh_dmae_probe(struct platform_device *pdev)
+ 	else
+ 		shdev->chcr_offset = CHCR;
+ 
++	shdev->chcr_clr_bit = pdata->chcr_clr_bit;
++
+ 	if (pdata->chcr_ie_bit)
+ 		shdev->chcr_ie_bit = pdata->chcr_ie_bit;
+ 	else
+diff --git a/drivers/dma/sh/shdma.h b/drivers/dma/sh/shdma.h
+index 9314e93..83a6874 100644
+--- a/drivers/dma/sh/shdma.h
++++ b/drivers/dma/sh/shdma.h
+@@ -42,6 +42,7 @@ struct sh_dmae_device {
+ 	u16 __iomem *dmars;
+ 	unsigned int chcr_offset;
+ 	u32 chcr_ie_bit;
++	u32 chcr_clr_bit;
+ };
+ 
+ struct sh_dmae_regs {
+diff --git a/include/linux/sh_dma.h b/include/linux/sh_dma.h
+index b64d6be..9111418 100644
+--- a/include/linux/sh_dma.h
++++ b/include/linux/sh_dma.h
+@@ -54,6 +54,7 @@ struct sh_dmae_pdata {
+ 	u16 dmaor_init;
+ 	unsigned int chcr_offset;
+ 	u32 chcr_ie_bit;
++	u32 chcr_clr_bit;
+ 
+ 	unsigned int dmaor_is_32bit:1;
+ 	unsigned int needs_tend_set:1;
+-- 
+1.8.2
+

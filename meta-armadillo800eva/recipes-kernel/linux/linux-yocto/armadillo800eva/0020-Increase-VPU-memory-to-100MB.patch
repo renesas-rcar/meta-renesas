@@ -1,0 +1,35 @@
+From 5c767f0d1df27174ea0569827ff63d323ccb2cbe Mon Sep 17 00:00:00 2001
+From: Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Thu, 13 Jun 2013 16:28:26 +0900
+Subject: [PATCH 20/32] Increase VPU memory to 100MB
+
+This is necessary to play 1080p video streams.
+---
+ arch/arm/mach-shmobile/setup-r8a7740.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7740.c b/arch/arm/mach-shmobile/setup-r8a7740.c
+index 48ef7b0..1790a76 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7740.c
++++ b/arch/arm/mach-shmobile/setup-r8a7740.c
+@@ -140,7 +140,7 @@ static struct platform_device meram_uio_device = {
+ 
+ /* VCP1 */
+ static unsigned int regions[] = {
+-	(80 << 20),
++	(100 << 20),
+ };
+ 
+ static struct uio_dmem_genirq_pdata vpu_platform_data = {
+@@ -931,7 +931,7 @@ void __init r8a7740_add_early_devices(void)
+ 
+ void __init r8a7740_reserve_memory(void)
+ {
+-	dma_declare_contiguous(&vpu_device.dev, 80 << 20, 0, 0);
++	dma_declare_contiguous(&vpu_device.dev, 100 << 20, 0, 0);
+ }
+ 
+ #ifdef CONFIG_USE_OF
+-- 
+1.8.2
+

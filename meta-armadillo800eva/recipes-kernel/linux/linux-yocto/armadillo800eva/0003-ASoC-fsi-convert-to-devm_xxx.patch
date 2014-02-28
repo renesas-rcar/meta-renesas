@@ -1,0 +1,80 @@
+From fac489a20643353d4438f244cf81fbdae760bd8f Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 10 Sep 2012 02:14:31 -0700
+Subject: [PATCH 03/32] ASoC: fsi: convert to devm_xxx()
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+(cherry picked from commit 6ac4262f367fd0d9b0219dfd014ffcca4a6cfa6a)
+---
+ sound/soc/sh/fsi.c | 25 ++++++++-----------------
+ 1 file changed, 8 insertions(+), 17 deletions(-)
+
+diff --git a/sound/soc/sh/fsi.c b/sound/soc/sh/fsi.c
+index 359840c..5360e9d 100644
+--- a/sound/soc/sh/fsi.c
++++ b/sound/soc/sh/fsi.c
+@@ -1656,22 +1656,20 @@ static int fsi_probe(struct platform_device *pdev)
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (!res || (int)irq <= 0) {
+ 		dev_err(&pdev->dev, "Not enough FSI platform resources.\n");
+-		ret = -ENODEV;
+-		goto exit;
++		return -ENODEV;
+ 	}
+ 
+-	master = kzalloc(sizeof(*master), GFP_KERNEL);
++	master = devm_kzalloc(&pdev->dev, sizeof(*master), GFP_KERNEL);
+ 	if (!master) {
+ 		dev_err(&pdev->dev, "Could not allocate master\n");
+-		ret = -ENOMEM;
+-		goto exit;
++		return -ENOMEM;
+ 	}
+ 
+-	master->base = ioremap_nocache(res->start, resource_size(res));
++	master->base = devm_ioremap_nocache(&pdev->dev,
++					    res->start, resource_size(res));
+ 	if (!master->base) {
+-		ret = -ENXIO;
+ 		dev_err(&pdev->dev, "Unable to ioremap FSI registers.\n");
+-		goto exit_kfree;
++		return -ENXIO;
+ 	}
+ 
+ 	/* master setting */
+@@ -1687,7 +1685,7 @@ static int fsi_probe(struct platform_device *pdev)
+ 	ret = fsi_stream_probe(&master->fsia, &pdev->dev);
+ 	if (ret < 0) {
+ 		dev_err(&pdev->dev, "FSIA stream probe failed\n");
+-		goto exit_iounmap;
++		return ret;
+ 	}
+ 
+ 	/* FSI B setting */
+@@ -1735,11 +1733,7 @@ exit_fsib:
+ 	fsi_stream_remove(&master->fsib);
+ exit_fsia:
+ 	fsi_stream_remove(&master->fsia);
+-exit_iounmap:
+-	iounmap(master->base);
+-exit_kfree:
+-	kfree(master);
+-exit:
++
+ 	return ret;
+ }
+ 
+@@ -1758,9 +1752,6 @@ static int fsi_remove(struct platform_device *pdev)
+ 	fsi_stream_remove(&master->fsia);
+ 	fsi_stream_remove(&master->fsib);
+ 
+-	iounmap(master->base);
+-	kfree(master);
+-
+ 	return 0;
+ }
+ 
+-- 
+1.8.2
+

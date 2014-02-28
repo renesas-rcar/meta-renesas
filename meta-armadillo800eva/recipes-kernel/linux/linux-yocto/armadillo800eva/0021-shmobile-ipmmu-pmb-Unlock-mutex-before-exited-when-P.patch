@@ -1,0 +1,32 @@
+From 864d43764aca65f731741251021e0bad3e73a60f Mon Sep 17 00:00:00 2001
+From: Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Sun, 16 Jun 2013 17:24:25 +0900
+Subject: [PATCH 21/32] shmobile: ipmmu-pmb: Unlock mutex before exited when
+ PMB is full
+
+While trying to allocate an available PMB slot when the device is opened,
+a mutex is taken before the resource check.  If the check fails, make sure to
+unlock the mutex before returning.
+---
+ arch/arm/mach-shmobile/ipmmu-pmb.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/ipmmu-pmb.c b/arch/arm/mach-shmobile/ipmmu-pmb.c
+index 7e87e70..1b9801c 100644
+--- a/arch/arm/mach-shmobile/ipmmu-pmb.c
++++ b/arch/arm/mach-shmobile/ipmmu-pmb.c
+@@ -129,8 +129,10 @@ static int ipmmu_pmb_open(struct inode *inode, struct file *filp)
+ 
+ 	mutex_lock(&priv->pmb_lock);
+ 	idx = find_first_zero_bit(&priv->busy_pmbs, PMB_NR);
+-	if (idx == PMB_NR)
++	if (idx == PMB_NR) {
++		mutex_unlock(&priv->pmb_lock);
+ 		return -EBUSY;
++	}
+ 
+ 	__set_bit(idx, &priv->busy_pmbs);
+ 	mutex_unlock(&priv->pmb_lock);
+-- 
+1.8.2
+

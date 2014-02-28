@@ -1,0 +1,79 @@
+From 4899d57489bc3c014ac284c2866203e6561dfe6f Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 29 Oct 2012 00:37:22 -0700
+Subject: [PATCH 05/32] ASoC: fsi: fsi_set_master_clk() was called from
+ fsi_hw_xxx() only
+
+Current FSI driver is using fsi_set_master_clk() if it needs system clock.
+But this function was called from
+fsi_hw_shutdown()/fsi_dai_trigger()/fsi_resume() without a sense of unity.
+Because of this, sound playback after suspend failed sometimes.
+To keep consistency, fsi_master_clk() was called from
+fsi_hw_start/stop() only now.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+(cherry picked from commit ddeb2d701b76bb1fc299c0f9306c63109769bc33)
+---
+ sound/soc/sh/fsi.c | 23 ++++++++---------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
+
+diff --git a/sound/soc/sh/fsi.c b/sound/soc/sh/fsi.c
+index 4e8ce36..233292c 100644
+--- a/sound/soc/sh/fsi.c
++++ b/sound/soc/sh/fsi.c
+@@ -1334,12 +1334,17 @@ static int fsi_hw_startup(struct fsi_priv *fsi,
+ 	/* fifo init */
+ 	fsi_fifo_init(fsi, io, dev);
+ 
++	/* start master clock */
++	if (fsi_is_clk_master(fsi))
++		fsi_set_master_clk(dev, fsi, fsi->rate, 1);
++
+ 	return 0;
+ }
+ 
+ static void fsi_hw_shutdown(struct fsi_priv *fsi,
+ 			    struct device *dev)
+ {
++	/* stop master clock */
+ 	if (fsi_is_clk_master(fsi))
+ 		fsi_set_master_clk(dev, fsi, fsi->rate, 0);
+ }
+@@ -1462,19 +1467,11 @@ static int fsi_dai_hw_params(struct snd_pcm_substream *substream,
+ 			     struct snd_soc_dai *dai)
+ {
+ 	struct fsi_priv *fsi = fsi_get_priv(substream);
+-	long rate = params_rate(params);
+-	int ret;
+-
+-	if (!fsi_is_clk_master(fsi))
+-		return 0;
+-
+-	ret = fsi_set_master_clk(dai->dev, fsi, rate, 1);
+-	if (ret < 0)
+-		return ret;
+ 
+-	fsi->rate = rate;
++	if (fsi_is_clk_master(fsi))
++		fsi->rate = params_rate(params);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static const struct snd_soc_dai_ops fsi_dai_ops = {
+@@ -1771,10 +1768,6 @@ static void __fsi_resume(struct fsi_priv *fsi,
+ 		return;
+ 
+ 	fsi_hw_startup(fsi, io, dev);
+-
+-	if (fsi_is_clk_master(fsi) && fsi->rate)
+-		fsi_set_master_clk(dev, fsi, fsi->rate, 1);
+-
+ 	fsi_stream_start(fsi, io);
+ }
+ 
+-- 
+1.8.2
+

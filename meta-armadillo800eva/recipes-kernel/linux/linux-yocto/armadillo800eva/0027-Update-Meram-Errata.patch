@@ -1,0 +1,37 @@
+From 25208115ad8645310e2fd7fd11c46292df1cef3f Mon Sep 17 00:00:00 2001
+From: Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Mon, 5 Aug 2013 12:55:56 +0900
+Subject: [PATCH 27/32] Update Meram Errata
+
+Use some newer values for the MERAM errata.
+---
+ arch/arm/mach-shmobile/setup-r8a7740.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7740.c b/arch/arm/mach-shmobile/setup-r8a7740.c
+index b0d2cb9..d0e19e7 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7740.c
++++ b/arch/arm/mach-shmobile/setup-r8a7740.c
+@@ -813,14 +813,16 @@ static struct platform_device *r8a7740_late_devices[] __initdata = {
+  * see
+  *	"Media RAM (MERAM)" on r8a7740 documentation
+  */
+-#define MEBUFCNTR	0xFE950098
++#define MEBUFCCNTR	0xFE950094
+ void r8a7740_meram_workaround(void)
+ {
+ 	void __iomem *reg;
+ 
+-	reg = ioremap_nocache(MEBUFCNTR, 4);
++	reg = ioremap_nocache(MEBUFCCNTR, 12);
+ 	if (reg) {
+-		iowrite32(0x01600164, reg);
++		iowrite32(0x0000014E, reg);
++		iowrite32(0x015E0162, reg + 4);
++		iowrite32(0x0166016A, reg + 8);
+ 		iounmap(reg);
+ 	}
+ }
+-- 
+1.8.2
+

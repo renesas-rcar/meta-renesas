@@ -1,0 +1,508 @@
+From d533c06b8edecf59ce839b3f1b4524f365033521 Mon Sep 17 00:00:00 2001
+From: Masahiro Nakai <nakai@atmark-techno.com>
+Date: Tue, 31 Jul 2012 18:07:39 +0900
+Subject: [PATCH 32/32] ARM: shmobile: armadillo800eva: Add USB ECHI and OHCI
+ support
+
+This adds USB's platform_device and rewrites clock functions in this board.
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ arch/arm/mach-shmobile/Kconfig                 |   2 +
+ arch/arm/mach-shmobile/board-armadillo800eva.c | 369 +++++++++++++++++--------
+ 2 files changed, 250 insertions(+), 121 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index 4c678e5..83a32e5 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -33,6 +33,8 @@ config ARCH_R8A7740
+ 	select CPU_V7
+ 	select SH_CLK_CPG
+ 	select ARCH_WANT_OPTIONAL_GPIOLIB
++	select USB_ARCH_HAS_EHCI
++	select USB_ARCH_HAS_OHCI
+ 
+ config ARCH_R8A7779
+ 	bool "R-Car H1 (R8A77790)"
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index 33007f4..7124d9d 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -32,6 +32,7 @@
+ #include <linux/regulator/machine.h>
+ #include <linux/sh_eth.h>
+ #include <linux/videodev2.h>
++#include <linux/usb/rmobile.h>
+ #include <linux/usb/renesas_usbhs.h>
+ #include <linux/mfd/tmio.h>
+ #include <linux/mmc/host.h>
+@@ -124,6 +125,224 @@
+  * # amixer set "Headphone" 50
+  */
+ 
++/* USB */
++#define USBCKCR		IOMEM(0xe615008c)
++#define USBCR1		IOMEM(0xe605810a)
++#define USBH		0xc6700000
++#define USBH_USBCTR	0x10834
++
++static DEFINE_SPINLOCK(usb_lock);
++
++struct r8a7740_usb_clock_priv {
++	const char *name;
++	struct list_head list;
++	int init_flag;
++
++	struct clk *phy;
++	struct clk *usb24;
++	struct clk *pci;
++	struct clk *func;
++	struct clk *host;
++};
++#define to_r8a7740_usb_clock_priv(list) \
++	container_of(list, struct r8a7740_usb_clock_priv, list)
++
++static LIST_HEAD(r8a7740_usb_clock_list);
++
++static void usbhs_clock_cleanup(struct r8a7740_usb_clock_priv *priv)
++{
++	if (!IS_ERR(priv->phy))
++		clk_put(priv->phy);
++	if (!IS_ERR(priv->usb24))
++		clk_put(priv->usb24);
++	if (!IS_ERR(priv->pci))
++		clk_put(priv->pci);
++	if (!IS_ERR(priv->host))
++		clk_put(priv->host);
++	if (!IS_ERR(priv->func))
++		clk_put(priv->func);
++	priv->phy       = NULL;
++	priv->usb24     = NULL;
++	priv->pci       = NULL;
++	priv->host      = NULL;
++	priv->func      = NULL;
++}
++
++static void usbhs_clock_disable(struct r8a7740_usb_clock_priv *priv)
++{
++	clk_disable(priv->phy);
++	clk_disable(priv->func);	/* usb work around */
++	clk_disable(priv->host);	/* usb work around */
++	clk_disable(priv->pci);		/* usb work around */
++	clk_disable(priv->usb24);	/* usb work around */
++}
++
++static void usb_common_clock(struct platform_device *pdev, int on)
++{
++	struct r8a7740_usb_clock_priv *priv = NULL;
++	struct list_head *list;
++	int use_count = 0;
++	unsigned long flags;
++
++	spin_lock_irqsave(&usb_lock, flags);
++
++	list_for_each(list, &r8a7740_usb_clock_list) {
++		struct r8a7740_usb_clock_priv *tmp =
++				to_r8a7740_usb_clock_priv(list);
++		if (tmp) {
++			if (!strcmp(dev_name(&pdev->dev), tmp->name))
++				priv = tmp;
++			use_count += tmp->init_flag;
++		}
++	}
++
++	if (!on && !use_count) {
++		spin_unlock_irqrestore(&usb_lock, flags);
++		goto exit;
++	}
++
++	if (!priv) {
++		/* create clock data */
++		priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
++		priv->name = dev_name(&pdev->dev);
++		list_add_tail(&priv->list, &r8a7740_usb_clock_list);
++	}
++
++	spin_unlock_irqrestore(&usb_lock, flags);
++
++	if (on) {
++		if (!priv->init_flag) {
++			priv->phy	= clk_get(&pdev->dev, "phy");
++			priv->usb24	= clk_get(&pdev->dev, "usb24");
++			priv->pci	= clk_get(&pdev->dev, "pci");
++			priv->func	= clk_get(&pdev->dev, "func");
++			priv->host	= clk_get(&pdev->dev, "host");
++
++			if (IS_ERR(priv->phy) || IS_ERR(priv->usb24) ||
++				IS_ERR(priv->pci) || IS_ERR(priv->host) ||
++				IS_ERR(priv->func)) {
++					dev_err(&pdev->dev, "USB clock setting failed\n");
++					usbhs_clock_cleanup(priv);
++					goto exit;
++			}
++
++			clk_enable(priv->usb24);
++			clk_enable(priv->pci);
++			clk_enable(priv->host);
++			clk_enable(priv->func);
++			clk_enable(priv->phy);
++			priv->init_flag++;
++		}
++
++		if (!use_count) {
++			void __iomem *host_base
++				= ioremap_nocache(USBH, 0x20000);
++			if (!host_base) {
++				usbhs_clock_disable(priv);
++				usbhs_clock_cleanup(priv);
++				priv->init_flag = 0;
++				goto exit;
++			}
++
++			if (!gpio_get_value(GPIO_PORT159)) {
++				/* Port1:Function Port2:HOST
++				 * USBCR.P1PORTSEL = 11b
++				 *		(Port1 is driven by UFB FUNC)
++				 * USBCR.P2PORTSEL = 01b
++				 *		(Port2 is driven by USB HOST)
++				 * USBCR.PORTNUM   = 01b
++				 *		(One HOST)
++				 */
++				__raw_writew(0xd750, USBCR1);
++				mdelay(1);
++			} else {
++				/* Port1:HOST Port2:HOST */
++				__raw_writew(0x6b50, USBCR1);
++			}
++
++			__raw_writel(0x0000040c, host_base + USBH_USBCTR);
++			__raw_writel(0x00000408, host_base + USBH_USBCTR);
++			mdelay(10);
++
++			if (!gpio_get_value(GPIO_PORT159))
++				__raw_writew(0xd770, USBCR1);
++			iounmap(host_base);
++		}
++	} else {
++		if (use_count - 1 == 0) {
++			void __iomem *host_base
++				= ioremap_nocache(USBH, 0x20000);
++			__raw_writel(0x0000050e, host_base + USBH_USBCTR);
++			__raw_writew(0x07c0, USBCR1);
++			iounmap(host_base);
++		}
++
++		priv->init_flag--;
++		if (priv->init_flag <= 0) {
++			usbhs_clock_disable(priv);
++			usbhs_clock_cleanup(priv);
++			list_del(&priv->list);
++		}
++	}
++
++exit:
++	return;
++}
++
++static struct rmobile_usb_platdata usb_host_platdata = {
++	.common_clock = usb_common_clock,
++};
++
++static u64 usb_host_dma_mask = DMA_BIT_MASK(32);
++
++static struct resource usb_ohci_resources[] = {
++	[0] = {
++		.start = 0xc6700000,
++		.end = 0xc6720000 - 1,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = evt2irq(0x15c0),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device usb_ohci_device = {
++	.name = "rmobile-ohci",
++	.id = -1,
++	.dev = {
++		.dma_mask = &usb_host_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++		.platform_data = &usb_host_platdata,
++	},
++	.num_resources = ARRAY_SIZE(usb_ohci_resources),
++	.resource = usb_ohci_resources,
++};
++
++static struct resource usb_ehci_resources[] = {
++	[0] = {
++		.start = 0xc6700000,
++		.end = 0xc6720000 - 1,
++		.flags = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start = evt2irq(0x15c0),
++		.flags = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device usb_ehci_device = {
++	.name = "rmobile-ehci",
++	.id = -1,
++	.dev = {
++		.dma_mask = &usb_host_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++		.platform_data = &usb_host_platdata,
++	},
++	.num_resources = ARRAY_SIZE(usb_ehci_resources),
++	.resource = usb_ehci_resources,
++};
++
+ /*
+  * USB function
+  *
+@@ -136,23 +355,6 @@
+  *	usbhsf_power_ctrl()
+  */
+ #define IRQ7		evt2irq(0x02e0)
+-#define USBCR1		0xe605810a
+-#define USBH		0xC6700000
+-#define USBH_USBCTR	0x10834
+-
+-struct usbhsf_private {
+-	struct clk *phy;
+-	struct clk *usb24;
+-	struct clk *pci;
+-	struct clk *func;
+-	struct clk *host;
+-	void __iomem *usbh_base;
+-	struct renesas_usbhs_platform_info info;
+-};
+-
+-#define usbhsf_get_priv(pdev)				\
+-	container_of(renesas_usbhs_get_info(pdev),	\
+-		     struct usbhsf_private, info)
+ 
+ static int usbhsf_get_id(struct platform_device *pdev)
+ {
+@@ -162,56 +364,18 @@ static int usbhsf_get_id(struct platform_device *pdev)
+ static void usbhsf_power_ctrl(struct platform_device *pdev,
+ 			      void __iomem *base, int enable)
+ {
+-	struct usbhsf_private *priv = usbhsf_get_priv(pdev);
+-
+ 	/*
+ 	 * Work around for USB Function.
+ 	 * It needs USB host clock, and settings
+ 	 */
+-	if (enable) {
+-		/*
+-		 * enable all the related usb clocks
+-		 * for usb workaround
+-		 */
+-		clk_enable(priv->usb24);
+-		clk_enable(priv->pci);
+-		clk_enable(priv->host);
+-		clk_enable(priv->func);
+-		clk_enable(priv->phy);
+-
+-		/*
+-		 * set USBCR1
+-		 *
+-		 * Port1 is driven by USB function,
+-		 * Port2 is driven by USB HOST
+-		 * One HOST (Port1 or Port2 is HOST)
+-		 * USB PLL input clock = 24MHz
+-		 */
+-		__raw_writew(0xd750, USBCR1);
+-		mdelay(1);
+-
+-		/*
+-		 * start USB Host
+-		 */
+-		__raw_writel(0x0000000c, priv->usbh_base + USBH_USBCTR);
+-		__raw_writel(0x00000008, priv->usbh_base + USBH_USBCTR);
+-		mdelay(10);
++	usb_common_clock(pdev, enable);
+ 
++	if (enable) {
+ 		/*
+ 		 * USB PHY Power ON
+ 		 */
+ 		__raw_writew(0xd770, USBCR1);
+ 		__raw_writew(0x4000, base + 0x102); /* USBF :: SUSPMODE */
+-
+-	} else {
+-		__raw_writel(0x0000010f, priv->usbh_base + USBH_USBCTR);
+-		__raw_writew(0xd7c0, USBCR1); /* GPIO */
+-
+-		clk_disable(priv->phy);
+-		clk_disable(priv->func);	/* usb work around */
+-		clk_disable(priv->host);	/* usb work around */
+-		clk_disable(priv->pci);		/* usb work around */
+-		clk_disable(priv->usb24);	/* usb work around */
+ 	}
+ }
+ 
+@@ -231,54 +395,14 @@ static irqreturn_t usbhsf_interrupt(int irq, void *data)
+ 
+ static void usbhsf_hardware_exit(struct platform_device *pdev)
+ {
+-	struct usbhsf_private *priv = usbhsf_get_priv(pdev);
+-
+-	if (!IS_ERR(priv->phy))
+-		clk_put(priv->phy);
+-	if (!IS_ERR(priv->usb24))
+-		clk_put(priv->usb24);
+-	if (!IS_ERR(priv->pci))
+-		clk_put(priv->pci);
+-	if (!IS_ERR(priv->host))
+-		clk_put(priv->host);
+-	if (!IS_ERR(priv->func))
+-		clk_put(priv->func);
+-	if (priv->usbh_base)
+-		iounmap(priv->usbh_base);
+-
+-	priv->phy	= NULL;
+-	priv->usb24	= NULL;
+-	priv->pci	= NULL;
+-	priv->host	= NULL;
+-	priv->func	= NULL;
+-	priv->usbh_base	= NULL;
+-
+ 	free_irq(IRQ7, pdev);
+ }
+ 
+ static int usbhsf_hardware_init(struct platform_device *pdev)
+ {
+-	struct usbhsf_private *priv = usbhsf_get_priv(pdev);
++	struct clk *usb24_clk;
+ 	int ret;
+ 
+-	priv->phy	= clk_get(&pdev->dev, "phy");
+-	priv->usb24	= clk_get(&pdev->dev, "usb24");
+-	priv->pci	= clk_get(&pdev->dev, "pci");
+-	priv->func	= clk_get(&pdev->dev, "func");
+-	priv->host	= clk_get(&pdev->dev, "host");
+-	priv->usbh_base	= ioremap_nocache(USBH, 0x20000);
+-
+-	if (IS_ERR(priv->phy)		||
+-	    IS_ERR(priv->usb24)		||
+-	    IS_ERR(priv->pci)		||
+-	    IS_ERR(priv->host)		||
+-	    IS_ERR(priv->func)		||
+-	    !priv->usbh_base) {
+-		dev_err(&pdev->dev, "USB clock setting failed\n");
+-		usbhsf_hardware_exit(pdev);
+-		return -EIO;
+-	}
+-
+ 	ret = request_irq(IRQ7, usbhsf_interrupt, IRQF_TRIGGER_NONE,
+ 			  dev_name(&pdev->dev), pdev);
+ 	if (ret) {
+@@ -288,27 +412,27 @@ static int usbhsf_hardware_init(struct platform_device *pdev)
+ 	irq_set_irq_type(IRQ7, IRQ_TYPE_EDGE_BOTH);
+ 
+ 	/* usb24 use 1/1 of parent clock (= usb24s = 24MHz) */
+-	clk_set_rate(priv->usb24,
+-		     clk_get_rate(clk_get_parent(priv->usb24)));
++	usb24_clk = clk_get(&pdev->dev, "usb24");
++	clk_set_rate(usb24_clk,
++		     clk_get_rate(clk_get_parent(usb24_clk)));
++	clk_put(usb24_clk);
+ 
+ 	return 0;
+ }
+ 
+-static struct usbhsf_private usbhsf_private = {
+-	.info = {
+-		.platform_callback = {
+-			.get_id		= usbhsf_get_id,
+-			.get_vbus	= usbhsf_get_vbus,
+-			.hardware_init	= usbhsf_hardware_init,
+-			.hardware_exit	= usbhsf_hardware_exit,
+-			.power_ctrl	= usbhsf_power_ctrl,
+-		},
+-		.driver_param = {
+-			.buswait_bwait		= 5,
+-			.detection_delay	= 5,
+-			.d0_rx_id	= SHDMA_SLAVE_USBHS_RX,
+-			.d1_tx_id	= SHDMA_SLAVE_USBHS_TX,
+-		},
++static struct renesas_usbhs_platform_info usbhs_pinfo = {
++	.platform_callback = {
++		.get_id		= usbhsf_get_id,
++		.get_vbus	= usbhsf_get_vbus,
++		.hardware_init	= usbhsf_hardware_init,
++		.hardware_exit	= usbhsf_hardware_exit,
++		.power_ctrl	= usbhsf_power_ctrl,
++	},
++	.driver_param = {
++		.buswait_bwait		= 5,
++		.detection_delay	= 5,
++		.d0_rx_id	= SHDMA_SLAVE_USBHS_RX,
++		.d1_tx_id	= SHDMA_SLAVE_USBHS_TX,
+ 	}
+ };
+ 
+@@ -328,7 +452,7 @@ static struct resource usbhsf_resources[] = {
+ static struct platform_device usbhsf_device = {
+ 	.name	= "renesas_usbhs",
+ 	.dev = {
+-		.platform_data = &usbhsf_private.info,
++		.platform_data = &usbhs_pinfo,
+ 	},
+ 	.id = -1,
+ 	.num_resources	= ARRAY_SIZE(usbhsf_resources),
+@@ -545,8 +669,7 @@ static struct platform_device gpio_keys_device = {
+ };
+ 
+ /* Fixed 3.3V regulator to be used by SDHI0, SDHI1, MMCIF */
+-static struct regulator_consumer_supply fixed3v3_power_consumers[] =
+-{
++static struct regulator_consumer_supply fixed3v3_power_consumers[] = {
+ 	REGULATOR_SUPPLY("vmmc", "sh_mobile_sdhi.0"),
+ 	REGULATOR_SUPPLY("vqmmc", "sh_mobile_sdhi.0"),
+ 	REGULATOR_SUPPLY("vmmc", "sh_mobile_sdhi.1"),
+@@ -568,7 +691,7 @@ static struct regulator_consumer_supply fixed3v3_power_consumers[] =
+ static struct sh_mobile_sdhi_info sdhi0_info = {
+ 	.dma_slave_tx	= SHDMA_SLAVE_SDHI0_TX,
+ 	.dma_slave_rx	= SHDMA_SLAVE_SDHI0_RX,
+-	.tmio_caps	= MMC_CAP_SD_HIGHSPEED | MMC_CAP_SDIO_IRQ |\
++	.tmio_caps	= MMC_CAP_SD_HIGHSPEED | MMC_CAP_SDIO_IRQ |
+ 			  MMC_CAP_NEEDS_POLL,
+ 	.tmio_ocr_mask	= MMC_VDD_165_195 | MMC_VDD_32_33 | MMC_VDD_33_34,
+ 	.tmio_flags	= TMIO_MMC_HAS_IDLE_WAIT,
+@@ -880,6 +1003,8 @@ static struct platform_device *eva_devices[] __initdata = {
+ 	&fsi_device,
+ 	&fsi_hdmi_device,
+ 	&fsi_wm8978_device,
++	&usb_ehci_device,
++	&usb_ohci_device,
+ };
+ 
+ static void __init eva_clock_init(void)
+@@ -926,8 +1051,9 @@ static void __init eva_init(void)
+ {
+ 	struct platform_device *usb = NULL;
+ 
+-	regulator_register_always_on(0, "fixed-3.3V", fixed3v3_power_consumers,
+-				     ARRAY_SIZE(fixed3v3_power_consumers), 3300000);
++	regulator_register_always_on(0, "fixed-3.3V",
++				fixed3v3_power_consumers,
++				ARRAY_SIZE(fixed3v3_power_consumers), 3300000);
+ 
+ 	r8a7740_pinmux_init();
+ 	r8a7740_meram_workaround();
+@@ -1004,6 +1130,7 @@ static void __init eva_init(void)
+ 	gpio_direction_output(GPIO_PORT18, 1);
+ 
+ 	/* USB */
++	writel(readl(USBCKCR) | 0x40, USBCKCR); /* USB div output */
+ 	gpio_request(GPIO_PORT159, NULL); /* USB_DEVICE_MODE */
+ 	gpio_direction_input(GPIO_PORT159);
+ 
+-- 
+1.8.2
+
