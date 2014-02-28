@@ -1,0 +1,37 @@
+From 52e30139294b4662042aa55a4dafd7ea2a0dd945 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 4 Mar 2013 20:44:39 -0800
+Subject: [PATCH 28/32] fbdev: sh_mobile_lcdc: fixup B side hsync adjust
+ settings
+
+The lcdc B side horizon output is shifted
+if sh_mobile_lcdc_pan() was called.
+This patch fixup this issue.
+It is tested on R8A7740 Armadillo800eva HDMI output.
+Special thanks to Fukushima-san, and Sano-san
+
+Reported-by: Osamu Fukushima <osamu.fukushima.wr@renesas.com>
+Signed-off-by: Hideyuki Sano <hideyuki.sano.dn@renesas.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(cherry picked from commit 9beb09f1cadf33145c307c504f844ae24686c872)
+---
+ drivers/video/sh_mobile_lcdcfb.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/video/sh_mobile_lcdcfb.c b/drivers/video/sh_mobile_lcdcfb.c
+index 699487c..13bdc9c 100644
+--- a/drivers/video/sh_mobile_lcdcfb.c
++++ b/drivers/video/sh_mobile_lcdcfb.c
+@@ -858,6 +858,7 @@ static void sh_mobile_lcdc_geometry(struct sh_mobile_lcdc_chan *ch)
+ 	tmp = ((mode->xres & 7) << 24) | ((display_h_total & 7) << 16)
+ 	    | ((mode->hsync_len & 7) << 8) | (hsync_pos & 7);
+ 	lcdc_write_chan(ch, LDHAJR, tmp);
++	lcdc_write_chan_mirror(ch, LDHAJR, tmp);
+ }
+ 
+ static void sh_mobile_lcdc_overlay_setup(struct sh_mobile_lcdc_overlay *ovl)
+-- 
+1.8.2
+

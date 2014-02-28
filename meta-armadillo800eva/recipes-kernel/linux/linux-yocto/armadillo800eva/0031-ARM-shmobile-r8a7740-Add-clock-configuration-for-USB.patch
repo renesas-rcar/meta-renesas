@@ -1,0 +1,38 @@
+From 6639cb8952610f6675fed4b8edcf015722806371 Mon Sep 17 00:00:00 2001
+From: Masahiro Nakai <nakai@atmark-techno.com>
+Date: Tue, 31 Jul 2012 17:59:35 +0900
+Subject: [PATCH 31/32] ARM: shmobile: r8a7740: Add clock configuration for USB
+ ECHI and OHCI
+
+The Renesas R-Mobile SoC (r8a7740) has USB EHCI and OHCI controllers.
+This is necessary to get these clock.
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7740.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7740.c b/arch/arm/mach-shmobile/clock-r8a7740.c
+index a86553c..20a4abe 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7740.c
++++ b/arch/arm/mach-shmobile/clock-r8a7740.c
+@@ -604,6 +604,16 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_ICK_ID("phy",	"renesas_usbhs",	&mstp_clks[MSTP406]),
+ 	CLKDEV_ICK_ID("pci",	"renesas_usbhs",	&div4_clks[DIV4_USBP]),
+ 	CLKDEV_ICK_ID("usb24",	"renesas_usbhs",	&usb24_clk),
++	CLKDEV_ICK_ID("host",	"rmobile-ehci",		&mstp_clks[MSTP416]),
++	CLKDEV_ICK_ID("func",	"rmobile-ehci",		&mstp_clks[MSTP407]),
++	CLKDEV_ICK_ID("phy",	"rmobile-ehci",		&mstp_clks[MSTP406]),
++	CLKDEV_ICK_ID("pci",	"rmobile-ehci",		&div4_clks[DIV4_USBP]),
++	CLKDEV_ICK_ID("usb24",	"rmobile-ehci",		&usb24_clk),
++	CLKDEV_ICK_ID("host",	"rmobile-ohci",		&mstp_clks[MSTP416]),
++	CLKDEV_ICK_ID("func",	"rmobile-ohci",		&mstp_clks[MSTP407]),
++	CLKDEV_ICK_ID("phy",	"rmobile-ohci",		&mstp_clks[MSTP406]),
++	CLKDEV_ICK_ID("pci",	"rmobile-ohci",		&div4_clks[DIV4_USBP]),
++	CLKDEV_ICK_ID("usb24",	"rmobile-ohci",		&usb24_clk),
+ 	CLKDEV_ICK_ID("ick",	"sh-mobile-hdmi",	&div6_reparent_clks[DIV6_HDMI]),
+ 
+ 	CLKDEV_ICK_ID("icka", "sh_fsi2",	&div6_reparent_clks[DIV6_FSIA]),
+-- 
+1.8.2
+

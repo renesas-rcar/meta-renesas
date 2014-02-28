@@ -1,0 +1,32 @@
+From 303d069195c1b1860c9ae8aa3cba185c14e9b933 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Thu, 11 Jul 2013 20:09:43 -0700
+Subject: [PATCH 26/32] ASoC: wm8978: enable symmetric rates
+
+wm8978 needs .symmetric_rates = 1.
+The playback/capture will be strange without this patch
+when it used asymmetric rate in same time
+
+Tested-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@linaro.org>
+(cherry picked from commit 5f17482a3244c07646279d16c0e5b8c0b2b76d0e)
+---
+ sound/soc/codecs/wm8978.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sound/soc/codecs/wm8978.c b/sound/soc/codecs/wm8978.c
+index 6c37c7c..3d80b62 100644
+--- a/sound/soc/codecs/wm8978.c
++++ b/sound/soc/codecs/wm8978.c
+@@ -925,6 +925,7 @@ static struct snd_soc_dai_driver wm8978_dai = {
+ 		.formats = WM8978_FORMATS,
+ 	},
+ 	.ops = &wm8978_dai_ops,
++	.symmetric_rates = 1,
+ };
+ 
+ static int wm8978_suspend(struct snd_soc_codec *codec)
+-- 
+1.8.2
+

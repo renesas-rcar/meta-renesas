@@ -1,0 +1,78 @@
+From a16f0bb1460b964a6819c1230be6b1c74576b854 Mon Sep 17 00:00:00 2001
+From: "kuninori.morimoto.gx@renesas.com" <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 15 Oct 2012 23:24:19 -0700
+Subject: [PATCH 15/32] usb: renesas_usbhs: gadget: add usb_gadget_ops ::
+ pullup support
+
+This patch adds usbhs_sys_function_pullup() to control
+D+ line for USB function, and enabled pullup support on mod_gadget.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+(cherry picked from commit 4cd2f5998757a41038deb55a0cb8319bdf67575a)
+---
+ drivers/usb/renesas_usbhs/common.c     |  5 +++++
+ drivers/usb/renesas_usbhs/common.h     |  1 +
+ drivers/usb/renesas_usbhs/mod_gadget.c | 11 +++++++++++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/drivers/usb/renesas_usbhs/common.c b/drivers/usb/renesas_usbhs/common.c
+index a165490..52ca0ca 100644
+--- a/drivers/usb/renesas_usbhs/common.c
++++ b/drivers/usb/renesas_usbhs/common.c
+@@ -132,6 +132,11 @@ void usbhs_sys_function_ctrl(struct usbhs_priv *priv, int enable)
+ 	usbhs_bset(priv, SYSCFG, mask, enable ? val : 0);
+ }
+ 
++void usbhs_sys_function_pullup(struct usbhs_priv *priv, int enable)
++{
++	usbhs_bset(priv, SYSCFG, DPRPU, enable ? DPRPU : 0);
++}
++
+ void usbhs_sys_set_test_mode(struct usbhs_priv *priv, u16 mode)
+ {
+ 	usbhs_write(priv, TESTMODE, mode);
+diff --git a/drivers/usb/renesas_usbhs/common.h b/drivers/usb/renesas_usbhs/common.h
+index 3f3ccd3..33c0dc1 100644
+--- a/drivers/usb/renesas_usbhs/common.h
++++ b/drivers/usb/renesas_usbhs/common.h
+@@ -285,6 +285,7 @@ void usbhs_bset(struct usbhs_priv *priv, u32 reg, u16 mask, u16 data);
+  */
+ void usbhs_sys_host_ctrl(struct usbhs_priv *priv, int enable);
+ void usbhs_sys_function_ctrl(struct usbhs_priv *priv, int enable);
++void usbhs_sys_function_pullup(struct usbhs_priv *priv, int enable);
+ void usbhs_sys_set_test_mode(struct usbhs_priv *priv, u16 mode);
+ 
+ /*
+diff --git a/drivers/usb/renesas_usbhs/mod_gadget.c b/drivers/usb/renesas_usbhs/mod_gadget.c
+index 28478ce..dd41f61 100644
+--- a/drivers/usb/renesas_usbhs/mod_gadget.c
++++ b/drivers/usb/renesas_usbhs/mod_gadget.c
+@@ -883,6 +883,16 @@ static int usbhsg_get_frame(struct usb_gadget *gadget)
+ 	return usbhs_frame_get_num(priv);
+ }
+ 
++static int usbhsg_pullup(struct usb_gadget *gadget, int is_on)
++{
++	struct usbhsg_gpriv *gpriv = usbhsg_gadget_to_gpriv(gadget);
++	struct usbhs_priv *priv = usbhsg_gpriv_to_priv(gpriv);
++
++	usbhs_sys_function_pullup(priv, is_on);
++
++	return 0;
++}
++
+ static int usbhsg_set_selfpowered(struct usb_gadget *gadget, int is_self)
+ {
+ 	struct usbhsg_gpriv *gpriv = usbhsg_gadget_to_gpriv(gadget);
+@@ -900,6 +910,7 @@ static struct usb_gadget_ops usbhsg_gadget_ops = {
+ 	.set_selfpowered	= usbhsg_set_selfpowered,
+ 	.udc_start		= usbhsg_gadget_start,
+ 	.udc_stop		= usbhsg_gadget_stop,
++	.pullup			= usbhsg_pullup,
+ };
+ 
+ static int usbhsg_start(struct usbhs_priv *priv)
+-- 
+1.8.2
+

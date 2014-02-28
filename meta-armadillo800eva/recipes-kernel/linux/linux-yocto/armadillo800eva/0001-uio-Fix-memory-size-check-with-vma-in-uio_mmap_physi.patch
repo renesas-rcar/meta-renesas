@@ -1,0 +1,31 @@
+From ea2f0a726c9788dc774d0f0378475e804b2943ee Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Date: Wed, 12 Mar 2014 10:22:04 +0900
+Subject: [PATCH] uio: Fix memory size check with vma in uio_mmap_physical()
+
+Register for the device are mapped in uio_mmap_physical().
+In this case, it might not be the same as the size of VMA always.
+This uses PAGE_ALIGN to memory size, fix the check of the memory size
+to be mapped.
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ drivers/uio/uio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/uio/uio.c b/drivers/uio/uio.c
+index 7150752..95574a2 100644
+--- a/drivers/uio/uio.c
++++ b/drivers/uio/uio.c
+@@ -655,7 +655,7 @@ static int uio_mmap_physical(struct vm_area_struct *vma)
+ 		return -EINVAL;
+ 	mem = idev->info->mem + mi;
+ 
+-	if (vma->vm_end - vma->vm_start > mem->size)
++	if (vma->vm_end - vma->vm_start > PAGE_ALIGN(mem->size))
+ 		return -EINVAL;
+ 
+ 	vma->vm_flags |= VM_IO | VM_RESERVED;
+-- 
+1.7.9.5
+

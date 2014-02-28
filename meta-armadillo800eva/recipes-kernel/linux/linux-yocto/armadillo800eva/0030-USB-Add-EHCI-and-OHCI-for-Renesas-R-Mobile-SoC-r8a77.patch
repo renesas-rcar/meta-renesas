@@ -1,0 +1,1376 @@
+From 069552229aba7e9b9bc8836841eb54cd94bed9c6 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Date: Tue, 25 Feb 2014 18:05:30 +0900
+Subject: [PATCH] USB: Add EHCI and OHCI for Renesas R-Mobile SoC (r8a7740)
+
+The Renesas R-Mobile SoC (r8a7740) has USB EHCI and OHCI controllers.
+
+The ehci and ohci blocks share a common register and clocking infrastructure.
+Initialization of the host controller and clocks is common between these and
+is factored out into the rmobile-common.c file.
+---
+ drivers/usb/host/Kconfig          |    4 +
+ drivers/usb/host/Makefile         |    1 +
+ drivers/usb/host/ehci-hcd.c       |    5 +
+ drivers/usb/host/ehci-rmobile.c   |  384 ++++++++++++++++++++++++++++++++++++
+ drivers/usb/host/ohci-hcd.c       |   21 +-
+ drivers/usb/host/ohci-rmobile.c   |  387 +++++++++++++++++++++++++++++++++++++
+ drivers/usb/host/rmobile-common.c |  145 ++++++++++++++
+ drivers/usb/host/rmobile-common.h |   53 +++++
+ include/linux/usb/rmobile.h       |  254 ++++++++++++++++++++++++
+ 9 files changed, 1253 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/usb/host/ehci-rmobile.c
+ create mode 100644 drivers/usb/host/ohci-rmobile.c
+ create mode 100644 drivers/usb/host/rmobile-common.c
+ create mode 100644 drivers/usb/host/rmobile-common.h
+ create mode 100644 include/linux/usb/rmobile.h
+
+diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+index f788eb8..539e5cb 100644
+--- a/drivers/usb/host/Kconfig
++++ b/drivers/usb/host/Kconfig
+@@ -638,3 +638,7 @@ config USB_OCTEON_OHCI
+ config USB_OCTEON2_COMMON
+ 	bool
+ 	default y if USB_OCTEON_EHCI || USB_OCTEON_OHCI
++
++config USB_RMOBILE_COMMON
++	bool
++	default y if ARCH_R8A7740
+diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
+index 0982bcc..6a005b3 100644
+--- a/drivers/usb/host/Makefile
++++ b/drivers/usb/host/Makefile
+@@ -41,3 +41,4 @@ obj-$(CONFIG_USB_IMX21_HCD)	+= imx21-hcd.o
+ obj-$(CONFIG_USB_FSL_MPH_DR_OF)	+= fsl-mph-dr-of.o
+ obj-$(CONFIG_USB_OCTEON2_COMMON) += octeon2-common.o
+ obj-$(CONFIG_MIPS_ALCHEMY)	+= alchemy-common.o
++obj-$(CONFIG_USB_RMOBILE_COMMON) += rmobile-common.o
+diff --git a/drivers/usb/host/ehci-hcd.c b/drivers/usb/host/ehci-hcd.c
+index bb73df6..680ae6d 100644
+--- a/drivers/usb/host/ehci-hcd.c
++++ b/drivers/usb/host/ehci-hcd.c
+@@ -1385,6 +1385,11 @@ MODULE_LICENSE ("GPL");
+ #define PLATFORM_DRIVER		ehci_platform_driver
+ #endif
+ 
++#if defined(CONFIG_ARCH_R8A7740)
++#include "ehci-rmobile.c"
++#define PLATFORM_DRIVER		ehci_hcd_rmobile_driver
++#endif
++
+ #if !defined(PCI_DRIVER) && !defined(PLATFORM_DRIVER) && \
+     !defined(PS3_SYSTEM_BUS_DRIVER) && !defined(OF_PLATFORM_DRIVER) && \
+     !defined(XILINX_OF_PLATFORM_DRIVER)
+diff --git a/drivers/usb/host/ehci-rmobile.c b/drivers/usb/host/ehci-rmobile.c
+new file mode 100644
+index 0000000..d551db9
+--- /dev/null
++++ b/drivers/usb/host/ehci-rmobile.c
+@@ -0,0 +1,384 @@
++/*
++ * Driver for EHCI on Renesas ARM SoC (rmobile)
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ * Copyright (C) 2013 Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details
++ *
++ * Current support is only r8a7740.
++ */
++
++#include <linux/device.h>
++#include <linux/signal.h>
++#include <linux/platform_device.h>
++#include <linux/miscdevice.h>
++#include <linux/workqueue.h>
++#include <linux/usb/rmobile.h>
++#include <linux/pm_runtime.h>
++#include "rmobile-common.h"
++
++static void rmobile_relinquish_port(struct usb_hcd *hcd, int portnum)
++{
++	struct rmobile_hci *hci = dev_get_drvdata(hcd->self.controller);
++
++	if ((!hci->handed_over) && (!hci->relinquish_count)) {
++		pr_err("Reset Host Controller\n");
++		hci->relinquish_count++;
++		rmobile_vbus_control(hci, 0);
++		if (hci->pdata->oci_irq)
++			disable_irq(hci->pdata->oci_irq);
++		return;
++	}
++
++	hci->handed_over = 0;
++	hci->relinquish_count = 0;
++	ehci_relinquish_port(hcd, portnum);
++}
++
++static int rmobile_port_handed_over(struct usb_hcd *hcd, int portnum)
++{
++	struct rmobile_hci *hci = dev_get_drvdata(hcd->self.controller);
++
++	hci->handed_over = 1;
++
++	return ehci_port_handed_over(hcd, portnum);
++}
++
++static int rmobile_hub_control(struct usb_hcd *hcd,
++		 u16 typereq, u16 value, u16 index, char *buf, u16 length)
++{
++	int retval;
++	struct rmobile_hci *hci = dev_get_drvdata(hcd->self.controller);
++
++	retval = ehci_hub_control(hcd, typereq, value, index, buf, length);
++
++	/* VBUS ON/OFF control */
++	if (!retval)
++		rmobile_vbus_setup(typereq, value, hci);
++
++	return retval;
++}
++
++static const struct hc_driver ehci_rmobile_hc_driver = {
++	.description = hcd_name,
++	.product_desc = "R-Mobile EHCI",
++	.hcd_priv_size = sizeof(struct ehci_hcd),
++
++	/*
++	 * generic hardware linkage
++	 */
++	.irq = ehci_irq,
++	.flags = HCD_MEMORY | HCD_USB2,
++
++	/*
++	 * basic lifecycle operations
++	 */
++	.reset = ehci_init,
++	.start = ehci_run,
++	.stop = ehci_stop,
++	.shutdown = ehci_shutdown,
++
++	/*
++	 * managing i/o requests and associated device resources
++	 */
++	.urb_enqueue = ehci_urb_enqueue,
++	.urb_dequeue = ehci_urb_dequeue,
++	.endpoint_disable = ehci_endpoint_disable,
++	.endpoint_reset = ehci_endpoint_reset,
++
++	/*
++	 * scheduling support
++	 */
++	.get_frame_number = ehci_get_frame,
++
++	/*
++	 * root hub support
++	 */
++	.hub_status_data = ehci_hub_status_data,
++	.hub_control = rmobile_hub_control,
++	.bus_suspend = ehci_bus_suspend,
++	.bus_resume = ehci_bus_resume,
++	.relinquish_port = rmobile_relinquish_port,
++	.port_handed_over = rmobile_port_handed_over,
++
++	.clear_tt_buffer_complete = ehci_clear_tt_buffer_complete,
++};
++
++static irqreturn_t rmobile_over_current_irq(int irq, void *_hcd)
++{
++	struct usb_hcd *hcd = _hcd;
++		 rmobile_over_current_check(
++			  dev_get_drvdata(hcd->self.controller));
++	return IRQ_HANDLED;
++}
++
++#define EHCI_OFFSET	0x1000
++#define EHCI_SIZE	0x1000
++#define RMOBILE_IRQF \
++	(IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING | IRQF_SHARED)
++
++static int ehci_hcd_drv_probe(struct platform_device *pdev)
++{
++	int retval, irq;
++	struct usb_hcd *hcd;
++	struct ehci_hcd *ehci;
++	struct rmobile_hci *hci;
++	struct rmobile_usb_platdata *pdata;
++	struct resource *r;
++	void __iomem *regs;
++
++	if (usb_disabled())
++		return -ENODEV;
++
++	pr_debug("Initializing Renesas R-Mobile USB Host Controller\n");
++
++	pdata = pdev->dev.platform_data;
++	if (!pdata) {
++		retval = -ENODEV;
++		goto err0;
++	}
++
++	/* OHCI irq */
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0) {
++		pr_err("no resource of IORESOURCE_IRQ");
++		retval = -ENODEV;
++		goto err0;
++	}
++
++	r = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!r) {
++		pr_err("no resource of IORESOURCE_MEM");
++		retval = -ENODEV;
++		goto err0;
++	}
++
++	if (EHCI_OFFSET + EHCI_SIZE > resource_size(r)) {
++		retval = -ENOMEM;
++		goto err0;
++	}
++
++	if (!request_mem_region(r->start + EHCI_OFFSET, EHCI_SIZE,
++			ehci_rmobile_hc_driver.description)) {
++		dev_dbg(&pdev->dev, "controller already in use\n");
++		retval = -EBUSY;
++		goto err0;
++	}
++
++	regs = devm_ioremap(&pdev->dev, r->start, resource_size(r));
++	if (regs == NULL) {
++		dev_dbg(&pdev->dev, "error mapping memory\n");
++		retval = -ENOMEM;
++		goto err1;
++	}
++
++	hcd = usb_create_hcd(&ehci_rmobile_hc_driver,
++		&pdev->dev, dev_name(&pdev->dev));
++	if (!hcd) {
++		retval = -ENOMEM;
++		goto err1;
++	}
++
++	hci = devm_kzalloc(&pdev->dev, sizeof(struct rmobile_hci),
++				   GFP_KERNEL);
++	if (!hci) {
++		retval = -ENOMEM;
++		goto err1;
++	}
++
++	platform_set_drvdata(pdev, hci);
++
++	hcd->rsrc_start = r->start + EHCI_OFFSET;
++	hcd->rsrc_len = EHCI_SIZE;
++	hcd->regs = regs + EHCI_OFFSET;
++
++	hci->hcd = hcd;
++	hci->phys_base = r->start;
++	hci->base = regs;
++
++	hci->pdata = pdata;
++	if (pdata->oci_irq) {
++		if (!pdata->check_oci) {
++			retval = -ENODEV;
++			goto err2;
++		}
++
++		retval = request_irq(pdata->oci_irq,
++			rmobile_over_current_irq,
++			RMOBILE_IRQF,
++			dev_name(&pdev->dev), hcd);
++		if (!retval)
++			goto err2;
++
++		 disable_irq(pdata->oci_irq);
++	}
++
++	pm_suspend_ignore_children(&pdev->dev, true);
++	pm_runtime_enable(&pdev->dev);
++	pm_runtime_get_noresume(&pdev->dev);
++
++	rmobile_hc_start(hcd, pdev);
++
++	ehci = hcd_to_ehci(hcd);
++	ehci->caps = hcd->regs;
++	ehci->regs = hcd->regs +
++		 HC_LENGTH(ehci, readl(&ehci->caps->hc_capbase));
++
++	/* cache this readonly data; minimize chip reads */
++	ehci->hcs_params = readl(&ehci->caps->hcs_params);
++	ehci->sbrn = 0x20;
++	hcd->has_tt = 0;
++
++	retval = usb_add_hcd(hcd, irq, IRQF_SHARED);
++	if (retval)
++		goto err3;
++
++	return retval;
++
++err3:
++	rmobile_hc_stop(hcd, pdev);
++
++	pm_runtime_disable(&pdev->dev);
++
++	if (pdata->oci_irq)
++		free_irq(pdata->oci_irq, hcd);
++err2:
++	usb_put_hcd(hcd);
++err1:
++	release_mem_region(r->start + EHCI_OFFSET, EHCI_SIZE);
++err0:
++	dev_err(&pdev->dev, "%s init fail, %d\n",
++		 dev_name(&pdev->dev), retval);
++
++	return retval;
++}
++
++static int ehci_hcd_drv_remove(struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct usb_hcd *hcd = hci->hcd;
++
++	usb_remove_hcd(hcd);
++	rmobile_hc_stop(hcd, pdev);
++	if (hci->pdata->oci_irq)
++		free_irq(hci->pdata->oci_irq, hcd);
++
++	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
++
++	pm_runtime_disable(&pdev->dev);
++	pm_runtime_set_suspended(&pdev->dev);
++
++	usb_put_hcd(hcd);
++
++	return 0;
++}
++
++#ifdef CONFIG_PM
++static void rmobile_ehci_save_register(struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct ehci_hcd *ehci = hcd_to_ehci(hci->hcd);
++	struct rmobile_ehci_reg *reg = &hci->ehci_reg;
++
++	if (reg->save_flag)
++		return;
++
++	reg->usbintr = ehci_readl(ehci, &ehci->regs->intr_enable);
++	reg->usbcmd = ehci_readl(ehci, &ehci->regs->command);
++	reg->usbsts = ehci_readl(ehci, &ehci->regs->status);
++	reg->frindex = ehci_readl(ehci, &ehci->regs->frame_index);
++	reg->periodiclistbase = ehci_readl(ehci, &ehci->regs->frame_list);
++	reg->asynclistaddr = ehci_readl(ehci, &ehci->regs->async_next);
++	reg->configflag = ehci_readl(ehci, &ehci->regs->configured_flag);
++	reg->portsc = ehci_readl(ehci, &ehci->regs->port_status[0]);
++
++	reg->save_flag = 1;
++}
++
++static void rmobile_ehci_load_register(struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct ehci_hcd *ehci = hcd_to_ehci(hci->hcd);
++	struct rmobile_ehci_reg *reg = &hci->ehci_reg;
++
++	if (!reg->save_flag)
++		return;
++
++	ehci_writel(ehci, reg->configflag, &ehci->regs->configured_flag);
++	ehci_writel(ehci, reg->portsc, &ehci->regs->port_status[0]);
++	ehci_writel(ehci, reg->asynclistaddr, &ehci->regs->async_next);
++	ehci_writel(ehci, reg->periodiclistbase, &ehci->regs->frame_list);
++	ehci_writel(ehci, reg->frindex, &ehci->regs->frame_index);
++	ehci_writel(ehci, reg->usbsts, &ehci->regs->status);
++	ehci_writel(ehci, reg->usbcmd, &ehci->regs->command);
++	ehci_writel(ehci, reg->usbintr, &ehci->regs->intr_enable);
++
++	reg->save_flag = 0;
++}
++
++static int ehci_hcd_drv_suspend(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct usb_hcd *hcd = dev_get_drvdata(dev);
++	struct ehci_hcd *ehci = hcd_to_ehci(hcd);
++	unsigned long flags;
++
++	ehci_prepare_ports_for_controller_suspend(ehci, device_may_wakeup(dev));
++	spin_lock_irqsave(&ehci->lock, flags);
++
++	if (hci->pdata->oci_irq)
++		disable_irq(hci->pdata->oci_irq);
++
++	rmobile_vbus_control(hci, 0);
++	rmobile_ehci_save_register(pdev);
++	rmobile_hc_stop(hcd, pdev);
++
++	pm_runtime_put(dev);
++
++	spin_unlock_irqrestore(&ehci->lock, flags);
++
++	return 0;
++}
++
++static int ehci_hcd_drv_resume(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct usb_hcd *hcd = dev_get_drvdata(dev);
++	struct ehci_hcd *ehci = hcd_to_ehci(hcd);
++
++	pm_runtime_get_sync(dev);
++
++	rmobile_hc_start(hcd, pdev);
++	rmobile_ehci_load_register(pdev);
++	rmobile_vbus_control(hci, 1);
++
++	ehci_prepare_ports_for_controller_resume(ehci);
++
++	return 0;
++}
++static const struct dev_pm_ops ehci_hcd_pm_ops = {
++	.suspend	 = ehci_hcd_drv_suspend,
++	.resume	  = ehci_hcd_drv_resume,
++};
++#endif /* CONFIG_PM */
++
++static struct platform_driver ehci_hcd_rmobile_driver = {
++	.probe = ehci_hcd_drv_probe,
++	.remove = ehci_hcd_drv_remove,
++	.shutdown = usb_hcd_platform_shutdown,
++	.driver = {
++		 .name = "rmobile-ehci",
++		 .owner  = THIS_MODULE,
++#ifdef CONFIG_PM
++		 .pm     = &ehci_hcd_pm_ops,
++#endif
++	}
++};
++
++MODULE_ALIAS("platform:rmobile-ehci");
++MODULE_AUTHOR("Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>");
+diff --git a/drivers/usb/host/ohci-hcd.c b/drivers/usb/host/ohci-hcd.c
+index 235171f..9a85386 100644
+--- a/drivers/usb/host/ohci-hcd.c
++++ b/drivers/usb/host/ohci-hcd.c
+@@ -1120,6 +1120,11 @@ MODULE_LICENSE ("GPL");
+ #define PLATFORM_DRIVER		ohci_platform_driver
+ #endif
+ 
++#ifdef CONFIG_ARCH_R8A7740
++#include "ohci-rmobile.c"
++#define RMOBILE_OHCI_DRIVER	ohci_hcd_rmobile_driver
++#endif
++
+ #if	!defined(PCI_DRIVER) &&		\
+ 	!defined(PLATFORM_DRIVER) &&	\
+ 	!defined(OMAP1_PLATFORM_DRIVER) &&	\
+@@ -1129,7 +1134,8 @@ MODULE_LICENSE ("GPL");
+ 	!defined(PS3_SYSTEM_BUS_DRIVER) && \
+ 	!defined(SM501_OHCI_DRIVER) && \
+ 	!defined(TMIO_OHCI_DRIVER) && \
+-	!defined(SSB_OHCI_DRIVER)
++	!defined(SSB_OHCI_DRIVER) && \
++	!defined(RMOBILE_OHCI_DRIVER)
+ #error "missing bus glue for ohci-hcd"
+ #endif
+ 
+@@ -1213,9 +1219,19 @@ static int __init ohci_hcd_mod_init(void)
+ 		goto error_tmio;
+ #endif
+ 
++#ifdef RMOBILE_OHCI_DRIVER
++	retval = platform_driver_register(&RMOBILE_OHCI_DRIVER);
++	if (retval < 0)
++		goto error_rmobile;
++#endif
++
+ 	return retval;
+ 
+ 	/* Error path */
++#ifdef RMOBILE_OHCI_DRIVER
++	platform_driver_unregister(&RMOBILE_OHCI_DRIVER);
++ error_rmobile:
++#endif
+ #ifdef TMIO_OHCI_DRIVER
+ 	platform_driver_unregister(&TMIO_OHCI_DRIVER);
+  error_tmio:
+@@ -1269,6 +1285,9 @@ module_init(ohci_hcd_mod_init);
+ 
+ static void __exit ohci_hcd_mod_exit(void)
+ {
++#ifdef RMOBILE_OHCI_DRIVER
++	platform_driver_unregister(&RMOBILE_OHCI_DRIVER);
++#endif
+ #ifdef TMIO_OHCI_DRIVER
+ 	platform_driver_unregister(&TMIO_OHCI_DRIVER);
+ #endif
+diff --git a/drivers/usb/host/ohci-rmobile.c b/drivers/usb/host/ohci-rmobile.c
+new file mode 100644
+index 0000000..c68a258
+--- /dev/null
++++ b/drivers/usb/host/ohci-rmobile.c
+@@ -0,0 +1,387 @@
++/*
++ * Driver for OHCI on Renesas ARM SoC (rmobile)
++ *
++ * Copyright (C) 2011, 2013 Renesas Electronics Corporation
++ * Copyright (C) 2013	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details
++ *
++ * Current support is only r8a7740.
++ */
++
++#include <linux/device.h>
++#include <linux/signal.h>
++#include <linux/platform_device.h>
++#include <linux/miscdevice.h>
++#include <linux/usb/rmobile.h>
++#include <linux/pm_runtime.h>
++#include "rmobile-common.h"
++
++static int rmobile_hub_control(struct usb_hcd *hcd,
++	u16 typereq, u16 value, u16 index, char *buf, u16 length)
++{
++	int retval;
++	struct rmobile_hci *hci = dev_get_drvdata(hcd->self.controller);
++
++	retval = ohci_hub_control(hcd, typereq, value, index, buf, length);
++
++	/* VBUS ON/OFF control */
++	if (!retval)
++		rmobile_vbus_setup(typereq, value, hci);
++
++	return retval;
++}
++
++static int ohci_rmobile_start(struct usb_hcd *hcd)
++{
++	struct ohci_hcd *ohci = hcd_to_ohci(hcd);
++	int ret;
++
++	ret = ohci_init(ohci);
++	if (ret < 0)
++		return ret;
++
++	ret = ohci_run(ohci);
++	if (ret < 0) {
++		pr_err("can't start %s", hcd->self.bus_name);
++		ohci_stop(hcd);
++		return ret;
++	}
++
++	return 0;
++}
++
++static struct hc_driver ohci_rmobile_hc_driver = {
++	.description	= hcd_name,
++	.product_desc	= "R-Mobile OHCI",
++	.hcd_priv_size	= sizeof(struct ohci_hcd),
++
++	/*
++	* generic hardware linkage
++	*/
++	.irq	= ohci_irq,
++	.flags	= HCD_USB11 | HCD_MEMORY,
++
++	/*
++	* basic lifecycle operations
++	*/
++	.start	= ohci_rmobile_start,
++	.stop	= ohci_stop,
++	.shutdown	= ohci_shutdown,
++
++	/*
++	* managing i/o requests and associated device resources
++	*/
++	.urb_enqueue	    = ohci_urb_enqueue,
++	.urb_dequeue	    = ohci_urb_dequeue,
++	.endpoint_disable	= ohci_endpoint_disable,
++
++	/*
++	* scheduling support
++	*/
++	.get_frame_number	= ohci_get_frame,
++
++	/*
++	* root hub support
++	*/
++	.hub_status_data	= ohci_hub_status_data,
++	.hub_control	    = rmobile_hub_control,
++#ifdef CONFIG_PM
++	.bus_suspend	    = ohci_bus_suspend,
++	.bus_resume	     = ohci_bus_resume,
++#endif
++	.start_port_reset	= ohci_start_port_reset,
++};
++
++static irqreturn_t rmobile_over_current_irq(int irq, void *_hcd)
++{
++	struct usb_hcd *hcd = _hcd;
++	rmobile_over_current_check(
++		dev_get_drvdata(hcd->self.controller));
++	return IRQ_HANDLED;
++}
++
++#define OHCI_OFFSET	0x0
++#define OHCI_SIZE	0x1000
++#define RMOBILE_IRQF \
++	(IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING | IRQF_SHARED)
++
++static int ohci_hcd_drv_probe(struct platform_device *pdev)
++{
++	int retval, irq;
++	struct usb_hcd *hcd;
++	struct rmobile_hci *hci;
++	struct rmobile_usb_platdata *pdata;
++	struct resource *r;
++	void __iomem *regs;
++
++	if (usb_disabled())
++		return -ENODEV;
++
++	pr_debug("Initializing Renesas R-Mobile USB Host Controller\n");
++
++	pdata = pdev->dev.platform_data;
++	if (!pdata) {
++		retval = -ENODEV;
++		goto err0;
++	}
++
++	/* OHCI irq */
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0) {
++		pr_err("no resource of IORESOURCE_IRQ");
++		retval = -ENODEV;
++		goto err0;
++	}
++
++	r = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!r) {
++		pr_err("no resource of IORESOURCE_MEM");
++		retval = -ENODEV;
++		goto err0;
++	}
++
++	if (OHCI_OFFSET + OHCI_SIZE > resource_size(r)) {
++		retval = -ENOMEM;
++		goto err0;
++	}
++
++	if (!request_mem_region(r->start + OHCI_OFFSET, OHCI_SIZE,
++			 ohci_rmobile_hc_driver.description)) {
++		dev_dbg(&pdev->dev, "controller already in use\n");
++		retval = -EBUSY;
++		goto err0;
++	}
++
++	regs = devm_ioremap(&pdev->dev, r->start, resource_size(r));
++	if (regs == NULL) {
++		dev_dbg(&pdev->dev, "error mapping memory\n");
++		retval = -ENOMEM;
++		goto err1;
++	}
++
++	hcd = usb_create_hcd(&ohci_rmobile_hc_driver,
++			 &pdev->dev, dev_name(&pdev->dev));
++	if (!hcd) {
++		retval = -ENOMEM;
++		goto err1;
++	}
++
++	hci = devm_kzalloc(&pdev->dev, sizeof(struct rmobile_hci),
++			 GFP_KERNEL);
++	if (!hci) {
++		retval = -ENOMEM;
++		goto err1;
++	}
++
++	platform_set_drvdata(pdev, hci);
++
++	hcd->rsrc_start = r->start + OHCI_OFFSET;
++	hcd->rsrc_len = OHCI_SIZE;
++	hcd->regs = regs + OHCI_OFFSET;
++
++	hci->hcd = hcd;
++	hci->phys_base = r->start;
++	hci->base = regs;
++
++	hci->pdata = pdata;
++	if (pdata->oci_irq) {
++		if (!pdata->check_oci) {
++			retval = -ENODEV;
++			goto err2;
++		}
++
++		retval = request_irq(pdata->oci_irq,
++		rmobile_over_current_irq,
++					   RMOBILE_IRQF,
++					   dev_name(&pdev->dev), hcd);
++		if (retval)
++			goto err2;
++		disable_irq(pdata->oci_irq);
++	}
++
++	pm_suspend_ignore_children(&pdev->dev, true);
++	pm_runtime_enable(&pdev->dev);
++	pm_runtime_get_noresume(&pdev->dev);
++
++	rmobile_hc_start(hcd, pdev);
++	ohci_hcd_init(hcd_to_ohci(hcd));
++
++	retval = usb_add_hcd(hcd, irq, IRQF_SHARED);
++	if (retval)
++		goto err3;
++
++	return retval;
++
++err3:
++	rmobile_hc_stop(hcd, pdev);
++
++	pm_runtime_disable(&pdev->dev);
++
++	if (pdata->oci_irq)
++		free_irq(pdata->oci_irq, hcd);
++err2:
++	usb_put_hcd(hcd);
++err1:
++	release_mem_region(r->start + OHCI_OFFSET, OHCI_SIZE);
++err0:
++	dev_err(&pdev->dev, "Init %s fail, %d\n",
++		dev_name(&pdev->dev), retval);
++
++	return retval;
++}
++
++static int ohci_hcd_drv_remove(struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct usb_hcd *hcd = hci->hcd;
++
++	rmobile_hc_stop(hcd, pdev);
++
++	if (hci->pdata->oci_irq)
++		free_irq(hci->pdata->oci_irq, hcd);
++
++	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
++
++	usb_remove_hcd(hcd);
++	pm_runtime_disable(&pdev->dev);
++	pm_runtime_set_suspended(&pdev->dev);
++	usb_put_hcd(hcd);
++
++	return 0;
++}
++
++static void rmobile_ohci_shutdown(struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct usb_hcd *hcd = hci->hcd;
++
++	if (hcd->driver->shutdown)
++		hcd->driver->shutdown(hcd);
++}
++
++#ifdef CONFIG_PM
++static void rmobile_ohci_save_register(struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct ohci_hcd *ohci = hcd_to_ohci(hci->hcd);
++	struct rmobile_ohci_reg *reg = &hci->ohci_reg;
++
++	if (reg->save_flag)
++		return;
++
++	reg->hcinterruptenable = ohci_readl(ohci, &ohci->regs->intrenable);
++	reg->hccontrol = ohci_readl(ohci, &ohci->regs->control);
++	reg->hccommandstatus = ohci_readl(ohci, &ohci->regs->cmdstatus);
++	reg->hchcca = ohci_readl(ohci, &ohci->regs->hcca);
++	reg->hccontrolheaded =
++		 ohci_readl(ohci, &ohci->regs->ed_controlhead);
++	reg->hccontrolcurrented =
++		 ohci_readl(ohci, &ohci->regs->ed_controlcurrent);
++	reg->hcbulkheaded = ohci_readl(ohci, &ohci->regs->ed_bulkhead);
++	reg->hcbulkcurrented =
++		 ohci_readl(ohci, &ohci->regs->ed_bulkcurrent);
++	reg->hcfminterval = ohci_readl(ohci, &ohci->regs->fminterval);
++	reg->hcperiodicstart = ohci_readl(ohci, &ohci->regs->periodicstart);
++	reg->hclsthreshold = ohci_readl(ohci, &ohci->regs->lsthresh);
++
++	reg->hcrhdescrptora = ohci_readl(ohci, &ohci->regs->roothub.a);
++	reg->hcrhdescrptorb = ohci_readl(ohci, &ohci->regs->roothub.b);
++	reg->hcrhstatus = ohci_readl(ohci, &ohci->regs->roothub.status);
++	reg->hcrhportstatus =
++		 ohci_readl(ohci, &ohci->regs->roothub.portstatus[0]);
++
++	reg->save_flag = 1;
++}
++
++static void rmobile_ohci_load_register(struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct ohci_hcd *ohci = hcd_to_ohci(hci->hcd);
++	struct rmobile_ohci_reg *reg = &hci->ohci_reg;
++
++	if (reg->save_flag == 0)
++		return;
++
++	ohci_writel(ohci, reg->hcrhportstatus,
++		 &ohci->regs->roothub.portstatus[0]);
++	ohci_writel(ohci, reg->hcrhstatus, &ohci->regs->roothub.status);
++	ohci_writel(ohci, reg->hcrhdescrptorb, &ohci->regs->roothub.b);
++	ohci_writel(ohci, reg->hcrhdescrptora, &ohci->regs->roothub.a);
++
++	ohci_writel(ohci, reg->hclsthreshold, &ohci->regs->lsthresh);
++	ohci_writel(ohci, reg->hcperiodicstart, &ohci->regs->periodicstart);
++	ohci_writel(ohci, reg->hcfminterval, &ohci->regs->fminterval);
++	ohci_writel(ohci, reg->hcbulkcurrented, &ohci->regs->ed_bulkcurrent);
++	ohci_writel(ohci, reg->hcbulkheaded, &ohci->regs->ed_bulkhead);
++	ohci_writel(ohci, reg->hccontrolcurrented,
++		 &ohci->regs->ed_controlcurrent);
++	ohci_writel(ohci, reg->hccontrolheaded,
++		 &ohci->regs->ed_controlhead);
++	ohci_writel(ohci, reg->hchcca, &ohci->regs->hcca);
++	ohci_writel(ohci, reg->hccommandstatus, &ohci->regs->cmdstatus);
++	ohci_writel(ohci, reg->hccontrol, &ohci->regs->control);
++	ohci_writel(ohci, reg->hcinterruptenable, &ohci->regs->intrenable);
++
++	reg->save_flag = 0;
++}
++
++static int ohci_hcd_drv_suspend(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++	struct usb_hcd *hcd = dev_get_drvdata(dev);
++
++	if (hci->pdata->oci_irq)
++		disable_irq(hci->pdata->oci_irq);
++
++	rmobile_vbus_control(hci, 0);
++	rmobile_ohci_save_register(pdev);
++	rmobile_hc_stop(hcd, pdev);
++
++	pm_runtime_put(dev);
++
++	return 0;
++}
++
++static int ohci_hcd_drv_resume(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct usb_hcd *hcd = dev_get_drvdata(dev);
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++
++	pm_runtime_get_sync(dev);
++
++	rmobile_hc_start(hcd, pdev);
++	rmobile_ohci_load_register(pdev);
++	rmobile_vbus_control(hci, 1);
++
++	ohci_resume(hcd, false);
++
++	return 0;
++}
++#else
++#define ohci_hcd_drv_suspend NULL
++#define ohci_hcd_drv_resume  NULL
++#endif
++
++static const struct dev_pm_ops ohci_hcd_pm_ops = {
++	.suspend = ohci_hcd_drv_suspend,
++	.resume  = ohci_hcd_drv_resume,
++};
++
++static struct platform_driver ohci_hcd_rmobile_driver = {
++	.probe	= ohci_hcd_drv_probe,
++	.remove	= ohci_hcd_drv_remove,
++	.shutdown	= rmobile_ohci_shutdown,
++	.driver	= {
++		.name   = "rmobile-ohci",
++		.owner  = THIS_MODULE,
++		.pm     = &ohci_hcd_pm_ops,
++	},
++};
++
++MODULE_ALIAS("platform:rmobile-ohci");
++MODULE_AUTHOR("Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>");
+diff --git a/drivers/usb/host/rmobile-common.c b/drivers/usb/host/rmobile-common.c
+new file mode 100644
+index 0000000..6db2f89
+--- /dev/null
++++ b/drivers/usb/host/rmobile-common.c
+@@ -0,0 +1,145 @@
++/*
++ * Driver for Renesas ARM SoC (rmobile)
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details
++ *
++ * Current support is only r8a7740.
++ */
++
++#include <linux/export.h>
++#include <linux/clk.h>
++#include <linux/device.h>
++#include <linux/platform_device.h>
++#include <linux/usb.h>
++#include <linux/usb/hcd.h>
++#include <linux/usb/rmobile.h>
++#include <asm/io.h>
++#include "rmobile-common.h"
++
++#define AHB_WRITE(h, d, a) __raw_writel(d, h->base + a)
++void rmobile_hc_start(struct usb_hcd *hcd, struct platform_device *pdev)
++{
++	u32 data;
++	struct clk *clk;
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++
++	if (hci->pdata->common_clock)
++		hci->pdata->common_clock(pdev, 1);
++	else {
++		/* Start Clock */
++		clk = clk_get(&pdev->dev, "host");
++		if (!IS_ERR(clk)) {
++			clk_enable(clk);
++			clk_put(clk);
++		}
++
++		clk = clk_get(&pdev->dev, "pci");
++		if (!IS_ERR(clk)) {
++			clk_enable(clk);
++			clk_put(clk);
++		}
++
++		/* Clock & Direct Power Down */
++		data = __raw_readl(hci->base + USBCTR);
++		data &= ~(DIRPD | PCICLK_MASK);
++		AHB_WRITE(hci, data, USBCTR);
++		AHB_WRITE(hci, data & ~PLL_RST, USBCTR);
++	}
++
++	data = SMODE_READY_CTR | MMODE_HBUSREQ |
++		MMODE_WR_INCR | MMODE_BYTE_BURST | MMODE_HTRANS;
++
++	if (data == __raw_readl(hci->base + AHB_BUS_CTR))
++		return;
++
++	/* AHB-PCI Bridge Communication Registers */
++	AHB_WRITE(hci, data, AHB_BUS_CTR);
++	AHB_WRITE(hci, (PHYS_OFFSET & 0xf0000000) | PREFETCH,
++				   PCIAHB_WIN1_CTR);
++	AHB_WRITE(hci, 0xf0000000 | PREFETCH, PCIAHB_WIN2_CTR);
++	AHB_WRITE(hci, hci->phys_base | PCIWIN2_PCICMD, AHBPCI_WIN2_CTR);
++	data = __raw_readl(hci->base + PCI_ARBITER_CTR);
++	AHB_WRITE(hci, data | PCIBP_MODE | PCIREQ1 | PCIREQ0,
++				   PCI_ARBITER_CTR);
++
++	/* PCI Configuration Registers for AHBPCI */
++	AHB_WRITE(hci, PCIWIN1_PCICMD | AHB_CFG_AHBPCI, AHBPCI_WIN1_CTR);
++	AHB_WRITE(hci, hci->phys_base + AHBPCI_OFFSET,
++				   PCI_CONF_AHBPCI_BASEAD);
++	AHB_WRITE(hci, PHYS_OFFSET & 0xf0000000, PCI_CONF_AHBPCI_WIN1_BASEAD);
++	AHB_WRITE(hci, 0xf0000000, PCI_CONF_AHBPCI_WIN2_BASEAD);
++	AHB_WRITE(hci, SERREN | PERREN | MASTEREN | MEMEN,
++				   PCI_CONF_AHBPCI_CMND_STS);
++
++	/* PCI Configuration Registers for EHCI */
++	AHB_WRITE(hci, PCIWIN1_PCICMD | AHB_CFG_HOST, AHBPCI_WIN1_CTR);
++	AHB_WRITE(hci, hci->phys_base + OHCI_OFFSET, OHCI_BASEAD);
++	AHB_WRITE(hci, hci->phys_base + EHCI_OFFSET, EHCI_BASEAD);
++
++	data = SERREN | PERREN | MASTEREN | MEMEN;
++	AHB_WRITE(hci, data, OHCI_CMND_STS);
++	AHB_WRITE(hci, data, EHCI_CMND_STS);
++
++	/* enable pci interrupt */
++	data = __raw_readl(hci->base + PCI_INT_ENABLE);
++	data |= USBH_PMEEN | USBH_INTBEN | USBH_INTAEN;
++	AHB_WRITE(hci, data, PCI_INT_ENABLE);
++}
++EXPORT_SYMBOL(rmobile_hc_start);
++
++void rmobile_hc_stop(struct usb_hcd *hcd, struct platform_device *pdev)
++{
++	struct rmobile_hci *hci = platform_get_drvdata(pdev);
++
++	rmobile_vbus_control(hci, 0);
++
++	if (hci->pdata->common_clock)
++		hci->pdata->common_clock(pdev, 0);
++	else {
++		/* Clock & Direct Power Down */
++		struct clk *clk;
++		u32 data = __raw_readl(hci->base + USBCTR);
++			data |= DIRPD | PLL_RST | PCICLK_MASK;
++		__raw_writel(data, hci->base + USBCTR);
++
++		/* Stop Clock */
++		clk = clk_get(&pdev->dev, "host");
++		if (!IS_ERR(clk)) {
++			clk_disable(clk);
++			clk_put(clk);
++		}
++		clk = clk_get(&pdev->dev, "pci");
++		if (!IS_ERR(clk)) {
++			clk_disable(clk);
++			clk_put(clk);
++		}
++	}
++}
++EXPORT_SYMBOL(rmobile_hc_stop);
++
++void rmobile_vbus_setup(u16 typereq,
++			  u16 value, struct rmobile_hci *hci)
++{
++	if (value == USB_PORT_FEAT_POWER) {
++		if (typereq == SetPortFeature) {
++			rmobile_vbus_control(hci, 1);
++			if (hci->pdata->oci_irq) {
++				mdelay(OVER_CURRENT_TIME);
++				if (!rmobile_over_current_check(hci))
++					enable_irq(hci->pdata->oci_irq);
++			}
++		} else if (typereq == ClearPortFeature) {
++			if (hci->vbus_flag) {
++				if (hci->pdata->oci_irq)
++					disable_irq(hci->pdata->oci_irq);
++				rmobile_vbus_control(hci, 0);
++			} else
++				hci->vbus_flag = 1;
++		}
++	}
++}
++EXPORT_SYMBOL(rmobile_vbus_setup);
+diff --git a/drivers/usb/host/rmobile-common.h b/drivers/usb/host/rmobile-common.h
+new file mode 100644
+index 0000000..8b66a34
+--- /dev/null
++++ b/drivers/usb/host/rmobile-common.h
+@@ -0,0 +1,53 @@
++/*
++ * Driver for OHCI and EHCI on Renesas ARM SoC (rmobile)
++ *
++ * Copyright (C) 2013 Renesas Electronics Corporation
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.See the file "COPYING" in the main directory of this archive
++ * for more details
++ */
++
++#include <linux/usb/rmobile.h>
++
++struct rmobile_hci {
++	struct usb_hcd *hcd;
++
++	u32 phys_base;
++	void __iomem *base;
++
++	int vbus_flag;
++	u32 relinquish_count;
++	u32 handed_over;
++
++	/* platform data */
++	struct rmobile_usb_platdata *pdata;
++
++	/* backup area */
++	struct rmobile_ehci_reg ehci_reg;
++	struct rmobile_ohci_reg ohci_reg;
++};
++
++static inline void rmobile_vbus_control(struct rmobile_hci *hci, int on)
++{
++	if (hci->pdata->set_vbus)
++		hci->pdata->set_vbus(on);
++	hci->vbus_flag = on ? 0 : 1;
++}
++
++static inline int rmobile_over_current_check(struct rmobile_hci *hci)
++{
++	if (hci->pdata->check_oci()) {
++		pr_err("USB Over Current\n");
++		rmobile_vbus_control(hci, 0);
++		return 1;
++	}
++	return 0;
++}
++
++void rmobile_hc_start(struct usb_hcd *hcd,
++	struct platform_device *pdev);
++void rmobile_hc_stop(struct usb_hcd *hcd,
++	struct platform_device *pdev);
++void rmobile_vbus_setup(u16 typereq,
++	u16 value, struct rmobile_hci *hci);
+diff --git a/include/linux/usb/rmobile.h b/include/linux/usb/rmobile.h
+new file mode 100644
+index 0000000..e26ba89
+--- /dev/null
++++ b/include/linux/usb/rmobile.h
+@@ -0,0 +1,254 @@
++#ifndef __LINUX_USB_RMOBILE_H
++#define __LINUX_USB_RMOBILE_H
++
++#include <linux/platform_device.h>
++
++struct rmobile_usb_platdata {
++       /* VBUS power on */
++       void (*set_vbus)(int on);
++
++       /* Overcurrent */
++       int oci_irq;
++       int (*check_oci)(void);
++
++       /* common clock */
++       void (*common_clock)(struct platform_device *pdev, int on);
++};
++
++/* OverCurrent parameter */
++#define OVER_CURRENT_TIME      5
++
++/* Register offset */
++#define OHCI_OFFSET            0x0
++#define OHCI_SIZE              0x1000
++
++#define EHCI_OFFSET            0x1000
++#define EHCI_SIZE              0x1000
++
++/* PCI Configuration Registers */
++#define VID_DID                0x0000
++#define CMND_STS       0x0004
++#define BASEAD         0x0010
++#define PM_CONTROL     0x0044
++
++#define PCI_CONF_OHCI_OFFSET   0x10000
++#define OHCI_VID_DID   (PCI_CONF_OHCI_OFFSET + VID_DID)
++#define OHCI_CMND_STS  (PCI_CONF_OHCI_OFFSET + CMND_STS)
++#define OHCI_BASEAD            (PCI_CONF_OHCI_OFFSET + BASEAD)
++#define OHCI_PM_CONTROL        (PCI_CONF_OHCI_OFFSET + PM_CONTROL)
++
++#define PCI_CONF_EHCI_OFFSET   0x10100
++#define EHCI_VID_DID   (PCI_CONF_EHCI_OFFSET + VID_DID)
++#define EHCI_CMND_STS  (PCI_CONF_EHCI_OFFSET + CMND_STS)
++#define EHCI_BASEAD            (PCI_CONF_EHCI_OFFSET + BASEAD)
++#define EHCI_PM_CONTROL        (PCI_CONF_EHCI_OFFSET + BASEAD)
++
++/* PCI Configuration Registers for AHB-PCI Bridge Registers */
++#define PCI_CONF_AHBPCI_OFFSET 0x10000
++#define PCI_CONF_AHBPCI_VID_DID (PCI_CONF_AHBPCI_OFFSET + 0x0000)
++#define PCI_CONF_AHBPCI_CMND_STS (PCI_CONF_AHBPCI_OFFSET + 0x0004)
++#define PCI_CONF_AHBPCI_REVID_CC (PCI_CONF_AHBPCI_OFFSET + 0x0008)
++#define PCI_CONF_AHBPCI_CLS_LT_HT_BIST (PCI_CONF_AHBPCI_OFFSET + 0x000C)
++#define PCI_CONF_AHBPCI_BASEAD (PCI_CONF_AHBPCI_OFFSET + 0x0010)
++#define PCI_CONF_AHBPCI_WIN1_BASEAD (PCI_CONF_AHBPCI_OFFSET + 0x0014)
++#define PCI_CONF_AHBPCI_WIN2_BASEAD (PCI_CONF_AHBPCI_OFFSET + 0x0018)
++#define PCI_CONF_AHBPCI_SSVID_SSID (PCI_CONF_AHBPCI_OFFSET + 0x002C)
++#define PCI_CONF_AHBPCI_INTR_LINE_PIN  (PCI_CONF_AHBPCI_OFFSET + 0x003C)
++
++/* AHB-PCI Bridge PCI Communication Registers */
++#define AHBPCI_OFFSET          0x10800
++#define PCIAHB_WIN1_CTR                (AHBPCI_OFFSET + 0x0000)
++#define PCIAHB_WIN2_CTR                (AHBPCI_OFFSET + 0x0004)
++#define PCIAHB_DCT_CTR         (AHBPCI_OFFSET + 0x0008)
++#define AHBPCI_WIN1_CTR                (AHBPCI_OFFSET + 0x0010)
++#define AHBPCI_WIN2_CTR                (AHBPCI_OFFSET + 0x0014)
++#define AHBPCI_DCT_CTR         (AHBPCI_OFFSET + 0x001C)
++#define PCI_INT_ENABLE         (AHBPCI_OFFSET + 0x0020)
++#define PCI_INT_STATUS         (AHBPCI_OFFSET + 0x0024)
++#define AHB_BUS_CTR                    (AHBPCI_OFFSET + 0x0030)
++#define USBCTR                         (AHBPCI_OFFSET + 0x0034)
++#define PCI_ARBITER_CTR                (AHBPCI_OFFSET + 0x0040)
++#define PCI_UNIT_REV           (AHBPCI_OFFSET + 0x004C)
++
++/* CMND_STS (0x10004) */
++#define DETPERR                        (1 << 31)               /* RW */
++#define SIGSERR                        (1 << 30)               /* RW */
++#define REMABORT               (1 << 29)               /* RW */
++#define RETABORT               (1 << 28)               /* RW */
++#define SIGTABORT              (1 << 27)               /* RW */
++#define DEVTIM                 ((1 << 26)|(1 << 25))   /* R */
++#define MDPERR                 (1 << 24)               /* R */
++#define FBTBCAP                        (1 << 23)               /* R */
++#define _66MCAP                        (1 << 21)               /* R */
++#define CAPLIST                        (1 << 20)               /* R */
++#define FBTBEN                 (1 << 9)                /* R */
++#define SERREN                 (1 << 8)                /* RW */
++#define STEPCTR                        (1 << 7)                /* R */
++#define PERREN                 (1 << 6)                /* RW */
++#define VGAPSNP                        (1 << 5)                /* R */
++#define MWINVEN                        (1 << 4)                /* R */
++#define SPECIALC               (1 << 3)                /* R */
++#define MASTEREN               (1 << 2)                /* RW */
++#define MEMEN                  (1 << 1)                /* RW */
++#define IOEN                   (1 << 0)                /* R */
++
++/* WIN1_BASEAD (0x10014) */
++#define PCI_WIN1_BASEADR       0xF0000000              /* RW */
++#define WIN1_PREFETCH          (1 << 3)                /* R */
++#define WIN1_TYPE              ((1 << 2)|(1 << 1))     /* R */
++#define WIN1_MEM               (1 << 0)                /* R */
++
++/* WIN2_BASEAD (0x10018) */
++#define PCI_WIN2_BASEADR       0xF0000000              /* RW */
++#define WIN2_PREFETCH          (1 << 3)                /* R */
++#define WIN2_TYPE              ((1 << 2)|(1 << 1))     /* R */
++#define WIN2_MEM               (1 << 0)                /* R */
++
++/* PCIAHB_WIN1_CTR (0x10800) */
++#define AHB_BASEADR            ((1 << 31)|(1 << 30))   /* RW */
++#define ENDIAN_CTR             0x000001C0              /* RW */
++#define PREFETCH               ((1 << 1)|(1 << 0))     /* RW */
++
++/* PCIAHB_WIN2_CTR (0x10804) */
++#define AHB_BASE_ADR           (1 << 31)_(1 << 28)     /* RW */
++#define ENDIAN_CTR             0x000001C0              /* RW */
++#define PREFETCH               ((1 << 1)|(1 << 0))     /* RW */
++
++/* PCIAHB_DCT_CTR (0x10808) */
++#define PCIAHB_DISCARD_TIMER   0x0000FFF0              /* RW */
++#define DISCARD_EN             (1 << 0)                /* RW */
++
++/* AHBPCI_WIN1_CTR (0x10810) */
++#define PCIWIN1_BASEADR                0xFFFFF800              /* RW */
++#define ENDIAN_CTR             0x000001C0              /* RW */
++#define CFGTYPE                        (1 << 4)                /* RW */
++#define PCICMD                 0x0000000E              /* RW */
++#define PCIWIN1_PCICMD         ((1 << 3)|(1 << 1))
++#define AHB_CFG_AHBPCI         0x40000000
++#define AHB_CFG_HOST           0x80000000
++
++/* AHBPCI_WIN2_CTR (0x10814) */
++#define PCIWIN2_BASEADR                0xFFFF0000              /* RW */
++#define ENDIAN_CTR             0x000001C0              /* RW */
++#define BURST_EN               (1 << 5)                /* RW */
++#define PCICMD                 0x0000000E              /* RW */
++#define PCIWIN2_PCICMD         ((1 << 2)|(1 << 1))
++#define PCIWIN2_PREFETCH       (1 << 0)                /* RW */
++
++/* AHBPCI_DCT_CTR (0x1081C) */
++#define AHBPCI_DISCARD_TIMER   (1 << 15)_(1 << 4)      /* RW */
++#define DISCARD_EN             (1 << 0)                /* RW */
++
++/* PCI_INT_ENABLE (0x10820) */
++#define USBH_PMEEN             (1 << 19)               /* RW */
++#define USBH_INTBEN            (1 << 17)               /* RW */
++#define USBH_INTAEN            (1 << 16)               /* RW */
++#define AHBPCI_WIN_INTEN       (1 << 14)               /* RW */
++#define PCIAHB_WIN2_INTEN      (1 << 13)               /* RW */
++#define PCIAHB_WIN1_INTEN      (1 << 12)               /* RW */
++#define DMA_AHBPCI_INTEN       (1 << 9)                /* RW */
++#define DMA_PCIAHB_INTEN       (1 << 8)                /* RW */
++#define RESERR_INTEN           (1 << 5)                /* RW */
++#define SIGSERR_INTEN          (1 << 4)                /* RW */
++#define PERR_INTEN             (1 << 3)                /* RW */
++#define REMABORT_INTEN         (1 << 2)                /* RW */
++#define RETABORT_INTEN         (1 << 1)                /* RW */
++#define SIGTABORT_INTEN                (1 << 0)                /* RW */
++
++/* PCI_INT_STATUS (0x10824) */
++#define USBH_PME               (1 << 19)               /* R */
++#define USBH_INTB              (1 << 17)               /* R */
++#define USBH_INTA              (1 << 16)               /* R */
++#define AHBPCI_WIN_INT         (1 << 14)               /* RW */
++#define PCIAHB_WIN2_INT                (1 << 13)               /* RW */
++#define PCIAHB_WIN1_INT                (1 << 12)               /* RW */
++#define DMA_AHBPCI_INT         (1 << 9)                /* RW */
++#define DMA_PCIAHB_INT         (1 << 8)                /* RW */
++#define RESERR_INT             (1 << 5)                /* RW */
++#define SIGSERR_INT            (1 << 4)                /* RW */
++#define PERR_INT               (1 << 3)                /* RW */
++#define REMABORT_INT           (1 << 2)                /* RW */
++#define RETABORT_INT           (1 << 1)                /* RW */
++#define SIGTABORT_INT          (1 << 0)                /* RW */
++
++/* AHB_BUS_CTR (0x10830) */
++#define SMODE_READY_CTR                (1 << 17)               /* RW */
++#define SMODE_READ_BURST       (1 << 16)               /* RW */
++#define MMODE_HBUSREQ          (1 << 7)                /* RW */
++#define MMODE_BOUNDARY         ((1 << 6)|(1 << 5))     /* RW */
++#define MMODE_BURST_WIDTH      ((1 << 4)|(1 << 3))     /* RW */
++#define MMODE_SINGLE_MODE      ((1 << 4)|(1 << 3))     /* RW */
++#define MMODE_WR_INCR          (1 << 2)                /* RW */
++#define MMODE_BYTE_BURST       (1 << 1)                /* RW */
++#define MMODE_HTRANS           (1 << 0)                /* RW */
++#define AHB_BUS_CTR_SET        \
++       ((1 << 17) | (1 << 7) | (1 << 4) | (1 << 3) | (1 << 2) | (1 << 1))
++
++/* USBCTR (0x10834) */
++#define DIRPD                  (1 << 8)                /* RW */
++#define PLL_RST                        (1 << 2)                /* RW */
++#define PCICLK_MASK            (1 << 1)                /* RW */
++#define USBH_RST               (1 << 0)                /* RW */
++
++/* PCI_ARBITER_CTR (0x10840) */
++#define PCIBUS_PARK_TIMER      0x00FF0000              /* RW */
++#define PCIBUS_PARK_TIMER_SET  0x00070000
++#define PCIBP_MODE             (1 << 12)               /* RW */
++#define PCIREQ7                        (1 << 7)                /* RW */
++#define PCIREQ6                        (1 << 6)                /* RW */
++#define PCIREQ5                        (1 << 5)                /* RW */
++#define PCIREQ4                        (1 << 4)                /* RW */
++#define PCIREQ3                        (1 << 3)                /* RW */
++#define PCIREQ2                        (1 << 2)                /* RW */
++#define PCIREQ1                        (1 << 1)                /* RW */
++#define PCIREQ0                        (1 << 0)                /* RW */
++
++/*-------------------------------------------------------------------------*/
++
++struct rmobile_ohci_reg {
++       u32     hcrevision;
++       u32     hccontrol;
++       u32     hccommandstatus;
++       u32     hcinterruptstatus;
++       u32     hcinterruptenable;
++       u32     hcinterruptdisable;
++       u32     hchcca;
++       u32     hcperiodiccurrented;
++       u32     hccontrolheaded;
++       u32     hccontrolcurrented;
++       u32     hcbulkheaded;
++       u32     hcbulkcurrented;
++       u32     hcdonehead;
++       u32     hcfminterval;
++       u32     hcfmremaining;
++       u32     hcfmnumber;
++       u32     hcperiodicstart;
++       u32     hclsthreshold;
++       u32     hcrhdescrptora;
++       u32     hcrhdescrptorb;
++       u32     hcrhstatus;
++       u32     hcrhportstatus;
++
++       u32     save_flag;
++};
++
++struct rmobile_ehci_reg {
++       u32     hciversion;
++       u32     hcsparams;
++       u32     hccparams;
++       u32     hcsp_portroute;
++       u32     usbcmd;
++       u32     usbsts;
++       u32     usbintr;
++       u32     frindex;
++       u32     ctrldssegment;
++       u32     periodiclistbase;
++       u32     asynclistaddr;
++       u32     reserved_1[9];
++       u32     configflag;
++       u32     portsc;
++
++       u32     save_flag;
++};
++
++#endif /* __LINUX_USB_RMOBILE_H */
+-- 
+1.7.9.5
+
