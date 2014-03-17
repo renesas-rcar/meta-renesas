@@ -1,0 +1,16 @@
+diff --git a/configure.ac b/configure.ac
+index 355289e..468f6ee 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -295,9 +295,8 @@ AS_CASE([$with_vpu5_version],
+ 	[VCP1],
+ 		[VPU_VERSION="VPU_VERSION_VCP1"
+ 		 VPU_SERIES="VPU5HA_SERIES"
+-		 VPU_CMN_LIBS="-lmcvdecvcp1a_lx30 -lmciphvcp1a_lx30"
+-		 VPU_DEC_LIBS="-lavcdecvcp1a_lx30 -lmciphvcp1cmndeca_lx30 \
+-			       -lmciphvcp1avcdeca_lx30 -lmciphvcp1cmna_lx30"],
++		 VPU_CMN_LIBS="-lvcp1_mciph -lvcp1_mciph_cmn -lvcp1_mciph_cmndec -lvcp1_mcvd"
++		 VPU_DEC_LIBS="-lvcp1_avcd -lvcp1_mciph_avcdec"],
+ dnl  	default
+ 		[with_vpu5_version=VPU5HG
+ 		VPU_VERSION="VPU_VERSION_5"

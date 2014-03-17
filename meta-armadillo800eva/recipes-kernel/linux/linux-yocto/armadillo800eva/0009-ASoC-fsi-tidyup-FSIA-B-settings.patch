@@ -1,0 +1,64 @@
+From 3ddf2db43b675eebc653fbff8edf1afc4b63053a Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 16 Nov 2012 01:16:22 -0800
+Subject: [PATCH 09/32] ASoC: fsi: tidyup FSIA/B settings
+
+This patch tidyup to use fsi pointer for FSIA/B settings
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+(cherry picked from commit 40f9118bd140ce949a38c1a8cbd6105c38e90478)
+---
+ sound/soc/sh/fsi.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/sound/soc/sh/fsi.c b/sound/soc/sh/fsi.c
+index e41d2b00..9b234a1 100644
+--- a/sound/soc/sh/fsi.c
++++ b/sound/soc/sh/fsi.c
+@@ -2010,6 +2010,7 @@ static int fsi_probe(struct platform_device *pdev)
+ 	struct fsi_master *master;
+ 	const struct platform_device_id	*id_entry;
+ 	struct sh_fsi_platform_info *info = pdev->dev.platform_data;
++	struct fsi_priv *fsi;
+ 	struct resource *res;
+ 	unsigned int irq;
+ 	int ret;
+@@ -2046,22 +2047,24 @@ static int fsi_probe(struct platform_device *pdev)
+ 	spin_lock_init(&master->lock);
+ 
+ 	/* FSI A setting */
+-	master->fsia.base	= master->base;
+-	master->fsia.master	= master;
+-	master->fsia.info	= &info->port_a;
+-	fsi_handler_init(&master->fsia);
+-	ret = fsi_stream_probe(&master->fsia, &pdev->dev);
++	fsi		= &master->fsia;
++	fsi->base	= master->base;
++	fsi->master	= master;
++	fsi->info	= &info->port_a;
++	fsi_handler_init(fsi);
++	ret = fsi_stream_probe(fsi, &pdev->dev);
+ 	if (ret < 0) {
+ 		dev_err(&pdev->dev, "FSIA stream probe failed\n");
+ 		return ret;
+ 	}
+ 
+ 	/* FSI B setting */
+-	master->fsib.base	= master->base + 0x40;
+-	master->fsib.master	= master;
+-	master->fsib.info	= &info->port_b;
+-	fsi_handler_init(&master->fsib);
+-	ret = fsi_stream_probe(&master->fsib, &pdev->dev);
++	fsi		= &master->fsib;
++	fsi->base	= master->base + 0x40;
++	fsi->master	= master;
++	fsi->info	= &info->port_b;
++	fsi_handler_init(fsi);
++	ret = fsi_stream_probe(fsi, &pdev->dev);
+ 	if (ret < 0) {
+ 		dev_err(&pdev->dev, "FSIB stream probe failed\n");
+ 		goto exit_fsia;
+-- 
+1.8.2
+

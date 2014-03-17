@@ -1,0 +1,40 @@
+From 10b7b243e95ffaaac269f57a7959bf25d05cf658 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Thu, 11 Oct 2012 18:39:36 -0700
+Subject: [PATCH 16/32] ARM: shmobile: armadillo800eva: enable restart
+
+Cc: Masahiro Nakai <nakai@atmark-techno.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Simon Horman <horms@verge.net.au>
+(cherry picked from commit 1efdf56369eb920aef4c77ad04cfafcc680f92cf)
+---
+ arch/arm/mach-shmobile/board-armadillo800eva.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index 9cd57de..f822577 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -1175,6 +1175,13 @@ static void __init eva_add_early_devices(void)
+ 	shmobile_timer.init = eva_earlytimer_init;
+ }
+ 
++#define RESCNT2 IOMEM(0xe6188020)
++static void eva_restart(char mode, const char *cmd)
++{
++	/* Do soft power on reset */
++	writel((1 << 31), RESCNT2);
++}
++
+ static const char *eva_boards_compat_dt[] __initdata = {
+ 	"renesas,armadillo800eva",
+ 	NULL,
+@@ -1190,4 +1197,5 @@ DT_MACHINE_START(ARMADILLO800EVA_DT, "armadillo800eva")
+ 	.init_late	= shmobile_init_late,
+ 	.timer		= &shmobile_timer,
+ 	.dt_compat	= eva_boards_compat_dt,
++	.restart	= eva_restart,
+ MACHINE_END
+-- 
+1.8.2
+

@@ -14,10 +14,13 @@ LICENSE = "LGPLv2.0+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=3214f080875748938ba060314b4f727d"
 
 SRCREV = "f0197adfbf2067d886b2bceeeffd4dba396f8686"
+SRCREV_armadillo800eva = "2f40baf6c351ab49c852a43b331b080c5f4549ae"
 SRC_URI = "git://github.com/renesas-devel/libuiomux.git;protocol=git"
 S = "${WORKDIR}/git/"
 
-EXTRA_OECONF = "--with-max-map-mem=105"
+UIO_MAX_MAP_MEM_bockw = "105"
+UIO_MAX_MAP_MEM_armadillo800eva = "128"
+EXTRA_OECONF = "--with-max-map-mem=${UIO_MAX_MAP_MEM}"
 
 do_configure() {
 	autoreconf -ivf ${S}

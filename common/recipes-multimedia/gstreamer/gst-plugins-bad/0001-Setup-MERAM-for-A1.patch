@@ -1,0 +1,78 @@
+From 0e02696530388011f573f0a5cc91af97ed84184d Mon Sep 17 00:00:00 2001
+From: Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Thu, 13 Sep 2012 13:14:13 +0900
+Subject: [PATCH] Setup MERAM for A1
+
+The A1 MERAM settings are different from E1 settings.  Namely A1 has
+more MERAM memory available and so can use more caching.
+---
+ ext/directfb/dfbvideosink.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/ext/directfb/dfbvideosink.c b/ext/directfb/dfbvideosink.c
+index 39aa4cc..e680681 100644
+--- a/ext/directfb/dfbvideosink.c
++++ b/ext/directfb/dfbvideosink.c
+@@ -994,7 +994,7 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
+       meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST], MExxCTRL,
+           val | (7 << 4));
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST], MExxCTRL,
+-        0x90400702);
++        0x90c00702);
+     /* NOTE: MExxSBSIZE is setting up afterward, that is in gst_dfbvideosink_setcaps(). */
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[DST], MExxSSARB,
+         0);
+@@ -1665,7 +1665,7 @@ gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
+       0) ? dfbvideosink->chroma_byte_offset / stride : video_height;
+ 
+   /* set up a readahead icb for Y plane
+-     4 lines / block-line, 8 lines held, 16 lines allocated */
++     32 lines / block-line, 32 lines held, 64 lines allocated */
+   if (dfbvideosink->icby[SRC]) {
+     addr =
+         meram_get_icb_address (dfbvideosink->meram, dfbvideosink->icby[SRC], 0);
+@@ -1680,13 +1680,13 @@ gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
+     return;
+   }
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxMCNF,
+-      0x010f0000);
++      0x003f0000);
+   meram_read_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL, &val);
+   if (val & (7 << 4))
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL,
+         val | 7 << 4);
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxCTRL,
+-      0xa0000701);
++      0xd0000701);
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxSSARB, 0);
+   meram_write_icb (dfbvideosink->meram, dfbvideosink->icby[SRC], MExxBSIZE,
+       (((sliceheight + dfbvideosink->tile_boundary_y_offset -
+@@ -1717,7 +1717,7 @@ gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
+   uiomux_register ((void *) addr, addr, 4096 * sliceheight);
+ 
+   /* set up a readahead icb for CbCr plane
+-     4 lines / block-line, 8 lines held, 16 lines allocated */
++     16 lines / block-line, 16 lines held, 32 lines allocated */
+   if (dfbvideosink->icbc[SRC]) {
+     addr =
+         meram_get_icb_address (dfbvideosink->meram, dfbvideosink->icbc[SRC], 0);
+@@ -1733,14 +1733,14 @@ gst_dfbvideosink_setup_meram (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
+       return;
+     }
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxMCNF,
+-        0x010f0000);
++        0x001f0000);
+     meram_read_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
+         &val);
+     if (val & (7 << 4))
+       meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
+           val | 7 << 4);
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxCTRL,
+-        0xa0200701);
++        0xc0800701);
+     meram_write_icb (dfbvideosink->meram, dfbvideosink->icbc[SRC], MExxBSIZE,
+         (((sliceheight / 2 + dfbvideosink->tile_boundary_c_offset -
+                     1) & 0x1fff) << 16) | ((stride - 1) & 0x7fff));
+-- 
+1.7.0.4
+

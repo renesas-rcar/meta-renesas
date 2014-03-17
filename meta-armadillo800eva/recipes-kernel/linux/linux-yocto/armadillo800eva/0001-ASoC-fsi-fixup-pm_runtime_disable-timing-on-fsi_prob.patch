@@ -1,0 +1,37 @@
+From 87aa027643e24d26776d13839835f6b12d4a7890 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Mon, 10 Sep 2012 02:13:52 -0700
+Subject: [PATCH 01/32] ASoC: fsi: fixup pm_runtime_disable() timing on
+ fsi_probe()
+
+pm_runtime_disable() error handling timing on fsi_probe() was wrong.
+This patch fixes it up.
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+(cherry picked from commit c35e005f3115cd27d85625805645b90ba961f16f)
+---
+ sound/soc/sh/fsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/sh/fsi.c b/sound/soc/sh/fsi.c
+index 341d34d..74754d6 100644
+--- a/sound/soc/sh/fsi.c
++++ b/sound/soc/sh/fsi.c
+@@ -1731,12 +1731,12 @@ exit_snd_soc:
+ exit_free_irq:
+ 	free_irq(irq, master);
+ exit_fsib:
++	pm_runtime_disable(&pdev->dev);
+ 	fsi_stream_remove(&master->fsib);
+ exit_fsia:
+ 	fsi_stream_remove(&master->fsia);
+ exit_iounmap:
+ 	iounmap(master->base);
+-	pm_runtime_disable(&pdev->dev);
+ exit_kfree:
+ 	kfree(master);
+ 	master = NULL;
+-- 
+1.8.2
+

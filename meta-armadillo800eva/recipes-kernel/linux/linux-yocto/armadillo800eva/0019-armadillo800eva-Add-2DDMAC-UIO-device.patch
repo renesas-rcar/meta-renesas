@@ -1,0 +1,130 @@
+From 558708657332b39e10a3f1506bd7e27ba7843e2a Mon Sep 17 00:00:00 2001
+From: Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Wed, 1 May 2013 19:45:12 +0900
+Subject: [PATCH 19/32] armadillo800eva: Add 2DDMAC UIO device
+
+---
+ arch/arm/mach-shmobile/clock-r8a7740.c |  4 +++-
+ arch/arm/mach-shmobile/intc-r8a7740.c  |  8 ++++----
+ arch/arm/mach-shmobile/setup-r8a7740.c | 29 ++++++++++++++++++++++++++++-
+ 3 files changed, 35 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7740.c b/arch/arm/mach-shmobile/clock-r8a7740.c
+index 67519efd..a86553c 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7740.c
++++ b/arch/arm/mach-shmobile/clock-r8a7740.c
+@@ -460,7 +460,7 @@ static struct clk div6_clks[DIV6_NR] = {
+ enum {
+ 	MSTP128, MSTP127, MSTP125,
+ 	MSTP116, MSTP111, MSTP100, MSTP117, MSTP101, MSTP107, MSTP103,
+-	MSTP112,
++	MSTP112, MSTP115,
+ 
+ 	MSTP230,
+ 	MSTP222,
+@@ -482,6 +482,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP125] = SH_CLK_MSTP32(&div6_clks[DIV6_SUB],	SMSTPCR1, 25, 0), /* TMU0 */
+ 	[MSTP117] = SH_CLK_MSTP32(&div4_clks[DIV4_B],	SMSTPCR1, 17, 0), /* LCDC1 */
+ 	[MSTP116] = SH_CLK_MSTP32(&div6_clks[DIV6_SUB],	SMSTPCR1, 16, 0), /* IIC0 */
++	[MSTP115] = SH_CLK_MSTP32(&div6_clks[DIV4_B],	SMSTPCR1, 15, 0), /* 2DDMAC */
+ 	[MSTP111] = SH_CLK_MSTP32(&div6_clks[DIV6_SUB],	SMSTPCR1, 11, 0), /* TMU1 */
+ 	[MSTP112] = SH_CLK_MSTP32(&div6_clks[DIV4_ZG],	SMSTPCR1, 12, 0), /* SGX */
+ 	[MSTP100] = SH_CLK_MSTP32(&div4_clks[DIV4_B],	SMSTPCR1,  0, 0), /* LCDC0 */
+@@ -563,6 +564,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("uio_dmem_genirq.0",	&mstp_clks[MSTP101]),
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.1",	&mstp_clks[MSTP103]),
+ 	CLKDEV_DEV_ID("uio_pdrv_genirq.2",	&mstp_clks[MSTP107]),
++	CLKDEV_DEV_ID("uio_pdrv_genirq.3",	&mstp_clks[MSTP115]),
+ 	CLKDEV_DEV_ID("sh_mobile_lcdc_fb.0",	&mstp_clks[MSTP100]),
+ 	CLKDEV_DEV_ID("sh_tmu.1",		&mstp_clks[MSTP111]),
+ 	CLKDEV_DEV_ID("i2c-sh_mobile.0",	&mstp_clks[MSTP116]),
+diff --git a/arch/arm/mach-shmobile/intc-r8a7740.c b/arch/arm/mach-shmobile/intc-r8a7740.c
+index 9a69a31..352870c 100644
+--- a/arch/arm/mach-shmobile/intc-r8a7740.c
++++ b/arch/arm/mach-shmobile/intc-r8a7740.c
+@@ -405,7 +405,7 @@ enum {
+ 	VPU5F,
+ 	_2DG_BRK_INT,
+ 	/* SGX540 */
+-	/* 2DDMAC */
++	_2DDMAC,
+ 	/* IPMMU */
+ 	/* RTDMAC 2 */
+ 	/* KEYSC */
+@@ -455,7 +455,7 @@ static struct intc_vect intcs_vectors[] = {
+ 	INTCS_VECT(VPU5F,		0x0980),
+ 	INTCS_VECT(_2DG_BRK_INT,	0x09A0),
+ 	/* SGX540 */
+-	/* 2DDMAC */
++	INTCS_VECT(_2DDMAC,		0x0A00),
+ 	/* IPMMU */
+ 	/* RTDMAC(2) */
+ 	/* KEYSC */
+@@ -516,7 +516,7 @@ static struct intc_mask_reg intcs_mask_registers[] = {
+ 	  { 0/*STPRO*/, 0, CEU21, VPU5F,
+ 	    0/*BBIF2*/, 0, 0, 0/*MFI*/ } },
+ 	{ /* IMR3SA / IMCR3SA */ 0xffd2018c, 0xffd201cc, 8,
+-	  { 0, 0, 0, 0, /*2DDMAC*/
++	  { 0, 0, 0, _2DDMAC,
+ 	    VIO6C, 0, 0, ICB } },
+ 	{ /* IMR4SA / IMCR4SA */ 0xffd20190, 0xffd201d0, 8,
+ 	  { 0, 0, VOU, CTI,
+@@ -559,7 +559,7 @@ static struct intc_mask_reg intcs_mask_registers[] = {
+ 
+ /* Priority is needed for INTCA to receive the INTCS interrupt */
+ static struct intc_prio_reg intcs_prio_registers[] = {
+-	{ 0xffd20000, 0, 16, 4, /* IPRAS */ { CTI, VOU, 0/*2DDMAC*/, ICB } },
++	{ 0xffd20000, 0, 16, 4, /* IPRAS */ { CTI, VOU, _2DDMAC, ICB } },
+ 	{ 0xffd20004, 0, 16, 4, /* IPRBS */ { JPU, LCDC0, 0, LCRC } },
+ 				/* IPRCS */ /*BBIF2*/
+ 				/* IPRDS */
+diff --git a/arch/arm/mach-shmobile/setup-r8a7740.c b/arch/arm/mach-shmobile/setup-r8a7740.c
+index 4d3c945..48ef7b0 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7740.c
++++ b/arch/arm/mach-shmobile/setup-r8a7740.c
+@@ -173,6 +173,33 @@ static struct platform_device vpu_device = {
+ 	.num_resources	= ARRAY_SIZE(vpu_resources),
+ };
+ 
++/* 2DDMAC */
++static struct uio_info tddmac_platform_data = {
++	.name = "2DDMAC",
++	.version = "0",
++	.irq = intcs_evt2irq(0xA00),
++};
++
++static struct resource tddmac_resources[] = {
++	[0] = {
++		.name	= "2DDMAC",
++		.start	= 0xfea00000,
++		.end	= 0xfea007FF,
++		.flags	= IORESOURCE_MEM,
++	},
++};
++
++static struct platform_device tddmac_device = {
++	.name		= "uio_pdrv_genirq",
++	.id		= 3,
++	.dev = {
++		.platform_data	= &tddmac_platform_data,
++		.coherent_dma_mask = ~0,
++	},
++	.resource	= tddmac_resources,
++	.num_resources	= ARRAY_SIZE(tddmac_resources),
++};
++
+ /* VI00 */
+ static struct uio_info vio_platform_data = {
+ 	.name = "VIO6C",
+@@ -458,7 +485,7 @@ static struct platform_device *r8a7740_early_devices[] __initdata = {
+ 	&ipmmu_device,
+ 	&meram_device,
+ 	&meram_uio_device,
+-
++	&tddmac_device,
+ };
+ 
+ /* DMA */
+-- 
+1.8.2
+

@@ -1,0 +1,38 @@
+From 50ddbb480c1673ef09aa8ca097631ebae245a41b Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Thu, 11 Oct 2012 21:49:38 -0700
+Subject: [PATCH 17/32] usb: renesas_usbhs: fixup interrupt status clear method
+
+When interrupt happened, renesas_usbhs driver gets irq status
+by usbhs_status_get_each_irq(), and cleared all status by using 0.
+But, this method is incorrect,
+since extra interrupt might occur between them.
+This patch cleared corresponding bits only
+
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+(cherry picked from commit d5c6a1e024dd5acd6ad2e1a6eb6a2fd5c15c50f1)
+---
+ drivers/usb/renesas_usbhs/mod.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/usb/renesas_usbhs/mod.c b/drivers/usb/renesas_usbhs/mod.c
+index 0871e81..fdefa88 100644
+--- a/drivers/usb/renesas_usbhs/mod.c
++++ b/drivers/usb/renesas_usbhs/mod.c
+@@ -254,9 +254,9 @@ static irqreturn_t usbhs_interrupt(int irq, void *data)
+ 	usbhs_write(priv, INTSTS0, ~irq_state.intsts0 & INTSTS0_MAGIC);
+ 	usbhs_write(priv, INTSTS1, ~irq_state.intsts1 & INTSTS1_MAGIC);
+ 
+-	usbhs_write(priv, BRDYSTS, 0);
+-	usbhs_write(priv, NRDYSTS, 0);
+-	usbhs_write(priv, BEMPSTS, 0);
++	usbhs_write(priv, BRDYSTS, ~irq_state.brdysts);
++	usbhs_write(priv, NRDYSTS, ~irq_state.nrdysts);
++	usbhs_write(priv, BEMPSTS, ~irq_state.bempsts);
+ 
+ 	/*
+ 	 * call irq callback functions
+-- 
+1.8.2
+

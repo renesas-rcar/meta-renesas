@@ -1,0 +1,54 @@
+diff -ru DirectFB-1.6.0//systems/fbdev/fbdev.c ../DirectFB-1.6.0//systems/fbdev/fbdev.c
+--- DirectFB-1.6.0//systems/fbdev/fbdev.c	2012-06-15 01:00:08.000000000 +0900
++++ ../DirectFB-1.6.0//systems/fbdev/fbdev.c	2012-08-30 16:16:11.998778572 +0900
+@@ -93,6 +93,7 @@
+ #include "agp.h"
+ 
+ #include <core/core_system.h>
++#include <uiomux/uiomux.h>
+ 
+ DFB_CORE_SYSTEM( fbdev )
+ 
+@@ -517,6 +518,9 @@
+           goto error;
+      }
+ 
++     uiomux_register(dfb_fbdev->framebuffer_base, shared->fix.smem_start,
++		shared->fix.smem_len);
++
+      if (ioctl( dfb_fbdev->fd, FBIOGET_VSCREENINFO, &shared->orig_var ) < 0) {
+           D_PERROR( "DirectFB/FBDev: "
+                     "Could not get variable screen information!\n" );
+diff -ru DirectFB-1.6.0//systems/fbdev/Makefile.am ../DirectFB-1.6.0//systems/fbdev/Makefile.am
+--- DirectFB-1.6.0//systems/fbdev/Makefile.am	2012-06-15 01:00:08.000000000 +0900
++++ ../DirectFB-1.6.0//systems/fbdev/Makefile.am	2012-08-30 16:28:27.022814147 +0900
+@@ -5,7 +5,8 @@
+ 	-I$(top_builddir)/lib		\
+ 	-I$(top_srcdir)/include		\
+ 	-I$(top_srcdir)/lib		\
+-	-I$(top_srcdir)/src
++	-I$(top_srcdir)/src		\
++	-I/usr/local/include
+ 
+ AM_CPPFLAGS = -D_XOPEN_SOURCE=500
+ 
+@@ -29,7 +30,8 @@
+ 
+ libdirectfb_fbdev_la_LDFLAGS = \
+ 	-avoid-version	\
+-	-module
++	-module \
++	-L/usr/local/lib
+ 
+ libdirectfb_fbdev_la_SOURCES = \
+ 	agp.c			\
+@@ -41,7 +43,8 @@
+ libdirectfb_fbdev_la_LIBADD = \
+ 	$(top_builddir)/lib/direct/libdirect.la \
+ 	$(top_builddir)/lib/fusion/libfusion.la \
+-	$(top_builddir)/src/libdirectfb.la
++	$(top_builddir)/src/libdirectfb.la \
++	-luiomux
+ 
+ 
+ include $(top_srcdir)/rules/libobject.make

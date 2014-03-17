@@ -1,0 +1,41 @@
+From 991b85f19ad6330c9ac797bd44dac29bbd9ab417 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Wed, 22 Aug 2012 18:01:13 -0700
+Subject: [PATCH 14/32] usb: renesas_usbhs: fixup DMA transport data alignment
+
+renesas_usbhs dma can transport 8byte alignment data, not 4byte.
+This patch fixup it.
+
+Reported-by: Sugnan Prabhu S <sugnan.prabhu@renesasmobile.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit a651684c100d47b34acb815d56c0c258565296dc)
+---
+ drivers/usb/renesas_usbhs/fifo.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/renesas_usbhs/fifo.c b/drivers/usb/renesas_usbhs/fifo.c
+index fc597a4..948d754 100644
+--- a/drivers/usb/renesas_usbhs/fifo.c
++++ b/drivers/usb/renesas_usbhs/fifo.c
+@@ -826,7 +826,7 @@ static int usbhsf_dma_prepare_push(struct usbhs_pkt *pkt, int *is_done)
+ 	    usbhs_pipe_is_dcp(pipe))
+ 		goto usbhsf_pio_prepare_push;
+ 
+-	if (len % 4) /* 32bit alignment */
++	if (len & 0x7) /* 8byte alignment */
+ 		goto usbhsf_pio_prepare_push;
+ 
+ 	if ((uintptr_t)(pkt->buf + pkt->actual) & 0x7) /* 8byte alignment */
+@@ -913,7 +913,7 @@ static int usbhsf_dma_try_pop(struct usbhs_pkt *pkt, int *is_done)
+ 	/* use PIO if packet is less than pio_dma_border */
+ 	len = usbhsf_fifo_rcv_len(priv, fifo);
+ 	len = min(pkt->length - pkt->actual, len);
+-	if (len % 4) /* 32bit alignment */
++	if (len & 0x7) /* 8byte alignment */
+ 		goto usbhsf_pio_prepare_pop_unselect;
+ 
+ 	if (len < usbhs_get_dparam(priv, pio_dma_border))
+-- 
+1.8.2
+
