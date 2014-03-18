@@ -1,6 +1,5 @@
-DEPENDS += "gstreamer libxml2 faad2 directfb libuiomux libshvio"
+DEPENDS += "gstreamer libxml2 faad2"
 EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-experimental', '--enable-experimental')}"
-EXTRA_OECONF := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
 EXTRA_OECONF += "--with-plugins=h264parse,asfmux,videoparsers"
 PACKAGECONFIG += "faad"
 
@@ -13,6 +12,8 @@ SRCREV_armadillo800eva = "6c0a11cb57d4425f6d721a6756c5af4d9dd269e5"
 SRC_URI_armadillo800eva = "git://github.com/matsu/gst-plugins-bad.git \
 	file://0001-Setup-MERAM-for-A1.patch"
 S_armadillo800eva = "${WORKDIR}/git/"
+DEPENDS_append_armadillo800eva = " directfb libuiomux libshvio"
+EXTRA_OECONF_armadillo800eva := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
 
 EXTRA_OECONF_append_armadillo800eva = " \
 	--disable-librfb --enable-introspection=no \
@@ -25,6 +26,8 @@ do_configure_armadillo800eva() {
 }
 
 # for bockw
+DEPENDS_append_bockw = " directfb libuiomux libshvio"
+EXTRA_OECONF_bockw := "${@'${EXTRA_OECONF}'.replace('--disable-directfb', '--enable-directfb')}"
 SRC_URI_bockw += " \
 	file://0001-directfb-trick-hardware-acceleration-check.patch \
 	file://0002-rawparse-set-a-frame-number-when-beginning-playback.patch \
