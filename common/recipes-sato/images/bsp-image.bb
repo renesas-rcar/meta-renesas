@@ -1,4 +1,5 @@
-require recipes-sato/images/core-image-sato.bb
+WAYLAND_ENABLE ?= "0"
+require ${@base_conditional("WAYLAND_ENABLE", "1", "recipes-core/images/core-image-minimal.bb", "recipes-sato/images/core-image-sato.bb", d)}
 
 IMAGE_INSTALL += " \
 	gst-plugins-base-videorate \
