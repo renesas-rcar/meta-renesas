@@ -3,7 +3,7 @@ PRINC := "${@int(PRINC) + 3}"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 PACKAGECONFIG_armadillo800eva += "v4l"
 
-SRC_URI_armadillo800eva += " \
+SRC_URI_append_armadillo800eva = " \
     file://0001-sys-v4l2-gstv4l2-fix-the-depth-value-for-RGB32.patch \
     file://0002-Revert-sys-v4l2-gstv4l2-fix-the-depth-value-for-RGB3.patch \
     file://0003-sys-v4l2-gstv4l2-register-uiomux-memory-regions-via-.patch \
@@ -37,7 +37,7 @@ SRC_URI_armadillo800eva += " \
     file://0031-videocrop-fix-a-memory-leak-caused-by-invoking-gst_p.patch \
     "
 
-SRC_URI_bockw += " \
+SRC_URI_append_bockw += " \
     file://0001-sys-v4l2-gstv4l2-fix-the-depth-value-for-RGB32.patch \
     file://0002-Revert-sys-v4l2-gstv4l2-fix-the-depth-value-for-RGB3.patch \
     file://0003-sys-v4l2-gstv4l2-register-uiomux-memory-regions-via-.patch \
