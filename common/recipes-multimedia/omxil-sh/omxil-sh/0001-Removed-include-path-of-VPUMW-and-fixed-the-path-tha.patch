@@ -1,0 +1,28 @@
+From 26d17f5f9bedfc42fd3482c521ff7e492542d66a Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Date: Tue, 25 Mar 2014 16:13:48 +0900
+Subject: [PATCH] Removed include path of VPUMW and fixed the path that refers
+ to firmware
+
+---
+ src/vpu5/Makefile.am |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/vpu5/Makefile.am b/src/vpu5/Makefile.am
+index f446593..d7618ce 100644
+--- a/src/vpu5/Makefile.am
++++ b/src/vpu5/Makefile.am
+@@ -8,8 +8,8 @@ endif
+ 
+ VPU5_LIBS = -L@VPUMW_PATH@/lib \
+ 	@VPU_CMN_LIBS@
+-VPU5_CFLAGS = -I@VPUMW_PATH@/include \
+-	-DVPU5HG_FIRMWARE_PATH=\"@VPUMW_PATH@/lib/firmware\" \
++VPU5_CFLAGS = \
++	-DVPU5HG_FIRMWARE_PATH=\"/usr/lib/firmware\" \
+ 	-D$(VPU_VERSION) -D$(VPU_SERIES)
+ 
+ OPTIONAL_SOURCES =
+-- 
+1.7.9.5
+
