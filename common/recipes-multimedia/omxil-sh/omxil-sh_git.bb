@@ -13,6 +13,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRCREV = "af89fcc030e3e5f82ce669fdfea2af105a73cf87"
 SRC_URI = "git://github.com/dhobsong/omxil-sh.git \
 	file://0001-vpu5-avc-parse-correct-pNal-size-calculation-for-EOS.patch \
+	file://0001-Removed-include-path-of-VPUMW-and-fixed-the-path-tha.patch \
 "
 DEPENDS = "libomxil libuiomux"
 S = "${WORKDIR}/git"
