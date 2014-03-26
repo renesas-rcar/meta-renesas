@@ -11,7 +11,9 @@ PR = "r1"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRCREV = "af89fcc030e3e5f82ce669fdfea2af105a73cf87"
-SRC_URI = "git://github.com/dhobsong/omxil-sh.git"
+SRC_URI = "git://github.com/dhobsong/omxil-sh.git \
+	file://p1.patch \
+	file://p2.patch"
 DEPENDS = "libomxil libuiomux"
 S = "${WORKDIR}/git"
 
@@ -24,7 +26,9 @@ inherit autotools pkgconfig
 
 VPUMW_PATH = "/usr/"
 
-EXTRA_OECONF = "--with-vpumw-path=${VPUMW_PATH} \
+# EXTRA_OECONF = "--with-vpumw-path=${VPUMW_PATH} 
+EXTRA_OECONF = "--with-vpumw-path=${SYSROOT_DESTDIR}/usr \
+	--with-libtool-sysroot=${SYSROOT_DESTDIR} \
 	--enable-tl_conv=kernel \
 	--enable-tl_conv_internal \
 	--with-vpu5_version=VCP1 \
