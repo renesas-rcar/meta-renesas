@@ -4,7 +4,6 @@ EXTRA_OECONF += "--with-plugins=h264parse,asfmux,videoparsers"
 PACKAGECONFIG += "faad"
 
 TARGET_CFLAGS += "-D_GNU_SOURCE"
-PRINC := "${@int(PRINC) + 7}"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 # For armadillo

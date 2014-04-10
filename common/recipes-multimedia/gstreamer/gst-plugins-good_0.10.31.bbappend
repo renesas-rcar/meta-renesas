@@ -1,5 +1,3 @@
-PRINC := "${@int(PRINC) + 3}"
-
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 PACKAGECONFIG_armadillo800eva += "v4l"
 
