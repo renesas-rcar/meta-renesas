@@ -1,0 +1,29 @@
+From a0e04460ec45afd25d58985c9144819c41d7ad4d Mon Sep 17 00:00:00 2001
+From: Osamu Fukushima <osamu.fukushima.wr@renesas.com>
+Date: Thu, 30 May 2013 13:29:21 +0900
+Subject: [PATCH] vpu5: avc parse: correct pNal->size calculation for EOS nal
+
+---
+ src/vpu5/shvpu5_avcdec_parse.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/vpu5/shvpu5_avcdec_parse.c b/src/vpu5/shvpu5_avcdec_parse.c
+index bd6ea18..1e529f5 100644
+--- a/src/vpu5/shvpu5_avcdec_parse.c
++++ b/src/vpu5/shvpu5_avcdec_parse.c
+@@ -396,6 +396,12 @@ parseAVCBuffer(shvpu_decode_PrivateType *shvpu_decode_Private,
+ 			avcparse->pPrevBuffer = pBuffer;
+ 			pStartSub = NULL;
+ 			nSizeSub = 0;
++		} else if(eos) {
++			pStartSub = NULL;
++			nSizeSub = 0;
++			pNal->splitBufferLen = 0;
++			pNal->size = nRemainSize + 1;
++			nRemainSize = 0;
+ 		} else {
+ 			pNal->size = pHead - pStart;
+ 			nRemainSize -= pNal->size;
+-- 
+1.7.9.5
+
