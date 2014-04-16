@@ -5,7 +5,7 @@ require linux-dtb-append.inc
 DESCRIPTION = "Linux kernel for the armadillo800eva board"
 COMPATIBLE_MACHINE = "armadillo800eva"
 
-PR = "r0"
+PR = "r1"
 PV_append = "+git${SRCREV}"
 
 FILESEXTRAPATHS_prepend_armadillo800eva := "${THISDIR}/${PN}:"
@@ -45,6 +45,7 @@ SRC_URI = "git://github.com/renesas-devel/linux.git;branch=3.4.81-ltsi \
 	file://0031-ARM-shmobile-r8a7740-Add-clock-configuration-for-USB.patch \
 	file://0032-ARM-shmobile-armadillo800eva-Add-USB-ECHI-and-OHCI-s.patch \
 	file://0001-uio-Fix-memory-size-check-with-vma-in-uio_mmap_physi.patch \
+	file://0001-ASoC-fsi-reserve-prefetch-period-on-DMA-transferring.patch \
 "
 
 S = "${WORKDIR}/git"
