@@ -7,11 +7,13 @@ SECTION = "multimedia"
 LICENSE = "LGPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=2d5025d4aa3495befef8f17206a5b0a1"
                                                                                                                                                                                               
-PR = "r1"
+PR = "r2"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRCREV = "af89fcc030e3e5f82ce669fdfea2af105a73cf87"
-SRC_URI = "git://github.com/dhobsong/omxil-sh.git"
+SRC_URI = "git://github.com/dhobsong/omxil-sh.git \
+	file://0001-vpu5-avc-parse-correct-pNal-size-calculation-for-EOS.patch \
+"
 DEPENDS = "libomxil libuiomux"
 S = "${WORKDIR}/git"
 
