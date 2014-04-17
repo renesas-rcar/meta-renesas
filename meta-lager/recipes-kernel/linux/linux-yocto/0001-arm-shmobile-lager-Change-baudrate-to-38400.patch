@@ -1,0 +1,26 @@
+From 3e0caf36d37f28619a3f4165d2a29f92b37f1ef5 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Date: Thu, 17 Apr 2014 15:07:31 +0900
+Subject: [PATCH 2/2] arm: shmobile: lager: Change baudrate to 38400
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ arch/arm/boot/dts/r8a7790-lager.dts |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7790-lager.dts b/arch/arm/boot/dts/r8a7790-lager.dts
+index 6135254..4db84c8 100644
+--- a/arch/arm/boot/dts/r8a7790-lager.dts
++++ b/arch/arm/boot/dts/r8a7790-lager.dts
+@@ -20,7 +20,7 @@
+ 	compatible = "renesas,lager", "renesas,r8a7790";
+ 
+ 	chosen {
+-		bootargs = "console=ttySC6,115200 ignore_loglevel rw root=/dev/nfs ip=dhcp";
++		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/nfs ip=dhcp";
+ 	};
+ 
+ 	memory@40000000 {
+-- 
+1.7.9.5
+
