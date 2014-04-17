@@ -10,12 +10,12 @@ do_install_append() {
 			continue
 		fi
 		DTS_BASE_NAME=`basename ${DTS_FILE} | awk -F "." '{print $1}'`
-		if [ ! -f ${DTS_BASE_NAME} ]; then
-			echo "Warning: ${DTS_BASE_NAME} is not available!"
+		if [ ! -f arch/${ARCH}/boot/dts/${DTS_BASE_NAME}.dtb ]; then
+			echo "Warning: ${DTS_BASE_NAME}.dtb is not available!"
 			continue
 		fi
 		# create zImage (for bootz)
-		cat arch/${ARCH}/boot/zImage ${DTS_BASE_NAME} > arch/${ARCH}/boot/zImage+dtb
+		cat arch/${ARCH}/boot/zImage arch/${ARCH}/boot/dts/${DTS_BASE_NAME}.dtb > arch/${ARCH}/boot/zImage+dtb
 		# create uImage
 		$(cut -f 3- -d ' ' < arch/${ARCH}/boot/.uImage.cmd | sed -e 's/zImage/zImage+dtb/g' -e 's/uImage/uImage+dtb/g')
 	done
