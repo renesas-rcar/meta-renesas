@@ -1,0 +1,26 @@
+From 93614d57ce0d0d2c1096994cbd46cd9a8cc1daa4 Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Date: Thu, 17 Apr 2014 15:07:04 +0900
+Subject: [PATCH 1/2] arm: shmobile: koelsch: Change baudrate to 38400
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ arch/arm/boot/dts/r8a7791-koelsch.dts |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7791-koelsch.dts b/arch/arm/boot/dts/r8a7791-koelsch.dts
+index 3d231b6..d2322ff 100644
+--- a/arch/arm/boot/dts/r8a7791-koelsch.dts
++++ b/arch/arm/boot/dts/r8a7791-koelsch.dts
+@@ -20,7 +20,7 @@
+ 	compatible = "renesas,koelsch", "renesas,r8a7791";
+ 
+ 	chosen {
+-		bootargs = "console=ttySC6,115200 ignore_loglevel rw root=/dev/nfs ip=dhcp";
++		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/nfs ip=dhcp";
+ 	};
+ 
+ 	memory@40000000 {
+-- 
+1.7.9.5
+
