@@ -1,0 +1,1 @@
+require qt4_append.inc

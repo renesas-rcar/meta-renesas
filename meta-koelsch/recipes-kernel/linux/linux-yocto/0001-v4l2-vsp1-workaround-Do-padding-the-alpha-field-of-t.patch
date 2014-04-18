@@ -1,0 +1,29 @@
+From 0af7edccb467514da62655489ec41d6a10f2298e Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 4 Feb 2014 17:25:09 +0900
+Subject: [PATCH] v4l2 vsp1: workaround: Do padding the alpha field of the
+ output pixel data converted from non-alpha format
+
+This avoids the transparent images output from VSP when converting
+from a non-alpha format to a format with alpha-channel by padding
+0xff into the output alpha field as a hard-coded value.
+---
+ drivers/media/video/vsp1/vsp1_wpf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/video/vsp1/vsp1_wpf.c b/drivers/media/video/vsp1/vsp1_wpf.c
+index 7baed81..c35902d 100644
+--- a/drivers/media/video/vsp1/vsp1_wpf.c
++++ b/drivers/media/video/vsp1/vsp1_wpf.c
+@@ -103,7 +103,7 @@ static int wpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	    wpf->entity.formats[RWPF_PAD_SOURCE].code)
+ 		outfmt |= VI6_WPF_OUTFMT_CSC;
+ 
+-	vsp1_wpf_write(wpf, VI6_WPF_OUTFMT, outfmt);
++	vsp1_wpf_write(wpf, VI6_WPF_OUTFMT, outfmt |= 0xff << 24);
+ 
+ 	vsp1_write(vsp1, VI6_DPR_WPF_FPORCH(wpf->entity.index),
+ 		   VI6_DPR_WPF_FPORCH_FP_WPFN);
+-- 
+1.8.0
+
