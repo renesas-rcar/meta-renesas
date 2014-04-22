@@ -57,3 +57,16 @@ Build the target file system image using bitbake:
 
 Once complete the images for the target machine will be available in the output
 directory 'tmp/deploy/images'.
+
+
+Install packages
+================
+To install the package, meta-renesas have flag of some unique.
+
+USE_GSTREAMER_0_10:
+	If you want to use gstreamer 0.10, plaese set USE_GSTREAMER_0_10="1" in conf/local.conf.
+	When enabled, the package of some of the gstrermer 0.10 will be installed in the boot image.
+
+USE_GSTREAMER_1_00:
+	If you want to use gstreamer 1.xx, plaese set USE_GSTREAMER_1_00="1" in conf/local.conf.
+	When enabled, the package of some of the gstrermer 1.xx will be installed in the boot image.
