@@ -6,7 +6,7 @@ Descriptions of section entries:
 	M: Mail patches to: FullName <address@domain>
 	F: Files and directories with wildcard patterns.
 	   A trailing slash includes all files and subdirectory files.
-	   F:	meta-bockw/	all files in and below meta-crownbay
+	   F:	meta-bockw/	all files in and below meta-bockw
 	   F:	meta-bockw/*	all files in meta-crownbay, but not below
 	   One pattern per line.  Multiple F: lines acceptable.
 
@@ -26,6 +26,14 @@ F:	meta-bockw
 COMMON
 M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 F:	common/
+
+KOELSCH
+M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+F:	meta-koelsch
+
+LAGER
+M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+F:	meta-lager
 
 MARZEN
 M:	None
