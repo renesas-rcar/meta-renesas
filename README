@@ -1,6 +1,59 @@
-OpenEmbedded/Yocto BSP layer for Renesas Electronics's
+OpenEmbedded/Yocto BSP layer for Renesas Electronics's SoCs
 ==========
 This layer provides support for Renesas Electronics's platforms for use with
 OpenEmbedded and/or Yocto.
 
 Layer maintainers: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+
+Supported Boards/Machines
+=========================
+
+Boards Supported by this layer (Please refer to the associate .conf for more
+information):
+	* Atmark Techno, Inc. Armadillo-800 EVA (R8A7740)
+	* Renesas Electronics Corporation. Bockw (R8A7778)
+	* Renesas Electronics Corporation. Koelsch (R8A7791)
+	* Renesas Electronics Corporation. Lager (R8A7790)
+	* Renesas Electronics Corporation. Marzen  (R8A7779)
+
+Patches
+=======
+
+Please submit any patches for this layer to: nobuhiro.iwamatsu.yj@renesas.com.
+Please see the MAINTAINERS file for more details.
+
+Dependencies
+============
+
+This layer depends on:
+
+	URI: git://git.openembedded.org/bitbake
+
+	URI: git://git.openembedded.org/openembedded-core
+	layers: meta
+
+Build Instructions
+==================
+
+The following instructions require a Poky installation (or equivalent).
+
+Initialize a build using the 'oe-init-build-env' script in Poky. Once
+initialized configure bblayers.conf by adding the 'meta-renesas' and 'meta-BOARD' layer. 
+e.g.:
+
+	BBLAYERS ?= " \
+		<path to layer>/oe-core/meta \
+		<path to layer>/meta-renesas \
+		<path to layer>/meta-lager \
+		"
+
+To build a specific target BSP configure the associated machine in local.conf:
+
+	MACHINE ?= "lager"
+
+Build the target file system image using bitbake:
+
+	$ bitbake core-image-minimal
+
+Once complete the images for the target machine will be available in the output
+directory 'tmp/deploy/images'.
