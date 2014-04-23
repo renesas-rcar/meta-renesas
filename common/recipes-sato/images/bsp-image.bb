@@ -17,6 +17,9 @@ IMAGE_INSTALL += " \
 	gst-plugins-ugly-asf \
 	gst-openmax \
 	libdrm-kms \
+	libdrm-tests \
+	media-ctl \
+	gst-plugins-good-audioparsers \
 	alsa-utils alsa-tools \
 "
 
