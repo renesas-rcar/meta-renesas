@@ -1,6 +1,5 @@
 require recipes-graphics/drm/libdrm.inc
 
-PREFERRED_VERSION_drm = "${PV}"
 SRC_URI += " \
 	file://installtests.patch \
 	file://GNU_SOURCE_definition.patch \
