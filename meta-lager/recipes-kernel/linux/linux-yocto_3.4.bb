@@ -5,11 +5,11 @@ require linux-dtb-append.inc
 DESCRIPTION = "Linux kernel for the lager board"
 COMPATIBLE_MACHINE = "lager"
 
-PR = "r14"
+PR = "r15"
 PV_append = "+git${SRCREV}"
 
-SRCREV = "83a97c86f457dda2d18a376ddcf35d5ebc98afcd"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.81/rcar-gen2-6"
+SRCREV = "d12dc4c7e7368c29f6710a4bbcc547e2699e9bac"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.81/rcar-gen2-7"
 
 WAYLAND_ENABLE ?= "0"
 # Append for wayland package
