@@ -7,8 +7,9 @@ COMPATIBLE_MACHINE = "koelsch"
 
 PV_append = "+git${SRCREV}"
 
+RENESAS_BACKPORTS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git"
 SRCREV = "663c9065886f8fde9bb10429f235f0baa95a5df0"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.2.0 \
+SRC_URI = "${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.2.0 \
 	file://0001-arm-shmobile-koelsch-Change-baudrate-to-38400.patch \
 "
 
