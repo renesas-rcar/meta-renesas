@@ -7,8 +7,8 @@ COMPATIBLE_MACHINE = "lager"
 
 PV_append = "+git${SRCREV}"
 
-SRCREV = "c39cb0ebc67d1f69f47abd039e56559680c98f1a"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.1.0 \
+SRCREV = "663c9065886f8fde9bb10429f235f0baa95a5df0"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.2.0 \
 	file://0001-arm-shmobile-lager-Change-baudrate-to-38400.patch \
 "
 
