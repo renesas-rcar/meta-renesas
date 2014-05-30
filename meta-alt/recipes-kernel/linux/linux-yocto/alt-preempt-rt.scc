@@ -1,0 +1,8 @@
+define KMACHINE alt
+define KTYPE preempt-rt
+define KARCH arm
+
+include ktypes/preempt-rt/preempt-rt.scc
+branch alt
+
+include alt.scc
