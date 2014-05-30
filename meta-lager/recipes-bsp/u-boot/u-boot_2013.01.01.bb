@@ -4,13 +4,6 @@ require u-boot.inc
 # make it default
 DEFAULT_PREFERENCE = "-1"
 
-# To build u-boot for your machine, provide the following lines in
-# your machine config, replacing the assignments as appropriate for
-# your machine.
-# UBOOT_MACHINE = "omap3_beagle_config"
-# UBOOT_ENTRYPOINT = "0x80008000"
-# UBOOT_LOADADDRESS = "0x80008000"
-
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=1707d6db1d42237583f50183a5651ecb"
 
