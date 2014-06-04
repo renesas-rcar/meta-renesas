@@ -21,7 +21,9 @@ S = "${WORKDIR}/git"
 # for armadillo800eva
 SRCREV_armadillo800eva = "d8d55af1e805bea57e27bc0bcfb82dff037f703a"
 SRC_URI_append_armadillo800eva = " file://vcp1-library-change.patch"
-DEPENDS_append_armadillo800eva = " vcp1"
+CHECK_OMXIL_SH_MW = "${USE_RENESAS_MW_VCP1}" 
+CHECK_OMXIL_SH_MW += "${USE_RENESAS_MW_VPU5}"
+DEPENDS_append_armadillo800eva = ' ${@base_contains("CHECK_OMXIL_SH_MW", "1", "vcp1", "", d)}'
 
 inherit autotools pkgconfig
 
