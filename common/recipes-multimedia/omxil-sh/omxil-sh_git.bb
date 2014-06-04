@@ -6,7 +6,7 @@ SECTION = "multimedia"
 
 LICENSE = "LGPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=2d5025d4aa3495befef8f17206a5b0a1"
-                                                                                                                                                                                              
+
 PR = "r2"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
@@ -40,9 +40,9 @@ do_configure() {
 	oe_runconf
 }
 
-PACKAGES = "\                                                                                                                                                                                 
-	${PN} \                                                                                                                                                                             
-	${PN}-dev \                                                                                                                                                                         
+PACKAGES = "\
+	${PN} \
+	${PN}-dev \
 	${PN}-staticdev \
 "
 
