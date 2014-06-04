@@ -52,9 +52,11 @@ Once complete the images for the target machine will be available in the output
 directory 'tmp/deploy/images/alt'.
 
 Images generated:
+	* uImage (Linux Kernel binary, in u-boot wrapped format)
+	* uImage+dtb (Linux Kernel binary with DTB, in u-boot wrapped format)
 	* zImage (Linux Kernel binary)
 	* zImage+dtb (Linux Kernel binary with DTB)
-	* zImage-<SoC namme>-<machine name>.dtb (DTB for target machine)
+	* uImage-<SoC namme>-<machine name>.dtb (DTB for target machine)
 	* core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
 	* core-image-minimal-<machine name>.jffs2 (rootfs in JFFS2 format)
 	* u-boot.bin (U-Boot binary)
