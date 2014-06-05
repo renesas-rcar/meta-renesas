@@ -1,0 +1,36 @@
+From 5a8da67d42c0a6e70fa63a741ce1615de3cfaed7 Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Mon, 2 Jun 2014 19:34:09 +0900
+Subject: [PATCH 9/9] arm: shmobile: armadillo: change gpio setting for
+ r8a66597-udc
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ arch/arm/mach-shmobile/board-armadillo800eva.c |   11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index 946accd..6ca5163 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -1094,16 +1094,7 @@ static void __init eva_init(void)
+ 		/* USB Host */
+ 	} else {
+ 		/* USB Func */
+-		/*
+-		 * A1 chip has 2 IRQ7 pin and it was controled by MSEL register.
+-		 * OTOH, usbhs interrupt needs its value (HI/LOW) to decide
+-		 * USB connection/disconnection (usbhsf_get_vbus()).
+-		 * This means we needs to select GPIO_FN_IRQ7_PORT209 first,
+-		 * and select GPIO_PORT209 here
+-		 */
+-		gpio_request(GPIO_FN_IRQ7_PORT209, NULL);
+-		gpio_request(GPIO_PORT209, NULL);
+-		gpio_direction_input(GPIO_PORT209);
++		gpio_request(GPIO_FN_VBUS, NULL);
+ 
+ 		platform_device_register(&usbhsf_device);
+ 		usb = &usbhsf_device;
+-- 
+1.7.9.5
+

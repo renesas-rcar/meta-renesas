@@ -1,0 +1,35 @@
+From 9fccab1f5ef35fa987a0b9c9b0a9f4d414534f62 Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Mon, 2 Jun 2014 18:03:32 +0900
+Subject: [PATCH 5/9] arm: shmobile: r8a7740: modify clock setting for
+ r8a66597-udc
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ arch/arm/mach-shmobile/clock-r8a7740.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/clock-r8a7740.c b/arch/arm/mach-shmobile/clock-r8a7740.c
+index 25e411c..bb8e970 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7740.c
++++ b/arch/arm/mach-shmobile/clock-r8a7740.c
+@@ -599,11 +599,11 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_DEV_ID("sh_mobile_sdhi.2",	&mstp_clks[MSTP415]),
+ 
+ 	/* ICK */
+-	CLKDEV_ICK_ID("host",	"renesas_usbhs",	&mstp_clks[MSTP416]),
+-	CLKDEV_ICK_ID("func",	"renesas_usbhs",	&mstp_clks[MSTP407]),
+-	CLKDEV_ICK_ID("phy",	"renesas_usbhs",	&mstp_clks[MSTP406]),
+-	CLKDEV_ICK_ID("pci",	"renesas_usbhs",	&div4_clks[DIV4_USBP]),
+-	CLKDEV_ICK_ID("usb24",	"renesas_usbhs",	&usb24_clk),
++	CLKDEV_ICK_ID("host",	"r8a66597_udc.0",	&mstp_clks[MSTP416]),
++	CLKDEV_ICK_ID("func",	"r8a66597_udc.0",	&mstp_clks[MSTP407]),
++	CLKDEV_ICK_ID("phy",	"r8a66597_udc.0",	&mstp_clks[MSTP406]),
++	CLKDEV_ICK_ID("pci",	"r8a66597_udc.0",	&div4_clks[DIV4_USBP]),
++	CLKDEV_ICK_ID("usb24",	"r8a66597_udc.0",	&usb24_clk),
+ 	CLKDEV_ICK_ID("host",	"rmobile-ehci",		&mstp_clks[MSTP416]),
+ 	CLKDEV_ICK_ID("func",	"rmobile-ehci",		&mstp_clks[MSTP407]),
+ 	CLKDEV_ICK_ID("phy",	"rmobile-ehci",		&mstp_clks[MSTP406]),
+-- 
+1.7.9.5
+
