@@ -1,0 +1,127 @@
+From 991c754dff75d2b36c35a3c25c70be70f65370cf Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Mon, 2 Jun 2014 18:05:46 +0900
+Subject: [PATCH 6/9] usb: gadget: r8a66597-udc: add parameters for r8a7740
+
+This patch adds .dmac_clk and .power_ctrl parameter.
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ drivers/usb/gadget/r8a66597-udc.c |   35 +++++++++++++++++++++++++----------
+ include/linux/usb/r8a66597.h      |    6 ++++++
+ 2 files changed, 31 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/usb/gadget/r8a66597-udc.c b/drivers/usb/gadget/r8a66597-udc.c
+index 13946b0..e514b9b 100644
+--- a/drivers/usb/gadget/r8a66597-udc.c
++++ b/drivers/usb/gadget/r8a66597-udc.c
+@@ -169,13 +169,16 @@ static int r8a66597_clk_get(struct r8a66597 *r8a66597,
+ 		return PTR_ERR(r8a66597->clk);
+ 	}
+ 
+-	snprintf(clk_name, sizeof(clk_name), "usb%d_dmac", pdev->id);
+-	/* We don't have any device resource defined for USBHS-DMAC */
+-	r8a66597->clk_dmac = clk_get(NULL, clk_name);
+-	if (IS_ERR(r8a66597->clk_dmac)) {
+-		dev_err(&pdev->dev, "cannot get clock \"%s\"\n", clk_name);
+-		clk_put(r8a66597->clk);
+-		return PTR_ERR(r8a66597->clk_dmac);
++	if (r8a66597->pdata->clk_dmac) {
++		snprintf(clk_name, sizeof(clk_name), "usb%d_dmac", pdev->id);
++		/* We don't have any device resource defined for USBHS-DMAC */
++		r8a66597->clk_dmac = clk_get(NULL, clk_name);
++		if (IS_ERR(r8a66597->clk_dmac)) {
++			dev_err(&pdev->dev, "cannot get clock \"%s\"\n",
++				clk_name);
++			clk_put(r8a66597->clk);
++			return PTR_ERR(r8a66597->clk_dmac);
++		}
+ 	}
+ 
+ 	return 0;
+@@ -183,7 +186,8 @@ static int r8a66597_clk_get(struct r8a66597 *r8a66597,
+ 
+ static void r8a66597_clk_put(struct r8a66597 *r8a66597)
+ {
+-	clk_put(r8a66597->clk_dmac);
++	if (r8a66597->pdata->clk_dmac)
++		clk_put(r8a66597->clk_dmac);
+ 	clk_put(r8a66597->clk);
+ }
+ 
+@@ -191,14 +195,16 @@ static void r8a66597_clk_enable(struct r8a66597 *r8a66597)
+ {
+ 	if (r8a66597->pdata->clk_enable)
+ 		r8a66597->pdata->clk_enable(1);
+-	clk_enable(r8a66597->clk_dmac);
++	if (r8a66597->pdata->clk_dmac)
++		clk_enable(r8a66597->clk_dmac);
+ 	clk_enable(r8a66597->clk);
+ }
+ 
+ static void r8a66597_clk_disable(struct r8a66597 *r8a66597)
+ {
+ 	clk_disable(r8a66597->clk);
+-	clk_disable(r8a66597->clk_dmac);
++	if (r8a66597->pdata->clk_dmac)
++		clk_disable(r8a66597->clk_dmac);
+ 	if (r8a66597->pdata->clk_enable)
+ 		r8a66597->pdata->clk_enable(0);
+ }
+@@ -2245,6 +2251,9 @@ static int __exit r8a66597_remove(struct platform_device *pdev)
+ 
+ 	if (r8a66597->pdata->on_chip) {
+ 		if (!r8a66597->transceiver) {
++			if (r8a66597->pdata->power_ctrl)
++				r8a66597->pdata->power_ctrl(pdev,
++							    r8a66597->reg, 0);
+ 			r8a66597_clk_disable(r8a66597);
+ 			pm_runtime_put(r8a66597_to_dev(r8a66597));
+ 		}
+@@ -2376,6 +2385,9 @@ static int __init r8a66597_probe(struct platform_device *pdev)
+ 		if (!r8a66597->transceiver) {
+ 			pm_runtime_get_sync(r8a66597_to_dev(r8a66597));
+ 			r8a66597_clk_enable(r8a66597);
++			if (r8a66597->pdata->power_ctrl)
++				r8a66597->pdata->power_ctrl(pdev,
++							    r8a66597->reg, 1);
+ 		}
+ 	}
+ 
+@@ -2449,6 +2461,9 @@ clean_up3:
+ clean_up2:
+ 	if (r8a66597->pdata->on_chip) {
+ 		if (!r8a66597->transceiver) {
++			if (r8a66597->pdata->power_ctrl)
++				r8a66597->pdata->power_ctrl(pdev,
++							    r8a66597->reg, 0);
+ 			r8a66597_clk_disable(r8a66597);
+ 			pm_runtime_put(r8a66597_to_dev(r8a66597));
+ 		}
+diff --git a/include/linux/usb/r8a66597.h b/include/linux/usb/r8a66597.h
+index dc8493c..4467e73 100644
+--- a/include/linux/usb/r8a66597.h
++++ b/include/linux/usb/r8a66597.h
+@@ -38,6 +38,10 @@ struct r8a66597_platdata {
+ 	/* supplement clock maintenance (or NULL, if it's not used) */
+ 	void (*clk_enable)(int enable);
+ 
++	/* for r8a7740 */
++	void (*power_ctrl)(struct platform_device *pdev, void __iomem *base,
++			   int enable);
++
+ 	/* the number of access waits from CPU to this module */
+ 	u16		buswait;
+ 
+@@ -61,6 +65,8 @@ struct r8a66597_platdata {
+ 
+ 	/* set one = using USBHS-DMAC */
+ 	unsigned	dmac:1;
++
++	unsigned	clk_dmac:1;
+ };
+ 
+ /* Register definitions */
+-- 
+1.7.9.5
+

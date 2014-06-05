@@ -1,0 +1,104 @@
+From a284b938f774e2bfdfbd7178ca29619aea9c2973 Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Mon, 2 Jun 2014 18:02:49 +0900
+Subject: [PATCH 4/9] arm: shmobile: r8a7740: remove platform_device of usb
+ dmac
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7740.c |   72 --------------------------------
+ 1 file changed, 72 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7740.c b/arch/arm/mach-shmobile/setup-r8a7740.c
+index d0e19e7..525349e 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7740.c
++++ b/arch/arm/mach-shmobile/setup-r8a7740.c
+@@ -684,77 +684,6 @@ static struct platform_device dma2_device = {
+ 	},
+ };
+ 
+-/* USB-DMAC */
+-static const struct sh_dmae_channel r8a7740_usb_dma_channels[] = {
+-	{
+-		.offset = 0,
+-	}, {
+-		.offset = 0x20,
+-	},
+-};
+-
+-static const struct sh_dmae_slave_config r8a7740_usb_dma_slaves[] = {
+-	{
+-		.slave_id	= SHDMA_SLAVE_USBHS_TX,
+-		.chcr		= USBTS_INDEX2VAL(USBTS_XMIT_SZ_8BYTE),
+-	}, {
+-		.slave_id	= SHDMA_SLAVE_USBHS_RX,
+-		.chcr		= USBTS_INDEX2VAL(USBTS_XMIT_SZ_8BYTE),
+-	},
+-};
+-
+-static struct sh_dmae_pdata usb_dma_platform_data = {
+-	.slave		= r8a7740_usb_dma_slaves,
+-	.slave_num	= ARRAY_SIZE(r8a7740_usb_dma_slaves),
+-	.channel	= r8a7740_usb_dma_channels,
+-	.channel_num	= ARRAY_SIZE(r8a7740_usb_dma_channels),
+-	.ts_low_shift	= USBTS_LOW_SHIFT,
+-	.ts_low_mask	= USBTS_LOW_BIT << USBTS_LOW_SHIFT,
+-	.ts_high_shift	= USBTS_HI_SHIFT,
+-	.ts_high_mask	= USBTS_HI_BIT << USBTS_HI_SHIFT,
+-	.ts_shift	= dma_usbts_shift,
+-	.ts_shift_num	= ARRAY_SIZE(dma_usbts_shift),
+-	.dmaor_init	= DMAOR_DME,
+-	.chcr_offset	= 0x14,
+-	.chcr_ie_bit	= (1 << 5) | (1 << 2),
+-	.chcr_clr_bit	= (1 << 2),
+-	.dmaor_is_32bit	= 1,
+-	.needs_tend_set	= 1,
+-	.no_dmars	= 1,
+-	.slave_only	= 1,
+-};
+-
+-static struct resource r8a7740_usb_dma_resources[] = {
+-	{
+-		/* Channel registers and DMAOR */
+-		.start	= 0xe68a0020,
+-		.end	= 0xe68a0064 - 1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	{
+-		/* VCR/SWR/DMICR */
+-		.start	= 0xe68a0000,
+-		.end	= 0xe68a0014 - 1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	{
+-		/* IRQ for channels */
+-		.start	= evt2irq(0x0a00),
+-		.end	= evt2irq(0x0a00),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-};
+-
+-static struct platform_device usb_dma_device = {
+-	.name		= "sh-dma-engine",
+-	.id		= 3,
+-	.resource	= r8a7740_usb_dma_resources,
+-	.num_resources	= ARRAY_SIZE(r8a7740_usb_dma_resources),
+-	.dev		= {
+-		.platform_data	= &usb_dma_platform_data,
+-	},
+-};
+-
+ /* I2C */
+ static struct resource i2c0_resources[] = {
+ 	[0] = {
+@@ -804,7 +733,6 @@ static struct platform_device *r8a7740_late_devices[] __initdata = {
+ 	&dma0_device,
+ 	&dma1_device,
+ 	&dma2_device,
+-	&usb_dma_device,
+ };
+ 
+ /*
+-- 
+1.7.9.5
+
