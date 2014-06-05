@@ -1,0 +1,61 @@
+From 347d00a9810dd13c6ca672773a9c9e3c4c027d63 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Tue, 6 Aug 2013 17:20:49 +0900
+Subject: [PATCH 1/2] mmc: tmio: Add disable auto CMD12
+
+Disable auto CMD12 at IO_RW_EXTENDED multiple block transfer.
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c |    8 ++++++++
+ include/linux/mfd/tmio.h        |    1 +
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 0d8a9bb..7399269 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -38,6 +38,7 @@
+ #include <linux/mmc/mmc.h>
+ #include <linux/mmc/slot-gpio.h>
+ #include <linux/mmc/tmio.h>
++#include <linux/mmc/sdio.h>
+ #include <linux/module.h>
+ #include <linux/pagemap.h>
+ #include <linux/platform_device.h>
+@@ -305,6 +306,7 @@ static int tmio_mmc_start_command(struct tmio_mmc_host *host, struct mmc_command
+ 	struct mmc_data *data = host->data;
+ 	int c = cmd->opcode;
+ 	u32 irq_mask = TMIO_MASK_CMD;
++	struct tmio_mmc_data *pdata = host->pdata;
+ 
+ 	/* CMD12 is handled by hardware */
+ 	if (cmd->opcode == MMC_STOP_TRANSMISSION && !cmd->arg) {
+@@ -335,6 +337,12 @@ static int tmio_mmc_start_command(struct tmio_mmc_host *host, struct mmc_command
+ 		if (data->blocks > 1) {
+ 			sd_ctrl_write16(host, CTL_STOP_INTERNAL_ACTION, 0x100);
+ 			c |= TRANSFER_MULTI;
++			if (cmd->opcode == SD_IO_RW_EXTENDED) {
++				/* Disable auto CMD12 at IO_RW_EXTENDED
++				  multiple block transfer */
++				if (pdata->disable_auto_cmd12)
++					pdata->disable_auto_cmd12(&c);
++			}
+ 		}
+ 		if (data->flags & MMC_DATA_READ)
+ 			c |= TRANSFER_READ;
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index d83af39..8cef4cb 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -111,6 +111,7 @@ struct tmio_mmc_data {
+ 	void (*set_clk_div)(struct platform_device *host, int state);
+ 	int (*get_cd)(struct platform_device *host);
+ 	int (*write16_hook)(struct tmio_mmc_host *host, int addr);
++	void (*disable_auto_cmd12)(int *val);
+ 	/* clock management callbacks */
+ 	int (*clk_enable)(struct platform_device *pdev, unsigned int *f);
+ 	void (*clk_disable)(struct platform_device *pdev);
+-- 
+1.7.9.5
+
