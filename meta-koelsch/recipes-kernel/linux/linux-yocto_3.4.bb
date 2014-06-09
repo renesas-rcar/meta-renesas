@@ -5,11 +5,11 @@ require linux-dtb-append.inc
 DESCRIPTION = "Linux kernel for the koelsch board"
 COMPATIBLE_MACHINE = "koelsch"
 
-PR = "r13"
+PR = "r14"
 PV_append = "+git${SRCREV}"
 
-SRCREV = "d12dc4c7e7368c29f6710a4bbcc547e2699e9bac"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.81/rcar-gen2-7"
+SRCREV = "f9a7635bfd356ab8cb391ac45c5e4226bc19a998"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git;protocol=git;branch=bsp/ltsi-3.4.81/rcar-gen2-8"
 
 WAYLAND_ENABLE ?= "0"
 # Append for wayland package
