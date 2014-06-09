@@ -46,6 +46,8 @@ SRC_URI = "git://github.com/renesas-devel/linux.git;branch=3.4.81-ltsi \
 	file://0032-ARM-shmobile-armadillo800eva-Add-USB-ECHI-and-OHCI-s.patch \
 	file://0001-uio-Fix-memory-size-check-with-vma-in-uio_mmap_physi.patch \
 	file://0001-ASoC-fsi-reserve-prefetch-period-on-DMA-transferring.patch \
+	file://0001-mmc-tmio-Add-disable-auto-CMD12.patch \
+	file://0002-mmc-sh_mobile_sdhi-Add-disable-auto-CMD12-support.patch \
 "
 
 S = "${WORKDIR}/git"
