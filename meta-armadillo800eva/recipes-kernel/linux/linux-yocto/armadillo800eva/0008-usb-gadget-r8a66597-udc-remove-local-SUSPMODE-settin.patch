@@ -1,0 +1,26 @@
+From 115b4358b92af55a46d5d9a8e669063817b6b896 Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Mon, 2 Jun 2014 18:55:36 +0900
+Subject: [PATCH 8/9] usb: gadget: r8a66597-udc: remove local SUSPMODE setting
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ drivers/usb/gadget/r8a66597-udc.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/usb/gadget/r8a66597-udc.c b/drivers/usb/gadget/r8a66597-udc.c
+index e514b9b..0b4b3e3 100644
+--- a/drivers/usb/gadget/r8a66597-udc.c
++++ b/drivers/usb/gadget/r8a66597-udc.c
+@@ -1033,8 +1033,6 @@ static void init_controller(struct r8a66597 *r8a66597)
+ 	u16 endian = r8a66597->pdata->endian ? BIGEND : 0;
+ 
+ 	if (r8a66597->pdata->on_chip) {
+-		r8a66597_write(r8a66597, 0x4000, 0x102);	/* SUSPMODE */
+-
+ 		r8a66597_write(r8a66597, bwait, SYSCFG1);
+ 		r8a66597_bset(r8a66597, HSE, SYSCFG0);
+ 
+-- 
+1.7.9.5
+

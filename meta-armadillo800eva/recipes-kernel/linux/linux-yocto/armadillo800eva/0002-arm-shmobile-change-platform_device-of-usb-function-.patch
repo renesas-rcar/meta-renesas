@@ -1,0 +1,141 @@
+From 9cab8d838c710aca1b4d99a4f286e8ef034ac544 Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Mon, 2 Jun 2014 15:56:23 +0900
+Subject: [PATCH 2/9] arm: shmobile: change platform_device of usb function
+ for r8a66597-udc
+
+TODO:
+ adjust for r8a7740
+---
+ arch/arm/mach-shmobile/board-armadillo800eva.c |   95 +++---------------------
+ 1 file changed, 10 insertions(+), 85 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index 7124d9d..0ae2757 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -33,7 +33,7 @@
+ #include <linux/sh_eth.h>
+ #include <linux/videodev2.h>
+ #include <linux/usb/rmobile.h>
+-#include <linux/usb/renesas_usbhs.h>
++#include <linux/usb/r8a66597.h>
+ #include <linux/mfd/tmio.h>
+ #include <linux/mmc/host.h>
+ #include <linux/mmc/sh_mmcif.h>
+@@ -349,91 +349,15 @@ static struct platform_device usb_ehci_device = {
+  * When you use USB Function,
+  * set SW1.6 ON, and connect cable to CN24.
+  *
+- * USBF needs workaround on R8A7740 chip.
+- * These are a little bit complex.
+- * see
+- *	usbhsf_power_ctrl()
+  */
+-#define IRQ7		evt2irq(0x02e0)
+-
+-static int usbhsf_get_id(struct platform_device *pdev)
+-{
+-	return USBHS_GADGET;
+-}
+-
+-static void usbhsf_power_ctrl(struct platform_device *pdev,
+-			      void __iomem *base, int enable)
+-{
+-	/*
+-	 * Work around for USB Function.
+-	 * It needs USB host clock, and settings
+-	 */
+-	usb_common_clock(pdev, enable);
+-
+-	if (enable) {
+-		/*
+-		 * USB PHY Power ON
+-		 */
+-		__raw_writew(0xd770, USBCR1);
+-		__raw_writew(0x4000, base + 0x102); /* USBF :: SUSPMODE */
+-	}
+-}
+-
+-static int usbhsf_get_vbus(struct platform_device *pdev)
++static void usbhsf_device_release(struct device *dev)
+ {
+-	return gpio_get_value(GPIO_PORT209);
++	/* We need this function for "rmmod r8a66597_udc" */
+ }
+ 
+-static irqreturn_t usbhsf_interrupt(int irq, void *data)
+-{
+-	struct platform_device *pdev = data;
+-
+-	renesas_usbhs_call_notify_hotplug(pdev);
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static void usbhsf_hardware_exit(struct platform_device *pdev)
+-{
+-	free_irq(IRQ7, pdev);
+-}
+-
+-static int usbhsf_hardware_init(struct platform_device *pdev)
+-{
+-	struct clk *usb24_clk;
+-	int ret;
+-
+-	ret = request_irq(IRQ7, usbhsf_interrupt, IRQF_TRIGGER_NONE,
+-			  dev_name(&pdev->dev), pdev);
+-	if (ret) {
+-		dev_err(&pdev->dev, "request_irq err\n");
+-		return ret;
+-	}
+-	irq_set_irq_type(IRQ7, IRQ_TYPE_EDGE_BOTH);
+-
+-	/* usb24 use 1/1 of parent clock (= usb24s = 24MHz) */
+-	usb24_clk = clk_get(&pdev->dev, "usb24");
+-	clk_set_rate(usb24_clk,
+-		     clk_get_rate(clk_get_parent(usb24_clk)));
+-	clk_put(usb24_clk);
+-
+-	return 0;
+-}
+-
+-static struct renesas_usbhs_platform_info usbhs_pinfo = {
+-	.platform_callback = {
+-		.get_id		= usbhsf_get_id,
+-		.get_vbus	= usbhsf_get_vbus,
+-		.hardware_init	= usbhsf_hardware_init,
+-		.hardware_exit	= usbhsf_hardware_exit,
+-		.power_ctrl	= usbhsf_power_ctrl,
+-	},
+-	.driver_param = {
+-		.buswait_bwait		= 5,
+-		.detection_delay	= 5,
+-		.d0_rx_id	= SHDMA_SLAVE_USBHS_RX,
+-		.d1_tx_id	= SHDMA_SLAVE_USBHS_TX,
+-	}
++static struct r8a66597_platdata usbhsf_data = {
++	.on_chip	= 1,
++	.buswait	= 5,
+ };
+ 
+ static struct resource usbhsf_resources[] = {
+@@ -450,11 +374,12 @@ static struct resource usbhsf_resources[] = {
+ };
+ 
+ static struct platform_device usbhsf_device = {
+-	.name	= "renesas_usbhs",
++	.name	= "r8a66597_udc",
+ 	.dev = {
+-		.platform_data = &usbhs_pinfo,
++		.platform_data = &usbhsf_data,
++		.release       = usbhsf_device_release,
+ 	},
+-	.id = -1,
++	.id = 0,
+ 	.num_resources	= ARRAY_SIZE(usbhsf_resources),
+ 	.resource	= usbhsf_resources,
+ };
+-- 
+1.7.9.5
+

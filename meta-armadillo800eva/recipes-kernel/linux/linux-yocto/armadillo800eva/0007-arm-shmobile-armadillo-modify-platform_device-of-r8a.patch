@@ -1,0 +1,69 @@
+From 5cb35e8ff41dcc49c94a71a363ddee0b9f4f86e1 Mon Sep 17 00:00:00 2001
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Date: Mon, 2 Jun 2014 18:06:46 +0900
+Subject: [PATCH 7/9] arm: shmobile: armadillo: modify platform_device of
+ r8a66597-udc
+
+TODO:
+ - at the moment, r8a66597-udc driver could not work
+
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ arch/arm/mach-shmobile/board-armadillo800eva.c |   31 ++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/board-armadillo800eva.c b/arch/arm/mach-shmobile/board-armadillo800eva.c
+index 0ae2757..946accd 100644
+--- a/arch/arm/mach-shmobile/board-armadillo800eva.c
++++ b/arch/arm/mach-shmobile/board-armadillo800eva.c
+@@ -355,9 +355,30 @@ static void usbhsf_device_release(struct device *dev)
+ 	/* We need this function for "rmmod r8a66597_udc" */
+ }
+ 
++static void usbhsf_power_ctrl(struct platform_device *pdev,
++			      void __iomem *base, int enable)
++{
++	/*
++	 * Work around for USB Function.
++	 * It needs USB host clock, and settings
++	 */
++	usb_common_clock(pdev, enable);
++
++	if (enable) {
++		/*
++		 * USB PHY Power ON
++		 */
++		__raw_writew(0xd770, USBCR1);
++		__raw_writew(0x4000, base + 0x102); /* USBF :: SUSPMODE */
++	}
++}
++
+ static struct r8a66597_platdata usbhsf_data = {
++	.power_ctrl	= usbhsf_power_ctrl,
+ 	.on_chip	= 1,
+ 	.buswait	= 5,
++	.max_bufnum	= 0xff,
++	.dmac		= 1,
+ };
+ 
+ static struct resource usbhsf_resources[] = {
+@@ -371,6 +392,16 @@ static struct resource usbhsf_resources[] = {
+ 		.start	= evt2irq(0x0A20),
+ 		.flags	= IORESOURCE_IRQ,
+ 	},
++	{
++		.name	= "dmac",
++		.start	= 0xe68a0000,
++		.end	= 0xe68a00ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	{
++		.start	= evt2irq(0x0A00),
++		.flags	= IORESOURCE_IRQ,
++	},
+ };
+ 
+ static struct platform_device usbhsf_device = {
+-- 
+1.7.9.5
+

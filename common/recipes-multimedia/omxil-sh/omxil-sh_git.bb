@@ -6,8 +6,8 @@ SECTION = "multimedia"
 
 LICENSE = "LGPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=2d5025d4aa3495befef8f17206a5b0a1"
-                                                                                                                                                                                              
-PR = "r2"
+
+PR = "r3"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRCREV = "af89fcc030e3e5f82ce669fdfea2af105a73cf87"
@@ -19,9 +19,11 @@ DEPENDS = "libomxil libuiomux"
 S = "${WORKDIR}/git"
 
 # for armadillo800eva
-SRCREV_armadillo800eva = "d8d55af1e805bea57e27bc0bcfb82dff037f703a"
+SRCREV_armadillo800eva = "bd43cfba750773cd323fb546f279e76b37c6d713"
 SRC_URI_append_armadillo800eva = " file://vcp1-library-change.patch"
-DEPENDS_append_armadillo800eva = " vcp1"
+CHECK_OMXIL_SH_MW = "${USE_RENESAS_MW_VCP1}" 
+CHECK_OMXIL_SH_MW += "${USE_RENESAS_MW_VPU5}"
+DEPENDS_append_armadillo800eva = ' ${@base_contains("CHECK_OMXIL_SH_MW", "1", "vcp1", "", d)}'
 
 inherit autotools pkgconfig
 
@@ -41,9 +43,9 @@ do_configure() {
 	oe_runconf
 }
 
-PACKAGES = "\                                                                                                                                                                                 
-	${PN} \                                                                                                                                                                             
-	${PN}-dev \                                                                                                                                                                         
+PACKAGES = "\
+	${PN} \
+	${PN}-dev \
 	${PN}-staticdev \
 "
 
