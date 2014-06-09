@@ -48,6 +48,15 @@ SRC_URI = "git://github.com/renesas-devel/linux.git;branch=3.4.81-ltsi \
 	file://0001-ASoC-fsi-reserve-prefetch-period-on-DMA-transferring.patch \
 	file://0001-mmc-tmio-Add-disable-auto-CMD12.patch \
 	file://0002-mmc-sh_mobile_sdhi-Add-disable-auto-CMD12-support.patch \
+	file://0001-arm-shmobile-change-usb-clock-for-r8a66597-udc-in-cl.patch \
+	file://0002-arm-shmobile-change-platform_device-of-usb-function-.patch \
+	file://0003-usb-gadget-r8a66597-porting-from-r-car-gen2-bsp.patch \
+	file://0004-arm-shmobile-r8a7740-remove-platform_device-of-usb-d.patch \
+	file://0005-arm-shmobile-r8a7740-modify-clock-setting-for-r8a665.patch \
+	file://0006-usb-gadget-r8a66597-udc-add-parameters-for-r8a7740.patch \
+	file://0007-arm-shmobile-armadillo-modify-platform_device-of-r8a.patch \
+	file://0008-usb-gadget-r8a66597-udc-remove-local-SUSPMODE-settin.patch \
+	file://0009-arm-shmobile-armadillo-change-gpio-setting-for-r8a66.patch \
 "
 
 S = "${WORKDIR}/git"
