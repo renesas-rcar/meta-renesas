@@ -1,1 +1,0 @@
-DEPENDS += "gst-plugins-ugly"

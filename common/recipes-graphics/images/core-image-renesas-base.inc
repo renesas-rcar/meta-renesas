@@ -6,6 +6,19 @@ IMAGE_INSTALL_append = " \
 	media-ctl \
 "
 
+# For GStreamer 
+# need commercial plugins
+def map_gst_commercial(d):
+    install_list = ""
+    if base_contains('LICENSE_FLAGS_WHITELIST', 'commercial', "1", "0", d) == "1":
+        if base_contains('USE_GSTREAMER_0_10', '1', "1", "0", d) == "1":
+            install_list += " gst-plugins-ugly gst-plugins-ugly-asf gst-openmax"
+        if base_contains('USE_GSTREAMER_1_00', '1', "1", "0", d) == "1":
+            install_list += " gstreamer1.0-plugins-ugly-asf gstreamer1.0-omx"
+    return install_list
+
+IMAGE_INSTALL_append = "${@map_gst_commercial(d)}"
+
 # gstreamer 0.10 plugins
 IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_0_10", "1", " \
 	gst-plugins-base-videorate \
@@ -21,9 +34,6 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_0_10", "1", " \
 	gst-plugins-bad-h264parse \
 	gst-plugins-bad-faad \
 	gst-plugins-bad-videoparsersbad \
-	gst-plugins-ugly \
-	gst-plugins-ugly-asf \
-	gst-openmax \
 	", "", d)}'
 
 # gstreamer 1.0 plugins
@@ -40,8 +50,6 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_1_00", "1", " \
 	gstreamer1.0-plugins-bad-fbdevsink \
 	gstreamer1.0-plugins-bad-faad \
 	gstreamer1.0-plugins-bad-videoparsersbad \
-	gstreamer1.0-plugins-ugly-asf \
-	gstreamer1.0-omx \
 	", "", d)}'
 
 # for Middle software
