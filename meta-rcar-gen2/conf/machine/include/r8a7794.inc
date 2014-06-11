@@ -2,8 +2,8 @@ SOC_FAMILY = "r8a7794"
 require conf/machine/include/soc-family.inc
 require conf/machine/include/tune-cortexa15.inc
 
-PREFERRED_PROVIDER_virtual/kernel ?= "linux-yocto"
-PREFERRED_VERSION_linux-yocto ?= "3.10%"
+PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
+PREFERRED_VERSION_linux-renesas ?= "3.10%"
                                                                                                                                                                                               
 KERNEL_IMAGETYPE = "uImage"
 KERNEL_EXTRA_ARGS += "LOADADDR=${UBOOT_ENTRYPOINT}"
