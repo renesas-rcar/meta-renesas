@@ -1,8 +1,0 @@
-define KMACHINE bockw
-define KTYPE standard
-define KARCH arm
-
-include ktypes/standard
-branch bockw
-
-include bockw.scc

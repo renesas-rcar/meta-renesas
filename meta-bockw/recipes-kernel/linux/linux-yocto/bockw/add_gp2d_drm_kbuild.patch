@@ -1,9 +1,0 @@
-diff --git a/include/drm/Kbuild b/include/drm/Kbuild
-index 1e38a19..be04415 100644
---- a/include/drm/Kbuild
-+++ b/include/drm/Kbuild
-@@ -13,3 +13,4 @@ header-y += savage_drm.h
- header-y += sis_drm.h
- header-y += via_drm.h
- header-y += vmwgfx_drm.h
-+header-y += gp2d_drm.h

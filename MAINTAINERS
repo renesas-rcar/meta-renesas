@@ -6,8 +6,8 @@ Descriptions of section entries:
 	M: Mail patches to: FullName <address@domain>
 	F: Files and directories with wildcard patterns.
 	   A trailing slash includes all files and subdirectory files.
-	   F:	meta-bockw/	all files in and below meta-bockw
-	   F:	meta-bockw/*	all files in meta-crownbay, but not below
+	   F:	meta-XXXXX/	all files in and below meta-XXXXX
+	   F:	meta-XXXXX/*	all files in meta-XXXXX, but not below
 	   One pattern per line.  Multiple F: lines acceptable.
 
 Please keep this list in alphabetical order.
@@ -22,10 +22,6 @@ F:	meta-alt
 ARMADILLO800EVA
 M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 F:	meta-armadillo800eva
-
-BOCKW
-M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-F:	meta-bockw
 
 COMMON
 M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
