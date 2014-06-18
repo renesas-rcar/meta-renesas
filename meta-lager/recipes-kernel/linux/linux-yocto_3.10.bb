@@ -22,3 +22,4 @@ KERNEL_DEFCONFIG = "shmobile_defconfig"
 do_configure_prepend() {
         install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
 }
+
