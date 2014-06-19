@@ -2,16 +2,16 @@ require linux.inc
 require linux-dtb.inc
 require linux-dtb-append.inc
 
-DESCRIPTION = "Linux kernel for the armadillo800eva board"
+DESCRIPTION = "Linux kernel for the R-Mobile board"
 COMPATIBLE_MACHINE = "armadillo800eva"
 
-PR = "r1"
 PV_append = "+git${SRCREV}"
 
 FILESEXTRAPATHS_prepend_armadillo800eva := "${THISDIR}/${PN}:"
 SRCREV = "db30987713a6fdcb215500864a5ffdf76e8dfe41"
-SRC_URI = "git://github.com/renesas-devel/linux.git;branch=3.4.81-ltsi \
-	file://defconfig \
+SRC_URI = "git://github.com/renesas-devel/linux.git;branch=3.4.81-ltsi"
+
+SRC_URI_armadillo800eva += "file://defconfig \
 	file://0001-ASoC-fsi-fixup-pm_runtime_disable-timing-on-fsi_prob.patch \
 	file://0002-ASoC-fsi-tidyup-remove-un-necessary-operation-from-f.patch \
 	file://0003-ASoC-fsi-convert-to-devm_xxx.patch \

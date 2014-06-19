@@ -1,5 +1,10 @@
-meta-armadillo800eva
+meta-rmobile
 ===========
+
+This layer provides that evaluation board is mounted ARM SoCs of Renesas                                                                                                                      
+Electronics, called the R-Mobile. Currently, this supports board and the
+SoCs of the following:                                                                                                                                                          
+  - Board: armadillo800eva / SoC: R8A7740 (R-Mobile A1)
 
 This layer provides armadillo800eva board which is Renesas Electronics ARM SoCs
 R8A7740 (R-Mobile A1) evaluation board.
@@ -30,26 +35,26 @@ The following instructions require a Poky installation (or equivalent).
 
 Initialize a build using the 'oe-init-build-env' script in Poky. Once
 initialized configure bblayers.conf by adding the meta-renesas and
-meta-armadillo800eva layer. e.g.:
+meta-rmobile layer. e.g.:
 
 	BBLAYERS ?= " \
 		<path to layer>/poky/meta \
 		<path to layer>/poky/meta-yocto \
 		<path to layer>/poky/meta-yocto-bsp \
 		<path to layer>/meta-renesas \
-		<path to layer>/meta-renesas/meta-armadillo800eva \
+		<path to layer>/meta-renesas/meta-rmobile \
 	"
 
 To build a specific target BSP configure the associated machine in local.conf:
 
-	MACHINE ?= "armadillo800eva"
+	MACHINE ?= "<support board name>"
 
 Build the target file system image using bitbake:
 
 	$ bitbake core-image-minimal
 
 Once complete the images for the target machine will be available in the output
-directory 'tmp/deploy/images/armadillo800eva'.
+directory 'tmp/deploy/images/<support board name>'.
 
 Images generated:
 	* uImage (Linux Kernel binary, in u-boot wrapped format)
