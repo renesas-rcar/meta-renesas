@@ -1,8 +1,0 @@
-define KMACHINE lager
-define KTYPE preempt-rt
-define KARCH arm
-
-include ktypes/preempt-rt/preempt-rt.scc
-branch lager
-
-include lager.scc

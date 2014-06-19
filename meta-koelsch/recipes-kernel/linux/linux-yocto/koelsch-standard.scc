@@ -1,8 +1,0 @@
-define KMACHINE koelsch
-define KTYPE standard
-define KARCH arm
-
-include ktypes/standard/standard.scc
-branch koelsch
-
-include koelsch.scc

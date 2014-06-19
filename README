@@ -11,14 +11,12 @@ Supported Boards/Machines
 In addition, this also provides layer that provides support board that is used
 SoCs that Renesas build. Layer and board that supports following:
 
-	* meta-armadillo800eva
-	  Atmark Techno, Inc. Armadillo-800 EVA (R8A7740)
-	* meta-alt
-	  Renesas Electronics Corporation. Alt (R8A7794)
-	* meta-koelsch
-	  Renesas Electronics Corporation. Koelsch (R8A7791)
-	* meta-lager
-	  Renesas Electronics Corporation. Lager (R8A7790)
+	* meta-rcar-gen2
+	  - Renesas Electronics Corporation. Alt (R8A7794)
+	  - Renesas Electronics Corporation. Koelsch (R8A7791)
+	  - Renesas Electronics Corporation. Lager (R8A7790)
+	* meta-rmobile
+	  - Atmark Techno, Inc. Armadillo-800 EVA (R8A7740)
 
 Please see README in the layer directory about the description of the board.
 

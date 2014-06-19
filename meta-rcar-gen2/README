@@ -1,0 +1,67 @@
+meta-rcar-gen2
+===========
+
+This layer provides that evaluation board is mounted ARM SoCs of Renesas
+Electronics, called the R-Car Generation 2. Currently, this supports
+board and the SoCs of the following:
+  - Board: lager   / SoC: R8A7790 (R-Car H2)
+  - Board: koelsch / SoC: R8A7791 (R-Car M2)
+  - Board: alt     / SoC: R8A7794 (R-Car E2)
+
+Patches
+=======
+
+Please submit any patches for this layer to: nobuhiro.iwamatsu.yj@renesas.com
+Please see the MAINTAINERS file for more details.
+
+Dependencies
+============
+
+This layer depends on:
+
+	URI: git://git.yoctoproject.org/poky
+	layers: meta, meta-yocto, meta-yocto-bsp
+	branch: master
+
+	URI: https://github.com/renesas-devel/meta-renesas.git
+	layers: renesas
+	branch: master
+
+Build Instructions
+==================
+
+The following instructions require a Poky installation (or equivalent).
+
+Initialize a build using the 'oe-init-build-env' script in Poky. Once
+initialized configure bblayers.conf by adding the meta-renesas and
+meta-rcar-gen2 layer. e.g.:
+
+	BBLAYERS ?= " \
+		<path to layer>/poky/meta \
+		<path to layer>/poky/meta-yocto \
+		<path to layer>/poky/meta-yocto-bsp \
+		<path to layer>/meta-renesas \
+		<path to layer>/meta-renesas/meta-rcar-gen2 \
+	"
+
+To build a specific target BSP configure the associated machine in local.conf:
+
+	MACHINE ?= "<supported board name>"
+
+Build the target file system image using bitbake:
+
+	$ bitbake core-image-minimal
+
+Once complete the images for the target machine will be available in the output
+directory 'tmp/deploy/images/<supported board name>'.
+
+Images generated:
+	* uImage (Linux Kernel binary, in u-boot wrapped format)
+	* uImage+dtb (Linux Kernel binary with DTB, in u-boot wrapped format)
+	* zImage (Linux Kernel binary)
+	* zImage+dtb (Linux Kernel binary with DTB)
+	* uImage-<SoC namme>-<machine name>.dtb (DTB for target machine)
+	* core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
+	* core-image-minimal-<machine name>.jffs2 (rootfs in JFFS2 format)
+	* u-boot.bin (U-Boot binary)
+

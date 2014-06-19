@@ -15,22 +15,14 @@ Please keep this list in alphabetical order.
 Maintainers List (try to look for most precise areas first)
 
 		-----------------------------------
-ALT
+Renesas ARM SoCs R-Car Generation 2
 M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-F:	meta-alt
+F:	meta-rcar-gen2
 
-ARMADILLO800EVA
+Renesas ARM SoCs rmobile
 M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-F:	meta-armadillo800eva
+F:	meta-rmobile
 
 COMMON
 M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 F:	common/
-
-KOELSCH
-M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-F:	meta-koelsch
-
-LAGER
-M:	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-F:	meta-lager
