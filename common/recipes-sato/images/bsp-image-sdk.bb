@@ -6,24 +6,9 @@ IMAGE_FEATURES += '${@base_conditional("WAYLAND_ENABLE", "1", "dev-pkgs tools-sd
 
 IMAGE_INSTALL += '${@base_conditional("WAYLAND_ENABLE", "1", "kernel-dev", "", d)}'
 
+include bsp-image.inc
+
 IMAGE_INSTALL += " \
         libdrm-kms \
         alsa-utils alsa-tools \
 "
-
-IMAGE_INSTALL += '${@base_conditional("WAYLAND_ENABLE", "1", " \
-	", " \
-	gst-plugins-base-videorate \
-	gst-plugins-good \
-	gst-plugins-good-isomp4 \
-	gst-plugins-good-video4linux2 \
-	gst-plugins-bad \
-	gst-plugins-bad-asfmux \
-	gst-plugins-bad-fbdevsink \
-	gst-plugins-bad-h264parse \
-	gst-plugins-bad-faad \
-	gst-plugins-bad-videoparsersbad \
-	gst-plugins-ugly \
-	gst-plugins-ugly-asf \
-	gst-openmax \
-", d)}'

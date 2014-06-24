@@ -1,0 +1,36 @@
+From 2319fa55b99d8bc0285f79f2cc322aa6ffdce41f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 21:50:31 +0900
+Subject: [PATCH 12/14] gstomx: Once reinitialize an instance and then retry
+ OMX_Init() if it fails
+
+Reinitializing an instance in case that OMX_Init() fails may
+be effective especially for some stateful OMXIL libraries since it
+resets the state.
+---
+ omx/gstomx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index f542954..be4c4dd 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -133,9 +133,15 @@ gst_omx_core_acquire (const gchar * filename)
+   core->user_count++;
+   if (core->user_count == 1) {
+     OMX_ERRORTYPE err;
++    int retry = 1;
+ 
++  reinit:
+     err = core->init ();
+     if (err != OMX_ErrorNone) {
++      if (retry-- > 0) {
++        core->deinit ();
++        goto reinit;
++      }
+       GST_ERROR ("Failed to initialize core '%s': 0x%08x", filename, err);
+       g_mutex_unlock (&core->lock);
+       goto error;
+-- 
+1.8.1.2
+

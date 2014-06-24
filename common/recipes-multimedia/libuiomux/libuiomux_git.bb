@@ -20,7 +20,8 @@ S = "${WORKDIR}/git/"
 
 UIO_MAX_MAP_MEM_bockw = "105"
 UIO_MAX_MAP_MEM_armadillo800eva = "128"
-EXTRA_OECONF = "--with-max-map-mem=${UIO_MAX_MAP_MEM}"
+EXTRA_OECONF_bockw = "--with-max-map-mem=${UIO_MAX_MAP_MEM}"
+EXTRA_OECONF_armadillo800eva = "--with-max-map-mem=${UIO_MAX_MAP_MEM}"
 
 do_configure() {
 	autoreconf -ivf ${S}

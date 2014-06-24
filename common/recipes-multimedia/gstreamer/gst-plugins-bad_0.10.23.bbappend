@@ -152,3 +152,4 @@ do_install_append_bockw () {
 }
 
 FILES_${PN} += "${bindir}"
+require gst-plugins-private-libs.inc

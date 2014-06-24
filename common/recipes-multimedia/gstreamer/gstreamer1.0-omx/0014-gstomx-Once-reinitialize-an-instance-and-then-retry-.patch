@@ -1,0 +1,39 @@
+From 4a858bb6cf197653aa77f6a3d8b652a793419291 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 22:03:37 +0900
+Subject: [PATCH 14/14] gstomx: Once reinitialize an instance and then retry
+ OMX_Init() if OMX_GetHandle() fails
+
+Reinitializing an instance in case that OMX_GetHandle() fails may
+be effective especially for some stateful OMXIL libraries since it
+resets the state.
+---
+ omx/gstomx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 6738d98..6b0a3d1 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -630,7 +630,9 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
+   GstOMXCore *core;
+   GstOMXComponent *comp;
+   const gchar *dot;
++  gint retry = 1;
+ 
++reinit:
+   core = gst_omx_core_acquire (core_name);
+   if (!core)
+     return NULL;
+@@ -653,6 +655,8 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
+     gst_omx_core_release (core);
+     g_free (comp->name);
+     g_slice_free (GstOMXComponent, comp);
++    if (retry-- > 0)
++      goto reinit;
+     return NULL;
+   }
+   GST_DEBUG_OBJECT (parent,
+-- 
+1.8.1.2
+

@@ -1,0 +1,36 @@
+From ca11a82ecfed260dfde19dfec5d9f27e0c5b4be5 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 5 Jun 2013 16:54:33 +0900
+Subject: [PATCH 01/14] omxvideodec: don't disable output port but allocate
+ output buffers when changing to idle
+
+According to the OpenMax specification, buffers for the component to
+use for all of the ports must be required to be allocated when
+changing to idle state. The input/output ports can't be disabled
+at this time.
+---
+ omx/gstomxvideodec.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 976f58e..7f6a48e 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -2097,13 +2097,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
+     /* Need to allocate buffers to reach Idle state */
+     if (gst_omx_port_allocate_buffers (self->dec_in_port) != OMX_ErrorNone)
+       return FALSE;
+-
+-    /* And disable output port */
+-    if (gst_omx_port_set_enabled (self->dec_out_port, FALSE) != OMX_ErrorNone)
+-      return FALSE;
+-
+-    if (gst_omx_port_wait_enabled (self->dec_out_port,
+-            1 * GST_SECOND) != OMX_ErrorNone)
++    if (gst_omx_port_allocate_buffers (self->dec_out_port) != OMX_ErrorNone)
+       return FALSE;
+ 
+     if (gst_omx_component_get_state (self->dec,
+-- 
+1.8.1.2
+
