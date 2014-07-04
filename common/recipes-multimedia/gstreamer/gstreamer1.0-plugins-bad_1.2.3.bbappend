@@ -16,7 +16,6 @@ PACKAGECONFIG[directfb] = "--enable-directfb,--disable-directfb,directfb"
 
 PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('curl', '')}"
 PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('eglgles', '')}"
-PACKAGECONFIG := "${@'${PACKAGECONFIG}'.replace('wayland', '')}"
 PACKAGECONFIG += "faad directfb"
 
 EXTRA_OECONF += "--enable-directfb --enable-experimental --disable-nls"
