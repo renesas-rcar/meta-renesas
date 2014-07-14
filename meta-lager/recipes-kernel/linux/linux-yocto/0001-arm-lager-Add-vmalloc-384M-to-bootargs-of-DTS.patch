@@ -1,0 +1,26 @@
+From 7a6b38f46db215055017a3288bd0d0bc6cfd5e8d Mon Sep 17 00:00:00 2001
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Date: Mon, 14 Jul 2014 11:43:33 +0900
+Subject: [PATCH] arm: shmobile: lager: Add 'vmalloc=384M' to bootargs of DTS
+
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ arch/arm/boot/dts/r8a7790-lager.dts |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7790-lager.dts b/arch/arm/boot/dts/r8a7790-lager.dts
+index 58b30a2..e0ac607 100644
+--- a/arch/arm/boot/dts/r8a7790-lager.dts
++++ b/arch/arm/boot/dts/r8a7790-lager.dts
+@@ -38,7 +38,7 @@
+ 	};
+ 
+ 	chosen {
+-		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/nfs ip=dhcp";
++		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/nfs ip=dhcp vmalloc=384M";
+ 	};
+ 
+ 	memory@40000000 {
+-- 
+1.7.9.5
+
