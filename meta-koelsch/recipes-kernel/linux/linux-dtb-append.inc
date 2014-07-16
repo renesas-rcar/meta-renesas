@@ -22,6 +22,17 @@ do_install_append() {
 }
 
 do_deploy_append() {
+	# zImage
+	if [ -f ${B}/arch/${ARCH}/boot/zImage -a "${KERNEL_IMAGETYPE}" != "zImage" ]; then
+		ZIMAGE_AND_DTB_NAME=`echo ${KERNEL_IMAGE_BASE_NAME} | sed "s/uImage/zImage/g"`
+
+		install -d ${DEPLOYDIR}
+		install -m 0644 ${B}/arch/${ARCH}/boot/zImage ${DEPLOYDIR}/${ZIMAGE_AND_DTB_NAME}
+		cd ${DEPLOYDIR}
+		ln -sf ${ZIMAGE_AND_DTB_NAME} zImage
+		cd -
+	fi
+
 	# zImage + DTB
 	if [ -f ${B}/arch/${ARCH}/boot/zImage+dtb ]; then
 		ZIMAGE_AND_DTB_NAME=`echo ${KERNEL_IMAGE_BASE_NAME} | sed "s/uImage/zImage+dtb/g"`
