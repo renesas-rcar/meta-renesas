@@ -1,0 +1,10 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -37,6 +37,7 @@
+ # Obtain compiler/linker options for dependencies
+ PKG_CHECK_MODULES([LIBGBM], [gbm])
+ PKG_CHECK_MODULES([WAYLAND_KMS], [wayland-kms])
++PKG_CHECK_MODULES([RGX_USER_MODULE], [rgx-user-module])
+ 
+ AC_CONFIG_FILES([Makefile egl.pc glesv2.pc])
+ AC_OUTPUT
