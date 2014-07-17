@@ -1,0 +1,32 @@
+--- a/Makefile.am	2014-04-08 21:25:34.095162897 +0900
++++ b/Makefile.am	2014-04-08 23:05:47.655275793 +0900
+@@ -11,26 +11,14 @@
+ libEGL_la_CFLAGS =	\
+ 	-I$(top_srcdir)/include \
+ 	@LIBGBM_CFLAGS@ \
+-	@WAYLAND_KMS_CFLAGS@
++	@WAYLAND_KMS_CFLAGS@ \
++	@SGX_USER_MODULE_CFLAGS@
+ 
+ libEGL_la_LDFLAGS = -version-info 1:0:0
+ 
+ egldir = $(includedir)/EGL
+ egl_HEADERS = \
+-	$(top_srcdir)/include/EGL/eglmesaext.h \
+-	$(top_srcdir)/include/EGL/egl.h \
+-	$(top_srcdir)/include/EGL/eglplatform.h \
+-	$(top_srcdir)/include/EGL/eglext.h
+-
+-khrdir = $(includedir)/KHR
+-khr_HEADERS = \
+-	$(top_srcdir)/include/KHR/khrplatform.h
+-
+-gles2dir = $(includedir)/GLES2
+-gles2_HEADERS = \
+-	$(top_srcdir)/include/GLES2/gl2ext.h \
+-	$(top_srcdir)/include/GLES2/gl2platform.h \
+-	$(top_srcdir)/include/GLES2/gl2.h
++	$(top_srcdir)/include/EGL/eglmesaext.h
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = egl.pc glesv2.pc
