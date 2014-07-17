@@ -1,4 +1,4 @@
-SOC_FAMILY = "r8a7791"
+SOC_FAMILY = "rcar-gen2:r8a7791"
 require conf/machine/include/soc-family.inc
 require conf/machine/include/tune-cortexa15.inc
 
