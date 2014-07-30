@@ -1,0 +1,54 @@
+--- a/etc/powervr.ini
++++ b/etc/powervr.ini
+@@ -9,50 +9,4 @@
+ ;ParamBufferSize=16777216
+ ; 8MByte
+ ;ParamBufferSize=8388608
+-;
+-; set a number of debug log buffer UM(Default is 1024.  Max is 65536)
+-;DebugLogBufferEntryUM=1024
+-; set a number of debug log buffer KM(Default is 1024.  Max is 65536)
+-;DebugLogBufferEntryKM=1024
+-; set a flag of debug log output level(Default is 0x00000001)
+-; flag is a hex mask value
+-;  0x00000001 : error        (Default is on)
+-;  0x00000002 : warning      (Default is off)
+-;  0x00000020 : cbuf wait time (Default is off)
+-;  0x00000040 : edm trace    (Default is off)
+-;  0x00000080 : mem trace    (Default is off)
+-;DebugLogOutputLevel=0x00000001
+-;
+-; Set WindowSystem
+-; (libpvrPVR2D_FLIPWSEGL.so,libpvrPVR2D_DRMWSEGL.so:support multi-layer/display)
+-;WindowSystem=libpvrPVR2D_FLIPWSEGL.so
+-;WindowSystem=libpvrPVR2D_DRMWSEGL.so
+-;
+-; Multi-Layer/Display settings (null window system)
+-; set params of overlay size and position (need to specify libpvrDRM_WSEGL.so in WindowSystem)
+-;
+-; format
+-;    DisplayLayer:<C>:<P>=<width>x<height>:<x>,<y>
+-;         <C>      display connector number.  (0 to 1)
+-;         <P>      overlay layer number.      (0 to 5)
+-;         <width>  layer width
+-;         <height> layer height
+-;         <x>      left position of layer on display
+-;         <y>      top position of layer on display
+-;
+-; sample for Connector-0 (HDMI)
+-DisplayLayer:0:0=640x480:0,0
+-DisplayLayer:0:1=640x480:640,0
+-DisplayLayer:0:2=640x480:1280,0
+-DisplayLayer:0:3=640x480:0,480
+-DisplayLayer:0:4=640x480:640,480
+-DisplayLayer:0:5=640x480:1280,480
+-;
+-; sample for Connector-1 (LVDS)
+-DisplayLayer:1:0=320x240:0,0
+-DisplayLayer:1:1=320x240:342,0
+-DisplayLayer:1:2=320x240:684,0
+-DisplayLayer:1:3=320x240:0,528
+-DisplayLayer:1:4=320x240:342,528
+-DisplayLayer:1:5=320x240:684,528
+-;
++WindowSystem=libpvrPVR2D_WAYLANDWSEGL.so
