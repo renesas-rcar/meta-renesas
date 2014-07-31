@@ -4,6 +4,8 @@ require conf/machine/include/tune-cortexa15.inc
 
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
 PREFERRED_VERSION_linux-renesas ?= "3.10%"
+PREFERRED_PROVIDER_linux-libc-headers ?= "linux-libc-headers"
+PREFERRED_VERSION_linux-libc-headers ?= "3.10%"
                                                                                                                                                                                               
 KERNEL_IMAGETYPE = "uImage"
 KERNEL_EXTRA_ARGS += "LOADADDR=${UBOOT_ENTRYPOINT}"
