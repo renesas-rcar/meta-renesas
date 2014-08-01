@@ -17,3 +17,4 @@ IMAGE_INSTALL_append_armadillo800eva = ' ${@base_contains("CHECK_OMXIL_SH_MW", "
 	libshvio \
 	libshmeram \
 '
+

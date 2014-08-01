@@ -1,5 +1,0 @@
-kconf hardware rcar-h1-marzen.cfg
-include features/usb-net/usb-net.scc
-
-kconf hardware user-config.cfg
-include user-patches.scc

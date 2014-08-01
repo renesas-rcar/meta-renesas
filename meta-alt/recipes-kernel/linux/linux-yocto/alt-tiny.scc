@@ -1,8 +1,0 @@
-define KMACHINE alt
-define KTYPE tiny
-define KARCH arm
-
-include ktypes/tiny/tiny.scc
-branch alt
-
-include alt.scc

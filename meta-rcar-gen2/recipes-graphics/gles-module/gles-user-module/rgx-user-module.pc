@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: rgx-user-module
+Description: Graphics Package
+Version: 1.0.8
+Cflags: -I${includedir} -I${includedir}/EGL -I${includedir}/GLES2 -I${includedir}/KHR
+

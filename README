@@ -11,29 +11,29 @@ Supported Boards/Machines
 In addition, this also provides layer that provides support board that is used
 SoCs that Renesas build. Layer and board that supports following:
 
-	* meta-armadillo800eva
-	  Atmark Techno, Inc. Armadillo-800 EVA (R8A7740)
-	* meta-alt
-	  Renesas Electronics Corporation. Alt (R8A7794)
-	* meta-bockw
-	  Renesas Electronics Corporation. Bockw (R8A7778)
-	* meta-koelsch
-	  Renesas Electronics Corporation. Koelsch (R8A7791)
-	* meta-lager
-	  Renesas Electronics Corporation. Lager (R8A7790)
-	* meta-marzen
-	  * Renesas Electronics Corporation. Marzen (R8A7779)
+	* meta-rcar-gen2
+	  - Renesas Electronics Corporation. Alt (R8A7794)
+	  - Renesas Electronics Corporation. Koelsch (R8A7791)
+	  - Renesas Electronics Corporation. Lager (R8A7790)
+	* meta-rmobile
+	  - Atmark Techno, Inc. Armadillo-800 EVA (R8A7740)
 
 Please see README in the layer directory about the description of the board.
 
-Install packages
-================
-To install the package, meta-renesas have flag of some unique.
+Original BSP image
+=========================
+The meta-renesas layer provides original BSP image. The following 
+	* core-image-x11
+	* core-image-weston
 
-USE_GSTREAMER_0_10:
-	If you want to use gstreamer 0.10, plaese set USE_GSTREAMER_0_10="1" in conf/local.conf.
-	When enabled, the package of some of the gstrermer 0.10 will be installed in the boot image.
+This adds some plug-in of gstreamer to original recipes.
+To use this recipes, meta-openembedded is also required. 
+In addition, the user can control below gstreeamr version.
 
-USE_GSTREAMER_1_00:
-	If you want to use gstreamer 1.xx, plaese set USE_GSTREAMER_1_00="1" in conf/local.conf.
-	When enabled, the package of some of the gstrermer 1.xx will be installed in the boot image.
+	* USE_GSTREAMER_0_10:
+	  If you want to use gstreamer 0.10, plaese set USE_GSTREAMER_0_10="1" in conf/local.conf.
+	  When enabled, the package of some of the gstrermer 0.10 will be installed in the boot image.
+
+	* USE_GSTREAMER_1_00:
+	  If you want to use gstreamer 1.xx, plaese set USE_GSTREAMER_1_00="1" in conf/local.conf.
+	  When enabled, the package of some of the gstrermer 1.xx will be installed in the boot image.

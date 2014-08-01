@@ -1,0 +1,32 @@
+--- a/usr/include/EGL/eglext.h
++++ b/usr/include/EGL/eglext.h
+@@ -638,6 +638,8 @@
+ #endif /* KHRONOS_SUPPORT_INT64 */
+ #endif /* EGL_NV_system_time */
+ 
++#include <EGL/eglmesaext.h>
++
+ #ifdef __cplusplus
+ }
+ #endif
+--- a/usr/include/EGL/eglplatform.h
++++ b/usr/include/EGL/eglplatform.h
+@@ -105,6 +105,18 @@
+ typedef Pixmap   EGLNativePixmapType;
+ typedef Window   EGLNativeWindowType;
+ 
++#elif defined(WL_EGL_PLATFORM)
++
++typedef struct wl_display     *EGLNativeDisplayType;
++typedef struct wl_egl_pixmap  *EGLNativePixmapType;
++typedef struct wl_egl_window  *EGLNativeWindowType;
++
++#elif defined(__GBM__)
++
++typedef struct gbm_device  *EGLNativeDisplayType;
++typedef struct gbm_bo      *EGLNativePixmapType;
++typedef void               *EGLNativeWindowType;
++
+ #else
+ 
+ /* NULLWS fallback */

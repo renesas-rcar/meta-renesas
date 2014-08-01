@@ -1,5 +1,0 @@
-kconf hardware alt.cfg
-include features/usb-net/usb-net.scc
-
-kconf hardware alt-user-config.cfg
-include alt-user-patches.scc
