@@ -22,7 +22,8 @@ SRC_URI_r8a7790 = '${@base_conditional( "OPENGLES3", "1", \
 SRC_URI_append_r8a7790 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://0001-powervr.ini.for_Wayland.rgx.patch \
         file://EGL_headers_for_wayland.patch \
-        file://rgx-user-module.pc \                                                                                                                                                        
+        file://change-shell.patch \
+        file://rgx-user-module.pc \
         ", "", d)}"
 
 SRC_URI_r8a7791 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"
@@ -39,7 +40,7 @@ SRC_URI_append_r8a7794 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://sgx-user-module.pc \
         ", "", d)}"
 
-USE_WAYLAND = "${@base_contains("DISTRO_FEATURES", "wayland", "yes", "no", d)}" 
+USE_WAYLAND = "${@base_contains("DISTRO_FEATURES", "wayland", "yes", "no", d)}"
 
 do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
