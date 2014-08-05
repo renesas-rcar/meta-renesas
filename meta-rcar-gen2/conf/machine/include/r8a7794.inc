@@ -16,4 +16,3 @@ UBOOT_ENTRYPOINT = "0x40008000"
 UBOOT_LOADADDRESS = "0x40007fc0"
 
 MACHINE_FEATURES = "apm usbgadget usbhost vfat alsa ethernet"
-
