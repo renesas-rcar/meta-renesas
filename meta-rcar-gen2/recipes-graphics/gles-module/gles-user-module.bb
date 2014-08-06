@@ -20,7 +20,7 @@ SRC_URI_r8a7790 = '${@base_conditional( "OPENGLES3", "1", \
         "file://r8a7790_linux_rgx_binaries_gles3.tar.bz2", \
         "file://r8a7790_linux_rgx_binaries_gles2.tar.bz2", d )}'
 SRC_URI_append_r8a7790 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
-        file://0001-powervr.ini.for_Wayland.rgx.patch \
+        file://0001-powervr.ini.for_Wayland.lager.patch \
         file://EGL_headers_for_wayland.patch \
         file://change-shell.patch \
         file://rgx-user-module.pc \
@@ -28,14 +28,14 @@ SRC_URI_append_r8a7790 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
 
 SRC_URI_r8a7791 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7791 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
-        file://0001-powervr.ini.for_Wayland.patch \
+        file://0001-powervr.ini.for_Wayland.koelsch.patch \
         file://EGL_headers_for_wayland.patch \
         file://sgx-user-module.pc \
         ", "", d)}"
 
 SRC_URI_r8a7794 = "file://r8a7794_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7794 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
-        file://0001-powervr.ini.for_Wayland.patch \
+        file://0001-powervr.ini.for_Wayland.alt.patch \
         file://EGL_headers_for_wayland.patch \
         file://sgx-user-module.pc \
         ", "", d)}"
@@ -84,3 +84,4 @@ RPROVIDES_${PN} += "${GLES}-user-module libgles2-mesa libgles2-mesa-dev libgles2
 INSANE_SKIP_${PN} += "ldflags already-stripped"
 INSANE_SKIP_${PN}-dev += "ldflags"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+PRIVATE_LIBS_${PN} = "libEGL.so.1"

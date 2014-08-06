@@ -3,6 +3,7 @@ IMAGE_INSTALL_append = " \
 	alsa-utils alsa-tools \
 	libdrm-tests \
 	libdrm-kms \
+	bash \
 "
 
 # For GStreamer 
