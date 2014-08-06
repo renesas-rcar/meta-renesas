@@ -1,0 +1,8 @@
+MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
+PREFERRED_PROVIDER_virtual/libgles1 = ""
+PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
+PREFERRED_PROVIDER_virtual/egl = "libegl"
+PREFERRED_PROVIDER_virtual/libgl = ""
+PREFERRED_PROVIDER_virtual/mesa = ""
+PREFERRED_PROVIDER_libgbm = "libgbm"
+PREFERRED_PROVIDER_libgbm-dev = "libgbm"
