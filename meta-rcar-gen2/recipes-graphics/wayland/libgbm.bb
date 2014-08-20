@@ -9,7 +9,7 @@ SRC_URI = "git://github.com/thayama/libgbm;protocol=git;branch=master"
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7794)"
+COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7793|r8a7794)"
 DEPENDS = "wayland-kms"
 
 inherit autotools pkgconfig

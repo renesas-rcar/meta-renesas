@@ -34,3 +34,4 @@ SRC_URI_append_armadillo800eva = " \
     file://0030-videocrop-hold-a-lock-to-prevent-from-accessing-crop.patch \
     file://0031-videocrop-fix-a-memory-leak-caused-by-invoking-gst_p.patch \
     "
+require gst-plugins-private-libs.inc

@@ -14,4 +14,4 @@ SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-1.6.0;pr
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(alt|koelsch|lager)"
+COMPATIBLE_MACHINE = "(alt|gose|koelsch|lager)"

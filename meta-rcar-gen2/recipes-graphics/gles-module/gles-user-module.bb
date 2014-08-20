@@ -4,18 +4,21 @@ LICENSE = "CLOSED"
 PN = "gles-user-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7794)"
+COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7793|r8a7794)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 S_r8a7790 = "${WORKDIR}/rogue"
 GLES_r8a7790 = "rgx"
 S_r8a7791 = "${WORKDIR}/eurasia"
 GLES_r8a7791 = "sgx"
+S_r8a7793 = "${WORKDIR}/eurasia"
+GLES_r8a7793 = "sgx"
 S_r8a7794 = "${WORKDIR}/eurasia"
 GLES_r8a7794 = "sgx"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
+OPENGLES3 ?= "0"
 SRC_URI_r8a7790 = '${@base_conditional( "OPENGLES3", "1", \
         "file://r8a7790_linux_rgx_binaries_gles3.tar.bz2", \
         "file://r8a7790_linux_rgx_binaries_gles2.tar.bz2", d )}'
@@ -28,6 +31,13 @@ SRC_URI_append_r8a7790 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
 
 SRC_URI_r8a7791 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7791 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
+        file://0001-powervr.ini.for_Wayland.koelsch.patch \
+        file://EGL_headers_for_wayland.patch \
+        file://sgx-user-module.pc \
+        ", "", d)}"
+
+SRC_URI_r8a7793 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"
+SRC_URI_append_r8a7793 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://0001-powervr.ini.for_Wayland.koelsch.patch \
         file://EGL_headers_for_wayland.patch \
         file://sgx-user-module.pc \

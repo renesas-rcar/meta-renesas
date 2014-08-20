@@ -1,0 +1,45 @@
+From 7616849bda6bb28b9cac7b307af5e61fcddc6d99 Mon Sep 17 00:00:00 2001
+From: Tomohiro Komagata <tomohiro.komagata.aj@renesas.com>
+Date: Tue, 8 Jul 2014 10:11:23 +0900
+Subject: [PATCH] Revert "shell: Orphan child windows when a shell surface is
+ destroyed"
+
+This revert commit 9046d2424ab388a0acde1bf0a0c51e292d146f9f.
+Above commit occures SIGSEGV when users show frame menu
+on client application by clicking right button on mounse,
+and select "close".
+However, when users kill process of client app
+or send interrupt signal (ctrl+c), it isn't occures.
+This issue was resolved from weston v1.4.91,
+so this revert is a shortterm workaround.
+---
+ desktop-shell/shell.c |    6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/desktop-shell/shell.c b/desktop-shell/shell.c
+index c275543..3b535b1 100644
+--- a/desktop-shell/shell.c
++++ b/desktop-shell/shell.c
+@@ -2901,8 +2901,6 @@ static const struct wl_shell_surface_interface shell_surface_implementation = {
+ static void
+ destroy_shell_surface(struct shell_surface *shsurf)
+ {
+-	struct shell_surface *child, *next;
+-
+ 	wl_signal_emit(&shsurf->destroy_signal, shsurf);
+ 
+ 	if (!wl_list_empty(&shsurf->popup.grab_link)) {
+@@ -2927,10 +2925,6 @@ destroy_shell_surface(struct shell_surface *shsurf)
+ 	weston_view_destroy(shsurf->view);
+ 
+ 	wl_list_remove(&shsurf->children_link);
+-	wl_list_for_each_safe(child, next, &shsurf->children_list, children_link) {
+-		wl_list_remove(&child->children_link);
+-		child->parent = NULL;
+-	}
+ 
+ 	wl_list_remove(&shsurf->link);
+ 	free(shsurf);
+-- 
+1.7.9.5
+

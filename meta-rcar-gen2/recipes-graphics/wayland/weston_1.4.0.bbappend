@@ -1,3 +1,7 @@
+# Fix upstream issues
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+SRC_URI += " file://0001-Revert-shell-Orphan-child-windows-when-a-shell-surfa.patch"
+
 PACKAGECONFIG_rcar-gen2 := "${@'${PACKAGECONFIG}'.replace('x11', '')}"
 
 PACKAGECONFIG_append_rcar-gen2 = " \

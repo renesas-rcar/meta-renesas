@@ -1,10 +1,11 @@
+diff --git a/etc/powervr.ini b/etc/powervr.ini
+index 647520f..20619e6 100644
 --- a/etc/powervr.ini
 +++ b/etc/powervr.ini
-@@ -9,50 +9,4 @@
- ;ParamBufferSize=16777216
+@@ -10,49 +10,4 @@ ExternalZBufferMode=4
  ; 8MByte
  ;ParamBufferSize=8388608
--;
+ ;
 -; set a number of debug log buffer UM(Default is 1024.  Max is 65536)
 -;DebugLogBufferEntryUM=1024
 -; set a number of debug log buffer KM(Default is 1024.  Max is 65536)
@@ -43,7 +44,7 @@
 -DisplayLayer:0:4=640x480:640,480
 -DisplayLayer:0:5=640x480:1280,480
 -;
--; sample for Connector-1 (Analog-RBG)
+-; sample for Connector-1 (LVDS)
 -DisplayLayer:1:0=320x240:0,0
 -DisplayLayer:1:1=320x240:342,0
 -DisplayLayer:1:2=320x240:684,0

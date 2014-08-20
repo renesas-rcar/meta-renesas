@@ -37,3 +37,10 @@ IMAGE_INSTALL_append += " gstreamer1.0 \
 # Plugins for only X11
 IMAGE_INSTALL += '${@base_conditional("WAYLAND_ENABLE", "0", " gstreamer1.0-plugins-base-ximagesink \
 															gstreamer1.0-plugins-base-xvimagesink", "", d)}'
+
+# For gles package
+IMAGE_INSTALL_append_rcar-gen2 = '${@base_contains("MACHINE_FEATURES", "rgx", \
+ 	" gles-kernel-module gles-user-module ", "", d)}'
+
+IMAGE_INSTALL_append_rcar-gen2 = '${@base_contains("MACHINE_FEATURES", "sgx", \
+ 	" gles-kernel-module gles-user-module", "", d)}'

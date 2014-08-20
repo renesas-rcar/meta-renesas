@@ -1,0 +1,26 @@
+From f1b6ab8592afda486b6c4c513f39dfbe2a4e8334 Mon Sep 17 00:00:00 2001
+From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+Date: Fri, 15 Aug 2014 14:59:45 +0700
+Subject: [PATCH] arm gose Add vmalloc 384M to bootargs of DTS
+
+Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7793-gose.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7793-gose.dts b/arch/arm/boot/dts/r8a7793-gose.dts
+index 9c0108b..fbe3566 100644
+--- a/arch/arm/boot/dts/r8a7793-gose.dts
++++ b/arch/arm/boot/dts/r8a7793-gose.dts
+@@ -36,7 +36,7 @@
+ 	};
+ 
+ 	chosen {
+-		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/nfs ip=dhcp";
++		bootargs = "console=ttySC6,38400 ignore_loglevel rw root=/dev/nfs ip=dhcp vmalloc=384M";
+ 	};
+ 
+ 	memory@40000000 {
+-- 
+1.8.0.1
+

@@ -1,6 +1,8 @@
+diff --git a/etc/powervr.ini b/etc/powervr.ini
+index 8f0f320..de2d6f8 100644
 --- a/etc/powervr.ini
 +++ b/etc/powervr.ini
-@@ -10,57 +10,4 @@
+@@ -10,57 +10,4 @@ ExternalZBufferMode=4
  ; 8MByte
  ;ParamBufferSize=8388608
  ;
@@ -42,20 +44,20 @@
 -DisplayLayer:0:4=640x480:640,600
 -DisplayLayer:0:5=640x480:1280,600
 -;
--; sample for Connector-1 (LVDS)
+-; sample for Connector-1 (Analog-RGB)
 -DisplayLayer:1:0=320x240:0,0
--DisplayLayer:1:1=320x240:342,0
--DisplayLayer:1:2=320x240:684,0
--DisplayLayer:1:3=320x240:0,528
--DisplayLayer:1:4=320x240:342,528
--DisplayLayer:1:5=320x240:684,528
+-DisplayLayer:1:1=320x240:320,0
+-DisplayLayer:1:2=320x240:640,0
+-DisplayLayer:1:3=320x240:960,0
+-DisplayLayer:1:4=320x240:0,528
+-DisplayLayer:1:5=320x240:320,528
+-DisplayLayer:1:6=320x240:640,528
 -;
--; sample for Connector-2 (Analog-RGB)
+-; sample for Connector-2 (LVDS)
 -DisplayLayer:2:0=320x240:0,0
--DisplayLayer:2:1=320x240:320,0
--DisplayLayer:2:2=320x240:640,0
--DisplayLayer:2:3=320x240:960,0
--DisplayLayer:2:4=320x240:0,528
--DisplayLayer:2:5=320x240:320,528
--DisplayLayer:2:6=320x240:640,528
+-DisplayLayer:2:1=320x240:342,0
+-DisplayLayer:2:2=320x240:684,0
+-DisplayLayer:2:3=320x240:0,528
+-DisplayLayer:2:4=320x240:342,528
+-DisplayLayer:2:5=320x240:684,528
 +WindowSystem=libpvrWAYLAND_WSEGL.so

@@ -6,10 +6,10 @@ DEPENDS = "linux-renesas"
 PN = "gles-kernel-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7794)"
+COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7793|r8a7794)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SRC_URI_r8a7790 = 'file://RGX_KM_H2_ES2.tar.bz2'
+SRC_URI_r8a7790 = 'file://RGX_KM_H2.tar.bz2'
 S_r8a7790 = "${WORKDIR}/rogue_km"
 KERNEL_SRC_PATH_r8a7790 = "build/linux/r8a7790_linux"
 TARGET_PATH_r8a7790 = "rogue_km/binary_r8a7790_linux_release/target/kbuild/"
@@ -18,6 +18,11 @@ SRC_URI_r8a7791 = 'file://SGX_KM_M2.tar.bz2'
 S_r8a7791 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7791 = "eurasiacon/build/linux2/r8a7791_linux/"
 TARGET_PATH_r8a7791 = "eurasia_km/eurasiacon/binary2_r8a7791_linux_release/target/kbuild"
+
+SRC_URI_r8a7793 = 'file://SGX_KM_M2.tar.bz2'
+S_r8a7793 = "${WORKDIR}/eurasia_km"
+KERNEL_SRC_PATH_r8a7793 = "eurasiacon/build/linux2/r8a7793_linux/"
+TARGET_PATH_r8a7793 = "eurasia_km/eurasiacon/binary2_r8a7793_linux_release/target/kbuild"
 
 SRC_URI_r8a7794 = 'file://SGX_KM_E2.tar.bz2'
 S_r8a7794 = "${WORKDIR}/eurasia_km"

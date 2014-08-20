@@ -1,4 +1,4 @@
-SOC_FAMILY = "rcar-gen2:r8a7790"
+SOC_FAMILY = "rcar-gen2:r8a7793"
 require conf/machine/include/soc-family.inc
 require conf/machine/include/tune-cortexa15.inc
 
@@ -15,7 +15,7 @@ KERNEL_EXTRA_ARGS += "LOADADDR=${UBOOT_ENTRYPOINT}"
 EXTRA_IMAGEDEPENDS += "u-boot"
 PREFERRED_PROVIDER_u-boot ?= "u-boot"
 PREFERRED_VERSION_u-boot ?= "v2013.01%"
-UBOOT_MACHINE = "lager_config"
+UBOOT_MACHINE = "gose_config"
 UBOOT_ENTRYPOINT = "0x40008000"
 UBOOT_LOADADDRESS = "0x40007fc0"
 
