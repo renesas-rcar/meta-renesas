@@ -1,0 +1,109 @@
+DTV_ENABLE ?= "0"
+
+## Additional configuration in OMX module, include
+# H263_DECODER_CONF for OMX Media Component H263 Decoder Library, default is DISABLE (0)
+# VC1_DECODER_CONF for OMX Media Component VC-1 Decoder Library, default is DISABLE (0)
+# MPEG4_DECODER_CONF for OMX Media Component MPEG-4 Decoder Library, default is DISABLE (0)
+# MPEG2_DECODER_CONF for VCP3 Driver Adapted for Linux MPEG-2 Decoder Library, default is DISABLE (0)
+# DIVX_DECODER_CONF for DivX Decoder Library for Linux, default is DISABLE (0)
+H263_DECODER_CONF ?= "0"
+VC1_DECODER_CONF ?= "0"
+MPEG2_DECODER_CONF ?= "0"
+MPEG4_DECODER_CONF ?= "0"
+DIVX_DECODER_CONF ?= "0"
+
+## Config to build H264AVC encoder
+# "1": enable, "0": disable
+H264AVC_ENCODER_CONF ?= "0"
+
+## Config for audio decoders
+#AACP2_DECODER_CONF for ARM 5.1ch aacPlus V2 Decoder for Linux
+#MP3_DECODER_CONF for ARM MP3 Decoder for Linux
+#WMA_DECODER_CONF for ARM WMA Decoder for Linux
+#DDD_DECODER_CONF for ARM 5.1ch Dolby Digital Decoder for Linux
+#ALAC_DECODER_CONF for ARM ALAC Decoder for Linux
+#FLAC_DECODER_CONF for ARM FLAC Decoder for Linux
+AACP2_DECODER_CONF ?= "0"
+MP3_DECODER_CONF ?= "0"
+WMA_DECODER_CONF ?= "0"
+DDD_DECODER_CONF ?= "0"
+ALAC_DECODER_CONF ?= "0"
+FLAC_DECODER_CONF ?= "0"
+
+## Config for audio encoders
+# AAC_ENCODER_CONF for ARM AAC Encoder for Linux
+AAC_ENCODER_CONF ?= "0"
+
+# Config for audio middlewares
+# ARMAACP2_MDW_DECODER_CONF for ARM 5.1ch aacPlus V2 Decode Middleware for Linux
+# MP3_MDW_DECODER_CONF for ARM MP3 Decode Middleware for Linux
+# WMA_MDW_DECODER_CONF for ARM WMA Decode Middleware for Linux
+# DDD_MDW_DECODER_CONF for ARM 5.1ch Dolby Digital Decode Middleware for Linux
+# ALAC_MDW_DECODER_CONF for ARM ALAC Decode Middleware for Linux
+# FLAC_MDW_DECODER_CONF for ARM FLAC Decode Middleware for Linux
+ARMAACP2_MDW_DECODER_CONF ?= "0"
+MP3_MDW_DECODER_CONF ?= "0"
+WMA_MDW_DECODER_CONF ?= "0"
+DDD_MDW_DECODER_CONF ?= "0"
+ALAC_MDW_DECODER_CONF ?= "0"
+FLAC_MDW_DECODER_CONF ?= "0"
+##
+# AAC_MDW_ENCODER_CONF for ARM AAC Encode Middleware for Linux
+AAC_MDW_ENCODER_CONF ?= "0"
+
+#############################################################
+##### Below part is auto dependent functions,
+##### user don't touch below part
+#############################################################
+# Config for audio common omx
+AUDIO_DECODER_ARRAY = "${AACP2_DECODER_CONF}"
+AUDIO_DECODER_ARRAY += "${MP3_DECODER_CONF}"
+AUDIO_DECODER_ARRAY += "${WMA_DECODER_CONF}"
+AUDIO_DECODER_ARRAY += "${DDD_DECODER_CONF}"
+AUDIO_DECODER_ARRAY += "${ALAC_DECODER_CONF}"
+AUDIO_DECODER_ARRAY += "${FLAC_DECODER_CONF}"
+AUDIO_ENCODER_ARRAY = "${AAC_ENCODER_CONF}"
+AUDIO_COMMON_CONF = "${@'1' if '1' in '${AUDIO_ENCODER_ARRAY}' or '1' in '${AUDIO_DECODER_ARRAY}' else '0' }"
+
+# Auto config for video common encoder. It will enable when there is at least 1 encoder is enabled.
+# Please add new encoder config into list when have new encoder (e.g. as RESERVE_ENCODER_CONF)
+VIDEO_ENCODER_ARRAY = "${H264AVC_ENCODER_CONF}"
+#VIDEO_ENCODER_ARRAY += "${RESERVE_ENCODER_CONF}"
+VIDEO_COMMON_ENCODER_CONF = '${@base_contains("VIDEO_ENCODER_ARRAY", "1", "1", "0", d)}'
+
+# Audio codec config
+ARMAACP2_MDW_DECODER = '${@base_conditional("AACP2_DECODER_CONF", "1", "1", "${ARMAACP2_MDW_DECODER_CONF}", d)}'
+MP3_MDW_DECODER = '${@base_conditional("MP3_DECODER_CONF", "1", "1", "${MP3_MDW_DECODER_CONF}", d)}'
+WMA_MDW_DECODER = '${@base_conditional("WMA_DECODER_CONF", "1", "1", "${WMA_MDW_DECODER_CONF}", d)}'
+DDD_MDW_DECODER = '${@base_conditional("DDD_DECODER_CONF", "1", "1", "${DDD_MDW_DECODER_CONF}", d)}'
+ALAC_MDW_DECODER = '${@base_conditional("ALAC_DECODER_CONF", "1", "1", "${ALAC_MDW_DECODER_CONF}", d)}'
+FLAC_MDW_DECODER = '${@base_conditional("FLAC_DECODER_CONF", "1", "1", "${FLAC_MDW_DECODER_CONF}", d)}'
+AAC_MDW_ENCODER = '${@base_conditional("AAC_ENCODER_CONF", "1", "1", "${AAC_MDW_ENCODER_CONF}", d)}'
+
+#--#Mask linaro tc bb due to unnecessaries
+#--BBMASK = "external-linaro-toolchain|binutils_linaro.*"
+#--
+#--# Mask MMP recipes base on their option
+#--# Pseudocode
+#--# if MMP not enable 
+#--#     then Mask all the MMP and DTV recipes (because DTV depend on MMP)
+#--# else if DTV enable
+#--# 	  		then remove mask of MMP recipes (use _remove suffix)
+#--#      else
+#--#           Mask DTV recipes
+#--#
+#--BB_MULTIMEDIA_KERNEL_MODULE = "meta-renesas-proprietary/meta-rcar-gen2-proprietary/recipes-kernel"
+#--BB_MULTIMEDIA_USER_MODULE = "meta-renesas-proprietary/meta-rcar-gen2-proprietary/recipes-multimedia"
+#--BB_MULTIMEDIA_TEST_MODULE = "meta-renesas-proprietary/meta-rcar-gen2-proprietary/recipes-multimedia-tp"
+#--
+#--BBMASK_DTV = '${@base_conditional("DTV_ENABLE", "1", "", "dtv-module|ssp-module|scu-module", d)}'
+#--MULTIMEDIA_BB = "${BB_MULTIMEDIA_KERNEL_MODULE}|${BB_MULTIMEDIA_USER_MODULE}"
+#--BBMASK_MULTIMEDIA = '${@ "" if ${MULTIMEDIA_ENABLE} == 1 or ${DTV_ENABLE} == 1 else "${MULTIMEDIA_BB}"}'
+#--BBMASK_MULTIMEDIA_TP = '${@ "" if ${MULTIMEDIA_ENABLE} == 1 and ${MULTIMEDIA_TP_ENABLE} == 1 else "${BB_MULTIMEDIA_TEST_MODULE}" }'
+#--GLES_ENABLE ?= "0"
+#--BBMASK_GLES_TP = '${@ "" if ${GLES_TP_ENABLE} == 1 and ${GLES_ENABLE} == 1 else "recipes-graphics-tp/gles-module"}'
+#--
+#--BBMASK .= '${@base_conditional("BBMASK_MULTIMEDIA", "", "", "|${BBMASK_MULTIMEDIA}", d)}'
+#--BBMASK .= '${@base_conditional("BBMASK_MULTIMEDIA_TP", "", "", "|${BBMASK_MULTIMEDIA_TP}", d)}'
+#--BBMASK .= '${@base_conditional("BBMASK_DTV", "", "", "|${BBMASK_DTV}", d)}'
+#--BBMASK .= '${@base_conditional("BBMASK_GLES_TP", "", "", "|${BBMASK_GLES_TP}", d)}'
