@@ -1,0 +1,110 @@
+From f83dc5358924b51db0ca7a840bd2cf11a44fb81e Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 2 Apr 2014 16:19:09 +0900
+Subject: [PATCH 09/16] vspfilter: Get the parameters of a video stream from a
+ GstVideoFilter instead of a GstVideoFrame structure
+
+A GstVideoFrame structure is obtained by mapping a GstBuffer, using
+a GstAllocator. To handle dmabuf descriptors without the mapping,
+video parameters, which are a video width, height and format respectively,
+have to be obtained from other than the GstVideoFrame.
+
+However only the stride of an output GstVideoFrame has been used yet
+because the stride from a GstVideoFilter is simply calculated by
+multiplying a width by a pixel stride.
+This is going to be fixed later.
+
+This is preliminary for the dmabuf handling support.
+---
+ gst/vspfilter/gstvspfilter.c | 44 +++++++++++++++++++++-----------------------
+ 1 file changed, 21 insertions(+), 23 deletions(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index beff9b2..e8d0cd6 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -680,45 +680,30 @@ init_entity_pad (GstVspFilter * space, gint fd, gint index, guint pad,
+ }
+ 
+ static gboolean
+-set_vsp_entities (GstVspFilter * space, GstVideoFrame * in_frame,
+-    GstVideoFrame * out_frame)
++set_vsp_entities (GstVspFilter * space, GstVideoFormat in_fmt, gint in_width,
++    gint in_height, GstVideoFormat out_fmt, gint out_width, gint out_height)
+ {
+   GstVspFilterVspInfo *vsp_info;
+   gint ret;
+   gchar tmp[256];
+-  gint in_width, in_height;
+-  gint out_width, out_height;
+ 
+   vsp_info = space->vsp_info;
+ 
+   if (vsp_info->already_setup_info)
+     return TRUE;
+ 
+-  set_colorspace (GST_VIDEO_FRAME_FORMAT (in_frame), &vsp_info->format[OUT],
+-      &vsp_info->code[OUT], &vsp_info->n_planes[OUT]);
+-  set_colorspace (GST_VIDEO_FRAME_FORMAT (out_frame), &vsp_info->format[CAP],
+-      &vsp_info->code[CAP], &vsp_info->n_planes[CAP]);
++  set_colorspace (in_fmt, &vsp_info->format[OUT], &vsp_info->code[OUT],
++      &vsp_info->n_planes[OUT]);
++  set_colorspace (out_fmt, &vsp_info->format[CAP], &vsp_info->code[CAP],
++      &vsp_info->n_planes[CAP]);
+ 
+-  GST_DEBUG_OBJECT (space, "in format=%d  out format=%d",
+-      GST_VIDEO_FRAME_FORMAT (in_frame), GST_VIDEO_FRAME_FORMAT (out_frame));
++  GST_DEBUG_OBJECT (space, "in format=%d  out format=%d", in_fmt, out_fmt);
+ 
+   GST_DEBUG_OBJECT (space, "set_colorspace[OUT]: format=%d code=%d n_planes=%d",
+       vsp_info->format[OUT], vsp_info->code[OUT], vsp_info->n_planes[OUT]);
+   GST_DEBUG_OBJECT (space, "set_colorspace[CAP]: format=%d code=%d n_planes=%d",
+       vsp_info->format[CAP], vsp_info->code[CAP], vsp_info->n_planes[CAP]);
+ 
+-  in_width = GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 0);
+-  in_height = GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 0);
+-
+-  /* A stride can't be specified to V4L2 driver in the conversion,
+-   * so the stride which isn't equal to the width of an output image can't
+-   * be dealt with. Therefore the width of the output port should be
+-   * specified as the stride of an output buffer.
+-   */
+-  out_width = GST_VIDEO_FRAME_COMP_STRIDE (out_frame, 0) /
+-      GST_VIDEO_FRAME_COMP_PSTRIDE (out_frame, 0);
+-  out_height = GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, 0);
+-
+   set_format (space, vsp_info->v4lout_fd, in_width, in_height,
+       OUT, V4L2_CAP_VIDEO_OUTPUT_MPLANE, V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE);
+   set_format (space, vsp_info->v4lcap_fd, out_width, out_height,
+@@ -1332,6 +1317,8 @@ gst_vsp_filter_transform_frame (GstVideoFilter * filter,
+   gint ret;
+   struct v4l2_plane in_planes[VIDEO_MAX_PLANES];
+   struct v4l2_plane out_planes[VIDEO_MAX_PLANES];
++  GstVideoInfo *in_info;
++  GstVideoInfo *out_info;
+   gint i;
+ 
+   space = GST_VSP_FILTER_CAST (filter);
+@@ -1342,7 +1329,18 @@ gst_vsp_filter_transform_frame (GstVideoFilter * filter,
+       GST_VIDEO_INFO_NAME (&filter->in_info),
+       GST_VIDEO_INFO_NAME (&filter->out_info));
+ 
+-  if (!set_vsp_entities (space, in_frame, out_frame)) {
++  in_info = &filter->in_info;
++  out_info = &filter->out_info;
++
++  /* A stride can't be specified to V4L2 driver in the conversion,
++   * so the stride which isn't equal to the width of an output image can't
++   * be dealt with. Therefore the width of the output port should be
++   * specified as the stride of an output buffer.
++   */
++  if (!set_vsp_entities (space, in_info->finfo->format, in_info->width,
++          in_info->height, out_info->finfo->format,
++          GST_VIDEO_FRAME_COMP_STRIDE (out_frame, 0) /
++          out_info->finfo->pixel_stride[0], out_info->height)) {
+     GST_ERROR_OBJECT (space, "set_vsp_entities failed");
+     return GST_FLOW_ERROR;
+   }
+-- 
+1.8.0
+

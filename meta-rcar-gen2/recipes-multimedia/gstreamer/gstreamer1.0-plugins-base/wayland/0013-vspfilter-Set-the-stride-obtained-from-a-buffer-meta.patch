@@ -1,0 +1,99 @@
+From f9ac7b29e792990d103b48246eeadd82e79c56fe Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 2 Apr 2014 19:14:10 +0900
+Subject: [PATCH 13/16] vspfilter: Set the stride obtained from a buffer meta
+ data
+
+This change abandons a reference to the video parameters of a GstVideoFrame
+to obtain the parameters without a buffer mapping.
+
+This is preliminary for the dmabuf handling support.
+---
+ gst/vspfilter/gstvspfilter.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index 1f035e9..0a1b970 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -95,7 +95,8 @@ static gboolean gst_vsp_filter_set_info (GstVideoFilter * filter,
+ static GstFlowReturn gst_vsp_filter_transform_frame (GstVideoFilter * filter,
+     GstVideoFrame * in_frame, GstVideoFrame * out_frame);
+ static GstFlowReturn gst_vsp_filter_transform_frame_process (GstVideoFilter *
+-    filter, GstVspFilterFrame in_vframe, GstVspFilterFrame out_vframe);
++    filter, GstVspFilterFrame in_vframe, GstVspFilterFrame out_vframe,
++    gint out_stride);
+ 
+ /* copies the given caps */
+ static GstCaps *
+@@ -1124,11 +1125,19 @@ gst_vsp_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+   GstMemory *gmem;
+   GstVideoFrame in_frame, out_frame;
+   GstVspFilterFrame in_vframe, out_vframe;
++  GstVideoMeta *meta;
++  gint out_stride;
+   GstFlowReturn ret;
+ 
+   if (G_UNLIKELY (!filter->negotiated))
+     goto unknown_format;
+ 
++  meta = gst_buffer_get_video_meta (outbuf);
++  if (meta)
++    out_stride = meta->stride[0];
++  else
++    out_stride = -1;
++
+   gmem = gst_buffer_get_memory (outbuf, 0);
+ 
+   if (gst_is_dmabuf_memory (gmem)) {
+@@ -1139,7 +1148,8 @@ gst_vsp_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+     out_vframe.dmafd = gst_dmabuf_memory_get_fd (gmem);
+ 
+     ret =
+-        gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe);
++        gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe,
++        out_stride);
+ 
+     gst_video_frame_unmap (&in_frame);
+   } else {
+@@ -1154,7 +1164,8 @@ gst_vsp_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+     out_vframe.frame = &out_frame;
+ 
+     ret =
+-        gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe);
++        gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe,
++        out_stride);
+ 
+     gst_video_frame_unmap (&in_frame);
+     gst_video_frame_unmap (&out_frame);
+@@ -1376,7 +1387,7 @@ start_capturing (GstVspFilter * space, int fd, int index,
+ 
+ static GstFlowReturn
+ gst_vsp_filter_transform_frame_process (GstVideoFilter * filter,
+-    GstVspFilterFrame in_vframe, GstVspFilterFrame out_vframe)
++    GstVspFilterFrame in_vframe, GstVspFilterFrame out_vframe, gint out_stride)
+ {
+   GstVspFilter *space;
+   GstVspFilterVspInfo *vsp_info;
+@@ -1407,7 +1418,7 @@ gst_vsp_filter_transform_frame_process (GstVideoFilter * filter,
+    */
+   if (!set_vsp_entities (space, in_info->finfo->format, in_info->width,
+           in_info->height, out_info->finfo->format,
+-          GST_VIDEO_FRAME_COMP_STRIDE (out_vframe.frame, 0) /
++          ((out_stride >= 0) ? out_stride : out_info->stride[0]) /
+           out_info->finfo->pixel_stride[0], out_info->height)) {
+     GST_ERROR_OBJECT (space, "set_vsp_entities failed");
+     return GST_FLOW_ERROR;
+@@ -1490,7 +1501,8 @@ gst_vsp_filter_transform_frame (GstVideoFilter * filter,
+   in_vframe.frame = in_frame;
+   out_vframe.frame = out_frame;
+ 
+-  return gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe);
++  return gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe,
++      GST_VIDEO_FRAME_COMP_STRIDE (out_frame, 0));
+ }
+ 
+ static gboolean
+-- 
+1.8.0
+

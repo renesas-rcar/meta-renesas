@@ -1,0 +1,45 @@
+From 7f9c0044d4ae3cf0167bb337a5d4be91b2ca5375 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 17 Mar 2014 12:23:17 +0900
+Subject: [PATCH 03/16] Set a default video converter by ./configure script
+
+This patch determines which a video converter plugin we use.
+---
+ configure.ac             | 8 ++++++++
+ gst/playback/Makefile.am | 2 +-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index ed981a9..bc02629 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -566,6 +566,14 @@ AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
+   AC_SUBST(XSHM_LIBS)
+ ])
+ 
++dnl set default video converter
++if test "x$gst_use_vspfilter" = xyes; then
++  DEFAULT_CNV="vspfilter"
++else
++  DEFAULT_CNV="videoconvert"
++fi
++AC_SUBST(DEFAULT_CNV)
++
+ dnl *** ext plug-ins ***
+ dnl keep this list sorted alphabetically !
+ 
+diff --git a/gst/playback/Makefile.am b/gst/playback/Makefile.am
+index 24e6b16..1d66eee 100644
+--- a/gst/playback/Makefile.am
++++ b/gst/playback/Makefile.am
+@@ -1,6 +1,6 @@
+ plugin_LTLIBRARIES = libgstplayback.la
+ 
+-csp_cflags = -DCOLORSPACE=\"videoconvert\"
++csp_cflags = -DCOLORSPACE=\"@DEFAULT_CNV@\"
+ 
+ libgstplayback_la_SOURCES = \
+ 	gstdecodebin2.c \
+-- 
+1.8.0
+

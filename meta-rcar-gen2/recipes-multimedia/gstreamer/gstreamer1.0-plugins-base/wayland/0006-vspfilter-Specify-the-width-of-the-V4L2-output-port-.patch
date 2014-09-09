@@ -1,0 +1,37 @@
+From 8c8ab262912d6afea457680cd50ec969733015a9 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 20 Mar 2014 14:35:09 +0900
+Subject: [PATCH 06/16] vspfilter: Specify the width of the V4L2 output port
+ as the stride of an output buffer
+
+A stride can't be specified to V4L2 driver in the conversion,
+so the stride which isn't equal to the width of an output image can't
+be dealt with. Therefore the width of the output port should be
+specified as the stride of an output buffer.
+---
+ gst/vspfilter/gstvspfilter.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index abcdd89..facf9a1 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -717,7 +717,14 @@ set_vsp_entities (GstVspFilter * space, GstVideoFrame * in_frame,
+ 
+   in_width = GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 0);
+   in_height = GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 0);
+-  out_width = GST_VIDEO_FRAME_COMP_WIDTH (out_frame, 0);
++
++  /* A stride can't be specified to V4L2 driver in the conversion,
++   * so the stride which isn't equal to the width of an output image can't
++   * be dealt with. Therefore the width of the output port should be
++   * specified as the stride of an output buffer.
++   */
++  out_width = GST_VIDEO_FRAME_COMP_STRIDE (out_frame, 0) /
++      GST_VIDEO_FRAME_COMP_PSTRIDE (out_frame, 0);
+   out_height = GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, 0);
+ 
+   set_format (space, vsp_info->v4lout_fd, in_width, in_height,
+-- 
+1.8.0
+

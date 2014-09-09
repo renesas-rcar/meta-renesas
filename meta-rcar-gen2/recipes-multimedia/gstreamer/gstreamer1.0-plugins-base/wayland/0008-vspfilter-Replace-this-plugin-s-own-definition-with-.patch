@@ -1,0 +1,53 @@
+From 4e6512a7f9f985a09bf592cc7ab2a6ca8f0da378 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 2 Apr 2014 15:58:19 +0900
+Subject: [PATCH 08/16] vspfilter: Replace this plugin's own definition with
+ V4L2's one
+
+---
+ gst/vspfilter/gstvspfilter.c | 2 +-
+ gst/vspfilter/gstvspfilter.h | 8 +-------
+ 2 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index 2deb8cc..beff9b2 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -1022,7 +1022,7 @@ gst_vsp_filter_vsp_device_init (GstVspFilter * space)
+ 
+   vsp_info = space->vsp_info;
+ 
+-  vsp_info->io[OUT] = vsp_info->io[CAP] = IO_METHOD_USERPTR;
++  vsp_info->io[OUT] = vsp_info->io[CAP] = V4L2_MEMORY_USERPTR;
+ 
+   /* Set the default path of gstvspfilter.conf */
+   g_setenv (env_config_name, "/etc", FALSE);
+diff --git a/gst/vspfilter/gstvspfilter.h b/gst/vspfilter/gstvspfilter.h
+index 583a8b0..722bd93 100644
+--- a/gst/vspfilter/gstvspfilter.h
++++ b/gst/vspfilter/gstvspfilter.h
+@@ -77,12 +77,6 @@ enum {
+   RESZ = 2,
+ };
+ 
+-typedef enum {
+-  IO_METHOD_READ,
+-  IO_METHOD_MMAP,
+-  IO_METHOD_USERPTR,
+-} io_method;
+-
+ struct _GstVspFilterVspInfo {
+   gchar *dev_name[MAX_DEVICES];
+   gboolean prop_dev_name[MAX_DEVICES];
+@@ -95,7 +89,7 @@ struct _GstVspFilterVspInfo {
+   guint format[MAX_DEVICES];
+   enum v4l2_mbus_pixelcode code[MAX_DEVICES];
+   guint n_planes[MAX_DEVICES];
+-  io_method io[MAX_DEVICES];
++  enum v4l2_memory io[MAX_DEVICES];
+   guint  n_buffers[MAX_DEVICES];
+   struct buffer buffers[MAX_DEVICES][N_BUFFERS][VIDEO_MAX_PLANES];
+   struct media_entity_desc entity[MAX_ENTITIES];
+-- 
+1.8.0
+

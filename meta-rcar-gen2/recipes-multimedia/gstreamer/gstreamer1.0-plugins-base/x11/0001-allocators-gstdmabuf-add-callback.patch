@@ -1,0 +1,89 @@
+From c52a2fcd305ee6650edba907e2b55d71c07526cc Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Wed, 6 Aug 2014 13:54:38 +0700
+Subject: [PATCH] Add callback for dmabuf functions
+
+This patch adds callback support for dmabuf allocator.
+To use callback feature, call gst_dmabuf_allocator_alloc_callback()
+instead of gst_dmabuf_allocator_alloc()
+
+refs #56373
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+
+diff --git a/gst-libs/gst/allocators/gstdmabuf.c b/gst-libs/gst/allocators/gstdmabuf.c
+index f3b3efd..429c3cc 100644
+--- a/gst-libs/gst/allocators/gstdmabuf.c
++++ b/gst-libs/gst/allocators/gstdmabuf.c
+@@ -1,5 +1,6 @@
+ /* GStreamer dmabuf allocator
+  * Copyright (C) 2013 Linaro SA
++ * Copyright (C) 2014, Renesas Electronics Corporation
+  * Author: Benjamin Gaignard <benjamin.gaignard@linaro.org> for Linaro.
+  *
+  * This library is free software; you can redistribute it and/or
+@@ -55,6 +56,9 @@ typedef struct
+   gint mmap_count;
+   gsize mmap_size;
+   GMutex lock;
++
++  gpointer cbdata;
++  GDestroyNotify cbfunc;
+ } GstDmaBufMemory;
+ 
+ GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
+@@ -72,6 +76,11 @@ gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * gmem)
+   }
+   close (mem->fd);
+   g_mutex_clear (&mem->lock);
++
++  /* Callback function */
++  if (mem->cbdata && mem->cbfunc)
++    mem->cbfunc (mem->cbdata);
++
+   g_slice_free (GstDmaBufMemory, mem);
+   GST_DEBUG ("%p: freed", mem);
+ #endif
+@@ -276,6 +285,8 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
+ 
+   GST_DEBUG ("%p: fd: %d size %" G_GSIZE_FORMAT, mem, mem->fd,
+       mem->mem.maxsize);
++  mem->cbfunc = NULL;
++  mem->data = NULL;
+ 
+   return (GstMemory *) mem;
+ #else /* !HAVE_MMAP */
+@@ -318,3 +329,14 @@ gst_is_dmabuf_memory (GstMemory * mem)
+ {
+   return gst_memory_is_type (mem, GST_ALLOCATOR_DMABUF);
+ }
++
++GstMemory *
++gst_dmabuf_allocator_alloc_callback (GstAllocator * allocator, gint fd,
++        gsize size, gpointer data, GDestroyNotify func)
++{
++  GstDmaBufMemory *mem;
++  mem = gst_dmabuf_allocator_alloc (allocator, fd, size);
++  mem->cbfunc = func;
++  mem->cbdata = data;
++  return (GstMemory *)mem;
++}
+diff --git a/gst-libs/gst/allocators/gstdmabuf.h b/gst-libs/gst/allocators/gstdmabuf.h
+index c09d2f1..2cb6334 100644
+--- a/gst-libs/gst/allocators/gstdmabuf.h
++++ b/gst-libs/gst/allocators/gstdmabuf.h
+@@ -1,5 +1,6 @@
+ /* GStreamer dmabuf allocator
+  * Copyright (C) 2013 Linaro SA
++ * Copyright (C) 2014, Renesas Electronics Corporation
+  * Author: Benjamin Gaignard <benjamin.gaignard@linaro.org> for Linaro.
+  *
+  * This library is free software; you can redistribute it and/or
+@@ -30,6 +31,8 @@ G_BEGIN_DECLS
+ GstAllocator * gst_dmabuf_allocator_new (void);
+ 
+ GstMemory    * gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size);
++GstMemory    * gst_dmabuf_allocator_alloc_callback (GstAllocator * allocator, gint fd,
++        gsize size, gpointer data, GDestroyNotify func);
+ 
+ gint           gst_dmabuf_memory_get_fd (GstMemory * mem);
+ 

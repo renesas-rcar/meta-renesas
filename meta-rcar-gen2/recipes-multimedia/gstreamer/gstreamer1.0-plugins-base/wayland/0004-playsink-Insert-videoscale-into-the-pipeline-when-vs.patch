@@ -1,0 +1,58 @@
+From 664e3bc9059480fba2892445852472c5b3370ad8 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 17 Mar 2014 15:27:52 +0900
+Subject: [PATCH 04/16] playsink: Insert videoscale into the pipeline when
+ vspfilter isn't used
+
+The videoscale plugin is necessary for the software scaling because
+the videoconvert plugin only has the capability to convert colorspace.
+---
+ gst/playback/gstplaysinkvideoconvert.c | 24 ++++++++++++++----------
+ 1 file changed, 14 insertions(+), 10 deletions(-)
+
+diff --git a/gst/playback/gstplaysinkvideoconvert.c b/gst/playback/gstplaysinkvideoconvert.c
+index 5bac5d0..c694352 100644
+--- a/gst/playback/gstplaysinkvideoconvert.c
++++ b/gst/playback/gstplaysinkvideoconvert.c
+@@ -21,6 +21,8 @@
+ #include "config.h"
+ #endif
+ 
++#include <string.h>
++
+ #include "gstplaysinkvideoconvert.h"
+ 
+ #include <gst/pbutils/pbutils.h>
+@@ -60,17 +62,19 @@ gst_play_sink_video_convert_add_conversion_elements (GstPlaySinkVideoConvert *
+     if (el)
+       prev = el;
+ 
+-    el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
+-        "videoscale", "scale");
+-    if (el) {
+-      /* Add black borders if necessary to keep the DAR */
+-      g_object_set (el, "add-borders", TRUE, NULL);
+-      if (prev) {
+-        if (!gst_element_link_pads_full (prev, "src", el, "sink",
+-                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
+-          goto link_failed;
++    if (strcmp (COLORSPACE, "vspfilter") != 0) {
++      el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
++          "videoscale", "scale");
++      if (el) {
++        /* Add black borders if necessary to keep the DAR */
++        g_object_set (el, "add-borders", TRUE, NULL);
++        if (prev) {
++          if (!gst_element_link_pads_full (prev, "src", el, "sink",
++                  GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
++            goto link_failed;
++        }
++        prev = el;
+       }
+-      prev = el;
+     }
+   }
+ 
+-- 
+1.8.0
+

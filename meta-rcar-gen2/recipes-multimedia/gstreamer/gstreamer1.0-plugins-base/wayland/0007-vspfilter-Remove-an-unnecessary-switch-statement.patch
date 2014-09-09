@@ -1,0 +1,33 @@
+From 8c2c4beafbcc28b6b4220db08256827fb4cfde6f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 2 Apr 2014 15:55:04 +0900
+Subject: [PATCH 07/16] vspfilter: Remove an unnecessary switch statement
+
+---
+ gst/vspfilter/gstvspfilter.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index facf9a1..2deb8cc 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -470,15 +470,7 @@ set_format (GstVspFilter * space, gint fd, guint width, guint height,
+     vsp_info->plane_stride[index][i] = fmt.fmt.pix_mp.plane_fmt[i].bytesperline;
+   }
+ 
+-  switch (vsp_info->io[index]) {
+-    case IO_METHOD_READ:
+-      break;
+-
+-    case IO_METHOD_USERPTR:
+-    case IO_METHOD_MMAP:
+-      request_buffers (space, fd, index, buftype, N_BUFFERS);
+-      break;
+-  }
++  request_buffers (space, fd, index, buftype, N_BUFFERS);
+ }
+ 
+ static gint
+-- 
+1.8.0
+

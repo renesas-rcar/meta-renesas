@@ -1,0 +1,313 @@
+From 63614ffd5009a58533fcdf30b330f16d026eedab Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 4 Apr 2014 10:48:34 +0900
+Subject: [PATCH 15/16] vspfilter: Change returned values of the functions
+ that should return the result of their own processing
+ to non-void types
+
+Change-Id: I02121b12256fd5c0c86be1deed255262d2a8cd65
+---
+ gst/vspfilter/gstvspfilter.c | 142 ++++++++++++++++++++++++++++++-------------
+ 1 file changed, 100 insertions(+), 42 deletions(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index 6809c7b..0ece947 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -405,7 +405,7 @@ gst_vsp_filter_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+   return ret;
+ }
+ 
+-static void
++static gboolean
+ request_buffers (GstVspFilter * space, gint fd, gint index,
+     enum v4l2_buf_type buftype, gint n_bufs)
+ {
+@@ -424,15 +424,15 @@ request_buffers (GstVspFilter * space, gint fd, gint index,
+   if (-1 == xioctl (fd, VIDIOC_REQBUFS, &req)) {
+     GST_ERROR_OBJECT (space, "VIDIOC_REQBUFS for %s errno=%d",
+         vsp_info->dev_name[index], errno);
+-    return;
++    return FALSE;
+   }
+ 
+   GST_DEBUG_OBJECT (space, "req.count = %d", req.count);
+ 
+-  return;
++  return TRUE;
+ }
+ 
+-static void
++static gboolean
+ set_format (GstVspFilter * space, gint fd, guint width, guint height,
+     gint index, guint captype, enum v4l2_buf_type buftype)
+ {
+@@ -453,7 +453,7 @@ set_format (GstVspFilter * space, gint fd, guint width, guint height,
+   if (-1 == xioctl (fd, VIDIOC_S_FMT, &fmt)) {
+     GST_ERROR_OBJECT (space, "VIDIOC_S_FMT for %s failed.",
+         vsp_info->dev_name[index]);
+-    return;
++    return FALSE;
+   }
+ 
+   GST_DEBUG_OBJECT (space, "pixelformat = %c%c%c%c (%c%c%c%c)",
+@@ -475,7 +475,13 @@ set_format (GstVspFilter * space, gint fd, guint width, guint height,
+     vsp_info->plane_stride[index][i] = fmt.fmt.pix_mp.plane_fmt[i].bytesperline;
+   }
+ 
+-  request_buffers (space, fd, index, buftype, N_BUFFERS);
++  if (!request_buffers (space, fd, index, buftype, N_BUFFERS)) {
++    GST_ERROR_OBJECT (space, "request_buffers for %s failed.",
++        vsp_info->dev_name[index]);
++    return FALSE;
++  }
++
++  return TRUE;
+ }
+ 
+ static gint
+@@ -661,7 +667,7 @@ leave:
+   return ret;
+ }
+ 
+-static void
++static gboolean
+ init_entity_pad (GstVspFilter * space, gint fd, gint index, guint pad,
+     guint width, guint height, guint code)
+ {
+@@ -680,8 +686,10 @@ init_entity_pad (GstVspFilter * space, gint fd, gint index, guint pad,
+   if (-1 == xioctl (fd, VIDIOC_SUBDEV_S_FMT, &sfmt)) {
+     GST_ERROR_OBJECT (space, "VIDIOC_SUBDEV_S_FMT for %s failed.",
+         space->vsp_info->entity_name[index]);
+-    return;
++    return FALSE;
+   }
++
++  return TRUE;
+ }
+ 
+ static gboolean
+@@ -709,10 +717,20 @@ set_vsp_entities (GstVspFilter * space, GstVideoFormat in_fmt, gint in_width,
+   GST_DEBUG_OBJECT (space, "set_colorspace[CAP]: format=%d code=%d n_planes=%d",
+       vsp_info->format[CAP], vsp_info->code[CAP], vsp_info->n_planes[CAP]);
+ 
+-  set_format (space, vsp_info->v4lout_fd, in_width, in_height,
+-      OUT, V4L2_CAP_VIDEO_OUTPUT_MPLANE, V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE);
+-  set_format (space, vsp_info->v4lcap_fd, out_width, out_height,
+-      CAP, V4L2_CAP_VIDEO_CAPTURE_MPLANE, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE);
++  if (!set_format (space, vsp_info->v4lout_fd, in_width, in_height,
++          OUT, V4L2_CAP_VIDEO_OUTPUT_MPLANE,
++          V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)) {
++    GST_ERROR_OBJECT (space, "set_format for %s failed (%dx%d)",
++        vsp_info->dev_name[OUT], in_width, in_height);
++    return FALSE;
++  }
++  if (!set_format (space, vsp_info->v4lcap_fd, out_width, out_height,
++          CAP, V4L2_CAP_VIDEO_CAPTURE_MPLANE,
++          V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
++    GST_ERROR_OBJECT (space, "set_format for %s failed (%dx%d)",
++        vsp_info->dev_name[CAP], out_width, out_height);
++    return FALSE;
++  }
+ 
+   vsp_info->media_fd = open_media_device (space);
+   if (vsp_info->media_fd < 0) {
+@@ -779,10 +797,16 @@ set_vsp_entities (GstVspFilter * space, GstVideoFormat in_fmt, gint in_width,
+     GST_DEBUG_OBJECT (space, "A link from %s to %s enabled.",
+         resz_entity_name, vsp_info->entity_name[CAP]);
+ 
+-    init_entity_pad (space, resz_subdev_fd, RESZ, 0, in_width,
+-        in_height, vsp_info->code[CAP]);
+-    init_entity_pad (space, resz_subdev_fd, RESZ, 1, out_width,
+-        out_height, vsp_info->code[CAP]);
++    if (!init_entity_pad (space, resz_subdev_fd, RESZ, 0, in_width,
++            in_height, vsp_info->code[CAP])) {
++      GST_ERROR_OBJECT (space, "init_entity_pad failed");
++      return FALSE;
++    }
++    if (!init_entity_pad (space, resz_subdev_fd, RESZ, 1, out_width,
++            out_height, vsp_info->code[CAP])) {
++      GST_ERROR_OBJECT (space, "init_entity_pad failed");
++      return FALSE;
++    }
+   } else {
+     ret = activate_link (space, &vsp_info->entity[OUT], &vsp_info->entity[CAP]);
+     if (ret) {
+@@ -805,17 +829,29 @@ set_vsp_entities (GstVspFilter * space, GstVideoFormat in_fmt, gint in_width,
+   }
+ 
+   /* sink pad in RPF */
+-  init_entity_pad (space, vsp_info->v4lsub_fd[OUT], OUT, 0, in_width,
+-      in_height, vsp_info->code[OUT]);
++  if (!init_entity_pad (space, vsp_info->v4lsub_fd[OUT], OUT, 0, in_width,
++          in_height, vsp_info->code[OUT])) {
++    GST_ERROR_OBJECT (space, "init_entity_pad failed");
++    return FALSE;
++  }
+   /* source pad in RPF */
+-  init_entity_pad (space, vsp_info->v4lsub_fd[OUT], OUT, 1, in_width,
+-      in_height, vsp_info->code[CAP]);
++  if (!init_entity_pad (space, vsp_info->v4lsub_fd[OUT], OUT, 1, in_width,
++          in_height, vsp_info->code[CAP])) {
++    GST_ERROR_OBJECT (space, "init_entity_pad failed");
++    return FALSE;
++  }
+   /* sink pad in WPF */
+-  init_entity_pad (space, vsp_info->v4lsub_fd[CAP], CAP, 0, out_width,
+-      out_height, vsp_info->code[CAP]);
++  if (!init_entity_pad (space, vsp_info->v4lsub_fd[CAP], CAP, 0, out_width,
++          out_height, vsp_info->code[CAP])) {
++    GST_ERROR_OBJECT (space, "init_entity_pad failed");
++    return FALSE;
++  }
+   /* source pad in WPF */
+-  init_entity_pad (space, vsp_info->v4lsub_fd[CAP], CAP, 1, out_width,
+-      out_height, vsp_info->code[CAP]);
++  if (!init_entity_pad (space, vsp_info->v4lsub_fd[CAP], CAP, 1, out_width,
++          out_height, vsp_info->code[CAP])) {
++    GST_ERROR_OBJECT (space, "init_entity_pad failed");
++    return FALSE;
++  }
+ 
+   vsp_info->already_setup_info = TRUE;
+ 
+@@ -898,7 +934,7 @@ gst_vsp_filter_finalize (GObject * obj)
+   G_OBJECT_CLASS (parent_class)->finalize (obj);
+ }
+ 
+-static void
++static gboolean
+ init_device (GstVspFilter * space, gint fd, gint index, guint captype,
+     enum v4l2_buf_type buftype)
+ {
+@@ -911,13 +947,13 @@ init_device (GstVspFilter * space, gint fd, gint index, guint captype,
+ 
+   if (vsp_info->already_device_initialized[index]) {
+     GST_WARNING_OBJECT (space, "The device is already initialized");
+-    return;
++    return FALSE;
+   }
+ 
+   if (-1 == xioctl (fd, VIDIOC_QUERYCAP, &cap)) {
+     GST_ERROR_OBJECT (space, "VIDIOC_QUERYCAP for %s errno=%d",
+         vsp_info->dev_name[index], errno);
+-    return;
++    return FALSE;
+   }
+ 
+   /* look for a counterpart */
+@@ -929,13 +965,13 @@ init_device (GstVspFilter * space, gint fd, gint index, guint captype,
+   } else if (strcmp (vsp_info->ip_name, p) != 0) {
+     GST_ERROR_OBJECT (space, "ip name mismatch vsp_info->ip_name=%s p=%s",
+         vsp_info->ip_name, p);
+-    return;
++    return FALSE;
+   }
+ 
+   vsp_info->entity_name[index] = strtok (NULL, " ");
+   if (vsp_info->entity_name[index] == NULL) {
+     GST_ERROR_OBJECT (space, "entity name not found. in %s", cap.card);
+-    return;
++    return FALSE;
+   }
+ 
+   GST_DEBUG_OBJECT (space, "ENTITY NAME[%d] = %s",
+@@ -946,24 +982,26 @@ init_device (GstVspFilter * space, gint fd, gint index, guint captype,
+   if (vsp_info->v4lsub_fd[index] < 0) {
+     GST_ERROR_OBJECT (space, "Cannot open '%s': %d, %s",
+         path, errno, strerror (errno));
+-    return;
++    return FALSE;
+   }
+ 
+   if (!(cap.capabilities & captype)) {
+     GST_ERROR_OBJECT (space, "%s is not suitable device (%08x != %08x)",
+         vsp_info->dev_name[index], cap.capabilities, captype);
+-    return;
++    return FALSE;
+   }
+ 
+   if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+     GST_ERROR_OBJECT (space, "%s does not support streaming i/o",
+         vsp_info->dev_name[index]);
+-    return;
++    return FALSE;
+   }
+ 
+   vsp_info->already_device_initialized[index] = TRUE;
+ 
+   GST_DEBUG_OBJECT (space, "Device initialization has suceeded");
++
++  return TRUE;
+ }
+ 
+ static gint
+@@ -1055,11 +1093,19 @@ skip_config:
+   vsp_info->v4lout_fd = open_device (space, OUT);
+   vsp_info->v4lcap_fd = open_device (space, CAP);
+ 
+-  init_device (space, vsp_info->v4lout_fd, OUT,
+-      V4L2_CAP_VIDEO_OUTPUT_MPLANE, V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE);
++  if (!init_device (space, vsp_info->v4lout_fd, OUT,
++          V4L2_CAP_VIDEO_OUTPUT_MPLANE, V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)) {
++    GST_ERROR_OBJECT (space, "init_device for %s failed",
++        vsp_info->dev_name[OUT]);
++    return FALSE;
++  }
+ 
+-  init_device (space, vsp_info->v4lcap_fd, CAP,
+-      V4L2_CAP_VIDEO_CAPTURE_MPLANE, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE);
++  if (!init_device (space, vsp_info->v4lcap_fd, CAP,
++          V4L2_CAP_VIDEO_CAPTURE_MPLANE, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
++    GST_ERROR_OBJECT (space, "init_device for %s failed",
++        vsp_info->dev_name[CAP]);
++    return FALSE;
++  }
+ 
+   return TRUE;
+ }
+@@ -1455,12 +1501,16 @@ dequeue_buffer (GstVspFilter * space, int fd, int index,
+   return 0;
+ }
+ 
+-static void
++static gboolean
+ start_capturing (GstVspFilter * space, int fd, int index,
+     enum v4l2_buf_type buftype)
+ {
+-  if (-1 == xioctl (fd, VIDIOC_STREAMON, &buftype))
++  if (-1 == xioctl (fd, VIDIOC_STREAMON, &buftype)) {
+     GST_ERROR_OBJECT (space, "VIDIOC_STREAMON failed index=%d", index);
++    return FALSE;
++  }
++
++  return TRUE;
+ }
+ 
+ static GstFlowReturn
+@@ -1530,10 +1580,18 @@ gst_vsp_filter_transform_frame_process (GstVideoFilter * filter,
+       V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, out_planes);
+ 
+   if (!vsp_info->is_stream_started) {
+-    start_capturing (space, vsp_info->v4lout_fd, OUT,
+-        V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE);
+-    start_capturing (space, vsp_info->v4lcap_fd, CAP,
+-        V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE);
++    if (!start_capturing (space, vsp_info->v4lout_fd, OUT,
++            V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)) {
++      GST_ERROR_OBJECT (space, "start_capturing for %s failed",
++          vsp_info->dev_name[OUT]);
++      return GST_FLOW_ERROR;
++    }
++    if (!start_capturing (space, vsp_info->v4lcap_fd, CAP,
++            V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
++      GST_ERROR_OBJECT (space, "start_capturing for %s failed",
++          vsp_info->dev_name[CAP]);
++      return GST_FLOW_ERROR;
++    }
+     vsp_info->is_stream_started = TRUE;
+   }
+ 
+-- 
+1.8.0
+

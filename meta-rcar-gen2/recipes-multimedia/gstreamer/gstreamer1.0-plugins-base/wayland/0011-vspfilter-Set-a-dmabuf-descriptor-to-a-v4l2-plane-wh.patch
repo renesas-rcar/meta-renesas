@@ -1,0 +1,41 @@
+From a226c6f4f7fb497770a01003a4efdcc99ff3a667 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 2 Apr 2014 17:07:40 +0900
+Subject: [PATCH 11/16] vspfilter: Set a dmabuf descriptor to a v4l2 plane
+ when the V4L2_MEMORY_DMABUF is selected
+
+This is preliminary for the dambuf handling support.
+---
+ gst/vspfilter/gstvspfilter.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index 945b7ab..7d311b4 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -1354,9 +1354,19 @@ gst_vsp_filter_transform_frame_process (GstVideoFilter * filter,
+   }
+ 
+   /* set up planes for queuing an output buffer */
+-  for (i = 0; i < vsp_info->n_planes[CAP]; i++) {
+-    out_planes[i].m.userptr = (unsigned long) out_vframe.frame->map[i].data;
+-    out_planes[i].length = out_vframe.frame->map[i].size;
++  switch (vsp_info->io[CAP]) {
++    case V4L2_MEMORY_USERPTR:
++      for (i = 0; i < vsp_info->n_planes[CAP]; i++) {
++        out_planes[i].m.userptr = (unsigned long) out_vframe.frame->map[i].data;
++        out_planes[i].length = out_vframe.frame->map[i].size;
++      }
++      break;
++    case V4L2_MEMORY_DMABUF:
++      out_planes[0].m.fd = out_vframe.dmafd;
++      break;
++    default:
++      GST_ERROR_OBJECT (space, "unsupported V4L2 I/O method");
++      return GST_FLOW_ERROR;
+   }
+ 
+   queue_buffer (space, vsp_info->v4lout_fd, OUT,
+-- 
+1.8.0
+

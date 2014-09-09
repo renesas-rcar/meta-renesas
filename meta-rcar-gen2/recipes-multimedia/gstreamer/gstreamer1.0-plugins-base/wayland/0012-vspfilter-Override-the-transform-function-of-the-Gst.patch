@@ -1,0 +1,124 @@
+From 4ec0699d44e541e614e1d0550d053ac06dfb4612 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 2 Apr 2014 17:25:19 +0900
+Subject: [PATCH 12/16] vspfilter: Override the transform function of the
+ GstBaseTransfrom class
+
+The gst_vsp_filter_transform() function sets a dmafd descriptor obtained
+by gst_dmabuf_memory_get_fd() to an output GstVspFilterFrame.
+When the output GstBuffer passed through this function does not have
+a dmabuf descriptor, the input and output buffers are mapped as a
+default behavior.
+
+This is preliminary for the dmabuf handling support.
+---
+ gst/vspfilter/Makefile.am    |  1 +
+ gst/vspfilter/gstvspfilter.c | 66 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 67 insertions(+)
+
+diff --git a/gst/vspfilter/Makefile.am b/gst/vspfilter/Makefile.am
+index 9ce29a8..51044a6 100644
+--- a/gst/vspfilter/Makefile.am
++++ b/gst/vspfilter/Makefile.am
+@@ -6,6 +6,7 @@ libgstvspfilter_la_CFLAGS = \
+ 	$(GST_CFLAGS)
+ libgstvspfilter_la_LIBADD = \
+ 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
++	$(top_builddir)/gst-libs/gst/allocators/libgstallocators-$(GST_API_VERSION).la \
+ 	$(GST_BASE_LIBS) \
+ 	$(GST_LIBS)
+ libgstvspfilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index 7d311b4..1f035e9 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -43,6 +43,7 @@
+ #include <gst/video/video.h>
+ #include <gst/video/gstvideometa.h>
+ #include <gst/video/gstvideopool.h>
++#include <gst/allocators/gstdmabuf.h>
+ 
+ #include <string.h>
+ #include <stdio.h>
+@@ -1115,6 +1116,69 @@ gst_vsp_filter_change_state (GstElement * element, GstStateChange transition)
+   return ret;
+ }
+ 
++static GstFlowReturn
++gst_vsp_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
++    GstBuffer * outbuf)
++{
++  GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
++  GstMemory *gmem;
++  GstVideoFrame in_frame, out_frame;
++  GstVspFilterFrame in_vframe, out_vframe;
++  GstFlowReturn ret;
++
++  if (G_UNLIKELY (!filter->negotiated))
++    goto unknown_format;
++
++  gmem = gst_buffer_get_memory (outbuf, 0);
++
++  if (gst_is_dmabuf_memory (gmem)) {
++    if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf, GST_MAP_READ))
++      goto invalid_buffer;
++
++    in_vframe.frame = &in_frame;
++    out_vframe.dmafd = gst_dmabuf_memory_get_fd (gmem);
++
++    ret =
++        gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe);
++
++    gst_video_frame_unmap (&in_frame);
++  } else {
++    if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf, GST_MAP_READ))
++      goto invalid_buffer;
++
++    if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
++            GST_MAP_WRITE))
++      goto invalid_buffer;
++
++    in_vframe.frame = &in_frame;
++    out_vframe.frame = &out_frame;
++
++    ret =
++        gst_vsp_filter_transform_frame_process (filter, in_vframe, out_vframe);
++
++    gst_video_frame_unmap (&in_frame);
++    gst_video_frame_unmap (&out_frame);
++  }
++
++  gst_memory_unref (gmem);
++
++  return ret;
++
++  /* ERRORS */
++unknown_format:
++  {
++    GST_ELEMENT_ERROR (filter, CORE, NOT_IMPLEMENTED, (NULL),
++        ("unknown format"));
++    return GST_FLOW_NOT_NEGOTIATED;
++  }
++invalid_buffer:
++  {
++    GST_ELEMENT_WARNING (filter, CORE, NOT_IMPLEMENTED, (NULL),
++        ("invalid video buffer received"));
++    return GST_FLOW_OK;
++  }
++}
++
+ static void
+ gst_vsp_filter_class_init (GstVspFilterClass * klass)
+ {
+@@ -1161,6 +1225,8 @@ gst_vsp_filter_class_init (GstVspFilterClass * klass)
+       GST_DEBUG_FUNCPTR (gst_vsp_filter_filter_meta);
+   gstbasetransform_class->transform_meta =
+       GST_DEBUG_FUNCPTR (gst_vsp_filter_transform_meta);
++  gstbasetransform_class->transform =
++      GST_DEBUG_FUNCPTR (gst_vsp_filter_transform);
+ 
+   gstbasetransform_class->passthrough_on_same_caps = TRUE;
+ 
+-- 
+1.8.0
+
