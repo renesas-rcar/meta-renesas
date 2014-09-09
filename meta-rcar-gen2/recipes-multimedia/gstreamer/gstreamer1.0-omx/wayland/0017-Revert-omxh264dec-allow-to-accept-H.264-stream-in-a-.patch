@@ -1,0 +1,27 @@
+From 3e0fd8fa81cfbc9071b0bf26e40f8dd4f3bae4df Mon Sep 17 00:00:00 2001
+From: Tomohiro Komagata <tomohiro.komagata.aj@renesas.com>
+Date: Mon, 16 Jun 2014 09:39:12 +0900
+Subject: [PATCH 17/31] Revert "omxh264dec: allow to accept H.264 stream in a
+ nal unit"
+
+This reverts commit 2c31e38a9db44a186dfc3be902279683c2b8807c.
+---
+ omx/gstomxh264dec.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 3ed41fc..2581889 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -61,7 +61,7 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
+ 
+   videodec_class->cdata.default_sink_template_caps = "video/x-h264, "
+       "parsed=(boolean) true, "
+-      "alignment=(string) { au, nal }, "
++      "alignment=(string) au, "
+       "stream-format=(string) byte-stream, "
+       "width=(int) [1,MAX], " "height=(int) [1,MAX]";
+ 
+-- 
+1.7.9.5
+

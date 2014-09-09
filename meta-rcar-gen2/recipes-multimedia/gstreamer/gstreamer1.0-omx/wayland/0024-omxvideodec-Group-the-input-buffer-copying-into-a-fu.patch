@@ -1,0 +1,105 @@
+From 4462136f8cc10e9aca0ae08201c10bdab659dd18 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Mon, 24 Mar 2014 14:52:27 +0900
+Subject: [PATCH 24/31] omxvideodec: Group the input buffer copying into a
+ function, copy_frame()
+
+This function can be overridden by the each specific codec class.
+The returned value indicates how much the input data is consumed.
+---
+ omx/gstomxvideodec.c |   38 ++++++++++++++++++++++++++++++--------
+ omx/gstomxvideodec.h |    1 +
+ 2 files changed, 31 insertions(+), 8 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 07151f1..3a956da 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -682,6 +682,26 @@ enum
+ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstOMXVideoDec, gst_omx_video_dec,
+     GST_TYPE_VIDEO_DECODER, DEBUG_INIT);
+ 
++static gsize
++gst_omx_video_dec_copy_frame (GstOMXVideoDec * self, GstBuffer * inbuf,
++    guint offset, GstOMXBuffer * outbuf)
++{
++  guint size;
++
++  size = gst_buffer_get_size (inbuf);
++
++  /* Copy the buffer content in chunks of size as requested
++   * by the port */
++  outbuf->omx_buf->nFilledLen =
++      MIN (size - offset,
++      outbuf->omx_buf->nAllocLen - outbuf->omx_buf->nOffset);
++  gst_buffer_extract (inbuf, offset,
++      outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
++      outbuf->omx_buf->nFilledLen);
++
++  return outbuf->omx_buf->nFilledLen;
++}
++
+ static void
+ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
+ {
+@@ -710,6 +730,8 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
+   klass->cdata.default_src_template_caps = "video/x-raw, "
+       "width = " GST_VIDEO_SIZE_RANGE ", "
+       "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE;
++
++  klass->copy_frame = gst_omx_video_dec_copy_frame;
+ }
+ 
+ static void
+@@ -2246,6 +2268,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+   guint offset = 0, size;
+   GstClockTime timestamp, duration;
+   OMX_ERRORTYPE err;
++  gsize inbuf_consumed;
+ 
+   self = GST_OMX_VIDEO_DEC (decoder);
+   klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
+@@ -2404,13 +2427,12 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+     /* Now handle the frame */
+     GST_DEBUG_OBJECT (self, "Passing frame offset %d to the component", offset);
+ 
+-    /* Copy the buffer content in chunks of size as requested
+-     * by the port */
+-    buf->omx_buf->nFilledLen =
+-        MIN (size - offset, buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
+-    gst_buffer_extract (frame->input_buffer, offset,
+-        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+-        buf->omx_buf->nFilledLen);
++    inbuf_consumed = klass->copy_frame (self, frame->input_buffer, offset, buf);
++    if (inbuf_consumed < 0) {
++      GST_ERROR_OBJECT (self, "Failed to copy an input frame");
++      self->downstream_flow_ret = GST_FLOW_ERROR;
++      goto flow_error;
++    }
+ 
+     if (timestamp != GST_CLOCK_TIME_NONE) {
+       buf->omx_buf->nTimeStamp =
+@@ -2444,7 +2466,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+      *     the segment
+      */
+ 
+-    offset += buf->omx_buf->nFilledLen;
++    offset += inbuf_consumed;
+ 
+     if (offset == size)
+       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index 747bc36..e17772b 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -87,6 +87,7 @@ struct _GstOMXVideoDecClass
+   gboolean (*is_format_change) (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
+   gboolean (*set_format)       (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
+   GstFlowReturn (*prepare_frame)   (GstOMXVideoDec * self, GstVideoCodecFrame *frame);
++  gsize (*copy_frame) (GstOMXVideoDec * self, GstBuffer * inbuf, guint offset, GstOMXBuffer * outbuf);
+ };
+ 
+ GType gst_omx_video_dec_get_type (void);
+-- 
+1.7.9.5
+

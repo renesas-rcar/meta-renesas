@@ -1,0 +1,24 @@
+From 8ba852a436d22604897526cb3408e51626b7dd5f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 21:59:29 +0900
+Subject: [PATCH 13/14] gstomx: fix a missing g_free
+
+---
+ omx/gstomx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index be4c4dd..6738d98 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -651,6 +651,7 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
+         "Failed to get component handle '%s' from core '%s': 0x%08x",
+         component_name, core_name, err);
+     gst_omx_core_release (core);
++    g_free (comp->name);
+     g_slice_free (GstOMXComponent, comp);
+     return NULL;
+   }
+-- 
+1.8.1.2
+

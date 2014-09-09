@@ -1,0 +1,356 @@
+From 30d374cb405a5988ea5981e3c387066322d39e58 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Wed, 2 Apr 2014 17:05:54 +0700
+Subject: [PATCH 02/22] Support mp4 container for omxh264dec
+
+This patch makes omxh264dec supports mp4 container.
+
+refs #53106
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxh264dec.c |  273 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ omx/gstomxh264dec.h |    2 +
+ 2 files changed, 274 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 3ed41fc..4485181 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
++ * Copyright (C) 2014, Renesas Electronics Corporation
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -34,6 +35,8 @@ static gboolean gst_omx_h264_dec_is_format_change (GstOMXVideoDec * dec,
+     GstOMXPort * port, GstVideoCodecState * state);
+ static gboolean gst_omx_h264_dec_set_format (GstOMXVideoDec * dec,
+     GstOMXPort * port, GstVideoCodecState * state);
++static GstFlowReturn gst_omx_h264_dec_prepare_frame
++    (GstOMXVideoDec * videodec, GstVideoCodecFrame * frame);
+ 
+ enum
+ {
+@@ -58,11 +61,13 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
+   videodec_class->is_format_change =
+       GST_DEBUG_FUNCPTR (gst_omx_h264_dec_is_format_change);
+   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_dec_set_format);
++  videodec_class->prepare_frame =
++      GST_DEBUG_FUNCPTR (gst_omx_h264_dec_prepare_frame);
+ 
+   videodec_class->cdata.default_sink_template_caps = "video/x-h264, "
+       "parsed=(boolean) true, "
+       "alignment=(string) { au, nal }, "
+-      "stream-format=(string) byte-stream, "
++      "stream-format=(string) avc, "
+       "width=(int) [1,MAX], " "height=(int) [1,MAX]";
+ 
+   gst_element_class_set_static_metadata (element_class,
+@@ -86,16 +91,282 @@ gst_omx_h264_dec_is_format_change (GstOMXVideoDec * dec,
+   return FALSE;
+ }
+ 
++
++static gboolean
++analize_codec_data (guint8 *data , guint size,
++                GstBuffer **out_codec_data, guint *out_nal_length_size)
++{
++  guint8 *ptr;
++  guint  sps_num, pps_num;
++  guint  sps_size[32] , pps_size[256];
++  guint  sps_pps_size;
++  guint  nal_length_size;
++  guint  i;
++  guint  fillsize;
++  GstBuffer *buffer;
++  const guint8 startcode[4] = {0x00, 0x00, 0x00, 0x01};
++
++  ptr = data;
++  sps_pps_size = 0;
++
++  ptr++; /* configuration version (uint 8bit) */
++  ptr++; /* AVCprofileIndication (uint 8bit) */
++  ptr++; /* profile_compatibility(uint 8bit) */
++  ptr++; /* AVCLevelIndication   (uint 8bit) */
++
++  nal_length_size = (*ptr & 0x03) + 1; /* lengthSizeMinusOne  (uint 2bit) */
++  ptr++; /* reserved(6bit) */
++
++  sps_num = *ptr++ & 0x1F; /* reserved(3bit) + numOfSequenceParameterSets(uint 5bit); */
++  for(i = 0 ; i < sps_num ; i++ )
++  {
++     sps_size[i] = (*ptr++);
++     sps_size[i] = sps_size[i] <<8;
++     sps_size[i] |= (*ptr++);
++     ptr += sps_size[i];
++     sps_pps_size += sps_size[i] + 4; /* 4 is start code prefix */
++  }
++
++  pps_num = *ptr++; /* numOfPictureParameterSets (unint 8bit) */
++  for(i = 0 ; i < pps_num ; i++ )
++  {
++    pps_size[i] = (*ptr++);
++    pps_size[i] = pps_size[i] <<8;
++    pps_size[i] |= (*ptr++);
++    ptr += pps_size[i];
++    sps_pps_size += pps_size[i] + 4; /* 4 is start code prefix */
++  }
++
++  /* buffer allocate */
++  buffer = gst_buffer_new_and_alloc (sps_pps_size);
++  fillsize = 0;
++
++  /* copy 4 bytes start code */
++  gst_buffer_fill(buffer, fillsize, startcode, sizeof(startcode));
++  fillsize += sizeof(startcode);
++
++  /* reset pointer and jump to sps data */
++  ptr = data;
++  ptr += 8;
++  for(i = 0 ; i < sps_num ; i++ )
++  {
++    /* Copy sps data to buffer */
++    gst_buffer_fill (buffer, fillsize, ptr, sps_size[i]);
++    fillsize += sps_size[i];
++
++    /* Jump to next sps (if any) */
++    ptr += (sps_size[i]+2);
++  }
++
++  /* copy 4 bytes start code */
++  gst_buffer_fill(buffer, fillsize, startcode, sizeof(startcode));
++  fillsize += sizeof(startcode);
++
++  /* jump to pps data */
++  ptr++;
++  for(i = 0 ; i < pps_num ; i++ )
++  {
++    /* Copy pps data to buffer */
++    gst_buffer_fill (buffer, fillsize, ptr, pps_size[i]);
++    fillsize += pps_size[i];
++
++    /* Jump to next pps (if any) */
++    ptr += (pps_size[i]+2);
++  }
++  gst_buffer_ref (buffer);
++
++  *out_codec_data = buffer;
++  *out_nal_length_size = nal_length_size;
++
++  return TRUE;
++}
++
+ static gboolean
+ gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
+     GstVideoCodecState * state)
+ {
+   gboolean ret;
+   OMX_PARAM_PORTDEFINITIONTYPE port_def;
++  GstOMXH264Dec * self;
++
++  self = GST_OMX_H264_DEC(dec);
+ 
+   gst_omx_port_get_port_definition (port, &port_def);
+   port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingAVC;
++
+   ret = gst_omx_port_update_port_definition (port, &port_def) == OMX_ErrorNone;
++  if(!ret)
++    return ret;
++
++
++  /* Get sps, pps and nal_length_size from codec_data */
++  if(state->codec_data)
++  {
++    GstStructure *structure;
++    const GValue *codec_data;
++    GstBuffer *buffer;
++    GstBuffer *h264_codec_data;
++    GstMapInfo bufinfo;
++    guint nal_length_size;
++    guint i;
++
++    /* Map buffer to read buffer pointer */
++    ret = gst_buffer_map(state->codec_data, &bufinfo, GST_LOCK_FLAG_READ);
++
++    if(ret)
++    {
++      /* Analyze to get sps, pps and nal_length_size */
++      analize_codec_data(bufinfo.data, bufinfo.size,
++                            &h264_codec_data, &nal_length_size);
++
++      /* Unmap data */
++      gst_buffer_unmap(state->codec_data, &bufinfo);
++
++
++      /* Output */
++      gst_buffer_replace (&state->codec_data, h264_codec_data);
++      self->nal_length_size = nal_length_size;
++    }
++  }
++
++
++  return ret;
++}
++
++
++
++static guint
++search_nal_start_code (GstOMXH264Dec * self, guint8 * data, guint size, guint nal_length_size)
++{
++  /* Quick Search algorithm by Sunday */
++  guint search_size=0;
++  guint i=0, j=0;
++  guint ret = -1;
++
++  GST_LOG_OBJECT (self, "begin");
++
++  if (nal_length_size < size) {
++    search_size = size - nal_length_size;
++    while (i < search_size) {
++      for (j = 0; j < nal_length_size; j++) {
++        if (j != nal_length_size - 1) {
++          if (data[i + j] != 0x00)
++            break;
++        } else {
++          if (data[i + j] != 0x01)
++            break;
++        }
++      }
++      if (j == nal_length_size) {
++        ret = i;
++        i = search_size;
++        break;
++      }
++      if (data[i + nal_length_size] == 0x00)
++        i += 2;
++      else if (data[i + nal_length_size] == 0x01)
++        i += 1;
++      else
++        i += nal_length_size + 1;
++    }
++  }
++
++  GST_LOG_OBJECT (self, "end");
++
++  return ret;
++}
++
++
++static guint
++get_nal_size (GstOMXH264Dec * self, guint8 * data, guint size, guint nal_length_size)
++{
++  guint nal_size = 0;
++  guint i;
++
++  GST_LOG_OBJECT (self, "begin");
++
++  for (i = 0; i < nal_length_size; i++)
++    nal_size = (nal_size << 8) | data[i];
++
++  if (nal_size <= 1) {
++    /* start-code is 0x000001 (first 0x00 more than 2bytes) */
++    /* search next start-code */
++    nal_size = search_nal_start_code (self,
++        (data + nal_length_size),
++        (size - nal_length_size),
++        nal_length_size);
++    if (nal_size == -1) {
++      /* not found */
++      nal_size = (size - nal_length_size);
++    }
++  }
++  /* round size */
++  if (nal_size <= 1 || (size - nal_length_size) < nal_size)
++    nal_size = (size - nal_length_size);
++
++  GST_LOG_OBJECT (self, "end");
++
++  return nal_size;
++}
++
++
++
++static GstFlowReturn gst_omx_h264_dec_prepare_frame
++    (GstOMXVideoDec * videodec, GstVideoCodecFrame * frame)
++{
++  GstOMXH264Dec * self;
++  GstFlowReturn ret = GST_FLOW_OK;
++  guint offset = 0;
++  guint nal_size = 0;
++  GstMapInfo bufinfo;
++  guint size;
++  guint8 *data;
++
++  self = GST_OMX_H264_DEC(videodec);
++
++  gst_buffer_map(frame->input_buffer, &bufinfo, GST_MAP_READ | GST_MAP_WRITE);
++
++  size = bufinfo.size;
++  data = bufinfo.data;
++
++
++  if (self->nal_length_size == 0) {
++    /* calcurate nal_length_size */
++    while (data[self->nal_length_size] == 0x00)
++      self->nal_length_size++;
++    if (self->nal_length_size != 0
++        && data[self->nal_length_size] == 0x01)
++      self->nal_length_size++;
++    else
++      self->nal_length_size = 4;  /* set regular size */
++  }
++
++
++  /* split nal unit */
++  while (offset < size) {
++    /* check size */
++    if (G_UNLIKELY ((size - offset) < self->nal_length_size)) {
++      GST_ERROR_OBJECT (self, "nal unit size %d is less than minimum %d", (size - offset), self->nal_length_size);
++      ret = GST_FLOW_ERROR;
++      break;
++    }
++
++    /* get nal size first, before it is overwritten */
++    nal_size = get_nal_size (self, (data + offset), (size - offset), self->nal_length_size);
++
++    /* overwirte start code prefix to mark the nal unit */
++    data[0 + offset] = 0x00;
++    data[1 + offset] = 0x00;
++    data[2 + offset] = 0x00;
++    data[3 + offset] = 0x01;
++
++    /* Then move the offset to next nal */
++    offset += (self->nal_length_size + nal_size);
++
++  }
++
++
++  gst_buffer_unmap(frame->input_buffer, &bufinfo);
+ 
+   return ret;
+ }
+diff --git a/omx/gstomxh264dec.h b/omx/gstomxh264dec.h
+index 4c0ea1f..43fa0a8 100644
+--- a/omx/gstomxh264dec.h
++++ b/omx/gstomxh264dec.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
++ * Copyright (C) 2014, Renesas Electronics Corporation
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -45,6 +46,7 @@ typedef struct _GstOMXH264DecClass GstOMXH264DecClass;
+ struct _GstOMXH264Dec
+ {
+   GstOMXVideoDec parent;
++  guint nal_length_size;
+ };
+ 
+ struct _GstOMXH264DecClass
+-- 
+1.7.9.5
+

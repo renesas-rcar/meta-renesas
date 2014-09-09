@@ -1,0 +1,46 @@
+From 53456003283e8fb1777fcfa6a48df5d1e038cb69 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 18 Apr 2014 09:01:18 +0700
+Subject: [PATCH 04/22] Fix flushing issue
+
+After porting to 1.2.3, gst-omx cannot run.
+It says "Incorrect state operation" and quit.
+The root cause is a change in base class GstVideoDecoder in gst-plugins-base.
+In 1.0.7, method ::reset will be called at the start, and this method will
+flush the ports.
+In 1.2.3 this method is not called at the start anymore, and gst-omx thinks
+it is in wrong state because the port is not flushed yet.
+Fix : change the variable flushing to FALSE so that gst-omx does not care
+about flushing at the starting flow.
+Result : gst-omx can run and decode video.
+
+refs #54088
+Signed-off-by: Hung Tran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 6b0a3d1..2558bdb 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -3,6 +3,7 @@
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+  * Copyright (C) 2013, Collabora Ltd.
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
++ * Copyright (C) 2014, Renesas Electronics Corporation
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -936,7 +937,7 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
+   port->port_def = port_def;
+ 
+   g_queue_init (&port->pending_buffers);
+-  port->flushing = TRUE;
++  port->flushing = FALSE;
+   port->flushed = FALSE;
+   port->enabled_pending = FALSE;
+   port->disabled_pending = FALSE;
+-- 
+1.7.9.5
+

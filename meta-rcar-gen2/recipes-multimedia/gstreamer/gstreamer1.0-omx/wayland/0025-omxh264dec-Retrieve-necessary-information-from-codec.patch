@@ -1,0 +1,186 @@
+From 1bdc1f90a3e7511ec64309cc1e0c02da5254885f Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Mar 2014 11:27:33 +0900
+Subject: [PATCH 25/31] omxh264dec: Retrieve necessary information from
+ codec_data
+
+This patch retrieves sps and pps nals from codec_data, transformed
+into bytestream. The nal length field size in AVC configuration
+is also obtained.
+
+This change is preliminary for the frame unit input support.
+---
+ omx/gstomxh264dec.c |  137 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ omx/gstomxh264dec.h |    2 +
+ 2 files changed, 135 insertions(+), 4 deletions(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 2581889..71d3156 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -86,16 +86,145 @@ gst_omx_h264_dec_is_format_change (GstOMXVideoDec * dec,
+   return FALSE;
+ }
+ 
++static GstBuffer *
++gst_omx_h264_dec_retrieve_sps_pps (GstOMXH264Dec * self, guint8 * data)
++{
++  guint8 *ptr, *outbuf, *dest;
++  guint sps_num, pps_num;
++  guint *sps_size_list, *pps_size_list;
++  guint sps_pps_size = 0;
++  guint i;
++
++  ptr = data;
++
++  sps_num = ptr[5] & 0x1f;      /* reserved(3bit) + numOfSequenceParameterSets(uint 5bit) */
++
++  sps_size_list = g_malloc (sps_num);
++  if (!sps_size_list) {
++    GST_ERROR_OBJECT (self, "failed g_malloc");
++    return NULL;
++  }
++
++  ptr += 6;
++
++  for (i = 0; i < sps_num; i++) {
++    sps_size_list[i] = GST_READ_UINT16_BE (ptr);
++    ptr += sps_size_list[i] + 2;
++    sps_pps_size += sps_size_list[i] + 4;       /* take account of the start code length */
++  }
++
++  pps_num = *ptr++;             /* numOfPictureParameterSets (unint 8bit) */
++  pps_size_list = g_malloc (pps_num);
++  if (!pps_size_list) {
++    GST_ERROR_OBJECT (self, "failed g_malloc");
++    g_free (sps_size_list);
++    return NULL;
++  }
++
++  for (i = 0; i < pps_num; i++) {
++    pps_size_list[i] = GST_READ_UINT16_BE (ptr);
++    ptr += pps_size_list[i] + 2;
++    sps_pps_size += pps_size_list[i] + 4;       /* take account of the start code length */
++  }
++
++  outbuf = g_malloc (sps_pps_size);
++  if (!outbuf) {
++    GST_ERROR_OBJECT (self, "failed g_malloc");
++    g_free (sps_size_list);
++    g_free (pps_size_list);
++    return NULL;
++  }
++  dest = outbuf;
++
++  /* reset ptr */
++  ptr = data;
++
++  /* jump to sps data */
++  ptr += 8;
++  for (i = 0; i < sps_num; i++) {
++    dest[0] = 0x00;
++    dest[1] = 0x00;
++    dest[2] = 0x00;
++    dest[3] = 0x01;
++    memcpy (dest + 4, ptr, sps_size_list[i]);
++    dest += sps_size_list[i] + 4;
++    ptr += sps_size_list[i] + 2;
++  }
++
++  /* jump to pps data */
++  ptr++;
++  for (i = 0; i < pps_num; i++) {
++    dest[0] = 0x00;
++    dest[1] = 0x00;
++    dest[2] = 0x00;
++    dest[3] = 0x01;
++    memcpy (dest + 4, ptr, pps_size_list[i]);
++    dest += pps_size_list[i] + 4;
++    ptr += pps_size_list[i] + 2;
++  }
++
++  g_free (sps_size_list);
++  g_free (pps_size_list);
++
++  return gst_buffer_new_wrapped (outbuf, sps_pps_size);
++}
++
+ static gboolean
+ gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
+     GstVideoCodecState * state)
+ {
+-  gboolean ret;
+   OMX_PARAM_PORTDEFINITIONTYPE port_def;
++  GstOMXH264Dec *self = GST_OMX_H264_DEC (dec);
++  OMXR_MC_VIDEO_PARAM_STREAM_STORE_UNITTYPE param;
++  OMX_ERRORTYPE err;
++  GstMapInfo map = GST_MAP_INFO_INIT;
++  GstBuffer *new_codec_data;
+ 
+   gst_omx_port_get_port_definition (port, &port_def);
+   port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingAVC;
+-  ret = gst_omx_port_update_port_definition (port, &port_def) == OMX_ErrorNone;
+-
+-  return ret;
++  err = gst_omx_port_update_port_definition (port, &port_def);
++  if (err != OMX_ErrorNone)
++    return FALSE;
++
++  GST_OMX_INIT_STRUCT (&param);
++  param.nPortIndex = GST_OMX_VIDEO_DEC (self)->dec_in_port->index;
++
++  err = gst_omx_component_get_parameter (GST_OMX_VIDEO_DEC (self)->dec,
++      OMXR_MC_IndexParamVideoStreamStoreUnit, &param);
++  if (err != OMX_ErrorNone) {
++    GST_WARNING_OBJECT (self,
++        "VideoStreamStoreUnit is not supported by component");
++    return TRUE;
++  }
++
++  param.eStoreUnit = OMXR_MC_VIDEO_StoreUnitTimestampSeparated;
++  err = gst_omx_component_set_parameter (GST_OMX_VIDEO_DEC (self)->dec,
++      OMXR_MC_IndexParamVideoStreamStoreUnit, &param);
++  if (err != OMX_ErrorNone) {
++    GST_ERROR_OBJECT (self,
++        "Error setting VideoStreamStoreUnit StoreUnitTimestampSeparated");
++    return FALSE;
++  }
++
++  gst_buffer_map (state->codec_data, &map, GST_MAP_READ);
++
++  /* Get the nal length field size from lengthSizeMinusOne field,
++   * which is contained in AVC Configuration.
++   */
++  self->nal_length_field_size = (map.data[4] & 0x03) + 1;
++
++  /* Retrieve sps and pps nals from codec_data, transformed into bytestream */
++  new_codec_data = gst_omx_h264_dec_retrieve_sps_pps (self, map.data);
++  if (!new_codec_data) {
++    GST_ERROR_OBJECT (self,
++        "failed sps and pps nals retrieval from codec_data");
++    gst_buffer_unmap (state->codec_data, &map);
++    return FALSE;
++  }
++
++  gst_buffer_unmap (state->codec_data, &map);
++
++  gst_buffer_replace (&state->codec_data, new_codec_data);
++
++  return TRUE;
+ }
+diff --git a/omx/gstomxh264dec.h b/omx/gstomxh264dec.h
+index 4c0ea1f..ae9523a 100644
+--- a/omx/gstomxh264dec.h
++++ b/omx/gstomxh264dec.h
+@@ -45,6 +45,8 @@ typedef struct _GstOMXH264DecClass GstOMXH264DecClass;
+ struct _GstOMXH264Dec
+ {
+   GstOMXVideoDec parent;
++
++  guint nal_length_field_size;
+ };
+ 
+ struct _GstOMXH264DecClass
+-- 
+1.7.9.5
+

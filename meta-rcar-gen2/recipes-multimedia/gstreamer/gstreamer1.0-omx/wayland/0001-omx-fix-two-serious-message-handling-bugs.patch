@@ -1,0 +1,40 @@
+From 8b06b07f6fdff4612d404eb99268c7a7325179b6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+Date: Sat, 1 Mar 2014 22:28:24 +0100
+Subject: [PATCH] omx: fix two serious message handling bugs
+
+Waiting for the next message if we already got one
+is nonsense and can lead to lockups.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=725468
+---
+ omx/gstomx.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 4e94712..9157b78 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -842,8 +842,7 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
+     g_mutex_unlock (&comp->lock);
+     if (!g_queue_is_empty (&comp->messages)) {
+       signalled = TRUE;
+-    }
+-    if (timeout == GST_CLOCK_TIME_NONE) {
++    } else if (timeout == GST_CLOCK_TIME_NONE) {
+       g_cond_wait (&comp->messages_cond, &comp->messages_lock);
+       signalled = TRUE;
+     } else {
+@@ -1514,8 +1513,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
+ 
+       if (!g_queue_is_empty (&comp->messages)) {
+         signalled = TRUE;
+-      }
+-      if (timeout == GST_CLOCK_TIME_NONE) {
++      } else if (timeout == GST_CLOCK_TIME_NONE) {
+         g_cond_wait (&comp->messages_cond, &comp->messages_lock);
+         signalled = TRUE;
+       } else {
+-- 
+1.7.9.5
+

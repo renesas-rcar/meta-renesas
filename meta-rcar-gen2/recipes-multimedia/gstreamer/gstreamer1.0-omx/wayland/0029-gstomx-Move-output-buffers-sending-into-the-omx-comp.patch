@@ -1,0 +1,40 @@
+From 78af58bae9b2bf83cf2467089b4ba47e408a2f6a Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 30 May 2014 18:11:57 +0900
+Subject: [PATCH 29/31] gstomx: Move output buffers sending into the omx
+ component after the flushing state becomes unset
+
+gst_omx_port_populate() can't perform while the flushing flag is set.
+This patch makes sure to call the function after unsetting the flag.
+---
+ omx/gstomxvideodec.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 9c53881..cb424c2 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -2189,15 +2189,17 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
+     if (gst_omx_component_get_state (self->dec,
+             GST_CLOCK_TIME_NONE) != OMX_StateExecuting)
+       return FALSE;
+-
+-    if (gst_omx_port_populate (self->dec_out_port) != OMX_ErrorNone)
+-      return FALSE;
+   }
+ 
+   /* Unset flushing to allow ports to accept data again */
+   gst_omx_port_set_flushing (self->dec_in_port, 5 * GST_SECOND, FALSE);
+   gst_omx_port_set_flushing (self->dec_out_port, 5 * GST_SECOND, FALSE);
+ 
++  if (!needs_disable) {
++    if (gst_omx_port_populate (self->dec_out_port) != OMX_ErrorNone)
++      return FALSE;
++  }
++
+   if (gst_omx_component_get_last_error (self->dec) != OMX_ErrorNone) {
+     GST_ERROR_OBJECT (self, "Component in error state: %s (0x%08x)",
+         gst_omx_component_get_last_error_string (self->dec),
+-- 
+1.7.9.5
+

@@ -1,0 +1,84 @@
+From 0eb9d804ebfc4302b6be73102f577a6d4b977f18 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Tue, 3 Jun 2014 18:59:17 +0700
+Subject: [PATCH 12/22] Add setting for StoreUnit and Deinterlace mode params
+
+Add setting for StoreUnit and Deinterlace mode params
+(for guidance purpose only, still use default value)
+
+refs #51267
+Signed-off-by: Hung Tran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxh264dec.c |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 88ed05c..7ac2e67 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -26,6 +26,8 @@
+ #include <gst/gst.h>
+ 
+ #include "gstomxh264dec.h"
++#include "OMXR_Extension_h264d.h"
++#include "OMXR_Extension_vdcmn.h"
+ 
+ GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_dec_debug_category);
+ #define GST_CAT_DEFAULT gst_omx_h264_dec_debug_category
+@@ -232,6 +234,53 @@ gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
+     }
+   }
+ 
++  {
++    /*
++     * Setting store unit mode (input port only)
++     *
++     * Can set:
++     *
++     *   OMXR_MC_VIDEO_StoreUnitEofSeparated    (default) :
++     *     Each OMX buffer sent to input port will contains a frame data
++     *      (many NALs, each NAL must have start code)
++     *
++     *   OMXR_MC_VIDEO_StoreUnitTimestampSeparated        :
++     *     Each OMX buffer sent to input port will contains a NAL data
++     *      (without or without start code)
++     */
++    OMXR_MC_VIDEO_PARAM_STREAM_STORE_UNITTYPE sStore;
++    GST_OMX_INIT_STRUCT (&sStore);
++    sStore.nPortIndex = dec->dec_in_port->index;
++
++    sStore.eStoreUnit = OMXR_MC_VIDEO_StoreUnitEofSeparated;  /* default */
++    gst_omx_component_set_parameter
++      (dec->dec, OMXR_MC_IndexParamVideoStreamStoreUnit, &sStore);
++
++
++    /*
++     * Setting reorder mode (output port only)
++     */
++    OMXR_MC_VIDEO_PARAM_REORDERTYPE sReorder;
++    GST_OMX_INIT_STRUCT (&sReorder);
++    sReorder.nPortIndex = dec->dec_out_port->index;  /* default */
++
++    sReorder.bReorder = OMX_TRUE;
++    gst_omx_component_set_parameter
++      (dec->dec, OMXR_MC_IndexParamVideoReorder, &sReorder);
++
++
++    /*
++     * Setting de-interlace mode (output port only)
++     */
++    OMXR_MC_VIDEO_PARAM_DEINTERLACE_MODETYPE sDeinterlace;
++    GST_OMX_INIT_STRUCT (&sDeinterlace);
++    sDeinterlace.nPortIndex = dec->dec_out_port->index;
++
++    sDeinterlace.eDeinterlace = OMXR_MC_VIDEO_Deinterlace3DHalf; /* default */
++    gst_omx_component_set_parameter
++      (dec->dec, OMXR_MC_IndexParamVideoDeinterlaceMode, &sDeinterlace);
++  }
++
+ 
+   return ret;
+ }
+-- 
+1.7.9.5
+

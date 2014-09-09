@@ -1,0 +1,591 @@
+From 32e8a20c02e0bf04c9f5aabc5ac2e588cb9dec02 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Mon, 28 Jul 2014 10:57:59 +0700
+Subject: [PATCH 21/22] Add dmabuf feature
+
+Add dmabuf feature for gst-omx on rcar platform.
+
+In this feature, gst-omx will export the OMX buffer memory
+  to a dmabuf fd(s) by an additional module, named "mmngrbuf".
+Then the fd(s) is added to a GstBuffer by
+  gst_dmabuf_allocator_alloc_callback() API.
+This API is modified from GStreamer API
+  gst_dmabuf_allocator_alloc(), added callback feature.
+
+Then the GstBuffer is sent to downstream  element.
+Downstream element must use GStreamer API
+  gst_dmabuf_memory_get_fd() to get the fd(s).
+Do not unref the GstBuffer until data is finished using.
+
+refs #56373
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ config/rcar/gstomx.conf |    2 +-
+ omx/Makefile.am         |    1 +
+ omx/gstomx.c            |    6 +-
+ omx/gstomx.h            |   12 ++
+ omx/gstomxvideodec.c    |  329 +++++++++++++++++++++++++++++++++++++++++++++--
+ omx/gstomxvideodec.h    |   26 ++++
+ 6 files changed, 360 insertions(+), 16 deletions(-)
+
+diff --git a/config/rcar/gstomx.conf b/config/rcar/gstomx.conf
+index b294e6a..559e482 100644
+--- a/config/rcar/gstomx.conf
++++ b/config/rcar/gstomx.conf
+@@ -5,7 +5,7 @@ component-name=OMX.RENESAS.VIDEO.DECODER.H264
+ rank=256
+ in-port-index=0
+ out-port-index=1
+-hacks=default-pix-aspect-ratio
++hacks=default-pix-aspect-ratio;rcar-mmngrbuf-exist;use-renesas-mc
+ 
+ [omxaacdec]
+ type-name=GstOMXAACDec
+diff --git a/omx/Makefile.am b/omx/Makefile.am
+index bb1cd4e..258d2d8 100644
+--- a/omx/Makefile.am
++++ b/omx/Makefile.am
+@@ -62,6 +62,7 @@ libgstomx_la_CFLAGS = \
+ 	$(GST_CFLAGS)
+ libgstomx_la_LIBADD = \
+ 	$(GST_PLUGINS_BASE_LIBS) \
++	-lgstallocators-@GST_API_VERSION@ \
+ 	-lgstaudio-@GST_API_VERSION@ \
+ 	-lgstpbutils-@GST_API_VERSION@ \
+ 	-lgstvideo-@GST_API_VERSION@ \
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index ceccf7e..0a48958 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -1318,7 +1318,7 @@ retry:
+     goto done;
+   }
+ 
+-  /* 
++  /*
+    * At this point we have no error or flushing/eos port
+    * and a properly configured port.
+    *
+@@ -2549,6 +2549,10 @@ gst_omx_parse_hacks (gchar ** hacks)
+       hacks_flags |= GST_OMX_HACK_NO_COMPONENT_ROLE;
+     else if (g_str_equal (*hacks, "default-pix-aspect-ratio"))
+       hacks_flags |= GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO;
++    else if (g_str_equal (*hacks, "use-renesas-mc"))
++      hacks_flags |= GST_OMX_HACK_GET_PRIVATE_RENESAS_MC;
++    else if (g_str_equal (*hacks, "rcar-mmngrbuf-exist"))
++      hacks_flags |= GST_OMX_HACK_RCAR_MMNGRBUF_EXIST;
+     else
+       GST_WARNING ("Unknown hack: %s", *hacks);
+     hacks++;
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index ffeb599..7f81a6d 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -109,6 +109,18 @@ G_BEGIN_DECLS
+  */
+ #define GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO                       G_GUINT64_CONSTANT (0x0000000000000100)
+ 
++/* If the system uses Renesas MC, some get useful information from
++ * buffer's pOutputPortPrivate
++ */
++#define GST_OMX_HACK_GET_PRIVATE_RENESAS_MC                           G_GUINT64_CONSTANT (0x0000000000000200)
++
++
++/* Renesas Gen2 platfrom can support dmabuf, but it requires an
++ * additional library MMNGRBUF
++ */
++#define GST_OMX_HACK_RCAR_MMNGRBUF_EXIST                              G_GUINT64_CONSTANT (0x0000000000000400)
++
++
+ typedef struct _GstOMXCore GstOMXCore;
+ typedef struct _GstOMXPort GstOMXPort;
+ typedef enum _GstOMXPortDirection GstOMXPortDirection;
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 7892742..67b6d26 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -33,6 +33,9 @@
+ #include "gstomxvideodec.h"
+ #include "OMXR_Extension_vdcmn.h"
+ 
++#include <stdio.h>
++#include <gst/allocators/gstdmabuf.h> /* For gstdmabuf related APIs */
++
+ GST_DEBUG_CATEGORY_STATIC (gst_omx_video_dec_debug_category);
+ #define GST_CAT_DEFAULT gst_omx_video_dec_debug_category
+ 
+@@ -40,6 +43,9 @@ typedef struct _GstOMXMemory GstOMXMemory;
+ typedef struct _GstOMXMemoryAllocator GstOMXMemoryAllocator;
+ typedef struct _GstOMXMemoryAllocatorClass GstOMXMemoryAllocatorClass;
+ 
++static unsigned long gst_omx_video_dec_get_physical_addr
++                            (GstOMXVideoDec * self, GstOMXBuffer * buf);
++
+ struct _GstOMXMemory
+ {
+   GstMemory mem;
+@@ -61,8 +67,10 @@ struct _GstOMXMemoryAllocatorClass
+ /* User data and function for release OMX buffer in no-copy mode */
+ struct GstOMXBufferCallback
+ {
+-  GstOMXPort   *out_port;
+-  GstOMXBuffer *buf;
++  GstOMXPort   * out_port;
++  GstOMXBuffer * buf;
++  gint           fd[GST_VIDEO_MAX_PLANES];
++  GDestroyNotify end_export_func;
+ };
+ 
+ #define GST_OMX_MEMORY_TYPE "openmax"
+@@ -685,12 +693,15 @@ static void gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+ static void GstOMXBufCallbackfunc (struct GstOMXBufferCallback *);
+ static GstBuffer * gst_omx_video_dec_wrap_buffer (GstOMXVideoDec * self,
+     GstOMXBuffer * buf);
++static GstBuffer * gst_omx_video_dec_wrap_dmabuf (GstOMXVideoDec * self,
++    GstOMXBuffer * buf);
+ 
+ enum
+ {
+   PROP_0,
+   PROP_NO_COPY,
+-  PROP_NO_REORDER
++  PROP_NO_REORDER,
++  PROP_USE_DMABUF
+ };
+ 
+ /* class initialization */
+@@ -745,6 +756,12 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
+         "Whether or not to transfer decoded data without copy",
+         FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+         GST_PARAM_MUTABLE_READY));
++
++    g_object_class_install_property (gobject_class, PROP_USE_DMABUF,
++      g_param_spec_boolean ("use-dmabuf", "Use dmabuf",
++        "Whether or not to transfer decoded data by dmabuf framework",
++        FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
++        GST_PARAM_MUTABLE_READY));
+ }
+ 
+ static void
+@@ -755,8 +772,11 @@ gst_omx_video_dec_init (GstOMXVideoDec * self)
+   g_mutex_init (&self->drain_lock);
+   g_cond_init (&self->drain_cond);
+ 
+-  self->no_copy = FALSE;
+-  self->no_reorder = FALSE;
++  self->no_copy        = FALSE;
++  self->no_reorder     = FALSE;
++  self->use_dmabuf     = FALSE;
++
++  self->mmbufcore.module = NULL;
+ }
+ 
+ static gboolean
+@@ -860,6 +880,12 @@ gst_omx_video_dec_close (GstVideoDecoder * decoder)
+   self->started = FALSE;
+   self->set_format_done = FALSE;
+ 
++  if (self->mmbufcore.module)
++    g_module_close (self->mmbufcore.module);
++
++  if (self->dmafd_allocator)
++    gst_object_unref (self->dmafd_allocator);
++
+   GST_DEBUG_OBJECT (self, "Closed decoder");
+ 
+   return TRUE;
+@@ -1625,10 +1651,19 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+      * caps and filling it
+      */
+ 
+-    GST_ERROR_OBJECT (self, "No corresponding frame found");
++    GST_WARNING_OBJECT (self, "No corresponding frame found");
++
++    if (self->no_copy || self->use_dmabuf) {
++      if (self->no_copy)
++        outbuf = gst_omx_video_dec_wrap_buffer (self, buf);
++      else
++        outbuf = gst_omx_video_dec_wrap_dmabuf (self, buf);
++
++      if (!outbuf) {
++        gst_omx_port_release_buffer (port, buf);
++        goto invalid_buffer;
++      }
+ 
+-    if (self->no_copy) {
+-      outbuf = gst_omx_video_dec_wrap_buffer (self, buf);
+       gst_buffer_ref (outbuf);
+ 
+       flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
+@@ -1676,8 +1711,20 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+     }
+   } else if (buf->omx_buf->nFilledLen > 0) {
+ 
+-    if (self->no_copy) {
+-      frame->output_buffer = gst_omx_video_dec_wrap_buffer (self, buf);
++    if (self->no_copy || self->use_dmabuf) {
++      if (self->no_copy)
++        frame->output_buffer = gst_omx_video_dec_wrap_buffer (self, buf);
++      else
++        frame->output_buffer = gst_omx_video_dec_wrap_dmabuf (self, buf);
++
++      if (!frame->output_buffer) {
++        flow_ret =
++            gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
++        frame = NULL;
++        gst_omx_port_release_buffer (port, buf);
++        goto invalid_buffer;
++      }
++
+       gst_buffer_ref (frame->output_buffer);
+ 
+       flow_ret =
+@@ -2770,6 +2817,9 @@ gst_omx_video_dec_set_property (GObject * object, guint prop_id,
+     case PROP_NO_REORDER:
+       self->no_reorder = g_value_get_boolean (value);
+       break;
++    case PROP_USE_DMABUF:
++      self->use_dmabuf = g_value_get_boolean (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -2789,6 +2839,9 @@ gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+     case PROP_NO_REORDER:
+       g_value_set_boolean (value, self->no_reorder);
+       break;
++    case PROP_USE_DMABUF:
++      g_value_set_boolean (value, self->use_dmabuf);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -2797,10 +2850,20 @@ gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+ 
+ static void GstOMXBufCallbackfunc (struct GstOMXBufferCallback *release)
+ {
+-  OMX_ERRORTYPE omx_err;
++  gint i;
++
++  if (!release)
++    return;
+ 
+-  if (release->buf) {
+-    omx_err = gst_omx_port_release_buffer (release->out_port, release->buf);
++  if (release->buf != NULL) {
++    gst_omx_port_release_buffer (release->out_port, release->buf);
++  }
++
++  if(release->end_export_func != NULL) {
++    for (i=0; i < GST_VIDEO_MAX_PLANES; i++)
++      if ( (release->fd[i] != 0) && (release->fd[i] != -1) ) {
++        release->end_export_func (release->fd[i]);
++      }
+   }
+ 
+   g_free (release);
+@@ -2873,7 +2936,9 @@ gst_omx_video_dec_wrap_buffer (GstOMXVideoDec * self, GstOMXBuffer * buf)
+       release = g_malloc (sizeof(struct GstOMXBufferCallback));
+       release->out_port = self->dec_out_port;
+       release->buf = buf;
+-      /* Add callback function to release OMX buffer to plane 1 */
++      release->fd[i] = -1;
++      release->end_export_func = NULL;
++      /* Add callback function to release OMX buffer to first plane */
+       mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+           buf->omx_buf->pBuffer + buf->omx_buf->nOffset + offs,
+           plane_size, 0, used_size, release, GstOMXBufCallbackfunc);
+@@ -2907,4 +2972,240 @@ gst_omx_video_dec_wrap_buffer (GstOMXVideoDec * self, GstOMXBuffer * buf)
+         OMX_TICKS_PER_SECOND);
+ 
+   return newbuf;
++}
++
++
++GstBuffer *
++gst_omx_video_dec_wrap_dmabuf (GstOMXVideoDec * self, GstOMXBuffer * buf)
++{
++  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
++
++  if (klass->cdata.hacks & GST_OMX_HACK_RCAR_MMNGRBUF_EXIST) {
++    if (self->mmbufcore.module == NULL) {
++      /* Load mmngrbuf interface
++       * (only load if needed, free in gst_omx_video_dec_close) */
++      self->mmbufcore.module =
++          g_module_open (MMNGR_BUF_IF, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
++
++      if (!self->mmbufcore.module) {
++        GST_ERROR_OBJECT (self, "Failed to load module '%s': %s",
++                MMNGR_BUF_IF, g_module_error ());
++        return NULL;
++      }
++
++      if (!g_module_symbol (self->mmbufcore.module,
++              "mmngr_export_start_in_user",
++              (gpointer *) & self->mmbufcore.mmngr_export_start_in_user))
++        goto symbol_error;
++
++      if (!g_module_symbol (self->mmbufcore.module,
++              "mmngr_export_end_in_user",
++              (gpointer *) & self->mmbufcore.mmngr_export_end_in_user))
++        goto symbol_error;
++
++      if (!g_module_symbol (self->mmbufcore.module,
++              "mmngr_import_start_in_user",
++              (gpointer *) & self->mmbufcore.mmngr_import_start_in_user))
++        goto symbol_error;
++
++      if (!g_module_symbol (self->mmbufcore.module,
++              "mmngr_import_end_in_user",
++              (gpointer *) & self->mmbufcore.mmngr_import_end_in_user))
++        goto symbol_error;
++
++
++      GST_DEBUG_OBJECT (self, "Successfully loaded '%s'", MMNGR_BUF_IF);
++    }
++
++    /* Export decoded data to a dmabuf file descritor. Then create a
++     * GstBuffer to wrap this file descriptor and send downstream */
++    {
++      GstBuffer *newbuf;
++      GstVideoCodecState *state;
++      GstVideoInfo *vinfo;
++      gint i, ret;
++      gint offs, plane_size;
++      gint base_stride, sliceheigh;
++      OMX_PARAM_PORTDEFINITIONTYPE *port_def;
++      GstMemory *mem;
++      gint stride[GST_VIDEO_MAX_PLANES];
++      int mmbuf_fd, dmabuf_fd;
++      guint phys_addr;
++      struct GstOMXBufferCallback *release = NULL;
++
++      /* Must use physical address for dmabuf */
++      phys_addr = gst_omx_video_dec_get_physical_addr (self, buf);
++
++      if (!phys_addr)
++        /* Fail to get the physical address, cannot continue */
++        return NULL;
++
++      state =
++        gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
++      vinfo = &state->info;
++
++      port_def    = &self->dec_out_port->port_def;
++      base_stride = port_def->format.video.nStride;
++      sliceheigh  = port_def->format.video.nSliceHeight;
++
++
++      newbuf = gst_buffer_new ();
++
++      /* Calculate memory area to add to Gst buffer */
++      offs = 0;
++      for (i=0; i < GST_VIDEO_INFO_N_PLANES(vinfo); i++) {
++        switch (GST_VIDEO_INFO_FORMAT(vinfo)) {
++          case GST_VIDEO_FORMAT_NV12:
++          case GST_VIDEO_FORMAT_NV21:
++          case GST_VIDEO_FORMAT_NV16:
++          case GST_VIDEO_FORMAT_NV24:
++            /* The scale_width value is wrong for plane 2 of these
++             * Semiplana formats. Need to multiply with 2 */
++            stride[i] = (i == 0 ? 1 : 2) *
++                GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo->finfo, i,
++                base_stride);
++            break;
++          default:
++            stride[i] =
++                GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo->finfo, i,
++                base_stride);
++            break;
++        }
++
++        plane_size = stride[i] *
++            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, sliceheigh);
++
++        /* Export to dmabuf */
++        ret = self->mmbufcore.mmngr_export_start_in_user (&mmbuf_fd, plane_size,
++              (phys_addr + buf->omx_buf->nOffset + offs), &dmabuf_fd);
++        if (ret < 0)    /* Fail to export */
++          return NULL;
++
++        /* Create allocator for dmabuf */
++        if (self->dmafd_allocator == NULL)
++          self->dmafd_allocator = gst_dmabuf_allocator_new ();
++
++        /* Wrap dmabuf file descriptor to a GstMemory.
++         * Note: GStreamer document is wrong in this API. The first
++         * input variable is not NULL-acceptable as it says.
++         * Instead, must provide a GstAllocator, created by
++         * gst_dmabuf_allocator_new () like above */
++        if (i == 0) {
++          /* Add callback function to first plane. This callback will
++           * release the OMX buffer to MC after downstream plugin finished
++           * using it */
++          release = g_malloc0 (sizeof(struct GstOMXBufferCallback));
++          release->out_port = self->dec_out_port;
++          release->buf = buf;
++          release->fd[i] = mmbuf_fd; /* End export later in release callback */
++          release->end_export_func = self->mmbufcore.mmngr_export_end_in_user;
++
++          mem = gst_dmabuf_allocator_alloc_callback (self->dmafd_allocator,
++                dmabuf_fd, plane_size, release, GstOMXBufCallbackfunc);
++        }
++        else {
++          mem = gst_dmabuf_allocator_alloc (self->dmafd_allocator, dmabuf_fd, plane_size);
++          release->fd[i] = mmbuf_fd;
++        }
++
++        if (!mem) {
++          GST_ERROR_OBJECT (self, "Failed to wrap dmabuf %d\n",dmabuf_fd);
++          self->mmbufcore.mmngr_export_end_in_user (mmbuf_fd);
++          if (release != NULL)
++            g_free (release);
++          return NULL;
++        }
++
++        gst_buffer_append_memory (newbuf, mem);
++
++        offs += plane_size;
++      }
++
++      /* Set timestamp */
++      GST_BUFFER_PTS (newbuf) =
++          gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
++          OMX_TICKS_PER_SECOND);
++      if (buf->omx_buf->nTickCount != 0)
++        GST_BUFFER_DURATION (newbuf) =
++            gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
++            OMX_TICKS_PER_SECOND);
++
++      return newbuf;
++    }
++
++  symbol_error:
++    {
++      GST_ERROR_OBJECT (self, "Failed to locate required in '%s': %s",
++              MMNGR_BUF_IF, g_module_error ());
++      g_module_close (self->mmbufcore.module);
++      self->mmbufcore.module = NULL;
++      return NULL;
++    }
++  }
++  else
++    /* Cannot export dmabuf without mmngrbuf */
++    return NULL;
++}
++
++/* This function get the physical address of buffer */
++static unsigned long gst_omx_video_dec_get_physical_addr (GstOMXVideoDec * self, GstOMXBuffer * buf)
++{
++  unsigned long physical_addr;
++  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
++
++  physical_addr = 0;
++
++  if (klass->cdata.hacks & GST_OMX_HACK_GET_PRIVATE_RENESAS_MC) {
++    /* Can get physical address from private data of buffer  in this case */
++    typedef struct tagOMXR_MC_VIDEO_DECODERESULTTYPE {
++      OMX_U32 nSize;
++      OMX_PTR pvPhysImageAddressY;
++      OMX_U32 u32PictWidth;
++      OMX_U32 u32PictHeight;
++      OMX_U32 u32DecodeError;
++      OMX_U32 u32PhyAddr;
++      OMX_U32 u32Stride;
++      OMX_U32 u32Area;
++      OMX_PTR pvReserved;
++    } OMXR_MC_VIDEO_DECODERESULTTYPE;
++
++    OMXR_MC_VIDEO_DECODERESULTTYPE* frameinfo =
++        (OMXR_MC_VIDEO_DECODERESULTTYPE*) buf->omx_buf->pOutputPortPrivate;
++
++    physical_addr = frameinfo->pvPhysImageAddressY;
++
++  } else {
++    /* Other method to get physical address by reading from maps file */
++    FILE *fp;
++    char map_file[21];
++    char s_virtual_address[17];
++    char s_device_name[20];
++    char s_physical_addr[17];
++    char video_file[50];
++    char tmp[200];
++
++    unsigned long virt_addr = buf->omx_buf->pBuffer;
++
++    /* Set strings to variables */
++    g_snprintf (map_file, 21,"/proc/%d/maps", getpid());
++    g_snprintf (s_virtual_address, 17,"%08x", virt_addr);
++
++    if((fp = fopen(map_file, "r")) == NULL) {
++        return(0);
++    }
++
++    /* grep maps file to find the address */
++    while(fgets(tmp, 200, fp) != NULL) {
++      if((strstr(tmp, s_virtual_address)) != NULL) {
++          strncpy(s_physical_addr,tmp+23,8);
++          s_physical_addr[8] = NULL;
++
++          physical_addr = strtoul(s_physical_addr,NULL,16);
++          break;
++      }
++    }
++    fclose(fp);
++  }
++
++  return physical_addr;
+ }
+\ No newline at end of file
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index def708d..a16784a 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -29,6 +29,24 @@
+ 
+ G_BEGIN_DECLS
+ 
++/* dmabuf support : call mmngrbuf for exporting buffer */
++#define MMNGR_BUF_IF "/usr/local/lib/libmmngrbuf.so"
++
++struct MMNGRBuf
++{
++  GModule *module;
++  int (*mmngr_export_start_in_user) (int *pid,
++			unsigned long size,
++			unsigned long hard_addr,
++			int *pbuf);
++  int (*mmngr_export_end_in_user) (int id);
++  int (*mmngr_import_start_in_user) (int *pid,
++			unsigned long *psize,
++			unsigned long *phard_addr,
++			int buf);
++  int (*mmngr_import_end_in_user) (int id);
++};
++
+ #define GST_TYPE_OMX_VIDEO_DEC \
+   (gst_omx_video_dec_get_type())
+ #define GST_OMX_VIDEO_DEC(obj) \
+@@ -81,11 +99,19 @@ struct _GstOMXVideoDec
+   /* Set TRUE to not using frame reorder */
+   gboolean no_reorder;
+ 
++  /* Set TRUE to use dmabuf for tranfering data (imply no_copy=true) */
++  gboolean use_dmabuf;
++
+   /* TRUE means timestamp should be increased, only effects when
+    * manually calculate timestamp (because timestamp is not provided
+    * by video stream) */
+   gboolean ts_flag;
+ 
++  /* Handle MMNGRBUF related function, use for dmabuf exporting */
++  struct MMNGRBuf mmbufcore;
++
++  GstAllocator *dmafd_allocator;
++
+   GstFlowReturn downstream_flow_ret;
+ };
+ 
+-- 
+1.7.9.5
+

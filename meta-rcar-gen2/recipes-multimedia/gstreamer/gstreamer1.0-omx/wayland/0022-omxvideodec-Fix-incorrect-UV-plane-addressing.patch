@@ -1,0 +1,27 @@
+From 4c09a773591f9705eb28ee5134f7dfa591f9be8b Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Feb 2014 18:43:04 +0900
+Subject: [PATCH 22/31] omxvideodec: Fix incorrect UV plane addressing
+
+gst_memory_new_wrapped() can be specified as the offset in an input
+data pointer, so this line mistakenly performs the duplicate offset
+addressing of UV plane.
+---
+ omx/gstomxvideodec.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 2d7c968..c12a050 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1591,7 +1591,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+         /* Set UV plane */
+         offset[1] = port_def->format.video.nSliceHeight *
+             port_def->format.video.nStride;
+-        data += offset[1];
+         stride[1] = port_def->format.video.nStride;
+         plane_size /= 2;
+ 
+-- 
+1.7.9.5
+

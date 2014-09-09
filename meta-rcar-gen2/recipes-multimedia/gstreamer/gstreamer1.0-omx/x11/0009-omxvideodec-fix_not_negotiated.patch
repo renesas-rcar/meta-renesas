@@ -1,0 +1,87 @@
+From 6f3164b68d75d97e5880a7bf94414f4b2f9377fd Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Thu, 29 May 2014 18:41:45 +0700
+Subject: [PATCH 09/22] Fix "not-negotiated" error
+
+This error happens because video sink plugin does not support other pixel-aspect-ratio than 1/1
+
+refs #55993
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ config/rcar/gstomx.conf |    2 +-
+ omx/gstomx.c            |    2 ++
+ omx/gstomx.h            |    6 ++++++
+ omx/gstomxvideodec.c    |    7 +++++++
+ 4 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/config/rcar/gstomx.conf b/config/rcar/gstomx.conf
+index aeb6430..c81055a 100644
+--- a/config/rcar/gstomx.conf
++++ b/config/rcar/gstomx.conf
+@@ -5,7 +5,7 @@ component-name=OMX.RENESAS.VIDEO.DECODER.H264
+ rank=256
+ in-port-index=0
+ out-port-index=1
+-hacks=
++hacks=default-pix-aspect-ratio
+ 
+ [omxaacdec]
+ type-name=GstOMXAACDec
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index db3c633..ceccf7e 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -2547,6 +2547,8 @@ gst_omx_parse_hacks (gchar ** hacks)
+       hacks_flags |= GST_OMX_HACK_DRAIN_MAY_NOT_RETURN;
+     else if (g_str_equal (*hacks, "no-component-role"))
+       hacks_flags |= GST_OMX_HACK_NO_COMPONENT_ROLE;
++    else if (g_str_equal (*hacks, "default-pix-aspect-ratio"))
++      hacks_flags |= GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO;
+     else
+       GST_WARNING ("Unknown hack: %s", *hacks);
+     hacks++;
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index b5d8379..ffeb599 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -103,6 +103,12 @@ G_BEGIN_DECLS
+  */
+ #define GST_OMX_HACK_NO_COMPONENT_ROLE                                G_GUINT64_CONSTANT (0x0000000000000080)
+ 
++/* If the video sink plugin only supports default pixel-aspect-ratio
++ * (1/1), cannot support other pixel-aspect-ratio
++ * Happens with Renesas Gen2 platfrom
++ */
++#define GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO                       G_GUINT64_CONSTANT (0x0000000000000100)
++
+ typedef struct _GstOMXCore GstOMXCore;
+ typedef struct _GstOMXPort GstOMXPort;
+ typedef enum _GstOMXPortDirection GstOMXPortDirection;
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 7a17321..2c9aad9 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1404,6 +1404,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+   GstOMXAcquireBufferReturn acq_return;
+   GstClockTimeDiff deadline;
+   OMX_ERRORTYPE err;
++  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
+ 
+   acq_return = gst_omx_port_acquire_buffer (port, &buf);
+   if (acq_return == GST_OMX_ACQUIRE_BUFFER_ERROR) {
+@@ -1481,6 +1482,12 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+ 
+     /* Take framerate and pixel-aspect-ratio from sinkpad caps */
+ 
++    if (klass->cdata.hacks & GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO) {
++      /* Workaround in case video sink plugin only supports
++       * default pixel-aspect-ratio 1/1   */
++      state->info.par_d = state->info.par_n;
++    }
++
+     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+       if (buf)
+         gst_omx_port_release_buffer (self->dec_out_port, buf);
+-- 
+1.7.9.5
+

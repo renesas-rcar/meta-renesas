@@ -1,0 +1,31 @@
+From b115c661221b5ef5cef2b7bd613948859f0acf0a Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 18 Apr 2014 10:31:14 +0700
+Subject: [PATCH 05/22] Fix not-negotiated issue with qtdemux
+
+When porting to GStreamer 1.2.3, mp4 file cannot be played because
+of not-negotiated error from qtdemux.
+The reason is unclear, but it 's probably a change of qtdemux.
+This solution is found through trials.
+
+refs #54088
+Signed-off-by: Hung Tran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxh264dec.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 4485181..b0bcca6 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -65,7 +65,6 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
+       GST_DEBUG_FUNCPTR (gst_omx_h264_dec_prepare_frame);
+ 
+   videodec_class->cdata.default_sink_template_caps = "video/x-h264, "
+-      "parsed=(boolean) true, "
+       "alignment=(string) { au, nal }, "
+       "stream-format=(string) avc, "
+       "width=(int) [1,MAX], " "height=(int) [1,MAX]";
+-- 
+1.7.9.5
+

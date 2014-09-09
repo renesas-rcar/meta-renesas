@@ -1,0 +1,37 @@
+From 08a7a39c6cf24432d8e970de7091c4e1d3e22de3 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Thu, 3 Jul 2014 17:46:23 +0700
+Subject: [PATCH 16/22] Workaround for Decoder initialized error
+
+This patch is a workaround to avoid Decoder initialized error.
+Phenomenon:
+   - Sometimes error happens when running GStreamer :
+     ERROR: from element /GstPipeline:pipeline0/GstOMXAACDec-omxaacdec:omxaacdec-omxaac
+     Additional debug info:
+     gstaudiodecoder.c(1798): gst_audio_decoder_chain (): /GstPipeline:pipeline0/GstOMX
+     decoder not initialized
+Cause:
+   - Attempt to set unsupported color format to REL OMX component.
+     The component supports only YUV 420 Semi Planar and Planar.
+
+refs #57073
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxvideodec.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 8fb385f..99d5bf4 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1900,7 +1900,6 @@ gst_omx_video_dec_get_supported_colorformats (GstOMXVideoDec * self)
+   const VideoNegotiationMap format_list[] = {
+     {GST_VIDEO_FORMAT_NV12, OMX_COLOR_FormatYUV420SemiPlanar},
+     {GST_VIDEO_FORMAT_I420, OMX_COLOR_FormatYUV420Planar},
+-    {GST_VIDEO_FORMAT_I420, OMX_COLOR_FormatYUV420PackedPlanar},
+   };
+ 
+   GST_OMX_INIT_STRUCT (&param);
+-- 
+1.7.9.5
+

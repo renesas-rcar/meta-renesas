@@ -1,0 +1,36 @@
+From 85f03304aaa82a544e746d2b3ffa06a0c6c143bf Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Wed, 9 Jul 2014 11:27:15 +0700
+Subject: [PATCH 18/22] Do not clean older frames in no_reorder mode
+
+Only clean older frames in reorder mode.
+In no_reorder mode (rarely used) the deocde order
+ is different with the display order, so do not clean.
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxvideodec.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index f6ddd53..5d60a85 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1604,8 +1604,12 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+    * stream, corrupted input data...
+    * In any cases, not likely to be seen again. so drop it before they pile up
+    * and use all the memory. */
+-  gst_omx_video_dec_clean_older_frames (self, buf,
+-      gst_video_decoder_get_frames (GST_VIDEO_DECODER (self)));
++  if (self->no_reorder == FALSE)
++    /* Only clean older frames in reorder mode. Do not clean in
++     * no_reorder mode, as in that mode the output frames are not in
++     * display order */
++    gst_omx_video_dec_clean_older_frames (self, buf,
++        gst_video_decoder_get_frames (GST_VIDEO_DECODER (self)));
+ 
+   if (frame
+       && (deadline = gst_video_decoder_get_max_decode_time
+-- 
+1.7.9.5
+

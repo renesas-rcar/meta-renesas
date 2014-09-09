@@ -1,0 +1,454 @@
+From 04c57583bbdde578a772eaa96de7d9c49592bb5b Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Thu, 5 Jun 2014 09:34:46 +0700
+Subject: [PATCH 15/22] Update for no-copy mode
+
+Heavy videos (Full HD 60fps) cannot be played on no-copy mode.
+The reason is that gst_omx_video_dec_loop jumps to special cases
+("drop frame" or "no corresponding frame" case).
+no-copy mode does not cover these special cases yet, so problem happens.
+This patch will fix it.
+
+refs #55991
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxvideodec.c |  347 +++++++++++++++++++++++++++-----------------------
+ 1 file changed, 190 insertions(+), 157 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 36d8b99..8fb385f 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -64,7 +64,6 @@ struct GstOMXBufferCallback
+   GstOMXPort   *out_port;
+   GstOMXBuffer *buf;
+ };
+-static void GstOMXBufCallbackfunc (struct GstOMXBufferCallback *);
+ 
+ #define GST_OMX_MEMORY_TYPE "openmax"
+ #define DEFAULT_FRAME_PER_SECOND  30
+@@ -683,7 +682,9 @@ static void gst_omx_video_dec_set_property (GObject * object, guint prop_id,
+     const GValue * value, GParamSpec * pspec);
+ static void gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+     GValue * value, GParamSpec * pspec);
+-
++static void GstOMXBufCallbackfunc (struct GstOMXBufferCallback *);
++static GstBuffer * gst_omx_video_dec_wrap_buffer (GstOMXVideoDec * self,
++    GstOMXBuffer * buf);
+ 
+ enum
+ {
+@@ -742,7 +743,7 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
+     g_object_class_install_property (gobject_class, PROP_NO_COPY,
+       g_param_spec_boolean ("no-copy", "No copy",
+         "Whether or not to transfer decoded data without copy",
+-        TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
++        FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+         GST_PARAM_MUTABLE_READY));
+ }
+ 
+@@ -1547,6 +1548,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+       buf->omx_buf->nFlags, buf->omx_buf->nTimeStamp);
+ 
+   GST_VIDEO_DECODER_STREAM_LOCK (self);
++
+   frame = _find_nearest_frame (self, buf);
+ 
+   if (frame
+@@ -1557,6 +1559,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+         GST_TIME_ARGS (-deadline));
+     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+     frame = NULL;
++
++    err = gst_omx_port_release_buffer (port, buf);
++    if (err != OMX_ErrorNone)
++      goto release_error;
++
+   } else if (!frame && buf->omx_buf->nFilledLen > 0) {
+     GstBuffer *outbuf;
+ 
+@@ -1567,167 +1574,90 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+ 
+     GST_ERROR_OBJECT (self, "No corresponding frame found");
+ 
+-    if (self->out_port_pool) {
+-      gint i, n;
+-      GstBufferPoolAcquireParams params = { 0, };
++    if (self->no_copy) {
++      outbuf = gst_omx_video_dec_wrap_buffer (self, buf);
++      gst_buffer_ref (outbuf);
+ 
+-      n = port->buffers->len;
+-      for (i = 0; i < n; i++) {
+-        GstOMXBuffer *tmp = g_ptr_array_index (port->buffers, i);
++      flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
++      gst_buffer_unref (outbuf); /* OMX buffer will be released in callback */
++    } else {
++      if (self->out_port_pool) {
++        gint i, n;
++        GstBufferPoolAcquireParams params = { 0, };
+ 
+-        if (tmp == buf)
+-          break;
+-      }
+-      g_assert (i != n);
++        n = port->buffers->len;
++        for (i = 0; i < n; i++) {
++          GstOMXBuffer *tmp = g_ptr_array_index (port->buffers, i);
+ 
+-      GST_OMX_BUFFER_POOL (self->out_port_pool)->current_buffer_index = i;
+-      flow_ret =
+-          gst_buffer_pool_acquire_buffer (self->out_port_pool, &outbuf,
+-          &params);
+-      if (flow_ret != GST_FLOW_OK) {
+-        gst_omx_port_release_buffer (port, buf);
+-        goto invalid_buffer;
++          if (tmp == buf)
++            break;
++        }
++        g_assert (i != n);
++
++        GST_OMX_BUFFER_POOL (self->out_port_pool)->current_buffer_index = i;
++        flow_ret =
++            gst_buffer_pool_acquire_buffer (self->out_port_pool, &outbuf,
++            &params);
++        if (flow_ret != GST_FLOW_OK) {
++          gst_omx_port_release_buffer (port, buf);
++          goto invalid_buffer;
++        }
++        buf = NULL;
++      } else {
++        outbuf =
++            gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
++        if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
++          gst_buffer_unref (outbuf);
++          gst_omx_port_release_buffer (port, buf);
++          goto invalid_buffer;
++        }
+       }
+-      buf = NULL;
+-    } else {
+-      outbuf =
+-          gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
+-      if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
+-        gst_buffer_unref (outbuf);
+-        gst_omx_port_release_buffer (port, buf);
+-        goto invalid_buffer;
++
++      flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
++
++      if (buf != NULL) {
++        err = gst_omx_port_release_buffer (port, buf);
++        if (err != OMX_ErrorNone)
++          goto release_error;
+       }
+     }
+-
+-    flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
+   } else if (buf->omx_buf->nFilledLen > 0) {
+-    if (self->out_port_pool) {
+-      gint i, n;
+-      GstBufferPoolAcquireParams params = { 0, };
+ 
+-      n = port->buffers->len;
+-      for (i = 0; i < n; i++) {
+-        GstOMXBuffer *tmp = g_ptr_array_index (port->buffers, i);
++    if (self->no_copy) {
++      frame->output_buffer = gst_omx_video_dec_wrap_buffer (self, buf);
++      gst_buffer_ref (frame->output_buffer);
+ 
+-        if (tmp == buf)
+-          break;
+-      }
+-      g_assert (i != n);
+-
+-      GST_OMX_BUFFER_POOL (self->out_port_pool)->current_buffer_index = i;
+-      flow_ret =
+-          gst_buffer_pool_acquire_buffer (self->out_port_pool,
+-          &frame->output_buffer, &params);
+-      if (flow_ret != GST_FLOW_OK) {
+-        flow_ret =
+-            gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+-        frame = NULL;
+-        gst_omx_port_release_buffer (port, buf);
+-        goto invalid_buffer;
+-      }
+       flow_ret =
+           gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
++
++      gst_buffer_unref (frame->output_buffer); /* OMX buffer will be released in callback */
+       frame = NULL;
+-      buf = NULL;
+     } else {
+-      if (self->no_copy) {
+-        /* Create a Gst buffer to wrap decoded data, then send to
+-         * downstream plugin.
+-         * Need to hold up the OMX buffer until downstream plugin
+-         * finishes using. To do that, add a callback function so that
+-         * OMX buffer will be released when downstream plugin unref
+-         * Gst buffer */
+-        GstBuffer *newbuf;
+-        GstVideoCodecState *state;
+-        GstVideoInfo *vinfo;
+-        gint i;
+-        gint offs, plane_size, used_size;
+-        gint width, base_stride, sliceheigh, height;
+-        OMX_PARAM_PORTDEFINITIONTYPE *port_def;
+-        GstMemory *mem;
+-        gsize offset[GST_VIDEO_MAX_PLANES];
+-        gint stride[GST_VIDEO_MAX_PLANES];
+-
+-
+-        state =
+-          gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
+-        vinfo = &state->info;
+-
+-        port_def    = &self->dec_out_port->port_def;
+-        width       = port_def->format.video.nFrameWidth;
+-        base_stride = port_def->format.video.nStride;
+-        sliceheigh  = port_def->format.video.nSliceHeight;
+-        height       = port_def->format.video.nFrameHeight;
+-
+-
+-        newbuf = gst_buffer_new ();
+-
+-        /* Calculate memory area to add to Gst buffer */
+-        offs = 0;
+-        for (i=0; i < GST_VIDEO_INFO_N_PLANES(vinfo); i++) {
+-          offset[i] = offs;
+-
+-          switch (GST_VIDEO_INFO_FORMAT(vinfo)) {
+-            case GST_VIDEO_FORMAT_NV12:
+-            case GST_VIDEO_FORMAT_NV21:
+-            case GST_VIDEO_FORMAT_NV16:
+-            case GST_VIDEO_FORMAT_NV24:
+-              /* The scale_width value is wrong for plane 2 of these
+-               * Semiplana formats. Need to multiply with 2 */
+-              stride[i] = (i == 0 ? 1 : 2) *
+-                  GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo->finfo, i,
+-                  base_stride);
+-              break;
+-            default:
+-              stride[i] =
+-                  GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo->finfo, i,
+-                  base_stride);
+-              break;
+-          }
++      if (self->out_port_pool) {
++        gint i, n;
++        GstBufferPoolAcquireParams params = { 0, };
+ 
+-          plane_size = stride[i] *
+-              GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, sliceheigh);
+-          used_size = stride[i] *
+-              GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, height);
+-
+-          if (i == 0) {
+-            struct GstOMXBufferCallback *release;
+-            release = g_malloc (sizeof(struct GstOMXBufferCallback));
+-            release->out_port = port;
+-            release->buf = buf;
+-            /* Add callback function to release OMX buffer to plane 1 */
+-            mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+-                buf->omx_buf->pBuffer + buf->omx_buf->nOffset + offs,
+-                plane_size, 0, used_size, release, GstOMXBufCallbackfunc);
+-          }
+-          else
+-            /* Only release OMX buffer one time. Do not add callback
+-             * function to other planes
+-             * (These planes are from same OMX buffer) */
+-            mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+-                buf->omx_buf->pBuffer + buf->omx_buf->nOffset + offs,
+-                plane_size, 0, used_size, NULL, NULL);
++        n = port->buffers->len;
++        for (i = 0; i < n; i++) {
++          GstOMXBuffer *tmp = g_ptr_array_index (port->buffers, i);
+ 
+-          gst_buffer_append_memory (newbuf, mem);
+-
+-          offs += plane_size;
++          if (tmp == buf)
++            break;
+         }
++        g_assert (i != n);
+ 
+-        /* Add video meta data, which is needed to map frame */
+-        gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
+-            GST_VIDEO_INFO_FORMAT (vinfo), width, height,
+-            GST_VIDEO_INFO_N_PLANES(vinfo),
+-            offset, stride);
+-
+-        gst_buffer_ref (newbuf);
+-        frame->output_buffer = newbuf;
+-
++        GST_OMX_BUFFER_POOL (self->out_port_pool)->current_buffer_index = i;
+         flow_ret =
+-            gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+-
+-        frame = NULL;
+-        gst_buffer_unref (newbuf);
+-        newbuf = NULL;
++            gst_buffer_pool_acquire_buffer (self->out_port_pool,
++            &frame->output_buffer, &params);
++        if (flow_ret != GST_FLOW_OK) {
++          flow_ret =
++              gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
++          frame = NULL;
++          gst_omx_port_release_buffer (port, buf);
++          goto invalid_buffer;
++        }
++        buf = NULL;
+       } else {
+         if ((flow_ret =
+                 gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER
+@@ -1744,12 +1674,20 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+             gst_omx_port_release_buffer (port, buf);
+             goto invalid_buffer;
+           }
+-          flow_ret =
+-              gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+-          frame = NULL;
+         }
+       }
++
++      flow_ret =
++          gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
++      frame = NULL;
++      if (buf != NULL) {
++        err = gst_omx_port_release_buffer (port, buf);
++        if (err != OMX_ErrorNone)
++          goto release_error;
++      }
+     }
++
++
+   } else if (frame != NULL) {
+     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+     frame = NULL;
+@@ -1759,14 +1697,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+ 
+   GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
+ 
+-  /* Do not release OMX buffer here if using no-copy mode
+-   * In no-copy OMX buffer will be released in callback function */
+-  if (buf && (self->no_copy == FALSE)) {
+-    err = gst_omx_port_release_buffer (port, buf);
+-    if (err != OMX_ErrorNone)
+-      goto release_error;
+-  }
+-
+   self->downstream_flow_ret = flow_ret;
+ 
+   if (flow_ret != GST_FLOW_OK)
+@@ -2822,4 +2752,107 @@ static void GstOMXBufCallbackfunc (struct GstOMXBufferCallback *release)
+   }
+ 
+   g_free (release);
++}
++
++GstBuffer *
++gst_omx_video_dec_wrap_buffer (GstOMXVideoDec * self, GstOMXBuffer * buf)
++{
++  /* Create a Gst buffer to wrap decoded data, then send to
++   * downstream plugin.
++   * Need to hold up the OMX buffer until downstream plugin
++   * finishes using. To do that, add a callback function so that
++   * OMX buffer will be released when downstream plugin unref
++   * Gst buffer */
++  GstBuffer *newbuf;
++  GstVideoCodecState *state;
++  GstVideoInfo *vinfo;
++  gint i;
++  gint offs, plane_size, used_size;
++  gint width, base_stride, sliceheigh, height;
++  OMX_PARAM_PORTDEFINITIONTYPE *port_def;
++  GstMemory *mem;
++  gsize offset[GST_VIDEO_MAX_PLANES];
++  gint stride[GST_VIDEO_MAX_PLANES];
++
++
++  state =
++    gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
++  vinfo = &state->info;
++
++  port_def    = &self->dec_out_port->port_def;
++  width       = port_def->format.video.nFrameWidth;
++  base_stride = port_def->format.video.nStride;
++  sliceheigh  = port_def->format.video.nSliceHeight;
++  height       = port_def->format.video.nFrameHeight;
++
++
++  newbuf = gst_buffer_new ();
++
++  /* Calculate memory area to add to Gst buffer */
++  offs = 0;
++  for (i=0; i < GST_VIDEO_INFO_N_PLANES(vinfo); i++) {
++    offset[i] = offs;
++
++    switch (GST_VIDEO_INFO_FORMAT(vinfo)) {
++      case GST_VIDEO_FORMAT_NV12:
++      case GST_VIDEO_FORMAT_NV21:
++      case GST_VIDEO_FORMAT_NV16:
++      case GST_VIDEO_FORMAT_NV24:
++        /* The scale_width value is wrong for plane 2 of these
++         * Semiplana formats. Need to multiply with 2 */
++        stride[i] = (i == 0 ? 1 : 2) *
++            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo->finfo, i,
++            base_stride);
++        break;
++      default:
++        stride[i] =
++            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo->finfo, i,
++            base_stride);
++        break;
++    }
++
++    plane_size = stride[i] *
++        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, sliceheigh);
++    used_size = stride[i] *
++        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, height);
++
++    if (i == 0) {
++      struct GstOMXBufferCallback *release;
++      release = g_malloc (sizeof(struct GstOMXBufferCallback));
++      release->out_port = self->dec_out_port;
++      release->buf = buf;
++      /* Add callback function to release OMX buffer to plane 1 */
++      mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
++          buf->omx_buf->pBuffer + buf->omx_buf->nOffset + offs,
++          plane_size, 0, used_size, release, GstOMXBufCallbackfunc);
++    }
++    else
++      /* Only release OMX buffer one time. Do not add callback
++       * function to other planes
++       * (These planes are from same OMX buffer) */
++      mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
++          buf->omx_buf->pBuffer + buf->omx_buf->nOffset + offs,
++          plane_size, 0, used_size, NULL, NULL);
++
++    gst_buffer_append_memory (newbuf, mem);
++
++    offs += plane_size;
++  }
++
++  /* Add video meta data, which is needed to map frame */
++  gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
++      GST_VIDEO_INFO_FORMAT (vinfo), width, height,
++      GST_VIDEO_INFO_N_PLANES(vinfo),
++      offset, stride);
++
++  /* Set timestamp */
++  GST_BUFFER_PTS (newbuf) =
++      gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
++      OMX_TICKS_PER_SECOND);
++  if (buf->omx_buf->nTickCount != 0)
++    GST_BUFFER_DURATION (newbuf) =
++        gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
++        OMX_TICKS_PER_SECOND);
++
++  return newbuf;
+ }
+\ No newline at end of file
+-- 
+1.7.9.5
+

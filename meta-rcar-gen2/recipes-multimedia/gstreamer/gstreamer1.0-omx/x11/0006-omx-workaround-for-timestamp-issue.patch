@@ -1,0 +1,40 @@
+From 7fb0d05fb22fa63a15806e210d42a659ea1c6163 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 18 Apr 2014 13:11:50 +0700
+Subject: [PATCH 06/22] Workaround the timestamp issue with h264parse
+
+In GStreamer, there are two timestamps for each frame data.
+They are pts and dts. gst-omx uses pts.
+In GStreamer 1.0.7, h264parse sends both pts and dts, but these values are
+same.
+In GStreamer 1.2.3, for an unknown reason, h264parse does not send pts for
+some videos, such as RenesasElectronicsVGA.264
+
+Since h264parse does not send pts, gst-omx cannot get the timestamp for buffer
+and as the result, the display video is very lag.
+
+refs #54088
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxvideodec.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 746b92d..b70fa44 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -2224,6 +2224,11 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+ 
+   timestamp = frame->pts;
+   duration = frame->duration;
++  
++  /* Workaround for timestamp issue */
++  if (!GST_CLOCK_TIME_IS_VALID (timestamp) &&
++        GST_CLOCK_TIME_IS_VALID (frame->dts))
++    timestamp = frame->dts;
+ 
+   if (self->downstream_flow_ret != GST_FLOW_OK) {
+     gst_video_codec_frame_unref (frame);
+-- 
+1.7.9.5
+

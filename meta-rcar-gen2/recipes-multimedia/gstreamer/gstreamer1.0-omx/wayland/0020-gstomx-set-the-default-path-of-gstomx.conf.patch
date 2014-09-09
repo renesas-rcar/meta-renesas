@@ -1,0 +1,28 @@
+From 47b619eda0245389390eb4b37167cbcce7533887 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 6 Dec 2013 10:30:46 +0900
+Subject: [PATCH 20/31] gstomx: set the default path of gstomx.conf
+
+This prioritizes the path obtained from GST_OMX_CONFIG_DIR
+environment variable in the system.
+---
+ omx/gstomx.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 6b0a3d1..6f0c7fb 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -2718,6 +2718,9 @@ plugin_init (GstPlugin * plugin)
+ 
+   GST_DEBUG_CATEGORY_INIT (gstomx_debug, "omx", 0, "gst-omx");
+ 
++  /* Set the default path of gstomx.conf */
++  g_setenv (*env_config_name, "/etc", FALSE);
++
+   /* Read configuration file gstomx.conf from the preferred
+    * configuration directories */
+   env_config_dir = g_strdup (g_getenv (*env_config_name));
+-- 
+1.7.9.5
+

@@ -1,0 +1,37 @@
+From 7f5e3e4badd36f0c87c2e1895be4bcc69b2fbf47 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Wed, 9 Jul 2014 08:49:11 +0700
+Subject: [PATCH 19/22] Remove "bug in decoder" message
+
+Remove misleading "bug in decoder" message and following dropframe.
+These things causes confusion and heavily dropframe when playing some interlace files
+In fact, on the online git tree, they were already removed at the 4th day
+after the first release of gst-omx
+
+refs #56479
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxvideodec.c |    7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 5d60a85..7892742 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1051,13 +1051,6 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
+     }
+   }
+ 
+-  if (finish_frames) {
+-    g_warning ("Too old frames, bug in decoder -- please file a bug");
+-    for (l = finish_frames; l; l = l->next) {
+-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), l->data);
+-    }
+-  }
+-
+   if (best)
+     gst_video_codec_frame_ref (best);
+ 
+-- 
+1.7.9.5
+

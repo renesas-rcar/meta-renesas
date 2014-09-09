@@ -1,0 +1,162 @@
+From 3d077b6b90cb1628ecc2fff31166f519f48456f7 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Feb 2014 13:53:42 +0900
+Subject: [PATCH 23/31] omxvideodec: Generalize the output buffer creation for
+ zero-copy buffer passing
+
+This change improves the hard-corded buffer creation for NV12 format.
+---
+ omx/gstomxvideodec.c |  120 ++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 77 insertions(+), 43 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index c12a050..07151f1 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1334,6 +1334,72 @@ gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec * self)
+   return err;
+ }
+ 
++static GstBuffer *
++gst_omx_video_dec_create_buffer_from_omx_output (GstOMXVideoDec * self,
++    GstOMXBuffer * buf)
++{
++  GstVideoCodecState *state =
++      gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
++  GstVideoInfo *vinfo = &state->info;
++  GstBuffer *outBuf;
++  guint8 *data;
++  gsize max_size;
++  gsize plane_size[GST_VIDEO_MAX_PLANES] = { 0 };
++  gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
++  gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
++  GstVideoFormat format;
++  guint n_planes;
++  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->dec_out_port->port_def;
++  gint i;
++
++  format = vinfo->finfo->format;
++
++  switch (format) {
++    case GST_VIDEO_FORMAT_I420:
++      stride[0] = port_def->format.video.nStride;
++      stride[1] = stride[2] = port_def->format.video.nStride / 2;
++      offset[1] = port_def->format.video.nSliceHeight *
++          port_def->format.video.nStride;
++      offset[2] = offset[1] +
++          stride[1] * port_def->format.video.nSliceHeight / 2;
++      plane_size[0] = port_def->format.video.nStride *
++          port_def->format.video.nFrameHeight;
++      plane_size[1] = plane_size[2] = plane_size[0] / 4;
++
++      n_planes = 3;
++      break;
++    case GST_VIDEO_FORMAT_NV12:
++      stride[0] = stride[1] = port_def->format.video.nStride;
++      offset[1] = port_def->format.video.nSliceHeight *
++          port_def->format.video.nStride;
++      plane_size[0] = port_def->format.video.nStride *
++          port_def->format.video.nFrameHeight;
++      plane_size[1] = plane_size[0] / 2;
++
++      n_planes = 2;
++      break;
++    default:
++      GST_ERROR_OBJECT (self, "Unsupported color format: %d", format);
++      return NULL;
++  }
++
++  outBuf = gst_buffer_new ();
++
++  data = buf->omx_buf->pBuffer + buf->omx_buf->nOffset;
++  max_size = buf->omx_buf->nFilledLen;
++
++  for (i = 0; i < n_planes; i++)
++    gst_buffer_append_memory (outBuf,
++        gst_memory_new_wrapped (0, data, max_size, offset[i], plane_size[i],
++            NULL, NULL));
++
++  gst_buffer_add_video_meta_full (outBuf, GST_VIDEO_FRAME_FLAG_NONE,
++      format, port_def->format.video.nFrameWidth,
++      port_def->format.video.nFrameHeight, n_planes, offset, stride);
++
++  return outBuf;
++}
++
+ static void
+ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+ {
+@@ -1553,14 +1619,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+       frame = NULL;
+       buf = NULL;
+     } else {
+-      GstBuffer *tmpBuf;
+-      guint8 *data;
+-      gsize plane_size;
+-      gsize max_size;
+-      gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
+-      gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
+-      OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->dec_out_port->port_def;
+-
+       if ((flow_ret =
+               gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER
+                   (self), frame)) == GST_FLOW_OK) {
+@@ -1570,44 +1628,20 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+          */
+ 
+         /*
+-         * Set the Y and UV plane address of an output buffer to GstBuffer
+-         * in order to pass an image data to the downstream plugin
+-         * without memcpy.
+-         */
+-        tmpBuf = gst_buffer_new ();
+-
+-        /* Set Y palne */
+-        data = buf->omx_buf->pBuffer + buf->omx_buf->nOffset;
+-        offset[0] = 0;
+-        stride[0] = port_def->format.video.nStride;
+-        max_size = buf->omx_buf->nFilledLen;
+-        plane_size = port_def->format.video.nStride *
+-            port_def->format.video.nFrameHeight;
+-
+-        gst_buffer_append_memory (tmpBuf,
+-            gst_memory_new_wrapped (0, data, max_size, offset[0], plane_size,
+-                NULL, NULL));
+-
+-        /* Set UV plane */
+-        offset[1] = port_def->format.video.nSliceHeight *
+-            port_def->format.video.nStride;
+-        stride[1] = port_def->format.video.nStride;
+-        plane_size /= 2;
+-
+-        gst_buffer_append_memory (tmpBuf,
+-            gst_memory_new_wrapped (0, data, max_size, offset[1], plane_size,
+-                NULL, NULL));
+-
+-        gst_buffer_add_video_meta_full (tmpBuf, GST_VIDEO_FRAME_FLAG_NONE,
+-            GST_VIDEO_FORMAT_NV12, port_def->format.video.nFrameWidth,
+-            port_def->format.video.nFrameHeight, 2, offset, stride);
+-
+-        /*
+          * Replace output buffer from the bufferpool of the downstream plugin
+-         * with the one created in the above processing.
++         * with the one created with
++         * gst_omx_video_dec_create_buffer_from_omx_output(), which sets each
++         * plane address of an OMX output buffer to a new GstBuffer in order to
++         * pass output image data to the downstream plugin without memcpy.
+          */
+         gst_buffer_unref (frame->output_buffer);
+-        frame->output_buffer = tmpBuf;
++        frame->output_buffer =
++            gst_omx_video_dec_create_buffer_from_omx_output (self, buf);
++        if (!frame->output_buffer) {
++          GST_ERROR_OBJECT (self, "failed to create an output buffer");
++          flow_ret = GST_FLOW_ERROR;
++          goto flow_error;
++        }
+ 
+         flow_ret =
+             gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+-- 
+1.7.9.5
+

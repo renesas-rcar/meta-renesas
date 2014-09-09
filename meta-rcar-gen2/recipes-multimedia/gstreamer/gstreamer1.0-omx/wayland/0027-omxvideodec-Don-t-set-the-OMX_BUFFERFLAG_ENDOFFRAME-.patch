@@ -1,0 +1,28 @@
+From de08e01b1f13b36c13a15772cb59ad3a6c6733ac Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 26 Mar 2014 12:19:29 +0900
+Subject: [PATCH 27/31] omxvideodec: Don't set the OMX_BUFFERFLAG_ENDOFFRAME
+ flag when the codec configuration data is input
+
+When OMXR_MC_VIDEO_StoreUnitEofSeparated is used, only OMX_BUFFERFLAG_CODECCONFIG
+must be set to the buffer that contains the codec configuration
+according to the REL OMXIL specification.
+---
+ omx/gstomxvideodec.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 3a956da..9c53881 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -2402,7 +2402,6 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+       }
+ 
+       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_CODECCONFIG;
+-      buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
+       buf->omx_buf->nFilledLen = gst_buffer_get_size (codec_data);;
+       gst_buffer_extract (codec_data, 0,
+           buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+-- 
+1.7.9.5
+

@@ -1,0 +1,45 @@
+From 23a56fb86827f4555e30fa587df32fb00f709877 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 27 Jun 2013 19:07:19 +0900
+Subject: [PATCH 11/14] omxvideodec: don't use gst_buffer_map when copying to
+ the output buffers
+
+When the preallocated buffers which are separated into multiple blocks
+are received from a sink plugin, gst_buffer_map() could return
+the different pointer from the buffers received from the sink plugin.
+Probably it is newly allocated because the buffers are mistakenly
+regarded as being discontiguous and tried to be collected into a
+region with copying.
+It is safety that the stride and the slice height are always taken
+account into when copying to the output buffers.
+---
+ omx/gstomxvideodec.c | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 2beaac6..1c3a64c 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1048,19 +1048,6 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
+     goto done;
+   }
+ 
+-  /* Same strides and everything */
+-  if (gst_buffer_get_size (outbuf) == inbuf->omx_buf->nFilledLen) {
+-    GstMapInfo map = GST_MAP_INFO_INIT;
+-
+-    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+-    memcpy (map.data,
+-        inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset,
+-        inbuf->omx_buf->nFilledLen);
+-    gst_buffer_unmap (outbuf, &map);
+-    ret = TRUE;
+-    goto done;
+-  }
+-
+   /* Different strides */
+ 
+   switch (vinfo->finfo->format) {
+-- 
+1.8.1.2
+

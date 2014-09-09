@@ -1,0 +1,94 @@
+From e5be1b86541c7ab9eb85052c0b3ebea76ba5f91d Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 12 Feb 2014 14:54:50 +0900
+Subject: [PATCH 21/31] omxvideodec: support zero-copy buffer output to the
+ downstream plugin
+
+This patch sets the Y and UV plane address of an output buffer to GstBuffer
+in order to pass image data to the downstream plugin without
+buffer copying.
+The implementation is hard-coded as NV12 format so it's going to be
+generalized later.
+---
+ omx/gstomxvideodec.c |   58 +++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 50 insertions(+), 8 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index e546af1..2d7c968 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1553,6 +1553,14 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+       frame = NULL;
+       buf = NULL;
+     } else {
++      GstBuffer *tmpBuf;
++      guint8 *data;
++      gsize plane_size;
++      gsize max_size;
++      gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
++      gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
++      OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->dec_out_port->port_def;
++
+       if ((flow_ret =
+               gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER
+                   (self), frame)) == GST_FLOW_OK) {
+@@ -1560,14 +1568,48 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+          * We first need to reconfigure the output port and then the input
+          * port if both need reconfiguration.
+          */
+-        if (!gst_omx_video_dec_fill_buffer (self, buf, frame->output_buffer)) {
+-          gst_buffer_replace (&frame->output_buffer, NULL);
+-          flow_ret =
+-              gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+-          frame = NULL;
+-          gst_omx_port_release_buffer (port, buf);
+-          goto invalid_buffer;
+-        }
++
++        /*
++         * Set the Y and UV plane address of an output buffer to GstBuffer
++         * in order to pass an image data to the downstream plugin
++         * without memcpy.
++         */
++        tmpBuf = gst_buffer_new ();
++
++        /* Set Y palne */
++        data = buf->omx_buf->pBuffer + buf->omx_buf->nOffset;
++        offset[0] = 0;
++        stride[0] = port_def->format.video.nStride;
++        max_size = buf->omx_buf->nFilledLen;
++        plane_size = port_def->format.video.nStride *
++            port_def->format.video.nFrameHeight;
++
++        gst_buffer_append_memory (tmpBuf,
++            gst_memory_new_wrapped (0, data, max_size, offset[0], plane_size,
++                NULL, NULL));
++
++        /* Set UV plane */
++        offset[1] = port_def->format.video.nSliceHeight *
++            port_def->format.video.nStride;
++        data += offset[1];
++        stride[1] = port_def->format.video.nStride;
++        plane_size /= 2;
++
++        gst_buffer_append_memory (tmpBuf,
++            gst_memory_new_wrapped (0, data, max_size, offset[1], plane_size,
++                NULL, NULL));
++
++        gst_buffer_add_video_meta_full (tmpBuf, GST_VIDEO_FRAME_FLAG_NONE,
++            GST_VIDEO_FORMAT_NV12, port_def->format.video.nFrameWidth,
++            port_def->format.video.nFrameHeight, 2, offset, stride);
++
++        /*
++         * Replace output buffer from the bufferpool of the downstream plugin
++         * with the one created in the above processing.
++         */
++        gst_buffer_unref (frame->output_buffer);
++        frame->output_buffer = tmpBuf;
++
+         flow_ret =
+             gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+         frame = NULL;
+-- 
+1.7.9.5
+

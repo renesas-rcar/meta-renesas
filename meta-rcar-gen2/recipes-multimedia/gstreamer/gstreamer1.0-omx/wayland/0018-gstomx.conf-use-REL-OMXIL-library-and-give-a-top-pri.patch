@@ -1,0 +1,57 @@
+From 8af27c750691d8476ce1fc001b0b18e5b1c4b2bf Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 3 Dec 2013 21:57:44 +0900
+Subject: [PATCH 18/31] gstomx.conf: use REL OMXIL library and give a top
+ priority on gst-omx plugins when using playbin
+
+---
+ config/bellagio/gstomx.conf |   35 ++++-------------------------------
+ 1 file changed, 4 insertions(+), 31 deletions(-)
+
+diff --git a/config/bellagio/gstomx.conf b/config/bellagio/gstomx.conf
+index 78f8e7d..c1f81e7 100644
+--- a/config/bellagio/gstomx.conf
++++ b/config/bellagio/gstomx.conf
+@@ -1,35 +1,8 @@
+-[omxmpeg4videodec]
+-type-name=GstOMXMPEG4VideoDec
+-core-name=/usr/local/lib/libomxil-bellagio.so.0
+-component-name=OMX.st.video_decoder.mpeg4
+-rank=256
+-in-port-index=0
+-out-port-index=1
+-hacks=event-port-settings-changed-ndata-parameter-swap;event-port-settings-changed-port-0-to-1
+-
+ [omxh264dec]
+ type-name=GstOMXH264Dec
+-core-name=/usr/local/lib/libomxil-bellagio.so.0
+-component-name=OMX.st.video_decoder.avc
+-rank=256
+-in-port-index=0
+-out-port-index=1
+-hacks=event-port-settings-changed-ndata-parameter-swap;event-port-settings-changed-port-0-to-1
+-
+-[omxmpeg4videoenc]
+-type-name=GstOMXMPEG4VideoEnc
+-core-name=/usr/local/lib/libomxil-bellagio.so.0
+-component-name=OMX.st.video_encoder.mpeg4
+-rank=0
+-in-port-index=0
+-out-port-index=1
+-hacks=event-port-settings-changed-ndata-parameter-swap;video-framerate-integer;syncframe-flag-not-used
+-
+-[omxaacenc]
+-type-name=GstOMXAACEnc
+-core-name=/usr/local/lib/libomxil-bellagio.so.0
+-component-name=OMX.st.audio_encoder.aac
+-rank=0
++core-name=/usr/lib/omx/libomxr_core.so
++component-name=OMX.RENESAS.VIDEO.DECODER.H264
++rank=512
+ in-port-index=0
+ out-port-index=1
+-hacks=event-port-settings-changed-ndata-parameter-swap
++hacks=event-port-settings-changed-ndata-parameter-swap;event-port-settings-changed-port-0-to-1;no-component-role
+-- 
+1.7.9.5
+

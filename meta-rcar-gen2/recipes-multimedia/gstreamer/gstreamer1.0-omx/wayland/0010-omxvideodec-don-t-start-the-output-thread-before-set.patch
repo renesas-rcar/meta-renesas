@@ -1,0 +1,74 @@
+From 2da5a0f7237723c8df074a03d5cc1c3e1211cd67 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 25 Jun 2013 19:23:28 +0900
+Subject: [PATCH 10/31] omxvideodec: don't start the output thread before
+ set_format has been done
+
+reset() method is invoked before set_format() has been invoked at
+the initialization. Thus the output thread is launched before output
+buffers haven't been populated into the component with FillThisBuffer() yet.
+This might cause a malfunction of decoding.
+To resolve the above issue, the output thread invocation in the
+reset() method is restricted before the processing necessary to
+activate the component with set_format_done flag.
+---
+ omx/gstomxvideodec.c |    8 ++++++--
+ omx/gstomxvideodec.h |    2 ++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index e8c276b..2beaac6 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -735,6 +735,7 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
+       klass->cdata.component_name, klass->cdata.component_role,
+       klass->cdata.hacks);
+   self->started = FALSE;
++  self->set_format_done = FALSE;
+ 
+   if (!self->dec)
+     return FALSE;
+@@ -819,6 +820,7 @@ gst_omx_video_dec_close (GstVideoDecoder * decoder)
+   self->dec = NULL;
+ 
+   self->started = FALSE;
++  self->set_format_done = FALSE;
+ 
+   GST_DEBUG_OBJECT (self, "Closed decoder");
+ 
+@@ -2158,6 +2160,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
+   self->downstream_flow_ret = GST_FLOW_OK;
+   gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
+       (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);
++  self->set_format_done = TRUE;
+ 
+   return TRUE;
+ }
+@@ -2192,8 +2195,9 @@ gst_omx_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
+   self->last_upstream_ts = 0;
+   self->eos = FALSE;
+   self->downstream_flow_ret = GST_FLOW_OK;
+-  gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
+-      (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);
++  if (self->set_format_done)
++    gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
++        (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);
+ 
+   GST_DEBUG_OBJECT (self, "Reset decoder");
+ 
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index 8f0f98b..747bc36 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -62,6 +62,8 @@ struct _GstOMXVideoDec
+    * the first buffer */
+   gboolean started;
+ 
++  gboolean set_format_done;
++
+   GstClockTime last_upstream_ts;
+ 
+   /* Draining state */
+-- 
+1.7.9.5
+

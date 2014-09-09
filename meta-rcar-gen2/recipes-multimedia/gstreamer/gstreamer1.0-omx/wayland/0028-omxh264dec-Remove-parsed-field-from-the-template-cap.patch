@@ -1,0 +1,26 @@
+From 192edbf688ffb419e8270814267885a3b84966e4 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 30 May 2014 17:55:49 +0900
+Subject: [PATCH 28/31] omxh264dec: Remove "parsed" field from the template
+ caps
+
+The input stream don't need to have this capability.
+---
+ omx/gstomxh264dec.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 0a927bb..92401dc 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -63,7 +63,6 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
+   videodec_class->copy_frame = GST_DEBUG_FUNCPTR (gst_omx_h264_dec_copy_frame);
+ 
+   videodec_class->cdata.default_sink_template_caps = "video/x-h264, "
+-      "parsed=(boolean) true, "
+       "alignment=(string) au, "
+       "stream-format=(string) avc, "
+       "width=(int) [1,MAX], " "height=(int) [1,MAX]";
+-- 
+1.7.9.5
+

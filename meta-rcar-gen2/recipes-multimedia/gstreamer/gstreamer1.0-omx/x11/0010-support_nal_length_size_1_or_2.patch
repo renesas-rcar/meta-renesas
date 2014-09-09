@@ -1,0 +1,253 @@
+From 2891c2e80881afdb7d7bc868b584c74010840f6d Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 30 May 2014 15:20:32 +0700
+Subject: [PATCH 10/22] Support videos with nal_length_size 1 or 2
+
+refs #55997
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxh264dec.c  |  122 +++++++++++++++++++++++++++++++++++++++++---------
+ omx/gstomxvideodec.c |   26 +++++++----
+ omx/gstomxvideodec.h |    1 +
+ 3 files changed, 120 insertions(+), 29 deletions(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index b0bcca6..88ed05c 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -37,6 +37,8 @@ static gboolean gst_omx_h264_dec_set_format (GstOMXVideoDec * dec,
+     GstOMXPort * port, GstVideoCodecState * state);
+ static GstFlowReturn gst_omx_h264_dec_prepare_frame
+     (GstOMXVideoDec * videodec, GstVideoCodecFrame * frame);
++static guint gst_omx_h264_dec_copy_to_omx (GstOMXVideoDec * dec,
++    GstBuffer * input_buffer, OMX_BUFFERHEADERTYPE * omx_buf, guint offset);
+ 
+ enum
+ {
+@@ -63,6 +65,8 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
+   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_dec_set_format);
+   videodec_class->prepare_frame =
+       GST_DEBUG_FUNCPTR (gst_omx_h264_dec_prepare_frame);
++  videodec_class->copy_to_omx =
++      GST_DEBUG_FUNCPTR (gst_omx_h264_dec_copy_to_omx);
+ 
+   videodec_class->cdata.default_sink_template_caps = "video/x-h264, "
+       "alignment=(string) { au, nal }, "
+@@ -328,7 +332,7 @@ static GstFlowReturn gst_omx_h264_dec_prepare_frame
+   size = bufinfo.size;
+   data = bufinfo.data;
+ 
+-
++  /* In case cannot get nal_length_size from codec_data */
+   if (self->nal_length_size == 0) {
+     /* calcurate nal_length_size */
+     while (data[self->nal_length_size] == 0x00)
+@@ -341,31 +345,109 @@ static GstFlowReturn gst_omx_h264_dec_prepare_frame
+   }
+ 
+ 
+-  /* split nal unit */
+-  while (offset < size) {
+-    /* check size */
+-    if (G_UNLIKELY ((size - offset) < self->nal_length_size)) {
+-      GST_ERROR_OBJECT (self, "nal unit size %d is less than minimum %d", (size - offset), self->nal_length_size);
+-      ret = GST_FLOW_ERROR;
+-      break;
+-    }
+-
+-    /* get nal size first, before it is overwritten */
+-    nal_size = get_nal_size (self, (data + offset), (size - offset), self->nal_length_size);
++  /* overwirte start code prefix to mark the nal unit
++   * In case nal_length_size is 4, which is the length of a start code
++   * prefix, just overwrite start code prefix to nal_length_size.
++   * If nal_length_size is smaller, cannot overwrite start code here
++   *   start code will be add when copying data to OMX buffer in
++   *   copy_to_omx function */
++  if (self->nal_length_size == 4) {
++    /* split nal unit */
++    while (offset < size) {
++      /* check size */
++      if (G_UNLIKELY ((size - offset) < self->nal_length_size)) {
++        GST_ERROR_OBJECT (self, "nal unit size %d is less than minimum %d", (size - offset), self->nal_length_size);
++        ret = GST_FLOW_ERROR;
++        break;
++      }
+ 
+-    /* overwirte start code prefix to mark the nal unit */
+-    data[0 + offset] = 0x00;
+-    data[1 + offset] = 0x00;
+-    data[2 + offset] = 0x00;
+-    data[3 + offset] = 0x01;
++      /* get nal size first, before it is overwritten */
++      nal_size = get_nal_size (self, (data + offset), (size - offset), self->nal_length_size);
+ 
+-    /* Then move the offset to next nal */
+-    offset += (self->nal_length_size + nal_size);
++      data[0 + offset] = 0x00;
++      data[1 + offset] = 0x00;
++      data[2 + offset] = 0x00;
++      data[3 + offset] = 0x01;
+ 
++      /* Then move the offset to next nal */
++      offset += (self->nal_length_size + nal_size);
++    }
+   }
+ 
+-
+   gst_buffer_unmap(frame->input_buffer, &bufinfo);
+ 
+   return ret;
+ }
++
++static guint
++gst_omx_h264_dec_copy_to_omx (GstOMXVideoDec * dec,
++    GstBuffer * input_buffer, OMX_BUFFERHEADERTYPE * omx_buf, guint offset)
++{
++  GstOMXH264Dec * self;
++  guint nal_size = 0;
++  GstMapInfo bufinfo;
++  guint size, copysize=0;
++  guint8 *src, *dest;
++
++  self = GST_OMX_H264_DEC(dec);
++
++  dest = omx_buf->pBuffer + omx_buf->nOffset;
++  omx_buf->nFilledLen = 0;
++
++  /* Note: cannot merge prepare_frame with this function as buffer is
++   * read only at this point */
++  gst_buffer_map (input_buffer, &bufinfo, GST_MAP_READ);
++
++  size = bufinfo.size - offset;
++  src  = bufinfo.data + offset;
++
++  if (self->nal_length_size == 4) {
++    /* In this case, start code prefix is already overwrite in
++     * prepare_frame function. Just copy whole frame to OMX buffer */
++    memcpy (dest, src, size);
++    omx_buf->nFilledLen = size;
++    copysize = size;
++  } else {
++    /* In this case, prepare_frame cannot overwrite start code because
++     * nal_length_size is mismatch.
++     * To solve this, write start code to OMX buffer and copy each
++     * NAL data there. */
++
++    /* split nal unit */
++    while (size > 0) {
++      /* check size */
++      if (G_UNLIKELY (size < self->nal_length_size)) {
++        GST_ERROR_OBJECT (self, "nal unit size %d is less than minimum %d"
++            , size, self->nal_length_size);
++        break;
++      }
++
++      /* get nal size first */
++      nal_size = get_nal_size (self, src, size, self->nal_length_size);
++
++      /* Stop copy if do not have enough memory */
++      if ((omx_buf->nFilledLen + 4 + nal_size) > omx_buf->nAllocLen)
++        break;
++
++      /* Make start code in OMX buffer */
++      dest[0] = 0x00;
++      dest[1] = 0x00;
++      dest[2] = 0x00;
++      dest[3] = 0x01;
++
++      /* Copy NAL data after start code */
++      memcpy (dest + 4, src + self->nal_length_size, nal_size);
++      omx_buf->nFilledLen += (4 + nal_size);
++      copysize += (self->nal_length_size + nal_size);
++
++      /* Then move the pointer to next nal */
++      src      += (self->nal_length_size + nal_size);
++      size     -= (self->nal_length_size + nal_size);
++      dest     += (4 + nal_size);
++    }
++  }
++
++  gst_buffer_unmap (input_buffer, &bufinfo);
++
++  return copysize;
++}
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 2c9aad9..39964ae 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -2337,7 +2337,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+   GstOMXPort *port;
+   GstOMXBuffer *buf;
+   GstBuffer *codec_data = NULL;
+-  guint offset = 0, size;
++  guint offset = 0, size, copysize;
+   GstClockTime timestamp, duration;
+   OMX_ERRORTYPE err;
+ 
+@@ -2479,7 +2479,9 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+ 
+       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_CODECCONFIG;
+       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
+-      buf->omx_buf->nFilledLen = gst_buffer_get_size (codec_data);;
++
++      buf->omx_buf->nFilledLen = gst_buffer_get_size (codec_data);
++      copysize = buf->omx_buf->nFilledLen;
+       gst_buffer_extract (codec_data, 0,
+           buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+           buf->omx_buf->nFilledLen);
+@@ -2505,11 +2507,17 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+ 
+     /* Copy the buffer content in chunks of size as requested
+      * by the port */
+-    buf->omx_buf->nFilledLen =
+-        MIN (size - offset, buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
+-    gst_buffer_extract (frame->input_buffer, offset,
+-        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+-        buf->omx_buf->nFilledLen);
++    if (klass->copy_to_omx)
++        /* In case sub-class need to do something when copying */
++      copysize = klass->copy_to_omx (self, frame->input_buffer, buf->omx_buf, offset);
++    else {
++      buf->omx_buf->nFilledLen =
++          MIN (size - offset, buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
++      copysize = buf->omx_buf->nFilledLen;
++      gst_buffer_extract (frame->input_buffer, offset,
++          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
++         buf->omx_buf->nFilledLen);
++    }
+ 
+     if (timestamp != GST_CLOCK_TIME_NONE) {
+       buf->omx_buf->nTimeStamp =
+@@ -2521,7 +2529,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+ 
+     if (duration != GST_CLOCK_TIME_NONE && offset == 0) {
+       buf->omx_buf->nTickCount =
+-          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration, size);
++          gst_util_uint64_scale (copysize, duration, size);
+       self->last_upstream_ts += duration;
+     } else {
+       buf->omx_buf->nTickCount = 0;
+@@ -2543,7 +2551,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+      *     the segment
+      */
+ 
+-    offset += buf->omx_buf->nFilledLen;
++    offset += copysize;
+ 
+     if (offset == size)
+       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index 219c821..c4c74e2 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -90,6 +90,7 @@ struct _GstOMXVideoDecClass
+   gboolean (*is_format_change) (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
+   gboolean (*set_format)       (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
+   GstFlowReturn (*prepare_frame)   (GstOMXVideoDec * self, GstVideoCodecFrame *frame);
++  guint (*copy_to_omx)   (GstOMXVideoDec * self, GstBuffer * input_buffer, OMX_BUFFERHEADERTYPE * omx_buf, guint offset);
+ };
+ 
+ GType gst_omx_video_dec_get_type (void);
+-- 
+1.7.9.5
+

@@ -1,0 +1,109 @@
+From bb64e06ab7ebb14fd6b0d26d81dbdc75889839a7 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Wed, 4 Jun 2014 15:58:56 +0700
+Subject: [PATCH 14/22] Fix slow issue with filler data
+
+Fix slow issue with video has filler data.
+Old source code also increases timestamp when meets filler data.
+In decoding, filler data is removed, and the corresponding timestamp is missing.
+This decreases the frame per second.
+With this patch, timestamp will only be increased with NAL type 1 - 5
+(filler data is NAL 12)
+
+refs #51427
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxh264dec.c  |   14 ++++++++++++++
+ omx/gstomxvideodec.c |    6 +++++-
+ omx/gstomxvideodec.h |    5 +++++
+ 3 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 6ec76bf..ca37bd8 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -377,6 +377,7 @@ static GstFlowReturn gst_omx_h264_dec_prepare_frame
+   GstMapInfo bufinfo;
+   guint size;
+   guint8 *data;
++  guint NAL_unit_type = 0;
+ 
+   self = GST_OMX_H264_DEC(videodec);
+ 
+@@ -407,6 +408,12 @@ static GstFlowReturn gst_omx_h264_dec_prepare_frame
+   if (self->nal_length_size == 4) {
+     /* split nal unit */
+     while (offset < size) {
++
++      /* Check NAL_unit_type */
++      NAL_unit_type = *(data + offset + 4) & 0x1F;
++      if ( (1 <= NAL_unit_type) && (NAL_unit_type <= 5) )
++        videodec->ts_flag = TRUE; /* increase timestamp (later) */
++
+       /* check size */
+       if (G_UNLIKELY ((size - offset) < self->nal_length_size)) {
+         GST_ERROR_OBJECT (self, "nal unit size %d is less than minimum %d", (size - offset), self->nal_length_size);
+@@ -441,6 +448,7 @@ gst_omx_h264_dec_copy_to_omx (GstOMXVideoDec * dec,
+   GstMapInfo bufinfo;
+   guint size, copysize=0;
+   guint8 *src, *dest;
++  guint NAL_unit_type = 0;
+ 
+   self = GST_OMX_H264_DEC(dec);
+ 
+@@ -468,6 +476,12 @@ gst_omx_h264_dec_copy_to_omx (GstOMXVideoDec * dec,
+ 
+     /* split nal unit */
+     while (size > 0) {
++
++      /* Check NAL_unit_type */
++      NAL_unit_type = *(src + self->nal_length_size) & 0x1F;
++      if ( (1 <= NAL_unit_type) && (NAL_unit_type <= 5) )
++        dec->ts_flag = TRUE; /* increase timestamp (later) */
++
+       /* check size */
+       if (G_UNLIKELY (size < self->nal_length_size)) {
+         GST_ERROR_OBJECT (self, "nal unit size %d is less than minimum %d"
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 5d5d704..36d8b99 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -2354,6 +2354,8 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+   self = GST_OMX_VIDEO_DEC (decoder);
+   klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
+ 
++  self->ts_flag = FALSE;  /* reset this flag for each buffer */
++
+   GST_DEBUG_OBJECT (self, "Handling frame");
+ 
+   if (self->eos) {
+@@ -2533,7 +2535,9 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+       self->last_upstream_ts = timestamp;
+     } else {
+       /* Video stream does not provide timestamp, try calculate */
+-      if (offset == 0) {
++      /* Skip calculate if the buffer does not contains any meaningful
++       * data (ts_flag = FALSE ) */
++      if (offset == 0 && self->ts_flag) {
+         if (duration != GST_CLOCK_TIME_NONE )
+           /* In case timestamp is invalid. may use duration to calculate
+            * timestamp */
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index 6cca4f3..def708d 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -81,6 +81,11 @@ struct _GstOMXVideoDec
+   /* Set TRUE to not using frame reorder */
+   gboolean no_reorder;
+ 
++  /* TRUE means timestamp should be increased, only effects when
++   * manually calculate timestamp (because timestamp is not provided
++   * by video stream) */
++  gboolean ts_flag;
++
+   GstFlowReturn downstream_flow_ret;
+ };
+ 
+-- 
+1.7.9.5
+

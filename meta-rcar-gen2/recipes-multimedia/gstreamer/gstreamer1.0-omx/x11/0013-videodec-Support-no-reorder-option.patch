@@ -1,0 +1,125 @@
+From 2c9b8f46b2b7ebbefdb8838b872f8ff6e48593cb Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Tue, 3 Jun 2014 19:26:31 +0700
+Subject: [PATCH 13/22] Support no-reorder option
+
+This patch appends the interface, no-reorder = true/false,
+that changes frame reordering option of Renesas's OMX decoder module
+to omxh264dec element.
+
+no-reorder = false :
+  It is the default value of Renesas's OMX decoder. When it is set,
+  results of decoding is passed to next element with consideration
+  for the appearance of B-frames.
+
+no-reorder = true :
+  It is the extension value of Renesas's OMX decoder. When it is set,
+  results of decoding is passed to next element as soon as possible.
+  When processing video that is encoded without B-frames, latency of
+  decoding is reduced.
+
+refs #57780
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxh264dec.c  |    6 +++++-
+ omx/gstomxvideodec.c |   17 ++++++++++++++++-
+ omx/gstomxvideodec.h |    3 +++
+ 3 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 7ac2e67..6ec76bf 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -264,7 +264,11 @@ gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
+     GST_OMX_INIT_STRUCT (&sReorder);
+     sReorder.nPortIndex = dec->dec_out_port->index;  /* default */
+ 
+-    sReorder.bReorder = OMX_TRUE;
++    if (dec->no_reorder != FALSE)
++      sReorder.bReorder = OMX_FALSE;
++    else
++      sReorder.bReorder = OMX_TRUE;
++
+     gst_omx_component_set_parameter
+       (dec->dec, OMXR_MC_IndexParamVideoReorder, &sReorder);
+ 
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 2ff2809..5d5d704 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -31,6 +31,7 @@
+ #include <string.h>
+ 
+ #include "gstomxvideodec.h"
++#include "OMXR_Extension_vdcmn.h"
+ 
+ GST_DEBUG_CATEGORY_STATIC (gst_omx_video_dec_debug_category);
+ #define GST_CAT_DEFAULT gst_omx_video_dec_debug_category
+@@ -687,7 +688,8 @@ static void gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+ enum
+ {
+   PROP_0,
+-  PROP_NO_COPY
++  PROP_NO_COPY,
++  PROP_NO_REORDER
+ };
+ 
+ /* class initialization */
+@@ -731,6 +733,12 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
+       "width = " GST_VIDEO_SIZE_RANGE ", "
+       "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE;
+ 
++    g_object_class_install_property (gobject_class, PROP_NO_REORDER,
++        g_param_spec_boolean ("no-reorder", "Use video frame without reordering",
++          "Whether or not to use video frame reordering",
++          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
++           GST_PARAM_MUTABLE_READY));
++
+     g_object_class_install_property (gobject_class, PROP_NO_COPY,
+       g_param_spec_boolean ("no-copy", "No copy",
+         "Whether or not to transfer decoded data without copy",
+@@ -747,6 +755,7 @@ gst_omx_video_dec_init (GstOMXVideoDec * self)
+   g_cond_init (&self->drain_cond);
+ 
+   self->no_copy = FALSE;
++  self->no_reorder = FALSE;
+ }
+ 
+ static gboolean
+@@ -2772,6 +2781,9 @@ gst_omx_video_dec_set_property (GObject * object, guint prop_id,
+     case PROP_NO_COPY:
+       self->no_copy = g_value_get_boolean (value);
+       break;
++    case PROP_NO_REORDER:
++      self->no_reorder = g_value_get_boolean (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -2788,6 +2800,9 @@ gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+     case PROP_NO_COPY:
+       g_value_set_boolean (value, self->no_copy);
+       break;
++    case PROP_NO_REORDER:
++      g_value_set_boolean (value, self->no_reorder);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index c4c74e2..6cca4f3 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -78,6 +78,9 @@ struct _GstOMXVideoDec
+   /* Set TRUE to transfer decoded data without copy */
+   gboolean no_copy;
+ 
++  /* Set TRUE to not using frame reorder */
++  gboolean no_reorder;
++
+   GstFlowReturn downstream_flow_ret;
+ };
+ 
+-- 
+1.7.9.5
+
