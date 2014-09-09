@@ -1,0 +1,65 @@
+From ed6456a2430975138ec2234cd7f9f50b92d88f9a Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Mon, 2 Jun 2014 14:59:43 +0700
+Subject: [PATCH 3/9] Fix "assertion `buffer != NULL' failed" warning
+
+In USERPTR mode, the buffer of v4l2 is not used.
+In alloc_buffer, the buffer is not allocated.
+This causes the warning when base class confirm NULL pointer.
+To prevent this warning, create a dummy buffer struct in alloc_buffer.
+
+refs #55991
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2bufferpool.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index 579d475..b3d803a 100755
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -371,6 +371,13 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+         }
+       }
+ 
++      /* Do not need to allocate buffer in this mode. Buffer from
++       * upstream plugin will be used. However, need a dummy buffer
++       * here to prevent a critical error :
++       *      assertion `buffer != NULL' failed
++       * from base class */
++      newbuf = gst_buffer_new ();
++
+       break;
+     }
+     default:
+@@ -737,8 +744,8 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
+   ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
+ 
+   /* then free the remaining buffers */
+-  /* don't free buffers in USERPTR as they belong to upstream plugin */
+   if (obj->mode != GST_V4L2_IO_USERPTR)
++    /* In USERPTR mode, all buffers are already freed above */
+     for (n = 0; n < pool->num_buffers; n++) {
+       if (pool->buffers[n])
+         gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
+@@ -1176,13 +1183,16 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+           break;
+         }
+ 
++        case GST_V4L2_IO_USERPTR:
++        {
++            break;
++        }
+         default:
+           g_assert_not_reached ();
+           break;
+       }
+       break;
+ 
+-    case GST_V4L2_IO_USERPTR:
+     default:
+       g_assert_not_reached ();
+       break;
+-- 
+1.7.9.5
+

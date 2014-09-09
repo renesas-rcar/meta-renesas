@@ -1,0 +1,180 @@
+From 7c2ae8b0c6c7373397d881bce6b6852b515f8ec3 Mon Sep 17 00:00:00 2001
+From: Thao Luong <thao.luong.uw@rvc.renesas.com>
+Date: Fri, 18 Jul 2014 10:27:21 +0700
+Subject: [PATCH 6/9] v4l2src support for rcar
+
+Revise v4l2src to support for RcarGen2. v4l2src capture video through 2 port
+(RCA (/dev/video1) for analog signal and HDMI (/dev/video0) for digital signal)
+of RCarGen2.
+v4l2src support formats: v42src:src {UYVY, NV16, RGB16, ...}.
+User should provide target width, target height and format for output of v4l2src
+output width is even number [6 2048]
+output height is even number [2 2048]
+Ex:
+gst-launch-1.0 -e v4l2src device=/dev/video1 ! videorate ! video/x-raw,width=720,height=480,format=UYVY,framerate=30/1 ! videoconvert ! fbdevsink
+
+refs #58093
+Signed-off-by: Thao Luong <thao.luong.uw@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2bufferpool.c |    5 +++--
+ sys/v4l2/gstv4l2object.c     |   15 ++++++++++++---
+ sys/v4l2/gstv4l2src.c        |   25 +++++++++++++++++++------
+ 3 files changed, 34 insertions(+), 11 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index 7b52976..f45dc83 100755
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -475,7 +475,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
+       GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
+           stride, obj->bytesperline[i]);
+ 
+-      if (stride != obj->bytesperline[i])
++      if (stride != obj->bytesperline[i] && GST_VIDEO_INFO_N_PLANES(&obj->info) == 0)  /*Workaround for NV16 wrong byteperline*/
+         goto missing_video_api;
+     }
+   }
+@@ -935,10 +935,11 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
+    * no share, so if it's not there, it's not used at all.
+    */
+   if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
++    /* VIDEO_CAPTURE type use 1 plane*/
+     gst_buffer_remove_all_memory (outbuf);
+     gst_buffer_append_memory (outbuf,
+         gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+-            meta->mem, vbuffer.length, 0, vbuffer.bytesused, NULL, NULL));
++            meta->mem[0], vbuffer.length, 0, vbuffer.bytesused, NULL, NULL));
+   }
+ 
+   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 3495ff2..f7db378 100755
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -950,6 +950,7 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
+   /* two planes -- one Y, one Cr + Cb interleaved  */
+   {V4L2_PIX_FMT_NV12, TRUE},
+   {V4L2_PIX_FMT_NV21, TRUE},
++  {V4L2_PIX_FMT_NV16, TRUE},
+ 
+   /*  The following formats are not defined in the V4L2 specification */
+   {V4L2_PIX_FMT_YUV410, TRUE},
+@@ -1105,6 +1106,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
+ 
+     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
++    case V4L2_PIX_FMT_NV16:    /* 16  Y/CbCr 4:2:2  */
+     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
+     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
+       rank = YUV_ODD_BASE_RANK;
+@@ -1370,6 +1372,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
+     case V4L2_PIX_FMT_BGR32:
+     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
++    case V4L2_PIX_FMT_NV16:    /* 16  Y/CrCb 4:2:2  */
+     case V4L2_PIX_FMT_YVU410:
+     case V4L2_PIX_FMT_YUV410:
+     case V4L2_PIX_FMT_YUV420:  /* I420/IYUV */
+@@ -1414,6 +1417,9 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
+         case V4L2_PIX_FMT_NV21:
+           format = GST_VIDEO_FORMAT_NV21;
+           break;
++        case V4L2_PIX_FMT_NV16:
++          format = GST_VIDEO_FORMAT_NV16;
++          break;
+         case V4L2_PIX_FMT_YVU410:
+           format = GST_VIDEO_FORMAT_YVU9;
+           break;
+@@ -1585,6 +1591,9 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
+       case GST_VIDEO_FORMAT_NV21:
+         fourcc = V4L2_PIX_FMT_NV21;
+         break;
++      case GST_VIDEO_FORMAT_NV16:
++        fourcc = V4L2_PIX_FMT_NV16;
++        break;
+ #ifdef V4L2_PIX_FMT_YVYU
+       case GST_VIDEO_FORMAT_YVYU:
+         fourcc = V4L2_PIX_FMT_YVYU;
+@@ -2216,15 +2225,15 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
+   fmt.fmt.pix.width = *width;
+   fmt.fmt.pix.height = *height;
+   fmt.fmt.pix.pixelformat = pixelformat;
+-  fmt.fmt.pix.field = V4L2_FIELD_NONE;
++  fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
+ 
+   r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
+   if (r < 0 && errno == EINVAL) {
+-    /* try again with interlaced video */
++    /* try again with progressive video */
+     fmt.fmt.pix.width = *width;
+     fmt.fmt.pix.height = *height;
+     fmt.fmt.pix.pixelformat = pixelformat;
+-    fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
++    fmt.fmt.pix.field = V4L2_FIELD_NONE;
+     r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
+   }
+ 
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index 8e1b754..eacea84 100755
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@indt.org.br>
++ *               2014 Renesas Electronics Corporation
+  *
+  * gstv4l2src.c: Video4Linux2 source element
+  *
+@@ -82,6 +83,7 @@ enum
+   SIGNAL_PRE_SET_FORMAT,
+   LAST_SIGNAL
+ };
++static GstVideoFormat vin_format;         /*Check format in cap*/
+ 
+ static guint gst_v4l2_signals[LAST_SIGNAL] = { 0 };
+ 
+@@ -439,10 +441,15 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+ {
+   GstV4l2Src *v4l2src;
+   GstV4l2Object *obj;
++  GstVideoInfo info;
+ 
+   v4l2src = GST_V4L2SRC (src);
+   obj = v4l2src->v4l2object;
+ 
++  /*Get format of cap to check in gst_v4l2src_decide_allocation function*/
++  gst_video_info_from_caps (&info, caps);
++  vin_format = GST_VIDEO_INFO_FORMAT (&info);
++
+   /* make sure the caps changed before doing anything */
+   if (gst_v4l2_object_caps_equal (obj, caps))
+     return TRUE;
+@@ -536,12 +543,18 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
+     gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
+     gst_buffer_pool_config_set_params (config, caps, size, min, max);
+ 
+-    /* if downstream supports video metadata, add this to the pool config */
+-    if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+-      GST_DEBUG_OBJECT (pool, "activate Video Meta");
+-      gst_buffer_pool_config_add_option (config,
+-          GST_BUFFER_POOL_OPTION_VIDEO_META);
+-    }
++    /*Check format of cap*/
++    if(vin_format == GST_VIDEO_FORMAT_NV16) {
++        /* support various metadata (neccesary when connect with videoconvert) */
++        gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
++    } else {
++        /* if downstream supports video metadata, add this to the pool config */
++        if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
++           GST_DEBUG_OBJECT (pool, "activate Video Meta");
++           gst_buffer_pool_config_add_option (config,
++                     GST_BUFFER_POOL_OPTION_VIDEO_META);
++        }
++     }
+ 
+     gst_buffer_pool_set_config (pool, config);
+   }
+-- 
+1.7.9.5
+

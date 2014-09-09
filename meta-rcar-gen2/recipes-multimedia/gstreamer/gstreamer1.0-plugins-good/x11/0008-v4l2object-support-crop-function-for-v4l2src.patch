@@ -1,0 +1,195 @@
+From e92a46fbbf5daa0be87492a38a526d7c4de06cf7 Mon Sep 17 00:00:00 2001
+From: Thao Luong <thao.luong.uw@rvc.renesas.com>
+Date: Fri, 1 Aug 2014 11:16:53 +0700
+Subject: [PATCH 8/9] Support crop function for v4l2src
+
+Support crop function for v4l2src. Crop function will crop an area of VIN image
+Crop has 4 components:
+crop-top: The topmost (y) coordinate of the video crop, it must be even number.
+crop-left: The leftmost (x) coordinate of the video crop, it must be even number
+crop-width: The width of the video crop, it must be even number more than 6
+crop-height: The height of the video crop, it must be even number more than 2
+Ex:
+gst-launch-1.0 -e v4l2src device=/dev/video1 crop-top=100 crop-left=100 crop-width=620 crop-height=380 ! videorate ! video/x-raw,width=720,height=480,format=UYVY,framerate=30/1 ! videoconvert ! fbdevsink
+
+Signed-off-by: Thao Luong <thao.luong.uw@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2object.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++
+ sys/v4l2/gstv4l2object.h |    2 ++
+ sys/v4l2/gstv4l2src.c    |   46 +++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 102 insertions(+), 1 deletion(-)
+
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 1f684de..3cb0178 100755
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -2389,6 +2389,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+   GstVideoInfo info;
+   gint width, height, fps_n, fps_d, stride;
+   guint i;
++  struct v4l2_crop crop;
+ 
+   if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
+     goto invalid_caps;
+@@ -2443,6 +2444,33 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+         format.fmt.pix.bytesperline,
+         format.fmt.pix.colorspace);
+ 
++    /*Set clip area */
++    if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
++      crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++      if (v4l2object->crop.top !=0 || v4l2object->crop.left !=0 ||
++          v4l2object->crop.width != 0 ||
++          v4l2object->crop.height != 0) {
++
++        crop.c.top = v4l2object->crop.top;
++        crop.c.left = v4l2object->crop.left;
++        if (v4l2object->crop.width == 0)
++          crop.c.width = width;
++        else
++          crop.c.width = v4l2object->crop.width;
++        if (v4l2object->crop.height == 0)
++          crop.c.height = height;
++        else
++          crop.c.height = v4l2object->crop.height;
++      } else {
++        crop.c.top = 0;
++        crop.c.left = 0;
++        crop.c.width = width;
++        crop.c.height = height;
++      }
++      if (-1 == v4l2_ioctl (fd, VIDIOC_S_CROP, &crop))
++        GST_WARNING_OBJECT (v4l2object->element, "Failed to set crop to %dx%d", width, height);
++    }
++
+     if (format.type != v4l2object->type ||
+         format.fmt.pix.width != width ||
+         format.fmt.pix.height != height ||
+@@ -2470,6 +2498,33 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+           format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+           format.fmt.pix.bytesperline);
+ 
++      /*Reset clip area when field or format change*/
++      if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
++        crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++        if (v4l2object->crop.top != 0 || v4l2object->crop.left != 0 ||
++            v4l2object->crop.width != 0 ||
++            v4l2object->crop.height != 0) {
++
++          crop.c.top = v4l2object->crop.top;
++          crop.c.left = v4l2object->crop.left;
++          if (v4l2object->crop.width == 0)
++            crop.c.width = width;
++          else
++            crop.c.width = v4l2object->crop.width;
++          if (v4l2object->crop.height == 0)
++            crop.c.height = height;
++          else
++            crop.c.height = v4l2object->crop.height;
++        } else {
++          crop.c.top = 0;
++          crop.c.left = 0;
++          crop.c.width = width;
++          crop.c.height = height;
++        }
++        if (-1 == v4l2_ioctl (fd, VIDIOC_S_CROP, &crop))
++          GST_WARNING_OBJECT (v4l2object->element, "Failed to set crop to %dx%d", width, height);
++      }
++
+       if (format.fmt.pix.width != width || format.fmt.pix.height != height)
+         goto invalid_dimensions;
+ 
+diff --git a/sys/v4l2/gstv4l2object.h b/sys/v4l2/gstv4l2object.h
+index 18d539f..206f4cf 100755
+--- a/sys/v4l2/gstv4l2object.h
++++ b/sys/v4l2/gstv4l2object.h
+@@ -164,6 +164,8 @@ struct _GstV4l2Object {
+   GstV4l2GetInOutFunction  get_in_out_func;
+   GstV4l2SetInOutFunction  set_in_out_func;
+   GstV4l2UpdateFpsFunction update_fps_func;
++  /*Support Crop for v4l2src*/
++  struct v4l2_rect crop;
+ };
+ 
+ struct _GstV4l2ObjectClassHelper {
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index eacea84..8a9859b 100755
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -74,7 +74,11 @@ enum
+ {
+   PROP_0,
+   V4L2_STD_OBJECT_PROPS,
+-  PROP_LAST
++  PROP_LAST,
++  PROP_CROP_TOP,
++  PROP_CROP_LEFT,
++  PROP_CROP_WIDTH,
++  PROP_CROP_HEIGHT,
+ };
+ 
+ /* signals and args */
+@@ -157,6 +161,22 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
+ 
+   gst_v4l2_object_install_properties_helper (gobject_class,
+       DEFAULT_PROP_DEVICE);
++  g_object_class_install_property (gobject_class, PROP_CROP_TOP,
++      g_param_spec_int ("crop-top", "Crop top",
++          "The topmost (y) coordinate of the video crop, it must be even number",
++          0, 2048, 0, G_PARAM_READWRITE));
++  g_object_class_install_property (gobject_class, PROP_CROP_LEFT,
++      g_param_spec_int ("crop-left", "Crop left",
++          "The leftmost (x) coordinate of the video crop, it must be even number",
++          0, 2048 , 0, G_PARAM_READWRITE));
++  g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
++      g_param_spec_uint ("crop-width", "Crop width",
++          "The width of the video crop, it must be even number",
++          6, 2048, 6, G_PARAM_READWRITE));
++  g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
++      g_param_spec_uint ("crop-height", "Crop height",
++          "The height of the video crop, it must be even number",
++          2, 2048, 2, G_PARAM_READWRITE));
+ 
+   /**
+    * GstV4l2Src::prepare-format:
+@@ -238,6 +258,18 @@ gst_v4l2src_set_property (GObject * object,
+   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
+           prop_id, value, pspec)) {
+     switch (prop_id) {
++      case PROP_CROP_TOP:
++        v4l2src->v4l2object->crop.top = g_value_get_int (value);
++        break;
++      case PROP_CROP_LEFT:
++        v4l2src->v4l2object->crop.left = g_value_get_int (value);
++        break;
++      case PROP_CROP_WIDTH:
++        v4l2src->v4l2object->crop.width = g_value_get_uint (value);
++        break;
++      case PROP_CROP_HEIGHT:
++        v4l2src->v4l2object->crop.height = g_value_get_uint (value);
++        break;
+       default:
+         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+         break;
+@@ -254,6 +286,18 @@ gst_v4l2src_get_property (GObject * object,
+   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
+           prop_id, value, pspec)) {
+     switch (prop_id) {
++      case PROP_CROP_TOP:
++        g_value_set_int (value, v4l2src->v4l2object->crop.top);
++        break;
++      case PROP_CROP_LEFT:
++        g_value_set_int (value, v4l2src->v4l2object->crop.left);
++        break;
++      case PROP_CROP_WIDTH:
++        g_value_set_uint (value, v4l2src->v4l2object->crop.width);
++        break;
++      case PROP_CROP_HEIGHT:
++        g_value_set_uint (value, v4l2src->v4l2object->crop.height);
++        break;
+       default:
+         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+         break;
+-- 
+1.7.9.5
+

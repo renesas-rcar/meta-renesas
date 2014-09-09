@@ -1,0 +1,52 @@
+From 13b336749406ea055c9932a0804ccb038d654801 Mon Sep 17 00:00:00 2001
+From: Thao Luong <thao.luong.uw@rvc.renesas.com>
+Date: Fri, 1 Aug 2014 11:42:35 +0700
+Subject: [PATCH 9/9] Remove workaround for NV16 wrong byteperline
+
+Remove workaround for NV16 wrong byteperline.
+Workaround is apply due to kernel 3.4 has wrong bits_per_sample for NV16. It
+leads to wrong bytepersline. Workaround will ignore checking bytepersline on
+v4l2src.
+On kernel 3.10 has correct bits_per_sample however at that time kernel provide 2
+planes for NV16, but there is only 1 plane has valid memory due to memory type
+is V4L2_BUF_TYPE_VIDEO_CAPTURE. On v4l2src check the valid of bytesperline for
+both 2 planes and it will be fail when check the valid of bytesperline on plane2
+So workaround is applied.
+
+This patch will replace workarround ignoring checking bytesperline into check
+the valid of bytesperline for only 1 plane if memory type is not a multiplanar.
+
+Signed-off-by: Thao Luong <thao.luong.uw@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2bufferpool.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index 73a6c93..7adf187 100755
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -478,7 +478,11 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
+       (obj->mode != GST_V4L2_IO_USERPTR) &&
+       (obj->mode != GST_V4L2_IO_DMABUF_IMPORT)) {
+ 
+-    maxplanes = GST_VIDEO_FORMAT_INFO_N_PLANES(obj->info.finfo);
++    if (V4L2_TYPE_IS_MULTIPLANAR(obj->type))
++      maxplanes = GST_VIDEO_FORMAT_INFO_N_PLANES(obj->info.finfo);
++    else
++      maxplanes = 1;
++
+     for (i = 0; i < maxplanes; i++) {
+       /* we don't have video metadata, and we are not dealing with raw video,
+        * see if the strides are compatible */
+@@ -487,7 +491,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
+       GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
+           stride, obj->bytesperline[i]);
+ 
+-      if (stride != obj->bytesperline[i] && GST_VIDEO_INFO_N_PLANES(&obj->info) == 0)  /*Workaround for NV16 wrong byteperline*/
++      if (stride != obj->bytesperline[i])
+         goto missing_video_api;
+     }
+   }
+-- 
+1.7.9.5
+

@@ -1,0 +1,808 @@
+From d8f8f08725842a6a4ede1e41a5649d81c0239f50 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Thu, 24 Apr 2014 13:33:34 +0700
+Subject: [PATCH 1/9] RCar Gen2 v4l2sink support (GStreamer 1.2.3)
+
+Support v4l2sink for RCar Gen2, GStreamer version 1.2.3
+Currently, only IO_MMAP mode is supported.
+IO_USERPTR and IO_DMABUF modes are not supported yet.
+
+refs #54088
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2bufferpool.c |  156 ++++++++++++++++++++++-------
+ sys/v4l2/gstv4l2bufferpool.h |    4 +-
+ sys/v4l2/gstv4l2object.c     |  223 ++++++++++++++++++++++++++++++++++--------
+ sys/v4l2/gstv4l2object.h     |    7 +-
+ sys/v4l2/gstv4l2sink.c       |   13 +--
+ sys/v4l2/gstv4l2tuner.c      |    7 +-
+ sys/v4l2/v4l2_calls.c        |    4 +-
+ 7 files changed, 327 insertions(+), 87 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index 463dd44..853e037 100755
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -3,6 +3,7 @@
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@indt.org.br>
+  *               2009 Texas Instruments, Inc - http://www.ti.com/
++ *               2014 Renesas Electronics Corporation
+  *
+  * gstv4l2bufferpool.c V4L2 buffer pool class
+  *
+@@ -106,6 +107,10 @@ gst_v4l2_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+ {
+   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
+   GstV4l2Object *obj;
++  guint i;
++  guint index;
++
++  index = pool->num_allocated;
+ 
+   obj = pool->obj;
+ 
+@@ -122,15 +127,39 @@ gst_v4l2_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+       g_assert (meta != NULL);
+ 
+       index = meta->vbuffer.index;
+-      GST_LOG_OBJECT (pool,
+-          "unmap buffer %p idx %d (data %p, len %u)", buffer,
+-          index, meta->mem, meta->vbuffer.length);
+ 
+-      v4l2_munmap (meta->mem, meta->vbuffer.length);
++
++      if (obj->type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
++        GST_LOG_OBJECT (pool,
++            "unmap buffer %p idx %d (data %p, len %u)", buffer,
++            index, meta->mem[0], meta->vbuffer.length);
++        v4l2_munmap (meta->mem[0], meta->vbuffer.length);
++      }
++      else
++        for (i=0; i<GST_VIDEO_MAX_PLANES; i++) {
++            GST_LOG_OBJECT (pool,
++                "unmap buffer %p idx %d (data %p, len %u)", buffer,
++                index, meta->mem[i], meta->memsize[i]);
++          if (meta->memsize[i] > 0)
++            v4l2_munmap (meta->mem[i], meta->memsize[i]);
++        }
++
+       pool->buffers[index] = NULL;
+       break;
+     }
+     case GST_V4L2_IO_USERPTR:
++    {
++      GstV4l2Meta *meta;
++      gint index;
++
++      meta = GST_V4L2_META_GET (buffer);
++      g_assert (meta != NULL);
++
++      index = meta->vbuffer.index;
++
++      pool->buffers[index] = NULL;
++      break;
++    }
+     default:
+       g_assert_not_reached ();
+       break;
+@@ -149,6 +178,9 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+   GstVideoInfo *info;
+   guint index;
+ 
++  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
++  guint i, planes_num, length, offset;
++
+   obj = pool->obj;
+   info = &obj->info;
+ 
+@@ -196,29 +228,66 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+       meta->vbuffer.type = obj->type;
+       meta->vbuffer.memory = V4L2_MEMORY_MMAP;
+ 
++      /* Additional config for multi-plane */
++      if (meta->vbuffer.type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
++        meta->vbuffer.length = GST_VIDEO_MAX_PLANES;
++        meta->vbuffer.m.planes = planes;
++      }
++
+       if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &meta->vbuffer) < 0)
+         goto querybuf_failed;
+ 
+       GST_LOG_OBJECT (pool, "  index:     %u", meta->vbuffer.index);
+       GST_LOG_OBJECT (pool, "  type:      %d", meta->vbuffer.type);
+-      GST_LOG_OBJECT (pool, "  bytesused: %u", meta->vbuffer.bytesused);
+       GST_LOG_OBJECT (pool, "  flags:     %08x", meta->vbuffer.flags);
+       GST_LOG_OBJECT (pool, "  field:     %d", meta->vbuffer.field);
+       GST_LOG_OBJECT (pool, "  memory:    %d", meta->vbuffer.memory);
+-      if (meta->vbuffer.memory == V4L2_MEMORY_MMAP)
++
++      if (meta->vbuffer.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
++        GST_LOG_OBJECT (pool, "  bytesused: %u", meta->vbuffer.bytesused);
+         GST_LOG_OBJECT (pool, "  MMAP offset:  %u", meta->vbuffer.m.offset);
++        GST_LOG_OBJECT (pool, "  length:    %u", meta->vbuffer.length);
++      } else {
++        for (i=0; i < GST_VIDEO_MAX_PLANES; i++) {
++          GST_LOG_OBJECT (pool, "  bytesused %d: %u", i, meta->vbuffer.m.planes[i].bytesused);
++          GST_LOG_OBJECT (pool, "  MMAP offset %d:  %u", i, meta->vbuffer.m.planes[i].m.mem_offset);
++          GST_LOG_OBJECT (pool, "  length %d:    %u", i, meta->vbuffer.m.planes[i].length);
++        }
++      }
+ 
+       if (obj->mode == GST_V4L2_IO_MMAP) {
+-        meta->mem = v4l2_mmap (0, meta->vbuffer.length,
+-            PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
+-            meta->vbuffer.m.offset);
+-        if (meta->mem == MAP_FAILED)
+-          goto mmap_failed;
++        if (meta->vbuffer.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
++          planes_num = 1;
++        else planes_num = GST_VIDEO_MAX_PLANES;
+ 
+-        gst_buffer_append_memory (newbuf,
+-            gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+-                meta->mem, meta->vbuffer.length, 0, meta->vbuffer.length, NULL,
+-                NULL));
++        for (i=0; i<planes_num; i++)
++        {
++          if (meta->vbuffer.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
++            length = meta->vbuffer.length;
++            offset = meta->vbuffer.m.offset;
++          } else {
++            length = meta->vbuffer.m.planes[i].length;
++            offset = meta->vbuffer.m.planes[i].m.mem_offset;
++          }
++
++          /* Skip all zero-length planes */
++          if (length > 0) {
++            meta->mem[i] = v4l2_mmap (0, length,
++                PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
++                offset);
++
++            if (meta->mem[i] == MAP_FAILED)
++              goto mmap_failed;
++            else {
++              gst_buffer_append_memory (newbuf,
++                gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
++                meta->mem[i], length, 0, length,
++                NULL, NULL));
++
++              meta->memsize[i] = length;
++            }
++          }
++        }
+       }
+ #if HAVE_DECL_V4L2_MEMORY_DMABUF
+       if (obj->mode == GST_V4L2_IO_DMABUF) {
+@@ -247,11 +316,10 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+         height = GST_VIDEO_INFO_HEIGHT (info);
+         n_planes = GST_VIDEO_INFO_N_PLANES (info);
+ 
+-        GST_DEBUG_OBJECT (pool, "adding video meta, bytesperline %d",
+-            obj->bytesperline);
+-
+         offs = 0;
+         for (i = 0; i < n_planes; i++) {
++          GST_DEBUG_OBJECT (pool, "adding video meta, bytesperline %d",
++              obj->bytesperline[i]);
+           offset[i] = offs;
+ 
+           switch (info->finfo->format) {
+@@ -261,12 +329,12 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+             case GST_VIDEO_FORMAT_NV24:
+               stride[i] =
+                   (i == 0 ? 1 : 2) * GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo,
+-                  i, obj->bytesperline);
++                  i, obj->bytesperline[i]);
+               break;
+             default:
+               stride[i] =
+                   GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i,
+-                  obj->bytesperline);
++                  obj->bytesperline[i]);
+               break;
+           }
+ 
+@@ -351,6 +419,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
+   GstAllocator *allocator;
+   GstAllocationParams params;
+   struct v4l2_requestbuffers breq;
++  gint stride;
++  guint i, maxplanes;
+ 
+   GST_DEBUG_OBJECT (pool, "set config");
+ 
+@@ -360,17 +430,19 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
+ 
+   if (!pool->add_videometa &&
+       GST_VIDEO_INFO_FORMAT (&obj->info) != GST_VIDEO_FORMAT_ENCODED) {
+-    gint stride;
+ 
+-    /* we don't have video metadata, and we are not dealing with raw video,
+-     * see if the strides are compatible */
+-    stride = GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0);
++    maxplanes = GST_VIDEO_FORMAT_INFO_N_PLANES(obj->info.finfo);
++    for (i = 0; i < maxplanes; i++) {
++      /* we don't have video metadata, and we are not dealing with raw video,
++       * see if the strides are compatible */
++      stride = GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, i);
+ 
+-    GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
+-        stride, obj->bytesperline);
++      GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
++          stride, obj->bytesperline[i]);
+ 
+-    if (stride != obj->bytesperline)
+-      goto missing_video_api;
++      if (stride != obj->bytesperline[i])
++        goto missing_video_api;
++    }
+   }
+ 
+   /* parse the config and keep around */
+@@ -469,8 +541,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
+ missing_video_api:
+   {
+     GST_ERROR_OBJECT (pool, "missing GstMetaVideo API in config, "
+-        "default stride: %d, wanted stride %u",
+-        GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0), obj->bytesperline);
++        "default stride: %d, result stride %u",
++        stride, obj->bytesperline[i]);
+     return FALSE;
+   }
+ wrong_config:
+@@ -674,15 +746,24 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
+ {
+   GstV4l2Meta *meta;
+   gint index;
++  guint i;
++
++  GstV4l2Object *obj;
++  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
++
++  obj = pool->obj;
+ 
+   meta = GST_V4L2_META_GET (buf);
+   if (meta == NULL) {
+-    GST_LOG_OBJECT (pool, "unref copied buffer %p", buf);
++    GST_LOG_OBJECT (pool, "unref copied buffer %p, size = %d\n", buf, gst_buffer_get_size(buf));
+     /* no meta, it was a copied buffer that we can unref */
+     gst_buffer_unref (buf);
+     return GST_FLOW_OK;
+   }
+ 
++  meta->vbuffer.m.planes = planes;
++  meta->vbuffer.length = GST_VIDEO_MAX_PLANES;
++
+   index = meta->vbuffer.index;
+   meta->vbuffer.bytesused = gst_buffer_get_size (buf);
+ 
+@@ -726,6 +807,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
+   GstV4l2Object *obj = pool->obj;
+   GstClockTime timestamp;
+   GstV4l2Meta *meta;
++  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
+ 
+   if ((res = gst_v4l2_object_poll (obj)) != GST_FLOW_OK)
+     goto poll_error;
+@@ -737,7 +819,9 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
+     vbuffer.memory = V4L2_MEMORY_DMABUF;
+   else
+ #endif
+-    vbuffer.memory = V4L2_MEMORY_MMAP;
++  vbuffer.memory = V4L2_MEMORY_MMAP;
++  vbuffer.m.planes = planes;
++  vbuffer.length = GST_VIDEO_MAX_PLANES;
+ 
+   GST_LOG_OBJECT (pool, "doing DQBUF");
+   if (v4l2_ioctl (pool->video_fd, VIDIOC_DQBUF, &vbuffer) < 0)
+@@ -919,6 +1003,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+       break;
+ 
+     case V4L2_BUF_TYPE_VIDEO_OUTPUT:
++    case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+       /* playback, This function should return an empty buffer */
+       switch (obj->mode) {
+         case GST_V4L2_IO_RW:
+@@ -946,6 +1031,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+       g_assert_not_reached ();
+       break;
+   }
++
+ done:
+   return ret;
+ 
+@@ -989,6 +1075,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+       break;
+ 
+     case V4L2_BUF_TYPE_VIDEO_OUTPUT:
++    case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+       switch (obj->mode) {
+         case GST_V4L2_IO_RW:
+           /* release back in the pool */
+@@ -1010,7 +1097,9 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+                 index);
+ 
+             /* reset to the full length, in case it was changed */
+-            gst_buffer_resize (buffer, 0, meta->vbuffer.length);
++            /* DO NOT resize buffer in case using multiplane format */
++            if (obj->type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
++              gst_buffer_resize (buffer, 0, meta->vbuffer.length);
+ 
+             /* playback, put the buffer back in the queue to refill later. */
+             GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool,
+@@ -1237,6 +1326,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
+       break;
+ 
+     case V4L2_BUF_TYPE_VIDEO_OUTPUT:
++    case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+       /* playback */
+       switch (obj->mode) {
+         case GST_V4L2_IO_RW:
+diff --git a/sys/v4l2/gstv4l2bufferpool.h b/sys/v4l2/gstv4l2bufferpool.h
+index 3582bce..fbec352 100755
+--- a/sys/v4l2/gstv4l2bufferpool.h
++++ b/sys/v4l2/gstv4l2bufferpool.h
+@@ -3,6 +3,7 @@
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@indt.org.br>
+  *               2009 Texas Instruments, Inc - http://www.ti.com/
++ *               2014 Renesas Electronics Corporation
+  *
+  * gstv4l2bufferpool.h V4L2 buffer pool class
+  *
+@@ -74,7 +75,8 @@ struct _GstV4l2BufferPoolClass
+ struct _GstV4l2Meta {
+   GstMeta meta;
+ 
+-  gpointer mem;
++  gpointer mem[GST_VIDEO_MAX_PLANES];
++  guint32  memsize[GST_VIDEO_MAX_PLANES];
+   struct v4l2_buffer vbuffer;
+ };
+ 
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index c3ed422..3495ff2 100755
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@indt.org.br>
++ *               2014 Renesas Electronics Corporation
+  *
+  * gstv4l2object.c: base class for V4L2 elements
+  *
+@@ -47,6 +48,8 @@
+ 
+ #include <gst/video/video.h>
+ 
++#include "gstv4l2sink.h"
++
+ /* videodev2.h is not versioned and we can't easily check for the presence
+  * of enum values at compile time, but the V4L2_CAP_VIDEO_OUTPUT_OVERLAY define
+  * was added in the same commit as V4L2_FIELD_INTERLACED_{TB,BT} (b2787845) */
+@@ -1204,7 +1207,7 @@ format_cmp_func (gconstpointer a, gconstpointer b)
+ static gboolean
+ gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object)
+ {
+-  gint n;
++  gint n = 0;
+   struct v4l2_fmtdesc *format;
+ 
+   GST_DEBUG_OBJECT (v4l2object->element, "getting src format enumerations");
+@@ -1221,7 +1224,12 @@ gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object)
+         g_free (format);
+         break;                  /* end of enumeration */
+       } else {
+-        goto failed;
++#ifdef RCARGEN2_ENUMFORMAT_HACK
++        if (GST_IS_V4L2SINK (v4l2object->element))
++          goto manual_set_format;
++        else
++#endif
++          goto failed;
+       }
+     }
+ 
+@@ -1265,6 +1273,39 @@ failed:
+     g_free (format);
+     return FALSE;
+   }
++
++#ifdef RCARGEN2_ENUMFORMAT_HACK
++  /* Hack for RCarGen2 platform, which do not support this ioctl */
++manual_set_format:
++
++  /* Set format manually here since the driver do not support ENUM_FMT */
++  n++;
++
++  /* Support NV12 (but need to convert to NV12M later) */
++  {
++    format = g_new0 (struct v4l2_fmtdesc, 1);
++
++    format->index = n;
++    format->type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++    format->flags = 0;
++    strcpy(format->description, "YUV 4:2:0(SP)");
++    format->pixelformat = V4L2_PIX_FMT_NV12;
++
++    GST_INFO_OBJECT (v4l2object->element, "index:       %u", format->index);
++    GST_INFO_OBJECT (v4l2object->element, "type:        %d", format->type);
++    GST_INFO_OBJECT (v4l2object->element, "flags:       %08x", format->flags);
++    GST_INFO_OBJECT (v4l2object->element, "description: '%s'",
++        format->description);
++    GST_INFO_OBJECT (v4l2object->element, "pixelformat: %" GST_FOURCC_FORMAT,
++        GST_FOURCC_ARGS (format->pixelformat));
++
++    v4l2object->formats = g_slist_insert_sorted (v4l2object->formats, format,
++        (GCompareFunc) format_cmp_func);
++  }
++
++  return TRUE;
++
++#endif
+ }
+ 
+ /*
+@@ -2336,6 +2377,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+   struct v4l2_fmtdesc *fmtdesc;
+   GstVideoInfo info;
+   gint width, height, fps_n, fps_d, stride;
++  guint i;
+ 
+   if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
+     goto invalid_caps;
+@@ -2358,10 +2400,6 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+     field = V4L2_FIELD_NONE;
+   }
+ 
+-  GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
+-      "%" GST_FOURCC_FORMAT " stride: %d", width, height,
+-      GST_FOURCC_ARGS (pixelformat), stride);
+-
+   GST_V4L2_CHECK_OPEN (v4l2object);
+   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
+ 
+@@ -2382,48 +2420,135 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
+   if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
+     goto get_fmt_failed;
+ 
+-  GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+-      "%" GST_FOURCC_FORMAT " bytesperline %d, colorspace %d",
+-      format.fmt.pix.width, format.fmt.pix.height,
+-      GST_FOURCC_ARGS (format.fmt.pix.pixelformat), format.fmt.pix.bytesperline,
+-      format.fmt.pix.colorspace);
+-
+-  if (format.type != v4l2object->type ||
+-      format.fmt.pix.width != width ||
+-      format.fmt.pix.height != height ||
+-      format.fmt.pix.pixelformat != pixelformat ||
+-      format.fmt.pix.field != field || format.fmt.pix.bytesperline != stride) {
+-    /* something different, set the format */
+-    GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
+-        "%" GST_FOURCC_FORMAT " bytesperline %d", width, height,
++  if(format.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
++    GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
++        "%" GST_FOURCC_FORMAT " stride: %d", width, height,
+         GST_FOURCC_ARGS (pixelformat), stride);
+ 
+-    format.type = v4l2object->type;
+-    format.fmt.pix.width = width;
+-    format.fmt.pix.height = height;
+-    format.fmt.pix.pixelformat = pixelformat;
+-    format.fmt.pix.field = field;
+-    /* try to ask our prefered stride */
+-    format.fmt.pix.bytesperline = stride;
++    GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
++        "%" GST_FOURCC_FORMAT " bytesperline %d, colorspace %d",
++        format.fmt.pix.width, format.fmt.pix.height,
++        GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
++        format.fmt.pix.bytesperline,
++        format.fmt.pix.colorspace);
++
++    if (format.type != v4l2object->type ||
++        format.fmt.pix.width != width ||
++        format.fmt.pix.height != height ||
++        format.fmt.pix.pixelformat != pixelformat ||
++        format.fmt.pix.field != field || format.fmt.pix.bytesperline != stride) {
++
++      /* something different, set the format */
++      GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
++          "%" GST_FOURCC_FORMAT " bytesperline %d", width, height,
++          GST_FOURCC_ARGS (pixelformat), stride);
++
++      format.type = v4l2object->type;
++      format.fmt.pix.width = width;
++      format.fmt.pix.height = height;
++      format.fmt.pix.pixelformat = pixelformat;
++      format.fmt.pix.field = field;
++      /* try to ask our prefered stride */
++      format.fmt.pix.bytesperline = stride;
++
++      if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
++        goto set_fmt_failed;
++
++      GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
++          "%" GST_FOURCC_FORMAT " stride %d", format.fmt.pix.width,
++          format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
++          format.fmt.pix.bytesperline);
++
++      if (format.fmt.pix.width != width || format.fmt.pix.height != height)
++        goto invalid_dimensions;
++
++      if (format.fmt.pix.pixelformat != pixelformat)
++        goto invalid_pixelformat;
++    }
++  } else {
+ 
+-    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+-      goto set_fmt_failed;
++    guint i;
+ 
+-    GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+-        "%" GST_FOURCC_FORMAT " stride %d", format.fmt.pix.width,
+-        format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+-        format.fmt.pix.bytesperline);
++    /* In case the format type is OUTPUT_MPLANE, need to use
++     * a multi-plane format */
++    switch(pixelformat)
++    {
++      case V4L2_PIX_FMT_NV12:
++        pixelformat = V4L2_PIX_FMT_NV12M;
++        break;
++      case V4L2_PIX_FMT_NV21:
++        pixelformat = V4L2_PIX_FMT_NV21M;
++        break;
++      case V4L2_PIX_FMT_YVU420:
++      case V4L2_PIX_FMT_YUV420:
++        pixelformat = V4L2_PIX_FMT_YUV420M;
++        break;
++      default:
++        break;
++    }
++
++    GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
++        "%" GST_FOURCC_FORMAT " stride: %d", width, height,
++        GST_FOURCC_ARGS (pixelformat), stride);
++
++    GST_DEBUG_OBJECT (v4l2object->element, "Got format multiplane to %dx%d, format "
++        "%" GST_FOURCC_FORMAT " bytesperline %d, colorspace %d",
++        format.fmt.pix_mp.width, format.fmt.pix_mp.height,
++        GST_FOURCC_ARGS (format.fmt.pix_mp.pixelformat), format.fmt.pix_mp.plane_fmt[0].bytesperline,
++        format.fmt.pix_mp.colorspace);
++
++    if (format.type != v4l2object->type ||
++        format.fmt.pix_mp.width != width ||
++        format.fmt.pix_mp.height != height ||
++        format.fmt.pix_mp.pixelformat != pixelformat ||
++        format.fmt.pix_mp.field != field ||
++        format.fmt.pix_mp.plane_fmt[0].bytesperline != stride) {
++
++      format.type = v4l2object->type;
++      format.fmt.pix_mp.width = width;
++      format.fmt.pix_mp.height = height;
++      format.fmt.pix_mp.pixelformat = pixelformat;
++      format.fmt.pix_mp.field = field;
++
++      /* It is complex to calculate stride of each plane (must consider
++       * the format), so let the driver handle it */
++      for(i = 0; i < GST_VIDEO_MAX_PLANES; i++)
++        format.fmt.pix_mp.plane_fmt[i].bytesperline = 0;
++
++
++      if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
++        goto set_fmt_failed;
++
++
++      GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
++          "%" GST_FOURCC_FORMAT, format.fmt.pix_mp.width,
++          format.fmt.pix_mp.height, GST_FOURCC_ARGS (format.fmt.pix_mp.pixelformat));
+ 
+-    if (format.fmt.pix.width != width || format.fmt.pix.height != height)
+-      goto invalid_dimensions;
++      for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
++        if (format.fmt.pix_mp.plane_fmt[i].bytesperline == 0)
++          break;
++        GST_DEBUG_OBJECT (v4l2object->element, "plane %d stride = %d", i, format.fmt.pix_mp.plane_fmt[i].bytesperline);
++      }
+ 
+-    if (format.fmt.pix.pixelformat != pixelformat)
+-      goto invalid_pixelformat;
++      if (format.fmt.pix_mp.width != width || format.fmt.pix_mp.height != height)
++        goto invalid_dimensions;
++
++      if (format.fmt.pix_mp.pixelformat != pixelformat)
++        goto invalid_pixelformat;
++    }
+   }
+ 
++
+   /* figure out the frame layout */
+-  v4l2object->bytesperline = format.fmt.pix.bytesperline;
+-  v4l2object->sizeimage = format.fmt.pix.sizeimage;
++  if (format.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
++    v4l2object->bytesperline[0] = format.fmt.pix.bytesperline;
++    v4l2object->sizeimage[0] = format.fmt.pix.sizeimage;
++  } else {
++    for (i=0; i < GST_VIDEO_MAX_PLANES; i++) {
++      v4l2object->bytesperline[i] = format.fmt.pix_mp.plane_fmt[i].bytesperline;
++      v4l2object->sizeimage[i] = format.fmt.pix_mp.plane_fmt[i].sizeimage;
++    }
++  }
+ 
+   GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %u",
+       v4l2object->sizeimage);
+@@ -2532,22 +2657,38 @@ set_fmt_failed:
+   }
+ invalid_dimensions:
+   {
++    guint set_width, set_height;
++    if(format.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
++      set_width = format.fmt.pix.width;
++      set_height = format.fmt.pix.height;
++    } else {
++      set_width = format.fmt.pix_mp.width;
++      set_height = format.fmt.pix_mp.height;
++    }
++
+     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+         (_("Device '%s' cannot capture at %dx%d"),
+             v4l2object->videodev, width, height),
+         ("Tried to capture at %dx%d, but device returned size %dx%d",
+-            width, height, format.fmt.pix.width, format.fmt.pix.height));
++            width, height, set_width, set_height));
++
+     return FALSE;
+   }
+ invalid_pixelformat:
+   {
++    guint32 set_pixelfmt;
++    if(format.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
++      set_pixelfmt = format.fmt.pix.pixelformat;
++    else
++      set_pixelfmt = format.fmt.pix_mp.pixelformat;
++
+     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+         (_("Device '%s' cannot capture in the specified format"),
+             v4l2object->videodev),
+         ("Tried to capture in %" GST_FOURCC_FORMAT
+             ", but device returned format" " %" GST_FOURCC_FORMAT,
+             GST_FOURCC_ARGS (pixelformat),
+-            GST_FOURCC_ARGS (format.fmt.pix.pixelformat)));
++            GST_FOURCC_ARGS (set_pixelfmt)));
+     return FALSE;
+   }
+ get_parm_failed:
+diff --git a/sys/v4l2/gstv4l2object.h b/sys/v4l2/gstv4l2object.h
+index fbfff92..ed91e78 100755
+--- a/sys/v4l2/gstv4l2object.h
++++ b/sys/v4l2/gstv4l2object.h
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@indt.org.br>
++ *               2014 Renesas Electronics Corporation
+  *
+  * gstv4l2object.h: base class for V4L2 elements
+  *
+@@ -118,8 +119,8 @@ struct _GstV4l2Object {
+   struct v4l2_fmtdesc *fmtdesc;
+   GstVideoInfo info;
+ 
+-  guint32 bytesperline;
+-  guint32 sizeimage;
++  guint32 bytesperline[GST_VIDEO_MAX_PLANES];
++  guint32 sizeimage[GST_VIDEO_MAX_PLANES];
+   GstClockTime duration;
+ 
+   /* wanted mode */
+@@ -288,4 +289,6 @@ interface_as_function ## _property_probe_interface_init (GstPropertyProbeInterfa
+ 
+ G_END_DECLS
+ 
++#define RCARGEN2_ENUMFORMAT_HACK
++
+ #endif /* __GST_V4L2_OBJECT_H__ */
+diff --git a/sys/v4l2/gstv4l2sink.c b/sys/v4l2/gstv4l2sink.c
+index ef09412..d6dc818 100755
+--- a/sys/v4l2/gstv4l2sink.c
++++ b/sys/v4l2/gstv4l2sink.c
+@@ -1,6 +1,7 @@
+ /* GStreamer
+  *
+  * Copyright (C) 2009 Texas Instruments, Inc - http://www.ti.com/
++ *               2014 Renesas Electronics Corporation
+  *
+  * Description: V4L2 sink element
+  *  Created on: Jul 2, 2009
+@@ -106,7 +107,6 @@ gst_v4l2sink_navigation_init (GstNavigationInterface * iface)
+ 
+ #define gst_v4l2sink_parent_class parent_class
+ G_DEFINE_TYPE_WITH_CODE (GstV4l2Sink, gst_v4l2sink, GST_TYPE_VIDEO_SINK,
+-    G_IMPLEMENT_INTERFACE (GST_TYPE_TUNER, gst_v4l2sink_tuner_interface_init);
+ #ifdef HAVE_XVIDEO
+     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+         gst_v4l2sink_video_overlay_interface_init);
+@@ -197,8 +197,8 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
+           0, 0xffffffff, 0, G_PARAM_READWRITE));
+ 
+   gst_element_class_set_static_metadata (element_class,
+-      "Video (video4linux2) Sink", "Sink/Video",
+-      "Displays frames on a video4linux2 device", "Rob Clark <rob@ti.com>,");
++      "Video (video4linux2 for R-Car) Sink", "Sink/Video",
++      "Displays frames on a video4linux2 device for R-Car", "Renesas Electronics,");
+ 
+   gst_element_class_add_pad_template (element_class,
+       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+@@ -220,8 +220,9 @@ static void
+ gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
+ {
+   v4l2sink->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2sink),
+-      V4L2_BUF_TYPE_VIDEO_OUTPUT, DEFAULT_PROP_DEVICE,
+-      gst_v4l2_get_output, gst_v4l2_set_output, NULL);
++      V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE, DEFAULT_PROP_DEVICE,
++      NULL, NULL, NULL);
++
+ 
+   /* same default value for video output device as is used for
+    * v4l2src/capture is no good..  so lets set a saner default
+@@ -312,7 +313,7 @@ gst_v4l2sink_sync_crop_fields (GstV4l2Sink * v4l2sink)
+     struct v4l2_crop crop;
+ 
+     memset (&crop, 0x00, sizeof (struct v4l2_crop));
+-    crop.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
++    crop.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+ 
+     if (v4l2_ioctl (fd, VIDIOC_G_CROP, &crop) < 0) {
+       GST_WARNING_OBJECT (v4l2sink, "VIDIOC_G_CROP failed");
+diff --git a/sys/v4l2/gstv4l2tuner.c b/sys/v4l2/gstv4l2tuner.c
+index 3a82eb7..c484009 100755
+--- a/sys/v4l2/gstv4l2tuner.c
++++ b/sys/v4l2/gstv4l2tuner.c
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@indt.org.br>
++ *               2014 Renesas Electronics Corporation
+  *
+  * gstv4l2tuner.c: tuner interface implementation for V4L2
+  *
+@@ -181,9 +182,9 @@ gst_v4l2_tuner_get_norm (GstV4l2Object * v4l2object)
+   /* assert that we're opened and that we're using a known item */
+   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2object), NULL);
+ 
+-  gst_v4l2_get_norm (v4l2object, &norm);
+-
+-  return gst_v4l2_tuner_get_norm_by_std_id (v4l2object, norm);
++  if(gst_v4l2_get_norm (v4l2object, &norm))
++    return gst_v4l2_tuner_get_norm_by_std_id (v4l2object, norm);
++  else return NULL;
+ }
+ 
+ GstTunerNorm *
+diff --git a/sys/v4l2/v4l2_calls.c b/sys/v4l2/v4l2_calls.c
+index eef2c7a..9e44bdf 100755
+--- a/sys/v4l2/v4l2_calls.c
++++ b/sys/v4l2/v4l2_calls.c
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@indt.org.br>
++ *               2014 Renesas Electronics Corporation
+  *
+  * v4l2_calls.c - generic V4L2 calls handling
+  *
+@@ -533,7 +534,8 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
+     goto not_capture;
+ 
+   if (GST_IS_V4L2SINK (v4l2object->element) &&
+-      !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT))
++      !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT) &&
++      !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT_MPLANE))
+     goto not_output;
+ 
+   /* create enumerations, posts errors. */
+-- 
+1.7.9.5
+

@@ -1,0 +1,52 @@
+From 2648d9eb26750d057a1b5e55775d6927a5eabce9 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Wed, 2 Jul 2014 14:54:52 +0700
+Subject: [PATCH 5/9] Fix mmap mode issue
+
+This patch fixes mmap mode issue
+
+Phenomenon:
+  - An Error always happens when run GStreamer in mmap mode:
+    Caught SIGSEGV
+    Spinning.  Please run 'gdb gst-launch-1.0 911' to continue debugging,
+    Ctrl-C to quit, or Ctrl-\ to dump core.
+
+Cause:
+  - meta->vbuffer.m.planes is not allocated.
+  - When send to v4l2 driver, v4l2 driver try to write to this area.
+  - This cause SIGSEGV error.
+  - But in older environment there is no error with same source code.
+
+refs #57075
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2bufferpool.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index 30abf06..7b52976 100755
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -818,6 +818,7 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
+ {
+   GstV4l2Meta *meta;
+   gint index;
++  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
+ 
+   meta = GST_V4L2_META_GET (buf);
+   if (meta == NULL) {
+@@ -827,9 +828,10 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
+     return GST_FLOW_OK;
+   }
+ 
+-
+   index = meta->vbuffer.index;
+   meta->vbuffer.bytesused = gst_buffer_get_size (buf);
++  meta->vbuffer.m.planes = planes;
++  meta->vbuffer.length = GST_VIDEO_MAX_PLANES;
+ 
+   GST_LOG_OBJECT (pool,
+       "enqueue buffer %p, index:%d, queued:%d, flags:%08x mem:%p used:%d",
+-- 
+1.7.9.5
+

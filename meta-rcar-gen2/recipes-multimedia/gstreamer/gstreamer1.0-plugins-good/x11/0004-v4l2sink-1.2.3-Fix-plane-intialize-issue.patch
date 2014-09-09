@@ -1,0 +1,75 @@
+From 078fd4c7a5bae0eb6ac3d5f66d4047bccef6e864 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 6 Jun 2014 18:55:37 +0700
+Subject: [PATCH 4/9] Fix plane intialize issue in kernel 3.10
+
+In kernel 3.10, only used planes are intialized, so other planes will get wrong value (offset in mmap)
+This patch avoids issue by preventing v4l2sink to map un-used planes.
+
+refs #55249
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2bufferpool.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index b3d803a..30abf06 100755
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -215,7 +215,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+ 
+       /* Additional config for multi-plane */
+       if (meta->vbuffer.type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+-        meta->vbuffer.length = GST_VIDEO_MAX_PLANES;
++        meta->vbuffer.length = GST_VIDEO_INFO_N_PLANES (info);
+         meta->vbuffer.m.planes = planes;
+       }
+ 
+@@ -234,7 +234,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+           GST_LOG_OBJECT (pool, "  MMAP offset:  %u", meta->vbuffer.m.offset);
+         GST_LOG_OBJECT (pool, "  length:    %u", meta->vbuffer.length);
+       } else {
+-        for (i=0; i < GST_VIDEO_MAX_PLANES; i++) {
++        for (i=0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+           GST_LOG_OBJECT (pool, "  bytesused %d: %u", i,
+                 meta->vbuffer.m.planes[i].bytesused);
+           if (obj->mode == GST_V4L2_IO_MMAP)
+@@ -248,7 +248,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+       if (obj->mode == GST_V4L2_IO_MMAP) {
+         if (meta->vbuffer.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
+           planes_num = 1;
+-        else planes_num = GST_VIDEO_MAX_PLANES;
++        else planes_num = GST_VIDEO_INFO_N_PLANES (info);
+ 
+         for (i=0; i<planes_num; i++)
+         {
+@@ -346,7 +346,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+ 
+       /* Additional config for multi-plane */
+       if (vb.type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+-        vb.length = GST_VIDEO_MAX_PLANES;
++        vb.length = GST_VIDEO_INFO_N_PLANES (info);
+         vb.m.planes = planes;
+       }
+ 
+@@ -363,7 +363,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+         GST_LOG_OBJECT (pool, "  bytesused: %u", vb.bytesused);
+         GST_LOG_OBJECT (pool, "  length:    %u", vb.length);
+       } else {
+-        for (i=0; i < GST_VIDEO_MAX_PLANES; i++) {
++        for (i=0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+           GST_LOG_OBJECT (pool, "  bytesused %d: %u", i,
+                 vb.m.planes[i].bytesused);
+           GST_LOG_OBJECT (pool, "  length %d:    %u", i,
+@@ -890,7 +890,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
+ 
+   if (obj->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+     vbuffer.m.planes = planes;
+-    vbuffer.length = GST_VIDEO_MAX_PLANES;
++    vbuffer.length = GST_VIDEO_INFO_N_PLANES (&obj->info);
+   }
+ 
+   GST_LOG_OBJECT (pool, "doing DQBUF");
+-- 
+1.7.9.5
+
