@@ -1,0 +1,40 @@
+From e4ff1aff5f1b4d661e02e850802de04af957da2c Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 15 Apr 2014 14:55:53 +0900
+Subject: [PATCH 15/24] waylandsink: Remove an unused member variable of the
+ window structure
+
+---
+ ext/wayland/gstwaylandsink.c | 3 ---
+ ext/wayland/gstwaylandsink.h | 1 -
+ 2 files changed, 4 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 4225e68..305e146 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -261,9 +261,6 @@ destroy_window (struct window *window)
+   if (window->callback)
+     wl_callback_destroy (window->callback);
+ 
+-  if (window->buffer)
+-    wl_buffer_destroy (window->buffer);
+-
+   if (window->shell_surface)
+     wl_shell_surface_destroy (window->shell_surface);
+ 
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index 4fd41fa..cc5c363 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -83,7 +83,6 @@ struct window
+   int width, height;
+   struct wl_surface *surface;
+   struct wl_shell_surface *shell_surface;
+-  struct wl_buffer *buffer;
+   struct wl_callback *callback;
+   guint init_complete :1;
+   guint screen_valid :1;
+-- 
+1.8.0
+

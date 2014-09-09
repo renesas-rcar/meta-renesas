@@ -1,0 +1,63 @@
+From 4b4b921422f5442d449a37338e26f47892538c93 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 21 Feb 2014 11:33:02 +0900
+Subject: [PATCH 11/24] waylandsink: Use a private event queue for dispatching
+ frame callback events
+
+This change is aimed at the improvement of the efficiency of waiting
+for frame callback events.
+---
+ ext/wayland/gstwaylandsink.c | 10 +++++++++-
+ ext/wayland/gstwaylandsink.h |  1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 10d9218..da152b0 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -538,6 +538,13 @@ create_display (GstWaylandSink * sink)
+ 
+   wl_display_get_fd (display->display);
+ 
++  /* Create a new event queue for frame callback */
++  display->wl_queue = wl_display_create_queue (display->display);
++  if (!display->wl_queue) {
++    GST_ERROR_OBJECT (sink, "Failed to create an event queue");
++    return FALSE;
++  }
++
+   return TRUE;
+ }
+ 
+@@ -801,7 +808,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+   meta = gst_buffer_get_wl_meta (buffer);
+ 
+   while (window->redraw_pending)
+-    wl_display_dispatch (display->display);
++    wl_display_dispatch_queue (display->display, display->wl_queue);
+ 
+   if (meta && meta->sink == sink) {
+     GST_LOG_OBJECT (sink, "buffer %p from our pool, writing directly", buffer);
+@@ -839,6 +846,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+   window->redraw_pending = TRUE;
+   window->callback = wl_surface_frame (window->surface);
+   wl_callback_add_listener (window->callback, &frame_callback_listener, window);
++  wl_proxy_set_queue ((struct wl_proxy *) window->callback, display->wl_queue);
+   wl_surface_commit (window->surface);
+   wl_display_dispatch (display->display);
+ 
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index 8c50a28..ea6b8ac 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -74,6 +74,7 @@ struct  display
+   gint drm_fd;
+   gboolean authenticated;
+ #endif
++  struct wl_event_queue *wl_queue;
+ };
+ 
+ struct window
+-- 
+1.8.0
+

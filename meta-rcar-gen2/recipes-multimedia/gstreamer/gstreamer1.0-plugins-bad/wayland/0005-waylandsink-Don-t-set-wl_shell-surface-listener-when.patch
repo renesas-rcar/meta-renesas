@@ -1,0 +1,41 @@
+From ed1803f6c5496e0673df931ee378703ba21bf8d1 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 12 Feb 2014 18:47:52 +0900
+Subject: [PATCH 05/24] waylandsink: Don't set wl_shell surface listener when
+ wl_shell isn't obtained by the global listener
+
+---
+ ext/wayland/gstwaylandsink.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 6440563..22de2b5 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -585,15 +585,17 @@ create_window (GstWaylandSink * sink, struct display *display, int width,
+ 
+   window->surface = wl_compositor_create_surface (display->compositor);
+ 
+-  window->shell_surface = wl_shell_get_shell_surface (display->shell,
+-      window->surface);
++  if (display->shell) {
++    window->shell_surface = wl_shell_get_shell_surface (display->shell,
++        window->surface);
+ 
+-  g_return_if_fail (window->shell_surface);
++    g_return_if_fail (window->shell_surface);
+ 
+-  wl_shell_surface_add_listener (window->shell_surface,
+-      &shell_surface_listener, window);
++    wl_shell_surface_add_listener (window->shell_surface,
++        &shell_surface_listener, window);
+ 
+-  wl_shell_surface_set_toplevel (window->shell_surface);
++    wl_shell_surface_set_toplevel (window->shell_surface);
++  }
+ 
+   sink->window = window;
+ 
+-- 
+1.8.0
+

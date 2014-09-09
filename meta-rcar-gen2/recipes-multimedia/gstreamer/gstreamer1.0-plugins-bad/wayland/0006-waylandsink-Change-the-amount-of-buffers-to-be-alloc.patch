@@ -1,0 +1,35 @@
+From 05c170711f3e987132e08188015788b3def0ef88 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 12 Feb 2014 18:52:50 +0900
+Subject: [PATCH 06/24] waylandsink: Change the amount of buffers to be
+ allocated in the bufferpool
+
+This is helpful to improve the efficiency of the upstream plugin
+output especielly for parallelizing the decoder output and
+rendering with waylandsink by inserting a queue plugin.
+---
+ ext/wayland/gstwaylandsink.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 22de2b5..5c7dd9e 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -667,12 +667,12 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+     size = info.size;
+ 
+     config = gst_buffer_pool_get_config (pool);
+-    gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
++    gst_buffer_pool_config_set_params (config, caps, size, 3, 0);
+     if (!gst_buffer_pool_set_config (pool, config))
+       goto config_failed;
+   }
+   if (pool) {
+-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
++    gst_query_add_allocation_pool (query, pool, size, 3, 0);
+     gst_object_unref (pool);
+   }
+ 
+-- 
+1.8.0
+

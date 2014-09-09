@@ -1,0 +1,106 @@
+From 3b32d87a77cc42e95013fbe4440bc3a82cfe96a1 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 21 Feb 2014 11:14:05 +0900
+Subject: [PATCH 09/24] waylandsink: Correct coding style by gst-indent
+
+---
+ ext/wayland/gstwaylandsink.c | 40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index cc9c77b..817b2cf 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -308,18 +308,18 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+   int i;
+ 
+   sink = GST_WAYLAND_SINK (bsink);
+-  caps = gst_caps_copy(gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink)));
++  caps =
++      gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink)));
+ 
+   if (!sink->window || !sink->window->screen_valid)
+-	goto skip;
++    goto skip;
+ 
+   for (i = 0; i < gst_caps_get_size (caps); i++) {
+     GstStructure *structure = gst_caps_get_structure (caps, i);
+ 
+     gst_structure_set (structure,
+-		"width", G_TYPE_INT, sink->window->width,
+-		"height", G_TYPE_INT, sink->window->height,
+-		NULL);
++        "width", G_TYPE_INT, sink->window->width,
++        "height", G_TYPE_INT, sink->window->height, NULL);
+   }
+ 
+ skip:
+@@ -406,7 +406,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
+     d->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
+     wl_shm_add_listener (d->shm, &shm_listenter, d);
+   } else if (strcmp (interface, "wl_output") == 0) {
+-    d->output = wl_registry_bind (registry, id, &wl_output_interface, 1); /* always last display */
++    d->output = wl_registry_bind (registry, id, &wl_output_interface, 1);       /* always last display */
+ #ifdef HAVE_WAYLAND_KMS
+   } else if (strcmp (interface, "wl_kms") == 0) {
+     d->wl_kms = wl_registry_bind (registry, id, &wl_kms_interface, version);
+@@ -432,13 +432,14 @@ static void
+ handle_configure (void *data, struct wl_shell_surface *shell_surface,
+     uint32_t edges, int32_t width, int32_t height)
+ {
+-    struct window *window = data;
+-    GST_DEBUG_OBJECT (NULL, "handle_configure: width = %d, height= %d", width, height);
+-    if (fullscreen) {
+-      window->width = width;
+-      window->height = height;
+-      window->screen_valid = TRUE;
+-    }
++  struct window *window = data;
++  GST_DEBUG_OBJECT (NULL, "handle_configure: width = %d, height= %d", width,
++      height);
++  if (fullscreen) {
++    window->width = width;
++    window->height = height;
++    window->screen_valid = TRUE;
++  }
+ }
+ 
+ static void
+@@ -484,18 +485,17 @@ create_display (GstWaylandSink * sink)
+     window->shell_surface = wl_shell_get_shell_surface (display->shell,
+         window->surface);
+ 
+-    if(!window->shell_surface) {
++    if (!window->shell_surface) {
+       GST_ERROR_OBJECT (sink, "Failed to create shell surface");
+-	return FALSE;
++      return FALSE;
+     }
+ 
+     wl_shell_surface_add_listener (window->shell_surface,
+         &shell_surface_listener, window);
+ 
+     if (fullscreen) {
+-      wl_shell_surface_set_fullscreen(window->shell_surface,
+-			WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
+-			0, display->output);
++      wl_shell_surface_set_fullscreen (window->shell_surface,
++          WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, display->output);
+     } else {
+       wl_shell_surface_set_toplevel (window->shell_surface);
+     }
+@@ -669,9 +669,9 @@ gst_wayland_sink_start (GstBaseSink * bsink)
+ 
+   GST_DEBUG_OBJECT (sink, "start");
+ 
+-  env_full = getenv("WAYLANDSINK_FULLSCREEN");
++  env_full = getenv ("WAYLANDSINK_FULLSCREEN");
+ 
+-  fullscreen = (env_full == NULL) ? 0 : atoi(env_full);
++  fullscreen = (env_full == NULL) ? 0 : atoi (env_full);
+ 
+   if (!create_display (sink)) {
+     GST_ELEMENT_ERROR (bsink, RESOURCE, OPEN_READ_WRITE,
+-- 
+1.8.0
+

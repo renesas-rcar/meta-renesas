@@ -1,0 +1,30 @@
+From 1c45e796a685e258e71132fe1e16a6f740017833 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 3 Apr 2014 10:51:51 +0900
+Subject: [PATCH 21/24] waylandsink: Fix the number of the buffers to be
+ registered to the pool
+
+The current implementation of waylandsink answers a allocation
+query that the pool has 3 buffers at least, so this change makes
+the number set as the pool configuration parameter accord with the
+actual number of the buffers waylandsink handles.
+---
+ ext/wayland/gstwaylandsink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 5164c14..603a7f4 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -604,7 +604,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+   }
+ 
+   structure = gst_buffer_pool_get_config (newpool);
+-  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
++  gst_buffer_pool_config_set_params (structure, caps, size, 3, 0);
+   gst_buffer_pool_config_set_allocator (structure, NULL, &params);
+   if (!gst_buffer_pool_set_config (newpool, structure))
+     goto config_failed;
+-- 
+1.8.0
+

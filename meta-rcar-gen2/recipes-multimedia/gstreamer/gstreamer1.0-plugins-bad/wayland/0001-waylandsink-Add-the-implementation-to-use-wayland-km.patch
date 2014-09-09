@@ -1,0 +1,401 @@
+From 8267107b7cbee1919ddc437758cb8b991e97f240 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 12 Feb 2014 17:57:27 +0900
+Subject: [PATCH 01/24] waylandsink: Add the implementation to use wayland kms
+
+This implementation allows to use kms bo as the bufferpool of waylandsink.
+---
+ configure.ac                   | 10 +++--
+ ext/wayland/Makefile.am        |  2 +
+ ext/wayland/gstwaylandsink.c   | 83 +++++++++++++++++++++++++++++++++++
+ ext/wayland/gstwaylandsink.h   | 10 +++++
+ ext/wayland/waylandpool.c      | 99 ++++++++++++++++++++++++++++++++++++++++++
+ ext/wayland/waylandpool.h      | 12 +++++
+ packaging/gst-plugins-bad.spec |  3 ++
+ 7 files changed, 216 insertions(+), 3 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 54df301..a0c2ded 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1220,9 +1220,13 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
+ dnl **** Wayland ****
+ translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
+ AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
+-  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.0.0, [
+-    HAVE_WAYLAND="yes" ], [ HAVE_WAYLAND="no"
+-  ])
++  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.0.0,
++    [HAVE_WAYLAND="yes" ], [ HAVE_WAYLAND="no"])
++  PKG_CHECK_MODULES(WAYLAND_KMS, libdrm libkms wayland-kms,
++    [HAVE_WAYLAND_KMS="yes"
++        AC_DEFINE(HAVE_WAYLAND_KMS, 1, [Define if wayland KMS protocol is available])],
++       [HAVE_WAYLAND_KMS="no"])
++  AM_CONDITIONAL(USE_WAYLAND_KMS, test "x$HAVE_WAYLAND_KMS" = "xyes")
+ ])
+ 
+ dnl **** WebP ****
+diff --git a/ext/wayland/Makefile.am b/ext/wayland/Makefile.am
+index e8edf73..5c865f1 100644
+--- a/ext/wayland/Makefile.am
++++ b/ext/wayland/Makefile.am
+@@ -2,9 +2,11 @@ plugin_LTLIBRARIES = libgstwaylandsink.la
+ 
+ libgstwaylandsink_la_SOURCES =  gstwaylandsink.c waylandpool.c
+ libgstwaylandsink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
++                               $(WAYLAND_KMS_CFLAGS) \
+                                $(WAYLAND_CFLAGS)
+ libgstwaylandsink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
+                                -lgstvideo-$(GST_API_VERSION) \
++                               $(WAYLAND_KMS_LIBS) \
+                                $(WAYLAND_LIBS)
+ libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+ libgstwaylandsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index cabf310..e8b3e69 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -185,6 +185,8 @@ static void
+ gst_wayland_sink_init (GstWaylandSink * sink)
+ {
+   sink->display = NULL;
++  sink->display->drm_fd = -1;
++
+   sink->window = NULL;
+   sink->shm_pool = NULL;
+   sink->pool = NULL;
+@@ -238,6 +240,9 @@ destroy_display (struct display *display)
+ 
+   wl_display_flush (display->display);
+   wl_display_disconnect (display->display);
++  if (display->drm_fd >= 0)
++    close (display->drm_fd);
++
+   free (display);
+ }
+ 
+@@ -318,6 +323,50 @@ struct wl_shm_listener shm_listenter = {
+   shm_format
+ };
+ 
++#ifdef HAVE_WAYLAND_KMS
++static void
++kms_device (void *data, struct wl_kms *kms, const char *device)
++{
++  struct display *d = data;
++  drm_magic_t magic;
++
++  if ((d->drm_fd = open (device, O_RDWR | O_CLOEXEC)) < 0) {
++    GST_ERROR ("%s open failed (%s)", device, strerror (errno));
++    return;
++  }
++
++  drmGetMagic (d->drm_fd, &magic);
++  wl_kms_authenticate (d->wl_kms, magic);
++}
++
++static void
++kms_format (void *data, struct wl_kms *wl_shm, uint32_t format)
++{
++  struct display *d = data;
++
++  if (format == WL_KMS_FORMAT_ARGB8888)
++    d->kms_argb_supported = TRUE;
++
++  GST_DEBUG ("kms_formats = 0x%08x", format);
++}
++
++static void
++kms_handle_authenticated (void *data, struct wl_kms *kms)
++{
++  struct display *d = data;
++
++  GST_DEBUG ("wl_kms has been authenticated");
++
++  d->authenticated = TRUE;
++}
++
++static const struct wl_kms_listener kms_listenter = {
++  .device = kms_device,
++  .format = kms_format,
++  .authenticated = kms_handle_authenticated
++};
++#endif
++
+ static void
+ registry_handle_global (void *data, struct wl_registry *registry,
+     uint32_t id, const char *interface, uint32_t version)
+@@ -332,7 +381,14 @@ registry_handle_global (void *data, struct wl_registry *registry,
+   } else if (strcmp (interface, "wl_shm") == 0) {
+     d->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
+     wl_shm_add_listener (d->shm, &shm_listenter, d);
++#ifdef HAVE_WAYLAND_KMS
++  } else if (strcmp (interface, "wl_kms") == 0) {
++    d->wl_kms = wl_registry_bind (registry, id, &wl_kms_interface, version);
++    wl_kms_add_listener (d->wl_kms, &kms_listenter, d);
++  }
++#else
+   }
++#endif
+ }
+ 
+ static const struct wl_registry_listener registry_listener = {
+@@ -356,13 +412,40 @@ create_display (void)
+   wl_registry_add_listener (display->registry, &registry_listener, display);
+ 
+   wl_display_roundtrip (display->display);
++
++#ifdef HAVE_WAYLAND_KMS
++  if (!display->wl_kms && !display->shm) {
++    GST_ERROR ("Both wl_kms and wl_shm global objects couldn't be obtained");
++    return NULL;
++  }
++#else
+   if (display->shm == NULL) {
+     GST_ERROR ("No wl_shm global..");
+     return NULL;
+   }
++#endif
++
++  wl_display_roundtrip (display->display);
++
++#ifdef HAVE_WAYLAND_KMS
++  if (display->wl_kms && !display->kms_argb_supported) {
++    GST_ERROR ("wl_kms format isn't WL_KMS_FORMAT_ARGB8888");
++    return NULL;
++  }
+ 
+   wl_display_roundtrip (display->display);
+ 
++  if (!display->authenticated) {
++    GST_ERROR ("Authentication failed...");
++    return NULL;
++  }
++#else
++  if (!(display->formats & (1 << WL_SHM_FORMAT_XRGB8888))) {
++    GST_ERROR ("WL_SHM_FORMAT_XRGB32 not available");
++    return NULL;
++  }
++#endif
++
+   wl_display_get_fd (display->display);
+ 
+   return display;
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index cb3383e..d62563b 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -42,6 +42,10 @@
+ 
+ #include <wayland-client.h>
+ 
++#ifdef HAVE_WAYLAND_KMS
++#include "wayland-kms-client-protocol.h"
++#endif
++
+ #define GST_TYPE_WAYLAND_SINK \
+ 	    (gst_wayland_sink_get_type())
+ #define GST_WAYLAND_SINK(obj) \
+@@ -63,6 +67,12 @@ struct  display
+   struct wl_shell *shell;
+   struct wl_shm *shm;
+   uint32_t formats;
++#ifdef HAVE_WAYLAND_KMS
++  struct wl_kms *wl_kms;
++  gboolean kms_argb_supported;
++  gint drm_fd;
++  gboolean authenticated;
++#endif
+ };
+ 
+ struct window
+diff --git a/ext/wayland/waylandpool.c b/ext/wayland/waylandpool.c
+index 9eb028a..6736663 100644
+--- a/ext/wayland/waylandpool.c
++++ b/ext/wayland/waylandpool.c
+@@ -52,7 +52,15 @@ static void
+ gst_wl_meta_free (GstWlMeta * meta, GstBuffer * buffer)
+ {
+   gst_object_unref (meta->sink);
++#ifdef HAVE_WAYLAND_KMS
++  if (meta->kms_bo) {
++    kms_bo_unmap (meta->kms_bo);
++    kms_bo_destroy (&meta->kms_bo);
++  } else
++    munmap (meta->data, meta->size);
++#else
+   munmap (meta->data, meta->size);
++#endif
+   wl_buffer_destroy (meta->wbuffer);
+ }
+ 
+@@ -242,9 +250,80 @@ gst_buffer_add_wayland_meta (GstBuffer * buffer, GstWaylandBufferPool * wpool)
+       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
+           size, 0, size, NULL, NULL));
+ 
++  return wmeta;
++}
++
++#ifdef HAVE_WAYLAND_KMS
++static GstWlMeta *
++gst_buffer_add_wayland_meta_kms (GstBuffer * buffer,
++    GstWaylandBufferPool * wpool)
++{
++  GstWlMeta *wmeta;
++  GstWaylandSink *sink;
++  gsize offset[GST_VIDEO_MAX_PLANES] = { 0 };
++  gint stride[GST_VIDEO_MAX_PLANES] = { 0 };
++  gint err;
++  void *data = NULL;
++  struct drm_gem_flink fl;
++  guint32 handle;
++  gint prime_fd;
++  unsigned attr[] = {
++    KMS_BO_TYPE, KMS_BO_TYPE_SCANOUT_X8R8G8B8,
++    KMS_WIDTH, 0,
++    KMS_HEIGHT, 0,
++    KMS_TERMINATE_PROP_LIST
++  };
++
++  sink = wpool->sink;
++
++  attr[3] = ((wpool->width + 31) >> 5) << 5;
++  attr[5] = wpool->height;
++
++  wmeta = (GstWlMeta *) gst_buffer_add_meta (buffer, GST_WL_META_INFO, NULL);
++  wmeta->sink = gst_object_ref (sink);
++
++  err = kms_bo_create (wpool->kms, attr, &wmeta->kms_bo);
++  if (err) {
++    GST_ERROR ("Failed to create kms bo");
++    return NULL;
++  }
++
++  err = kms_bo_map (wmeta->kms_bo, &data);
++  if (err) {
++    GST_ERROR ("Failed to map kms bo");
++    return NULL;
++  }
++
++  kms_bo_get_prop (wmeta->kms_bo, KMS_PITCH, (guint *) & stride[0]);
++
++  wmeta->data = data;
++  wmeta->size = stride[0] * wpool->height;
++
++  kms_bo_get_prop (wmeta->kms_bo, KMS_HANDLE, &handle);
++
++  fl.handle = handle;
++  fl.name = 0;
++  err = drmIoctl (sink->display->drm_fd, DRM_IOCTL_GEM_FLINK, &fl);
++  if (err) {
++    GST_ERROR ("DRM_IOCTL_GEM_FLINK failed. %s\n", strerror (errno));
++    return NULL;
++  }
++  prime_fd = fl.name;
++
++  wmeta->wbuffer = wl_kms_create_buffer (sink->display->wl_kms, prime_fd,
++      wpool->width, wpool->height, stride[0], WL_KMS_FORMAT_ARGB8888, 0);
++
++  gst_buffer_append_memory (buffer,
++      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
++          wmeta->size, 0, wmeta->size, NULL, NULL));
++
++  gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
++      GST_VIDEO_FORMAT_BGRA, (int) wpool->width, (int) wpool->height, 1, offset,
++      stride);
+ 
+   return wmeta;
+ }
++#endif /* HAVE_WAYLAND_KMS */
+ 
+ static GstFlowReturn
+ wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+@@ -255,7 +334,14 @@ wayland_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+   GstWlMeta *meta;
+ 
+   w_buffer = gst_buffer_new ();
++#ifdef HAVE_WAYLAND_KMS
++  if (w_pool->sink->display->drm_fd >= 0)
++    meta = gst_buffer_add_wayland_meta_kms (w_buffer, w_pool);
++  else
++    meta = gst_buffer_add_wayland_meta (w_buffer, w_pool);
++#else
+   meta = gst_buffer_add_wayland_meta (w_buffer, w_pool);
++#endif
+   if (meta == NULL) {
+     gst_buffer_unref (w_buffer);
+     goto no_buffer;
+@@ -281,6 +367,13 @@ gst_wayland_buffer_pool_new (GstWaylandSink * waylandsink)
+   pool = g_object_new (GST_TYPE_WAYLAND_BUFFER_POOL, NULL);
+   pool->sink = gst_object_ref (waylandsink);
+ 
++#ifdef HAVE_WAYLAND_KMS
++  if (kms_create (pool->sink->display->drm_fd, &pool->kms)) {
++    GST_WARNING_OBJECT (pool, "kms_create failed");
++    return NULL;
++  }
++#endif
++
+   return GST_BUFFER_POOL_CAST (pool);
+ }
+ 
+@@ -299,6 +392,7 @@ gst_wayland_buffer_pool_class_init (GstWaylandBufferPoolClass * klass)
+ static void
+ gst_wayland_buffer_pool_init (GstWaylandBufferPool * pool)
+ {
++  pool->kms = NULL;
+ }
+ 
+ static void
+@@ -306,6 +400,11 @@ gst_wayland_buffer_pool_finalize (GObject * object)
+ {
+   GstWaylandBufferPool *pool = GST_WAYLAND_BUFFER_POOL_CAST (object);
+ 
++#ifdef HAVE_WAYLAND_KMS
++  if (pool->kms)
++    kms_destroy (&pool->kms);
++#endif
++
+   gst_object_unref (pool->sink);
+ 
+   G_OBJECT_CLASS (gst_wayland_buffer_pool_parent_class)->finalize (object);
+diff --git a/ext/wayland/waylandpool.h b/ext/wayland/waylandpool.h
+index 4089da0..eed54d9 100644
+--- a/ext/wayland/waylandpool.h
++++ b/ext/wayland/waylandpool.h
+@@ -24,6 +24,11 @@
+ G_BEGIN_DECLS
+ 
+ #include "gstwaylandsink.h"
++#ifdef HAVE_WAYLAND_KMS
++#include "drm.h"
++#include "libkms.h"
++#include <xf86drm.h>
++#endif
+ typedef struct _GstWlMeta GstWlMeta;
+ 
+ typedef struct _GstWaylandBufferPool GstWaylandBufferPool;
+@@ -44,6 +49,9 @@ struct _GstWlMeta {
+   struct wl_buffer *wbuffer;
+   void *data;
+   size_t size;
++#ifdef HAVE_WAYLAND_KMS
++  struct kms_bo *kms_bo;
++#endif
+ };
+ 
+ /* buffer pool functions */
+@@ -63,6 +71,10 @@ struct _GstWaylandBufferPool
+   GstVideoInfo info;
+   guint width;
+   guint height;
++
++#ifdef HAVE_WAYLAND_KMS
++  struct kms_driver *kms;
++#endif
+ };
+ 
+ struct _GstWaylandBufferPoolClass
+-- 
+1.8.0
+

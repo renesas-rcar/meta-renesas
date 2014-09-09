@@ -1,0 +1,32 @@
+From 031c13aca5d58e30cf0f5d4d440a691ca279af7a Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 15 Apr 2014 18:43:13 +0900
+Subject: [PATCH 20/24] waylandsink: Check if the wl_display has been created
+ before the flush and disconnection
+
+---
+ ext/wayland/gstwaylandsink.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 105526a..5164c14 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -247,9 +247,11 @@ destroy_display (struct display *display, gboolean ext_display)
+   if (display->compositor)
+     wl_compositor_destroy (display->compositor);
+ 
+-  wl_display_flush (display->display);
+-  if (!ext_display)
+-    wl_display_disconnect (display->display);
++  if (display->display) {
++    wl_display_flush (display->display);
++    if (!ext_display)
++      wl_display_disconnect (display->display);
++  }
+ 
+   if (display->drm_fd >= 0)
+     close (display->drm_fd);
+-- 
+1.8.0
+

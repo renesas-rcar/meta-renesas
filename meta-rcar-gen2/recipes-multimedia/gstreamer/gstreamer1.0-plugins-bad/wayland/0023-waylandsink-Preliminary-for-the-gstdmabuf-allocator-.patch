@@ -1,0 +1,214 @@
+From dc3411c656791c471ef96aa6885cf5ac3e9ce7d1 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 3 Apr 2014 11:52:25 +0900
+Subject: [PATCH 23/24] waylandsink: Preliminary for the gstdmabuf allocator
+ registration to the buffer pool
+
+This change is aimed at the handling of the dmabuf descriptor of KMS BOs
+however the dmabuf allocator registration to the pool has still been
+commented out.
+---
+ configure.ac                 |  2 +-
+ ext/wayland/gstwaylandsink.c | 18 ++++++++++++++
+ ext/wayland/gstwaylandsink.h |  1 +
+ ext/wayland/waylandpool.c    | 56 +++++++++++++++++++++++++++++++++++---------
+ ext/wayland/waylandpool.h    |  1 +
+ 5 files changed, 66 insertions(+), 12 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index a0c2ded..46749a6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1222,7 +1222,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
+ AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
+   PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.0.0,
+     [HAVE_WAYLAND="yes" ], [ HAVE_WAYLAND="no"])
+-  PKG_CHECK_MODULES(WAYLAND_KMS, libdrm libkms wayland-kms,
++  PKG_CHECK_MODULES(WAYLAND_KMS, libdrm libkms wayland-kms gstreamer-allocators-1.0,
+     [HAVE_WAYLAND_KMS="yes"
+         AC_DEFINE(HAVE_WAYLAND_KMS, 1, [Define if wayland KMS protocol is available])],
+        [HAVE_WAYLAND_KMS="no"])
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 1d43813..919f135 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -724,7 +724,14 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+   GstCaps *caps;
+   guint size;
+   gboolean need_pool;
++#ifdef HAVE_WAYLAND_KMS
++/*  GstAllocator *allocator; */
++  GstAllocationParams params;
++#endif
+ 
++#ifdef HAVE_WAYLAND_KMS
++  gst_allocation_params_init (&params);
++#endif
+   gst_query_parse_allocation (query, &caps, &need_pool);
+ 
+   if (caps == NULL)
+@@ -765,12 +772,23 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+     config = gst_buffer_pool_get_config (pool);
+     gst_buffer_pool_config_set_params (config, caps, size,
+         GST_WAYLAND_BUFFER_POOL_NUM, 0);
++#ifdef HAVE_WAYLAND_KMS
++    gst_buffer_pool_config_set_allocator (config, NULL, &params);
++#endif
+     if (!gst_buffer_pool_set_config (pool, config))
+       goto config_failed;
+   }
+   if (pool) {
+     gst_query_add_allocation_pool (query, pool, size,
+         GST_WAYLAND_BUFFER_POOL_NUM, 0);
++/* This implementation will kick the handling of dmabuf descriptors and
++   the descriptors will be passed to the upstream plugin.
++#ifdef HAVE_WAYLAND_KMS
++    allocator = gst_dmabuf_allocator_new ();
++    gst_query_add_allocation_param (query, allocator, &params);
++    gst_object_unref (allocator);
++#endif
++*/
+     gst_object_unref (pool);
+   }
+ 
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index cc5c363..31aff4e 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -44,6 +44,7 @@
+ 
+ #ifdef HAVE_WAYLAND_KMS
+ #include "wayland-kms-client-protocol.h"
++#include "gst/allocators/gstdmabuf.h"
+ #endif
+ 
+ #define GST_TYPE_WAYLAND_SINK \
+diff --git a/ext/wayland/waylandpool.c b/ext/wayland/waylandpool.c
+index 6736663..c47dfa2 100644
+--- a/ext/wayland/waylandpool.c
++++ b/ext/wayland/waylandpool.c
+@@ -54,7 +54,8 @@ gst_wl_meta_free (GstWlMeta * meta, GstBuffer * buffer)
+   gst_object_unref (meta->sink);
+ #ifdef HAVE_WAYLAND_KMS
+   if (meta->kms_bo) {
+-    kms_bo_unmap (meta->kms_bo);
++    if (meta->data)
++      kms_bo_unmap (meta->kms_bo);
+     kms_bo_destroy (&meta->kms_bo);
+   } else
+     munmap (meta->data, meta->size);
+@@ -91,9 +92,16 @@ static gboolean
+ wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+ {
+   GstWaylandBufferPool *wpool = GST_WAYLAND_BUFFER_POOL_CAST (pool);
++#ifdef HAVE_WAYLAND_KMS
++  GstAllocationParams params;
++#endif
+   GstVideoInfo info;
+   GstCaps *caps;
+ 
++  if (wpool->allocator)
++    gst_object_unref (wpool->allocator);
++  wpool->allocator = NULL;
++
+   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
+     goto wrong_config;
+ 
+@@ -106,6 +114,14 @@ wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+ 
+   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
+       caps);
++#ifdef HAVE_WAYLAND_KMS
++  if (!gst_buffer_pool_config_get_allocator (config, &wpool->allocator,
++                                             &params))
++    goto wrong_allocator;
++
++  if (wpool->allocator)
++    gst_object_ref (wpool->allocator);
++#endif
+ 
+   /*Fixme: Enable metadata checking handling based on the config of pool */
+ 
+@@ -116,6 +132,11 @@ wayland_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+ 
+   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
+   /* ERRORS */
++wrong_allocator:
++  {
++    GST_WARNING_OBJECT (pool, "no allocator");
++    return FALSE;
++  }
+ wrong_config:
+   {
+     GST_WARNING_OBJECT (pool, "invalid config");
+@@ -288,15 +309,8 @@ gst_buffer_add_wayland_meta_kms (GstBuffer * buffer,
+     return NULL;
+   }
+ 
+-  err = kms_bo_map (wmeta->kms_bo, &data);
+-  if (err) {
+-    GST_ERROR ("Failed to map kms bo");
+-    return NULL;
+-  }
+-
+   kms_bo_get_prop (wmeta->kms_bo, KMS_PITCH, (guint *) & stride[0]);
+ 
+-  wmeta->data = data;
+   wmeta->size = stride[0] * wpool->height;
+ 
+   kms_bo_get_prop (wmeta->kms_bo, KMS_HANDLE, &handle);
+@@ -313,9 +327,25 @@ gst_buffer_add_wayland_meta_kms (GstBuffer * buffer,
+   wmeta->wbuffer = wl_kms_create_buffer (sink->display->wl_kms, prime_fd,
+       wpool->width, wpool->height, stride[0], WL_KMS_FORMAT_ARGB8888, 0);
+ 
+-  gst_buffer_append_memory (buffer,
+-      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
+-          wmeta->size, 0, wmeta->size, NULL, NULL));
++  if (wpool->allocator &&
++      g_strcmp0 (wpool->allocator->mem_type, GST_ALLOCATOR_DMABUF) == 0) {
++    gst_buffer_append_memory (buffer,
++        gst_dmabuf_allocator_alloc (wpool->allocator, prime_fd, wmeta->size));
++
++    wmeta->data = NULL;
++  } else {
++    err = kms_bo_map (wmeta->kms_bo, &data);
++    if (err) {
++      GST_ERROR ("Failed to map kms bo");
++      return NULL;
++    }
++
++    wmeta->data = data;
++
++    gst_buffer_append_memory (buffer,
++        gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
++            wmeta->size, 0, wmeta->size, NULL, NULL));
++  }
+ 
+   gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+       GST_VIDEO_FORMAT_BGRA, (int) wpool->width, (int) wpool->height, 1, offset,
+@@ -401,6 +431,10 @@ gst_wayland_buffer_pool_finalize (GObject * object)
+   GstWaylandBufferPool *pool = GST_WAYLAND_BUFFER_POOL_CAST (object);
+ 
+ #ifdef HAVE_WAYLAND_KMS
++  if (pool->allocator)
++    gst_object_unref (pool->allocator);
++  pool->allocator = NULL;
++
+   if (pool->kms)
+     kms_destroy (&pool->kms);
+ #endif
+diff --git a/ext/wayland/waylandpool.h b/ext/wayland/waylandpool.h
+index 712aa94..ffaa63a 100644
+--- a/ext/wayland/waylandpool.h
++++ b/ext/wayland/waylandpool.h
+@@ -76,6 +76,7 @@ struct _GstWaylandBufferPool
+ 
+ #ifdef HAVE_WAYLAND_KMS
+   struct kms_driver *kms;
++  GstAllocator *allocator;
+ #endif
+ };
+ 
+-- 
+1.8.0
+

@@ -1,0 +1,56 @@
+From b1bbbcc7d31d47c03a2f1761bb87a5fd2da770ab Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 12 Feb 2014 18:44:15 +0900
+Subject: [PATCH 04/24] waylandsink: Change error message macros from
+ GST_ERROR() to GST_ERROR_OBJECT() in create_display()
+
+---
+ ext/wayland/gstwaylandsink.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 7a322fb..6440563 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -425,12 +425,13 @@ create_display (GstWaylandSink * sink)
+ 
+ #ifdef HAVE_WAYLAND_KMS
+   if (!display->wl_kms && !display->shm) {
+-    GST_ERROR ("Both wl_kms and wl_shm global objects couldn't be obtained");
++    GST_ERROR_OBJECT (sink,
++        "Both wl_kms and wl_shm global objects couldn't be obtained");
+     return FALSE;
+   }
+ #else
+   if (display->shm == NULL) {
+-    GST_ERROR ("No wl_shm global..");
++    GST_ERROR_OBJECT (sink, "No wl_shm global..");
+     return FALSE;
+   }
+ #endif
+@@ -439,19 +440,19 @@ create_display (GstWaylandSink * sink)
+ 
+ #ifdef HAVE_WAYLAND_KMS
+   if (display->wl_kms && !display->kms_argb_supported) {
+-    GST_ERROR ("wl_kms format isn't WL_KMS_FORMAT_ARGB8888");
++    GST_ERROR_OBJECT (sink, "wl_kms format isn't WL_KMS_FORMAT_ARGB8888");
+     return FALSE;
+   }
+ 
+   wl_display_roundtrip (display->display);
+ 
+   if (!display->authenticated) {
+-    GST_ERROR ("Authentication failed...");
++    GST_ERROR_OBJECT (sink, "Authentication failed...");
+     return FALSE;
+   }
+ #else
+   if (!(display->formats & (1 << WL_SHM_FORMAT_XRGB8888))) {
+-    GST_ERROR ("WL_SHM_FORMAT_XRGB32 not available");
++    GST_ERROR_OBJECT (sink, "WL_SHM_FORMAT_XRGB32 not available");
+     return FALSE;
+   }
+ #endif
+-- 
+1.8.0
+

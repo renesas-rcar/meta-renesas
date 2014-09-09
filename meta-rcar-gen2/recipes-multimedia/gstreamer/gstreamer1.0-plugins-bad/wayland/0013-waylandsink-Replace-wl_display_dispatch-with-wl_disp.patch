@@ -1,0 +1,33 @@
+From 4604fc0ed38526f7d2af49893ee2b9fb27b61516 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Fri, 7 Mar 2014 16:44:22 +0900
+Subject: [PATCH 13/24] waylandsink: Replace wl_display_dispatch() with
+ wl_display_dispatch_pending()
+
+wl_display_dispatch() could get the frame rendering processing delayed.
+wl_display_dispatch_pending() dispatches events on the main queue
+without blocking.
+wl_display_flush(), which sends all buffered data on the client side to the server,
+would rather be also invoked for every frame rendering.
+---
+ ext/wayland/gstwaylandsink.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index e4986da..91c0887 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -853,7 +853,9 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+   wl_callback_add_listener (window->callback, &frame_callback_listener, window);
+   wl_proxy_set_queue ((struct wl_proxy *) window->callback, display->wl_queue);
+   wl_surface_commit (window->surface);
+-  wl_display_dispatch (display->display);
++
++  wl_display_dispatch_pending (display->display);
++  wl_display_flush (display->display);
+ 
+   if (buffer != to_render)
+     gst_buffer_unref (to_render);
+-- 
+1.8.0
+

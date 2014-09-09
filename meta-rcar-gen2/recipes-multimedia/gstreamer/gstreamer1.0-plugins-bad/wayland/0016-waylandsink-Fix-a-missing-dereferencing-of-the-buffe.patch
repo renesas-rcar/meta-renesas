@@ -1,0 +1,55 @@
+From 89952946d29dfbf6169d2f1dea7de3ad630fb199 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 15 Apr 2014 14:59:02 +0900
+Subject: [PATCH 16/24] waylandsink: Fix a missing dereferencing of the buffer
+ pool belonging to waylandsink
+
+---
+ ext/wayland/gstwaylandsink.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 305e146..a708da0 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -84,6 +84,7 @@ static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink,
+     GstCaps * filter);
+ static gboolean gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
+ static gboolean gst_wayland_sink_start (GstBaseSink * bsink);
++static gboolean gst_wayland_sink_stop (GstBaseSink * bsink);
+ static gboolean gst_wayland_sink_preroll (GstBaseSink * bsink,
+     GstBuffer * buffer);
+ static gboolean
+@@ -172,6 +173,7 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_get_caps);
+   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_set_caps);
+   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_wayland_sink_start);
++  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_wayland_sink_stop);
+   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_wayland_sink_preroll);
+   gstbasesink_class->propose_allocation =
+       GST_DEBUG_FUNCPTR (gst_wayland_sink_propose_allocation);
+@@ -688,6 +690,21 @@ gst_wayland_sink_start (GstBaseSink * bsink)
+ }
+ 
+ static gboolean
++gst_wayland_sink_stop (GstBaseSink * bsink)
++{
++  GstWaylandSink *sink = (GstWaylandSink *) bsink;
++
++  GST_DEBUG_OBJECT (sink, "stop");
++
++  if (sink->pool) {
++    gst_object_unref (sink->pool);
++    sink->pool = NULL;
++  }
++
++  return TRUE;
++}
++
++static gboolean
+ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+ {
+   GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
+-- 
+1.8.0
+

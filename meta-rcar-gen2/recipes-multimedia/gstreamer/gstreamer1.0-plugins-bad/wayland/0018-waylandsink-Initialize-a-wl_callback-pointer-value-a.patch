@@ -1,0 +1,30 @@
+From a46cce0ac94d20ed45384f890dfe2c52f8d15832 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 15 Apr 2014 17:06:00 +0900
+Subject: [PATCH 18/24] waylandsink: Initialize a wl_callback pointer value
+ after the destruction
+
+---
+ ext/wayland/gstwaylandsink.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index e8870a9..b35181b 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -807,9 +807,10 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
+   if (f_info->buffer)
+     gst_buffer_unref (f_info->buffer);
+ 
+-  g_free (f_info);
+-
+   wl_callback_destroy (callback);
++  f_info->window->callback = NULL;
++
++  g_free (f_info);
+ }
+ 
+ static const struct wl_callback_listener frame_callback_listener = {
+-- 
+1.8.0
+

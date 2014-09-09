@@ -1,0 +1,46 @@
+From fab9a45bee2d7fa9dea75b5613f1d65cea0c0cb5 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 23 Apr 2014 15:36:38 +0900
+Subject: [PATCH 24/24] waylandsink: Restrict the number of buffers in the
+ pool to be allocated
+
+This patch sets the maximum number of buffers to be allocated in
+the buffer pool waylandsink has.
+---
+ ext/wayland/gstwaylandsink.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 919f135..e95157f 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -605,7 +605,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+ 
+   structure = gst_buffer_pool_get_config (newpool);
+   gst_buffer_pool_config_set_params (structure, caps, size,
+-      GST_WAYLAND_BUFFER_POOL_NUM, 0);
++      GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+   gst_buffer_pool_config_set_allocator (structure, NULL, &params);
+   if (!gst_buffer_pool_set_config (newpool, structure))
+     goto config_failed;
+@@ -771,7 +771,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+ 
+     config = gst_buffer_pool_get_config (pool);
+     gst_buffer_pool_config_set_params (config, caps, size,
+-        GST_WAYLAND_BUFFER_POOL_NUM, 0);
++        GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+ #ifdef HAVE_WAYLAND_KMS
+     gst_buffer_pool_config_set_allocator (config, NULL, &params);
+ #endif
+@@ -780,7 +780,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+   }
+   if (pool) {
+     gst_query_add_allocation_pool (query, pool, size,
+-        GST_WAYLAND_BUFFER_POOL_NUM, 0);
++        GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+ /* This implementation will kick the handling of dmabuf descriptors and
+    the descriptors will be passed to the upstream plugin.
+ #ifdef HAVE_WAYLAND_KMS
+-- 
+1.8.0
+

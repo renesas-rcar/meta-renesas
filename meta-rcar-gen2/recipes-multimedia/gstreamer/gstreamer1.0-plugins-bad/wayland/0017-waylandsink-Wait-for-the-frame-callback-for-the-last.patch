@@ -1,0 +1,36 @@
+From 13d8363d8484ef9d9f93ce7ba8fb012ec3bf1490 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 15 Apr 2014 15:25:10 +0900
+Subject: [PATCH 17/24] waylandsink: Wait for the frame callback for the last
+ one waylandsink passed to weston when the streaming
+ stops
+
+---
+ ext/wayland/gstwaylandsink.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index a708da0..e8870a9 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -693,9 +693,17 @@ static gboolean
+ gst_wayland_sink_stop (GstBaseSink * bsink)
+ {
+   GstWaylandSink *sink = (GstWaylandSink *) bsink;
++  struct window *window;
++  struct display *display;
+ 
+   GST_DEBUG_OBJECT (sink, "stop");
+ 
++  window = sink->window;
++  display = sink->display;
++
++  while (window->inbuf_num > 0)
++    wl_display_dispatch_queue (display->display, display->wl_queue);
++
+   if (sink->pool) {
+     gst_object_unref (sink->pool);
+     sink->pool = NULL;
+-- 
+1.8.0
+

@@ -1,0 +1,58 @@
+From 6b97c2c926865493475c5ea6b483b65a54b57dac Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Thu, 3 Apr 2014 11:15:58 +0900
+Subject: [PATCH 22/24] waylandsink: Declare the definition that indicates the
+ number of the buffers to be registred to the pool
+
+---
+ ext/wayland/gstwaylandsink.c | 9 ++++++---
+ ext/wayland/waylandpool.h    | 2 ++
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 603a7f4..1d43813 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -604,7 +604,8 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+   }
+ 
+   structure = gst_buffer_pool_get_config (newpool);
+-  gst_buffer_pool_config_set_params (structure, caps, size, 3, 0);
++  gst_buffer_pool_config_set_params (structure, caps, size,
++      GST_WAYLAND_BUFFER_POOL_NUM, 0);
+   gst_buffer_pool_config_set_allocator (structure, NULL, &params);
+   if (!gst_buffer_pool_set_config (newpool, structure))
+     goto config_failed;
+@@ -762,12 +763,14 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+     size = info.size;
+ 
+     config = gst_buffer_pool_get_config (pool);
+-    gst_buffer_pool_config_set_params (config, caps, size, 3, 0);
++    gst_buffer_pool_config_set_params (config, caps, size,
++        GST_WAYLAND_BUFFER_POOL_NUM, 0);
+     if (!gst_buffer_pool_set_config (pool, config))
+       goto config_failed;
+   }
+   if (pool) {
+-    gst_query_add_allocation_pool (query, pool, size, 3, 0);
++    gst_query_add_allocation_pool (query, pool, size,
++        GST_WAYLAND_BUFFER_POOL_NUM, 0);
+     gst_object_unref (pool);
+   }
+ 
+diff --git a/ext/wayland/waylandpool.h b/ext/wayland/waylandpool.h
+index eed54d9..712aa94 100644
+--- a/ext/wayland/waylandpool.h
++++ b/ext/wayland/waylandpool.h
+@@ -41,6 +41,8 @@ const GstMetaInfo * gst_wl_meta_get_info (void);
+ 
+ #define gst_buffer_get_wl_meta(b) ((GstWlMeta*)gst_buffer_get_meta((b),GST_WL_META_API_TYPE))
+ 
++#define GST_WAYLAND_BUFFER_POOL_NUM 3
++
+ struct _GstWlMeta {
+   GstMeta meta;
+ 
+-- 
+1.8.0
+

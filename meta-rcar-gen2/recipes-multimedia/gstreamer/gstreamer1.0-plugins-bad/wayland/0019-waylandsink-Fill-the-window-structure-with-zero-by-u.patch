@@ -1,0 +1,26 @@
+From 6b387c6e07021cf9c1e619255e13965012cd34b3 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Tue, 15 Apr 2014 18:33:05 +0900
+Subject: [PATCH 19/24] waylandsink: Fill the window structure with zero by
+ using g_malloc0 when it is allocated
+
+---
+ ext/wayland/gstwaylandsink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index b35181b..105526a 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -474,7 +474,7 @@ create_display (GstWaylandSink * sink)
+ 
+   wl_display_roundtrip (display->display);
+ 
+-  window = malloc (sizeof *window);
++  window = g_malloc0 (sizeof *window);
+   window->display = display;
+   window->inbuf_num = 0;
+   window->screen_valid = FALSE;
+-- 
+1.8.0
+
