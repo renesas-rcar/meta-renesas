@@ -1,11 +1,10 @@
-def map_libs(d):
-    if base_contains('MACHINE_FEATURES', 'sgx', "1", "0", d) == "0":
-        if base_contains('MACHINE_FEATURES', 'rgx', "1", "0", d) == "0":
-            return "dummy"
+require ../../include/gles-control.inc
 
-    if base_contains('DISTRO_FEATURES', 'wayland', '1', '0', d) == "1":
+def map_libs(d):
+    if base_conditional('USE_GLES_WAYLAND', "1", "1", "0", d) == "1":
         return "wayland"
-    if base_contains('DISTRO_FEATURES', 'x11', '1', '0', d) == "1":
+
+    if base_conditional('USE_GLES_X11', "1", "1", "0", d) == "1":
         return "x11"
 
     return "dummy"
