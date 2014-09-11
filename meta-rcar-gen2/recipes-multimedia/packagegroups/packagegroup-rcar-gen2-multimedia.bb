@@ -1,0 +1,54 @@
+require ../../include/gles-control.inc
+
+DESCRIPTION = "Package Group for multimedia of R-Car Gen2"
+LICENSE = "CLOSED"
+
+inherit packagegroup
+
+PACKAGES = "\
+    packagegroup-rcar-gen2-multimedia \
+    packagegroup-rcar-gen2-multimedia-tp \
+    packagegroup-rcar-gen2-dtv \
+"
+
+MULTIMEDIA_PACKAGES ="\
+    mmngr-kernel-module mmngr-user-module \
+    mmngrbuf-kernel-module mmngrbuf-user-module \
+    fdpm-kernel-module fdpm-user-module \
+    vspm-kernel-module vspm-user-module \
+    s3ctl-kernel-module s3ctl-user-module \
+    uvcs-kernel-module omx-user-module \
+"
+
+RDEPENDS_packagegroup-rcar-gen2-multimedia = "\
+    ${MULTIMEDIA_PACKAGES} \
+    media-ctl \
+    gstreamer1.0-plugins-base-audioconvert \
+    gstreamer1.0-plugins-base-audioresample \
+    gstreamer1.0-plugins-base-playback \
+    gstreamer1.0-plugins-base-videoconvert \
+    gstreamer1.0-plugins-base-typefindfunctions \
+    gstreamer1.0-plugins-base-videoscale \
+    gstreamer1.0-plugins-good-avi \
+    gstreamer1.0-plugins-good-audioparsers \
+    gstreamer1.0-plugins-bad-faad \
+    gstreamer1.0-plugins-bad-mpegtsdemux \
+    gstreamer1.0-plugins-bad-debugutilsbad \
+    ${@base_contains("LICENSE_FLAGS_WHITELIST", "commercial", "gstreamer1.0-omx gstreamer1.0-plugins-ugly-asf", "", d )} \
+    ${@base_conditional("USE_GLES_WAYLAND", "1", "gstreamer1.0-plugins-base-vspfilter", "", d )} \
+"
+
+RDEPENDS_packagegroup-rcar-gen2-multimedia-tp= "\
+    ${MULTIMEDIA_PACKAGES} \
+    mmngr-tp-user-module \
+    mmngrbuf-tp-user-module \
+    fdpm-tp-user-module \
+    vspm-tp-user-module \
+    s3ctl-tp-user-module \
+"
+
+RDEPENDS_packagegroup-rcar-gen2-dtv = "\
+    ${MULTIMEDIA_PACKAGES} \
+    scu-kernel-module ssp-kernel-module \
+    dtv \
+"
