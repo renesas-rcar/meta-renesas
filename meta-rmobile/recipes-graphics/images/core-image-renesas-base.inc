@@ -56,8 +56,8 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_1_00", "1", " \
 CHECK_OMXIL_SH_MW = "${USE_RENESAS_MW_VCP1}"
 CHECK_OMXIL_SH_MW += "${USE_RENESAS_MW_VPU5}"
 IMAGE_INSTALL_append_armadillo800eva = ' ${@base_contains("CHECK_OMXIL_SH_MW", "1", "omxil-sh", "", d)} \
-	gst-plugins-bad-dfbvideosink \	
+	gst-plugins-bad-dfbvideosink \
 	v4l-utils \
 	libshvio \
 	libshmeram \
-' 
+'
