@@ -89,7 +89,7 @@ FILES_${PN}-dev = " \
 "
 
 PROVIDES = "virtual/libgles2"
-PROVIDES_append = "${@base_contains("DISTRO_FEATURES", "wayland", "", "virtual/egl", d)}"
+PROVIDES_append = "${@base_contains("DISTRO_FEATURES", "wayland", "", " virtual/egl", d)}"
 RPROVIDES_${PN} += "${GLES}-user-module libgles2-mesa libgles2-mesa-dev libgles2 libgles2-dev"
 INSANE_SKIP_${PN} += "ldflags already-stripped"
 INSANE_SKIP_${PN}-dev += "ldflags"
