@@ -1,0 +1,38 @@
+From 5dbb78388883e2f6e4525b0f322587aa090c3c72 Mon Sep 17 00:00:00 2001
+From: Kazunori Kobayashi <kkobayas@igel.co.jp>
+Date: Wed, 19 Jun 2013 14:10:07 +0900
+Subject: [PATCH 1/2] asfdemux/asfpacket: specify the offset by an amount of
+ filled buffer size when concatenating fragmented media objects
+
+This change is preliminary for inserting VC-1 startcodes of advanced
+profile. To achieve this, the VC-1 startcode size is required to be
+added to the amount of filled buffer size of a payload. As a result
+the offset to concatenate fragmented media objects couldn't be determined
+by mo_offset of an asfpacket, so the offset is specified as the amount
+of filled buffer size instead, which will take account into the VC-1
+start code size.
+---
+ gst/asfdemux/asfpacket.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/gst/asfdemux/asfpacket.c b/gst/asfdemux/asfpacket.c
+index f9b13fb..12eede8 100644
+--- a/gst/asfdemux/asfpacket.c
++++ b/gst/asfdemux/asfpacket.c
+@@ -425,10 +425,10 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
+                   "offset=%u vs buf_filled=%u", payload.mo_offset,
+                   prev->buf_filled);
+             }
+-            gst_buffer_fill (prev->buf, payload.mo_offset,
++            gst_buffer_fill (prev->buf, prev->buf_filled,
+                 payload_data, payload_len);
+-            prev->buf_filled =
+-                MAX (prev->buf_filled, payload.mo_offset + payload_len);
++            if ((payload.mo_offset + payload_len) > prev->buf_filled)
++              prev->buf_filled += payload_len;
+             GST_LOG_OBJECT (demux, "Merged media object fragments, size now %u",
+                 prev->buf_filled);
+           }
+-- 
+1.8.1.2
+
