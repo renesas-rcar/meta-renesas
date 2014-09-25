@@ -1,3 +1,5 @@
+require ../../include/gles-control.inc
+
 DESCRIPTION = "SGX/RGX user module"
 LICENSE = "CLOSED"
 
@@ -50,8 +52,6 @@ SRC_URI_append_r8a7794 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://sgx-user-module.pc \
         ", "", d)}"
 
-USE_WAYLAND = "${@base_contains("DISTRO_FEATURES", "wayland", "yes", "no", d)}"
-
 do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
 
@@ -60,7 +60,7 @@ do_install() {
     cp -r ${S}/etc ${D}
     cp -r ${S}/usr ${D}
 
-    if [ "${USE_WAYLAND}" = "yes" ]; then
+    if [ "${USE_WAYLAND}" = "1" ]; then
         # Install additional file
         mkdir -p ${D}/usr/lib/pkgconfig/
         install -m 0644 ${WORKDIR}/${GLES}-user-module.pc ${D}/usr/lib/pkgconfig/
