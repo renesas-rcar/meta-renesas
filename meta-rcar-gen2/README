@@ -6,6 +6,7 @@ Electronics, called the R-Car Generation 2. Currently, this supports
 board and the SoCs of the following:
   - Board: lager   / SoC: R8A7790 (R-Car H2)
   - Board: koelsch / SoC: R8A7791 (R-Car M2)
+  - Board: gose    / SoC: R8A7793 (R-Car M2-N)
   - Board: alt     / SoC: R8A7794 (R-Car E2)
 
 Patches
