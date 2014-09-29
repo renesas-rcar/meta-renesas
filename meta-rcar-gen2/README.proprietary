@@ -1,0 +1,81 @@
+Proprietary libraries for meta-rcar-gen2
+========================================
+
+The meta-rcar-gen2 of meta-renesas is supported GLES(RGX and SGX) libraires
+for x11 and Weston, and proprietary library of multimedia. This README describes
+how to use these featuresthe and setting to local.conf.
+
+In addition, these binaries are not provided at the recipes. If you want to use,
+you will need get from Renesas.
+
+Build with GLES
+==================
+
+* For wayland
+
+  1. Please copy proprietary libraries to the directory of recipes.
+  2. Please set local.conf the following.
+
+       MACHINE_FEATURES_append = " sgx"
+       MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
+       PREFERRED_PROVIDER_virtual/libgles1 = ""
+       PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
+       PREFERRED_PROVIDER_virtual/egl = "libegl"
+       PREFERRED_PROVIDER_virtual/libgl = ""
+       PREFERRED_PROVIDER_virtual/mesa = ""
+       PREFERRED_PROVIDER_libgbm = "libgbm"
+       PREFERRED_PROVIDER_libgbm-dev = "libgbm"
+
+     NOTE: The r8a7790 uses rgx, r8a7791, r8a7793 and r8a7794 uses sgx.
+           If you want to use rgx, please set to 'rgx' instaed of 'sgx'.
+
+  3. Please run 'bitbake core-image-weston'
+
+* For X11
+  1. Please copy proprietary libraries to the directory of recipes.
+  2. Please set local.conf the following.
+
+       MACHINE_FEATURES_append = " sgx"
+       MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
+       PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
+       PREFERRED_PROVIDER_virtual/egl = "gles-user-module"
+       DISTRO_FEATURES_remove = "wayland"
+       BBMASK .= "|libegl|libgbm|wayland-kms|wayland-wsegl"
+
+     NOTE: The r8a7790 uses rgx, r8a7791, r8a7793 and r8a7794 uses sgx.
+           If you want to use rgx, please set to 'rgx' instaed of 'sgx'.
+
+  3. Please run 'bitbake core-image-x11'
+
+Build with Renesas multimedia libraries
+=======================================
+
+  multimedia libraries of meta-rcar-gen2 provides as packagegroup following. 
+  - packagegroup-rcar-gen2-multimedia
+    This provides package group of plug-ins of the GStreamer, multimedia
+    libraries and kernel drivers.
+    
+  - packagegroup-rcar-gen2-multimedia-tp
+    This provides package group of test program with packagegroup-rcar-gen2-multimedia.
+
+  - packagegroup-rcar-gen2-dtv
+    This provides package group of dtv libraries with packagegroup-rcar-gen2-multimedia.
+
+
+  1. Please copy proprietary libraries to the directory of recipes.
+  2. Please set local.conf the following.
+
+       IMAGE_INSTALL_append = " packagegroup-rcar-gen2-multimedia"
+
+       or
+
+       IMAGE_INSTALL_append = " packagegroup-rcar-gen2-multimedia-tp"
+
+       or
+
+       IMAGE_INSTALL_append = " packagegroup-rcar-gen2-dtv"
+
+       And you need to set GLES to local.conf. Please check section of
+       'Build with GLES'.
+
+  3. Please run 'bitbake core-image-x11' or 'bitbake core-image-weston'
