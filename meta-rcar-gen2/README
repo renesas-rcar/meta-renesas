@@ -5,7 +5,7 @@ This layer provides that evaluation board is mounted ARM SoCs of Renesas
 Electronics, called the R-Car Generation 2. Currently, this supports
 board and the SoCs of the following:
   - Board: lager   / SoC: R8A7790 (R-Car H2)
-  - Board: koelsch / SoC: R8A7791 (R-Car M2)
+  - Board: koelsch / SoC: R8A7791 (R-Car M2-W)
   - Board: gose    / SoC: R8A7793 (R-Car M2-N)
   - Board: alt     / SoC: R8A7794 (R-Car E2)
 
@@ -65,4 +65,3 @@ Images generated:
 	* core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
 	* core-image-minimal-<machine name>.jffs2 (rootfs in JFFS2 format)
 	* u-boot.bin (U-Boot binary)
-
