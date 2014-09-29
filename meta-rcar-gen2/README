@@ -24,7 +24,7 @@ This layer depends on:
 	layers: meta, meta-yocto, meta-yocto-bsp
 	branch: master
 
-	URI: https://github.com/renesas-devel/meta-renesas.git
+	URI: git://git.yoctoproject.org/meta-renesas
 	layers: renesas
 	branch: master
 
