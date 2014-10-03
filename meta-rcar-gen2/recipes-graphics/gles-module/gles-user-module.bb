@@ -29,6 +29,7 @@ SRC_URI_append_r8a7790 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://EGL_headers_for_wayland.patch \
         file://change-shell.patch \
         file://rgx-user-module.pc \
+        file://remove_bash_from_rc.pvr.patch \
         ", "", d)}"
 
 SRC_URI_r8a7791 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"

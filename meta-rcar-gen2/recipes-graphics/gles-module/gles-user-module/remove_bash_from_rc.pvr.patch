@@ -1,0 +1,10 @@
+diff --git a/etc/init.d/rc.pvr.x b/etc/init.d/rc.pvr
+index 78e5618..c19b144 100755
+--- a/etc/init.d/rc.pvr.x
++++ b/etc/init.d/rc.pvr
+@@ -1,4 +1,4 @@
+-#!/bin/bash
++#!/bin/sh
+ ############################################################################ ###
+ #@Copyright     Copyright (c) Imagination Technologies Ltd. All Rights Reserved
+ #@License       Strictly Confidential.
