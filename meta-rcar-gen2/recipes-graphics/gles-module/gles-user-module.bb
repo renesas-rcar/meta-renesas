@@ -69,9 +69,6 @@ do_install() {
         # Rename libEGL.so
         mv ${D}/usr/lib/libEGL.so ${D}/usr/lib/libEGL-pvr.so
     fi
-
-    # Create runlevel links
-    update-rc.d -r ${D} rc.pvr defaults 8 21
 } 
 
 PACKAGES = "\
