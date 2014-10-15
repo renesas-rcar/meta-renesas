@@ -86,6 +86,8 @@ FILES_${PN}-dev = " \
     ${includedir}/* \
 "
 
+inherit update-rc.d
+
 PROVIDES = "virtual/libgles2"
 PROVIDES_append = "${@base_contains("DISTRO_FEATURES", "wayland", "", " virtual/egl", d)}"
 RPROVIDES_${PN} += "${GLES}-user-module libgles2-mesa libgles2-mesa-dev libgles2 libgles2-dev"
@@ -93,3 +95,5 @@ INSANE_SKIP_${PN} += "ldflags already-stripped"
 INSANE_SKIP_${PN}-dev += "ldflags"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 PRIVATE_LIBS_${PN} = "libEGL.so.1"
+INITSCRIPT_NAME = "rc.pvr"
+INITSCRIPT_PARAMS = "start 8 5 2 . stop 21 0 1 6 ."
