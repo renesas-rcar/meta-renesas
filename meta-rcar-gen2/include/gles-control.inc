@@ -1,0 +1,5 @@
+USE_GLES = "${@'1' if 'rgx' in '${MACHINE_FEATURES}' or 'sgx' in '${MACHINE_FEATURES}' else '0'}"
+USE_WAYLAND = "${@'1' if 'wayland' in '${DISTRO_FEATURES}' else '0'}"
+USE_GLES_WAYLAND = "${@'1' if '${USE_GLES}' == '1' and '${USE_WAYLAND}' == '1' else '0'}"
+USE_X11 = "${@'1' if 'x11' in '${DISTRO_FEATURES}' else '0'}" 
+USE_GLES_X11 = "${@'1' if '1' in '${USE_GLES}' and '${USE_X11}' == '1' and '${USE_WAYLAND}' == '0' else '0'}" 
