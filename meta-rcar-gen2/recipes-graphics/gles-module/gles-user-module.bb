@@ -27,25 +27,21 @@ SRC_URI_r8a7790 = '${@base_conditional( "OPENGLES3", "1", \
 SRC_URI_append_r8a7790 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://EGL_headers_for_wayland.patch \
         file://change-shell.patch \
-        file://rgx-user-module.pc \
         ", "", d)}"
 
 SRC_URI_r8a7791 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7791 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://EGL_headers_for_wayland.patch \
-        file://sgx-user-module.pc \
         ", "", d)}"
 
 SRC_URI_r8a7793 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7793 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://EGL_headers_for_wayland.patch \
-        file://sgx-user-module.pc \
         ", "", d)}"
 
 SRC_URI_r8a7794 = "file://r8a7794_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7794 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://EGL_headers_for_wayland.patch \
-        file://sgx-user-module.pc \
         ", "", d)}"
 
 do_populate_lic[noexec] = "1"
@@ -57,10 +53,6 @@ do_install() {
     cp -r ${S}/usr ${D}
 
     if [ "${USE_WAYLAND}" = "1" ]; then
-        # Install additional file
-        mkdir -p ${D}/usr/lib/pkgconfig/
-        install -m 0644 ${WORKDIR}/${GLES}-user-module.pc ${D}/usr/lib/pkgconfig/
-    
         # Rename libEGL.so
         mv ${D}/usr/lib/libEGL.so ${D}/usr/lib/libEGL-pvr.so
 
