@@ -55,9 +55,9 @@ WAYLAND_PATCHES = " \
 "
 
 SRC_URI_append_rcar-gen2 = " \
-    ${@'${WAYLAND_PATCHES}' if '1' in '${USE_GLES_WAYLAND}' else ''}"
+    ${@'${WAYLAND_PATCHES}' if '1' in '${USE_WAYLAND}' else ''}"
 FILESEXTRAPATHS_prepend_rcar-gen2 := \
-    "${@'${THISDIR}/${PN}/wayland:' if '1' in '${USE_GLES_WAYLAND}' else ''}"
+    "${@'${THISDIR}/${PN}/wayland:' if '1' in '${USE_WAYLAND}' else ''}"
 
 # for x11
 X11_PATCHES = " \
@@ -83,9 +83,13 @@ X11_PATCHES = " \
     file://0020-h264enc-add-omxh264enc.patch \
     file://0021-videodec-add-dmabuf-feature.patch \
     file://0022-omx-fix-two-serious-message-handling-bugs.patch \
+	file://0023-videodec-fix-issue-with-wrong-timestamp-ES-stream.patch \
+    file://0024-264dec-remove-not-supported-aligment-nal.patch \
+    file://0025-videoenc-Align-stride-due-to-limitation-of-encode-MC.patch \
+    file://0026-videodec-revise-dmabuf-implement.patch \
 "
 
 SRC_URI_append_rcar-gen2 = " \
-    ${@'${X11_PATCHES}' if '1' in '${USE_GLES_X11}' else ''}"
+    ${@'${X11_PATCHES}' if '${USE_X11}' == '1' and '${USE_WAYLAND}' == '0' else ''}"
 FILESEXTRAPATHS_prepend_rcar-gen2 := \
-    "${@'${THISDIR}/${PN}/x11:' if '1' in '${USE_GLES_X11}' else ''}"
+    "${@'${THISDIR}/${PN}/x11:' if '${USE_X11}' == '1' and '${USE_WAYLAND}' == '0' else ''}"

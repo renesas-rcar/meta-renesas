@@ -1,7 +1,7 @@
 From 30d374cb405a5988ea5981e3c387066322d39e58 Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Wed, 2 Apr 2014 17:05:54 +0700
-Subject: [PATCH 02/22] Support mp4 container for omxh264dec
+Subject: [PATCH 02/26] Support mp4 container for omxh264dec
 
 This patch makes omxh264dec supports mp4 container.
 

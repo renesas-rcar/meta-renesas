@@ -1,7 +1,7 @@
 From 7fb0d05fb22fa63a15806e210d42a659ea1c6163 Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Fri, 18 Apr 2014 13:11:50 +0700
-Subject: [PATCH 06/22] Workaround the timestamp issue with h264parse
+Subject: [PATCH 06/26] Workaround the timestamp issue with h264parse
 
 In GStreamer, there are two timestamps for each frame data.
 They are pts and dts. gst-omx uses pts.

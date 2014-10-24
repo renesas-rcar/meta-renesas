@@ -1,0 +1,176 @@
+From 92a58e24814afcc8074bc923679362d5401c7dc9 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 10 Oct 2014 16:07:07 +0700
+Subject: [PATCH 26/26] Revise dmabuf implement
+
+Revise some small points in dmabuf implement :
+- Remove struct OMXR_MC_VIDEO_DECODERESULTTYPE define and replace by
+   include header OMXR_Extension_vdcmn.h
+- Remove substitute method to get the physical address (read maps file),
+   which is not used in our system, to avoid misunderstanding.
+
+Another modification for consistence:
+- Enclose other OMXR header include inside hack for consistence.
+
+refs #56373
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomx.c         |    2 +-
+ omx/gstomx.h         |    7 +++----
+ omx/gstomxh264dec.c  |    9 ++++++---
+ omx/gstomxvideodec.c |   54 ++++++--------------------------------------------
+ 4 files changed, 16 insertions(+), 56 deletions(-)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 2a9750d..0017a1c 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -2548,7 +2548,7 @@ gst_omx_parse_hacks (gchar ** hacks)
+     else if (g_str_equal (*hacks, "default-pix-aspect-ratio"))
+       hacks_flags |= GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO;
+     else if (g_str_equal (*hacks, "use-renesas-mc"))
+-      hacks_flags |= GST_OMX_HACK_GET_PRIVATE_RENESAS_MC;
++      hacks_flags |= GST_OMX_HACK_RENESAS_MC;
+     else if (g_str_equal (*hacks, "rcar-mmngrbuf-exist"))
+       hacks_flags |= GST_OMX_HACK_RCAR_MMNGRBUF_EXIST;
+     else if (g_str_equal (*hacks, "renesas-encmc-stride-align"))
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index 46ce680..05cc46a 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -109,10 +109,9 @@ G_BEGIN_DECLS
+  */
+ #define GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO                       G_GUINT64_CONSTANT (0x0000000000000100)
+ 
+-/* If the system uses Renesas MC, some get useful information from
+- * buffer's pOutputPortPrivate
++/* Can use some special data or setting only exist on Renesas MC
+  */
+-#define GST_OMX_HACK_GET_PRIVATE_RENESAS_MC                           G_GUINT64_CONSTANT (0x0000000000000200)
++#define GST_OMX_HACK_RENESAS_MC                                       G_GUINT64_CONSTANT (0x0000000000000200)
+ 
+ 
+ /* Renesas Gen2 platfrom can support dmabuf, but it requires an
+@@ -126,7 +125,7 @@ G_BEGIN_DECLS
+  * + Others (YUV420SemiPlanar/YVY420SemiPlanar: Stride must be a
+  * multiple of 128
+  */
+-#define GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN                   G_GUINT64_CONSTANT (0x0000000000000800)
++#define GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN                       G_GUINT64_CONSTANT (0x0000000000000800)
+ 
+ 
+ typedef struct _GstOMXCore GstOMXCore;
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index 81d86eb..c02ddab 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -26,8 +26,6 @@
+ #include <gst/gst.h>
+ 
+ #include "gstomxh264dec.h"
+-#include "OMXR_Extension_h264d.h"
+-#include "OMXR_Extension_vdcmn.h"
+ 
+ GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_dec_debug_category);
+ #define GST_CAT_DEFAULT gst_omx_h264_dec_debug_category
+@@ -195,6 +193,7 @@ gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
+   GstOMXH264Dec * self;
+ 
+   self = GST_OMX_H264_DEC(dec);
++  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (dec);
+ 
+   gst_omx_port_get_port_definition (port, &port_def);
+   port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingAVC;
+@@ -234,7 +233,11 @@ gst_omx_h264_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
+     }
+   }
+ 
+-  {
++  /* Some settings only exist on Renesas MC */
++  if (klass->cdata.hacks & GST_OMX_HACK_RENESAS_MC) {
++    #include "OMXR_Extension_h264d.h"
++    #include "OMXR_Extension_vdcmn.h"
++
+     /*
+      * Setting store unit mode (input port only)
+      *
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index a532d0d..930620a 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -31,7 +31,6 @@
+ #include <string.h>
+ 
+ #include "gstomxvideodec.h"
+-#include "OMXR_Extension_vdcmn.h"
+ 
+ #include <stdio.h>
+ #include <gst/allocators/gstdmabuf.h> /* For gstdmabuf related APIs */
+@@ -3122,57 +3121,16 @@ static unsigned long gst_omx_video_dec_get_physical_addr (GstOMXVideoDec * self,
+ 
+   physical_addr = 0;
+ 
+-  if (klass->cdata.hacks & GST_OMX_HACK_GET_PRIVATE_RENESAS_MC) {
+-    /* Can get physical address from private data of buffer  in this case */
+-    typedef struct tagOMXR_MC_VIDEO_DECODERESULTTYPE {
+-      OMX_U32 nSize;
+-      OMX_PTR pvPhysImageAddressY;
+-      OMX_U32 u32PictWidth;
+-      OMX_U32 u32PictHeight;
+-      OMX_U32 u32DecodeError;
+-      OMX_U32 u32PhyAddr;
+-      OMX_U32 u32Stride;
+-      OMX_U32 u32Area;
+-      OMX_PTR pvReserved;
+-    } OMXR_MC_VIDEO_DECODERESULTTYPE;
++  if (klass->cdata.hacks & GST_OMX_HACK_RENESAS_MC) {
++    /* Can get phys address from private data of buffer in this case */
++    #include "OMXR_Extension_vdcmn.h"
+ 
+     OMXR_MC_VIDEO_DECODERESULTTYPE* frameinfo =
+         (OMXR_MC_VIDEO_DECODERESULTTYPE*) buf->omx_buf->pOutputPortPrivate;
+ 
+     physical_addr = frameinfo->pvPhysImageAddressY;
+ 
+-  } else {
+-    /* Other method to get physical address by reading from maps file */
+-    FILE *fp;
+-    char map_file[21];
+-    char s_virtual_address[17];
+-    char s_device_name[20];
+-    char s_physical_addr[17];
+-    char video_file[50];
+-    char tmp[200];
+-
+-    unsigned long virt_addr = buf->omx_buf->pBuffer;
+-
+-    /* Set strings to variables */
+-    g_snprintf (map_file, 21,"/proc/%d/maps", getpid());
+-    g_snprintf (s_virtual_address, 17,"%08x", virt_addr);
+-
+-    if((fp = fopen(map_file, "r")) == NULL) {
+-        return(0);
+-    }
+-
+-    /* grep maps file to find the address */
+-    while(fgets(tmp, 200, fp) != NULL) {
+-      if((strstr(tmp, s_virtual_address)) != NULL) {
+-          strncpy(s_physical_addr,tmp+23,8);
+-          s_physical_addr[8] = NULL;
+-
+-          physical_addr = strtoul(s_physical_addr,NULL,16);
+-          break;
+-      }
+-    }
+-    fclose(fp);
+-  }
+-
+-  return physical_addr;
++    return physical_addr;
++  } else
++    return 0;
+ }
+\ No newline at end of file
+-- 
+1.7.9.5
+

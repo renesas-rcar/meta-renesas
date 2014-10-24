@@ -1,7 +1,7 @@
 From d97d1a8edd7f7e5bc575a087aabc1b861f65180b Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Tue, 3 Jun 2014 18:03:38 +0700
-Subject: [PATCH 11/22] Manually calculate timestamp if not provided
+Subject: [PATCH 11/26] Manually calculate timestamp if not provided
 
 There is case when video does not provide timestamp or duration.
 In that case, video will not played correctly.

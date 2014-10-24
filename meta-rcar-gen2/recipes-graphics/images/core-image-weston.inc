@@ -7,8 +7,8 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_1_00", "1", " \
 
 IMAGE_INSTALL_append_rcar-gen2 = '${@base_contains("MACHINE_FEATURES", "rgx", \
 	" gles-kernel-module libegl libegl-dev \
-	wayland-wsegl-dev libgbm-dev ldd", "", d)}'
+	libgbm-dev ldd", "", d)}'
 
 IMAGE_INSTALL_append_rcar-gen2 = '${@base_contains("MACHINE_FEATURES", "sgx", \
 	" gles-kernel-module libegl libegl-dev \
-	wayland-wsegl-dev libgbm-dev ldd", "", d)}'
+	libgbm-dev ldd", "", d)}'

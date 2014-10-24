@@ -1,0 +1,516 @@
+From e1df1b67a6652096b5db1ed70c8ab2ba2b060133 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 5 Sep 2014 09:05:57 +0700
+Subject: [PATCH 2/2] v4l2sink: improve userptr implement
+
+Improve userptr implement by using  bufferpool.
+
+In old implement, in userptr mode, buffer handling is quite weak.
+Bufferpool is not used, so upper element must create GstBuffer
+by itself before send to v4l2sink. Also, temporary buffers are
+managed in an array, which is not safe.
+
+With this patch, bufferpool is used to manage the buffer (safer).
+Upper element can request and use buffer from v4l2sink bufferpool
+(or use its own buffers like before).
+Besides, with this improvement, buffer handling is unified now
+(similar between mmap, userptr, dmabuf-import modes), thus
+easier for maintainance.
+
+refs #59664
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2bufferpool.c |  311 ++++++++++++++++--------------------------
+ sys/v4l2/gstv4l2bufferpool.h |    1 -
+ 2 files changed, 114 insertions(+), 198 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index 7adf187..7249591 100755
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -167,6 +167,8 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+   struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
+   guint i, planes_num, length, offset;
+ 
++  GST_DEBUG_OBJECT (pool, "alloc");
++
+   obj = pool->obj;
+   info = &obj->info;
+ 
+@@ -180,11 +182,14 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+     case GST_V4L2_IO_MMAP:
+     case GST_V4L2_IO_DMABUF:
+     case GST_V4L2_IO_DMABUF_IMPORT:
++    case GST_V4L2_IO_USERPTR:
+     {
+ #ifdef VIDIOC_CREATE_BUFS
+-    /* Don't create buffers in DMABUF_IMPORT mode or error will happen */
++    /* Don't create buffers in DMABUF_IMPORT and USERPTR mode or error
++     * will happen */
+       if (pool->num_allocated == pool->num_buffers &&
+-            obj->mode != GST_V4L2_IO_DMABUF_IMPORT) {
++            obj->mode != GST_V4L2_IO_DMABUF_IMPORT &&
++            obj->mode != GST_V4L2_IO_USERPTR) {
+         struct v4l2_create_buffers create_bufs;
+ 
+         memset (&create_bufs, 0, sizeof (struct v4l2_create_buffers));
+@@ -207,7 +212,6 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+ #endif
+       newbuf = gst_buffer_new ();
+       meta = GST_V4L2_META_ADD (newbuf);
+-      meta->ori_buf = NULL;
+ 
+       index = pool->num_allocated;
+ 
+@@ -216,10 +220,14 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+       memset (&meta->vbuffer, 0x0, sizeof (struct v4l2_buffer));
+       meta->vbuffer.index = index;
+       meta->vbuffer.type = obj->type;
++      meta->ori_buf = NULL;
+ 
+       if (obj->mode == GST_V4L2_IO_DMABUF_IMPORT)
+         /* Setting for DMABUF IMPORT */
+         meta->vbuffer.memory = V4L2_MEMORY_DMABUF;
++      else if (obj->mode == GST_V4L2_IO_USERPTR)
++        /* Setting for USERPTR */
++        meta->vbuffer.memory = V4L2_MEMORY_USERPTR;
+       else
+         /* Use MMAP setting for both MMAP and DMABUF EXPORT */
+         meta->vbuffer.memory = V4L2_MEMORY_MMAP;
+@@ -348,49 +356,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+       }
+       break;
+     }
+-    case GST_V4L2_IO_USERPTR:
+-    {
+-      struct v4l2_buffer vb;
+-      vb.index = pool->num_allocated;
+-      vb.type = obj->type;
+-      vb.memory = V4L2_MEMORY_USERPTR;
+-
+-      /* Additional config for multi-plane */
+-      if (vb.type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+-        vb.length = GST_VIDEO_INFO_N_PLANES (info);
+-        vb.m.planes = planes;
+-      }
+-
+-      if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &vb) < 0)
+-        goto querybuf_failed;
+-
+-      GST_LOG_OBJECT (pool, "  index:     %u", vb.index);
+-      GST_LOG_OBJECT (pool, "  type:      %d", vb.type);
+-      GST_LOG_OBJECT (pool, "  flags:     %08x", vb.flags);
+-      GST_LOG_OBJECT (pool, "  field:     %d", vb.field);
+-      GST_LOG_OBJECT (pool, "  memory:    %d", vb.memory);
+-
+-      if (vb.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+-        GST_LOG_OBJECT (pool, "  bytesused: %u", vb.bytesused);
+-        GST_LOG_OBJECT (pool, "  length:    %u", vb.length);
+-      } else {
+-        for (i=0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+-          GST_LOG_OBJECT (pool, "  bytesused %d: %u", i,
+-                vb.m.planes[i].bytesused);
+-          GST_LOG_OBJECT (pool, "  length %d:    %u", i,
+-                vb.m.planes[i].length);
+-        }
+-      }
+ 
+-      /* Do not need to allocate buffer in this mode. Buffer from
+-       * upstream plugin will be used. However, need a dummy buffer
+-       * here to prevent a critical error :
+-       *      assertion `buffer != NULL' failed
+-       * from base class */
+-      newbuf = gst_buffer_new ();
+-
+-      break;
+-    }
+     default:
+       newbuf = NULL;
+       g_assert_not_reached ();
+@@ -681,10 +647,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
+   pool->num_allocated = 0;
+   pool->num_queued = 0;
+ 
+-  /* Use pool->frames in IO_USERPTR mode, pool->buffers in others */
+-  if (obj->mode == GST_V4L2_IO_USERPTR)
+-    pool->frames = g_new0 (GstVideoFrame *, pool->num_buffers);
+-  else pool->buffers = g_new0 (GstBuffer *, pool->num_buffers);
++  pool->buffers = g_new0 (GstBuffer *, pool->num_buffers);
+ 
+   /* now, allocate the buffers: */
+   if (!GST_BUFFER_POOL_CLASS (parent_class)->start (bpool))
+@@ -778,17 +741,11 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
+     }
+ 
+   pool->num_queued = 0;
+-  if (obj->mode == GST_V4L2_IO_USERPTR) {
+-    if (pool->frames) {
+-      g_free (pool->frames);
+-      pool->frames = NULL;
+-    }
++
++  if (pool->buffers) {
++    g_free (pool->buffers);
++    pool->buffers = NULL;
+   }
+-  else
+-    if (pool->buffers) {
+-      g_free (pool->buffers);
+-      pool->buffers = NULL;
+-    }
+ 
+   gst_v4l2_buffer_pool_free_buffers (pool);
+ 
+@@ -910,9 +867,9 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
+   if (obj->mode == GST_V4L2_IO_DMABUF_IMPORT)
+     vbuffer.memory = V4L2_MEMORY_DMABUF;
+   else if (obj->mode == GST_V4L2_IO_USERPTR)
+-      vbuffer.memory = V4L2_MEMORY_USERPTR;
++    vbuffer.memory = V4L2_MEMORY_USERPTR;
+   else
+-      vbuffer.memory = V4L2_MEMORY_MMAP;
++    vbuffer.memory = V4L2_MEMORY_MMAP;
+ 
+   if (obj->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+     vbuffer.m.planes = planes;
+@@ -1112,6 +1069,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+         case GST_V4L2_IO_MMAP:
+         case GST_V4L2_IO_DMABUF:
+         case GST_V4L2_IO_DMABUF_IMPORT:
++        case GST_V4L2_IO_USERPTR:
+           /* get a free unqueued buffer */
+           ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (bpool,
+               buffer, params);
+@@ -1183,6 +1141,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+         case GST_V4L2_IO_MMAP:
+         case GST_V4L2_IO_DMABUF:
+         case GST_V4L2_IO_DMABUF_IMPORT:
++        case GST_V4L2_IO_USERPTR:
+         {
+           GstV4l2Meta *meta;
+           guint index;
+@@ -1191,6 +1150,8 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+           g_assert (meta != NULL);
+ 
+           if (meta->ori_buf != NULL) {
++            /* Free the original buffer send by upstream plugin after
++             * finished use */
+             gst_buffer_unref (meta->ori_buf);
+             meta->ori_buf = NULL;
+           }
+@@ -1216,11 +1177,6 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+           }
+           break;
+         }
+-
+-        case GST_V4L2_IO_USERPTR:
+-        {
+-            break;
+-        }
+         default:
+           g_assert_not_reached ();
+           break;
+@@ -1446,13 +1402,13 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
+           break;
+         case GST_V4L2_IO_DMABUF:
+         case GST_V4L2_IO_MMAP:
+-        case GST_V4L2_IO_DMABUF_IMPORT:
+         {
+           GstBuffer *to_queue;
+ 
+           if (buf->pool == bpool) {
+             /* nothing, we can queue directly */
+             to_queue = gst_buffer_ref (buf);
++
+             GST_LOG_OBJECT (pool, "processing buffer from our pool");
+           } else {
+             GST_LOG_OBJECT (pool, "alloc buffer from our pool");
+@@ -1479,81 +1435,12 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
+               goto acquire_failed;
+ 
+             /* copy into it and queue */
+-            if (obj->mode == GST_V4L2_IO_MMAP || obj->mode == GST_V4L2_IO_DMABUF){
+-              if (!gst_v4l2_object_copy (obj, to_queue, buf))
+-                goto copy_failed;
+-            }
+-            /* Do not copy this way for DMABUF_IMPORT */
++            if (!gst_v4l2_object_copy (obj, to_queue, buf))
++              goto copy_failed;
+           }
+ 
+-          if (obj->mode == GST_V4L2_IO_DMABUF_IMPORT) {
+-            /* Take dmabuf fd from buffer and set to v4l2_buf */
+-            GstV4l2Meta *meta;
+-            GstVideoInfo *info;
+-            gint i, index;
+-            struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
+-
+-            meta = GST_V4L2_META_GET (to_queue);
+-            if (meta == NULL) {
+-              gst_v4l2_buffer_pool_release_buffer (bpool, to_queue);
+-              return GST_FLOW_ERROR;
+-            }
+-
+-            /* Hold the buffer until we finish */
+-            gst_buffer_ref (buf);
+-            meta->ori_buf = buf;  /* For later release inside pool_release_buffer */
+-
+-            meta->vbuffer.bytesused = gst_buffer_get_size (buf);
+-
+-            info = &pool->obj->info;
+-
+-            index = meta->vbuffer.index;
+-            meta->vbuffer.type = obj->type;
+-            meta->vbuffer.memory = V4L2_MEMORY_DMABUF;
+-
+-            if (meta->vbuffer.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+-                GstMemory *mem = gst_buffer_peek_memory (buf, i);
+-              if (!gst_is_dmabuf_memory (mem)) {
+-                gst_buffer_unref (buf);
+-                GST_ERROR_OBJECT (pool, "Memory %d is not a dmabuf");
+-                gst_v4l2_buffer_pool_release_buffer (bpool, to_queue);
+-                return GST_FLOW_ERROR;
+-              }
+-
+-              meta->vbuffer.m.fd = gst_dmabuf_memory_get_fd (mem);
+-              meta->vbuffer.length = meta->vbuffer.bytesused;
+-            } else {
+-              meta->vbuffer.m.planes = planes;
+-              meta->vbuffer.length = GST_VIDEO_INFO_N_PLANES (info);
+-              for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+-                GstMemory *mem = gst_buffer_peek_memory (buf, i);
+-                if (!gst_is_dmabuf_memory (mem)) {
+-                  gst_buffer_unref (buf);
+-                  GST_ERROR_OBJECT (pool, "Memory %d is not a dmabuf");
+-                  return GST_FLOW_ERROR;
+-                }
+-
+-                planes[i].m.fd = gst_dmabuf_memory_get_fd (mem);
+-                planes[i].bytesused = mem->size;
+-                planes[i].length = mem->maxsize;
+-                planes[i].data_offset = 0;
+-              }
+-            }
+-
+-            ret =v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &meta->vbuffer);
+-            if (ret < 0) {
+-              GST_ERROR_OBJECT (obj->element, "Could not queue a buffer %d (%s)", errno,
+-                  g_strerror (errno));
+-              goto done;
+-            }
+-
+-            pool->buffers[index] = to_queue;
+-            pool->num_queued++;
+-          }
+-          else {
+-            if ((ret = gst_v4l2_buffer_pool_qbuf (pool, to_queue)) != GST_FLOW_OK)
+-              goto done;
+-          }
++          if ((ret = gst_v4l2_buffer_pool_qbuf (pool, to_queue)) != GST_FLOW_OK)
++            goto done;
+ 
+           /* if we are not streaming yet (this is the first buffer, start
+            * streaming now */
+@@ -1579,75 +1466,109 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
+ 
+           break;
+         }
+-
++        case GST_V4L2_IO_DMABUF_IMPORT:
+         case GST_V4L2_IO_USERPTR:
+         {
+-          GstVideoFrame *frame;
+-          GstVideoInfo *info;
+-          struct v4l2_buffer v4buf;
++          GstBuffer *to_queue;
++          gint index;
++          GstV4l2Meta *meta;
+           struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
+-          gint i;
+ 
+-          gst_buffer_ref (buf);
+-          info = &obj->info;
++          if (buf->pool == bpool) {
++            /* this is buffer from our pool, use it */
++            to_queue = gst_buffer_ref (buf);
++
++            GST_LOG_OBJECT (pool, "processing buffer from our pool");
++          } else {
++            GST_LOG_OBJECT (pool, "alloc buffer from our pool");
++            if (!gst_buffer_pool_is_active (bpool)) {
++              GstStructure *config;
+ 
+-          if (!gst_buffer_pool_is_active (bpool)) {
+-            GstStructure *config;
++              /* this pool was not activated, configure and activate */
++              GST_DEBUG_OBJECT (pool, "activating pool");
+ 
+-            /* this pool was not activated, configure and activate */
+-            GST_DEBUG_OBJECT (pool, "activating pool");
++              config = gst_buffer_pool_get_config (bpool);
++              gst_buffer_pool_config_add_option (config,
++                  GST_BUFFER_POOL_OPTION_VIDEO_META);
++              gst_buffer_pool_set_config (bpool, config);
+ 
+-            config = gst_buffer_pool_get_config (bpool);
+-            gst_buffer_pool_config_add_option (config,
+-                GST_BUFFER_POOL_OPTION_VIDEO_META);
+-            gst_buffer_pool_set_config (bpool, config);
++              if (!gst_buffer_pool_set_active (bpool, TRUE))
++                goto activate_failed;
++            }
+ 
+-            if (!gst_buffer_pool_set_active (bpool, TRUE))
+-              goto activate_failed;
+-          }
++            /* Get a buffer (contains v4l2_buffer) from our pool */
++            ret = gst_buffer_pool_acquire_buffer (bpool, &to_queue, NULL);
++            if (ret != GST_FLOW_OK)
++              goto acquire_failed;
+ 
+-          frame = g_malloc (sizeof (GstVideoFrame));
+-          if (!gst_video_frame_map (frame, info, buf, GST_MAP_READ)) {
+-            ret = GST_FLOW_ERROR;
+-            goto done;
++            meta = GST_V4L2_META_GET (to_queue);
++            if (meta == NULL) {
++              gst_v4l2_buffer_pool_release_buffer (bpool, to_queue);
++              return GST_FLOW_ERROR;
++            }
++            /* Hold the source buffer until we finish using it */
++            gst_buffer_ref (buf);
++            meta->ori_buf = buf;  /* For later release inside pool_release_buffer */
++            GST_LOG_OBJECT (pool, "source buffer %p, our buffer %p", buf, to_queue);
+           }
+ 
+-          v4buf.type = obj->type;
+-          v4buf.bytesused = gst_buffer_get_size (buf);
+-          v4buf.memory = V4L2_MEMORY_USERPTR;
++          /* don't copy buffer in this mode. Instead, take dmabuf fd or
++           * buffer pointer from buffer and set to v4l2_buf */
++          {
++            GstVideoInfo *info;
++            gint i;
+ 
+-          if (v4buf.type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+-            v4buf.m.userptr = frame->data[0];
+-            v4buf.length = v4buf.bytesused;
+-          } else {
+-            v4buf.m.planes = planes;
+-            v4buf.length = GST_VIDEO_INFO_N_PLANES (info);
++            meta->vbuffer.bytesused = gst_buffer_get_size (buf);
++
++            info = &pool->obj->info;
++
++            index = meta->vbuffer.index;
++
++            /* Take the dmabuf fd or buffer pointer from buffer and
++             * set to v4l2_plane */
+             for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+               GstMemory *mem = gst_buffer_peek_memory (buf, i);
+-              planes[i].m.userptr = frame->data[i];
++
++              if (obj->mode == GST_V4L2_IO_DMABUF_IMPORT) {
++                if (!gst_is_dmabuf_memory (mem)) {
++                  gst_buffer_unref (buf);
++                  GST_ERROR_OBJECT (pool, "Memory %d is not a dmabuf");
++                  gst_v4l2_buffer_pool_release_buffer (bpool, to_queue);
++                  return GST_FLOW_ERROR;
++                }
++                else  planes[i].m.fd = gst_dmabuf_memory_get_fd (mem);
++              }
++              else {
++                GstMapInfo meminfo;
++                gst_memory_map (mem, &meminfo, GST_LOCK_FLAG_READ);
++                planes[i].m.userptr = meminfo.data;
++                gst_memory_unmap (mem, &meminfo);
++              }
++
+               planes[i].bytesused = mem->size;
+               planes[i].length = mem->maxsize;
++              planes[i].data_offset = 0;
+             }
+-          }
+ 
+-          /* Store the frames to pool->frames for later unmap */
+-          for (i=0; i < pool->num_buffers; i++) {
+-            if (pool->frames[i] == NULL) { /* Found an un-used slot */
+-              pool->frames[i] = frame;
+-              v4buf.index = i;      /* Store index here to use when dqbuf */
+-              break;
++            /* Set data (from v4l2_plane) to v4l2_buffer */
++            if (V4L2_TYPE_IS_MULTIPLANAR(meta->vbuffer.type)) {
++              meta->vbuffer.length = GST_VIDEO_INFO_N_PLANES (info);
++              meta->vbuffer.m.planes = planes;
++            } else {
++              meta->vbuffer.length = meta->vbuffer.bytesused;
++              meta->vbuffer.m.userptr = planes[0].m.userptr;
++              /* Same as meta->vbuffer.m.fd  = planes[0].m.fd; */
+             }
+           }
+-          if (i == pool->num_buffers)
+-            GST_ERROR_OBJECT (obj->element, "do not find any un-used slot");
+ 
+-          ret = v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &v4buf);
++          ret = v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &meta->vbuffer);
+           if (ret < 0) {
+             GST_ERROR_OBJECT (obj->element, "Could not queue a buffer %d (%s)", errno,
+                 g_strerror (errno));
+             goto done;
+           }
+ 
++          pool->buffers[index] = to_queue;
+           pool->num_queued++;
+ 
+           /* if we are not streaming yet (this is the first buffer, start
+@@ -1656,24 +1577,20 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
+             if (!start_streaming (pool))
+               goto start_failed;
+ 
+-          /*  DQBUF if used all buffers */
+-          if (pool->num_queued >= pool->num_buffers) {
+-            ret = v4l2_ioctl (pool->video_fd, VIDIOC_DQBUF, &v4buf);
+-            if (ret < 0) {
+-              GST_ERROR_OBJECT (obj->element, "Could not dequeue a buffer %d (%s)", errno,
+-                  g_strerror (errno));
++          if (pool->num_queued == pool->num_allocated) {
++            GstBuffer *out;
++            /* all buffers are queued, try to dequeue one and release it back
++             * into the pool so that _acquire can get to it again. */
++            ret = gst_v4l2_buffer_pool_dqbuf (pool, &out);
++            if (ret != GST_FLOW_OK) {
++              gst_buffer_unref (to_queue);
+               goto done;
+             }
+ 
+-            pool->num_queued--;
+-            frame = pool->frames[v4buf.index];
+-            buf = frame->buffer;
+-            gst_video_frame_unmap (frame);
+-            g_free (frame);
+-            pool->frames[v4buf.index] = NULL; /* This slot is not used anymore */
+-
+-            /* Free the buffer */
+-            gst_buffer_unref (buf);
++            /* release the rendered buffer back into the pool. This wakes up any
++             * thread waiting for a buffer in _acquire(). If the buffer still has
++             * a pool then this will happen when the refcount reaches 0 */
++            gst_buffer_unref (out);
+           }
+ 
+           break;
+diff --git a/sys/v4l2/gstv4l2bufferpool.h b/sys/v4l2/gstv4l2bufferpool.h
+index 7b23636..fb20092 100755
+--- a/sys/v4l2/gstv4l2bufferpool.h
++++ b/sys/v4l2/gstv4l2bufferpool.h
+@@ -65,7 +65,6 @@ struct _GstV4l2BufferPool
+   gboolean streaming;
+ 
+   GstBuffer **buffers;
+-  GstVideoFrame **frames;     /* Use in USERPTR mode */
+ };
+ 
+ struct _GstV4l2BufferPoolClass
+-- 
+1.7.9.5
+

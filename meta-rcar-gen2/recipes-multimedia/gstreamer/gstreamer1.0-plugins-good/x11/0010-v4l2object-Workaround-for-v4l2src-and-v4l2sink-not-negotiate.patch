@@ -1,0 +1,66 @@
+From fe981767c7c4412ec8ef2d3a65375984c7581b58 Mon Sep 17 00:00:00 2001
+From: Thao Luong <thao.luong.uw@rvc.renesas.com>
+Date: Fri, 5 Sep 2014 09:55:18 +0700
+Subject: [PATCH 1/2] Workaround for v4l2src and v4l2sink not-negotiate
+
+v4l2src and v4l2sink has difference interlace-mode, which causes
+not-negotiate error:
+v4l2src support mixed/progressive mode
+v4l2sink only support progressive mode
+This patch will allow only v4l2src checking interlace-mode (because
+v4l2src need to check input signal is interlace or progressive),
+v4l2sink does not care.
+Note: Currently, only v4l2sink copy-mode can run, no-copy still fails
+
+refs #59339
+Signed-off-by: Thao Luong <thao.luong.uw@rvc.renesas.com>
+---
+ sys/v4l2/gstv4l2object.c |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 3cb0178..d6c822d 100755
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -49,6 +49,7 @@
+ #include <gst/video/video.h>
+ 
+ #include "gstv4l2sink.h"
++#include "gstv4l2src.h"
+ 
+ /* videodev2.h is not versioned and we can't easily check for the presence
+  * of enum values at compile time, but the V4L2_CAP_VIDEO_OUTPUT_OVERLAY define
+@@ -1923,9 +1924,11 @@ return_data:
+   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
+       "height", G_TYPE_INT, (gint) height, NULL);
+   gst_v4l2_object_add_aspect_ratio (v4l2object, s);
+-  if (g_str_equal (gst_structure_get_name (s), "video/x-raw"))
+-    gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
+-        (interlaced ? "mixed" : "progressive"), NULL);
++  /*v4l2src need checking interlace-mode, v4l2sink can skip checking*/
++  if (GST_IS_V4L2SRC(v4l2object->element))
++    if (g_str_equal (gst_structure_get_name (s), "video/x-raw"))
++      gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
++          (interlaced ? "mixed" : "progressive"), NULL);
+ 
+   if (G_IS_VALUE (&rates)) {
+     /* only change the framerate on the template when we have a valid probed new
+@@ -2184,10 +2187,11 @@ default_frame_sizes:
+       gst_structure_set (tmp, "height", G_TYPE_INT, max_h, NULL);
+     else
+       gst_structure_set (tmp, "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
+-
+-    if (g_str_equal (gst_structure_get_name (tmp), "video/x-raw"))
+-      gst_structure_set (tmp, "interlace-mode", G_TYPE_STRING,
+-          (interlaced ? "mixed" : "progressive"), NULL);
++    /*v4l2src need checking interlace-mode, v4l2sink can skip checking*/
++    if (GST_IS_V4L2SRC(v4l2object->element))
++      if (g_str_equal (gst_structure_get_name (tmp), "video/x-raw"))
++        gst_structure_set (tmp, "interlace-mode", G_TYPE_STRING,
++            (interlaced ? "mixed" : "progressive"), NULL);
+     gst_v4l2_object_add_aspect_ratio (v4l2object, tmp);
+ 
+     gst_caps_append_structure (ret, tmp);
+-- 
+1.7.9.5
+

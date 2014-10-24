@@ -1,8 +1,8 @@
 require ../../include/gles-control.inc
 
 # for wayland
-PACKAGECONFIG_remove_rcar-gen2 = "${@'orc' if '1' in '${USE_GLES_WAYLAND}' else ''}"
-PACKAGECONFIG_append_rcar-gen2 = " faad ${@base_contains('USE_GLES_WAYLAND', '1', 'wayland', '', d)}"
+PACKAGECONFIG_remove_rcar-gen2 = "${@'orc' if '1' in '${USE_WAYLAND}' else ''}"
+PACKAGECONFIG_append_rcar-gen2 = " faad ${@base_contains('USE_WAYLAND', '1', 'wayland', '', d)}"
 
 FILESEXTRAPATHS_prepend_rcar-gen2 := \
     "${@'${THISDIR}/${PN}/wayland:' \

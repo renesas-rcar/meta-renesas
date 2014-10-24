@@ -1,7 +1,7 @@
 From 6f3164b68d75d97e5880a7bf94414f4b2f9377fd Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Thu, 29 May 2014 18:41:45 +0700
-Subject: [PATCH 09/22] Fix "not-negotiated" error
+Subject: [PATCH 09/26] Fix "not-negotiated" error
 
 This error happens because video sink plugin does not support other pixel-aspect-ratio than 1/1
 

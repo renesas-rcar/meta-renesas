@@ -1,7 +1,7 @@
 From 04c57583bbdde578a772eaa96de7d9c49592bb5b Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Thu, 5 Jun 2014 09:34:46 +0700
-Subject: [PATCH 15/22] Update for no-copy mode
+Subject: [PATCH 15/26] Update for no-copy mode
 
 Heavy videos (Full HD 60fps) cannot be played on no-copy mode.
 The reason is that gst_omx_video_dec_loop jumps to special cases

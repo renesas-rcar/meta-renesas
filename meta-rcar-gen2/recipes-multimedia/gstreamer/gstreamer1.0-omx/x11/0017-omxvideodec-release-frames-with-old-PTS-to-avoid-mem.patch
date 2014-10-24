@@ -1,7 +1,7 @@
 From 37457ae4a1f79794aaac7a94c06bb83b8b60847d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Aur=C3=A9lien=20Zanelli?= <aurelien.zanelli@parrot.com>
 Date: Fri, 30 May 2014 13:29:15 +0000
-Subject: [PATCH 17/22] omxvideodec: release frames with old PTS to avoid
+Subject: [PATCH 17/26] omxvideodec: release frames with old PTS to avoid
  memory issue
 
 Interlaced stream could make the decoder use two input frames to produce

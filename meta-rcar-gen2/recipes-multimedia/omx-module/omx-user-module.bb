@@ -1,5 +1,4 @@
 require ../../include/rcar-gen2-modules-common.inc
-include omx-module-default-config.inc
 
 LICENSE = "CLOSED"
 DEPENDS = "mmngr-kernel-module mmngr-user-module \
@@ -280,8 +279,8 @@ do_install() {
     
     if [ "X${MP3_MDW_DECODER}" = "X1" ] ; then
         cd ${S}/audio_mdw
-        ln -sf libMP3DLA_L.so.1.0 libMP3DLA_L.so.1
-        ln -sf libMP3DLA_L.so.1.0 libMP3DLA_L.so
+        ln -sf libMP3DLA_L.so.1.4 libMP3DLA_L.so.1
+        ln -sf libMP3DLA_L.so.1.4 libMP3DLA_L.so
         cp -P ${S}/audio_mdw/*.so* ${D}/usr/local/lib/
         cp -P ${S}/audio_mdw/mp3d_Lib.h ${D}/usr/local/include
         cp -P ${S}/audio_mdw/mp3d_Lib.h ${STAGING_INCDIR}
@@ -289,8 +288,8 @@ do_install() {
     
     if [ "X${WMA_MDW_DECODER}" = "X1" ] ; then
         cd ${S}/audio_mdw
-        ln -sf libWMASTDLA_L.so.1.0 libWMASTDLA_L.so.1
-        ln -sf libWMASTDLA_L.so.1.0 libWMASTDLA_L.so
+        ln -sf libWMASTDLA_L.so.1.3 libWMASTDLA_L.so.1
+        ln -sf libWMASTDLA_L.so.1.3 libWMASTDLA_L.so
         cp -P ${S}/audio_mdw/*.so* ${D}/usr/local/lib/
         cp -P ${S}/audio_mdw/wmastd_Lib.h ${D}/usr/local/include
         cp -P ${S}/audio_mdw/wmastd_Lib.h ${STAGING_INCDIR}
@@ -316,8 +315,8 @@ do_install() {
 
     if [ "X${FLAC_MDW_DECODER}" = "X1" ] ; then
         cd ${S}/audio_mdw
-        ln -sf libFLACDLA_L.so.1.0 libFLACDLA_L.so.1
-        ln -sf libFLACDLA_L.so.1.0 libFLACDLA_L.so
+        ln -sf libFLACDLA_L.so.1.1 libFLACDLA_L.so.1
+        ln -sf libFLACDLA_L.so.1.1 libFLACDLA_L.so
         cp -P ${S}/audio_mdw/*.so* ${D}/usr/local/lib/
         cp -P ${S}/audio_mdw/flacd_Lib.h ${D}/usr/local/include
         cp -P ${S}/audio_mdw/flacd_Lib.h ${STAGING_INCDIR}
@@ -325,8 +324,8 @@ do_install() {
 
     if [ "X${AAC_MDW_ENCODER}" = "X1" ] ; then
         cd ${S}/audio_mdw
-        ln -sf libRSAACELA_L.so.1.0 libRSAACELA_L.so.1
-        ln -sf libRSAACELA_L.so.1.0 libRSAACELA_L.so
+        ln -sf libRSAACELA_L.so.2.1 libRSAACELA_L.so.2
+        ln -sf libRSAACELA_L.so.2.1 libRSAACELA_L.so
         cp -P ${S}/audio_mdw/*.so* ${D}/usr/local/lib/
         cp -P ${S}/audio_mdw/RSAACE_AAC.h ${D}/usr/local/include
         cp -P ${S}/audio_mdw/RSAACE_AAC.h ${STAGING_INCDIR}

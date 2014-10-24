@@ -1,7 +1,7 @@
 From 0eb9d804ebfc4302b6be73102f577a6d4b977f18 Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Tue, 3 Jun 2014 18:59:17 +0700
-Subject: [PATCH 12/22] Add setting for StoreUnit and Deinterlace mode params
+Subject: [PATCH 12/26] Add setting for StoreUnit and Deinterlace mode params
 
 Add setting for StoreUnit and Deinterlace mode params
 (for guidance purpose only, still use default value)

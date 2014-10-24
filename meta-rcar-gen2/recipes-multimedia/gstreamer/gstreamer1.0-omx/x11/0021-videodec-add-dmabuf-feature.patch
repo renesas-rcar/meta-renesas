@@ -1,7 +1,7 @@
 From 32e8a20c02e0bf04c9f5aabc5ac2e588cb9dec02 Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Mon, 28 Jul 2014 10:57:59 +0700
-Subject: [PATCH 21/22] Add dmabuf feature
+Subject: [PATCH 21/26] Add dmabuf feature
 
 Add dmabuf feature for gst-omx on rcar platform.
 

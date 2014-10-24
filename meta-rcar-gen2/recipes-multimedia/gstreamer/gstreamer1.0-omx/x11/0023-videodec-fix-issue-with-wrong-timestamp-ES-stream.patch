@@ -1,0 +1,68 @@
+From dcaa31bee9c1e84e41bbd39d9f208b20e7093fa2 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 5 Sep 2014 16:31:57 +0700
+Subject: [PATCH 23/26] omxvideodec : fix issue with wrong timestamp ES stream
+
+When playing an ES stream with wrong timestamp order, the video
+is laggy and cannot stop at the end of file.
+(wrong timestamp order means some frames has timestamp far in
+future or past compare to frames around them)
+
+This patch fixes this issue (less laggy and can exit normally)
+
+Actually, this source code is added in patch 0007.
+This patch simply reverts patch 0007.
+
+refs #59523
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxvideodec.c |   33 ---------------------------------
+ 1 file changed, 33 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 67b6d26..a532d0d 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1015,39 +1015,6 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
+   }
+ 
+   if (best_id) {
+-    /* This processing is required when the data packets split from a frame
+-     * are queued in VideoDecoder class. The VideoDecoder class takes account
+-     * into frame to frame decoding, so the subsequent packets are left queued.
+-     * These should be removed before the test to determine if the remaining
+-     * data in the queue is needed to be dropped.
+-     */
+-    for (l = frames; l; l = l->next) {
+-      GstVideoCodecFrame *tmp;
+-      BufferIdentification *id;
+-
+-      tmp = l->data;
+-      id = gst_video_codec_frame_get_user_data (tmp);
+-
+-      /* This happens for frames that were just added but
+-       * which were not passed to the component yet. Ignore
+-       * them here!
+-       */
+-      if (!id)
+-        continue;
+-
+-      if (id->timestamp == best_timestamp && l != best_l) {
+-        GstVideoCodecFrame *removal;
+-
+-        removal = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+-            tmp->system_frame_number);
+-        gst_video_decoder_release_frame (GST_VIDEO_DECODER (self), removal);
+-      }
+-    }
+-
+-    g_list_foreach (frames, (GFunc) gst_video_codec_frame_unref, NULL);
+-    g_list_free (frames);
+-    frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
+-
+     for (l = frames; l && l != best_l; l = l->next) {
+       GstVideoCodecFrame *tmp = l->data;
+       BufferIdentification *id = gst_video_codec_frame_get_user_data (tmp);
+-- 
+1.7.9.5
+

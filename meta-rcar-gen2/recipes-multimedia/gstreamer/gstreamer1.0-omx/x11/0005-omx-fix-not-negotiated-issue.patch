@@ -1,7 +1,7 @@
 From b115c661221b5ef5cef2b7bd613948859f0acf0a Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Fri, 18 Apr 2014 10:31:14 +0700
-Subject: [PATCH 05/22] Fix not-negotiated issue with qtdemux
+Subject: [PATCH 05/26] Fix not-negotiated issue with qtdemux
 
 When porting to GStreamer 1.2.3, mp4 file cannot be played because
 of not-negotiated error from qtdemux.

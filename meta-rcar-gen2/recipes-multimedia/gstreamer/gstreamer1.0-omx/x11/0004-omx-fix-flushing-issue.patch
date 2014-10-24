@@ -1,7 +1,7 @@
 From 53456003283e8fb1777fcfa6a48df5d1e038cb69 Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Fri, 18 Apr 2014 09:01:18 +0700
-Subject: [PATCH 04/22] Fix flushing issue
+Subject: [PATCH 04/26] Fix flushing issue
 
 After porting to 1.2.3, gst-omx cannot run.
 It says "Incorrect state operation" and quit.

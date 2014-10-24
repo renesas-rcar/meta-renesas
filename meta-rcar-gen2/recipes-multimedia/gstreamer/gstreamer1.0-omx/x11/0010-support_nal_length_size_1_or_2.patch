@@ -1,7 +1,7 @@
 From 2891c2e80881afdb7d7bc868b584c74010840f6d Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Fri, 30 May 2014 15:20:32 +0700
-Subject: [PATCH 10/22] Support videos with nal_length_size 1 or 2
+Subject: [PATCH 10/26] Support videos with nal_length_size 1 or 2
 
 refs #55997
 Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>

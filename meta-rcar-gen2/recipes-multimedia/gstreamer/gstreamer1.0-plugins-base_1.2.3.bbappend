@@ -56,8 +56,8 @@ FILES_${PN}_append_rcar-gen2 = " \
 
 # For x11
 FILESEXTRAPATHS_prepend_rcar-gen2 := \
-    "${@'${THISDIR}/gstreamer1.0-plugins-base/x11:' if '1' in '${USE_GLES_X11}' else ''}"
+    "${@'${THISDIR}/gstreamer1.0-plugins-base/x11:' if '${USE_X11}' == '1' and '${USE_WAYLAND}' == '0' else ''}"
 
 SRC_URI_append_rcar-gen2 = " \
     ${@' file://0001-allocators-gstdmabuf-add-callback.patch' \
-        if '1' in '${USE_GLES_X11}' else ''}"
+        if '${USE_X11}' == '1' and '${USE_WAYLAND}' == '0' else ''}"

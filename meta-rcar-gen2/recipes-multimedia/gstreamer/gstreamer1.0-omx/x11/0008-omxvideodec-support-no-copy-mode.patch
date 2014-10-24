@@ -1,7 +1,7 @@
 From 5f11da07314c862fff45bf867270b784ca20a92c Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Fri, 30 May 2014 16:27:50 +0700
-Subject: [PATCH 08/22] Support no-copy mode
+Subject: [PATCH 08/26] Support no-copy mode
 
 Support no-copy mode.
 Combine with userptr mode of v4l2sink for zero-copy process.

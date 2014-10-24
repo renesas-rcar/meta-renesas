@@ -1,7 +1,7 @@
 From 7ccf7421147cea6943c78098af3e2cb62ebce77e Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Thu, 15 May 2014 16:28:53 +0700
-Subject: [PATCH 07/22] Support audiodec and aacdec
+Subject: [PATCH 07/26] Support audiodec and aacdec
 
 This patch adds support for audio decode, and aac decode plugin.
 

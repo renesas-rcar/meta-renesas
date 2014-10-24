@@ -1,0 +1,30 @@
+From 9278989fea5efa20d9dde7825bca4742d8469480 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 5 Sep 2014 16:43:08 +0700
+Subject: [PATCH 24/26] omxh264dec : remove not supported aligment nal
+
+This patch remove aligment nal cap, which is not supported
+anymore long ago.
+If nal aligment is used, stream corrupted error will happen.
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ omx/gstomxh264dec.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/omx/gstomxh264dec.c b/omx/gstomxh264dec.c
+index ca37bd8..81d86eb 100644
+--- a/omx/gstomxh264dec.c
++++ b/omx/gstomxh264dec.c
+@@ -71,7 +71,7 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
+       GST_DEBUG_FUNCPTR (gst_omx_h264_dec_copy_to_omx);
+ 
+   videodec_class->cdata.default_sink_template_caps = "video/x-h264, "
+-      "alignment=(string) { au, nal }, "
++      "alignment=(string) au, "
+       "stream-format=(string) avc, "
+       "width=(int) [1,MAX], " "height=(int) [1,MAX]";
+ 
+-- 
+1.7.9.5
+

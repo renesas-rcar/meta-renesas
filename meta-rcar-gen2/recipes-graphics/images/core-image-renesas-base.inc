@@ -51,7 +51,22 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_1_00", "1", " \
 	gstreamer1.0-plugins-bad-faad \
 	gstreamer1.0-plugins-bad-videoparsersbad \
 	", "", d)}'
-
+# pkg groups for multimedia
+IMAGE_INSTALL_append = ' ${@base_contains("MULTIMEDIA_ENABLE", "1", " \
+	 packagegroup-rcar-gen2-multimedia \
+	", "", d)}'
+# pkg groups for multimedia test program
+IMAGE_INSTALL_append = ' ${@base_contains("MULTIMEDIA_TP_ENABLE", "1", " \
+	packagegroup-rcar-gen2-multimedia-tp \
+	", "", d)}'
+# pkg groups for dtv
+IMAGE_INSTALL_append = ' ${@base_contains("DTV_ENABLE", "1", " \
+	 packagegroup-rcar-gen2-dtv \
+	", "", d)}'
+# pkg groups for graphic test program
+IMAGE_INSTALL_append = ' ${@base_contains("GLES_TP_ENABLE", "1", " \
+	 gles-test-module \
+	", "", d)}'
 # for Middle software
 CHECK_OMXIL_SH_MW = "${USE_RENESAS_MW_VCP1}"
 CHECK_OMXIL_SH_MW += "${USE_RENESAS_MW_VPU5}"

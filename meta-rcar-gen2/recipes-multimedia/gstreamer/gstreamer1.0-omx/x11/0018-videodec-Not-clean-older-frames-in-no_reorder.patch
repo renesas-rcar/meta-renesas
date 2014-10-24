@@ -1,7 +1,7 @@
 From 85f03304aaa82a544e746d2b3ffa06a0c6c143bf Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Wed, 9 Jul 2014 11:27:15 +0700
-Subject: [PATCH 18/22] Do not clean older frames in no_reorder mode
+Subject: [PATCH 18/26] Do not clean older frames in no_reorder mode
 
 Only clean older frames in reorder mode.
 In no_reorder mode (rarely used) the deocde order

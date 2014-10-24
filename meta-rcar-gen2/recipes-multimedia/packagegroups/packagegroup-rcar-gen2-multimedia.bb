@@ -14,6 +14,7 @@ PACKAGES = "\
 MULTIMEDIA_PACKAGES ="\
     mmngr-kernel-module mmngr-user-module \
     mmngrbuf-kernel-module mmngrbuf-user-module \
+    mmngrbuf-user-module-dev \
     fdpm-kernel-module fdpm-user-module \
     vspm-kernel-module vspm-user-module \
     s3ctl-kernel-module s3ctl-user-module \
@@ -21,8 +22,11 @@ MULTIMEDIA_PACKAGES ="\
 "
 
 RDEPENDS_packagegroup-rcar-gen2-multimedia = "\
-    ${MULTIMEDIA_PACKAGES} \
+    ${@ "${MULTIMEDIA_PACKAGES}" if "${MULTIMEDIA_ENABLE}" == "1" else "" } \
     media-ctl \
+	gstreamer1.0-meta-base \
+	gstreamer1.0-meta-audio \
+	gstreamer1.0-meta-video \
     gstreamer1.0-plugins-base-audioconvert \
     gstreamer1.0-plugins-base-audioresample \
     gstreamer1.0-plugins-base-playback \
@@ -31,6 +35,7 @@ RDEPENDS_packagegroup-rcar-gen2-multimedia = "\
     gstreamer1.0-plugins-base-videoscale \
     gstreamer1.0-plugins-good-avi \
     gstreamer1.0-plugins-good-audioparsers \
+	gstreamer1.0-plugins-good-id3demux \
     gstreamer1.0-plugins-bad-faad \
     gstreamer1.0-plugins-bad-mpegtsdemux \
     gstreamer1.0-plugins-bad-debugutilsbad \
@@ -38,7 +43,7 @@ RDEPENDS_packagegroup-rcar-gen2-multimedia = "\
     ${@base_conditional("USE_GLES_WAYLAND", "1", "gstreamer1.0-plugins-base-vspfilter", "", d )} \
 "
 
-RDEPENDS_packagegroup-rcar-gen2-multimedia-tp= "\
+MULTIMEDIA_TEST_PACKAGES = "\
     ${MULTIMEDIA_PACKAGES} \
     mmngr-tp-user-module \
     mmngrbuf-tp-user-module \
@@ -47,8 +52,16 @@ RDEPENDS_packagegroup-rcar-gen2-multimedia-tp= "\
     s3ctl-tp-user-module \
 "
 
-RDEPENDS_packagegroup-rcar-gen2-dtv = "\
+RDEPENDS_packagegroup-rcar-gen2-multimedia-tp = "\
+    ${@ '${MULTIMEDIA_TEST_PACKAGES}' if '${MULTIMEDIA_ENABLE}' == '1' and '${MULTIMEDIA_TP_ENABLE}' == '1' else '' } \
+"
+
+DTV_PACKAGES = "\
     ${MULTIMEDIA_PACKAGES} \
     scu-kernel-module ssp-kernel-module \
     dtv \
+"
+
+RDEPENDS_packagegroup-rcar-gen2-dtv = "\
+    ${@ '${DTV_PACKAGES}' if '${DTV_ENABLE}' == '1' else '' } \
 "

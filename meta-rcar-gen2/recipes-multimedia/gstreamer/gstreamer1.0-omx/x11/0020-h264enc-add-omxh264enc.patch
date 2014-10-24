@@ -1,7 +1,7 @@
 From 4e4ad372fc17507fd32d0967987d310eafd4ef3d Mon Sep 17 00:00:00 2001
 From: Thao Luong <thao.luong.uw@rvc.renesas.com>
 Date: Fri, 18 Jul 2014 10:32:40 +0700
-Subject: [PATCH 20/22] Add omxh264enc
+Subject: [PATCH 20/26] Add omxh264enc
 
 Support omxh264enc for RCarGen2. omxh264enc receive video/x-raw with format is
 {NV12, I420} and encode to video/x-264, stream-format is byte-stream. For more

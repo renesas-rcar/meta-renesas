@@ -1,7 +1,7 @@
 From 85c5827981843fb50af7f9e032a41bce6cfc9026 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
 Date: Sat, 1 Mar 2014 22:28:24 +0100
-Subject: [PATCH 22/22] omx: fix two serious message handling bugs
+Subject: [PATCH 22/26] omx: fix two serious message handling bugs
 
 Waiting for the next message if we already got one
 is nonsense and can lead to lockups.

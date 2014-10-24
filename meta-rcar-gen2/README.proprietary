@@ -8,6 +8,18 @@ how to use these featuresthe and setting to local.conf.
 In addition, these binaries are not provided at the recipes. If you want to use,
 you will need get from Renesas.
 
+Board configuration
+==================
+* Please add this line to local.conf depending on your board
+  1. For Lager board
+       MACHINE ??= "lager" 
+  2. For Koelsch board
+       MACHINE ??= "koelsch" 
+  3. For Gose board
+       MACHINE ??= "gose" 
+  4. For Alt board
+       MACHINE ??= "alt" 
+
 Build with GLES
 ==================
 
@@ -40,42 +52,29 @@ Build with GLES
        PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
        PREFERRED_PROVIDER_virtual/egl = "gles-user-module"
        DISTRO_FEATURES_remove = "wayland"
-       BBMASK .= "|libegl|libgbm|wayland-kms|wayland-wsegl"
+       BBMASK .= "|libegl|libgbm|wayland-kms"
 
      NOTE: The r8a7790 uses rgx, r8a7791, r8a7793 and r8a7794 uses sgx.
            If you want to use rgx, please set to 'rgx' instaed of 'sgx'.
 
   3. Please run 'bitbake core-image-x11'
 
-Build with Renesas multimedia libraries
-=======================================
+Build without GLES
+==================
 
-  multimedia libraries of meta-rcar-gen2 provides as packagegroup following. 
-  - packagegroup-rcar-gen2-multimedia
-    This provides package group of plug-ins of the GStreamer, multimedia
-    libraries and kernel drivers.
-    
-  - packagegroup-rcar-gen2-multimedia-tp
-    This provides package group of test program with packagegroup-rcar-gen2-multimedia.
-
-  - packagegroup-rcar-gen2-dtv
-    This provides package group of dtv libraries with packagegroup-rcar-gen2-multimedia.
-
-
+* For X11 without rgx/sgx
   1. Please copy proprietary libraries to the directory of recipes.
   2. Please set local.conf the following.
 
-       IMAGE_INSTALL_append = " packagegroup-rcar-gen2-multimedia"
+      DISTRO_FEATURES_remove = "wayland"
+      BBMASK .= "|libegl|libgbm|wayland-kms|gles-kernel-module|gles-user-module|gles-test-module"
 
-       or
+  3. Please run 'bitbake core-image-x11'
 
-       IMAGE_INSTALL_append = " packagegroup-rcar-gen2-multimedia-tp"
+Build with Renesas multimedia libraries
+=======================================
 
-       or
-
-       IMAGE_INSTALL_append = " packagegroup-rcar-gen2-dtv"
-
-       And you need to set GLES to local.conf. Please check section of
-       'Build with GLES'.
-
+  1. Please copy proprietary libraries to the directory of recipes.
+  2. Please modify meta-renesas/meta-rcar-gen2/conf/auto.conf with your image features.
+    "1" is ENABLE. "0" is DISABLE
   3. Please run 'bitbake core-image-x11' or 'bitbake core-image-weston'

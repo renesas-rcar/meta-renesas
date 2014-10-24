@@ -1,7 +1,7 @@
 From 8a027db11db686ba4831482d663c14c8840cfffc Mon Sep 17 00:00:00 2001
 From: HungTran <hung.tran.jy@rvc.renesas.com>
 Date: Fri, 18 Apr 2014 08:49:14 +0700
-Subject: [PATCH 03/22] Change ::reset to ::flush
+Subject: [PATCH 03/26] Change ::reset to ::flush
 
 From GStreamer 1.2, ::reset function is deprecated.
 It is replaced by ::flush

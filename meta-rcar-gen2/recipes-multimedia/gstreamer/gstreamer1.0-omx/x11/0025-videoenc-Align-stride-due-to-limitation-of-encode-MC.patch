@@ -1,0 +1,105 @@
+From af1db1a0d36c738ed8db209a56ae88612da70179 Mon Sep 17 00:00:00 2001
+From: Thao Luong <thao.luong.uw@rvc.renesas.com>
+Date: Tue, 9 Sep 2014 14:16:02 +0700
+Subject: [PATCH 25/26] Align stride due to limitation of encode MC
+
+There are some limitations of Renesas Encode MC:
+Format YUV420Planar/YVU420Planar: only support stride value: 256, 512, 1024, 2048
+Others (YUV420SemiPlanar/YVU420SemiPlanar): support stride value is
+a multiple of 128
+This patch align stride when using Renesas Encode MC.
+
+refs #58659
+Signed-off-by: Thao Luong <thao.luong.uw@rvc.renesas.com>
+---
+ config/rcar/gstomx.conf |    2 +-
+ omx/gstomx.c            |    2 ++
+ omx/gstomx.h            |    8 ++++++++
+ omx/gstomxvideoenc.c    |   28 +++++++++++++++++++++++++++-
+ 4 files changed, 38 insertions(+), 2 deletions(-)
+
+diff --git a/config/rcar/gstomx.conf b/config/rcar/gstomx.conf
+index 559e482..09cab54 100644
+--- a/config/rcar/gstomx.conf
++++ b/config/rcar/gstomx.conf
+@@ -23,5 +23,5 @@ component-name=OMX.RENESAS.VIDEO.ENCODER.H264
+ rank=256
+ in-port-index=0
+ out-port-index=1
+-hacks=
++hacks=renesas-encmc-stride-align
+ 
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 24f96b0..2a9750d 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -2551,6 +2551,8 @@ gst_omx_parse_hacks (gchar ** hacks)
+       hacks_flags |= GST_OMX_HACK_GET_PRIVATE_RENESAS_MC;
+     else if (g_str_equal (*hacks, "rcar-mmngrbuf-exist"))
+       hacks_flags |= GST_OMX_HACK_RCAR_MMNGRBUF_EXIST;
++    else if (g_str_equal (*hacks, "renesas-encmc-stride-align"))
++      hacks_flags |= GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN;
+     else
+       GST_WARNING ("Unknown hack: %s", *hacks);
+     hacks++;
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index 7f81a6d..46ce680 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -120,6 +120,14 @@ G_BEGIN_DECLS
+  */
+ #define GST_OMX_HACK_RCAR_MMNGRBUF_EXIST                              G_GUINT64_CONSTANT (0x0000000000000400)
+ 
++/* Renesas encode MC has limitation for input stride:
++ * + Format YUV420Planar/YVU420Planar: Stride must be 256, 512, 1024,
++ * 2048
++ * + Others (YUV420SemiPlanar/YVY420SemiPlanar: Stride must be a
++ * multiple of 128
++ */
++#define GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN                   G_GUINT64_CONSTANT (0x0000000000000800)
++
+ 
+ typedef struct _GstOMXCore GstOMXCore;
+ typedef struct _GstOMXPort GstOMXPort;
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index 0ae3305..5c89b3f 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -1196,7 +1196,33 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+         (info->width + port_def.nBufferAlignment - 1) &
+         (~(port_def.nBufferAlignment - 1));
+   else
+-    port_def.format.video.nStride = GST_ROUND_UP_32 (info->width);
++  {
++  if (klass->cdata.hacks & GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN)
++  {
++    switch (port_def.format.video.eColorFormat) {
++    case OMX_COLOR_FormatYUV420Planar: {
++      /*Renesas encode MC only support following strides*/
++      if (info->width <= 256)
++        port_def.format.video.nStride = 256;
++      else if ((info->width > 256) && (info->width <= 512))
++        port_def.format.video.nStride = 512;
++      else if ((info->width > 512) && (info->width <= 1024))
++        port_def.format.video.nStride = 1024;
++      else
++        port_def.format.video.nStride = 2048;
++      break;
++    }
++    case OMX_COLOR_FormatYUV420SemiPlanar:
++      port_def.format.video.nStride = ((info->width + 127) & ~ 127);   /* Align 128 */
++      break;
++    default:
++      port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);    /* Safe (?) default */
++     break;
++    }
++  } else {
++      port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);    /* Safe (?) default */
++    }
++  }
+ 
+   port_def.format.video.nFrameHeight = info->height;
+   port_def.format.video.nSliceHeight = info->height;
+-- 
+1.7.9.5
+
