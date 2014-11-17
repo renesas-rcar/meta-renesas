@@ -9,8 +9,8 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=1707d6db1d42237583f50183a5651ecb"
 
 PV = "v2013.01.01+git${SRCPV}"
 
-SRCREV = "74b16badc2f0ecf45c53f50a6b2b793f0ba94c51"
-SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-1.8.0;protocol=git"
+SRCREV = "46367b1ef10204981cf5838a933b76a83d97977e"
+SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-1.9.0;protocol=git"
 
 S = "${WORKDIR}/git"
 
