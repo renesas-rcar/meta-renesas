@@ -55,9 +55,9 @@ WAYLAND_PATCHES = " \
 "
 
 SRC_URI_append_rcar-gen2 = " \
-    ${@'${WAYLAND_PATCHES}' if '1' in '${USE_WAYLAND}' else ''}"
+    ${@'${WAYLAND_PATCHES}' if '${USE_X11}' == '0' and '${USE_WAYLAND}' == '1' else ''}"
 FILESEXTRAPATHS_prepend_rcar-gen2 := \
-    "${@'${THISDIR}/${PN}/wayland:' if '1' in '${USE_WAYLAND}' else ''}"
+    "${@'${THISDIR}/${PN}/wayland:' if '${USE_X11}' == '0' and '${USE_WAYLAND}' == '1' else ''}"
 
 # for x11
 X11_PATCHES = " \
