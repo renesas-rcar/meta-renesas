@@ -1,6 +1,6 @@
 require recipes-graphics/drm/libdrm.inc
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRCREV = "4d8674077c006f68ec4771530891df8231da839d"
 SRC_URI = "git://git.ideasonboard.com/renesas/drm.git;protocol=git;branch=live \
