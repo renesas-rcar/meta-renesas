@@ -23,14 +23,14 @@ PACKAGECONFIG_remove_rcar-gen2 = "${@base_contains("DISTRO_FEATURES", "wayland",
 
 SRC_URI_append_rcar-gen2 = \
     "${@'${VSPFILTER_CONFIGS}' \
-        if '${USE_X11}' == '0' and '${USE_WAYLAND}' == '1' else ''}"
+        if '${USE_WAYLAND}' == '1' else ''}"
 
 EXTRA_OECONF_append_rcar-gen2 = " \
     ${@'--enable-vspfilter' \
-        if '${USE_X11}' == '0' and '${USE_WAYLAND}' == '1' else ''}"
+        if '${USE_WAYLAND}' == '1' else ''}"
 
 do_install_append_rcar-gen2() {
-    if [ '${USE_X11}' = '0' -a '${USE_WAYLAND}' = '1' ] ; then
+    if [ '${USE_WAYLAND}' = '1' ] ; then
         mkdir ${D}/etc/
         install -m644 ${WORKDIR}/gstvspfilter-${MACHINE}.conf ${D}/etc/gstvspfilter.conf
     fi
@@ -38,7 +38,7 @@ do_install_append_rcar-gen2() {
 
 FILES_${PN}_append_rcar-gen2 = " \
     ${@'${datadir}/gst-plugins-base/1.0/* ${sysconfdir}/*.conf' \
-        if '${USE_X11}' == '0' and '${USE_WAYLAND}' == '1' else ''}"
+        if '${USE_WAYLAND}' == '1' else ''}"
 
 # For x11
 # None
