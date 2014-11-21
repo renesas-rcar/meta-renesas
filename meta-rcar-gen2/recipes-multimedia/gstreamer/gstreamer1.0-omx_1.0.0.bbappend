@@ -9,7 +9,7 @@ do_configure() {
 	oe_runconf
 }
 
-DEPENDS_append_rcar-gen2 = " omx-user-module"
+DEPENDS_append_rcar-gen2 = " omx-user-module mmngrbuf-user-module"
 EXTRA_OECONF_append_rcar-gen2 = " --with-omx-target=rcar --enable-experimental"
 
 # Overwrite do_install[postfuncs] += " set_omx_core_name "
