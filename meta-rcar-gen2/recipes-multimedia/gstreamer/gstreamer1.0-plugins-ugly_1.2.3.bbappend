@@ -1,5 +1,5 @@
 SRC_URI_rcar-gen2 = "git://github.com/renesas-devel/gst-plugins-ugly.git;protocol=git;branch=RCAR-GEN2/1.2.3"
-SRCREV_rcar-gen2 = "258bf9862e5b7179562f0cae9fb470f6486dca3a"
+SRCREV_rcar-gen2 = "af884db954b53bf083ebc39e3a90b639f81513e1"
 S = "${WORKDIR}/git"
 
 PACKAGECONFIG ??= " \
