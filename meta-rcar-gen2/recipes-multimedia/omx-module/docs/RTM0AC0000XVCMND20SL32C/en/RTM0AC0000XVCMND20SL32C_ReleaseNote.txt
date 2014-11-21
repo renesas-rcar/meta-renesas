@@ -4,11 +4,13 @@ OMX Media Component Video Decoder Common Library for Linux
 RELEASE NOTE
 
 Version:
-  beta10
+  beta11
 
 Feature/Fix:
 
-* [Dec][Common]Dynamic Port Reconfiguration動作モードの追加
+* [Dec][Common] CODECCONFIGをデコード途中変更できるように修正
+* [Dec][Common] OMXR_MC_VIDEO_PARAM_DEINTERLACE_MODETYPE.eDeinterlaceにOMXR_MC_VIDEO_DeinterlaceNoneを指定した場合、画像高さが1024を越える場合にInvalid状態に遷移する問題の修正
+* [Dec][Common] デコード中に画像サイズが変化中に、Flushするとタイミング依存でInvalid状態に遷移する問題の修正
 
 Restriction:
 
