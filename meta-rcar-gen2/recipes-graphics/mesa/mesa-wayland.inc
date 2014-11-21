@@ -7,10 +7,6 @@ EXTRA_OECONF_rcar-gen2 := "${@'${EXTRA_OECONF}'.replace('--enable-gbm', '--disab
 # Remove the gbm and egl packages. These are provided in other recipes.
 PACKAGES_remove_rcar-gen2 = "libgbm-dev libgbm libegl-mesa-dev libegl-mesa libegl-dev libegl libgles2-mesa libgles2-mesa-dev"
 
-# FIXME
-# PROVIDES_remove_koelsch = "virtual/libgles2 virtual/egl"
-# PACKAGES_remove_rcar-gen2 = "libgbm-dev libgbm libegl-dev libegl libgles2 libgles2-dev"
-
 # Remove the x11 configure
 PACKAGECONFIG_rcar-gen2 := "${@'${PACKAGECONFIG}'.replace('x11', '')}"
 
