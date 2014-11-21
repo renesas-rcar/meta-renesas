@@ -1,0 +1,113 @@
+From a0c66c4acddc978bfebd422e4bbb7732f6db6286 Mon Sep 17 00:00:00 2001
+From: Takanari Hayama <taki@igel.co.jp>
+Date: Fri, 12 Sep 2014 12:57:30 +0900
+Subject: [PATCH 10/22] vsp-renderer-device: add support for alpha channel.
+
+Add support for global alpha.
+
+N.B. VSP1 cannot support both global alpha and pixel alpha simultaneously.
+---
+ src/vsp-renderer.c |   46 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 44 insertions(+), 2 deletions(-)
+
+diff --git a/src/vsp-renderer.c b/src/vsp-renderer.c
+index 7673c89..869d412 100644
+--- a/src/vsp-renderer.c
++++ b/src/vsp-renderer.c
+@@ -43,6 +43,7 @@
+ #include "v4l2-renderer-device.h"
+ 
+ #include "media-ctl/mediactl.h"
++#include "media-ctl/mediactl-priv.h"
+ #include "media-ctl/v4l2subdev.h"
+ #include "media-ctl/tools.h"
+ 
+@@ -117,10 +118,18 @@ const char *vsp_input_composer[] = {
+ 	"'%s bru':3"
+ };
+ 
++const char *vsp_input_subdev[] = {
++	"%s rpf.0",
++	"%s rpf.1",
++	"%s rpf.2",
++	"%s rpf.3"
++};
++
+ struct vsp_media_pad {
+ 	struct media_pad	*infmt_pad;
+ 	struct media_pad	*outfmt_pad;
+ 	struct media_pad	*compose_pad;
++	struct media_entity	*input_entity;
+ 
+ 	struct media_link	*link;
+ 
+@@ -277,6 +286,13 @@ vsp_init(struct media_device *media)
+ 			goto error;
+ 		}
+ 
++		snprintf(buf, sizeof(buf), vsp_input_subdev[i], device_name);
++		weston_log("get a input subdev pad: '%s'\n", buf);
++		if (!(vsp->input_pads[i].input_entity = media_get_entity_by_name(media, buf, strlen(buf)))) {
++			weston_log("parse entity failed.\n");
++			goto error;
++		}
++
+ 		/* get a file descriptor for the input */
+ 		snprintf(buf, sizeof(buf), vsp_inputs[i], device_name);
+ 		entity = media_get_entity_by_name(media, buf, strlen(buf));
+@@ -602,6 +618,24 @@ vsp_comp_begin(struct v4l2_renderer_device *dev, struct v4l2_renderer_output *ou
+ }
+ 
+ static int
++vsp_set_alpha(struct media_entity *entity, float alpha)
++{
++	struct v4l2_control ctrl;
++
++	ctrl.id = V4L2_CID_ALPHA_COMPONENT;
++	ctrl.value = (__s32)(alpha * 0xff);
++
++	weston_log("setting to %f(%d)\n", alpha, ctrl.value);
++
++	if (ioctl(entity->fd, VIDIOC_S_CTRL, &ctrl) == -1) {
++		weston_log("failed to set alpha value (%d)\n", ctrl.value);
++		return -1;
++	}
++
++	return 0;
++}
++
++static int
+ vsp_comp_setup_inputs(struct vsp_device *vsp, struct vsp_media_pad *mpad, struct vsp_surface_state *vs, int enable)
+ {
+ 	struct v4l2_mbus_framefmt format;
+@@ -625,6 +659,12 @@ vsp_comp_setup_inputs(struct vsp_device *vsp, struct vsp_media_pad *mpad, struct
+ 		return -1;
+ 	}
+ 
++	// set an alpha
++	if (vsp_set_alpha(mpad->input_entity, vs->base.alpha)) {
++		weston_log("setting alpha (=%f) failed.", vs->base.alpha);
++		return -1;
++	}
++
+ 	// this is an output towards BRU. this shall be consistent among all inputs.
+ 	format.code = V4L2_MBUS_FMT_ARGB8888_1X32;
+ 	if (v4l2_subdev_set_format(mpad->outfmt_pad->entity, &format, mpad->outfmt_pad->index,
+@@ -770,10 +810,12 @@ vsp_comp_set_view(struct v4l2_renderer_device *dev, struct v4l2_surface_state *s
+ 		return -1;
+ 	}
+ 
+-	DBG("set input %d (dmafd=%d): %dx%d@(%d,%d).\n", vsp->input_count,
++	DBG("set input %d (dmafd=%d): %dx%d@(%d,%d). alpha=%f\n",
++	    vsp->input_count,
+ 	    vs->base.planes[0].dmafd,
+ 	    vs->base.dst_rect.width, vs->base.dst_rect.height,
+-	    vs->base.dst_rect.left, vs->base.dst_rect.top);
++	    vs->base.dst_rect.left, vs->base.dst_rect.top,
++	    vs->base.alpha);
+ 
+ 	switch(vsp->state) {
+ 	case VSP_STATE_START:
+-- 
+1.7.9.5
+

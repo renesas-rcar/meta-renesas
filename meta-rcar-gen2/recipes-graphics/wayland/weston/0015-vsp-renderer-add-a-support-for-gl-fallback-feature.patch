@@ -1,0 +1,49 @@
+From cb2046453d726eff989f3a13cd65cbda487c5d17 Mon Sep 17 00:00:00 2001
+From: Takanari Hayama <taki@igel.co.jp>
+Date: Wed, 29 Oct 2014 15:12:01 +0900
+Subject: [PATCH 15/22] vsp-renderer: add a support for gl-fallback feature.
+
+VSP1 cannot handle the case where both global alpha and pixel alpha
+are specified. Tell v4l2-renderer that it won't be able to handle
+such case.
+---
+ src/vsp-renderer.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/src/vsp-renderer.c b/src/vsp-renderer.c
+index 0e97fa7..1287d86 100644
+--- a/src/vsp-renderer.c
++++ b/src/vsp-renderer.c
+@@ -986,6 +986,19 @@ vsp_set_output_buffer(struct v4l2_renderer_output *out, struct v4l2_bo_state *bo
+ 	output->surface_state.fmt.fmt.pix_mp.plane_fmt[0].bytesperline = bo->stride;
+ }
+ 
++#ifdef V4L2_GL_FALLBACK
++static int
++vsp_can_compose(struct v4l2_surface_state *vs)
++{
++	switch(vs->pixel_format) {
++	case V4L2_PIX_FMT_ABGR32:
++		if (vs->alpha != 1.0)
++			return 0;
++	}
++	return 1;
++}
++#endif
++
+ static uint32_t
+ vsp_get_capabilities(void)
+ {
+@@ -1005,5 +1018,9 @@ WL_EXPORT struct v4l2_device_interface v4l2_device_interface = {
+ 	.finish_compose = vsp_comp_finish,
+ 	.draw_view = vsp_comp_set_view,
+ 
++#ifdef V4L2_GL_FALLBACK
++	.can_compose = vsp_can_compose,
++#endif
++
+ 	.get_capabilities = vsp_get_capabilities,
+ };
+-- 
+1.7.9.5
+

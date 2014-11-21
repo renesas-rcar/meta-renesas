@@ -1,0 +1,272 @@
+From 0fee6e989351f230981bf3bec7b6532fca742f63 Mon Sep 17 00:00:00 2001
+From: Takanari Hayama <taki@igel.co.jp>
+Date: Fri, 12 Sep 2014 17:21:40 +0900
+Subject: [PATCH 12/22] vsp-renderer: add a support for scaling.
+
+Support scaling of surfaces using VSP1 UDS.
+---
+ src/vsp-renderer.c |  150 ++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 140 insertions(+), 10 deletions(-)
+
+diff --git a/src/vsp-renderer.c b/src/vsp-renderer.c
+index 8041e39..0e97fa7 100644
+--- a/src/vsp-renderer.c
++++ b/src/vsp-renderer.c
+@@ -73,6 +73,7 @@ struct vsp_renderer_output {
+ };
+ 
+ #define VSP_INPUT_MAX	4
++#define VSP_SCALER_MAX	1
+ 
+ const char *vsp_input_links[] = {
+ 	"'%s rpf.0':1 -> '%s bru':0",
+@@ -125,6 +126,14 @@ const char *vsp_input_subdev[] = {
+ 	"%s rpf.3"
+ };
+ 
++const char *vsp_scaler_links[] = {
++	"'%s rpf.%d':1 -> '%s uds.%d':0",
++	"'%s uds.%d':1 -> '%s bru':%d"
++};
++
++const char *vsp_scaler_infmt = "'%s uds.%d':0";
++const char *vsp_scaler_outfmt = "'%s uds.%d':1";
++
+ struct vsp_media_pad {
+ 	struct media_pad	*infmt_pad;
+ 	struct media_pad	*outfmt_pad;
+@@ -136,6 +145,20 @@ struct vsp_media_pad {
+ 	int			fd;
+ };
+ 
++struct vsp_scaler_template {
++	struct media_link *link0;	// rpf -> uds
++	struct media_link *link1;	// uds -> bru
++};
++
++struct vsp_scaler {
++	int input;
++
++	struct media_pad	*infmt_pad;
++	struct media_pad	*outfmt_pad;
++
++	struct vsp_scaler_template	templates[VSP_INPUT_MAX];
++};
++
+ typedef enum {
+ 	VSP_STATE_IDLE,
+ 	VSP_STATE_START,
+@@ -154,6 +177,11 @@ struct vsp_device {
+ 	int input_max;
+ 	struct vsp_media_pad input_pads[VSP_INPUT_MAX];
+ 	struct vsp_surface_state *input_surface_states[VSP_INPUT_MAX];
++	struct vsp_scaler *use_scaler[VSP_INPUT_MAX];
++
++	int scaler_count;
++	int scaler_max;
++	struct vsp_scaler scalers[VSP_SCALER_MAX];
+ };
+ 
+ static void
+@@ -219,7 +247,7 @@ vsp_init(struct media_device *media)
+ 	const struct media_device_info *info;
+ 	char buf[64], *p, *endp;
+ 	const char *device_name, *devname;
+-	int i;
++	int i, j;
+ 	
+ 	/* Get device name */
+ 	info = media_get_info(media);
+@@ -242,6 +270,7 @@ vsp_init(struct media_device *media)
+ 	vsp->base.device_name = device_name;
+ 	vsp->state = VSP_STATE_IDLE;
+ 	vsp->input_max = VSP_INPUT_MAX;
++	vsp->scaler_max = VSP_SCALER_MAX;
+ 	if (!vsp->input_pads)
+ 		goto error;
+ 
+@@ -310,6 +339,39 @@ vsp_init(struct media_device *media)
+ 		vsp_check_capabiility(vsp->input_pads[i].fd, media_entity_get_devname(entity));
+ 	}
+ 
++	/* Initialize scaler */
++	weston_log("Setting up scaler(s).\n");
++	for (i = 0; i < vsp->scaler_max; i++) {
++		/* create link templates */
++		for (j = 0; j < vsp->input_max; j++) {
++			snprintf(buf, sizeof(buf), vsp_scaler_links[0], device_name, j, device_name, i);
++			weston_log("parsing link: '%s'\n", buf);
++			vsp->scalers[i].templates[j].link0 = media_parse_link(media, buf, &endp);
++
++			snprintf(buf, sizeof(buf), vsp_scaler_links[1], device_name, i, device_name, j);
++			weston_log("parsing link: '%s'\n", buf);
++			vsp->scalers[i].templates[j].link1 = media_parse_link(media, buf, &endp);
++		}
++
++		/* get pads to setup UDS */
++		snprintf(buf, sizeof(buf), vsp_scaler_infmt, device_name, i);
++		weston_log("get a scaler input pad: '%s'\n", buf);
++		if (!(vsp->scalers[i].infmt_pad = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++
++		snprintf(buf, sizeof(buf), vsp_scaler_outfmt, device_name, i);
++		weston_log("get a scaler output pad: '%s'\n", buf);
++		if (!(vsp->scalers[i].outfmt_pad = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++
++		/* initialize input */
++		vsp->scalers[i].input = -1;
++	}
++
+ 	/* Initialize output */
+ 	weston_log("Setting up an output.\n");
+ 
+@@ -512,6 +574,10 @@ vsp_create_output(struct v4l2_renderer_device *dev, int width, int height)
+ 	outdev->surface_state.base.width = width;
+ 	outdev->surface_state.base.height = height;
+ 	outdev->surface_state.base.num_planes = 1;
++	outdev->surface_state.base.src_rect.width = width;
++	outdev->surface_state.base.src_rect.height = height;
++	outdev->surface_state.base.dst_rect.width = width;
++	outdev->surface_state.base.dst_rect.height = height;
+ 
+ 	/* we use this later to let output to be input for composition */
+ 	fmt = &outdev->surface_state.fmt;
+@@ -624,8 +690,6 @@ vsp_set_alpha(struct media_entity *entity, float alpha)
+ 	ctrl.id = V4L2_CID_ALPHA_COMPONENT;
+ 	ctrl.value = (__s32)(alpha * 0xff);
+ 
+-	weston_log("setting to %f(%d)\n", alpha, ctrl.value);
+-
+ 	if (ioctl(entity->fd, VIDIOC_S_CTRL, &ctrl) == -1) {
+ 		weston_log("failed to set alpha value (%d)\n", ctrl.value);
+ 		return -1;
+@@ -635,14 +699,32 @@ vsp_set_alpha(struct media_entity *entity, float alpha)
+ }
+ 
+ static int
+-vsp_comp_setup_inputs(struct vsp_device *vsp, struct vsp_media_pad *mpad, struct vsp_surface_state *vs, int enable)
++vsp_comp_setup_inputs(struct vsp_device *vsp, struct vsp_media_pad *mpad, struct vsp_scaler *scaler,
++		      struct vsp_surface_state *vs, int enable)
+ {
+ 	struct v4l2_mbus_framefmt format;
+ 
+ 	// enable link associated with this pad
+-	if (media_setup_link(vsp->base.media, mpad->link->source, mpad->link->sink, enable)) {
+-		weston_log("enabling media link setup failed.\n");
+-		return -1;
++	if (!scaler) {
++		if (media_setup_link(vsp->base.media, mpad->link->source, mpad->link->sink, enable)) {
++			weston_log("enabling media link setup failed.\n");
++			return -1;
++		}
++	} else {
++		struct vsp_scaler_template *temp = &scaler->templates[scaler->input];
++
++		if (enable)
++			media_setup_link(vsp->base.media, mpad->link->source, mpad->link->sink, 0);
++
++		if (media_setup_link(vsp->base.media, temp->link0->source, temp->link0->sink, enable)) {
++			weston_log("enabling scaler link0 setup failed.\n");
++			return -1;
++		}
++
++		if (media_setup_link(vsp->base.media, temp->link1->source, temp->link1->sink, enable)) {
++			weston_log("enabling scaler link1 setup failed.\n");
++			return -1;
++		}
+ 	}
+ 
+ 	if (!enable)
+@@ -672,6 +754,25 @@ vsp_comp_setup_inputs(struct vsp_device *vsp, struct vsp_media_pad *mpad, struct
+ 		return -1;
+ 	}
+ 
++	// if we enabled the scaler, we should set resize parameters.
++	if (scaler) {
++		// a sink of UDS should be the same as a source of RPF.
++		if (v4l2_subdev_set_format(scaler->infmt_pad->entity, &format, scaler->infmt_pad->index,
++					   V4L2_SUBDEV_FORMAT_ACTIVE)) {
++			weston_log("set input format of UDS via subdev failed.\n");
++			return -1;
++		}
++
++		// a source of UDS should be the same as a sink of BRU.
++		format.width  = vs->base.dst_rect.width;
++		format.height = vs->base.dst_rect.height;
++		if (v4l2_subdev_set_format(scaler->outfmt_pad->entity, &format, scaler->outfmt_pad->index,
++					   V4L2_SUBDEV_FORMAT_ACTIVE)) {
++			weston_log("set output format of UDS via subdev failed.\n");
++			return -1;
++		}
++	}
++
+ 	// so does the BRU input
+ 	if (v4l2_subdev_set_format(mpad->compose_pad->entity, &format, mpad->compose_pad->index,
+ 				   V4L2_SUBDEV_FORMAT_ACTIVE)) {
+@@ -728,12 +829,12 @@ vsp_comp_flush(struct vsp_device *vsp)
+ 
+ 	// enable links and queue buffer
+ 	for (i = 0; i < vsp->input_count; i++)
+-		vsp_comp_setup_inputs(vsp, &vsp->input_pads[i],
+-					     vsp->input_surface_states[i], 1);
++		vsp_comp_setup_inputs(vsp, &vsp->input_pads[i], vsp->use_scaler[i],
++				      vsp->input_surface_states[i], 1);
+ 
+ 	// disable unused inputs
+ 	for (i = vsp->input_count; i < vsp->input_max; i++)
+-		vsp_comp_setup_inputs(vsp, &vsp->input_pads[i], NULL, 0);
++		vsp_comp_setup_inputs(vsp, &vsp->input_pads[i], NULL, NULL, 0);
+ 
+ 	// get an output pad
+ 	fd = vsp->output_pad.fd;
+@@ -776,6 +877,17 @@ vsp_comp_flush(struct vsp_device *vsp)
+ 		}
+ 	}
+ 
++	// disable UDS if used
++	if (vsp->scaler_count) {
++		for (i = 0; i < vsp->input_count; i++) {
++			if (vsp->use_scaler[i]) {
++				vsp_comp_setup_inputs(vsp, &vsp->input_pads[i], vsp->use_scaler[i], NULL, 0);
++				vsp->use_scaler[i]->input = -1;
++				vsp->use_scaler[i] = NULL;
++			}
++		}
++		vsp->scaler_count = 0;
++	}
+ 	vsp->input_count = 0;
+ 	return 0;
+ 
+@@ -836,6 +948,24 @@ vsp_comp_set_view(struct v4l2_renderer_device *dev, struct v4l2_surface_state *s
+ 		return -1;
+ 	}
+ 
++	/* check if we need to use a scaler */
++	if (vs->base.dst_rect.width != vs->base.src_rect.width ||
++	    vs->base.dst_rect.height != vs->base.src_rect.height) {
++		weston_log("We need scaler! scaler! scaler! (%dx%d)->(%dx%d)\n",
++			vs->base.src_rect.width, vs->base.src_rect.height,
++			vs->base.dst_rect.width, vs->base.dst_rect.height);
++
++		// if all scalers are oocupied, flush and then retry.
++		if (vsp->scaler_count == vsp->scaler_max) {
++			vsp_comp_flush(vsp);
++			return vsp_comp_set_view(dev, surface_state);
++		}
++
++		vsp->scalers[vsp->scaler_count].input = vsp->input_count;
++		vsp->use_scaler[vsp->input_count] = &vsp->scalers[vsp->scaler_count];
++		vsp->scaler_count++;
++	}
++
+ 	// get an available input pad
+ 	vsp->input_surface_states[vsp->input_count] = vs;
+ 
+-- 
+1.7.9.5
+

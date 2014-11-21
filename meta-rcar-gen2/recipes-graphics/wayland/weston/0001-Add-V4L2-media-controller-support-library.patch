@@ -1,0 +1,2556 @@
+From 877e1b9a92367de22d365a165efa263bb2e6bb09 Mon Sep 17 00:00:00 2001
+From: Takanari Hayama <taki@igel.co.jp>
+Date: Thu, 14 Aug 2014 17:03:12 +0900
+Subject: [PATCH 01/22] Add V4L2 media controller support library.
+
+The library is for V4L2 media controller API. The library is
+taken from
+
+	git://linuxtv.org/v4l-utils.git
+---
+ src/media-ctl/libmediactl.c   |  957 +++++++++++++++++++++++++++++++++++++++++
+ src/media-ctl/libv4l2subdev.c |  759 ++++++++++++++++++++++++++++++++
+ src/media-ctl/mediactl-priv.h |   64 +++
+ src/media-ctl/mediactl.h      |  423 ++++++++++++++++++
+ src/media-ctl/tools.h         |   32 ++
+ src/media-ctl/v4l2subdev.h    |  258 +++++++++++
+ 6 files changed, 2493 insertions(+)
+ create mode 100644 src/media-ctl/libmediactl.c
+ create mode 100644 src/media-ctl/libv4l2subdev.c
+ create mode 100644 src/media-ctl/mediactl-priv.h
+ create mode 100644 src/media-ctl/mediactl.h
+ create mode 100644 src/media-ctl/tools.h
+ create mode 100644 src/media-ctl/v4l2subdev.h
+
+diff --git a/src/media-ctl/libmediactl.c b/src/media-ctl/libmediactl.c
+new file mode 100644
+index 0000000..ec360bd
+--- /dev/null
++++ b/src/media-ctl/libmediactl.c
+@@ -0,0 +1,957 @@
++/*
++ * Media controller interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include "config.h"
++
++#include <sys/ioctl.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++
++#include <ctype.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++#include <linux/media.h>
++#include <linux/videodev2.h>
++
++#include "mediactl.h"
++#include "mediactl-priv.h"
++#include "tools.h"
++
++/* -----------------------------------------------------------------------------
++ * Graph access
++ */
++
++struct media_pad *media_entity_remote_source(struct media_pad *pad)
++{
++	unsigned int i;
++
++	if (!(pad->flags & MEDIA_PAD_FL_SINK))
++		return NULL;
++
++	for (i = 0; i < pad->entity->num_links; ++i) {
++		struct media_link *link = &pad->entity->links[i];
++
++		if (!(link->flags & MEDIA_LNK_FL_ENABLED))
++			continue;
++
++		if (link->sink == pad)
++			return link->source;
++	}
++
++	return NULL;
++}
++
++struct media_entity *media_get_entity_by_name(struct media_device *media,
++					      const char *name, size_t length)
++{
++	unsigned int i;
++
++	/* A match is impossible if the entity name is longer than the maximum
++	 * size we can get from the kernel.
++	 */
++	if (length >= FIELD_SIZEOF(struct media_entity_desc, name))
++		return NULL;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		if (strncmp(entity->info.name, name, length) == 0 &&
++		    entity->info.name[length] == '\0')
++			return entity;
++	}
++
++	return NULL;
++}
++
++struct media_entity *media_get_entity_by_id(struct media_device *media,
++					    __u32 id)
++{
++	bool next = id & MEDIA_ENT_ID_FLAG_NEXT;
++	unsigned int i;
++
++	id &= ~MEDIA_ENT_ID_FLAG_NEXT;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		if ((entity->info.id == id && !next) ||
++		    (entity->info.id > id && next))
++			return entity;
++	}
++
++	return NULL;
++}
++
++unsigned int media_get_entities_count(struct media_device *media)
++{
++	return media->entities_count;
++}
++
++struct media_entity *media_get_entity(struct media_device *media, unsigned int index)
++{
++	if (index >= media->entities_count)
++		return NULL;
++
++	return &media->entities[index];
++}
++
++const struct media_pad *media_entity_get_pad(struct media_entity *entity, unsigned int index)
++{
++	if (index >= entity->info.pads)
++		return NULL;
++
++	return &entity->pads[index];
++}
++
++unsigned int media_entity_get_links_count(struct media_entity *entity)
++{
++	return entity->num_links;
++}
++
++const struct media_link *media_entity_get_link(struct media_entity *entity, unsigned int index)
++{
++	if (index >= entity->num_links)
++		return NULL;
++
++	return &entity->links[index];
++}
++
++const char *media_entity_get_devname(struct media_entity *entity)
++{
++	return entity->devname[0] ? entity->devname : NULL;
++}
++
++struct media_entity *media_get_default_entity(struct media_device *media,
++					      unsigned int type)
++{
++	switch (type) {
++	case MEDIA_ENT_T_DEVNODE_V4L:
++		return media->def.v4l;
++	case MEDIA_ENT_T_DEVNODE_FB:
++		return media->def.fb;
++	case MEDIA_ENT_T_DEVNODE_ALSA:
++		return media->def.alsa;
++	case MEDIA_ENT_T_DEVNODE_DVB:
++		return media->def.dvb;
++	}
++
++	return NULL;
++}
++
++const struct media_device_info *media_get_info(struct media_device *media)
++{
++	return &media->info;
++}
++
++const char *media_get_devnode(struct media_device *media)
++{
++	return media->devnode;
++}
++
++const struct media_entity_desc *media_entity_get_info(struct media_entity *entity)
++{
++	return &entity->info;
++}
++
++/* -----------------------------------------------------------------------------
++ * Open/close
++ */
++
++static int media_device_open(struct media_device *media)
++{
++	int ret;
++
++	if (media->fd != -1)
++		return 0;
++
++	media_dbg(media, "Opening media device %s\n", media->devnode);
++
++	media->fd = open(media->devnode, O_RDWR);
++	if (media->fd < 0) {
++		ret = -errno;
++		media_dbg(media, "%s: Can't open media device %s\n",
++			  __func__, media->devnode);
++		return ret;
++	}
++
++	return 0;
++}
++
++static void media_device_close(struct media_device *media)
++{
++	if (media->fd != -1) {
++		close(media->fd);
++		media->fd = -1;
++	}
++}
++
++/* -----------------------------------------------------------------------------
++ * Link setup
++ */
++
++int media_setup_link(struct media_device *media,
++		     struct media_pad *source,
++		     struct media_pad *sink,
++		     __u32 flags)
++{
++	struct media_link *link;
++	struct media_link_desc ulink;
++	unsigned int i;
++	int ret;
++
++	ret = media_device_open(media);
++	if (ret < 0)
++		goto done;
++
++	for (i = 0; i < source->entity->num_links; i++) {
++		link = &source->entity->links[i];
++
++		if (link->source->entity == source->entity &&
++		    link->source->index == source->index &&
++		    link->sink->entity == sink->entity &&
++		    link->sink->index == sink->index)
++			break;
++	}
++
++	if (i == source->entity->num_links) {
++		media_dbg(media, "%s: Link not found\n", __func__);
++		ret = -ENOENT;
++		goto done;
++	}
++
++	/* source pad */
++	ulink.source.entity = source->entity->info.id;
++	ulink.source.index = source->index;
++	ulink.source.flags = MEDIA_PAD_FL_SOURCE;
++
++	/* sink pad */
++	ulink.sink.entity = sink->entity->info.id;
++	ulink.sink.index = sink->index;
++	ulink.sink.flags = MEDIA_PAD_FL_SINK;
++
++	ulink.flags = flags | (link->flags & MEDIA_LNK_FL_IMMUTABLE);
++
++	ret = ioctl(media->fd, MEDIA_IOC_SETUP_LINK, &ulink);
++	if (ret == -1) {
++		ret = -errno;
++		media_dbg(media, "%s: Unable to setup link (%s)\n",
++			  __func__, strerror(errno));
++		goto done;
++	}
++
++	link->flags = ulink.flags;
++	link->twin->flags = ulink.flags;
++
++	ret = 0;
++
++done:
++	media_device_close(media);
++	return ret;
++}
++
++int media_reset_links(struct media_device *media)
++{
++	unsigned int i, j;
++	int ret;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		for (j = 0; j < entity->num_links; j++) {
++			struct media_link *link = &entity->links[j];
++
++			if (link->flags & MEDIA_LNK_FL_IMMUTABLE ||
++			    link->source->entity != entity)
++				continue;
++
++			ret = media_setup_link(media, link->source, link->sink,
++					       link->flags & ~MEDIA_LNK_FL_ENABLED);
++			if (ret < 0)
++				return ret;
++		}
++	}
++
++	return 0;
++}
++
++/* -----------------------------------------------------------------------------
++ * Entities, pads and links enumeration
++ */
++
++static struct media_link *media_entity_add_link(struct media_entity *entity)
++{
++	if (entity->num_links >= entity->max_links) {
++		struct media_link *links = entity->links;
++		unsigned int max_links = entity->max_links * 2;
++		unsigned int i;
++
++		links = realloc(links, max_links * sizeof *links);
++		if (links == NULL)
++			return NULL;
++
++		for (i = 0; i < entity->num_links; ++i)
++			links[i].twin->twin = &links[i];
++
++		entity->max_links = max_links;
++		entity->links = links;
++	}
++
++	return &entity->links[entity->num_links++];
++}
++
++static int media_enum_links(struct media_device *media)
++{
++	__u32 id;
++	int ret = 0;
++
++	for (id = 1; id <= media->entities_count; id++) {
++		struct media_entity *entity = &media->entities[id - 1];
++		struct media_links_enum links;
++		unsigned int i;
++
++		links.entity = entity->info.id;
++		links.pads = calloc(entity->info.pads, sizeof(struct media_pad_desc));
++		links.links = calloc(entity->info.links, sizeof(struct media_link_desc));
++
++		if (ioctl(media->fd, MEDIA_IOC_ENUM_LINKS, &links) < 0) {
++			ret = -errno;
++			media_dbg(media,
++				  "%s: Unable to enumerate pads and links (%s).\n",
++				  __func__, strerror(errno));
++			free(links.pads);
++			free(links.links);
++			return ret;
++		}
++
++		for (i = 0; i < entity->info.pads; ++i) {
++			entity->pads[i].entity = entity;
++			entity->pads[i].index = links.pads[i].index;
++			entity->pads[i].flags = links.pads[i].flags;
++		}
++
++		for (i = 0; i < entity->info.links; ++i) {
++			struct media_link_desc *link = &links.links[i];
++			struct media_link *fwdlink;
++			struct media_link *backlink;
++			struct media_entity *source;
++			struct media_entity *sink;
++
++			source = media_get_entity_by_id(media, link->source.entity);
++			sink = media_get_entity_by_id(media, link->sink.entity);
++
++			if (source == NULL || sink == NULL) {
++				media_dbg(media,
++					  "WARNING entity %u link %u from %u/%u to %u/%u is invalid!\n",
++					  id, i, link->source.entity,
++					  link->source.index,
++					  link->sink.entity,
++					  link->sink.index);
++				ret = -EINVAL;
++			} else {
++				fwdlink = media_entity_add_link(source);
++				fwdlink->source = &source->pads[link->source.index];
++				fwdlink->sink = &sink->pads[link->sink.index];
++				fwdlink->flags = link->flags;
++
++				backlink = media_entity_add_link(sink);
++				backlink->source = &source->pads[link->source.index];
++				backlink->sink = &sink->pads[link->sink.index];
++				backlink->flags = link->flags;
++
++				fwdlink->twin = backlink;
++				backlink->twin = fwdlink;
++			}
++		}
++
++		free(links.pads);
++		free(links.links);
++	}
++
++	return ret;
++}
++
++#ifdef HAVE_LIBUDEV
++
++#include <libudev.h>
++
++static inline int media_udev_open(struct udev **udev)
++{
++	*udev = udev_new();
++	if (*udev == NULL)
++		return -ENOMEM;
++	return 0;
++}
++
++static inline void media_udev_close(struct udev *udev)
++{
++	if (udev != NULL)
++		udev_unref(udev);
++}
++
++static int media_get_devname_udev(struct udev *udev,
++		struct media_entity *entity)
++{
++	struct udev_device *device;
++	dev_t devnum;
++	const char *p;
++	int ret = -ENODEV;
++
++	if (udev == NULL)
++		return -EINVAL;
++
++	devnum = makedev(entity->info.v4l.major, entity->info.v4l.minor);
++	media_dbg(entity->media, "looking up device: %u:%u\n",
++		  major(devnum), minor(devnum));
++	device = udev_device_new_from_devnum(udev, 'c', devnum);
++	if (device) {
++		p = udev_device_get_devnode(device);
++		if (p) {
++			strncpy(entity->devname, p, sizeof(entity->devname));
++			entity->devname[sizeof(entity->devname) - 1] = '\0';
++		}
++		ret = 0;
++	}
++
++	udev_device_unref(device);
++
++	return ret;
++}
++
++#else	/* HAVE_LIBUDEV */
++
++struct udev;
++
++static inline int media_udev_open(struct udev **udev) { return 0; }
++
++static inline void media_udev_close(struct udev *udev) { }
++
++static inline int media_get_devname_udev(struct udev *udev,
++		struct media_entity *entity)
++{
++	return -ENOTSUP;
++}
++
++#endif	/* HAVE_LIBUDEV */
++
++static int media_get_devname_sysfs(struct media_entity *entity)
++{
++	struct stat devstat;
++	char devname[32];
++	char sysname[32];
++	char target[1024];
++	char *p;
++	int ret;
++
++	sprintf(sysname, "/sys/dev/char/%u:%u", entity->info.v4l.major,
++		entity->info.v4l.minor);
++	ret = readlink(sysname, target, sizeof(target) - 1);
++	if (ret < 0)
++		return -errno;
++
++	target[ret] = '\0';
++	p = strrchr(target, '/');
++	if (p == NULL)
++		return -EINVAL;
++
++	sprintf(devname, "/dev/%s", p + 1);
++	ret = stat(devname, &devstat);
++	if (ret < 0)
++		return -errno;
++
++	/* Sanity check: udev might have reordered the device nodes.
++	 * Make sure the major/minor match. We should really use
++	 * libudev.
++	 */
++	if (major(devstat.st_rdev) == entity->info.v4l.major &&
++	    minor(devstat.st_rdev) == entity->info.v4l.minor)
++		strcpy(entity->devname, devname);
++
++	return 0;
++}
++
++static int media_enum_entities(struct media_device *media)
++{
++	struct media_entity *entity;
++	struct udev *udev;
++	unsigned int size;
++	__u32 id;
++	int ret;
++
++	ret = media_udev_open(&udev);
++	if (ret < 0)
++		media_dbg(media, "Can't get udev context\n");
++
++	for (id = 0, ret = 0; ; id = entity->info.id) {
++		size = (media->entities_count + 1) * sizeof(*media->entities);
++		media->entities = realloc(media->entities, size);
++
++		entity = &media->entities[media->entities_count];
++		memset(entity, 0, sizeof(*entity));
++		entity->fd = -1;
++		entity->info.id = id | MEDIA_ENT_ID_FLAG_NEXT;
++		entity->media = media;
++
++		ret = ioctl(media->fd, MEDIA_IOC_ENUM_ENTITIES, &entity->info);
++		if (ret < 0) {
++			ret = errno != EINVAL ? -errno : 0;
++			break;
++		}
++
++		/* Number of links (for outbound links) plus number of pads (for
++		 * inbound links) is a good safe initial estimate of the total
++		 * number of links.
++		 */
++		entity->max_links = entity->info.pads + entity->info.links;
++
++		entity->pads = malloc(entity->info.pads * sizeof(*entity->pads));
++		entity->links = malloc(entity->max_links * sizeof(*entity->links));
++		if (entity->pads == NULL || entity->links == NULL) {
++			ret = -ENOMEM;
++			break;
++		}
++
++		media->entities_count++;
++
++		if (entity->info.flags & MEDIA_ENT_FL_DEFAULT) {
++			switch (entity->info.type) {
++			case MEDIA_ENT_T_DEVNODE_V4L:
++				media->def.v4l = entity;
++				break;
++			case MEDIA_ENT_T_DEVNODE_FB:
++				media->def.fb = entity;
++				break;
++			case MEDIA_ENT_T_DEVNODE_ALSA:
++				media->def.alsa = entity;
++				break;
++			case MEDIA_ENT_T_DEVNODE_DVB:
++				media->def.dvb = entity;
++				break;
++			}
++		}
++
++		/* Find the corresponding device name. */
++		if (media_entity_type(entity) != MEDIA_ENT_T_DEVNODE &&
++		    media_entity_type(entity) != MEDIA_ENT_T_V4L2_SUBDEV)
++			continue;
++
++		/* Try to get the device name via udev */
++		if (!media_get_devname_udev(udev, entity))
++			continue;
++
++		/* Fall back to get the device name via sysfs */
++		media_get_devname_sysfs(entity);
++	}
++
++	media_udev_close(udev);
++	return ret;
++}
++
++int media_device_enumerate(struct media_device *media)
++{
++	int ret;
++
++	if (media->entities)
++		return 0;
++
++	ret = media_device_open(media);
++	if (ret < 0)
++		return ret;
++
++	ret = ioctl(media->fd, MEDIA_IOC_DEVICE_INFO, &media->info);
++	if (ret < 0) {
++		ret = -errno;
++		media_dbg(media, "%s: Unable to retrieve media device "
++			  "information for device %s (%s)\n", __func__,
++			  media->devnode, strerror(errno));
++		goto done;
++	}
++
++	media_dbg(media, "Enumerating entities\n");
++
++	ret = media_enum_entities(media);
++	if (ret < 0) {
++		media_dbg(media,
++			  "%s: Unable to enumerate entities for device %s (%s)\n",
++			  __func__, media->devnode, strerror(-ret));
++		goto done;
++	}
++
++	media_dbg(media, "Found %u entities\n", media->entities_count);
++	media_dbg(media, "Enumerating pads and links\n");
++
++	ret = media_enum_links(media);
++	if (ret < 0) {
++		media_dbg(media,
++			  "%s: Unable to enumerate pads and linksfor device %s\n",
++			  __func__, media->devnode);
++		goto done;
++	}
++
++	ret = 0;
++
++done:
++	media_device_close(media);
++	return ret;
++}
++
++/* -----------------------------------------------------------------------------
++ * Create/destroy
++ */
++
++static void media_debug_default(void *ptr, ...)
++{
++}
++
++void media_debug_set_handler(struct media_device *media,
++			     void (*debug_handler)(void *, ...),
++			     void *debug_priv)
++{
++	if (debug_handler) {
++		media->debug_handler = debug_handler;
++		media->debug_priv = debug_priv;
++	} else {
++		media->debug_handler = media_debug_default;
++		media->debug_priv = NULL;
++	}
++}
++
++static struct media_device *__media_device_new(void)
++{
++	struct media_device *media;
++
++	media = calloc(1, sizeof(*media));
++	if (media == NULL)
++		return NULL;
++
++	media->fd = -1;
++	media->refcount = 1;
++
++	media_debug_set_handler(media, NULL, NULL);
++
++	return media;
++}
++
++struct media_device *media_device_new(const char *devnode)
++{
++	struct media_device *media;
++
++	media = __media_device_new();
++	if (media == NULL)
++		return NULL;
++
++	media->devnode = strdup(devnode);
++	if (media->devnode == NULL) {
++		media_device_unref(media);
++		return NULL;
++	}
++
++	return media;
++}
++
++struct media_device *media_device_new_emulated(struct media_device_info *info)
++{
++	struct media_device *media;
++
++	media = __media_device_new();
++	if (media == NULL)
++		return NULL;
++
++	media->info = *info;
++
++	return media;
++}
++
++struct media_device *media_device_ref(struct media_device *media)
++{
++	media->refcount++;
++	return media;
++}
++
++void media_device_unref(struct media_device *media)
++{
++	unsigned int i;
++
++	media->refcount--;
++	if (media->refcount > 0)
++		return;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		free(entity->pads);
++		free(entity->links);
++		if (entity->fd != -1)
++			close(entity->fd);
++	}
++
++	free(media->entities);
++	free(media->devnode);
++	free(media);
++}
++
++int media_device_add_entity(struct media_device *media,
++			    const struct media_entity_desc *desc,
++			    const char *devnode)
++{
++	struct media_entity **defent = NULL;
++	struct media_entity *entity;
++	unsigned int size;
++
++	size = (media->entities_count + 1) * sizeof(*media->entities);
++	entity = realloc(media->entities, size);
++	if (entity == NULL)
++		return -ENOMEM;
++
++	media->entities = entity;
++	media->entities_count++;
++
++	entity = &media->entities[media->entities_count - 1];
++	memset(entity, 0, sizeof *entity);
++
++	entity->fd = -1;
++	entity->media = media;
++	strncpy(entity->devname, devnode, sizeof entity->devname);
++	entity->devname[sizeof entity->devname - 1] = '\0';
++
++	entity->info.id = 0;
++	entity->info.type = desc->type;
++	entity->info.flags = 0;
++	memcpy(entity->info.name, desc->name, sizeof entity->info.name);
++
++	switch (entity->info.type) {
++	case MEDIA_ENT_T_DEVNODE_V4L:
++		defent = &media->def.v4l;
++		entity->info.v4l = desc->v4l;
++		break;
++	case MEDIA_ENT_T_DEVNODE_FB:
++		defent = &media->def.fb;
++		entity->info.fb = desc->fb;
++		break;
++	case MEDIA_ENT_T_DEVNODE_ALSA:
++		defent = &media->def.alsa;
++		entity->info.alsa = desc->alsa;
++		break;
++	case MEDIA_ENT_T_DEVNODE_DVB:
++		defent = &media->def.dvb;
++		entity->info.dvb = desc->dvb;
++		break;
++	}
++
++	if (desc->flags & MEDIA_ENT_FL_DEFAULT) {
++		entity->info.flags |= MEDIA_ENT_FL_DEFAULT;
++		if (defent)
++			*defent = entity;
++	}
++
++	return 0;
++}
++
++struct media_pad *media_parse_pad(struct media_device *media,
++				  const char *p, char **endp)
++{
++	unsigned int entity_id, pad;
++	struct media_entity *entity;
++	char *end;
++
++	/* endp can be NULL. To avoid spreading NULL checks across the function,
++	 * set endp to &end in that case.
++	 */
++	if (endp == NULL)
++		endp = &end;
++
++	for (; isspace(*p); ++p);
++
++	if (*p == '"' || *p == '\'') {
++		for (end = (char *)p + 1; *end && *end != '"' && *end != '\''; ++end);
++		if (*end != '"' && *end != '\'') {
++			media_dbg(media, "missing matching '\"'\n");
++			*endp = end;
++			return NULL;
++		}
++
++		entity = media_get_entity_by_name(media, p + 1, end - p - 1);
++		if (entity == NULL) {
++			media_dbg(media, "no such entity \"%.*s\"\n", end - p - 1, p + 1);
++			*endp = (char *)p + 1;
++			return NULL;
++		}
++
++		++end;
++	} else {
++		entity_id = strtoul(p, &end, 10);
++		entity = media_get_entity_by_id(media, entity_id);
++		if (entity == NULL) {
++			media_dbg(media, "no such entity %d\n", entity_id);
++			*endp = (char *)p;
++			return NULL;
++		}
++	}
++	for (; isspace(*end); ++end);
++
++	if (*end != ':') {
++		media_dbg(media, "Expected ':'\n", *end);
++		*endp = end;
++		return NULL;
++	}
++
++	for (p = end + 1; isspace(*p); ++p);
++
++	pad = strtoul(p, &end, 10);
++
++	if (pad >= entity->info.pads) {
++		media_dbg(media, "No pad '%d' on entity \"%s\". Maximum pad number is %d\n",
++				pad, entity->info.name, entity->info.pads - 1);
++		*endp = (char *)p;
++		return NULL;
++	}
++
++	for (p = end; isspace(*p); ++p);
++	*endp = (char *)p;
++
++	return &entity->pads[pad];
++}
++
++struct media_link *media_parse_link(struct media_device *media,
++				    const char *p, char **endp)
++{
++	struct media_link *link;
++	struct media_pad *source;
++	struct media_pad *sink;
++	unsigned int i;
++	char *end;
++
++	source = media_parse_pad(media, p, &end);
++	if (source == NULL) {
++		*endp = end;
++		return NULL;
++	}
++
++	if (end[0] != '-' || end[1] != '>') {
++		*endp = end;
++		media_dbg(media, "Expected '->'\n");
++		return NULL;
++	}
++
++	p = end + 2;
++
++	sink = media_parse_pad(media, p, &end);
++	if (sink == NULL) {
++		*endp = end;
++		return NULL;
++	}
++
++	*endp = end;
++
++	for (i = 0; i < source->entity->num_links; i++) {
++		link = &source->entity->links[i];
++
++		if (link->source == source && link->sink == sink)
++			return link;
++	}
++
++	media_dbg(media, "No link between \"%s\":%d and \"%s\":%d\n",
++			source->entity->info.name, source->index,
++			sink->entity->info.name, sink->index);
++	return NULL;
++}
++
++int media_parse_setup_link(struct media_device *media,
++			   const char *p, char **endp)
++{
++	struct media_link *link;
++	__u32 flags;
++	char *end;
++
++	link = media_parse_link(media, p, &end);
++	if (link == NULL) {
++		media_dbg(media,
++			  "%s: Unable to parse link\n", __func__);
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end;
++	if (*p++ != '[') {
++		media_dbg(media, "Unable to parse link flags: expected '['.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	flags = strtoul(p, &end, 10);
++	for (p = end; isspace(*p); p++);
++	if (*p++ != ']') {
++		media_dbg(media, "Unable to parse link flags: expected ']'.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	for (; isspace(*p); p++);
++	*endp = (char *)p;
++
++	media_dbg(media,
++		  "Setting up link %u:%u -> %u:%u [%u]\n",
++		  link->source->entity->info.id, link->source->index,
++		  link->sink->entity->info.id, link->sink->index,
++		  flags);
++
++	return media_setup_link(media, link->source, link->sink, flags);
++}
++
++void media_print_streampos(struct media_device *media, const char *p,
++			   const char *end)
++{
++	int pos;
++
++	pos = end - p + 1;
++
++	if (pos < 0)
++		pos = 0;
++	if (pos > strlen(p))
++		pos = strlen(p);
++
++	media_dbg(media, "\n");
++	media_dbg(media, " %s\n", p);
++	media_dbg(media, " %*s\n", pos, "^");
++}
++
++int media_parse_setup_links(struct media_device *media, const char *p)
++{
++	char *end;
++	int ret;
++
++	do {
++		ret = media_parse_setup_link(media, p, &end);
++		if (ret < 0) {
++			media_print_streampos(media, p, end);
++			return ret;
++		}
++
++		p = end + 1;
++	} while (*end == ',');
++
++	return *end ? -EINVAL : 0;
++}
+diff --git a/src/media-ctl/libv4l2subdev.c b/src/media-ctl/libv4l2subdev.c
+new file mode 100644
+index 0000000..4ede4fa
+--- /dev/null
++++ b/src/media-ctl/libv4l2subdev.c
+@@ -0,0 +1,759 @@
++/*
++ * V4L2 subdev interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <sys/ioctl.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++
++#include <ctype.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++#include <linux/v4l2-subdev.h>
++
++#include "mediactl.h"
++#include "mediactl-priv.h"
++#include "tools.h"
++#include "v4l2subdev.h"
++
++int v4l2_subdev_open(struct media_entity *entity)
++{
++	if (entity->fd != -1)
++		return 0;
++
++	entity->fd = open(entity->devname, O_RDWR);
++	if (entity->fd == -1) {
++		int ret = -errno;
++		media_dbg(entity->media,
++			  "%s: Failed to open subdev device node %s\n", __func__,
++			  entity->devname);
++		return ret;
++	}
++
++	return 0;
++}
++
++void v4l2_subdev_close(struct media_entity *entity)
++{
++	close(entity->fd);
++	entity->fd = -1;
++}
++
++int v4l2_subdev_get_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which)
++{
++	struct v4l2_subdev_format fmt;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&fmt, 0, sizeof(fmt));
++	fmt.pad = pad;
++	fmt.which = which;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_FMT, &fmt);
++	if (ret < 0)
++		return -errno;
++
++	*format = fmt.format;
++	return 0;
++}
++
++int v4l2_subdev_set_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which)
++{
++	struct v4l2_subdev_format fmt;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&fmt, 0, sizeof(fmt));
++	fmt.pad = pad;
++	fmt.which = which;
++	fmt.format = *format;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_FMT, &fmt);
++	if (ret < 0)
++		return -errno;
++
++	*format = fmt.format;
++	return 0;
++}
++
++int v4l2_subdev_get_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which)
++{
++	union {
++		struct v4l2_subdev_selection sel;
++		struct v4l2_subdev_crop crop;
++	} u;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&u.sel, 0, sizeof(u.sel));
++	u.sel.pad = pad;
++	u.sel.target = target;
++	u.sel.which = which;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_SELECTION, &u.sel);
++	if (ret >= 0) {
++		*rect = u.sel.r;
++		return 0;
++	}
++	if (errno != ENOTTY || target != V4L2_SEL_TGT_CROP)
++		return -errno;
++
++	memset(&u.crop, 0, sizeof(u.crop));
++	u.crop.pad = pad;
++	u.crop.which = which;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_CROP, &u.crop);
++	if (ret < 0)
++		return -errno;
++
++	*rect = u.crop.rect;
++	return 0;
++}
++
++int v4l2_subdev_set_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which)
++{
++	union {
++		struct v4l2_subdev_selection sel;
++		struct v4l2_subdev_crop crop;
++	} u;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&u.sel, 0, sizeof(u.sel));
++	u.sel.pad = pad;
++	u.sel.target = target;
++	u.sel.which = which;
++	u.sel.r = *rect;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_SELECTION, &u.sel);
++	if (ret >= 0) {
++		*rect = u.sel.r;
++		return 0;
++	}
++	if (errno != ENOTTY || target != V4L2_SEL_TGT_CROP)
++		return -errno;
++
++	memset(&u.crop, 0, sizeof(u.crop));
++	u.crop.pad = pad;
++	u.crop.which = which;
++	u.crop.rect = *rect;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_CROP, &u.crop);
++	if (ret < 0)
++		return -errno;
++
++	*rect = u.crop.rect;
++	return 0;
++}
++
++#if 0
++int v4l2_subdev_get_dv_timings_caps(struct media_entity *entity,
++	struct v4l2_dv_timings_cap *caps)
++{
++	unsigned int pad = caps->pad;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(caps, 0, sizeof(*caps));
++	caps->pad = pad;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_DV_TIMINGS_CAP, caps);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++
++int v4l2_subdev_query_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings)
++{
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(timings, 0, sizeof(*timings));
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_QUERY_DV_TIMINGS, timings);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++
++int v4l2_subdev_get_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings)
++{
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(timings, 0, sizeof(*timings));
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_DV_TIMINGS, timings);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++
++int v4l2_subdev_set_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings)
++{
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_DV_TIMINGS, timings);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++#endif
++
++int v4l2_subdev_get_frame_interval(struct media_entity *entity,
++				   struct v4l2_fract *interval)
++{
++	struct v4l2_subdev_frame_interval ival;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&ival, 0, sizeof(ival));
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_FRAME_INTERVAL, &ival);
++	if (ret < 0)
++		return -errno;
++
++	*interval = ival.interval;
++	return 0;
++}
++
++int v4l2_subdev_set_frame_interval(struct media_entity *entity,
++				   struct v4l2_fract *interval)
++{
++	struct v4l2_subdev_frame_interval ival;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&ival, 0, sizeof(ival));
++	ival.interval = *interval;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_FRAME_INTERVAL, &ival);
++	if (ret < 0)
++		return -errno;
++
++	*interval = ival.interval;
++	return 0;
++}
++
++static int v4l2_subdev_parse_format(struct media_device *media,
++				    struct v4l2_mbus_framefmt *format,
++				    const char *p, char **endp)
++{
++	enum v4l2_mbus_pixelcode code;
++	unsigned int width, height;
++	char *end;
++
++	/*
++	 * Compatibility with the old syntax: consider space as valid
++	 * separator between the media bus pixel code and the size.
++	 */
++	for (; isspace(*p); ++p);
++	for (end = (char *)p;
++	     *end != '/' && *end != ' ' && *end != '\0'; ++end);
++
++	code = v4l2_subdev_string_to_pixelcode(p, end - p);
++	if (code == (enum v4l2_mbus_pixelcode)-1) {
++		media_dbg(media, "Invalid pixel code '%.*s'\n", end - p, p);
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	width = strtoul(p, &end, 10);
++	if (*end != 'x') {
++		media_dbg(media, "Expected 'x'\n");
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	height = strtoul(p, &end, 10);
++	*endp = end;
++
++	memset(format, 0, sizeof(*format));
++	format->width = width;
++	format->height = height;
++	format->code = code;
++
++	return 0;
++}
++
++static int v4l2_subdev_parse_rectangle(struct media_device *media,
++				       struct v4l2_rect *r, const char *p,
++				       char **endp)
++{
++	char *end;
++
++	if (*p++ != '(') {
++		media_dbg(media, "Expected '('\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	r->left = strtoul(p, &end, 10);
++	if (*end != ',') {
++		media_dbg(media, "Expected ','\n");
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	r->top = strtoul(p, &end, 10);
++	if (*end++ != ')') {
++		media_dbg(media, "Expected ')'\n");
++		*endp = end - 1;
++		return -EINVAL;
++	}
++	if (*end != '/') {
++		media_dbg(media, "Expected '/'\n");
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	r->width = strtoul(p, &end, 10);
++	if (*end != 'x') {
++		media_dbg(media, "Expected 'x'\n");
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	r->height = strtoul(p, &end, 10);
++	*endp = end;
++
++	return 0;
++}
++
++static int v4l2_subdev_parse_frame_interval(struct media_device *media,
++					    struct v4l2_fract *interval,
++					    const char *p, char **endp)
++{
++	char *end;
++
++	for (; isspace(*p); ++p);
++
++	interval->numerator = strtoul(p, &end, 10);
++
++	for (p = end; isspace(*p); ++p);
++	if (*p++ != '/') {
++		media_dbg(media, "Expected '/'\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	for (; isspace(*p); ++p);
++	interval->denominator = strtoul(p, &end, 10);
++
++	*endp = end;
++	return 0;
++}
++
++/*
++ * The debate over whether this function should be named icanhasstr() instead
++ * has been strong and heated. If you feel like this would be an important
++ * change, patches are welcome (or not).
++ */
++static bool strhazit(const char *str, const char **p)
++{
++	int len = strlen(str);
++
++	if (strncmp(str, *p, len))
++		return false;
++
++	for (*p += len; isspace(**p); ++*p);
++	return true;
++}
++
++static struct media_pad *v4l2_subdev_parse_pad_format(
++	struct media_device *media, struct v4l2_mbus_framefmt *format,
++	struct v4l2_rect *crop, struct v4l2_rect *compose,
++	struct v4l2_fract *interval, const char *p, char **endp)
++{
++	struct media_pad *pad;
++	bool first;
++	char *end;
++	int ret;
++
++	for (; isspace(*p); ++p);
++
++	pad = media_parse_pad(media, p, &end);
++	if (pad == NULL) {
++		*endp = end;
++		return NULL;
++	}
++
++	for (p = end; isspace(*p); ++p);
++	if (*p++ != '[') {
++		media_dbg(media, "Expected '['\n");
++		*endp = (char *)p - 1;
++		return NULL;
++	}
++
++	for (first = true; ; first = false) {
++		for (; isspace(*p); p++);
++
++		/*
++		 * Backward compatibility: if the first property starts with an
++		 * uppercase later, process it as a format description.
++		 */
++		if (strhazit("fmt:", &p) || (first && isupper(*p))) {
++			ret = v4l2_subdev_parse_format(media, format, p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			p = end;
++			continue;
++		}
++
++		/*
++		 * Backward compatibility: crop rectangles can be specified
++		 * implicitly without the 'crop:' property name.
++		 */
++		if (strhazit("crop:", &p) || *p == '(') {
++			ret = v4l2_subdev_parse_rectangle(media, crop, p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			p = end;
++			continue;
++		}
++
++		if (strhazit("compose:", &p)) {
++			ret = v4l2_subdev_parse_rectangle(media, compose, p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			for (p = end; isspace(*p); p++);
++			continue;
++		}
++
++		if (*p == '@') {
++			ret = v4l2_subdev_parse_frame_interval(media, interval, ++p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			p = end;
++			continue;
++		}
++
++		break;
++	}
++
++	if (*p != ']') {
++		media_dbg(media, "Expected ']'\n");
++		*endp = (char *)p;
++		return NULL;
++	}
++
++	*endp = (char *)p + 1;
++	return pad;
++}
++
++static int set_format(struct media_pad *pad,
++		      struct v4l2_mbus_framefmt *format)
++{
++	int ret;
++
++	if (format->width == 0 || format->height == 0)
++		return 0;
++
++	media_dbg(pad->entity->media,
++		  "Setting up format %s %ux%u on pad %s/%u\n",
++		  v4l2_subdev_pixelcode_to_string(format->code),
++		  format->width, format->height,
++		  pad->entity->info.name, pad->index);
++
++	ret = v4l2_subdev_set_format(pad->entity, format, pad->index,
++				     V4L2_SUBDEV_FORMAT_ACTIVE);
++	if (ret < 0) {
++		media_dbg(pad->entity->media,
++			  "Unable to set format: %s (%d)\n",
++			  strerror(-ret), ret);
++		return ret;
++	}
++
++	media_dbg(pad->entity->media,
++		  "Format set: %s %ux%u\n",
++		  v4l2_subdev_pixelcode_to_string(format->code),
++		  format->width, format->height);
++
++	return 0;
++}
++
++static int set_selection(struct media_pad *pad, unsigned int target,
++			 struct v4l2_rect *rect)
++{
++	int ret;
++
++	if (rect->left == -1 || rect->top == -1)
++		return 0;
++
++	media_dbg(pad->entity->media,
++		  "Setting up selection target %u rectangle (%u,%u)/%ux%u on pad %s/%u\n",
++		  target, rect->left, rect->top, rect->width, rect->height,
++		  pad->entity->info.name, pad->index);
++
++	ret = v4l2_subdev_set_selection(pad->entity, rect, pad->index,
++					target, V4L2_SUBDEV_FORMAT_ACTIVE);
++	if (ret < 0) {
++		media_dbg(pad->entity->media,
++			  "Unable to set selection rectangle: %s (%d)\n",
++			  strerror(-ret), ret);
++		return ret;
++	}
++
++	media_dbg(pad->entity->media,
++		  "Selection rectangle set: (%u,%u)/%ux%u\n",
++		  rect->left, rect->top, rect->width, rect->height);
++
++	return 0;
++}
++
++static int set_frame_interval(struct media_entity *entity,
++			      struct v4l2_fract *interval)
++{
++	int ret;
++
++	if (interval->numerator == 0)
++		return 0;
++
++	media_dbg(entity->media,
++		  "Setting up frame interval %u/%u on entity %s\n",
++		  interval->numerator, interval->denominator,
++		  entity->info.name);
++
++	ret = v4l2_subdev_set_frame_interval(entity, interval);
++	if (ret < 0) {
++		media_dbg(entity->media,
++			  "Unable to set frame interval: %s (%d)",
++			  strerror(-ret), ret);
++		return ret;
++	}
++
++	media_dbg(entity->media, "Frame interval set: %u/%u\n",
++		  interval->numerator, interval->denominator);
++
++	return 0;
++}
++
++
++static int v4l2_subdev_parse_setup_format(struct media_device *media,
++					  const char *p, char **endp)
++{
++	struct v4l2_mbus_framefmt format = { 0, 0, 0 };
++	struct media_pad *pad;
++	struct v4l2_rect crop = { -1, -1, -1, -1 };
++	struct v4l2_rect compose = crop;
++	struct v4l2_fract interval = { 0, 0 };
++	unsigned int i;
++	char *end;
++	int ret;
++
++	pad = v4l2_subdev_parse_pad_format(media, &format, &crop, &compose,
++					   &interval, p, &end);
++	if (pad == NULL) {
++		media_print_streampos(media, p, end);
++		media_dbg(media, "Unable to parse format\n");
++		return -EINVAL;
++	}
++
++	if (pad->flags & MEDIA_PAD_FL_SINK) {
++		ret = set_format(pad, &format);
++		if (ret < 0)
++			return ret;
++	}
++
++	ret = set_selection(pad, V4L2_SEL_TGT_CROP, &crop);
++	if (ret < 0)
++		return ret;
++
++	ret = set_selection(pad, V4L2_SEL_TGT_COMPOSE, &compose);
++	if (ret < 0)
++		return ret;
++
++	if (pad->flags & MEDIA_PAD_FL_SOURCE) {
++		ret = set_format(pad, &format);
++		if (ret < 0)
++			return ret;
++	}
++
++	ret = set_frame_interval(pad->entity, &interval);
++	if (ret < 0)
++		return ret;
++
++
++	/* If the pad is an output pad, automatically set the same format on
++	 * the remote subdev input pads, if any.
++	 */
++	if (pad->flags & MEDIA_PAD_FL_SOURCE) {
++		for (i = 0; i < pad->entity->num_links; ++i) {
++			struct media_link *link = &pad->entity->links[i];
++			struct v4l2_mbus_framefmt remote_format;
++
++			if (!(link->flags & MEDIA_LNK_FL_ENABLED))
++				continue;
++
++			if (link->source == pad &&
++			    link->sink->entity->info.type == MEDIA_ENT_T_V4L2_SUBDEV) {
++				remote_format = format;
++				set_format(link->sink, &remote_format);
++			}
++		}
++	}
++
++	*endp = end;
++	return 0;
++}
++
++int v4l2_subdev_parse_setup_formats(struct media_device *media, const char *p)
++{
++	char *end;
++	int ret;
++
++	do {
++		ret = v4l2_subdev_parse_setup_format(media, p, &end);
++		if (ret < 0)
++			return ret;
++
++		p = end + 1;
++	} while (*end == ',');
++
++	return *end ? -EINVAL : 0;
++}
++
++static struct {
++	const char *name;
++	enum v4l2_mbus_pixelcode code;
++} mbus_formats[] = {
++	{ "Y8", V4L2_MBUS_FMT_Y8_1X8},
++	{ "Y10", V4L2_MBUS_FMT_Y10_1X10 },
++	{ "Y12", V4L2_MBUS_FMT_Y12_1X12 },
++	{ "YUYV", V4L2_MBUS_FMT_YUYV8_1X16 },
++	{ "YUYV1_5X8", V4L2_MBUS_FMT_YUYV8_1_5X8 },
++	{ "YUYV2X8", V4L2_MBUS_FMT_YUYV8_2X8 },
++	{ "UYVY", V4L2_MBUS_FMT_UYVY8_1X16 },
++	{ "UYVY1_5X8", V4L2_MBUS_FMT_UYVY8_1_5X8 },
++	{ "UYVY2X8", V4L2_MBUS_FMT_UYVY8_2X8 },
++	{ "SBGGR8", V4L2_MBUS_FMT_SBGGR8_1X8 },
++	{ "SGBRG8", V4L2_MBUS_FMT_SGBRG8_1X8 },
++	{ "SGRBG8", V4L2_MBUS_FMT_SGRBG8_1X8 },
++	{ "SRGGB8", V4L2_MBUS_FMT_SRGGB8_1X8 },
++	{ "SBGGR10", V4L2_MBUS_FMT_SBGGR10_1X10 },
++	{ "SGBRG10", V4L2_MBUS_FMT_SGBRG10_1X10 },
++	{ "SGRBG10", V4L2_MBUS_FMT_SGRBG10_1X10 },
++	{ "SRGGB10", V4L2_MBUS_FMT_SRGGB10_1X10 },
++	{ "SBGGR10_DPCM8", V4L2_MBUS_FMT_SBGGR10_DPCM8_1X8 },
++	{ "SGBRG10_DPCM8", V4L2_MBUS_FMT_SGBRG10_DPCM8_1X8 },
++	{ "SGRBG10_DPCM8", V4L2_MBUS_FMT_SGRBG10_DPCM8_1X8 },
++	{ "SRGGB10_DPCM8", V4L2_MBUS_FMT_SRGGB10_DPCM8_1X8 },
++	{ "SBGGR12", V4L2_MBUS_FMT_SBGGR12_1X12 },
++	{ "SGBRG12", V4L2_MBUS_FMT_SGBRG12_1X12 },
++	{ "SGRBG12", V4L2_MBUS_FMT_SGRBG12_1X12 },
++	{ "SRGGB12", V4L2_MBUS_FMT_SRGGB12_1X12 },
++	{ "AYUV32", V4L2_MBUS_FMT_AYUV8_1X32 },
++	{ "ARGB32", V4L2_MBUS_FMT_ARGB8888_1X32 },
++};
++
++const char *v4l2_subdev_pixelcode_to_string(enum v4l2_mbus_pixelcode code)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(mbus_formats); ++i) {
++		if (mbus_formats[i].code == code)
++			return mbus_formats[i].name;
++	}
++
++	return "unknown";
++}
++
++enum v4l2_mbus_pixelcode v4l2_subdev_string_to_pixelcode(const char *string,
++							 unsigned int length)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(mbus_formats); ++i) {
++		if (strncmp(mbus_formats[i].name, string, length) == 0)
++			break;
++	}
++
++	if (i == ARRAY_SIZE(mbus_formats))
++		return (enum v4l2_mbus_pixelcode)-1;
++
++	return mbus_formats[i].code;
++}
+diff --git a/src/media-ctl/mediactl-priv.h b/src/media-ctl/mediactl-priv.h
+new file mode 100644
+index 0000000..a0d3a55
+--- /dev/null
++++ b/src/media-ctl/mediactl-priv.h
+@@ -0,0 +1,64 @@
++/*
++ * Media controller interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __MEDIA_PRIV_H__
++#define __MEDIA_PRIV_H__
++
++#include <linux/media.h>
++
++#include "mediactl.h"
++
++struct media_entity {
++	struct media_device *media;
++	struct media_entity_desc info;
++	struct media_pad *pads;
++	struct media_link *links;
++	unsigned int max_links;
++	unsigned int num_links;
++
++	char devname[32];
++	int fd;
++};
++
++struct media_device {
++	int fd;
++	int refcount;
++	char *devnode;
++
++	struct media_device_info info;
++	struct media_entity *entities;
++	unsigned int entities_count;
++
++	void (*debug_handler)(void *, ...);
++	void *debug_priv;
++
++	struct {
++		struct media_entity *v4l;
++		struct media_entity *fb;
++		struct media_entity *alsa;
++		struct media_entity *dvb;
++	} def;
++};
++
++#define media_dbg(media, ...) \
++	(media)->debug_handler((media)->debug_priv, __VA_ARGS__)
++
++#endif /* __MEDIA_PRIV_H__ */
+diff --git a/src/media-ctl/mediactl.h b/src/media-ctl/mediactl.h
+new file mode 100644
+index 0000000..77ac182
+--- /dev/null
++++ b/src/media-ctl/mediactl.h
+@@ -0,0 +1,423 @@
++/*
++ * Media controller interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __MEDIA_H__
++#define __MEDIA_H__
++
++#include <linux/media.h>
++
++struct media_link {
++	struct media_pad *source;
++	struct media_pad *sink;
++	struct media_link *twin;
++	__u32 flags;
++	__u32 padding[3];
++};
++
++struct media_pad {
++	struct media_entity *entity;
++	__u32 index;
++	__u32 flags;
++	__u32 padding[3];
++};
++
++struct media_device;
++struct media_entity;
++
++/**
++ * @brief Create a new media device.
++ * @param devnode - device node path.
++ *
++ * Create a media device instance for the given device node and return it. The
++ * device node is not accessed by this function, device node access errors will
++ * not be caught and reported here. The media device needs to be enumerated
++ * before it can be accessed, see media_device_enumerate().
++ *
++ * Media devices are reference-counted, see media_device_ref() and
++ * media_device_unref() for more information.
++ *
++ * @return A pointer to the new media device or NULL if memory cannot be
++ * allocated.
++ */
++struct media_device *media_device_new(const char *devnode);
++
++/**
++ * @brief Create a new emulated media device.
++ * @param info - device information.
++ *
++ * Emulated media devices are userspace-only objects not backed by a kernel
++ * media device. They are created for ALSA and V4L2 devices that are not
++ * associated with a media controller device.
++ *
++ * Only device query functions are available for media devices. Enumerating or
++ * setting up links is invalid.
++ *
++ * @return A pointer to the new media device or NULL if memory cannot be
++ * allocated.
++ */
++struct media_device *media_device_new_emulated(struct media_device_info *info);
++
++/**
++ * @brief Take a reference to the device.
++ * @param media - device instance.
++ *
++ * Media devices are reference-counted. Taking a reference to a device prevents
++ * it from being freed until all references are released. The reference count is
++ * initialized to 1 when the device is created.
++ *
++ * @return A pointer to @a media.
++ */
++struct media_device *media_device_ref(struct media_device *media);
++
++/**
++ * @brief Release a reference to the device.
++ * @param media - device instance.
++ *
++ * Release a reference to the media device. When the reference count reaches 0
++ * this function frees the device.
++ */
++void media_device_unref(struct media_device *media);
++
++/**
++ * @brief Add an entity to an existing media device
++ * @param media - device instance.
++ * @param desc - description of the entity to be added
++ * @param devnode - device node corresponding to the entity
++ *
++ * Entities are usually created and added to media devices automatically when
++ * the media device is enumerated through the media controller API. However,
++ * when an emulated media device (thus not backed with a kernel-side media
++ * controller device) is created, entities need to be manually added.
++ *
++ * Entities can also be manually added to a successfully enumerated media device
++ * to group several functions provided by separate kernel devices. The most
++ * common use case is to group the audio and video functions of a USB webcam in
++ * a single media device. Those functions are exposed through separate USB
++ * interfaces and handled through unrelated kernel drivers, they must thus be
++ * manually added to the same media device.
++ *
++ * This function adds a new entity to the given media device and initializes it
++ * from the given entity description and device node name. Only the following
++ * fields of the description are copied over to the new entity:
++ *
++ * - type
++ * - flags (MEDIA_ENT_FL_DEFAULT only)
++ * - name
++ * - v4l, fb, alsa or dvb (depending on the device type)
++ *
++ * All other fields of the newly created entity id are initialized to 0,
++ * including the entity ID.
++ *
++ * @return Zero on success or -ENOMEM if memory cannot be allocated.
++ */
++int media_device_add_entity(struct media_device *media,
++			    const struct media_entity_desc *desc,
++			    const char *devnode);
++
++/**
++ * @brief Set a handler for debug messages.
++ * @param media - device instance.
++ * @param debug_handler - debug message handler
++ * @param debug_priv - first argument to debug message handler
++ *
++ * Set a handler for debug messages that will be called whenever
++ * debugging information is to be printed. The handler expects an
++ * fprintf-like function.
++ */
++void media_debug_set_handler(
++	struct media_device *media, void (*debug_handler)(void *, ...),
++	void *debug_priv);
++
++/**
++ * @brief Enumerate the device topology
++ * @param media - device instance.
++ *
++ * Enumerate the media device entities, pads and links. Calling this function is
++ * mandatory before accessing the media device contents.
++ *
++ * @return Zero on success or a negative error code on failure.
++ */
++int media_device_enumerate(struct media_device *media);
++
++/**
++ * @brief Locate the pad at the other end of a link.
++ * @param pad - sink pad at one end of the link.
++ *
++ * Locate the source pad connected to @a pad through an enabled link. As only one
++ * link connected to a sink pad can be enabled at a time, the connected source
++ * pad is guaranteed to be unique.
++ *
++ * @return A pointer to the connected source pad, or NULL if all links connected
++ * to @a pad are disabled. Return NULL also if @a pad is not a sink pad.
++ */
++struct media_pad *media_entity_remote_source(struct media_pad *pad);
++
++/**
++ * @brief Get information about a media entity
++ * @param entity - media entity.
++ *
++ * The information structure is owned by the media entity object and will be
++ * freed when the object is destroyed.
++ *
++ * @return A pointer to the media entity information
++ */
++const struct media_entity_desc *media_entity_get_info(struct media_entity *entity);
++
++/**
++ * @brief Get an entity pad
++ * @param entity - media entity.
++ * @param index - pad index.
++ *
++ * This function returns a pointer to the pad object identified by its index
++ * for the given entity. If the pad index is out of bounds it will return NULL.
++ *
++ * @return A pointer to the pad
++ */
++const struct media_pad *media_entity_get_pad(struct media_entity *entity,
++					     unsigned int index);
++
++/**
++ * @brief Get the number of links
++ * @param entity - media entity.
++ *
++ * This function returns the total number of links that originate from or arrive
++ * at the the media entity.
++ *
++ * @return The number of links for the entity
++ */
++unsigned int media_entity_get_links_count(struct media_entity *entity);
++
++/**
++ * @brief Get an entity link
++ * @param entity - media entity.
++ * @param index - link index.
++ *
++ * This function returns a pointer to the link object identified by its index
++ * for the given entity. If the link index is out of bounds it will return NULL.
++ *
++ * @return A pointer to the link
++ */
++const struct media_link *media_entity_get_link(struct media_entity *entity,
++					       unsigned int index);
++
++/**
++ * @brief Get the device node name for an entity
++ * @param entity - media entity.
++ *
++ * This function returns the full path and name to the device node corresponding
++ * to the given entity.
++ *
++ * @return A pointer to the device node name or NULL if the entity has no
++ * associated device node
++ */
++const char *media_entity_get_devname(struct media_entity *entity);
++
++/**
++ * @brief Get the type of an entity.
++ * @param entity - the entity.
++ *
++ * @return The type of @a entity.
++ */
++static inline unsigned int media_entity_type(struct media_entity *entity)
++{
++	return media_entity_get_info(entity)->type & MEDIA_ENT_TYPE_MASK;
++}
++
++/**
++ * @brief Find an entity by its name.
++ * @param media - media device.
++ * @param name - entity name.
++ * @param length - size of @a name.
++ *
++ * Search for an entity with a name equal to @a name.
++ *
++ * @return A pointer to the entity if found, or NULL otherwise.
++ */
++struct media_entity *media_get_entity_by_name(struct media_device *media,
++	const char *name, size_t length);
++
++/**
++ * @brief Find an entity by its ID.
++ * @param media - media device.
++ * @param id - entity ID.
++ *
++ * This function searches for an entity based on its ID using an exact match or
++ * next ID method based on the given @a id. If @a id is ORed with
++ * MEDIA_ENT_ID_FLAG_NEXT, the function will return the entity with the smallest
++ * ID larger than @a id. Otherwise it will return the entity with an ID equal to
++ * @a id.
++ *
++ * @return A pointer to the entity if found, or NULL otherwise.
++ */
++struct media_entity *media_get_entity_by_id(struct media_device *media,
++	__u32 id);
++
++/**
++ * @brief Get the number of entities
++ * @param media - media device.
++ *
++ * This function returns the total number of entities in the media device. If
++ * entities haven't been enumerated yet it will return 0.
++ *
++ * @return The number of entities in the media device
++ */
++unsigned int media_get_entities_count(struct media_device *media);
++
++/**
++ * @brief Get the entities
++ * @param media - media device.
++ *
++ * This function returns a pointer to the array of entities for the media
++ * device. If entities haven't been enumerated yet it will return NULL.
++ *
++ * The array of entities is owned by the media device object and will be freed
++ * when the media object is destroyed.
++ *
++ * @return A pointer to an array of entities
++ */
++struct media_entity *media_get_entity(struct media_device *media, unsigned int index);
++
++/**
++ * @brief Get the default entity for a given type
++ * @param media - media device.
++ * @param type - entity type.
++ *
++ * This function returns the default entity of the requested type. @a type must
++ * be one of
++ *
++ *	MEDIA_ENT_T_DEVNODE_V4L
++ *	MEDIA_ENT_T_DEVNODE_FB
++ *	MEDIA_ENT_T_DEVNODE_ALSA
++ *	MEDIA_ENT_T_DEVNODE_DVB
++ *
++ * @return A pointer to the default entity for the type if it exists, or NULL
++ * otherwise.
++ */
++struct media_entity *media_get_default_entity(struct media_device *media,
++					      unsigned int type);
++
++/**
++ * @brief Get the media device information
++ * @param media - media device.
++ *
++ * The information structure is owned by the media device object and will be freed
++ * when the media object is destroyed.
++ *
++ * @return A pointer to the media device information
++ */
++const struct media_device_info *media_get_info(struct media_device *media);
++
++/**
++ * @brief Get the media device node name
++ * @param media - media device.
++ *
++ * The device node name string is owned by the media device object and will be
++ * freed when the media object is destroyed.
++ *
++ * @return A pointer to the media device node name
++ */
++const char *media_get_devnode(struct media_device *media);
++
++/**
++ * @brief Configure a link.
++ * @param media - media device.
++ * @param source - source pad at the link origin.
++ * @param sink - sink pad at the link target.
++ * @param flags - configuration flags.
++ *
++ * Locate the link between @a source and @a sink, and configure it by applying
++ * the new @a flags.
++ *
++ * Only the MEDIA_LINK_FLAG_ENABLED flag is writable.
++ *
++ * @return 0 on success, -1 on failure:
++ *	   -ENOENT: link not found
++ *	   - other error codes returned by MEDIA_IOC_SETUP_LINK
++ */
++int media_setup_link(struct media_device *media,
++	struct media_pad *source, struct media_pad *sink,
++	__u32 flags);
++
++/**
++ * @brief Reset all links to the disabled state.
++ * @param media - media device.
++ *
++ * Disable all links in the media device. This function is usually used after
++ * opening a media device to reset all links to a known state.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int media_reset_links(struct media_device *media);
++
++/**
++ * @brief Parse string to a pad on the media device.
++ * @param media - media device.
++ * @param p - input string
++ * @param endp - pointer to string where parsing ended
++ *
++ * Parse NULL terminated string describing a pad and return its struct
++ * media_pad instance.
++ *
++ * @return Pointer to struct media_pad on success, NULL on failure.
++ */
++struct media_pad *media_parse_pad(struct media_device *media,
++				  const char *p, char **endp);
++
++/**
++ * @brief Parse string to a link on the media device.
++ * @param media - media device.
++ * @param p - input string
++ * @param endp - pointer to p where parsing ended
++ *
++ * Parse NULL terminated string p describing a link and return its struct
++ * media_link instance.
++ *
++ * @return Pointer to struct media_link on success, NULL on failure.
++ */
++struct media_link *media_parse_link(struct media_device *media,
++				    const char *p, char **endp);
++
++/**
++ * @brief Parse string to a link on the media device and set it up.
++ * @param media - media device.
++ * @param p - input string
++ *
++ * Parse NULL terminated string p describing a link and its configuration
++ * and configure the link.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int media_parse_setup_link(struct media_device *media,
++			   const char *p, char **endp);
++
++/**
++ * @brief Parse string to link(s) on the media device and set it up.
++ * @param media - media device.
++ * @param p - input string
++ *
++ * Parse NULL terminated string p describing link(s) separated by
++ * commas (,) and configure the link(s).
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int media_parse_setup_links(struct media_device *media, const char *p);
++
++#endif
+diff --git a/src/media-ctl/tools.h b/src/media-ctl/tools.h
+new file mode 100644
+index 0000000..815534c
+--- /dev/null
++++ b/src/media-ctl/tools.h
+@@ -0,0 +1,32 @@
++/*
++ * Media controller test application
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __TOOLS_H__
++#define __TOOLS_H__
++
++#define ARRAY_SIZE(array)	(sizeof(array) / sizeof((array)[0]))
++#define FIELD_SIZEOF(t, f)	(sizeof(((t*)0)->f))
++
++void media_print_streampos(struct media_device *media, const char *p,
++			   const char *end);
++
++#endif /* __TOOLS_H__ */
++
+diff --git a/src/media-ctl/v4l2subdev.h b/src/media-ctl/v4l2subdev.h
+new file mode 100644
+index 0000000..1cb53ff
+--- /dev/null
++++ b/src/media-ctl/v4l2subdev.h
+@@ -0,0 +1,258 @@
++/*
++ * V4L2 subdev interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __SUBDEV_H__
++#define __SUBDEV_H__
++
++#include <linux/v4l2-subdev.h>
++
++struct media_entity;
++
++/**
++ * @brief Open a sub-device.
++ * @param entity - sub-device media entity.
++ *
++ * Open the V4L2 subdev device node associated with @a entity. The file
++ * descriptor is stored in the media_entity structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_open(struct media_entity *entity);
++
++/**
++ * @brief Close a sub-device.
++ * @param entity - sub-device media entity.
++ *
++ * Close the V4L2 subdev device node associated with the @a entity and opened by
++ * a previous call to v4l2_subdev_open() (either explicit or implicit).
++ */
++void v4l2_subdev_close(struct media_entity *entity);
++
++/**
++ * @brief Retrieve the format on a pad.
++ * @param entity - subdev-device media entity.
++ * @param format - format to be filled.
++ * @param pad - pad number.
++ * @param which - identifier of the format to get.
++ *
++ * Retrieve the current format on the @a entity @a pad and store it in the
++ * @a format structure.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to retrieve the try format stored
++ * in the file handle, of V4L2_SUBDEV_FORMAT_ACTIVE to retrieve the current
++ * active format.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Set the format on a pad.
++ * @param entity - subdev-device media entity.
++ * @param format - format.
++ * @param pad - pad number.
++ * @param which - identifier of the format to set.
++ *
++ * Set the format on the @a entity @a pad to @a format. The driver is allowed to
++ * modify the requested format, in which case @a format is updated with the
++ * modifications.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to set the try format stored in the
++ * file handle, of V4L2_SUBDEV_FORMAT_ACTIVE to configure the device with an
++ * active format.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Retrieve a selection rectangle on a pad.
++ * @param entity - subdev-device media entity.
++ * @param r - rectangle to be filled.
++ * @param pad - pad number.
++ * @param target - selection target
++ * @param which - identifier of the format to get.
++ *
++ * Retrieve the @a target selection rectangle on the @a entity @a pad
++ * and store it in the @a rect structure.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to retrieve the try
++ * selection rectangle stored in the file handle, or
++ * V4L2_SUBDEV_FORMAT_ACTIVE to retrieve the current active selection
++ * rectangle.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Set a selection rectangle on a pad.
++ * @param entity - subdev-device media entity.
++ * @param rect - crop rectangle.
++ * @param pad - pad number.
++ * @param target - selection target
++ * @param which - identifier of the format to set.
++ *
++ * Set the @a target selection rectangle on the @a entity @a pad to @a
++ * rect. The driver is allowed to modify the requested rectangle, in
++ * which case @a rect is updated with the modifications.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to set the try crop rectangle
++ * stored in the file handle, of V4L2_SUBDEV_FORMAT_ACTIVE to configure the
++ * device with an active crop rectangle.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Query the digital video capabilities of a pad.
++ * @param entity - subdev-device media entity.
++ * @param cap - capabilities to be filled.
++ *
++ * Retrieve the digital video capabilities of the @a entity pad specified by
++ * @a cap.pad and store it in the @a cap structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_dv_timings_caps(struct media_entity *entity,
++	struct v4l2_dv_timings_cap *caps);
++
++/**
++ * @brief Query the digital video timings of a sub-device
++ * @param entity - subdev-device media entity.
++ * @param timings timings to be filled.
++ *
++ * Retrieve the detected digital video timings for the currently selected input
++ * of @a entity and store them in the @a timings structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_query_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings);
++
++/**
++ * @brief Get the current digital video timings of a sub-device
++ * @param entity - subdev-device media entity.
++ * @param timings timings to be filled.
++ *
++ * Retrieve the current digital video timings for the currently selected input
++ * of @a entity and store them in the @a timings structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings);
++
++/**
++ * @brief Set the digital video timings of a sub-device
++ * @param entity - subdev-device media entity.
++ * @param timings timings to be set.
++ *
++ * Set the digital video timings of @a entity to @a timings. The driver is
++ * allowed to modify the requested format, in which case @a timings is updated
++ * with the modifications.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings);
++
++/**
++ * @brief Retrieve the frame interval on a sub-device.
++ * @param entity - subdev-device media entity.
++ * @param interval - frame interval to be filled.
++ *
++ * Retrieve the current frame interval on subdev @a entity and store it in the
++ * @a interval structure.
++ *
++ * Frame interval retrieving is usually supported only on devices at the
++ * beginning of video pipelines, such as sensors.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++
++int v4l2_subdev_get_frame_interval(struct media_entity *entity,
++	struct v4l2_fract *interval);
++
++/**
++ * @brief Set the frame interval on a sub-device.
++ * @param entity - subdev-device media entity.
++ * @param interval - frame interval.
++ *
++ * Set the frame interval on subdev @a entity to @a interval. The driver is
++ * allowed to modify the requested frame interval, in which case @a interval is
++ * updated with the modifications.
++ *
++ * Frame interval setting is usually supported only on devices at the beginning
++ * of video pipelines, such as sensors.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_frame_interval(struct media_entity *entity,
++	struct v4l2_fract *interval);
++
++/**
++ * @brief Parse a string and apply format, crop and frame interval settings.
++ * @param media - media device.
++ * @param p - input string
++ * @param endp - pointer to string p where parsing ended (return)
++ *
++ * Parse string @a p and apply format, crop and frame interval settings to a
++ * subdev pad specified in @a p. @a endp will be written a pointer where
++ * parsing of @a p ended.
++ *
++ * Format strings are separeted by commas (,).
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_parse_setup_formats(struct media_device *media, const char *p);
++
++/**
++ * @brief Convert media bus pixel code to string.
++ * @param code - input string
++ *
++ * Convert media bus pixel code @a code to a human-readable string.
++ *
++ * @return A pointer to a string on success, NULL on failure.
++ */
++const char *v4l2_subdev_pixelcode_to_string(enum v4l2_mbus_pixelcode code);
++
++/**
++ * @brief Parse string to media bus pixel code.
++ * @param string - input string
++ * @param lenght - length of the string
++ *
++ * Parse human readable string @a string to an media bus pixel code.
++ *
++ * @return media bus pixelcode on success, -1 on failure.
++ */
++enum v4l2_mbus_pixelcode v4l2_subdev_string_to_pixelcode(const char *string,
++							 unsigned int length);
++#endif
+-- 
+1.7.9.5
+
