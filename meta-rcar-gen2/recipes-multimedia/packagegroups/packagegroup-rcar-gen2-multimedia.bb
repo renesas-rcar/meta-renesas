@@ -19,6 +19,7 @@ MULTIMEDIA_PACKAGES ="\
     vspm-kernel-module vspm-user-module \
     s3ctl-kernel-module s3ctl-user-module \
     uvcs-kernel-module omx-user-module \
+    libmemcpy \
 "
 
 RDEPENDS_packagegroup-rcar-gen2-multimedia = "\
