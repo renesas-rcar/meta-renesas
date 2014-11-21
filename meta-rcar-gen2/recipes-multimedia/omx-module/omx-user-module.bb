@@ -1,4 +1,5 @@
 require ../../include/rcar-gen2-modules-common.inc
+require ../../include/omx-components-control.inc
 
 LICENSE = "CLOSED"
 DEPENDS = "mmngr-kernel-module mmngr-user-module \
@@ -398,3 +399,4 @@ INSANE_SKIP_${PN} += "libdir"
 INSANE_SKIP_${PN}-dev += "libdir"
 RPROVIDES_${PN} += "omx-user-module"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+

@@ -1,3 +1,5 @@
+require ../../include/multimedia-control.inc
+require ../../include/gles-control.inc
 # common
 IMAGE_INSTALL_append = " \
 	alsa-utils alsa-tools \
@@ -52,19 +54,19 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_1_00", "1", " \
 	gstreamer1.0-plugins-bad-videoparsersbad \
 	", "", d)}'
 # pkg groups for multimedia
-IMAGE_INSTALL_append = ' ${@base_contains("MULTIMEDIA_ENABLE", "1", " \
+IMAGE_INSTALL_append = ' ${@base_contains("USE_MULTIMEDIA", "1", " \
 	 packagegroup-rcar-gen2-multimedia \
 	", "", d)}'
 # pkg groups for multimedia test program
-IMAGE_INSTALL_append = ' ${@base_contains("MULTIMEDIA_TP_ENABLE", "1", " \
+IMAGE_INSTALL_append = ' ${@base_contains("USE_MULTIMEDIA_TEST", "1", " \
 	packagegroup-rcar-gen2-multimedia-tp \
 	", "", d)}'
 # pkg groups for dtv
-IMAGE_INSTALL_append = ' ${@base_contains("DTV_ENABLE", "1", " \
+IMAGE_INSTALL_append = ' ${@base_contains("USE_DTV", "1", " \
 	 packagegroup-rcar-gen2-dtv \
 	", "", d)}'
 # pkg groups for graphic test program
-IMAGE_INSTALL_append = ' ${@base_contains("GLES_TP_ENABLE", "1", " \
+IMAGE_INSTALL_append = ' ${@base_contains("USE_GLES_TEST", "1", " \
 	 gles-test-module \
 	", "", d)}'
 # for Middle software

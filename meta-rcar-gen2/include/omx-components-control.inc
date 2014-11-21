@@ -1,30 +1,17 @@
-# MULTIMEDIA_ENABLE is configuration for whole multimedia modules (kernel and lib modules), 
-# include MMNGR, FDPM, S3CTL, VSPM, OMX, VPC3 and UVCS modules
-# MULTIMEDIA_TP_ENABLE is configuration for whole multimedia test modules, 
-# include MMNGR, FDPM, S3CTL, VSPM, OMX, VPC3 and UVCS modules
-MULTIMEDIA_ENABLE = "1"
-MULTIMEDIA_TP_ENABLE = "0"
-DTV_ENABLE = "0"
-
-# Default config for additonal modules: 0/1 - disable/enable
-# GLES_TP_ENABLE is configuration for RGX or SGX test module
-GLES_TP_ENABLE = "0"
-
 ## Additional configuration in OMX module, include
 # H263_DECODER_CONF for OMX Media Component H263 Decoder Library, default is DISABLE (0)
 # VC1_DECODER_CONF for OMX Media Component VC-1 Decoder Library, default is DISABLE (0)
 # MPEG4_DECODER_CONF for OMX Media Component MPEG-4 Decoder Library, default is DISABLE (0)
 # MPEG2_DECODER_CONF for VCP3 Driver Adapted for Linux MPEG-2 Decoder Library, default is DISABLE (0)
 # DIVX_DECODER_CONF for DivX Decoder Library for Linux, default is DISABLE (0)
-H263_DECODER_CONF = "0"
-VC1_DECODER_CONF = "0"
-MPEG2_DECODER_CONF = "0"
-MPEG4_DECODER_CONF = "0"
-DIVX_DECODER_CONF = "0"
+H263_DECODER_CONF = "${@'1' if 'h263dec' in '${DISTRO_FEATURES}' else '0'}"
+VC1_DECODER_CONF = "${@'1' if 'vc1dec' in '${DISTRO_FEATURES}' else '0'}"
+MPEG2_DECODER_CONF = "${@'1' if 'mpeg2dec' in '${DISTRO_FEATURES}' else '0'}"
+MPEG4_DECODER_CONF = "${@'1' if 'mpeg4dec' in '${DISTRO_FEATURES}' else '0'}"
+DIVX_DECODER_CONF = "${@'1' if 'divxdec' in '${DISTRO_FEATURES}' else '0'}"
 
 ## Config to build H264AVC encoder
-# "1": enable, "0": disable
-H264AVC_ENCODER_CONF = "0"
+H264AVC_ENCODER_CONF = "${@'1' if 'h264avcenc' in '${DISTRO_FEATURES}' else '0'}"
 
 ## Config for audio decoders
 #AACP2_DECODER_CONF for ARM 5.1ch aacPlus V2 Decoder for Linux
@@ -33,16 +20,16 @@ H264AVC_ENCODER_CONF = "0"
 #DDD_DECODER_CONF for ARM 5.1ch Dolby Digital Decoder for Linux
 #ALAC_DECODER_CONF for ARM ALAC Decoder for Linux
 #FLAC_DECODER_CONF for ARM FLAC Decoder for Linux
-AACP2_DECODER_CONF = "0"
-MP3_DECODER_CONF = "0"
-WMA_DECODER_CONF = "0"
-DDD_DECODER_CONF = "0"
-ALAC_DECODER_CONF = "0"
-FLAC_DECODER_CONF = "0"
+AACP2_DECODER_CONF = "${@'1' if 'aacp2dec' in '${DISTRO_FEATURES}' else '0'}"
+MP3_DECODER_CONF = "${@'1' if 'mp3dec' in '${DISTRO_FEATURES}' else '0'}"
+WMA_DECODER_CONF = "${@'1' if 'wmadec' in '${DISTRO_FEATURES}' else '0'}"
+DDD_DECODER_CONF = "${@'1' if 'ddddec' in '${DISTRO_FEATURES}' else '0'}"
+ALAC_DECODER_CONF = "${@'1' if 'alacdec' in '${DISTRO_FEATURES}' else '0'}"
+FLAC_DECODER_CONF = "${@'1' if 'flacdec' in '${DISTRO_FEATURES}' else '0'}"
 
 ## Config for audio encoders
 # AAC_ENCODER_CONF for ARM AAC Encoder for Linux
-AAC_ENCODER_CONF = "0"
+AAC_ENCODER_CONF = "${@'1' if 'aacenc' in '${DISTRO_FEATURES}' else '0'}"
 
 # Config for audio middlewares
 # ARMAACP2_MDW_DECODER_CONF for ARM 5.1ch aacPlus V2 Decode Middleware for Linux
@@ -51,15 +38,15 @@ AAC_ENCODER_CONF = "0"
 # DDD_MDW_DECODER_CONF for ARM 5.1ch Dolby Digital Decode Middleware for Linux
 # ALAC_MDW_DECODER_CONF for ARM ALAC Decode Middleware for Linux
 # FLAC_MDW_DECODER_CONF for ARM FLAC Decode Middleware for Linux
-ARMAACP2_MDW_DECODER_CONF = "0"
-MP3_MDW_DECODER_CONF = "0"
-WMA_MDW_DECODER_CONF = "0"
-DDD_MDW_DECODER_CONF = "0"
-ALAC_MDW_DECODER_CONF = "0"
-FLAC_MDW_DECODER_CONF = "0"
+ARMAACP2_MDW_DECODER_CONF = "${@'1' if 'armaccp2dec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+MP3_MDW_DECODER_CONF = "${@'1' if 'mp3dec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+WMA_MDW_DECODER_CONF = "${@'1' if 'wmadec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+DDD_MDW_DECODER_CONF = "${@'1' if 'ddddec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+ALAC_MDW_DECODER_CONF = "${@'1' if 'alacdec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+FLAC_MDW_DECODER_CONF = "${@'1' if 'flacdec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 ##
 # AAC_MDW_ENCODER_CONF for ARM AAC Encode Middleware for Linux
-AAC_MDW_ENCODER_CONF = "0"
+AAC_MDW_ENCODER_CONF = "${@'1' if 'aacenc_mdw' in '${DISTRO_FEATURES}' else '0'}"
 
 #############################################################
 ##### Below part is auto dependent functions,
@@ -89,29 +76,3 @@ DDD_MDW_DECODER = '${@base_conditional("DDD_DECODER_CONF", "1", "1", "${DDD_MDW_
 ALAC_MDW_DECODER = '${@base_conditional("ALAC_DECODER_CONF", "1", "1", "${ALAC_MDW_DECODER_CONF}", d)}'
 FLAC_MDW_DECODER = '${@base_conditional("FLAC_DECODER_CONF", "1", "1", "${FLAC_MDW_DECODER_CONF}", d)}'
 AAC_MDW_ENCODER = '${@base_conditional("AAC_ENCODER_CONF", "1", "1", "${AAC_MDW_ENCODER_CONF}", d)}'
-
-#Mask linaro tc bb due to unnecessaries
-BBMASK ?= "external-linaro-toolchain|binutils_linaro.*"
-
-# Mask MMP recipes base on their option
-# Pseudocode
-# if MMP enable or DTV enable
-#     Don't mask multimedia recipes
-# if DTV not enable
-# 	  	mask dtv recipes
-# if multimedia test not enable
-# 	  	mask multimedia test program recipes
-
-BB_MULTIMEDIA_KERNEL_MODULE = "fdpm-kernel-module|mmngr-kernel-module|mmngrbuf-kernel-module|s3ctl-kernel-module|uvcs-kernel-module|vspm-kernel-module"
-BB_MULTIMEDIA_USER_MODULE = "fdpm-user-module|mmngr-user-module|mmngrbuf-user-module|omx-user-module|s3ctl-user-module|vspm-user-module"
-BB_GST_PLUGINS = "meta-renesas/meta-rcar-gen2/recipes-multimedia/gstreamer"
-BB_MULTIMEDIA_TEST_MODULE = "fdpm-tp-user-module|mmngr-tp-user-module|mmngrbuf-tp-user-module|s3ctl-tp-user-module|vspm-tp-user-module"
-
-BBMASK_DTV = '${@base_conditional("DTV_ENABLE", "1", "", "dtv-module|ssp-module|scu-module", d)}'
-MULTIMEDIA_BB = "${BB_MULTIMEDIA_KERNEL_MODULE}|${BB_MULTIMEDIA_USER_MODULE}|${BB_GST_PLUGINS}"
-BBMASK_MULTIMEDIA = '${@ "" if ${MULTIMEDIA_ENABLE} == 1 or ${DTV_ENABLE} == 1 else "${MULTIMEDIA_BB}"}'
-BBMASK_MULTIMEDIA_TP = '${@ "" if ${MULTIMEDIA_ENABLE} == 1 and ${MULTIMEDIA_TP_ENABLE} == 1 else "${BB_MULTIMEDIA_TEST_MODULE}" }'
-
-BBMASK .= '${@base_conditional("BBMASK_MULTIMEDIA", "", "", "|${BBMASK_MULTIMEDIA}", d)}'
-BBMASK .= '${@base_conditional("BBMASK_MULTIMEDIA_TP", "", "", "|${BBMASK_MULTIMEDIA_TP}", d)}'
-BBMASK .= '${@base_conditional("BBMASK_DTV", "", "", "|${BBMASK_DTV}", d)}'

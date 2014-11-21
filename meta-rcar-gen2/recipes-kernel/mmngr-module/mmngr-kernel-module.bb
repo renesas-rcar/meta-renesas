@@ -1,4 +1,5 @@
 require ../../include/rcar-gen2-modules-common.inc
+require ../../include/multimedia-control.inc
 
 LICENSE = "GPLv2&MIT"
 LIC_FILES_CHKSUM = "file://drv/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
@@ -17,7 +18,7 @@ MMNGR_CFG_r8a7794 = "MMNGR_ALT"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
-    if [ "X${DTV_ENABLE}" = "X1" ]; then
+    if [ "X${USE_DTV}" = "X1" ]; then
         export MMNGR_SSP_CONFIG="MMNGR_SSP_ENABLE"
     else
         export MMNGR_SSP_CONFIG="MMNGR_SSP_DISABLE"
