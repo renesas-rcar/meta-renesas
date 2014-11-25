@@ -16,21 +16,21 @@ SRC_URI = "file://RTM0AC0000XCMCTL20SL32C.tar.bz2;name=file1 \
            file://RTM0AC0000XVCMND20SL32C.tar.bz2;name=file2 \
            file://RTM0AC0000XV264D20SL32C.tar.bz2;name=file3 \
            "
-SRC_URI += '${@base_conditional( "H263_DECODER_CONF", "1", " file://RTM0AC0000XV263D20SL32C.tar.bz2;name=file4", "", d )}'
-SRC_URI += '${@base_conditional( "MPEG2_DECODER_CONF", "1", " file://RTM0AC0000XVM2VD20SL32C.tar.bz2;name=file5", "", d )}'
-SRC_URI += '${@base_conditional( "MPEG4_DECODER_CONF", "1", " file://RTM0AC0000XVM4VD20SL32C.tar.bz2;name=file6", "", d )}'
-SRC_URI += '${@base_conditional( "DIVX_DECODER_CONF", "1", " file://RTM0AC0000XVDVXD20SL32C.tar.bz2;name=file7", "", d )}'
-SRC_URI += '${@base_conditional( "VC1_DECODER_CONF", "1", " file://RTM0AC0000XVVC1D20SL32C.tar.bz2;name=file8", "", d )}'
-SRC_URI += '${@base_conditional( "H264AVC_ENCODER_CONF", "1", " file://RTM0AC0000XV264E20SL32C.tar.bz2;name=file9", "", d )}'
-SRC_URI += '${@base_conditional( "VIDEO_COMMON_ENCODER_CONF", "1", " file://RTM0AC0000XVCMNE20SL32C.tar.bz2;name=file10", "", d )}'
-SRC_URI += '${@base_conditional( "AUDIO_COMMON_CONF", "1", " file://RTM0AC0000XACMND20SL32C.tar.bz2;name=file11", "", d )}'
-SRC_URI += '${@base_conditional( "AACP2_DECODER_CONF", "1", " file://RTM0AC0000XAAAPD20SL32C.tar.bz2;name=file12", "", d )}'
-SRC_URI += '${@base_conditional( "MP3_DECODER_CONF", "1", " file://RTM0AC0000XAMP3D20SL32C.tar.bz2;name=file13", "", d )}'
-SRC_URI += '${@base_conditional( "WMA_DECODER_CONF", "1", " file://RTM0AC0000XAWMAD20SL32C.tar.bz2;name=file14", "", d )}'
-SRC_URI += '${@base_conditional( "DDD_DECODER_CONF", "1", " file://RTM0AC0000XADDDD20SL32C.tar.bz2;name=file15", "", d )}'
-SRC_URI += '${@base_conditional( "ALAC_DECODER_CONF", "1", " file://RTM0AC0000XAALAD20SL32C.tar.bz2;name=file16", "", d )}'
-SRC_URI += '${@base_conditional( "FLAC_DECODER_CONF", "1", " file://RTM0AC0000XAFLAD20SL32C.tar.bz2;name=file17", "", d )}'
-SRC_URI += '${@base_conditional( "AAC_ENCODER_CONF", "1", " file://RTM0AC0000XAAACE20SL32C.tar.bz2;name=file18", "", d )}'
+SRC_URI += '${@base_conditional( "USE_H263_DECODER", "1", " file://RTM0AC0000XV263D20SL32C.tar.bz2;name=file4", "", d )}'
+SRC_URI += '${@base_conditional( "USE_MPEG2_DECODER", "1", " file://RTM0AC0000XVM2VD20SL32C.tar.bz2;name=file5", "", d )}'
+SRC_URI += '${@base_conditional( "USE_MPEG4_DECODER", "1", " file://RTM0AC0000XVM4VD20SL32C.tar.bz2;name=file6", "", d )}'
+SRC_URI += '${@base_conditional( "USE_DIVX_DECODER", "1", " file://RTM0AC0000XVDVXD20SL32C.tar.bz2;name=file7", "", d )}'
+SRC_URI += '${@base_conditional( "USE_VC1_DECODER", "1", " file://RTM0AC0000XVVC1D20SL32C.tar.bz2;name=file8", "", d )}'
+SRC_URI += '${@base_conditional( "USE_H264AVC_ENCODER", "1", " file://RTM0AC0000XV264E20SL32C.tar.bz2;name=file9", "", d )}'
+SRC_URI += '${@base_conditional( "USE_VIDEO_COMMON_ENCODER", "1", " file://RTM0AC0000XVCMNE20SL32C.tar.bz2;name=file10", "", d )}'
+SRC_URI += '${@base_conditional( "USE_AUDIO_COMMON", "1", " file://RTM0AC0000XACMND20SL32C.tar.bz2;name=file11", "", d )}'
+SRC_URI += '${@base_conditional( "USE_AACP2_DECODER", "1", " file://RTM0AC0000XAAAPD20SL32C.tar.bz2;name=file12", "", d )}'
+SRC_URI += '${@base_conditional( "USE_MP3_DECODER", "1", " file://RTM0AC0000XAMP3D20SL32C.tar.bz2;name=file13", "", d )}'
+SRC_URI += '${@base_conditional( "USE_WMA_DECODER", "1", " file://RTM0AC0000XAWMAD20SL32C.tar.bz2;name=file14", "", d )}'
+SRC_URI += '${@base_conditional( "USE_DDD_DECODER", "1", " file://RTM0AC0000XADDDD20SL32C.tar.bz2;name=file15", "", d )}'
+SRC_URI += '${@base_conditional( "USE_ALAC_DECODER", "1", " file://RTM0AC0000XAALAD20SL32C.tar.bz2;name=file16", "", d )}'
+SRC_URI += '${@base_conditional( "USE_FLAC_DECODER", "1", " file://RTM0AC0000XAFLAD20SL32C.tar.bz2;name=file17", "", d )}'
+SRC_URI += '${@base_conditional( "USE_AAC_ENCODER", "1", " file://RTM0AC0000XAAACE20SL32C.tar.bz2;name=file18", "", d )}'
 SRC_URI += '${@base_conditional( "ARMAACP2_MDW_DECODER", "1", " file://RTM0AC0000ADAAPMZ1SL32C.tar.bz2;name=file19", "", d )}'
 SRC_URI += '${@base_conditional( "MP3_MDW_DECODER", "1", " file://RTM0AC0000ADMP3MZ1SL32C.tar.bz2;name=file20", "", d )}'
 SRC_URI += '${@base_conditional( "WMA_MDW_DECODER", "1", " file://RTM0AC0000ADWMAMZ1SL32C.tar.bz2;name=file21", "", d )}'
@@ -43,21 +43,21 @@ LISTSRC = "RTM0AC0000XCMCTL20SL32C \
            RTM0AC0000XVCMND20SL32C \
            RTM0AC0000XV264D20SL32C"
 
-LISTSRC += '${@base_conditional( "H263_DECODER_CONF", "1", "RTM0AC0000XV263D20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "MPEG2_DECODER_CONF", "1", "RTM0AC0000XVM2VD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "MPEG4_DECODER_CONF", "1", "RTM0AC0000XVM4VD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "DIVX_DECODER_CONF", "1", "RTM0AC0000XVDVXD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "VC1_DECODER_CONF", "1", "RTM0AC0000XVVC1D20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "H264AVC_ENCODER_CONF", "1", "RTM0AC0000XV264E20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "VIDEO_COMMON_ENCODER_CONF", "1", "RTM0AC0000XVCMNE20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "AUDIO_COMMON_CONF", "1", "RTM0AC0000XACMND20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "AACP2_DECODER_CONF", "1", "RTM0AC0000XAAAPD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "MP3_DECODER_CONF", "1", "RTM0AC0000XAMP3D20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "WMA_DECODER_CONF", "1", "RTM0AC0000XAWMAD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "DDD_DECODER_CONF", "1", "RTM0AC0000XADDDD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "ALAC_DECODER_CONF", "1", "RTM0AC0000XAALAD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "FLAC_DECODER_CONF", "1", "RTM0AC0000XAFLAD20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "AAC_ENCODER_CONF", "1", "RTM0AC0000XAAACE20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_H263_DECODER", "1", "RTM0AC0000XV263D20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_MPEG2_DECODER", "1", "RTM0AC0000XVM2VD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_MPEG4_DECODER", "1", "RTM0AC0000XVM4VD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_DIVX_DECODER", "1", "RTM0AC0000XVDVXD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_VC1_DECODER", "1", "RTM0AC0000XVVC1D20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_H264AVC_ENCODER", "1", "RTM0AC0000XV264E20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_VIDEO_COMMON_ENCODER", "1", "RTM0AC0000XVCMNE20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_AUDIO_COMMON", "1", "RTM0AC0000XACMND20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_AACP2_DECODER", "1", "RTM0AC0000XAAAPD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_MP3_DECODER", "1", "RTM0AC0000XAMP3D20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_WMA_DECODER", "1", "RTM0AC0000XAWMAD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_DDD_DECODER", "1", "RTM0AC0000XADDDD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_ALAC_DECODER", "1", "RTM0AC0000XAALAD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_FLAC_DECODER", "1", "RTM0AC0000XAFLAD20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_AAC_ENCODER", "1", "RTM0AC0000XAAACE20SL32C", "", d )}'
 
 MIDWARESRC = '${@base_conditional( "ARMAACP2_MDW_DECODER", "1", "RTM0AC0000ADAAPMZ1SL32C", "", d )}'
 MIDWARESRC += '${@base_conditional( "MP3_MDW_DECODER", "1", "RTM0AC0000ADMP3MZ1SL32C", "", d )}'
@@ -146,7 +146,7 @@ do_install() {
     ln -sf libvcp3_avcd.so.1.0.0 libvcp3_avcd.so
     
     # H263 Decoder
-    if [ "X${H263_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_H263_DECODER}" = "X1" ] ; then
         ln -sf libomxr_mc_h263d.so.2.0.0 libomxr_mc_h263d.so.2
         ln -sf libomxr_mc_h263d.so.2.0.0 libomxr_mc_h263d.so
 
@@ -155,7 +155,7 @@ do_install() {
     fi
 
     # M2VD decoder
-    if [ "X${MPEG2_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_MPEG2_DECODER}" = "X1" ] ; then
         ln -sf libvcp3_m2vd.so.1.0.0 libvcp3_m2vd.so.1
         ln -sf libvcp3_m2vd.so.1 libvcp3_m2vd.so
 
@@ -164,7 +164,7 @@ do_install() {
     fi
 
     # M4VD decoder
-    if [ "X${MPEG4_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_MPEG4_DECODER}" = "X1" ] ; then
         ln -sf libvcp3_m4vd.so.1.0.0 libvcp3_m4vd.so.1
         ln -sf libvcp3_m4vd.so.1 libvcp3_m4vd.so
 
@@ -173,7 +173,7 @@ do_install() {
     fi
 
     # DIVX decoder
-    if [ "X${DIVX_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_DIVX_DECODER}" = "X1" ] ; then
         ln -sf libvcp3_dvxd.so.1.0.0 libvcp3_dvxd.so.1
         ln -sf libvcp3_dvxd.so.1 libvcp3_dvxd.so
 
@@ -182,7 +182,7 @@ do_install() {
     fi
 
     # VC1D decoder
-    if [ "X${VC1_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_VC1_DECODER}" = "X1" ] ; then
         ln -sf libvcp3_vc1d.so.1.0.0 libvcp3_vc1d.so.1
         ln -sf libvcp3_vc1d.so.1 libvcp3_vc1d.so
 
@@ -192,7 +192,7 @@ do_install() {
 
     #Encoder
     # H264E
-    if [ "X${H264AVC_ENCODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_H264AVC_ENCODER}" = "X1" ] ; then
         ln -sf libomxr_mc_h264e.so.2.0.0 libomxr_mc_h264e.so.2
         ln -sf libomxr_mc_h264e.so.2 libomxr_mc_h264e.so
         
@@ -201,7 +201,7 @@ do_install() {
     fi
 
     ### Encoder common
-    if [ "X${VIDEO_COMMON_ENCODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_VIDEO_COMMON_ENCODER}" = "X1" ] ; then
         ln -sf libomxr_mc_vecmn.so.2.0.0 libomxr_mc_vecmn.so.2
         ln -sf libomxr_mc_vecmn.so.2.0.0 libomxr_mc_vecmn.so
 
@@ -214,49 +214,49 @@ do_install() {
     fi
     
     # audio common OMX
-    if [ "X${AUDIO_COMMON_CONF}" = "X1" ] ; then
+    if [ "X${USE_AUDIO_COMMON}" = "X1" ] ; then
         ln -sf libomxr_mc_acmn.so.2.0.0 libomxr_mc_acmn.so.2
         ln -sf libomxr_mc_acmn.so.2.0.0 libomxr_mc_acmn.so
     fi
 
     # aacd OMX
-    if [ "X${AACP2_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_AACP2_DECODER}" = "X1" ] ; then
         ln -sf libomxr_mc_aacd.so.2.0.0 libomxr_mc_aacd.so.2
         ln -sf libomxr_mc_aacd.so.2.0.0 libomxr_mc_aacd.so
     fi
 
     # mp3 OMX
-    if [ "X${MP3_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_MP3_DECODER}" = "X1" ] ; then
         ln -sf libomxr_mc_mp3d.so.2.0.0 libomxr_mc_mp3d.so.2
         ln -sf libomxr_mc_mp3d.so.2.0.0 libomxr_mc_mp3d.so
     fi
 
     # wma OMX
-    if [ "X${WMA_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_WMA_DECODER}" = "X1" ] ; then
         ln -sf libomxr_mc_wmad.so.2.0.0 libomxr_mc_wmad.so.2
         ln -sf libomxr_mc_wmad.so.2.0.0 libomxr_mc_wmad.so
     fi
 
     # ddd OMX
-    if [ "X${DDD_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_DDD_DECODER}" = "X1" ] ; then
         ln -sf libomxr_mc_ddd.so.2.0.0 libomxr_mc_ddd.so.2
         ln -sf libomxr_mc_ddd.so.2.0.0 libomxr_mc_ddd.so
     fi
 
     # alac OMX
-    if [ "X${ALAC_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_ALAC_DECODER}" = "X1" ] ; then
         ln -sf libomxr_mc_alacd.so.2.0.0 libomxr_mc_alacd.so.2
         ln -sf libomxr_mc_alacd.so.2.0.0 libomxr_mc_alacd.so
     fi
 
     # flac OMX
-    if [ "X${FLAC_DECODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_FLAC_DECODER}" = "X1" ] ; then
         ln -sf libomxr_mc_flacd.so.2.0.0 libomxr_mc_flacd.so.2
         ln -sf libomxr_mc_flacd.so.2.0.0 libomxr_mc_flacd.so
     fi
 
     # aac enc omx
-    if [ "X${AAC_ENCODER_CONF}" = "X1" ] ; then
+    if [ "X${USE_AAC_ENCODER}" = "X1" ] ; then
         ln -sf libomxr_mc_aace.so.2.0.0 libomxr_mc_aace.so.2
         ln -sf libomxr_mc_aace.so.2.0.0 libomxr_mc_aace.so
     fi
