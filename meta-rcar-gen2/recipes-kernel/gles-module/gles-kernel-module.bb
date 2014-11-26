@@ -83,6 +83,10 @@ do_clean_source() {
 	rm -Rf ${KERNELSRC}/include/${GLES}.symvers
 }
 
+ALLOW_EMPTY_kernel-module-bc-example = "1"
+ALLOW_EMPTY_kernel-module-dc-linuxfb = "1"
+ALLOW_EMPTY_kernel-module-pvrsrvkm = "1"
+
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/${GLES}.symvers \
 "
