@@ -2,6 +2,9 @@ require ../../include/gles-control.inc
 
 SRC_URI_rcar-gen2 = "git://github.com/renesas-devel/gst-plugins-base.git;protocol=git;branch=RCAR-GEN2/1.2.3"
 SRCREV_rcar-gen2 = "6f90f0cd0435f719d8510b4e255444396117e76d"
+LIC_FILES_CHKSUM_remove_rcar-gen2 = "\
+	file://common/coverage/coverage-report.pl;beginline=2;endline=17;md5=a4e1830fce078028c8f0974161272607"
+
 S = "${WORKDIR}/git"
 
 do_configure() {
