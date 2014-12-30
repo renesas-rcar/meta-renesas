@@ -10,6 +10,7 @@ EXTRA_OECONF_append_rcar-gen2 = " \
         ${@base_conditional('USE_GLES', '1', '--enable-v4l2', \
         '--disable-xwayland-test WESTON_NATIVE_BACKEND=fbdev-backend.so', d)}"
 
+<<<<<<< HEAD
 SRC_URI_append_rcar-gen2 = "${@base_conditional('USE_GLES', '1', ' \
         file://0001-Add-V4L2-media-controller-support-library.patch \
         file://0002-Add-V4L2-media-controller-renderer.patch \
@@ -34,3 +35,15 @@ SRC_URI_append_rcar-gen2 = "${@base_conditional('USE_GLES', '1', ' \
         file://0021-vsp-renderer-fix-debug-messages.patch \
         file://0022-v4l2-renderer-skip-view-not-attached-to-the-renderer.patch \
        ', '', d)}"
+=======
+SRCREV_rcar-gen2 = "${@'489cbe16c87107a5221aff4f5524aa39b27c7ede' \
+	if '1' in '${USE_GLES}' else '00781bcf518f6bab0d08e6962630b0994e8bf632'}"
+SRC_URI_rcar-gen2 = "git://github.com/renesas-devel/weston.git;protocol=git;branch=RCAR-GEN2/1.5.0/gl-fallback \
+	file://weston.desktop \
+	file://weston.png \
+	file://disable-wayland-scanner-pkg-check.patch \
+	file://make-lcms-explicitly-configurable.patch \
+	file://make-libwebp-explicitly-configurable.patch \
+"
+S = "${WORKDIR}/git"
+>>>>>>> 4bd4db1... rcar-gen2: weston: Change SRC_URL to github
