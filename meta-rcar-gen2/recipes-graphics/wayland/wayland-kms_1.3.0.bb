@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://wayland-kms.c;beginline=6;endline=24;md5=5cdaac262c87
 
 PV_append = "+git${SRCREV}"
 
-SRCREV = "1f8567a92c9ba4efd6c6dfaf96ab75ee481733d8"
+SRCREV = "38a691bc6b556cab535358dd28713abb57fcad17"
 SRC_URI = "git://github.com/thayama/wayland-kms;protocol=git;branch=master"
 
 COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7793|r8a7794)"
