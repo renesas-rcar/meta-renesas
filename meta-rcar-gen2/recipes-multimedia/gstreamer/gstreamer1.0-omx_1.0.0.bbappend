@@ -1,7 +1,8 @@
 SRC_URI_rcar-gen2 = "git://github.com/renesas-devel/gst-omx.git;protocol=git;branch=RCAR-GEN2/1.0.0"
 SRCREV_rcar-gen2 = "f109a467062ea0b351f2ef7923cb9096032c6d56"
-LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
-                    file://omx/gstomx.h;beginline=1;endline=22;md5=0d05f437fd2cd9a30dba5ff8e826e8f7"
+
+LIC_FILES_CHKSUM_remove_rcar-gen2 = " file://omx/gstomx.h;beginline=1;endline=21;md5=5c8e1fca32704488e76d2ba9ddfa935f" 
+LIC_FILES_CHKSUM_append_rcar-gen2 = " file://omx/gstomx.h;beginline=1;endline=22;md5=0d05f437fd2cd9a30dba5ff8e826e8f7" 
 S = "${WORKDIR}/git"
 
 do_configure() {
