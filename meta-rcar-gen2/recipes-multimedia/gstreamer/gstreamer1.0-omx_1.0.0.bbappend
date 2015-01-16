@@ -1,8 +1,10 @@
+require ../../include/gles-control.inc
+
 SRC_URI_rcar-gen2 = "git://github.com/renesas-devel/gst-omx.git;protocol=git;branch=RCAR-GEN2/1.0.0"
-SRCREV_rcar-gen2 = "f109a467062ea0b351f2ef7923cb9096032c6d56"
+SRCREV_rcar-gen2 = "84863f0c4be9345276fb77ec75cc0190ded63d62"
 
 LIC_FILES_CHKSUM_remove_rcar-gen2 = " file://omx/gstomx.h;beginline=1;endline=21;md5=5c8e1fca32704488e76d2ba9ddfa935f" 
-LIC_FILES_CHKSUM_append_rcar-gen2 = " file://omx/gstomx.h;beginline=1;endline=22;md5=0d05f437fd2cd9a30dba5ff8e826e8f7" 
+LIC_FILES_CHKSUM_append_rcar-gen2 = " file://omx/gstomx.h;beginline=1;endline=22;md5=17e5f2943dace9e5cde4a8587a31e8f9"
 S = "${WORKDIR}/git"
 
 do_configure() {
@@ -11,7 +13,8 @@ do_configure() {
 }
 
 DEPENDS_append_rcar-gen2 = " omx-user-module mmngrbuf-user-module"
-EXTRA_OECONF_append_rcar-gen2 = " --with-omx-target=rcar --enable-experimental"
+EXTRA_OECONF_append_rcar-gen2 = " --with-omx-target=rcar --enable-experimental \
+    '${@'--disable-dmabuf' if '${USE_GLES}' == '0' and '${USE_WAYLAND}' == '1' else ''}'"
 
 # Overwrite do_install[postfuncs] += " set_omx_core_name "
 # because it will force the plugin to use bellagio instead of our config
