@@ -267,11 +267,11 @@ do_install() {
     # audio aacp2 midleware
     if [ "X${ARMAACP2_MDW_DECODER}" = "X1" ] ; then
         cd ${S}/audio_mdw
-        ln -sf libRSACPDLA_L.so.1.0 libRSACPDAL_L.so.1.0
-        ln -sf libRSACPDLA_L.so.1.0 libRSACPDLA_L.so.1
-        ln -sf libRSACPDLA_L.so.1.0 libRSACPDLA_L.so
-        ln -sf libRSACPDAL_L.so.1.0 libRSACPDAL_L.so.1
-        ln -sf libRSACPDAL_L.so.1.0 libRSACPDAL_L.so
+        ln -sf libRSACPDLA_L.so.1.1 libRSACPDAL_L.so.1.1
+        ln -sf libRSACPDLA_L.so.1.1 libRSACPDLA_L.so.1
+        ln -sf libRSACPDLA_L.so.1.1 libRSACPDLA_L.so
+        ln -sf libRSACPDAL_L.so.1.1 libRSACPDAL_L.so.1
+        ln -sf libRSACPDAL_L.so.1.1 libRSACPDAL_L.so
         cp -P ${S}/audio_mdw/*.so* ${D}/usr/local/lib/
         cp -P ${S}/audio_mdw/RSACPD_ADL.h ${D}/usr/local/include
         cp -P ${S}/audio_mdw/RSACPD_ADL.h ${STAGING_INCDIR}
