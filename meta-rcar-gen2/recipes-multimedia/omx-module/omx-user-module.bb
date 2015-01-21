@@ -127,7 +127,7 @@ do_install() {
 
     # Video (decode) common
     ln -sf libomxr_mc_vcmn.so.2.0.0 libomxr_mc_vcmn.so.2
-    ln -sf libomxr_mc_cmn.so.2.0.0  libomxr_mc_vcmn.so
+    ln -sf libomxr_mc_vcmn.so.2.0.0  libomxr_mc_vcmn.so
 
     ln -sf libomxr_mc_vdcmn.so.2.0.0 libomxr_mc_vdcmn.so.2
     ln -sf libomxr_mc_vdcmn.so.2.0.0 libomxr_mc_vdcmn.so
