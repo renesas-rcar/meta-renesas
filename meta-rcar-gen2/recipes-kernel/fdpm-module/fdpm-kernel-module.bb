@@ -51,11 +51,13 @@ do_cleansstate_prepend() {
 }
 
 do_clean_source() {
-    cd ${KERNELSRC}/include/linux/
-    rm -f fdpm_drv.h ${FDPM_INATALL_HEADERS}
+	if [ -d ${KERNELSRC} ] ; then
+		cd ${KERNELSRC}/include/linux/
+		rm -f fdpm_drv.h ${FDPM_INATALL_HEADERS}
 
-    cd  ${KERNELSRC}/include/
-    rm -f fdpm.symvers ${FDPM_INATALL_HEADERS}
+		cd  ${KERNELSRC}/include/
+		rm -f fdpm.symvers ${FDPM_INATALL_HEADERS}
+	fi
 }
 
 PACKAGES = " \
