@@ -207,7 +207,6 @@ do_install() {
 
         ln -sf libuvcs_enc.so.1.0.0 libuvcs_enc.so.1
         ln -sf libuvcs_enc.so.1.0.0 libuvcs_enc.so
-        ln -s -f libuvcs_enc.so.1.0.0 libuvcsenc.so
 
         ln -sf libvcp3_mcve.so.1.0.0 libvcp3_mcve.so.1
         ln -sf libvcp3_mcve.so.1.0.0 libvcp3_mcve.so
