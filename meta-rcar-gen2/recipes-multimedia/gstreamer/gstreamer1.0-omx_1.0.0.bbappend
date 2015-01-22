@@ -1,7 +1,7 @@
 require ../../include/gles-control.inc
 
 SRC_URI_rcar-gen2 = "git://github.com/renesas-devel/gst-omx.git;protocol=git;branch=RCAR-GEN2/1.0.0"
-SRCREV_rcar-gen2 = "84863f0c4be9345276fb77ec75cc0190ded63d62"
+SRCREV_rcar-gen2 = "05563465faad99243ee2dd30547e3075eb8cf5e3"
 
 LIC_FILES_CHKSUM_remove_rcar-gen2 = " file://omx/gstomx.h;beginline=1;endline=21;md5=5c8e1fca32704488e76d2ba9ddfa935f" 
 LIC_FILES_CHKSUM_append_rcar-gen2 = " file://omx/gstomx.h;beginline=1;endline=22;md5=17e5f2943dace9e5cde4a8587a31e8f9"
