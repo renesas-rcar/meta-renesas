@@ -4,11 +4,11 @@ OMX Media Component Common Library for Linux
 RELEASE NOTE
 
 Version:
-  beta11
+  2.0.1
 
 Feature/Fix:
 
-* N/A
+* [Common]タイミング依存でOMX_CommandPortDisableコマンドが応答しない問題の修正 
 
 Restriction:
 
@@ -16,4 +16,5 @@ Restriction:
 
 Notes:
 
-* This version is under testing.
+* N/A
+
