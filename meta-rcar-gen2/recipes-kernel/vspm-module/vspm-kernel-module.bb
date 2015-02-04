@@ -10,10 +10,10 @@ PR = "r0"
 SRC_URI = "file://vspm-kernel.tar.bz2"
 S = "${WORKDIR}"
 
-FDPM_CFG_r8a7790 = "H2CONFIG"
-FDPM_CFG_r8a7791 = "M2CONFIG"
-FDPM_CFG_r8a7793 = "M2CONFIG"
-FDPM_CFG_r8a7794 = "E2CONFIG"
+VSPM_CFG_r8a7790 = "H2CONFIG"
+VSPM_CFG_r8a7791 = "M2CONFIG"
+VSPM_CFG_r8a7793 = "M2CONFIG"
+VSPM_CFG_r8a7794 = "E2CONFIG"
 
 do_configure[noexec] = "1"
 do_compile() {
