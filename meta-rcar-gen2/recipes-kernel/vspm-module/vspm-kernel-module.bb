@@ -15,7 +15,6 @@ VSPM_CFG_r8a7791 = "M2CONFIG"
 VSPM_CFG_r8a7793 = "M2CONFIG"
 VSPM_CFG_r8a7794 = "E2CONFIG"
 
-do_configure[noexec] = "1"
 do_compile() {
     export VSPM_CONFIG=${VSPM_CFG}
     cd ${S}/vspm/drv
