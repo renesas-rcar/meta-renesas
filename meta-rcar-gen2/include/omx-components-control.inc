@@ -4,14 +4,14 @@
 # USE_MPEG4_DECODER for OMX Media Component MPEG-4 Decoder Library, default is DISABLE (0)
 # USE_MPEG2_DECODER for VCP3 Driver Adapted for Linux MPEG-2 Decoder Library, default is DISABLE (0)
 # USE_DIVX_DECODER for DivX Decoder Library for Linux, default is DISABLE (0)
-USE_H263_DECODER = "${@'1' if 'h263dec' in '${DISTRO_FEATURES}' else '0'}"
-USE_VC1_DECODER = "${@'1' if 'vc1dec' in '${DISTRO_FEATURES}' else '0'}"
-USE_MPEG2_DECODER = "${@'1' if 'mpeg2dec' in '${DISTRO_FEATURES}' else '0'}"
-USE_MPEG4_DECODER = "${@'1' if 'mpeg4dec' in '${DISTRO_FEATURES}' else '0'}"
-USE_DIVX_DECODER = "${@'1' if 'divxdec' in '${DISTRO_FEATURES}' else '0'}"
+USE_H263_DECODER = "${@'1' if 'h263dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_VC1_DECODER = "${@'1' if 'vc1dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_MPEG2_DECODER = "${@'1' if 'mpeg2dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_MPEG4_DECODER = "${@'1' if 'mpeg4dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_DIVX_DECODER = "${@'1' if 'divxdec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 ## Config to build H264AVC encoder
-USE_H264AVC_ENCODER = "${@'1' if 'h264avcenc' in '${DISTRO_FEATURES}' else '0'}"
+USE_H264AVC_ENCODER = "${@'1' if 'h264avcenc_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 ## Config for audio decoders
 #USE_AACP2_DECODER for ARM 5.1ch aacPlus V2 Decoder for Linux
@@ -20,16 +20,16 @@ USE_H264AVC_ENCODER = "${@'1' if 'h264avcenc' in '${DISTRO_FEATURES}' else '0'}"
 #USE_DDD_DECODER for ARM 5.1ch Dolby Digital Decoder for Linux
 #USE_ALAC_DECODER for ARM ALAC Decoder for Linux
 #USE_FLAC_DECODER for ARM FLAC Decoder for Linux
-USE_AACP2_DECODER = "${@'1' if 'aacp2dec' in '${DISTRO_FEATURES}' else '0'}"
-USE_MP3_DECODER = "${@'1' if 'mp3dec' in '${DISTRO_FEATURES}' else '0'}"
-USE_WMA_DECODER = "${@'1' if 'wmadec' in '${DISTRO_FEATURES}' else '0'}"
-USE_DDD_DECODER = "${@'1' if 'ddddec' in '${DISTRO_FEATURES}' else '0'}"
-USE_ALAC_DECODER = "${@'1' if 'alacdec' in '${DISTRO_FEATURES}' else '0'}"
-USE_FLAC_DECODER = "${@'1' if 'flacdec' in '${DISTRO_FEATURES}' else '0'}"
+USE_AACP2_DECODER = "${@'1' if 'aacp2dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_MP3_DECODER = "${@'1' if 'mp3dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_WMA_DECODER = "${@'1' if 'wmadec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_DDD_DECODER = "${@'1' if 'ddddec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_ALAC_DECODER = "${@'1' if 'alacdec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_FLAC_DECODER = "${@'1' if 'flacdec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 ## Config for audio encoders
 # USE_AAC_ENCODER for ARM AAC Encoder for Linux
-USE_AAC_ENCODER = "${@'1' if 'aacenc' in '${DISTRO_FEATURES}' else '0'}"
+USE_AAC_ENCODER = "${@'1' if 'aacenc_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 # Config for audio middlewares
 # USE_ARMAACP2_MDW_DECODER for ARM 5.1ch aacPlus V2 Decode Middleware for Linux
