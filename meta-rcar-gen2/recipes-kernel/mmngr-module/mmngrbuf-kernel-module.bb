@@ -23,8 +23,6 @@ do_install () {
 
     # Copy shared library for reference from other modules
     cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/mmngrbuf.symvers
-    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include
-    cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/mmngrbuf.symvers
 
     # Copy kernel module
@@ -39,7 +37,6 @@ do_cleansstate_prepend() {
 do_clean_source() {
     rm -f ${KERNELSRC}/include/mmngr_buf_private.h
     rm -f ${KERNELSRC}/include/mmngrbuf.symvers
-    rm -f ${KERNELSRC}/include/Module.symvers
 }
 
 PACKAGES = "\
@@ -52,7 +49,6 @@ FILES_${PN} = " \
 "
 
 FILES_${PN}-dev = " \
-    /usr/src/kernel/include/Module.symvers \
     /usr/src/kernel/include/mmngrbuf.symvers \
     /usr/src/kernel/include/*.h \
 "
