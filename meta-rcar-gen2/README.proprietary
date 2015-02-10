@@ -119,21 +119,21 @@ III/ Build with Renesas multimedia libraries
 		1. Please copy proprietary libraries to the directory of recipes.
 		2. Add features to DISTRO_FEATURES_append to local.conf
 			# Additional configuration in OMX module
-			" h263dec"    - for OMX Media Component H263 Decoder Library
-			" vc1dec"     - for OMX Media Component VC-1 Decoder Library
-			" mpeg4dec"   - for OMX Media Component MPEG-4 Decoder Library
-			" mpeg2dec"   - for VCP3 Driver Adapted for Linux MPEG-2 Decoder Library
-			" divxdec"    - for DivX Decoder Library for Linux
-			" h264avcenc" - for Encoder Library for Linux
+			" h263dec_lib"    - for OMX Media Component H263 Decoder Library
+			" vc1dec_lib"     - for OMX Media Component VC-1 Decoder Library
+			" mpeg4dec_lib"   - for OMX Media Component MPEG-4 Decoder Library
+			" mpeg2dec_lib"   - for VCP3 Driver Adapted for Linux MPEG-2 Decoder Library
+			" divxdec_lib"    - for DivX Decoder Library for Linux
+			" h264avcenc_lib" - for Encoder Library for Linux
 
 			# Configuration for audio decoders
-			" aacp2dec"   - for ARM 5.1ch aacPlus V2 Decoder for Linux
-			" mp3dec"     - for ARM MP3 Decoder for Linux
-			" wmadec"     - for ARM WMA Decoder for Linux
-			" ddddec"     - for ARM 5.1ch Dolby Digital Decoder for Linux
-			" alacdec"    - for ARM ALAC Decoder for Linux
-			" flacdec"    - for ARM FLAC Decoder for Linux
-			" aacenc"     - for ARM AAC Encoder for Linux
+			" aacp2dec_lib"   - for ARM 5.1ch aacPlus V2 Decoder for Linux
+			" mp3dec_lib"     - for ARM MP3 Decoder for Linux
+			" wmadec_lib"     - for ARM WMA Decoder for Linux
+			" ddddec_lib"     - for ARM 5.1ch Dolby Digital Decoder for Linux
+			" alacdec_lib"    - for ARM ALAC Decoder for Linux
+			" flacdec_lib"    - for ARM FLAC Decoder for Linux
+			" aacenc_lib"     - for ARM AAC Encoder for Linux
 
 			# Configuration for audio middlewares
 			" armaccp2dec_mdw"  - for ARM 5.1ch aacPlus V2 Decode Middleware for Linux
@@ -145,7 +145,7 @@ III/ Build with Renesas multimedia libraries
 			" aacenc_mdw"       - for ARM AAC Encode Middleware for Linux
 		Ex:
 
-				DISTRO_FEATURES_append = " mp3dec wmadec mp3dec_mdw wmadec_mdw"
+				DISTRO_FEATURES_append = " mp3dec_lib wmadec_lib mp3dec_mdw wmadec_mdw"
 
 	C/ Configuration for test packages
 		1. Please copy proprietary libraries to the directory of recipes.
