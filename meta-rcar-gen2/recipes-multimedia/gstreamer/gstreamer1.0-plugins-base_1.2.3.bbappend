@@ -19,6 +19,8 @@ VSPFILTER_CONFIGS = " \
     file://gstvspfilter-gose.conf \
     file://gstvspfilter-koelsch.conf \
     file://gstvspfilter-lager.conf \
+    file://gstvspfilter-porter.conf \
+    file://gstvspfilter-silk.conf \
 "
 
 # For wayland
