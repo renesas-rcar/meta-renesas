@@ -113,6 +113,14 @@ do_configure_prepend() {
 	yes '' | oe_runmake oldconfig
 }
 
+do_configure_append_porter() {
+    # Enable CAN
+    kernel_configure_variable CAN y
+    kernel_configure_variable CAN_RCAR y
+
+    yes '' | oe_runmake oldconfig
+}
+
 # Automatically depend on lzop-native if CONFIG_KERNEL_LZO is enabled
 python () {
     try:
