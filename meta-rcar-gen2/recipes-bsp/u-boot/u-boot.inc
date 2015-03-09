@@ -24,6 +24,11 @@ UBOOT_BINARY ?= "u-boot.${UBOOT_SUFFIX}"
 UBOOT_SYMLINK ?= "u-boot-${MACHINE}.${UBOOT_SUFFIX}"
 UBOOT_MAKE_TARGET ?= "all"
 
+# MiniMonitor requires u-boot.srec
+UBOOT_SREC ?= "u-boot.srec"
+UBOOT_SREC_SYMLINK ?= "u-boot-${MACHINE}.srec"
+UBOOT_SREC_IMAGE ?= "u-boot-${MACHINE}-${PV}-${PR}.srec"
+
 # Some versions of u-boot build an SPL (Second Program Loader) image that
 # should be packaged along with the u-boot binary as well as placed in the
 # deploy directory.  For those versions they can set the following variables
@@ -80,6 +85,15 @@ do_deploy () {
         ln -sf ${SPL_IMAGE} ${DEPLOYDIR}/${SPL_BINARY}
         ln -sf ${SPL_IMAGE} ${DEPLOYDIR}/${SPL_SYMLINK}
     fi
+}
+
+do_deploy_append() {
+	install ${S}/${UBOOT_SREC} ${DEPLOYDIR}/${UBOOT_SREC_IMAGE}
+
+	cd ${DEPLOYDIR}
+	rm -f ${UBOOT_SREC} ${UBOOT_SREC_SYMLINK}
+	ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC}
+	ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC_SYMLINK}
 }
 
 addtask deploy before do_build after do_compile
