@@ -30,6 +30,7 @@ SRC_URI_append_r8a7790 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         ", "", d)}"
 
 SRC_URI_r8a7791 = "file://r8a7791_linux_sgx_binaries_gles2.tar.bz2"
+SRC_URI_porter = "file://EVA_r8a7791_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7791 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://EGL_headers_for_wayland.patch \
         ", "", d)}"
@@ -40,6 +41,7 @@ SRC_URI_append_r8a7793 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         ", "", d)}"
 
 SRC_URI_r8a7794 = "file://r8a7794_linux_sgx_binaries_gles2.tar.bz2"
+SRC_URI_silk = "file://EVA_r8a7794_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7794 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
         file://EGL_headers_for_wayland.patch \
         ", "", d)}"
