@@ -10,7 +10,7 @@ SRC_URI = "git://github.com/thayama/wayland-kms;protocol=git;branch=master"
 
 COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7793|r8a7794)"
 S = "${WORKDIR}/git"
-DEPENDS = "libdrm wayland"
+DEPENDS = "libdrm wayland gles-user-module"
 
 inherit autotools pkgconfig
 
