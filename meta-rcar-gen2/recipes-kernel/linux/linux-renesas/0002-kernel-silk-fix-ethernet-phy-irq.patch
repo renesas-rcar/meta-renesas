@@ -1,0 +1,25 @@
+From f186213b9d9d3942dc403060542796e07d254d52 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Mon, 2 Feb 2015 13:34:25 +0300
+Subject: [PATCH] Silk: Ethernet phy interrupt is connected to IRQ8
+
+---
+ arch/arm/boot/dts/r8a7794-silk.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7794-silk.dts b/arch/arm/boot/dts/r8a7794-silk.dts
+index cb69f6b..aa20df8 100644
+--- a/arch/arm/boot/dts/r8a7794-silk.dts
++++ b/arch/arm/boot/dts/r8a7794-silk.dts
+@@ -280,7 +280,7 @@
+ 	phy1: ethernet-phy@1 {
+ 		reg = <1>;
+ 		interrupt-parent = <&irqc0>;
+-		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
++		interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
+ 		micrel,led-mode = <1>;
+ 	};
+ };
+-- 
+1.9.1
+

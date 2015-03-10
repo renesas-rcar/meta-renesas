@@ -1,0 +1,31 @@
+From 23fa8d125ca1be9c03ac7d2f42530a57d6ca28f2 Mon Sep 17 00:00:00 2001
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Tue, 3 Mar 2015 18:30:16 +0300
+Subject: [PATCH] i2c: busses: rcar: Workaround arbitration loss error
+
+Sometimes I2C master enable/disable at every transmission
+causes arbitration loss errors making the bus unusable.
+Workaround the issue by enabling I2C master
+in the rcar_i2c_init() function.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ drivers/i2c/busses/i2c-rcar.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 0e863f3..4334006 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -161,7 +161,7 @@ static void rcar_i2c_init(struct rcar_i2c_priv *priv)
+ 
+ 	/* reset master mode */
+ 	rcar_i2c_write(priv, ICMIER, 0);
+-	rcar_i2c_write(priv, ICMCR, 0);
++	rcar_i2c_write(priv, ICMCR, MDBS | MIE);
+ 	rcar_i2c_write(priv, ICMSR, 0);
+ 	rcar_i2c_write(priv, ICMAR, 0);
+ }
+-- 
+1.9.3
+

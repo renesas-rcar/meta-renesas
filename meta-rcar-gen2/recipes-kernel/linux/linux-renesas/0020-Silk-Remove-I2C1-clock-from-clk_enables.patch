@@ -1,0 +1,30 @@
+From 6c0691906b3bcce0a9629ca00faa6be88a013aaa Mon Sep 17 00:00:00 2001
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Tue, 3 Mar 2015 18:25:15 +0300
+Subject: [PATCH] ARM: shmobile: silk: Remove I2C1 clock from clk_enables
+ array
+
+Remove I2C1 clock from clk_enables array since it is not needed.
+I2C clocks are handled by the OF driver while shmobile_clk_workaround
+is only needed for platform devices.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ arch/arm/mach-shmobile/board-silk-reference.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/board-silk-reference.c b/arch/arm/mach-shmobile/board-silk-reference.c
+index 090a4df..d4c64fa 100644
+--- a/arch/arm/mach-shmobile/board-silk-reference.c
++++ b/arch/arm/mach-shmobile/board-silk-reference.c
+@@ -271,7 +271,6 @@ static const struct clk_name clk_names[] __initconst = {
+  */
+ static const struct clk_name clk_enables[] __initconst = {
+ 	{ "ether", NULL, "ee700000.ethernet" },
+-	{ "i2c1", NULL, "e6518000.i2c" },
+ 	{ "mmcif0", NULL, "ee200000.mmc" },
+ 	{ "sdhi0", NULL, "ee100000.sd" },
+ 	{ "sdhi1", NULL, "ee140000.sd" },
+-- 
+1.9.3
+

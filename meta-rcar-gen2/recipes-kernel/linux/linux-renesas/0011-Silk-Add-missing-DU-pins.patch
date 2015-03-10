@@ -1,0 +1,49 @@
+From 78aac9e8fbd6b5463554990e055302074a7fc485 Mon Sep 17 00:00:00 2001
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Fri, 13 Feb 2015 06:01:51 +0300
+Subject: [PATCH] ARM: dts: r8a7794-silk: Add missing DU pins
+
+This adds missing DU pins to R8A7794 SILK device tree.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ arch/arm/boot/dts/r8a7794-silk.dts | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7794-silk.dts b/arch/arm/boot/dts/r8a7794-silk.dts
+index f6994c9..dc04673 100644
+--- a/arch/arm/boot/dts/r8a7794-silk.dts
++++ b/arch/arm/boot/dts/r8a7794-silk.dts
+@@ -209,16 +209,26 @@
+ };
+ 
+ &pfc {
+-	pinctrl-0 = <&du_pins &usb0_pins &usb1_pins &sound_pins &sound_clk_pins
++	pinctrl-0 = <&du_pins &du0_pins &du1_pins &usb0_pins &usb1_pins &sound_pins &sound_clk_pins
+ 		     &vin0_pins>;
+ 	pinctrl-names = "default";
+ 
+ 	du_pins: du {
+-		renesas,groups = "du0_rgb888", "du0_sync", "du0_clk_out",
+-				 "du1_rgb666", "du1_sync", "du1_clk_out";
++		renesas,groups = "du0_rgb888", "du0_sync", "du0_clk_out", "du0_cde_disp",
++				 "du1_rgb666", "du1_sync", "du1_clk_out", "du1_cde_disp";
+ 		renesas,function = "du";
+ 	};
+ 
++	du0_pins: du0 {
++		renesas,groups = "du0_clk_in";
++		renesas,function = "du0";
++	};
++
++	du1_pins: du1 {
++		renesas,groups = "du1_clk_in";
++		renesas,function = "du1";
++	};
++
+ 	i2c0_pins: i2c0 {
+ 		renesas,groups = "i2c0_d";
+ 		renesas,function = "i2c0";
+-- 
+1.9.3
+

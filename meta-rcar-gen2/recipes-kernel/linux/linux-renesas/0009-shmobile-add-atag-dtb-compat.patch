@@ -1,0 +1,26 @@
+From 80644cc053765ec9ea7c509acad7cfd819ea25f5 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 11 Feb 2015 15:19:56 +0300
+Subject: [PATCH] Add ATAG DTB compatibility
+
+This is useful when DTB is static
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+
+---
+ arch/arm/configs/shmobile_defconfig |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: renesas-backport.v0/arch/arm/configs/shmobile_defconfig
+===================================================================
+--- renesas-backport.v0.orig/arch/arm/configs/shmobile_defconfig	2015-01-28 12:21:43.823500578 +0300
++++ renesas-backport.v0/arch/arm/configs/shmobile_defconfig	2015-02-11 14:33:34.864892464 +0300
+@@ -52,6 +52,8 @@
+ CONFIG_ZBOOT_ROM_TEXT=0x0
+ CONFIG_ZBOOT_ROM_BSS=0x0
+ CONFIG_ARM_APPENDED_DTB=y
++CONFIG_ARM_ATAG_DTB_COMPAT=y
++CONFIG_ARM_ATAG_DTB_COMPAT_CMDLINE_FROM_BOOTLOADER=y
+ CONFIG_KEXEC=y
+ CONFIG_CPU_FREQ=y
+ CONFIG_CPU_FREQ_STAT_DETAILS=y

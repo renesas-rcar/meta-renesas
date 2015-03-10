@@ -1,0 +1,45 @@
+From 207ad91c8ebbfbd2b862323200071a8c2a816fef Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Sun, 28 Dec 2014 20:01:53 +0300
+Subject: [PATCH] SILK: add i2c0
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ arch/arm/boot/dts/r8a7794-silk.dts |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7794-silk.dts b/arch/arm/boot/dts/r8a7794-silk.dts
+index aa20df8..bd1359d 100644
+--- a/arch/arm/boot/dts/r8a7794-silk.dts
++++ b/arch/arm/boot/dts/r8a7794-silk.dts
+@@ -181,6 +181,14 @@
+ 	clock-frequency = <20000000>;
+ };
+ 
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++};
++
+ &i2c1 {
+ 	pinctrl-0 = <&i2c1_pins>;
+ 	pinctrl-names = "default";
+@@ -211,6 +219,11 @@
+ 		renesas,function = "du";
+ 	};
+ 
++	i2c0_pins: i2c0 {
++		renesas,groups = "i2c0_d";
++		renesas,function = "i2c0";
++	};
++
+ 	i2c1_pins: i2c1 {
+ 		renesas,groups = "i2c1";
+ 		renesas,function = "i2c1";
+-- 
+1.7.10.4
+

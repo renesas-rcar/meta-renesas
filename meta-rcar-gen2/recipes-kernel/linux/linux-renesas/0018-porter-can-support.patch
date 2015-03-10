@@ -1,0 +1,63 @@
+From b73784d861cfff9651936b3d101b1a91ca3550a8 Mon Sep 17 00:00:00 2001
+From: Andrey Dolnikov <andrey.dolnikov@cogentembedded.com>
+Date: Wed, 25 Feb 2015 15:17:46 +0300
+Subject: [PATCH] Porter: Add CAN support.
+
+---
+ arch/arm/boot/dts/r8a7791-porter.dts | 12 ++++++++++++
+ arch/arm/boot/dts/r8a7791.dtsi       |  9 +++++++++
+ 2 files changed, 21 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7791-porter.dts b/arch/arm/boot/dts/r8a7791-porter.dts
+index 6a0ccde..4fb5cd5 100644
+--- a/arch/arm/boot/dts/r8a7791-porter.dts
++++ b/arch/arm/boot/dts/r8a7791-porter.dts
+@@ -211,6 +211,11 @@
+ 		renesas,groups = "vin0_data8", "vin0_clk";
+ 		renesas,function = "vin0";
+ 	};
++
++	can0_pins: can0 {
++		renesas,groups = "can0_data_b";
++		renesas,function = "can0";
++	};
+ };
+ 
+ &ether {
+@@ -229,6 +234,13 @@
+ 	};
+ };
+ 
++&can0 {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	status = "okay";
++};
++
+ &sata0 {
+ 	status = "okay";
+ };
+diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
+index 799d41c..1cad41e 100644
+--- a/arch/arm/boot/dts/r8a7791.dtsi
++++ b/arch/arm/boot/dts/r8a7791.dtsi
+@@ -533,6 +533,15 @@
+ 		status = "disabled";
+ 	};
+ 
++	can0: can@e6e80000 {
++		compatible = "renesas,can-r8a7791";
++		reg = <0 0xe6e80000 0 0x1000>;
++		interrupts = <0 186 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7791_CLK_RCAN0>;
++		clock-names = "clkp1", "clkp2", "can_clk";
++		status = "disabled";
++	};
++
+ 	sata0: sata@ee300000 {
+ 		compatible = "renesas,sata-r8a7791";
+ 		reg = <0 0xee300000 0 0x2000>;
+-- 
+1.9.1
+

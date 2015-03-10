@@ -1,0 +1,25 @@
+From 1a56b82aad68465e69827f1cbe18f53ab886f7df Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Mon, 2 Feb 2015 13:35:06 +0300
+Subject: [PATCH] Silk: Fix SDHI1 write protect pin detection
+
+---
+ arch/arm/boot/dts/r8a7794-silk.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7794-silk.dts b/arch/arm/boot/dts/r8a7794-silk.dts
+index aa20df8..9438dfa 100644
+--- a/arch/arm/boot/dts/r8a7794-silk.dts
++++ b/arch/arm/boot/dts/r8a7794-silk.dts
+@@ -345,7 +345,7 @@
+ 	vmmc-supply = <&vcc_sdhi1>;
+ 	vqmmc-supply = <&vccq_sdhi1>;
+ 	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
+-	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
++	wp-gpios = <&gpio6 15 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
+ };
+ 
+-- 
+1.9.1
+

@@ -1,0 +1,276 @@
+From 488e93a1d8371c6ce8cfd24d7299973c476a1aef Mon Sep 17 00:00:00 2001
+From: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+Date: Sun, 28 Dec 2014 19:58:58 +0300
+Subject: [PATCH] Rcar-DU: add RGB connector
+
+
+Signed-off-by: Andrey Gusakov <andrey.gusakov@cogentembedded.com>
+---
+ drivers/gpu/drm/rcar-du/Makefile          |    1 +
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c |    9 ++
+ drivers/gpu/drm/rcar-du/rcar_du_rgbcon.c  |  142 +++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_rgbcon.h  |   24 +++++
+ include/linux/platform_data/rcar-du.h     |    7 ++
+ 5 files changed, 183 insertions(+)
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_rgbcon.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_rgbcon.h
+
+diff --git a/drivers/gpu/drm/rcar-du/Makefile b/drivers/gpu/drm/rcar-du/Makefile
+index a6909f0..744da0f 100644
+--- a/drivers/gpu/drm/rcar-du/Makefile
++++ b/drivers/gpu/drm/rcar-du/Makefile
+@@ -5,6 +5,7 @@ rcar-du-drm-y := rcar_du_crtc.o \
+ 		 rcar_du_hdmicon.o \
+ 		 rcar_du_kms.o \
+ 		 rcar_du_lvdscon.o \
++		 rcar_du_rgbcon.o \
+ 		 rcar_du_plane.o \
+ 		 rcar_du_vgacon.o
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+index 0edec97..de0ccc1 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+@@ -24,6 +24,7 @@
+ #include "rcar_du_encoder.h"
+ #include "rcar_du_kms.h"
+ #include "rcar_du_lvdscon.h"
++#include "rcar_du_rgbcon.h"
+ #include "rcar_du_lvdsenc.h"
+ #include "rcar_du_vgacon.h"
+ #include "rcar_du_hdmicon.h"
+@@ -235,6 +236,9 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	case RCAR_DU_ENCODER_LVDS:
+ 		encoder_type = DRM_MODE_ENCODER_LVDS;
+ 		break;
++	case RCAR_DU_ENCODER_RGB:
++		encoder_type = DRM_MODE_ENCODER_NONE;
++		break;
+ 	case RCAR_DU_ENCODER_HDMI:
+ 		encoder_type = DRM_MODE_ENCODER_TMDS;
+ 		break;
+@@ -277,6 +281,11 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	case DRM_MODE_ENCODER_DAC:
+ 		return rcar_du_vga_connector_init(rcdu, renc);
+ 
++	case DRM_MODE_ENCODER_NONE:
++		if (type == RCAR_DU_ENCODER_RGB)
++			return rcar_du_rgb_connector_init(rcdu, renc,
++						&data->connector.rgb.panel);
++		/* fallthrough */
+ 	default:
+ 		return -EINVAL;
+ 	}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_rgbcon.c b/drivers/gpu/drm/rcar-du/rcar_du_rgbcon.c
+new file mode 100644
+index 0000000..9ee845d
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_rgbcon.c
+@@ -0,0 +1,142 @@
++/*
++ * rcar_du_rgbcon.c  --  R-Car Display Unit RGB Connector
++ * base on rcar_du_lvdscon.c
++ *
++ * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_encoder.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_rgbcon.h"
++
++struct rcar_du_rgb_connector {
++	struct rcar_du_connector connector;
++
++	const struct rcar_du_panel_data *panel;
++};
++
++#define to_rcar_rgb_connector(c) \
++	container_of(c, struct rcar_du_rgb_connector, connector.connector)
++
++static int rcar_du_rgb_connector_get_modes(struct drm_connector *connector)
++{
++	struct rcar_du_rgb_connector *rgbcon =
++		to_rcar_rgb_connector(connector);
++	struct drm_display_mode *mode;
++
++	mode = drm_mode_create(connector->dev);
++	if (mode == NULL)
++		return 0;
++
++	mode->type = DRM_MODE_TYPE_PREFERRED | DRM_MODE_TYPE_DRIVER;
++	mode->clock = rgbcon->panel->mode.clock;
++	mode->hdisplay = rgbcon->panel->mode.hdisplay;
++	mode->hsync_start = rgbcon->panel->mode.hsync_start;
++	mode->hsync_end = rgbcon->panel->mode.hsync_end;
++	mode->htotal = rgbcon->panel->mode.htotal;
++	mode->vdisplay = rgbcon->panel->mode.vdisplay;
++	mode->vsync_start = rgbcon->panel->mode.vsync_start;
++	mode->vsync_end = rgbcon->panel->mode.vsync_end;
++	mode->vtotal = rgbcon->panel->mode.vtotal;
++	mode->flags = rgbcon->panel->mode.flags;
++
++	drm_mode_set_name(mode);
++	drm_mode_probed_add(connector, mode);
++
++	return 1;
++}
++
++static int rcar_du_rgb_connector_mode_valid(struct drm_connector *connector,
++					    struct drm_display_mode *mode)
++{
++	return MODE_OK;
++}
++
++static const struct drm_connector_helper_funcs connector_helper_funcs = {
++	.get_modes = rcar_du_rgb_connector_get_modes,
++	.mode_valid = rcar_du_rgb_connector_mode_valid,
++	.best_encoder = rcar_du_connector_best_encoder,
++};
++
++static void rcar_du_rgb_connector_destroy(struct drm_connector *connector)
++{
++	drm_sysfs_connector_remove(connector);
++	drm_connector_cleanup(connector);
++}
++
++static enum drm_connector_status
++rcar_du_rgb_connector_detect(struct drm_connector *connector, bool force)
++{
++	return connector_status_connected;
++}
++
++static const struct drm_connector_funcs connector_funcs = {
++	.dpms = drm_helper_connector_dpms,
++	.detect = rcar_du_rgb_connector_detect,
++	.fill_modes = drm_helper_probe_single_connector_modes,
++	.destroy = rcar_du_rgb_connector_destroy,
++};
++
++int rcar_du_rgb_connector_init(struct rcar_du_device *rcdu,
++				struct rcar_du_encoder *renc,
++				const struct rcar_du_panel_data *panel)
++{
++	struct rcar_du_rgb_connector *rgbcon;
++	struct drm_connector *connector;
++	int ret;
++
++	if (rcdu->pdata->backlight_on) {
++		ret = rcdu->pdata->backlight_on();
++		if (ret < 0)
++			return ret;
++	}
++
++	rgbcon = devm_kzalloc(rcdu->dev, sizeof(*rgbcon), GFP_KERNEL);
++	if (rgbcon == NULL)
++		return -ENOMEM;
++
++	rgbcon->panel = panel;
++
++	connector = &rgbcon->connector.connector;
++	connector->display_info.width_mm = panel->width_mm;
++	connector->display_info.height_mm = panel->height_mm;
++
++	ret = drm_connector_init(rcdu->ddev, connector, &connector_funcs,
++				 DRM_MODE_CONNECTOR_Component);
++	if (ret < 0)
++		return ret;
++
++	drm_connector_helper_add(connector, &connector_helper_funcs);
++	ret = drm_sysfs_connector_add(connector);
++	if (ret < 0)
++		return ret;
++
++#if 0
++	drm_helper_connector_dpms(connector, DRM_MODE_DPMS_OFF);
++	drm_object_property_set_value(&connector->base,
++		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
++#else
++	drm_helper_connector_dpms(connector, DRM_MODE_DPMS_ON);
++	drm_object_property_set_value(&connector->base,
++		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_ON);
++#endif
++	ret = drm_mode_connector_attach_encoder(connector, renc->encoder);
++	if (ret < 0)
++		return ret;
++
++	connector->encoder = renc->encoder;
++	rgbcon->connector.encoder = renc;
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_rgbcon.h b/drivers/gpu/drm/rcar-du/rcar_du_rgbcon.h
+new file mode 100644
+index 0000000..d4d51be
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_rgbcon.h
+@@ -0,0 +1,24 @@
++/*
++ * rcar_du_rgbcon.h  --  R-Car Display Unit RGB Connector
++ * based on rcar_du_lvdscon.h
++ *
++ * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_RGBCON_H__
++#define __RCAR_DU_RGBCON_H__
++
++struct rcar_du_device;
++struct rcar_du_encoder;
++struct rcar_du_panel_data;
++
++int rcar_du_rgb_connector_init(struct rcar_du_device *rcdu,
++				struct rcar_du_encoder *renc,
++				const struct rcar_du_panel_data *panel);
++
++#endif /* __RCAR_DU_RGBCON_H__ */
+diff --git a/include/linux/platform_data/rcar-du.h b/include/linux/platform_data/rcar-du.h
+index 62464de..93c29af 100644
+--- a/include/linux/platform_data/rcar-du.h
++++ b/include/linux/platform_data/rcar-du.h
+@@ -31,6 +31,7 @@ enum rcar_du_encoder_type {
+ 	RCAR_DU_ENCODER_NONE,
+ 	RCAR_DU_ENCODER_VGA,
+ 	RCAR_DU_ENCODER_LVDS,
++	RCAR_DU_ENCODER_RGB,
+ 	RCAR_DU_ENCODER_HDMI,
+ };
+ 
+@@ -44,6 +45,11 @@ struct rcar_du_connector_lvds_data {
+ 	struct rcar_du_panel_data panel;
+ };
+ 
++struct rcar_du_connector_rgb_data {
++	struct rcar_du_panel_data panel;
++};
++
++
+ struct rcar_du_connector_vga_data {
+ 	/* TODO: Add DDC information for EDID retrieval */
+ };
+@@ -68,6 +74,7 @@ struct rcar_du_encoder_data {
+ 
+ 	union {
+ 		struct rcar_du_connector_lvds_data lvds;
++		struct rcar_du_connector_rgb_data rgb;
+ 		struct rcar_du_connector_vga_data vga;
+ 		struct rcar_du_connector_hdmi_data hdmi;
+ 	} connector;
+-- 
+1.7.10.4
+
