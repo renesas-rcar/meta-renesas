@@ -1,0 +1,51 @@
+From 1b5c615b0bb18985c9e5b8a3023506d910877d78 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sun, 15 Feb 2015 02:00:36 +0300
+Subject: [U-boot][PATCH] Silk disable dcache until fixed
+
+Disable D-cache on Silk platform until fixed
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ board/renesas/silk/silk.c | 4 ++--
+ include/configs/silk.h    | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/board/renesas/silk/silk.c b/board/renesas/silk/silk.c
+index addcfcb..78aede1 100644
+--- a/board/renesas/silk/silk.c
++++ b/board/renesas/silk/silk.c
+@@ -48,7 +48,7 @@ void s_init(void)
+ 	qos_init();
+ #endif
+ 
+-#ifndef CONFIG_DCACHE_OFF
++//#ifndef CONFIG_DCACHE_OFF
+ 	/*
+ 	 * The caches are disabled when ACTLR.SMP is set to 0
+ 	 * regardless of the value of the SCTLR.C (cache enable bit)
+@@ -58,7 +58,7 @@ void s_init(void)
+ 		"mrc	15, 0, r0, c1, c0, 1\n"		/* read ACTLR */
+ 		"orr	r0, r0, #(1 << 6)\n"		/* set SMP */
+ 		"mcr	p15, 0, r0, c1, c0, 1\n");	/* write ACTLR */
+-#endif
++//#endif
+ }
+ 
+ #define TMU0_MSTP125	(1 << 25)
+diff --git a/include/configs/silk.h b/include/configs/silk.h
+index 1a61272..4b66573 100644
+--- a/include/configs/silk.h
++++ b/include/configs/silk.h
+@@ -55,6 +55,8 @@
+ #define CONFIG_CMD_SPI
+ #define CONFIG_CMD_CACHE
+ 
++#define CONFIG_DCACHE_OFF
++
+ #define CONFIG_CMDLINE_TAG
+ #define CONFIG_SETUP_MEMORY_TAGS
+ #define CONFIG_INITRD_TAG
+-- 
+1.9.1
+

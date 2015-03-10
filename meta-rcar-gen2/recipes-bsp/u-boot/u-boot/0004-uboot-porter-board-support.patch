@@ -1,0 +1,3186 @@
+From 480e53ade723e637d9557d224706bad2210fb3ca Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 4 Feb 2015 22:13:49 +0300
+Subject: [U-boot][PATCH] arm: rmobile: Add Porter board support
+
+Porter is an entry level development board based on R-Car M2 SoC (R8A7791)
+
+This commit supports the following peripherals:
+- SCIF, I2C, Ethernet, QSPI, SDHI, USB Host
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ board/renesas/porter/Makefile        |   48 +
+ board/renesas/porter/lowlevel_init.S |   71 +
+ board/renesas/porter/porter.c        |  308 +++++
+ board/renesas/porter/porter.h        |   28 +
+ board/renesas/porter/qos.c           | 2411 ++++++++++++++++++++++++++++++++++
+ boards.cfg                           |    2 +
+ drivers/mmc/sh_sdhi.c                |    6 +-
+ drivers/usb/host/ehci-r8a779x.c      |    2 +
+ include/configs/porter.h             |  213 +++
+ 9 files changed, 3087 insertions(+), 2 deletions(-)
+ create mode 100644 board/renesas/porter/Makefile
+ create mode 100644 board/renesas/porter/lowlevel_init.S
+ create mode 100644 board/renesas/porter/porter.c
+ create mode 100644 board/renesas/porter/porter.h
+ create mode 100644 board/renesas/porter/qos.c
+ create mode 100644 include/configs/porter.h
+
+diff --git a/board/renesas/porter/Makefile b/board/renesas/porter/Makefile
+new file mode 100644
+index 0000000..24e63f1
+--- /dev/null
++++ b/board/renesas/porter/Makefile
+@@ -0,0 +1,48 @@
++#
++# board/renesas/porter/Makefile
++#
++# Copyright (C) 2015 Renesas Electronics Corporation
++# Copyright (C) 2015 Cogent Embedded, Inc.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License version 2
++# as published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software Foundation,
++# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++#
++
++include	$(TOPDIR)/config.mk
++
++LIB	= $(obj)lib$(BOARD).o
++
++COBJS	:= porter.o qos.o
++SOBJS	:= lowlevel_init.o
++
++SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
++OBJS	:= $(addprefix $(obj),$(COBJS))
++SOBJS	:= $(addprefix $(obj),$(SOBJS))
++
++$(LIB): $(obj).depend $(OBJS) $(SOBJS)
++	$(call cmd_link_o_target, $(OBJS) $(SOBJS))
++
++clean:
++	rm -f $(SOBJS) $(OBJS)
++
++distclean:	clean
++	rm -f $(LIB) core *.bak $(obj).depend
++
++#########################################################################
++
++# defines $(obj).depend target
++include $(SRCTREE)/rules.mk
++
++sinclude $(obj).depend
++
++#########################################################################
+diff --git a/board/renesas/porter/lowlevel_init.S b/board/renesas/porter/lowlevel_init.S
+new file mode 100644
+index 0000000..c5ceada
+--- /dev/null
++++ b/board/renesas/porter/lowlevel_init.S
+@@ -0,0 +1,71 @@
++/*
++ * board/renesas/porter/lowlevel_init.S
++ *     This file is Porter low level initialize.
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ * Copyright (C) 2015 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#include <config.h>
++#include <linux/linkage.h>
++
++ENTRY(lowlevel_init)
++	mrc	p15, 0, r4, c0, c0, 5 /* mpidr */
++	orr	r4, r4, r4, lsr #6
++	and	r4, r4, #7 /* id 0-3 = ca15.0,1,2,3 */
++
++	b do_lowlevel_init
++
++	.pool
++
++/*
++ * Only CPU ID #0 comes here
++ */
++	.align  4
++do_lowlevel_init:
++
++	/* surpress wfe if ca15 */
++	tst r4, #4
++	mrceq p15, 0, r0, c1, c0, 1	/* actlr */
++	orreq r0, r0, #(1<<7)
++	mcreq p15, 0, r0, c1, c0, 1
++
++	/* and set l2 latency */
++	mrc p15, 0, r0, c0, c0, 5	/* r0 = MPIDR */
++	and r0, r0, #0xf00
++	lsr r0, r0, #8
++	tst r0, #1			/* only need for cluster 0 */
++	bne _exit_init_l2_a15
++
++	mrc p15, 1, r0, c9, c0, 2	/* r0 = L2CTLR */
++	and r1, r0, #7
++	cmp r1, #3			/* has already been set up */
++	bicne r0, r0, #0xe7
++	orrne r0, r0, #0x83		/* L2CTLR[7:6] + L2CTLR[2:0] */
++	mcrne p15, 1, r0, c9, c0, 2
++_exit_init_l2_a15:
++	ldr	r3, =(CONFIG_SYS_INIT_SP_ADDR)
++	sub	sp, r3, #4
++	str	lr, [sp]
++
++	/* initialize system */
++	bl s_init
++
++	ldr	lr, [sp]
++	mov	pc, lr
++	nop
++ENDPROC(lowlevel_init)
++	.ltorg
+diff --git a/board/renesas/porter/porter.c b/board/renesas/porter/porter.c
+new file mode 100644
+index 0000000..e6ded08
+--- /dev/null
++++ b/board/renesas/porter/porter.c
+@@ -0,0 +1,305 @@
++/*
++ * board/renesas/porter/porter.c
++ *     This file is Porter board support.
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ * Copyright (C) 2015 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#include <common.h>
++#include <malloc.h>
++#include <asm/processor.h>
++#include <asm/mach-types.h>
++#include <asm/io.h>
++#include <asm/errno.h>
++#include <asm/arch/sys_proto.h>
++#include <asm/gpio.h>
++#include <asm/arch/rmobile.h>
++#include <netdev.h>
++#include <i2c.h>
++#include "porter.h"
++
++DECLARE_GLOBAL_DATA_PTR;
++
++#define PLL0CR		0xE61500D8
++
++void s_init(void)
++{
++	struct r8a7791_rwdt *rwdt = (struct r8a7791_rwdt *)RWDT_BASE;
++	struct r8a7791_swdt *swdt = (struct r8a7791_swdt *)SWDT_BASE;
++	u32 val;
++
++	/* Watchdog init */
++	writel(0xA5A5A500, &rwdt->rwtcsra);
++	writel(0xA5A5A500, &swdt->swtcsra);
++
++	/* cpu frequency setting */
++	val = readl(PLL0CR);
++	val &= ~0x7F000000;
++	val |= 0x4A000000;	/* 1.5GHz */
++	writel(val, PLL0CR);
++
++#if !defined(CONFIG_EXTRAM_BOOT)
++	/* QoS */
++	qos_init();
++#endif
++}
++
++#define TMU0_MSTP125	(1 << 25)
++#define SDHI0_MSTP314	(1 << 14)
++#define SDHI2_MSTP311	(1 << 11)
++#define SCIF0_MSTP721	(1 << 21)
++#define ETHER_MSTP813	(1 << 13)
++
++#define SD2CKCR		0xE615026C
++#define SD2_97500KHZ	0x7
++
++int board_early_init_f(void)
++{
++	u32 val;
++
++	/* TMU0 */
++	val = readl(MSTPSR1);
++	val &= ~TMU0_MSTP125;
++	writel(val, SMSTPCR1);
++
++	val = readl(MSTPSR7);
++	val &= ~SCIF0_MSTP721;
++	writel(val, SMSTPCR7);
++
++	/* ETHER */
++	val = readl(MSTPSR8);
++	val &= ~ETHER_MSTP813;
++	writel(val, SMSTPCR8);
++
++	/* SD */
++	val = readl(MSTPSR3);
++	val &= ~(SDHI0_MSTP314 | SDHI2_MSTP311);
++	writel(val, SMSTPCR3);
++
++	/*
++	 * SD0 clock is set to 97.5MHz by default.
++	 * Set SD2 to the 97.5MHz as well.
++	 */
++	writel(SD2_97500KHZ, SD2CKCR);
++
++	return 0;
++}
++
++/* LSI pin pull-up control */
++#define PUPR5		0xe6060114
++#define PUPR5_ETH	0x3FFC0000
++#define PUPR5_ETH_MAGIC	(1 << 27)
++
++int board_init(void)
++{
++	u32 val;
++
++	/* adress of boot parameters */
++	gd->bd->bi_boot_params = PORTER_SDRAM_BASE + 0x100;
++
++	/* Init PFC controller */
++	r8a7791_pinmux_init();
++
++	sh_timer_init();
++
++	/* ETHER Enable */
++	gpio_request(GPIO_FN_ETH_CRS_DV, NULL);
++	gpio_request(GPIO_FN_ETH_RX_ER, NULL);
++	gpio_request(GPIO_FN_ETH_RXD0, NULL);
++	gpio_request(GPIO_FN_ETH_RXD1, NULL);
++	gpio_request(GPIO_FN_ETH_LINK, NULL);
++	gpio_request(GPIO_FN_ETH_REFCLK, NULL);
++	gpio_request(GPIO_FN_ETH_MDIO, NULL);
++	gpio_request(GPIO_FN_ETH_TXD1, NULL);
++	gpio_request(GPIO_FN_ETH_TX_EN, NULL);
++	gpio_request(GPIO_FN_ETH_TXD0, NULL);
++	gpio_request(GPIO_FN_ETH_MDC, NULL);
++	gpio_request(GPIO_FN_IRQ0, NULL);
++
++	val = readl(PUPR5);
++	val &= ~(PUPR5_ETH & ~PUPR5_ETH_MAGIC);
++	writel(val, PUPR5);
++
++	gpio_request(GPIO_GP_5_22, NULL);	/* PHY_RST */
++	val = readl(PUPR5);
++	val &= ~PUPR5_ETH_MAGIC;
++	writel(val, PUPR5);
++
++	gpio_direction_output(GPIO_GP_5_22, 0);
++	mdelay(20);
++	gpio_set_value(GPIO_GP_5_22, 1);
++	udelay(1);
++
++#ifdef CONFIG_SH_SDHI
++	gpio_request(GPIO_FN_SD0_DATA0, NULL);
++	gpio_request(GPIO_FN_SD0_DATA1, NULL);
++	gpio_request(GPIO_FN_SD0_DATA2, NULL);
++	gpio_request(GPIO_FN_SD0_DATA3, NULL);
++	gpio_request(GPIO_FN_SD0_CLK, NULL);
++	gpio_request(GPIO_FN_SD0_CMD, NULL);
++	gpio_request(GPIO_FN_SD0_CD, NULL);
++	gpio_request(GPIO_FN_SD2_DATA0, NULL);
++	gpio_request(GPIO_FN_SD2_DATA1, NULL);
++	gpio_request(GPIO_FN_SD2_DATA2, NULL);
++	gpio_request(GPIO_FN_SD2_DATA3, NULL);
++	gpio_request(GPIO_FN_SD2_CLK, NULL);
++	gpio_request(GPIO_FN_SD2_CMD, NULL);
++	gpio_request(GPIO_FN_SD2_CD, NULL);
++#endif
++
++	/* sdhi0 */
++	gpio_request(GPIO_GP_2_12, NULL);
++	gpio_direction_output(GPIO_GP_2_12, 1);	/* 1: 3.3V, 0: 1.8V */
++	/* sdhi2 */
++	gpio_request(GPIO_GP_2_26, NULL);
++	gpio_direction_output(GPIO_GP_2_26, 1);	/* 1: 3.3V, 0: 1.8V */
++
++	return 0;
++}
++
++int board_eth_init(bd_t *bis)
++{
++	int ret = -ENODEV;
++	u32 val;
++	unsigned char enetaddr[6];
++
++#ifdef CONFIG_SH_ETHER
++	ret = sh_eth_initialize(bis);
++	if (!eth_getenv_enetaddr("ethaddr", enetaddr))
++		return ret;
++
++	/* Set Mac address */
++	val = enetaddr[0] << 24 | enetaddr[1] << 16 |
++	    enetaddr[2] << 8 | enetaddr[3];
++	writel(val, 0xEE7003C0);
++
++	val = enetaddr[4] << 8 | enetaddr[5];
++	writel(val, 0xEE7003C8);
++#endif
++
++	return ret;
++}
++
++int dram_init(void)
++{
++	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
++
++	return 0;
++}
++
++const struct rmobile_sysinfo sysinfo = {
++	CONFIG_RMOBILE_BOARD_STRING
++};
++
++void dram_init_banksize(void)
++{
++	gd->bd->bi_dram[0].start = PORTER_SDRAM_BASE;
++	gd->bd->bi_dram[0].size = PORTER_SDRAM_SIZE;
++}
++
++int board_late_init(void)
++{
++	return 0;
++}
++
++int board_mmc_init(bd_t *bis)
++{
++	int ret = 0;
++
++#ifdef CONFIG_SH_SDHI
++	/* use SDHI0,2 */
++	ret = sdhi_mmc_init(SDHI0_BASE, 0);
++	if (ret)
++		return ret;
++
++	ret = sdhi_mmc_init(SDHI2_BASE, 2);
++#endif
++
++	return ret;
++}
++
++void reset_cpu(ulong addr)
++{
++	u8 val;
++
++	i2c_init(CONFIG_SYS_I2C_SPEED, 0);
++	i2c_read(0x58, 0x13, 1, &val, 1);
++	val |= 0x02;
++	i2c_write(0x58, 0x13, 1, &val, 1);
++}
++
++enum {
++	MSTP00, MSTP01, MSTP02, MSTP03, MSTP04, MSTP05,
++	MSTP07, MSTP08, MSTP09, MSTP10, MSTP11,
++	MSTP_NR,
++};
++
++struct mstp_ctl {
++	u32 s_addr;
++	u32 s_dis;
++	u32 s_ena;
++	u32 r_addr;
++	u32 r_dis;
++	u32 r_ena;
++} mstptbl[MSTP_NR] = {
++	[MSTP00] = { SMSTPCR0,  0x00640801, 0x00400000,
++		     RMSTPCR0,  0x00640801, 0x00000000 },
++	[MSTP01] = { SMSTPCR1,  0x9B6C9B5A, 0x00000000,
++		     RMSTPCR1,  0x9B6C9B5A, 0x00000000 },
++	[MSTP02] = { SMSTPCR2,  0x100D21FC, 0x00002000,
++		     RMSTPCR2,  0x100D21FC, 0x00000000 },
++	[MSTP03] = { SMSTPCR3,  0xF08CD810, 0x00000000,
++		     RMSTPCR3,  0xF08CD810, 0x00000000 },
++	[MSTP04] = { SMSTPCR4,  0x800001C4, 0x00000180,
++		     RMSTPCR4,  0x800001C4, 0x00000000 },
++	[MSTP05] = { SMSTPCR5,  0x44C00046, 0x00000000,
++		     RMSTPCR5,  0x44C00046, 0x00000000 },
++	[MSTP07] = { SMSTPCR7,  0x05BFE618, 0x00200000,
++		     RMSTPCR7,  0x05BFE618, 0x00000000 },
++	[MSTP08] = { SMSTPCR8,  0x40C0FE85, 0x00000000,
++		     RMSTPCR8,  0x40C0FE85, 0x00000000 },
++	[MSTP09] = { SMSTPCR9,  0xFF979FFF, 0x00000000,
++		     RMSTPCR9,  0xFF979FFF, 0x00000000 },
++	[MSTP10] = { SMSTPCR10, 0xFFFEFFE0, 0x00000000,
++		     RMSTPCR10, 0xFFFEFFE0, 0x00000000 },
++	[MSTP11] = { SMSTPCR11, 0x000001C0, 0x00000000,
++		     RMSTPCR11, 0x000001C0, 0x00000000 },
++};
++
++#define TSTR0		4
++#define TSTR0_STR0	0x1
++
++void arch_preboot_os()
++{
++	u32 val;
++	int i;
++
++	/* stop TMU0 */
++	val = readb(TMU_BASE + TSTR0);
++	val &= ~TSTR0_STR0;
++	writeb(val, TMU_BASE + TSTR0);
++
++	/* stop all module clock*/
++	for (i = MSTP00; i < MSTP_NR; i++) {
++		val = readl(mstptbl[i].s_addr);
++		writel((val | mstptbl[i].s_dis) & ~(mstptbl[i].s_ena),
++		       mstptbl[i].s_addr);
++		val = readl(mstptbl[i].r_addr);
++		writel((val | mstptbl[i].r_dis) & ~(mstptbl[i].r_ena),
++		       mstptbl[i].r_addr);
++	}
++}
+diff --git a/board/renesas/porter/porter.h b/board/renesas/porter/porter.h
+new file mode 100644
+index 0000000..c83e200
+--- /dev/null
++++ b/board/renesas/porter/porter.h
+@@ -0,0 +1,27 @@
++/*
++ * board/renesas/porter/porter.h
++ *     This file is Porter board definition.
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ * Copyright (C) 2015 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++extern int sh_timer_init(void);
++extern int sdhi_mmc_init(unsigned long addr, int ch);
++
++extern void arch_preboot_os(void);
++
++extern void qos_init(void);
+diff --git a/board/renesas/porter/qos.c b/board/renesas/porter/qos.c
+new file mode 100644
+index 0000000..b3c2951
+--- /dev/null
++++ b/board/renesas/porter/qos.c
+@@ -0,0 +1,2411 @@
++/*
++ * board/renesas/porter/qos.c
++ *     This file is Porter QoS setting.
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ * Copyright (C) 2015 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#include <common.h>
++#include <asm/processor.h>
++#include <asm/mach-types.h>
++#include <asm/io.h>
++#include <asm/arch/rmobile.h>
++
++/* QoS version 0.240 for ES1 and version 0.411 for ES2 later */
++
++#define QOS_PRI_MEDIA	0
++#define QOS_PRI_NORMAL	1
++#define QOS_PRI_GFX	0
++
++enum {
++	DBSC3_00, DBSC3_01, DBSC3_02, DBSC3_03, DBSC3_04,
++	DBSC3_05, DBSC3_06, DBSC3_07, DBSC3_08, DBSC3_09,
++	DBSC3_10, DBSC3_11, DBSC3_12, DBSC3_13, DBSC3_14,
++	DBSC3_15,
++	DBSC3_NR,
++};
++
++static u32 dbsc3_0_r_qos_addr[DBSC3_NR] = {
++	[DBSC3_00] = DBSC3_0_QOS_R0_BASE,
++	[DBSC3_01] = DBSC3_0_QOS_R1_BASE,
++	[DBSC3_02] = DBSC3_0_QOS_R2_BASE,
++	[DBSC3_03] = DBSC3_0_QOS_R3_BASE,
++	[DBSC3_04] = DBSC3_0_QOS_R4_BASE,
++	[DBSC3_05] = DBSC3_0_QOS_R5_BASE,
++	[DBSC3_06] = DBSC3_0_QOS_R6_BASE,
++	[DBSC3_07] = DBSC3_0_QOS_R7_BASE,
++	[DBSC3_08] = DBSC3_0_QOS_R8_BASE,
++	[DBSC3_09] = DBSC3_0_QOS_R9_BASE,
++	[DBSC3_10] = DBSC3_0_QOS_R10_BASE,
++	[DBSC3_11] = DBSC3_0_QOS_R11_BASE,
++	[DBSC3_12] = DBSC3_0_QOS_R12_BASE,
++	[DBSC3_13] = DBSC3_0_QOS_R13_BASE,
++	[DBSC3_14] = DBSC3_0_QOS_R14_BASE,
++	[DBSC3_15] = DBSC3_0_QOS_R15_BASE,
++};
++
++static u32 dbsc3_0_w_qos_addr[DBSC3_NR] = {
++	[DBSC3_00] = DBSC3_0_QOS_W0_BASE,
++	[DBSC3_01] = DBSC3_0_QOS_W1_BASE,
++	[DBSC3_02] = DBSC3_0_QOS_W2_BASE,
++	[DBSC3_03] = DBSC3_0_QOS_W3_BASE,
++	[DBSC3_04] = DBSC3_0_QOS_W4_BASE,
++	[DBSC3_05] = DBSC3_0_QOS_W5_BASE,
++	[DBSC3_06] = DBSC3_0_QOS_W6_BASE,
++	[DBSC3_07] = DBSC3_0_QOS_W7_BASE,
++	[DBSC3_08] = DBSC3_0_QOS_W8_BASE,
++	[DBSC3_09] = DBSC3_0_QOS_W9_BASE,
++	[DBSC3_10] = DBSC3_0_QOS_W10_BASE,
++	[DBSC3_11] = DBSC3_0_QOS_W11_BASE,
++	[DBSC3_12] = DBSC3_0_QOS_W12_BASE,
++	[DBSC3_13] = DBSC3_0_QOS_W13_BASE,
++	[DBSC3_14] = DBSC3_0_QOS_W14_BASE,
++	[DBSC3_15] = DBSC3_0_QOS_W15_BASE,
++};
++
++static u32 dbsc3_1_r_qos_addr[DBSC3_NR] = {
++	[DBSC3_00] = DBSC3_1_QOS_R0_BASE,
++	[DBSC3_01] = DBSC3_1_QOS_R1_BASE,
++	[DBSC3_02] = DBSC3_1_QOS_R2_BASE,
++	[DBSC3_03] = DBSC3_1_QOS_R3_BASE,
++	[DBSC3_04] = DBSC3_1_QOS_R4_BASE,
++	[DBSC3_05] = DBSC3_1_QOS_R5_BASE,
++	[DBSC3_06] = DBSC3_1_QOS_R6_BASE,
++	[DBSC3_07] = DBSC3_1_QOS_R7_BASE,
++	[DBSC3_08] = DBSC3_1_QOS_R8_BASE,
++	[DBSC3_09] = DBSC3_1_QOS_R9_BASE,
++	[DBSC3_10] = DBSC3_1_QOS_R10_BASE,
++	[DBSC3_11] = DBSC3_1_QOS_R11_BASE,
++	[DBSC3_12] = DBSC3_1_QOS_R12_BASE,
++	[DBSC3_13] = DBSC3_1_QOS_R13_BASE,
++	[DBSC3_14] = DBSC3_1_QOS_R14_BASE,
++	[DBSC3_15] = DBSC3_1_QOS_R15_BASE,
++};
++
++static u32 dbsc3_1_w_qos_addr[DBSC3_NR] = {
++	[DBSC3_00] = DBSC3_1_QOS_W0_BASE,
++	[DBSC3_01] = DBSC3_1_QOS_W1_BASE,
++	[DBSC3_02] = DBSC3_1_QOS_W2_BASE,
++	[DBSC3_03] = DBSC3_1_QOS_W3_BASE,
++	[DBSC3_04] = DBSC3_1_QOS_W4_BASE,
++	[DBSC3_05] = DBSC3_1_QOS_W5_BASE,
++	[DBSC3_06] = DBSC3_1_QOS_W6_BASE,
++	[DBSC3_07] = DBSC3_1_QOS_W7_BASE,
++	[DBSC3_08] = DBSC3_1_QOS_W8_BASE,
++	[DBSC3_09] = DBSC3_1_QOS_W9_BASE,
++	[DBSC3_10] = DBSC3_1_QOS_W10_BASE,
++	[DBSC3_11] = DBSC3_1_QOS_W11_BASE,
++	[DBSC3_12] = DBSC3_1_QOS_W12_BASE,
++	[DBSC3_13] = DBSC3_1_QOS_W13_BASE,
++	[DBSC3_14] = DBSC3_1_QOS_W14_BASE,
++	[DBSC3_15] = DBSC3_1_QOS_W15_BASE,
++};
++
++/* QoS version 0.240 for ES1 */
++
++void qos_init_es1(void)
++{
++	int i;
++	struct r8a7791_s3c *s3c;
++	struct r8a7791_s3c_qos *s3c_qos;
++	struct r8a7791_dbsc3_qos *qos_addr;
++	struct r8a7791_mxi *mxi;
++	struct r8a7791_mxi_qos *mxi_qos;
++	struct r8a7791_axi_qos *axi_qos;
++
++	/* DBSC DBADJ2 */
++	writel(0x20042004, DBSC3_0_DBADJ2);
++	writel(0x20042004, DBSC3_1_DBADJ2);
++
++	/* S3C -QoS */
++	s3c = (struct r8a7791_s3c *)S3C_BASE;
++	writel(0x00FF1B1D, &s3c->s3cadsplcr);
++	writel(0x1F0D0C0C, &s3c->s3crorr);
++	writel(0x1F0D0C0A, &s3c->s3cworr);
++
++	/* QoS Control Registers */
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_CCI0_BASE;
++	writel(0x00890089, &s3c_qos->s3cqos0);
++	writel(0x20960010, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++	writel(0x20AA2200, &s3c_qos->s3cqos3);
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960010, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++	writel(0x20AA2200, &s3c_qos->s3cqos7);
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_CCI1_BASE;
++	writel(0x00890089, &s3c_qos->s3cqos0);
++	writel(0x20960010, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++	writel(0x20AA2200, &s3c_qos->s3cqos3);
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960010, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++	writel(0x20AA2200, &s3c_qos->s3cqos7);
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_MXI_BASE;
++	writel(0x00820082, &s3c_qos->s3cqos0);
++	writel(0x20960020, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++	writel(0x20AA20DC, &s3c_qos->s3cqos3);
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960020, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++	writel(0x20AA20DC, &s3c_qos->s3cqos7);
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_AXI_BASE;
++	writel(0x00820082, &s3c_qos->s3cqos0);
++	writel(0x20960020, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++	writel(0x20AA20FA, &s3c_qos->s3cqos3);
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960020, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++	writel(0x20AA20FA, &s3c_qos->s3cqos7);
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	/* DBSC -QoS */
++	/* DBSC0 - Read */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_0_r_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x00002096, &qos_addr->dbtmval0);
++		writel(0x00002064, &qos_addr->dbtmval1);
++		writel(0x00002032, &qos_addr->dbtmval2);
++		writel(0x00001FB0, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000204B, &qos_addr->dbthres1);
++		writel(0x00001FE7, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* DBSC0 - Write */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_0_w_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x000020EB, &qos_addr->dbtmval0);
++		writel(0x0000206E, &qos_addr->dbtmval1);
++		writel(0x00002050, &qos_addr->dbtmval2);
++		writel(0x0000203A, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000205A, &qos_addr->dbthres1);
++		writel(0x0000203C, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* DBSC1 - Read */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_1_r_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x00002096, &qos_addr->dbtmval0);
++		writel(0x00002064, &qos_addr->dbtmval1);
++		writel(0x00002032, &qos_addr->dbtmval2);
++		writel(0x00001FB0, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000204B, &qos_addr->dbthres1);
++		writel(0x00001FE7, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* DBSC1 - Write */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_1_w_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x000020EB, &qos_addr->dbtmval0);
++		writel(0x0000206E, &qos_addr->dbtmval1);
++		writel(0x00002050, &qos_addr->dbtmval2);
++		writel(0x0000203A, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000205A, &qos_addr->dbthres1);
++		writel(0x0000203C, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* CCI-400 -QoS */
++	writel(0x20001000, CCI_400_MAXOT_1);
++	writel(0x20001000, CCI_400_MAXOT_2);
++	writel(0x0000000C, CCI_400_QOSCNTL_1);
++	writel(0x0000000C, CCI_400_QOSCNTL_2);
++
++	/* MXI -QoS */
++	/* Transaction Control (MXI) */
++	mxi = (struct r8a7791_mxi *)MXI_BASE;
++	writel(0x00000013, &mxi->mxrtcr);
++	writel(0x00000013, &mxi->mxwtcr);
++	writel(0x00780080, &mxi->mxsaar0);
++	writel(0x02000800, &mxi->mxsaar1);
++
++	/* QoS Control (MXI) */
++	mxi_qos = (struct r8a7791_mxi_qos *)MXI_QOS_BASE;
++	writel(0x0000000C, &mxi_qos->vspdu0);
++	writel(0x0000000C, &mxi_qos->vspdu1);
++	writel(0x0000000D, &mxi_qos->du0);
++
++	/* AXI -QoS */
++	/* Transaction Control (MXI) */
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SYX64TO128_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_AVB_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_G2D_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMP0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002021, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMP1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002037, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMUX0_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMUX1_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMUX2_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_LBS_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUDS_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUM_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUS0_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUS1_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MTSB0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002021, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MTSB1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002021, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_PCI_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_RTX_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDS0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDS1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB20_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB21_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB22_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB30_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_AX2M_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_CC50_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002029, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_CCI_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_CS_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_DDM_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_ETH_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MPXM_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SAT0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SAT1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDM0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDM1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_TRAB_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_UDM0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_UDM1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (RT-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_SHX_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_DBG_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_RDM_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002299, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_RDS_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002029, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_RTX64TO128_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_STPRO_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002029, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_SY2RT_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (MP-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_ADSP_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002037, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_ASDS0_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002014, &axi_qos->qosctset0);
++	writel(0x00000040, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_ASDS1_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002014, &axi_qos->qosctset0);
++	writel(0x00000040, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_MLP_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00001FF0, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00002001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_MMUMP_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_SPU_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_SPUC_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000206E, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (SYS-AXI256) */
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_AXI128TO256_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_SYX_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_MPX_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_MXI_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (CCI-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUS0_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_SYX2_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUDS_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUM_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MXI_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUS1_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUMP_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (Media-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_MXR_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020DC, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x000020AA, &axi_qos->qosthres0);
++	writel(0x00002032, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_MXW_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020DC, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x000020AA, &axi_qos->qosthres0);
++	writel(0x00002032, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_JPR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_JPW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_TDMR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_TDMW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU0CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU0CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU1CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU1CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VIN0W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP0R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP0W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMSR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMSW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP1R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP1W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMRR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMRW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD0R_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD0W_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD1R_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD1W_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_DU0R_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002063, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_DU0W_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002063, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0VR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0VW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VPC0R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++}
++
++/* QoS version 0.411 for ES2 later */
++
++#define S3CADSPLCR_LINEAR_ALL				0
++#define S3CADSPLCR_4K_SPLIT_LINEAR_0x7000_0x7800	1
++#define S3CADSPLCR_4K_SPLIT_LINEAR_0x6800_0x7000	0
++#define S3CADSPLCR_4K_SPLIT_ALL				0
++
++void qos_init_es2(void)
++{
++	int i;
++	struct r8a7791_s3c *s3c;
++	struct r8a7791_s3c_qos *s3c_qos;
++	struct r8a7791_dbsc3_qos *qos_addr;
++	struct r8a7791_mxi *mxi;
++	struct r8a7791_mxi_qos *mxi_qos;
++	struct r8a7791_axi_qos *axi_qos;
++
++	/* DBSC DBADJ2 */
++	writel(0x20042004, DBSC3_0_DBADJ2);
++	writel(0x20042004, DBSC3_1_DBADJ2);
++
++	/* S3C -QoS */
++	s3c = (struct r8a7791_s3c *)S3C_BASE;
++#if S3CADSPLCR_LINEAR_ALL
++	writel(0x00000000, &s3c->s3cadsplcr);
++#elif S3CADSPLCR_4K_SPLIT_LINEAR_0x7000_0x7800
++	writel(0x00BF1B0C, &s3c->s3cadsplcr);
++#elif S3CADSPLCR_4K_SPLIT_LINEAR_0x6800_0x7000
++	writel(0x00DF1B0C, &s3c->s3cadsplcr);
++#elif S3CADSPLCR_4K_SPLIT_ALL
++	writel(0x00FF1B0C, &s3c->s3cadsplcr);
++#else
++#error "S3CADSPLCR_* not defined"
++#endif
++#if QOS_PRI_MEDIA
++	writel(0x1F0B0604, &s3c->s3crorr);
++	writel(0x1F0E0705, &s3c->s3cworr);
++#elif QOS_PRI_NORMAL
++	writel(0x1F0B0908, &s3c->s3crorr);
++	writel(0x1F0E0A08, &s3c->s3cworr);
++#elif QOS_PRI_GFX
++	writel(0x1F0B0B0B, &s3c->s3crorr);
++	writel(0x1F0E0C0C, &s3c->s3cworr);
++#else
++#error "QOS_PRI_* not defined"
++#endif
++
++	/* QoS Control Registers */
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_CCI0_BASE;
++	writel(0x00890089, &s3c_qos->s3cqos0);
++	writel(0x20960010, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++#if QOS_PRI_MEDIA
++	writel(0x20AA2300, &s3c_qos->s3cqos3);
++#elif QOS_PRI_NORMAL
++	writel(0x20AA2200, &s3c_qos->s3cqos3);
++#elif QOS_PRI_GFX
++	writel(0x20AA2100, &s3c_qos->s3cqos3);
++#endif
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960010, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++#if QOS_PRI_MEDIA
++	writel(0x20AA2300, &s3c_qos->s3cqos7);
++#elif QOS_PRI_NORMAL
++	writel(0x20AA2200, &s3c_qos->s3cqos7);
++#elif QOS_PRI_GFX
++	writel(0x20AA2100, &s3c_qos->s3cqos7);
++#endif
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_CCI1_BASE;
++	writel(0x00890089, &s3c_qos->s3cqos0);
++	writel(0x20960010, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++#if QOS_PRI_MEDIA
++	writel(0x20AA2300, &s3c_qos->s3cqos3);
++#elif QOS_PRI_NORMAL
++	writel(0x20AA2200, &s3c_qos->s3cqos3);
++#elif QOS_PRI_GFX
++	writel(0x20AA2100, &s3c_qos->s3cqos3);
++#endif
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960010, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++#if QOS_PRI_MEDIA
++	writel(0x20AA2300, &s3c_qos->s3cqos7);
++#elif QOS_PRI_NORMAL
++	writel(0x20AA2200, &s3c_qos->s3cqos7);
++#elif QOS_PRI_GFX
++	writel(0x20AA2100, &s3c_qos->s3cqos7);
++#endif
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_MXI_BASE;
++	writel(0x80928092, &s3c_qos->s3cqos0);
++	writel(0x20960020, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++	writel(0x20AA20DC, &s3c_qos->s3cqos3);
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960020, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++	writel(0x20AA20DC, &s3c_qos->s3cqos7);
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	s3c_qos = (struct r8a7791_s3c_qos *)S3C_QOS_AXI_BASE;
++	writel(0x00828092, &s3c_qos->s3cqos0);
++	writel(0x20960020, &s3c_qos->s3cqos1);
++	writel(0x20302030, &s3c_qos->s3cqos2);
++	writel(0x20AA20FA, &s3c_qos->s3cqos3);
++	writel(0x00002032, &s3c_qos->s3cqos4);
++	writel(0x20960020, &s3c_qos->s3cqos5);
++	writel(0x20302030, &s3c_qos->s3cqos6);
++	writel(0x20AA20FA, &s3c_qos->s3cqos7);
++	writel(0x00002032, &s3c_qos->s3cqos8);
++
++	/* DBSC -QoS */
++	/* DBSC0 - Read */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_0_r_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x00002096, &qos_addr->dbtmval0);
++		writel(0x00002064, &qos_addr->dbtmval1);
++		writel(0x00002032, &qos_addr->dbtmval2);
++		writel(0x00001FB0, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000204B, &qos_addr->dbthres1);
++		writel(0x0000201E, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* DBSC0 - Write */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_0_w_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x00002096, &qos_addr->dbtmval0);
++		writel(0x00002064, &qos_addr->dbtmval1);
++		writel(0x00002050, &qos_addr->dbtmval2);
++		writel(0x0000203A, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000204B, &qos_addr->dbthres1);
++		writel(0x0000203C, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* DBSC1 - Read */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_1_r_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x00002096, &qos_addr->dbtmval0);
++		writel(0x00002064, &qos_addr->dbtmval1);
++		writel(0x00002032, &qos_addr->dbtmval2);
++		writel(0x00001FB0, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000204B, &qos_addr->dbthres1);
++		writel(0x0000201E, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* DBSC1 - Write */
++	for (i = DBSC3_00; i < DBSC3_NR; i++) {
++		qos_addr = (struct r8a7791_dbsc3_qos *)dbsc3_1_w_qos_addr[i];
++		writel(0x00000002, &qos_addr->dblgcnt);
++		writel(0x00002096, &qos_addr->dbtmval0);
++		writel(0x00002064, &qos_addr->dbtmval1);
++		writel(0x00002050, &qos_addr->dbtmval2);
++		writel(0x0000203A, &qos_addr->dbtmval3);
++		writel(0x00000001, &qos_addr->dbrqctr);
++		writel(0x00002078, &qos_addr->dbthres0);
++		writel(0x0000204B, &qos_addr->dbthres1);
++		writel(0x0000203C, &qos_addr->dbthres2);
++		writel(0x00000001, &qos_addr->dblgqon);
++	}
++
++	/* CCI-400 -QoS */
++	writel(0x20001000, CCI_400_MAXOT_1);
++	writel(0x20001000, CCI_400_MAXOT_2);
++	writel(0x0000000C, CCI_400_QOSCNTL_1);
++	writel(0x0000000C, CCI_400_QOSCNTL_2);
++
++	/* MXI -QoS */
++	/* Transaction Control (MXI) */
++	mxi = (struct r8a7791_mxi *)MXI_BASE;
++	writel(0x00000013, &mxi->mxrtcr);
++	writel(0x00000016, &mxi->mxwtcr);
++	writel(0x00780080, &mxi->mxsaar0);
++	writel(0x02000800, &mxi->mxsaar1);
++
++	/* QoS Control (MXI) */
++	mxi_qos = (struct r8a7791_mxi_qos *)MXI_QOS_BASE;
++	writel(0x0000000C, &mxi_qos->vspdu0);
++	writel(0x0000000C, &mxi_qos->vspdu1);
++	writel(0x0000000E, &mxi_qos->du0);
++
++	/* AXI -QoS */
++	/* Transaction Control (MXI) */
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SYX64TO128_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_AVB_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_G2D_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMP0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002021, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMP1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002037, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMUX0_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMUX1_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_IMUX2_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_LBS_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUDS_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUM_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUS0_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MMUS1_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MTSB0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002021, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MTSB1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002021, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_PCI_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_RTX_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDS0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDS1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB20_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB21_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB22_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_USB30_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_AX2M_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_CC50_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002029, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_CCI_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_CS_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_DDM_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_ETH_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_MPXM_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SAT0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SAT1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDM0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_SDM1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000214C, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_TRAB_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x000020A6, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_UDM0_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI_UDM1_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (RT-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_SHX_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_DBG_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_RDM_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002299, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_RDS_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002029, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_RTX64TO128_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_STPRO_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002029, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)RT_AXI_SY2RT_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (MP-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_ADSP_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002037, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_ASDS0_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002014, &axi_qos->qosctset0);
++	writel(0x00000040, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_ASDS1_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002014, &axi_qos->qosctset0);
++	writel(0x00000040, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_MLP_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00001FF0, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00002001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_MMUMP_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_SPU_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x00002053, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MP_AXI_SPUC_BASE;
++	writel(0x00000000, &axi_qos->qosconf);
++	writel(0x0000206E, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (SYS-AXI256) */
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_AXI128TO256_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020EB, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_SYX_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020EB, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_MPX_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020EB, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)SYS_AXI256_MXI_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020EB, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (CCI-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUS0_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_SYX2_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUDS_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUM_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MXI_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x00002245, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUS1_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)CCI_AXI_MMUMP_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002004, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000000, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	/* QoS Register (Media-AXI) */
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_MXR_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020DC, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x000020AA, &axi_qos->qosthres0);
++	writel(0x00002032, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_MXW_BASE;
++	writel(0x00000002, &axi_qos->qosconf);
++	writel(0x000020DC, &axi_qos->qosctset0);
++	writel(0x00002096, &axi_qos->qosctset1);
++	writel(0x00002030, &axi_qos->qosctset2);
++	writel(0x00002030, &axi_qos->qosctset3);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x000020AA, &axi_qos->qosthres0);
++	writel(0x00002032, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_JPR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_JPW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_TDMR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_TDMW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU0CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU0CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU1CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPDU1CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002190, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VIN0W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00001FF0, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00002001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP0R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP0W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMSR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMSW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSP1W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP1R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_FDP1W_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMRR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_IMRW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD0R_BASE;
++	writel(0x00000003, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD0W_BASE;
++	writel(0x00000003, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD1R_BASE;
++	writel(0x00000003, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VSPD1W_BASE;
++	writel(0x00000003, &axi_qos->qosconf);
++	writel(0x000020C8, &axi_qos->qosctset0);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_DU0R_BASE;
++	writel(0x00000003, &axi_qos->qosconf);
++	writel(0x00002063, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_DU0W_BASE;
++	writel(0x00000003, &axi_qos->qosconf);
++	writel(0x00002063, &axi_qos->qosctset0);
++	writel(0x00000001, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0CR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0CW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0VR_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VCP0VW_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00000001, &axi_qos->qosthres0);
++	writel(0x00000001, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++
++	axi_qos = (struct r8a7791_axi_qos *)MEDIA_AXI_VPC0R_BASE;
++	writel(0x00000001, &axi_qos->qosconf);
++	writel(0x00002073, &axi_qos->qosctset0);
++	writel(0x00000020, &axi_qos->qosreqctr);
++	writel(0x00002064, &axi_qos->qosthres0);
++	writel(0x00002004, &axi_qos->qosthres1);
++	writel(0x00000001, &axi_qos->qosthres2);
++	writel(0x00000001, &axi_qos->qosqon);
++}
++
++void qos_init(void)
++{
++	if (rmobile_get_cpu_rev_integer() >= R8A7791_CUT_ES2X)
++		qos_init_es2();
++	else
++		qos_init_es1();
++}
+diff --git a/boards.cfg b/boards.cfg
+index 8bcb01f..ef340fa 100644
+--- a/boards.cfg
++++ b/boards.cfg
+@@ -300,6 +300,8 @@ lager                        arm         armv7       lager               renesas
+ lager_extram                 arm         armv7       lager               renesas        rmobile     lager:EXTRAM_BOOT
+ koelsch                      arm         armv7       koelsch             renesas        rmobile
+ koelsch_extram               arm         armv7       koelsch             renesas        rmobile     koelsch:EXTRAM_BOOT
++porter                       arm         armv7       porter              renesas        rmobile
++porter_extram                arm         armv7       porter              renesas        rmobile     porter:EXTRAM_BOOT
+ gose                         arm         armv7       gose                renesas        rmobile
+ gose_extram                  arm         armv7       gose                renesas        rmobile     gose:EXTRAM_BOOT
+ alt                          arm         armv7       alt                 renesas        rmobile
+diff --git a/drivers/mmc/sh_sdhi.c b/drivers/mmc/sh_sdhi.c
+index 7e691c8..e915ba4 100644
+--- a/drivers/mmc/sh_sdhi.c
++++ b/drivers/mmc/sh_sdhi.c
+@@ -197,7 +197,8 @@ static void sdhi_sync_reset(struct sdhi_host *host)
+ 	if (host->ch < 2)
+ 		sdhi_writew(host, SDHI_HOST_MODE, 1);	/* 16bit access */
+ #elif defined(KOELSCH_SDRAM_BASE) || defined(GOSE_SDRAM_BASE) || \
+-	defined(ALT_SDRAM_BASE) || defined(SILK_SDRAM_BASE)
++	defined(ALT_SDRAM_BASE) || defined(SILK_SDRAM_BASE) || \
++	defined(PORTER_SDRAM_BASE)
+ 	if (host->ch == 0)
+ 		sdhi_writew(host, SDHI_HOST_MODE, 1);	/* 16bit access */
+ #else
+@@ -668,7 +669,8 @@ int sdhi_mmc_init(unsigned long addr, int ch)
+ 	else
+ 		host->bus_shift = 0;
+ #elif defined(KOELSCH_SDRAM_BASE) || defined(GOSE_SDRAM_BASE) || \
+-	defined(ALT_SDRAM_BASE) || defined(SILK_SDRAM_BASE)
++	defined(ALT_SDRAM_BASE) || defined(SILK_SDRAM_BASE) || \
++	defined(PORTER_SDRAM_BASE)
+ 	if (ch == 0)
+ 		host->bus_shift = 1;
+ 	else
+diff --git a/drivers/usb/host/ehci-r8a779x.c b/drivers/usb/host/ehci-r8a779x.c
+index e33a5d6..494fc09 100644
+--- a/drivers/usb/host/ehci-r8a779x.c
++++ b/drivers/usb/host/ehci-r8a779x.c
+@@ -26,6 +26,8 @@
+ #define PHYS_OFFSET     LAGER_SDRAM_BASE
+ #elif defined(KOELSCH_SDRAM_BASE)
+ #define PHYS_OFFSET	KOELSCH_SDRAM_BASE
++#elif defined(PORTER_SDRAM_BASE)
++#define PHYS_OFFSET	PORTER_SDRAM_BASE
+ #elif defined(GOSE_SDRAM_BASE)
+ #define PHYS_OFFSET	GOSE_SDRAM_BASE
+ #elif defined(ALT_SDRAM_BASE)
+diff --git a/include/configs/porter.h b/include/configs/porter.h
+new file mode 100644
+index 0000000..0d68248
+--- /dev/null
++++ b/include/configs/porter.h
+@@ -0,0 +1,206 @@
++/*
++ * include/configs/porter.h
++ *     This file is Porter board configuration.
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ * Copyright (C) 2015 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++
++#ifndef __PORTER_H
++#define __PORTER_H
++
++#undef DEBUG
++#define CONFIG_ARMV7
++#define CONFIG_R8A7791
++#define CONFIG_RMOBILE
++#define CONFIG_RMOBILE_BOARD_STRING "Porter Board\n"
++#define CONFIG_SH_GPIO_PFC
++#define CONFIG_SYS_THUMB_BUILD
++
++#include <asm/arch/rmobile.h>
++
++#define CONFIG_CMD_EDITENV
++#define CONFIG_CMD_SAVEENV
++#define CONFIG_CMD_MEMORY
++#define CONFIG_CMD_DFL
++#define CONFIG_CMD_SDRAM
++#define CONFIG_CMD_RUN
++#define CONFIG_CMD_LOADS
++#define CONFIG_CMD_NET
++#define CONFIG_CMD_MII
++#define CONFIG_CMD_PING
++#define CONFIG_CMD_DHCP
++#define CONFIG_CMD_NFS
++#define CONFIG_CMD_BOOTZ
++#define CONFIG_CMD_USB
++#define CONFIG_CMD_FAT
++#define CONFIG_FAT_WRITE
++#define CONFIG_CMD_MMC
++#define CONFIG_CMD_EXT4
++#define CONFIG_CMD_EXT4_WRITE
++#define CONFIG_CMD_SF
++#define CONFIG_CMD_SPI
++
++#define CONFIG_CMDLINE_TAG
++#define CONFIG_SETUP_MEMORY_TAGS
++#define CONFIG_INITRD_TAG
++#define CONFIG_CMDLINE_EDITING
++
++#define CONFIG_OF_LIBFDT
++#define BOARD_LATE_INIT
++
++#define CONFIG_BAUDRATE		38400
++#define CONFIG_BOOTDELAY	3
++#define CONFIG_BOOTARGS		""
++
++#define CONFIG_VERSION_VARIABLE
++#undef  CONFIG_SHOW_BOOT_PROGRESS
++
++#define CONFIG_ARCH_CPU_INIT
++#define CONFIG_DISPLAY_CPUINFO
++#define CONFIG_DISPLAY_BOARDINFO
++#define CONFIG_BOARD_EARLY_INIT_F
++#define CONFIG_USE_ARCH_MEMSET
++#define CONFIG_USE_ARCH_MEMCPY
++#define CONFIG_TMU_TIMER
++
++/* STACK */
++#if defined(CONFIG_EXTRAM_BOOT)
++#define CONFIG_SYS_INIT_SP_ADDR		0x7003FFFC
++#else
++#define CONFIG_SYS_INIT_SP_ADDR		0xE633FFFC
++#endif
++#define STACK_AREA_SIZE			0xC000
++#define LOW_LEVEL_MERAM_STACK	\
++		(CONFIG_SYS_INIT_SP_ADDR + STACK_AREA_SIZE - 4)
++
++/* MEMORY */
++#define PORTER_SDRAM_BASE	0x40000000
++#define PORTER_SDRAM_SIZE	0x40000000
++#define PORTER_UBOOT_SDRAM_SIZE	0x20000000
++
++#define CONFIG_SYS_LONGHELP
++#define CONFIG_SYS_PROMPT		"=> "
++#define CONFIG_SYS_CBSIZE		256
++#define CONFIG_SYS_PBSIZE		256
++#define CONFIG_SYS_MAXARGS		16
++#define CONFIG_SYS_BARGSIZE		512
++#define CONFIG_SYS_BAUDRATE_TABLE	{ 38400, 115200 }
++
++/* SCIF */
++#define CONFIG_SCIF_CONSOLE
++#define CONFIG_CONS_SCIF0
++#define SCIF0_BASE		0xe6e60000
++#undef  CONFIG_SYS_CONSOLE_INFO_QUIET
++#undef  CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
++#undef  CONFIG_SYS_CONSOLE_ENV_OVERWRITE
++
++#define CONFIG_SYS_MEMTEST_START	(PORTER_SDRAM_BASE)
++#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + \
++					 504 * 1024 * 1024)
++#undef  CONFIG_SYS_ALT_MEMTEST
++#undef  CONFIG_SYS_MEMTEST_SCRATCH
++#undef  CONFIG_SYS_LOADS_BAUD_CHANGE
++
++#define CONFIG_SYS_SDRAM_BASE		(PORTER_SDRAM_BASE)
++#define CONFIG_SYS_SDRAM_SIZE		(PORTER_UBOOT_SDRAM_SIZE)
++#define CONFIG_SYS_LOAD_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x7fc0)
++#define CONFIG_NR_DRAM_BANKS		1
++
++#define CONFIG_SYS_MONITOR_BASE		0x00000000
++#define CONFIG_SYS_MONITOR_LEN		(256 * 1024)
++#define CONFIG_SYS_MALLOC_LEN		(1 * 1024 * 1024)
++#define CONFIG_SYS_GBL_DATA_SIZE	(256)
++#define CONFIG_SYS_BOOTMAPSZ		(8 * 1024 * 1024)
++
++#if defined(CONFIG_EXTRAM_BOOT)
++#define CONFIG_SYS_TEXT_BASE	0x70000000
++#else
++#define CONFIG_SYS_TEXT_BASE	0xE6304000
++#endif
++
++/* FLASH */
++#define CONFIG_SPI
++#define CONFIG_SH_QSPI
++#define CONFIG_SPI_FLASH
++#define CONFIG_SPI_FLASH_SPANSION
++#define CONFIG_SPI_FLASH_QUAD
++#define CONFIG_SYS_NO_FLASH
++#define CONFIG_SH_QSPI_BASE	0xE6B10000
++
++/* ENV setting */
++#define CONFIG_ENV_IS_IN_SPI_FLASH
++#define CONFIG_ENV_SECT_SIZE	(256 * 1024)
++#define CONFIG_ENV_ADDR		0xC0000
++#define CONFIG_ENV_OFFSET	(CONFIG_ENV_ADDR)
++#define CONFIG_ENV_SIZE		(CONFIG_ENV_SECT_SIZE)
++
++#define CONFIG_EXTRA_ENV_SETTINGS \
++	"bootm_low=0x40e00000\0" \
++	"bootm_size=0x100000\0" \
++
++/* SH Ether */
++#define CONFIG_NET_MULTI
++#define CONFIG_SH_ETHER
++#define CONFIG_SH_ETHER_USE_PORT	0
++#define CONFIG_SH_ETHER_PHY_ADDR	0x1
++#define CONFIG_SH_ETHER_PHY_MODE	PHY_INTERFACE_MODE_RMII
++#define CONFIG_SH_ETHER_CACHE_WRITEBACK
++#define CONFIG_SH_ETHER_CACHE_INVALIDATE
++#define CONFIG_PHYLIB
++#define CONFIG_PHY_MICREL
++#define CONFIG_BITBANGMII
++#define CONFIG_BITBANGMII_MULTI
++
++/* Board Clock */
++#define	CONFIG_SYS_CLK_FREQ	20000000
++#define	CONFIG_SCIF_CLK_FREQ	65000000
++#define CONFIG_SYS_TMU_CLK_DIV	4
++#define CONFIG_SYS_HZ		1000
++
++/* i2c */
++#define CONFIG_SH_I2C		1
++#define CONFIG_SYS_I2C_MODULE	1
++#define CONFIG_SYS_I2C_SPEED	400000 /* 400 kHz */
++#define CONFIG_SYS_I2C_SLAVE	0x7F
++#define CONFIG_SH_I2C_DATA_HIGH	4
++#define CONFIG_SH_I2C_DATA_LOW	5
++#define CONFIG_SH_I2C_CLOCK	10000000
++#define CONFIG_SH_I2C_BASE0	0xE60B0000
++
++/* FS */
++#define CONFIG_DOS_PARTITION
++#define CONFIG_SUPPORT_VFAT
++
++/* USB */
++#define CONFIG_USB_STORAGE
++#define CONFIG_USB_EHCI
++#define CONFIG_USB_EHCI_R8A779x
++#define CONFIG_USB_MAX_CONTROLLER_COUNT	2
++
++/* SD */
++#define CONFIG_MMC			1
++#define CONFIG_GENERIC_MMC		1
++#define CONFIG_SH_SDHI			1
++#define CONFIG_SH_SDHI_FREQ		97500000
++#define CONFIG_MMC_SH_SDHI_NR_CHANNEL	3
++
++/* USB-ether */
++#define CONFIG_MII
++#define CONFIG_USB_HOST_ETHER	/* Enable USB Ethernet adapters */
++#define CONFIG_USB_ETHER_ASIX	/* Asix, or whatever driver(s) you want */
++
++#endif	/* __PORTER_H */
+-- 
+1.9.1
+
