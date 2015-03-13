@@ -10,7 +10,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 PV_append = "+git${SRCREV}"
 
 RENESAS_BACKPORTS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git"
-SRCREV = "9cc3c94a025704e54a1c749476a6b716bdc2e3d7"
+SRCREV = "b8ca8c397343f4233f9f68fc3a5bf8e1c9b88251"
 SRC_URI = "${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.2 \
 	file://0001-arm-lager-Add-vmalloc-384M-to-bootargs-of-DTS.patch \
 	file://0001-arm-koelsch-Add-vmalloc-384M-to-bootargs-of-DTS.patch \
