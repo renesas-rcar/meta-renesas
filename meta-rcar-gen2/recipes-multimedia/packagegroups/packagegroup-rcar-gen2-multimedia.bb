@@ -24,6 +24,10 @@ MULTIMEDIA_PACKAGES ="\
     libmemcpy \
 "
 
+MULTIMEDIA_PACKAGES_append = " \
+    ${@ "vsp2-kernel-module" if "${USE_GLES_WAYLAND}" == "1" else "" } \
+"
+
 RDEPENDS_packagegroup-rcar-gen2-multimedia = "\
     ${@ "${MULTIMEDIA_PACKAGES}" if "${USE_MULTIMEDIA}" == "1" else "" } \
     media-ctl \

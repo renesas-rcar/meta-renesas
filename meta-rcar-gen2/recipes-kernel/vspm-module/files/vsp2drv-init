@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+### BEGIN INIT INFO
+# Provides: vsp2
+# Required-Start: $local_fs $remote_fs
+# Required-Stop:  $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+
+case "$1" in
+  start)
+	if ! modprobe vsp2; then
+		echo "Couldn't load vsp2 module. Retrying..."
+		if [ -e /sbin/depmod ]; then
+			depmod
+			if ! modprobe vsp2; then
+				echo "Couldn't load vsp2 module."
+			fi
+		fi
+	fi
+  ;;
+
+  stop)
+	if ! modprobe -r vsp2; then
+		echo "Couldn't unload vsp2 module."
+	fi
+  ;;
+
+  reload|restart)
+	$0 stop
+	sleep 1
+	$0 start
+  ;;
+
+  *)
+	echo "usage: $0 { start | stop | reload | restart }"
+  ;;
+esac
+
+exit 0
