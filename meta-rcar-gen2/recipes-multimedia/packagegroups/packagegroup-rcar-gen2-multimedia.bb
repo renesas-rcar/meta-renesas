@@ -11,6 +11,7 @@ PACKAGES = "\
     packagegroup-rcar-gen2-multimedia-tp \
     packagegroup-rcar-gen2-dtv \
 "
+PACKAGES_append_lcb = " packagegroup-lcb-oss-codecs"
 
 MULTIMEDIA_PACKAGES ="\
     mmngr-kernel-module mmngr-user-module \
@@ -67,8 +68,6 @@ DTV_PACKAGES = "\
 RDEPENDS_packagegroup-rcar-gen2-dtv = "\
     ${@ '${DTV_PACKAGES}' if '${USE_DTV}' == '1' else '' } \
 "
-PACKAGES_append_silk = " packagegroup-lcb-oss-codecs"
-PACKAGES_append_porter = " packagegroup-lcb-oss-codecs"
 
 RDEPENDS_packagegroup-lcb-oss-codecs = "\
 	libmad \
