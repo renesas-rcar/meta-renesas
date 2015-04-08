@@ -1,0 +1,41 @@
+diff --git a/Makefile.am b/Makefile.am
+index 26b1cb1..25231bc 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -183,13 +183,13 @@ v4l2_renderer_la_SOURCES =			\
+ 	src/media-ctl/tools.h			\
+ 	src/media-ctl/v4l2subdev.h
+ 
+-module_LTLIBRARIES += v4l2-vsp1-device.la
+-v4l2_vsp1_device_la_LDFLAGS = -module -avoid-version
+-v4l2_vsp1_device_la_LIBADD = $(COMPOSITOR_LIBS)
+-v4l2_vsp1_device_la_CFLAGS =				\
++module_LTLIBRARIES += v4l2-vsp2-device.la
++v4l2_vsp2_device_la_LDFLAGS = -module -avoid-version
++v4l2_vsp2_device_la_LIBADD = $(COMPOSITOR_LIBS)
++v4l2_vsp2_device_la_CFLAGS =				\
+ 	$(COMPOSITOR_CFLAGS)			\
+ 	$(GCC_CFLAGS)
+-v4l2_vsp1_device_la_SOURCES =			\
++v4l2_vsp2_device_la_SOURCES =			\
+ 	src/vsp-renderer.c			\
+ 	src/v4l2-device.h			\
+ 	src/media-ctl/libmediactl.c		\
+diff --git a/src/vsp-renderer.c b/src/vsp-renderer.c
+index f7c9acc..d8681e6 100644
+--- a/src/vsp-renderer.c
++++ b/src/vsp-renderer.c
+@@ -284,8 +284,8 @@ vsp_init(struct media_device *media, struct weston_config *config)
+ 	else
+ 		device_name = info->bus_info;
+ 
+-	if (strncmp(device_name, "vsp1.", 5)) {
+-		weston_log("The device is not VSP1.");
++	if (strncmp(device_name, "vsp2.", 5)) {
++		weston_log("The device is not VSP2.");
+ 		goto error;
+ 	}
+ 
+-- 
+1.7.9.5
+
