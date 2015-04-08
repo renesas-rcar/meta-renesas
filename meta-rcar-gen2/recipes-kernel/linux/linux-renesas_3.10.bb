@@ -37,6 +37,7 @@ SRC_URI_append_lcb = " \
 	file://0019-i2c-busses-rcar-Workaround-arbitration-loss-error.patch \
 	file://0020-Silk-Remove-I2C1-clock-from-clk_enables.patch \
 "
+SRC_URI_append_porter = " file://can.cfg"
 
 S = "${WORKDIR}/git"
 
