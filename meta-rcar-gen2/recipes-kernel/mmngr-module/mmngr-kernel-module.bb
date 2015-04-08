@@ -33,8 +33,6 @@ do_install () {
 
     # Copy shared library for reference from other modules
     cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/mmngr.symvers
-    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include
-    cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/mmngr.symvers
 
     # Copy kernel module
@@ -54,7 +52,6 @@ do_clean_source() {
     rm -f ${KERNELSRC}/include/mmngr_private.h
     rm -f ${KERNELSRC}/include/mmngr_public.h
     rm -f ${KERNELSRC}/include/mmngr.symvers
-    rm -f ${KERNELSRC}/include/Module.symvers
 }
 
 PACKAGES = "\
@@ -67,8 +64,6 @@ FILES_${PN} = " \
 "
 
 FILES_${PN}-dev = " \
-    /usr/src/kernel/include \
-    /usr/src/kernel/include/Module.symvers \
     /usr/src/kernel/include/mmngr.symvers \
     /usr/src/kernel/include/*.h \
 "
