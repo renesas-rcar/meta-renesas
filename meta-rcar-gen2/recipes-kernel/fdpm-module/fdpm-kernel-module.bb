@@ -16,7 +16,7 @@ FDPM_CFG_r8a7793 = "M2CONFIG"
 FDPM_CFG_r8a7794 = "E2CONFIG"
 
 KERNEL_HEADER_PATH = "${KERNELSRC}/include/linux"
-FDPM_INATALL_HEADERS="fdpm_drv.h fdpm_public.h fdpm_api.h"
+FDPM_INSTALL_HEADERS="fdpm_drv.h fdpm_public.h fdpm_api.h"
 
 do_compile() {
     # Build kernel module
@@ -34,12 +34,12 @@ do_install() {
     cp -f ${S}/drv/fdpm.ko ${D}/lib/modules/${KERNEL_VERSION}/extra
     cp ${S}/drv/Module.symvers ${KERNELSRC}/include/fdpm.symvers
 
-    for f in ${FDPM_INATALL_HEADERS} ; do
+    for f in ${FDPM_INSTALL_HEADERS} ; do
         cp -f ${KERNEL_HEADER_PATH}/${f} ${KERNELSRC}/include
     done
 
     # Copy header files to destination
-    for f in ${FDPM_INATALL_HEADERS} ; do
+    for f in ${FDPM_INSTALL_HEADERS} ; do
         cp -f ${KERNEL_HEADER_PATH}/${f} ${D}/usr/src/kernel/include
     done
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/fdpm.symvers
@@ -51,13 +51,12 @@ do_cleansstate_prepend() {
 }
 
 do_clean_source() {
-	if [ -d ${KERNELSRC} ] ; then
-		cd ${KERNELSRC}/include/linux/
-		rm -f fdpm_drv.h ${FDPM_INATALL_HEADERS}
-
-		cd  ${KERNELSRC}/include/
-		rm -f fdpm.symvers ${FDPM_INATALL_HEADERS}
-	fi
+    # Check if kernel source exists before doing cleansstate
+    if [ -d ${KERNELSRC} ] ; then
+        for f in fdpm_drv.h fdpm.symvers ${FDPM_INSTALL_HEADERS} ; do
+            find ${KERNELSRC} -name ${f} -delete
+        done
+    fi
 }
 
 PACKAGES = " \
