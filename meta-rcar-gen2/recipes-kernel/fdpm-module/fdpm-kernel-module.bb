@@ -22,6 +22,7 @@ do_compile() {
     # Build kernel module
     export FDPM_CONFIG=${FDPM_CFG}
     export FDPM_MMNGRDIR=${KERNELSRC}/include
+    export FDPM_MMNGRSYMVERS=mmngr.symvers
     cd ${S}/drv
     make all ARCH=arm
 }
