@@ -1,0 +1,98 @@
+From be4e5cf9cd8d13cb34f10de70b666636cbae9e15 Mon Sep 17 00:00:00 2001
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Wed, 11 Mar 2015 15:23:58 +0300
+Subject: [PATCH 4/4] ARM: cpu: Add ARMv7 barrier operations support
+
+This enables ARMv7 barrier operations support when
+march=armv7-a is enabled. Using CP15 barriers causes
+U-Boot bootm command crash when transferring control
+to the loaded image on Renesas R8A7794 Cortex A7 CPU.
+Using ARMv7 barrier operations instead of the deprecated
+CP15 barriers helps to avoid these issues.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ arch/arm/cpu/armv7/cache_v7.c | 14 +++++++-------
+ arch/arm/include/asm/armv7.h  | 10 ++++++++++
+ 2 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm/cpu/armv7/cache_v7.c b/arch/arm/cpu/armv7/cache_v7.c
+index 5f6d039..39c28a5 100644
+--- a/arch/arm/cpu/armv7/cache_v7.c
++++ b/arch/arm/cpu/armv7/cache_v7.c
+@@ -82,7 +82,7 @@ static void v7_inval_dcache_level_setway(u32 level, u32 num_sets,
+ 		}
+ 	}
+ 	/* DSB to make sure the operation is complete */
+-	CP15DSB;
++	DSB;
+ }
+ 
+ static void v7_clean_inval_dcache_level_setway(u32 level, u32 num_sets,
+@@ -109,7 +109,7 @@ static void v7_clean_inval_dcache_level_setway(u32 level, u32 num_sets,
+ 		}
+ 	}
+ 	/* DSB to make sure the operation is complete */
+-	CP15DSB;
++	DSB;
+ }
+ 
+ static void v7_maint_dcache_level_setway(u32 level, u32 operation)
+@@ -230,7 +230,7 @@ static void v7_dcache_maint_range(u32 start, u32 stop, u32 range_op)
+ 	}
+ 
+ 	/* DSB to make sure the operation is complete */
+-	CP15DSB;
++	DSB;
+ }
+ 
+ /* Invalidate TLB */
+@@ -243,9 +243,9 @@ static void v7_inval_tlb(void)
+ 	/* Invalidate entire instruction TLB */
+ 	asm volatile ("mcr p15, 0, %0, c8, c5, 0" : : "r" (0));
+ 	/* Full system DSB - make sure that the invalidation is complete */
+-	CP15DSB;
++	DSB;
+ 	/* Full system ISB - make sure the instruction stream sees it */
+-	CP15ISB;
++	ISB;
+ }
+ 
+ void invalidate_dcache_all(void)
+@@ -356,10 +356,10 @@ void invalidate_icache_all(void)
+ 	asm volatile ("mcr p15, 0, %0, c7, c5, 6" : : "r" (0));
+ 
+ 	/* Full system DSB - make sure that the invalidation is complete */
+-	CP15DSB;
++	DSB;
+ 
+ 	/* ISB - make sure the instruction stream sees it */
+-	CP15ISB;
++	ISB;
+ }
+ #else
+ void invalidate_icache_all(void)
+diff --git a/arch/arm/include/asm/armv7.h b/arch/arm/include/asm/armv7.h
+index ad9a875..1e82224 100644
+--- a/arch/arm/include/asm/armv7.h
++++ b/arch/arm/include/asm/armv7.h
+@@ -66,6 +66,16 @@
+ #define CP15DSB	asm volatile ("mcr     p15, 0, %0, c7, c10, 4" : : "r" (0))
+ #define CP15DMB	asm volatile ("mcr     p15, 0, %0, c7, c10, 5" : : "r" (0))
+ 
++#ifdef __ARM_ARCH_7A__
++#define	ISB	asm volatile ("isb" : : : "memory")
++#define	DSB	asm volatile ("dsb" : : : "memory")
++#define	DMB	asm volatile ("dmb" : : : "memory")
++#else
++#define ISB	CP15ISB
++#define DSB	CP15DSB
++#define DMB	CP15DMB
++#endif
++
+ void v7_outer_cache_enable(void);
+ void v7_outer_cache_disable(void);
+ void v7_outer_cache_flush_all(void);
+-- 
+1.9.1
+

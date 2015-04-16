@@ -1,0 +1,126 @@
+From c30e8288eada6363be162051b03582f83201e250 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Thu, 12 Feb 2015 16:25:57 +0300
+Subject: [PATCH 3/4] serial: serial-sh: SCIF internal clock source support
+
+Support internal clock source for SCIF
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/serial/serial_sh.c | 4 ++++
+ drivers/serial/serial_sh.h | 7 ++++++-
+ include/configs/alt.h      | 1 +
+ include/configs/gose.h     | 1 +
+ include/configs/koelsch.h  | 1 +
+ include/configs/lager.h    | 1 +
+ include/configs/silk.h     | 1 +
+ 7 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/serial/serial_sh.c b/drivers/serial/serial_sh.c
+index d129743..b18323f 100644
+--- a/drivers/serial/serial_sh.c
++++ b/drivers/serial/serial_sh.c
+@@ -63,9 +63,13 @@ static void sh_serial_setbrg(void)
+ 	DECLARE_GLOBAL_DATA_PTR;
+ #if defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791) || \
+ 	defined(CONFIG_R8A7793) || defined(CONFIG_R8A7794)
++#ifdef CONFIG_SCIF_USE_EXT_CLK
+ 	sci_out(&sh_sci, DL, DL_VALUE(gd->baudrate, CONFIG_SCIF_CLK_FREQ));
+ 	udelay((1000000 * 2 * 16 / CONFIG_SYS_CLK_FREQ) * 1000 + 1);
+ #else
++	sci_out(&sh_sci, SCBRR, SCBRR_VALUE(gd->baudrate, CONFIG_SCIF_CLK_FREQ));
++#endif
++#else
+ 	sci_out(&sh_sci, SCBRR, SCBRR_VALUE(gd->baudrate, CONFIG_SYS_CLK_FREQ));
+ #endif
+ }
+diff --git a/drivers/serial/serial_sh.h b/drivers/serial/serial_sh.h
+index ac0ba2a..e976527 100644
+--- a/drivers/serial/serial_sh.h
++++ b/drivers/serial/serial_sh.h
+@@ -227,8 +227,12 @@ struct uart_port {
+ #elif defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791) || \
+ 	defined(CONFIG_R8A7793) || defined(CONFIG_R8A7794)
+ # define SCIF_ORER	0x0001
++#ifdef CONFIG_SCIF_USE_EXT_CLK
+ # define SCSCR_INIT(port)	0x32	/* TIE=0,RIE=0,TE=1,RE=1,REIE=0, */
+ #else
++# define SCSCR_INIT(port)	0x30	/* TIE=0,RIE=0,TE=1,RE=1,REIE=0, */
++#endif
++#else
+ # error CPU subtype not defined
+ #endif
+ 
+@@ -735,7 +739,8 @@ static inline int scbrr_calc(struct uart_port port, int bps, int clk)
+ #define SCBRR_VALUE(bps, clk) (((clk*1000/32)/bps)-1)
+ #elif defined(CONFIG_R8A7790) || defined(CONFIG_R8A7791) || \
+ 	defined(CONFIG_R8A7793) || defined(CONFIG_R8A7794)
+-#define DL_VALUE(bps, clk)	(clk / bps / 16)
++#define DL_VALUE(bps, clk) (clk / bps / 16) /* External Clock */
++#define SCBRR_VALUE(bps, clk) (clk / bps / 32 - 1) /* Internal Clock */
+ #else /* Generic SH */
+ #define SCBRR_VALUE(bps, clk) ((clk+16*bps)/(32*bps)-1)
+ #endif
+diff --git a/include/configs/alt.h b/include/configs/alt.h
+index bb09de3..b56e132 100644
+--- a/include/configs/alt.h
++++ b/include/configs/alt.h
+@@ -102,6 +102,7 @@
+ /* SCIF */
+ #define CONFIG_SCIF_CONSOLE
+ #define CONFIG_CONS_SCIF2
++#define CONFIG_SCIF_USE_EXT_CLK
+ #define SCIF2_BASE		0xe6e58000
+ #undef	CONFIG_SYS_CONSOLE_INFO_QUIET
+ #undef	CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
+diff --git a/include/configs/gose.h b/include/configs/gose.h
+index 204fb60..336818a 100644
+--- a/include/configs/gose.h
++++ b/include/configs/gose.h
+@@ -102,6 +102,7 @@
+ /* SCIF */
+ #define CONFIG_SCIF_CONSOLE
+ #define CONFIG_CONS_SCIF0
++#define CONFIG_SCIF_USE_EXT_CLK
+ #define SCIF0_BASE		0xe6e60000
+ #undef	CONFIG_SYS_CONSOLE_INFO_QUIET
+ #undef	CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
+diff --git a/include/configs/koelsch.h b/include/configs/koelsch.h
+index 0eb3a29..9463674 100644
+--- a/include/configs/koelsch.h
++++ b/include/configs/koelsch.h
+@@ -102,6 +102,7 @@
+ /* SCIF */
+ #define CONFIG_SCIF_CONSOLE
+ #define CONFIG_CONS_SCIF0
++#define CONFIG_SCIF_USE_EXT_CLK
+ #define SCIF0_BASE		0xe6e60000
+ #undef	CONFIG_SYS_CONSOLE_INFO_QUIET
+ #undef	CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
+diff --git a/include/configs/lager.h b/include/configs/lager.h
+index 9e530c3..d15cc5f 100644
+--- a/include/configs/lager.h
++++ b/include/configs/lager.h
+@@ -103,6 +103,7 @@
+ /* SCIF */
+ #define CONFIG_SCIF_CONSOLE
+ #define CONFIG_CONS_SCIF0
++#define CONFIG_SCIF_USE_EXT_CLK
+ #define SCIF0_BASE		0xe6e60000
+ #undef	CONFIG_SYS_CONSOLE_INFO_QUIET
+ #undef	CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
+diff --git a/include/configs/silk.h b/include/configs/silk.h
+index 89f371e..1a61272 100644
+--- a/include/configs/silk.h
++++ b/include/configs/silk.h
+@@ -104,6 +104,7 @@
+ /* SCIF */
+ #define CONFIG_SCIF_CONSOLE
+ #define CONFIG_CONS_SCIF2
++#define CONFIG_SCIF_USE_EXT_CLK
+ #define SCIF2_BASE	0xe6e58000
+ #undef  CONFIG_SYS_CONSOLE_INFO_QUIET
+ #undef  CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
+-- 
+1.9.1
+

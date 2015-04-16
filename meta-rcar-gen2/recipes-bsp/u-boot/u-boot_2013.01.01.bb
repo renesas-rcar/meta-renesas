@@ -14,4 +14,11 @@ SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-1.9.3;pr
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(alt|gose|koelsch|lager)"
+COMPATIBLE_MACHINE = "(alt|gose|koelsch|lager|porter|silk)"
+
+SRC_URI_append_lcb = " \
+	file://0001-arm-rmobile-Add-SILK-board-support.patch \
+	file://0002-arm-rmobile-Add-Porter-board-support.patch \
+	file://0003-serial-serial-sh-SCIF-internal-clock-source-support.patch \
+	file://0004-ARM-cpu-Add-ARMv7-barrier-operations-support.patch \
+"
