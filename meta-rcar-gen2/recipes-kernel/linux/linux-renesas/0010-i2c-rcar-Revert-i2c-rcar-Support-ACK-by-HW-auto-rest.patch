@@ -1,0 +1,69 @@
+From 5e57e97195628068dc542ad405d35d45669a3502 Mon Sep 17 00:00:00 2001
+From: Petr Nechaev <petr.nechaev@cogentembedded.com>
+Date: Mon, 2 Feb 2015 13:37:55 +0300
+Subject: [PATCH 10/16] i2c: rcar: Revert "i2c: rcar: Support ACK by HW auto
+ restart after NACK"
+
+Reverts commit 4df6b2af6c0f795d810eb1e2e9411ad1cbbe4245 that made i2c bus stall
+while using i2ctools: "i2cdetect -y XX"
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/i2c/busses/i2c-rcar.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 4c8a347..c0f9d3f 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -532,6 +532,7 @@ static irqreturn_t rcar_i2c_irq(int irq, void *ptr)
+ 
+ 		/* go to stop phase */
+ 		rcar_i2c_bus_phase(priv, RCAR_BUS_PHASE_STOP);
++		rcar_i2c_irq_mask(priv, RCAR_IRQ_OPEN_FOR_STOP);
+ 		rcar_i2c_flags_set(priv, ID_NACK);
+ 		rcar_i2c_status_bit_clear(priv, MNR | MDE | MAT);
+ 		goto out;
+@@ -542,14 +543,8 @@ static irqreturn_t rcar_i2c_irq(int irq, void *ptr)
+ 	 */
+ 	if (msr & MST) {
+ 		dev_dbg(dev, "Stop\n");
+-		if (rcar_i2c_flags_has(priv, ID_NACK)) {
+-			/* don't set ID_DONE for expecting ACK
+-					after auto-restart by HW */
+-			rcar_i2c_status_bit_clear(priv, MST);
+-		} else {
+-			rcar_i2c_flags_set(priv, ID_DONE);
+-			rcar_i2c_status_clear(priv);
+-		}
++		rcar_i2c_flags_set(priv, ID_DONE);
++		rcar_i2c_status_clear(priv);
+ 		goto out;
+ 	}
+ 
+@@ -626,10 +621,6 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+ 					     rcar_i2c_flags_has(priv, ID_DONE),
+ 					     5 * HZ);
+ 		if (!timeout) {
+-			if (rcar_i2c_flags_has(priv, ID_NACK)) {
+-				ret = -ENXIO;
+-				break;
+-			}
+ 			ret = -ETIMEDOUT;
+ 			break;
+ 		}
+@@ -637,6 +628,11 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+ 		/*
+ 		 * error handling
+ 		 */
++		if (rcar_i2c_flags_has(priv, ID_NACK)) {
++			ret = -ENXIO;
++			break;
++		}
++
+ 		if (rcar_i2c_flags_has(priv, ID_ARBLOST)) {
+ 			ret = -EAGAIN;
+ 			break;
+-- 
+1.9.1
+

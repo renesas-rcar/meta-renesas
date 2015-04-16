@@ -1,0 +1,27 @@
+From 5fe4e97522e48a6224492488134ce428b4bb0a6e Mon Sep 17 00:00:00 2001
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Thu, 19 Mar 2015 21:04:02 +0300
+Subject: [PATCH 14/16] ARM: shmobile: defconfig: Enable SCI DMA support
+
+This enables SCI DMA support.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ arch/arm/configs/shmobile_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index ff950ed..78043f0 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -124,6 +124,7 @@ CONFIG_SERIAL_8250_EM=y
+ CONFIG_SERIAL_SH_SCI=y
+ CONFIG_SERIAL_SH_SCI_NR_UARTS=20
+ CONFIG_SERIAL_SH_SCI_CONSOLE=y
++CONFIG_SERIAL_SH_SCI_DMA=y
+ CONFIG_I2C_CHARDEV=y
+ CONFIG_I2C_GPIO=y
+ CONFIG_I2C_SH_MOBILE=y
+-- 
+1.9.1
+

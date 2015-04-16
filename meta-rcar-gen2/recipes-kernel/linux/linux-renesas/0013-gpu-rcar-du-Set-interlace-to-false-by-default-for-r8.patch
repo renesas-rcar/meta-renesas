@@ -1,0 +1,37 @@
+From 71d10baebb54eb0c878da6da473d8f9a3e938c5a Mon Sep 17 00:00:00 2001
+From: Andrey Dolnikov <andrey.dolnikov@cogentembedded.com>
+Date: Wed, 18 Mar 2015 19:40:37 +0300
+Subject: [PATCH 13/16] gpu: rcar-du: Set interlace to 'false' by default for
+ r8a7791 and r8a7794
+
+This fixes DU image sharpness/smooth on r8a7791/r8a7794, the same as it is already set
+by default for r8a7790
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index d21531f..b52a62c 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -596,7 +596,7 @@ static const struct rcar_du_device_info rcar_du_r8a7791_info = {
+ 	.drgbs_bit = 1,
+ 	.max_xres = 1920,
+ 	.max_yres = 1080,
+-	.interlace = true,
++	.interlace = false,
+ 	.lvds0_crtc = BIT(0),
+ 	.lvds1_crtc = 0,
+ 	.vspd_crtc = BIT(0) | BIT(1),
+@@ -679,7 +679,7 @@ static const struct rcar_du_device_info rcar_du_r8a7794_info = {
+ 	.drgbs_bit = 0,
+ 	.max_xres = 1920,
+ 	.max_yres = 1080,
+-	.interlace = true,
++	.interlace = false,
+ 	.lvds0_crtc = 0,
+ 	.lvds1_crtc = 0,
+ 	.vspd_crtc = BIT(0),
+-- 
+1.9.1
+

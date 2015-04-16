@@ -1,0 +1,52 @@
+From 707eb2ce1a5f6650d87f933a0b5d683bcef369b1 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Tue, 29 Jul 2014 02:12:55 +0400
+Subject: [PATCH 05/16] sh-pfc: r8a7791: fix CAN pin groups
+
+I had made last-minute changes before submitting the patch "sh-pfc: r8a7791:
+add CAN pin groups"; now I'm seeing that they weren't complete: I had missed
+update to the pin group names in pin[01]_groups[]. Drop the "_a" suffixes there.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7791.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7791.c b/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
+index 6dcce17..89eb6fa 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
+@@ -4517,24 +4517,24 @@ static const char * const audio_clk_groups[] = {
+ };
+ 
+ static const char * const can0_groups[] = {
+-	"can0_data_a",
++	"can0_data",
+ 	"can0_data_b",
+ 	"can0_data_c",
+ 	"can0_data_d",
+ 	"can0_data_e",
+ 	"can0_data_f",
+-	"can_clk_a",
++	"can_clk",
+ 	"can_clk_b",
+ 	"can_clk_c",
+ 	"can_clk_d",
+ };
+ 
+ static const char * const can1_groups[] = {
+-	"can1_data_a",
++	"can1_data",
+ 	"can1_data_b",
+ 	"can1_data_c",
+ 	"can1_data_d",
+-	"can_clk_a",
++	"can_clk",
+ 	"can_clk_b",
+ 	"can_clk_c",
+ 	"can_clk_d",
+-- 
+1.9.1
+

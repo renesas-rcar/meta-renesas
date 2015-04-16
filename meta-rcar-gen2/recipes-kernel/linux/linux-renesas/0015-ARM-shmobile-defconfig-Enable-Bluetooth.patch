@@ -1,0 +1,31 @@
+From ff1d3a97b23597fbbfd32330dcb01590e9731bb6 Mon Sep 17 00:00:00 2001
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Thu, 19 Mar 2015 21:53:05 +0300
+Subject: [PATCH 15/16] ARM: shmobile: defconfig: Enable Bluetooth
+
+This enables Bluetooth HCI support.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ arch/arm/configs/shmobile_defconfig | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 78043f0..5e178dc 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -72,6 +72,11 @@ CONFIG_TCP_CONG_ADVANCED=y
+ CONFIG_IP_PNP=y
+ CONFIG_IP_PNP_DHCP=y
+ # CONFIG_IPV6 is not set
++CONFIG_BT=y
++CONFIG_BT_RFCOMM=y
++CONFIG_BT_RFCOMM_TTY=y
++CONFIG_BT_HCIUART=y
++CONFIG_BT_HCIUART_H4=y
+ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_DEVTMPFS=y
+ CONFIG_DEVTMPFS_MOUNT=y
+-- 
+1.9.1
+
