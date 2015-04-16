@@ -133,6 +133,7 @@ III/ Build with Renesas multimedia libraries
 			" ddddec_lib"     - for ARM 5.1ch Dolby Digital Decoder for Linux
 			" alacdec_lib"    - for ARM ALAC Decoder for Linux
 			" flacdec_lib"    - for ARM FLAC Decoder for Linux
+			" aaclcsdec_lib"  - for ARM AAC-LC Decoder Sample for Linux
 			" aacenc_lib"     - for ARM AAC Encoder for Linux
 
 			# Configuration for audio middlewares
@@ -142,6 +143,7 @@ III/ Build with Renesas multimedia libraries
 			" ddddec_mdw"       - for ARM 5.1ch Dolby Digital Decode Middleware for Linux
 			" alacdec_mdw"      - for ARM ALAC Decode Middleware for Linux
 			" flacdec_mdw"      - for ARM FLAC Decode Middleware for Linux
+			" aacsdec_mdw"      - for ARM AAC-LC Decode Middleware for Linux
 			" aacenc_mdw"       - for ARM AAC Encode Middleware for Linux
 		Ex:
 

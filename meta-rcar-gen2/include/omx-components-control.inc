@@ -20,12 +20,14 @@ USE_H264AVC_ENCODER = "${@'1' if 'h264avcenc_lib' in '${DISTRO_FEATURES}' else '
 #USE_DDD_DECODER for ARM 5.1ch Dolby Digital Decoder for Linux
 #USE_ALAC_DECODER for ARM ALAC Decoder for Linux
 #USE_FLAC_DECODER for ARM FLAC Decoder for Linux
+#USE_AACLCS_DECODER for ARM AAC-LC Decoder Sample for Linux
 USE_AACP2_DECODER = "${@'1' if 'aacp2dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 USE_MP3_DECODER = "${@'1' if 'mp3dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 USE_WMA_DECODER = "${@'1' if 'wmadec_lib' in '${DISTRO_FEATURES}' else '0'}"
 USE_DDD_DECODER = "${@'1' if 'ddddec_lib' in '${DISTRO_FEATURES}' else '0'}"
 USE_ALAC_DECODER = "${@'1' if 'alacdec_lib' in '${DISTRO_FEATURES}' else '0'}"
 USE_FLAC_DECODER = "${@'1' if 'flacdec_lib' in '${DISTRO_FEATURES}' else '0'}"
+USE_AACLCS_DECODER = "${@'1' if 'aaclcsdec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 ## Config for audio encoders
 # USE_AAC_ENCODER for ARM AAC Encoder for Linux
@@ -38,12 +40,14 @@ USE_AAC_ENCODER = "${@'1' if 'aacenc_lib' in '${DISTRO_FEATURES}' else '0'}"
 # USE_DDD_MDW_DECODER for ARM 5.1ch Dolby Digital Decode Middleware for Linux
 # USE_ALAC_MDW_DECODER for ARM ALAC Decode Middleware for Linux
 # USE_FLAC_MDW_DECODER for ARM FLAC Decode Middleware for Linux
+# USE_AACS_MDW_DECODER for ARM AAC-LC Decode Middleware for Linux
 USE_ARMAACP2_MDW_DECODER = "${@'1' if 'armaccp2dec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 USE_MP3_MDW_DECODER = "${@'1' if 'mp3dec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 USE_WMA_MDW_DECODER = "${@'1' if 'wmadec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 USE_DDD_MDW_DECODER = "${@'1' if 'ddddec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 USE_ALAC_MDW_DECODER = "${@'1' if 'alacdec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 USE_FLAC_MDW_DECODER = "${@'1' if 'flacdec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+USE_AACS_MDW_DECODER = "${@'1' if 'aacsdec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 ##
 # USE_AAC_MDW_ENCODER for ARM AAC Encode Middleware for Linux
 USE_AAC_MDW_ENCODER = "${@'1' if 'aacenc_mdw' in '${DISTRO_FEATURES}' else '0'}"
@@ -75,4 +79,5 @@ WMA_MDW_DECODER = '${@base_conditional("USE_WMA_DECODER", "1", "1", "${USE_WMA_M
 DDD_MDW_DECODER = '${@base_conditional("USE_DDD_DECODER", "1", "1", "${USE_DDD_MDW_DECODER}", d)}'
 ALAC_MDW_DECODER = '${@base_conditional("USE_ALAC_DECODER", "1", "1", "${USE_ALAC_MDW_DECODER}", d)}'
 FLAC_MDW_DECODER = '${@base_conditional("USE_FLAC_DECODER", "1", "1", "${USE_FLAC_MDW_DECODER}", d)}'
+AACS_MDW_DECODER = '${@base_conditional("USE_AACLCS_DECODER", "1", "1", "${USE_AACS_MDW_DECODER}", d)}'
 AAC_MDW_ENCODER = '${@base_conditional("USE_AAC_ENCODER", "1", "1", "${USE_AAC_MDW_ENCODER}", d)}'
