@@ -5,7 +5,7 @@ require ../../include/gles-control.inc
 require ../../include/multimedia-control.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(alt|gose|koelsch|lager|porter|silk)"
+COMPATIBLE_MACHINE = "(alt|gose|koelsch|lager)"
 
 PV_append = "+git${SRCREV}"
 
@@ -22,27 +22,6 @@ SRC_URI_append = " \
     ${@' file://drm-rcar-du.cfg' \
         if '${USE_MULTIMEDIA}' == '0' or '${USE_GLES_WAYLAND}' == '0' else ''}"
 
-SRC_URI_append_lcb = " \
-	file://0001-kernel-Silk-board-support.patch \
-	file://0002-kernel-silk-fix-ethernet-phy-irq.patch \
-	file://0003-kernel-silk-fix-sd-detect.patch \
-	file://0004-kernel-Revert-i2c-rcar-Support-ACK-by-HW-auto-restart-after-NACK.patch \
-	file://0006-Rcar-DU-add-RGB-connector.patch \
-	file://0007-SILK-add-i2c0.patch \
-	file://0008-Porter-board-support.patch \
-	file://0009-shmobile-add-atag-dtb-compat.patch \
-	file://0010-Silk-Add-missing-pins-handle-to-Eth.patch \
-	file://0011-Silk-Add-missing-DU-pins.patch \
-	file://0012-can-add-Renesas-R-Car-CAN-driver.patch \
-	file://0013-sh-pfc-r8a7791-add-CAN-pin-groups.patch \
-	file://0014-sh-pfc-r8a7791-fix-CAN-pin-groups.patch \
-	file://0015-can-rcar_can-support-all-input-clocks.patch \
-	file://0016-can-rcar_can-document-device-tree-bindings.patch \
-	file://0017-can-rcar_can-add-device-tree-support.patch \
-	file://0018-porter-can-support.patch \
-	file://0019-i2c-busses-rcar-Workaround-arbitration-loss-error.patch \
-	file://0020-Silk-Remove-I2C1-clock-from-clk_enables.patch \
-"
 SRC_URI_append_porter = " file://can.cfg"
 
 S = "${WORKDIR}/git"
