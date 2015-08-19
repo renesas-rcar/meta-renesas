@@ -1,0 +1,1 @@
+inherit multilib_sdk
