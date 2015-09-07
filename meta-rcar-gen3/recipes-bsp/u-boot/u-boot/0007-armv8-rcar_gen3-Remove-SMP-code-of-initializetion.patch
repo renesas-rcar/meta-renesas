@@ -1,0 +1,31 @@
+From 32dd13ae69878ffba8f092996c8167a34186f51b Mon Sep 17 00:00:00 2001
+From: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+Date: Fri, 21 Aug 2015 17:31:46 +0900
+Subject: armv8: rcar_gen3: Remove SMP code of initializetion
+
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S b/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S
+index 092d41b..88ff56e 100644
+--- a/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S
++++ b/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S
+@@ -70,13 +70,6 @@ ENTRY(lowlevel_init)
+ 
+ 	bl      s_init
+ 
+-	/*
+-	 * Enable SMP bit
+-	 */
+-	mrs	x0, S3_1_c15_c2_1
+-	orr	x0, x0, #0x40	/* SMP bit */
+-	msr	S3_1_c15_c2_1, x0
+-
+ 2:
+ 	mov	lr, x29			/* Restore LR */
+ 	ret
+-- 
+1.8.3.2
+

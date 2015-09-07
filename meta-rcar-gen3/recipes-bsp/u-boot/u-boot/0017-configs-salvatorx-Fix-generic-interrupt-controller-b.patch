@@ -1,0 +1,27 @@
+From 6bb2f41e823d606b6ba03f9cbc61c2acc3d8d061 Mon Sep 17 00:00:00 2001
+From: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+Date: Mon, 31 Aug 2015 17:29:06 +0900
+Subject: configs: salvatorx: Fix generic interrupt controller base address
+
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ include/configs/salvatorx.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/include/configs/salvatorx.h b/include/configs/salvatorx.h
+index 2a9bd3a..66b22b5 100644
+--- a/include/configs/salvatorx.h
++++ b/include/configs/salvatorx.h
+@@ -58,7 +58,8 @@
+ #define COUNTER_FREQUENCY	0xFE502A	/* 16.66MHz from CPclk */
+ 
+ /* Generic Interrupt Controller Definitions */
+-#define GICD_BASE	(0xF1020000)
++#define GICD_BASE	(0xF1010000)
++#define GICC_BASE	(0xF1020000)
+ #define CONFIG_GICV2
+ 
+ /* USB */
+-- 
+1.8.3.2
+

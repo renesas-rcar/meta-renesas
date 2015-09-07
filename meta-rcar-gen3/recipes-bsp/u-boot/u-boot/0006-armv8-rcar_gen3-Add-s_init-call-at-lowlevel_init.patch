@@ -1,0 +1,29 @@
+From 32b00387a116711eb8f80cba02849283a3fd02c1 Mon Sep 17 00:00:00 2001
+From: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+Date: Fri, 21 Aug 2015 15:10:04 +0900
+Subject: armv8: rcar_gen3: Add s_init call at lowlevel_init
+
+ - Stop watchdog timer.
+ - CPG write control.
+
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S b/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S
+index cc1becc..092d41b 100644
+--- a/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S
++++ b/arch/arm/cpu/armv8/rcar_gen3/lowlevel_init.S
+@@ -68,6 +68,8 @@ ENTRY(lowlevel_init)
+ 
+ #endif /* CONFIG_ARMV8_MULTIENTRY */
+ 
++	bl      s_init
++
+ 	/*
+ 	 * Enable SMP bit
+ 	 */
+-- 
+1.8.3.2
+

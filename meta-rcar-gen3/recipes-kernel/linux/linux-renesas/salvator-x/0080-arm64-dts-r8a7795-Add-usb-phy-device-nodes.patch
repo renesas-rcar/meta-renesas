@@ -1,0 +1,54 @@
+From a7ebcc4b2223fc9b69e101d05656fead8e802597 Mon Sep 17 00:00:00 2001
+From: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Date: Wed, 19 Aug 2015 13:41:02 +0900
+Subject: [PATCH 80/85] arm64: dts: r8a7795: Add usb-phy device nodes
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi |   31 ++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index 98fbd5c..4acc673 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -685,5 +685,36 @@
+ 				};
+ 			};
+ 		};
++
++		usb2_phy0: usb-phy@ee080200 {
++			compatible = "renesas,usb2-phy-r8a7795";
++			reg = <0 0xee080200 0 0x6ff>, <0 0xe6590100 0 0x100>;
++			reg-names = "usb2", "hsusb";
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI0>,
++				 <&mstp7_clks R8A7795_CLK_HSUSB>;
++			clock-names = "usb2", "hsusb";
++			#phy-cells = <0>;
++			status = "disabled";
++		};
++
++		usb2_phy1: usb-phy@ee0a0200 {
++			compatible = "renesas,usb2-phy-r8a7795";
++			reg = <0 0xee0a0200 0 0x6ff>;
++			reg-names = "usb2";
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI1>;
++			clock-names = "usb2";
++			#phy-cells = <0>;
++			status = "disabled";
++		};
++
++		usb2_phy2: usb-phy@ee0c0200 {
++			compatible = "renesas,usb2-phy-r8a7795";
++			reg = <0 0xee0c0200 0 0x6ff>;
++			reg-names = "usb2";
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI2>;
++			clock-names = "usb2";
++			#phy-cells = <0>;
++			status = "disabled";
++		};
+ 	};
+ };
+-- 
+1.7.9.5
+

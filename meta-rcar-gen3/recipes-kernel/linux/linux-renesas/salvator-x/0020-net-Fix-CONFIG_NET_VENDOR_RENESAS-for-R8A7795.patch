@@ -1,0 +1,29 @@
+From 0fc062d62d3459b2c5e3ee14737a9362254b6a13 Mon Sep 17 00:00:00 2001
+From: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Date: Tue, 18 Aug 2015 11:24:49 +0900
+Subject: [PATCH 20/85] net: Fix CONFIG_NET_VENDOR_RENESAS for R8A7795
+
+CONFIG_NET_VENDOR_RENESAS is added to Makefile for R8A7795.
+CONFIG_SH_ETH exists under renesas directory, so it is removed.
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+---
+ drivers/net/ethernet/Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/Makefile b/drivers/net/ethernet/Makefile
+index f42177b..ddfc808 100644
+--- a/drivers/net/ethernet/Makefile
++++ b/drivers/net/ethernet/Makefile
+@@ -65,7 +65,7 @@ obj-$(CONFIG_NET_VENDOR_PASEMI) += pasemi/
+ obj-$(CONFIG_NET_VENDOR_QLOGIC) += qlogic/
+ obj-$(CONFIG_NET_VENDOR_QUALCOMM) += qualcomm/
+ obj-$(CONFIG_NET_VENDOR_REALTEK) += realtek/
+-obj-$(CONFIG_SH_ETH) += renesas/
++obj-$(CONFIG_NET_VENDOR_RENESAS) += renesas/
+ obj-$(CONFIG_NET_VENDOR_RDC) += rdc/
+ obj-$(CONFIG_NET_VENDOR_ROCKER) += rocker/
+ obj-$(CONFIG_NET_VENDOR_SAMSUNG) += samsung/
+-- 
+1.7.9.5
+

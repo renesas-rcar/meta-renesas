@@ -1,0 +1,33 @@
+From bd2613bb0ce5ebacacab9d1f721c0e73dc632849 Mon Sep 17 00:00:00 2001
+From: Masaru Nagai <masaru.nagai.vx@renesas.com>
+Date: Mon, 17 Aug 2015 16:31:00 +0900
+Subject: [PATCH 29/85] ravb: Fix int mask value overwritten issue
+
+if BE and NC interrupts occurs at same time,
+it overwrites a interrupt mask values.
+
+Signed-off-by: Masaru Nagai <masaru.nagai.vx@renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index c8730ea..94beed9 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -737,8 +737,10 @@ static irqreturn_t ravb_interrupt(int irq, void *dev_id)
+ 			    ((tis  & tic)  & BIT(q))) {
+ 				if (napi_schedule_prep(&priv->napi[q])) {
+ 					/* Mask RX and TX interrupts */
+-					ravb_write(ndev, ric0 & ~BIT(q), RIC0);
+-					ravb_write(ndev, tic  & ~BIT(q), TIC);
++					ric0 &= ~BIT(q);
++					tic &= ~BIT(q);
++					ravb_write(ndev, ric0, RIC0);
++					ravb_write(ndev, tic, TIC);
+ 					__napi_schedule(&priv->napi[q]);
+ 				} else {
+ 					netdev_warn(ndev,
+-- 
+1.7.9.5
+

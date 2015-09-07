@@ -1,0 +1,28 @@
+From 33c17ddd2dcdd946b903ac439bb721a22801f491 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 3 Aug 2015 20:39:01 +0900
+Subject: [PATCH 13/85] gpio: rcar: Add ARM64 dependence
+
+Enables the R-Car GPIO driver on ARM64.
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/gpio/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+index b4fc9e4..5d083f7 100644
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -356,7 +356,7 @@ config GPIO_PXA
+ 
+ config GPIO_RCAR
+ 	tristate "Renesas R-Car GPIO"
+-	depends on ARM && (ARCH_SHMOBILE || COMPILE_TEST)
++	depends on (ARM || ARM64) && (ARCH_SHMOBILE || COMPILE_TEST)
+ 	select GPIOLIB_IRQCHIP
+ 	help
+ 	  Say yes here to support GPIO on Renesas R-Car SoCs.
+-- 
+1.7.9.5
+

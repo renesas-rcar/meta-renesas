@@ -1,0 +1,124 @@
+From ad903c9234dba95bf3c48ca5a539e6d7aaf17216 Mon Sep 17 00:00:00 2001
+From: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Date: Tue, 18 Aug 2015 20:28:18 +0900
+Subject: [PATCH 24/85] ravb: Add DRV control and clk setting for r8a7795
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb.h      |    1 +
+ drivers/net/ethernet/renesas/ravb_main.c |   65 ++++++++++++++++++++++++++++++
+ 2 files changed, 66 insertions(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index 1832737..96ee014 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -76,6 +76,7 @@ enum ravb_reg {
+ 	CDAR20	= 0x0060,
+ 	CDAR21	= 0x0064,
+ 	ESR	= 0x0088,
++	APSR	= 0x008c,
+ 	RCR	= 0x0090,
+ 	RQC0	= 0x0094,
+ 	RQC1	= 0x0098,
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 8a60281..387ead6 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -31,6 +31,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
++#include <linux/of_gpio.h>
+ 
+ #include "ravb.h"
+ 
+@@ -1648,6 +1649,15 @@ static int ravb_mdio_release(struct ravb_private *priv)
+ 	return 0;
+ }
+ 
++#define	PFC_PMMR_BASE	0xE6060000	/* LSI Multiplexed Pin Setting Mask */
++#define	PFC_PMMR	0x0 /* LSI Multiplexed Pin Setting Mask */
++#define	PFC_DRVCTRL2	0x308 /* DRV control register2 */
++#define	PFC_DRVCTRL3	0x30C /* DRV control register3 */
++#define	PFC_PUEN0	0x400 /* LSI pin pull-enable register 0 */
++#define	PFC_PUEN1	0x404 /* LSI pin pull-enable register 1 */
++#define BIT0		0x0000000000000001
++#define BIT31_15	0x00000000FFFF8000
++
+ static int ravb_probe(struct platform_device *pdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -1655,7 +1665,58 @@ static int ravb_probe(struct platform_device *pdev)
+ 	struct net_device *ndev;
+ 	int error, irq, q;
+ 	struct resource *res;
++	u32 data;
++	void __iomem *p;
++	int phy_reset;
+ 
++	/* drv setting for r8a7795 */
++	if (of_device_is_compatible(np,
++				    "renesas,etheravb-r8a7795")) {
++		p = ioremap_nocache(PFC_PMMR_BASE, 0x500);
++
++		data = ioread32(p + PFC_PUEN0);
++
++		data &= ~(BIT31_15);
++		iowrite32(~data, p + PFC_PMMR);
++		iowrite32(~data, p + PFC_PUEN0);
++
++		data = ioread32(p + PFC_PUEN1);
++		data &= ~(BIT0);
++		iowrite32(~data, p + PFC_PMMR);
++		iowrite32(~data, p + PFC_PUEN1);
++
++		data = ioread32(p + PFC_DRVCTRL2);
++
++		data &= ~0x00000777;
++		data |=  0x00000333;
++		iowrite32(~data, p + PFC_PMMR);
++		iowrite32(data, p + PFC_DRVCTRL2);
++
++		data = ioread32(p + PFC_DRVCTRL3);
++		data &= ~0x77700000;
++		data |=  0x33300000;
++		iowrite32(~data, p + PFC_PMMR);
++		iowrite32(data, p + PFC_DRVCTRL3);
++		iounmap(p);
++
++		/* phy reset */
++		phy_reset = of_get_named_gpio(np, "phy-reset-gpio", 0);
++		if (!gpio_is_valid(phy_reset))
++			goto out_dma_free;
++		error = devm_gpio_request_one(&pdev->dev, phy_reset,
++					      GPIOF_OUT_INIT_HIGH,
++					      "phy-reset");
++		if (error) {
++			dev_err(&pdev->dev,
++				"failed to get phy-reset-gpios: %d\n", error);
++			goto out_dma_free;
++		}
++		msleep(20);
++		gpio_set_value(phy_reset, 0);
++		msleep(20);
++		gpio_set_value(phy_reset, 1);
++		msleep(20);
++	}
+ 	if (!np) {
+ 		dev_err(&pdev->dev,
+ 			"this driver is required to be instantiated from device tree\n");
+@@ -1739,6 +1800,10 @@ static int ravb_probe(struct platform_device *pdev)
+ 	/* Request GTI loading */
+ 	ravb_write(ndev, ravb_read(ndev, GCCR) | GCCR_LTI, GCCR);
+ 
++	/* clk setting */
++	if (of_device_is_compatible(np, "renesas,etheravb-r8a7795"))
++		ravb_write(ndev, ravb_read(ndev, APSR) | 0x00004000, APSR);
++
+ 	/* Allocate descriptor base address table */
+ 	priv->desc_bat_size = sizeof(struct ravb_desc) * DBAT_ENTRY_NUM;
+ 	priv->desc_bat = dma_alloc_coherent(NULL, priv->desc_bat_size,
+-- 
+1.7.9.5
+

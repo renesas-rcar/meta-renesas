@@ -1,0 +1,29 @@
+From b357a210f9c3506b7892d560b84bc0ee5470b594 Mon Sep 17 00:00:00 2001
+From: Yoshifumi Hosoya <yoshifumi.hosoya.wj@renesas.com>
+Date: Tue, 18 Aug 2015 15:06:17 +0900
+Subject: configs: salvatorx: Disable icache and dcache
+
+Signed-off-by: Yoshifumi Hosoya <yoshifumi.hosoya.wj@renesas.com>
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ include/configs/salvatorx.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/configs/salvatorx.h b/include/configs/salvatorx.h
+index 6f33bd7..e1b1d86 100644
+--- a/include/configs/salvatorx.h
++++ b/include/configs/salvatorx.h
+@@ -16,6 +16,10 @@
+ 
+ #include "rcar-gen3-common.h"
+ 
++/* Cache Definitions */
++#define CONFIG_SYS_DCACHE_OFF
++#define CONFIG_SYS_ICACHE_OFF
++
+ /* SCIF */
+ #define CONFIG_SCIF_CONSOLE
+ #define CONFIG_CONS_SCIF2
+-- 
+1.8.3.2
+

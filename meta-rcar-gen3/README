@@ -1,0 +1,76 @@
+meta-rcar-gen3
+==============
+
+This layer provides that evaluation board is mounted ARM SoCs of Renesas
+Electronics, called the R-Car Generation 3. Currently, this supports
+board and the SoCs of the following:
+     - Board: Salvator-X   / SoC: R8A7795 (R-Car H3)
+
+Patches
+=======
+
+Please submit any patches for this layer to: takeshi.saito.xv@renesas.com
+Please see the MAINTAINERS file for more details.
+
+Dependencies
+============
+
+This layer depends on:
+
+    URI: git://git.yoctoproject.org/poky
+    layers: meta, meta-yocto, meta-yocto-bsp
+    branch: fido
+
+    URI: git://git.yoctoproject.org/meta-renesas
+    layers: meta-rcar-gen3
+    branch: fido
+
+Build Instructions
+==================
+
+The following instructions require a Poky installation (or equivalent).
+
+Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
+
+    $ source poky/oe-init-build-env
+
+After that, initialized configure bblayers.conf by adding meta-rcar-gen3 layer. e.g.:
+
+    BBLAYERS ?= " \
+        <path to layer>/poky/meta \
+        <path to layer>/poky/meta-yocto \
+        <path to layer>/poky/meta-yocto-bsp \
+        <path to layer>/meta-renesas/meta-rcar-gen3 \
+    "
+
+To build a specific target BSP, configure the associated machine in local.conf:
+
+    MACHINE ??= "<supported board name>"
+
+Must change the package class to ipk files in local.conf:
+
+    PACKAGE_CLASSES ?= "package_ipk"
+
+Must append the 32-bit application to the image in local.conf.
+At least one 32-bit app have to be installed to run the multilib image.e.g.:
+
+    IMAGE_INSTALL_append = " lib32-coreutils"
+
+Configure for systemd init in local.conf:
+
+    DISTRO_FEATURES_append = " systemd"
+    VIRTUAL-RUNTIME_init_manager = "systemd"
+
+Build the target file system image using bitbake:
+
+    $ bitbake core-image-minimal
+
+After completing the images for the target machine will be available in the output
+directory 'tmp/deploy/images/<supported board name>'.
+
+Images generated:
+    * Image (generic Linux Kernel binary image file)
+    * Image-<machine name>.dtb (DTB for target machine)
+    * core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
+    * core-image-minimal-<machine name>.ext4  (rootfs ext4 format)
+    * core-image-minimal-<machine name>.cpio.gz (rootfs cpio+gz format)

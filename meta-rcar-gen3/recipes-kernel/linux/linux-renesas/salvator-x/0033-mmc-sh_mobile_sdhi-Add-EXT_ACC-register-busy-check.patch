@@ -1,0 +1,27 @@
+From b2ebadddf84a11e5c42192d7208048c05f091738 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Fri, 25 Apr 2014 18:14:17 +0900
+Subject: [PATCH 33/85] mmc: sh_mobile_sdhi: Add EXT_ACC register busy check
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit de350941c8e30c5713f49f7486ab42466c417636)
+Signed-off-by: Ai Kyuse <ai.kyuse.uw@renesas.com>
+---
+ drivers/mmc/host/sh_mobile_sdhi.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index 354f4f3..61671f3 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -163,6 +163,7 @@ static int sh_mobile_sdhi_write16_hook(struct tmio_mmc_host *host, int addr)
+ 	case CTL_SD_MEM_CARD_OPT:
+ 	case CTL_TRANSACTION_CTL:
+ 	case CTL_DMA_ENABLE:
++	case EXT_ACC:
+ 		return sh_mobile_sdhi_wait_idle(host);
+ 	}
+ 
+-- 
+1.7.9.5
+

@@ -1,0 +1,53 @@
+From 6394cd9da7cc091cee0b104f7a1fe042c27efb33 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Thu, 11 Sep 2014 13:59:21 +0900
+Subject: [PATCH 38/85] mmc: tmio: Add error check for data access end
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit e130acb4cfd76e9b01655a6a36cdbd7a26259cd4)
+
+Conflicts:
+	drivers/mmc/host/tmio_mmc_pio.c
+
+Excluded for UHS mode support.
+
+Signed-off-by: Ai Kyuse <ai.kyuse.uw@renesas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 295365f..887a38e 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -528,7 +528,7 @@ void tmio_mmc_do_data_irq(struct tmio_mmc_host *host)
+ 	schedule_work(&host->done);
+ }
+ 
+-static void tmio_mmc_data_irq(struct tmio_mmc_host *host)
++static void tmio_mmc_data_irq(struct tmio_mmc_host *host, unsigned int stat)
+ {
+ 	struct mmc_data *data;
+ 	spin_lock(&host->lock);
+@@ -537,6 +537,9 @@ static void tmio_mmc_data_irq(struct tmio_mmc_host *host)
+ 	if (!data)
+ 		goto out;
+ 
++	if (stat & TMIO_STAT_CRCFAIL || stat & TMIO_STAT_STOPBIT_ERR ||
++	    stat & TMIO_STAT_TXUNDERRUN)
++		data->error = -EILSEQ;
+ 	if (host->chan_tx && (data->flags & MMC_DATA_WRITE) && !host->force_pio) {
+ 		u32 status = sd_ctrl_read32(host, CTL_STATUS);
+ 		bool done = false;
+@@ -701,7 +704,7 @@ static bool __tmio_mmc_sdcard_irq(struct tmio_mmc_host *host,
+ 	/* Data transfer completion */
+ 	if (ireg & TMIO_STAT_DATAEND) {
+ 		tmio_mmc_ack_mmc_irqs(host, TMIO_STAT_DATAEND);
+-		tmio_mmc_data_irq(host);
++		tmio_mmc_data_irq(host, status);
+ 		return true;
+ 	}
+ 
+-- 
+1.7.9.5
+

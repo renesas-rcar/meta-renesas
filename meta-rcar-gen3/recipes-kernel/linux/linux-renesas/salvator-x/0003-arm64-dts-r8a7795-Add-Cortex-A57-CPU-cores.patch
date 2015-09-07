@@ -1,0 +1,86 @@
+From 20ec61263edf6fc9b6fa45d218bcfda1e57f0143 Mon Sep 17 00:00:00 2001
+From: Gaku Inami <gaku.inami.xw@bp.renesas.com>
+Date: Mon, 29 Jun 2015 15:48:27 +0900
+Subject: [PATCH 03/85] arm64: dts: r8a7795: Add Cortex-A57 CPU cores
+
+Add Cortex-A57 CPU cores to r8a7795 SoC for a total of 4 x Cortex-A57.
+
+Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi |   31 ++++++++++++++++++++++++------
+ 1 file changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index 7d7499f..0940549 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -25,13 +25,31 @@
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+ 
+-		/* 1core only at this point */
+ 		a57_0: cpu@0 {
+ 			compatible = "arm,cortex-a57", "arm,armv8";
+ 			reg = <0x0>;
+ 			device_type = "cpu";
+ 			enable-method = "psci";
+ 		};
++
++		a57_1: cpu@1 {
++			compatible = "arm,cortex-a57","arm,armv8";
++			reg = <0x1>;
++			device_type = "cpu";
++			enable-method = "psci";
++		};
++		a57_2: cpu@2 {
++			compatible = "arm,cortex-a57","arm,armv8";
++			reg = <0x2>;
++			device_type = "cpu";
++			enable-method = "psci";
++		};
++		a57_3: cpu@3 {
++			compatible = "arm,cortex-a57","arm,armv8";
++			reg = <0x3>;
++			device_type = "cpu";
++			enable-method = "psci";
++		};
+ 	};
+ 
+ 	extal_clk: extal_clk {
+@@ -44,6 +62,7 @@
+ 	soc {
+ 		compatible = "simple-bus";
+ 		interrupt-parent = <&gic>;
++
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+ 		ranges;
+@@ -56,19 +75,19 @@
+ 			reg = <0x0 0xf1010000 0 0x1000>,
+ 			      <0x0 0xf1020000 0 0x2000>;
+ 			interrupts = <GIC_PPI 9
+-					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_HIGH)>;
++					(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
+ 		};
+ 
+ 		timer {
+ 			compatible = "arm,armv8-timer";
+ 			interrupts = <GIC_PPI 13
+-					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
++					(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
+ 				     <GIC_PPI 14
+-					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
++					(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
+ 				     <GIC_PPI 11
+-					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
++					(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
+ 				     <GIC_PPI 10
+-					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>;
++					(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>;
+ 		};
+ 
+ 		clocks {
+-- 
+1.7.9.5
+

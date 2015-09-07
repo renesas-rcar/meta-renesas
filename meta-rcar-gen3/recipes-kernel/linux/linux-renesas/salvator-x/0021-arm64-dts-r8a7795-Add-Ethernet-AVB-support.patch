@@ -1,0 +1,63 @@
+From 409b24b779711b30054221c43f8258daf694afc4 Mon Sep 17 00:00:00 2001
+From: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Date: Mon, 24 Aug 2015 17:53:37 +0900
+Subject: [PATCH 21/85] arm64: dts: r8a7795: Add Ethernet AVB support
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi  |   20 ++++++++++++++++++++
+ include/dt-bindings/clock/r8a7795-clock.h |    1 +
+ 2 files changed, 21 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index 77e8f6d..828eea3 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -176,6 +176,16 @@
+ 					clock-output-names = "scif2";
+ 				};
+ 
++				mstp8_clks: mstp8_clks@e6150990 {
++					compatible = "renesas,r8a7795-mstp-clocks",
++						     "renesas,cpg-mstp-clocks";
++					reg = <0 0xe6150990 0 4>, <0 0xe61509a0 0 4>;
++					clocks =  <&p_clk>;
++					#clock-cells = <1>;
++					renesas,clock-indices = <R8A7795_CLK_AVB>;
++					clock-output-names = "avb";
++				};
++
+ 				mstp9_clks: mstp9_clks@e6150994 {
+ 					compatible = "renesas,r8a7795-mstp-clocks",
+ 						     "renesas,cpg-mstp-clocks";
+@@ -439,5 +449,15 @@
+ 			clocks = <&mstp9_clks R8A7795_CLK_I2C6>;
+ 			status = "disabled";
+ 		};
++
++		avb: ethernet@e6800000 {
++			compatible = "renesas,etheravb-r8a7795";
++			reg = <0 0xe6800000 0 0x800>, <0 0xe6a00000 0 0x10000>;
++			interrupts = <GIC_SPI 61 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 63 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7795_CLK_AVB>;
++			phy-mode = "rgmii-id";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
+ 	};
+ };
+diff --git a/include/dt-bindings/clock/r8a7795-clock.h b/include/dt-bindings/clock/r8a7795-clock.h
+index 1e30043..b5a54bf 100644
+--- a/include/dt-bindings/clock/r8a7795-clock.h
++++ b/include/dt-bindings/clock/r8a7795-clock.h
+@@ -36,6 +36,7 @@
+ /* MSTP7 */
+ 
+ /* MSTP8 */
++#define R8A7795_CLK_AVB		12
+ 
+ /* MSTP9 */
+ #define R8A7795_CLK_GPIO0		12
+-- 
+1.7.9.5
+

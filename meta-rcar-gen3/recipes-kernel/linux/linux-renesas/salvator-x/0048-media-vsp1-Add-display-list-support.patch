@@ -1,0 +1,1400 @@
+From dfc9040a2f2057f79ceafdc9447a3bfc368ae001 Mon Sep 17 00:00:00 2001
+From: Takashi Saito <takashi.saitou.ry@renesas.com>
+Date: Wed, 26 Aug 2015 18:04:31 +0900
+Subject: [PATCH 48/85] media: vsp1: Add display list support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/media/platform/vsp1/Makefile      |    2 +
+ drivers/media/platform/vsp1/vsp1.h        |    8 +
+ drivers/media/platform/vsp1/vsp1_bru.c    |   17 +
+ drivers/media/platform/vsp1/vsp1_dl.c     |  769 +++++++++++++++++++++++++++++
+ drivers/media/platform/vsp1/vsp1_dl.h     |   49 ++
+ drivers/media/platform/vsp1/vsp1_drm.c    |   24 +
+ drivers/media/platform/vsp1/vsp1_drv.c    |   24 +
+ drivers/media/platform/vsp1/vsp1_entity.c |   14 +
+ drivers/media/platform/vsp1/vsp1_pipe.c   |   72 +++
+ drivers/media/platform/vsp1/vsp1_pipe.h   |    2 +
+ drivers/media/platform/vsp1/vsp1_rpf.c    |   28 ++
+ drivers/media/platform/vsp1/vsp1_wpf.c    |   34 ++
+ include/media/vsp1.h                      |    5 +
+ 13 files changed, 1048 insertions(+)
+ create mode 100644 drivers/media/platform/vsp1/vsp1_dl.c
+ create mode 100644 drivers/media/platform/vsp1/vsp1_dl.h
+
+diff --git a/drivers/media/platform/vsp1/Makefile b/drivers/media/platform/vsp1/Makefile
+index 447e72a..5471692 100644
+--- a/drivers/media/platform/vsp1/Makefile
++++ b/drivers/media/platform/vsp1/Makefile
+@@ -4,4 +4,6 @@ vsp1-y					+= vsp1_rpf.o vsp1_rwpf.o vsp1_wpf.o
+ vsp1-y					+= vsp1_hsit.o vsp1_lif.o vsp1_lut.o
+ vsp1-y					+= vsp1_bru.o vsp1_sru.o vsp1_uds.o
+ 
++vsp1-y					+= vsp1_dl.o
++
+ obj-$(CONFIG_VIDEO_RENESAS_VSP1)	+= vsp1.o
+diff --git a/drivers/media/platform/vsp1/vsp1.h b/drivers/media/platform/vsp1/vsp1.h
+index d357ed9..3515bc3 100644
+--- a/drivers/media/platform/vsp1/vsp1.h
++++ b/drivers/media/platform/vsp1/vsp1.h
+@@ -23,6 +23,8 @@
+ 
+ #include "vsp1_regs.h"
+ 
++#define VSP1_DL_SUPPORT 1
++
+ struct clk;
+ struct device;
+ 
+@@ -35,6 +37,9 @@ struct vsp1_lut;
+ struct vsp1_rwpf;
+ struct vsp1_sru;
+ struct vsp1_uds;
++#ifdef VSP1_DL_SUPPORT
++struct vsp1_dl;
++#endif
+ 
+ #define VSP1_MAX_RPF		5
+ #define VSP1_MAX_UDS		3
+@@ -76,6 +81,9 @@ struct vsp1_device {
+ 	struct vsp1_sru *sru;
+ 	struct vsp1_uds *uds[VSP1_MAX_UDS];
+ 	struct vsp1_rwpf *wpf[VSP1_MAX_WPF];
++#ifdef VSP1_DL_SUPPORT
++	struct vsp1_dl *dl;
++#endif
+ 
+ 	struct list_head entities;
+ 	struct list_head videos;
+diff --git a/drivers/media/platform/vsp1/vsp1_bru.c b/drivers/media/platform/vsp1/vsp1_bru.c
+index 4c861900..cc9e351 100644
+--- a/drivers/media/platform/vsp1/vsp1_bru.c
++++ b/drivers/media/platform/vsp1/vsp1_bru.c
+@@ -20,6 +20,9 @@
+ #include "vsp1_bru.h"
+ #include "vsp1_rwpf.h"
+ #include "vsp1_video.h"
++#ifdef VSP1_DL_SUPPORT
++#include "vsp1_dl.h"
++#endif
+ 
+ #define BRU_MIN_SIZE				1U
+ #define BRU_MAX_SIZE				8190U
+@@ -35,7 +38,14 @@ static inline u32 vsp1_bru_read(struct vsp1_bru *bru, u32 reg)
+ 
+ static inline void vsp1_bru_write(struct vsp1_bru *bru, u32 reg, u32 data)
+ {
++#ifdef VSP1_DL_SUPPORT
++	if (vsp1_dl_is_use(bru->entity.vsp1))
++		vsp1_dl_set(bru->entity.vsp1, reg, data);
++	else
++		vsp1_write(bru->entity.vsp1, reg, data);
++#else
+ 	vsp1_write(bru->entity.vsp1, reg, data);
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -52,6 +62,9 @@ static int bru_s_ctrl(struct v4l2_ctrl *ctrl)
+ 
+ 	switch (ctrl->id) {
+ 	case V4L2_CID_BG_COLOR:
++#ifdef VSP1_DL_SUPPORT
++	/* TODO	vsp1_dl_get(bru->entity.vsp1, DL_BODY_BRU);*/
++#endif
+ 		vsp1_bru_write(bru, VI6_BRU_VIRRPF_COL, ctrl->val |
+ 			       (0xff << VI6_BRU_VIRRPF_COL_A_SHIFT));
+ 		break;
+@@ -84,6 +97,10 @@ static int bru_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	if (!enable)
+ 		return 0;
+ 
++#ifdef VSP1_DL_SUPPORT
++	vsp1_dl_get(bru->entity.vsp1, DL_BODY_BRU);
++#endif
++
+ 	format = &bru->entity.formats[bru->entity.source_pad];
+ 
+ 	/* The hardware is extremely flexible but we have no userspace API to
+diff --git a/drivers/media/platform/vsp1/vsp1_dl.c b/drivers/media/platform/vsp1/vsp1_dl.c
+new file mode 100644
+index 0000000..d8b6e65
+--- /dev/null
++++ b/drivers/media/platform/vsp1/vsp1_dl.c
+@@ -0,0 +1,769 @@
++
++#include <linux/device.h>
++#include <linux/gfp.h>
++#include <linux/dma-mapping.h>
++
++#include "vsp1.h"
++#include "vsp1_dl.h"
++
++#ifdef VSP1_DL_SUPPORT
++
++#define DL_MEM_SIZE (1024 * 3)
++#define DISPLAY_LIST_NUM 3
++#define DISPLAY_LIST_BODY_NUM 8
++
++/* flag */
++#define DL_FLAG_BODY_WRITEBLE (1 << 0)
++
++/* Display List header/body use stat */
++enum {
++	DL_MEM_NO_USE = 0,
++	DL_MEM_USE,
++};
++
++struct vsp1_device;
++
++/* display list header format */
++struct display_header {
++	/* zero_bits:29 + num_list_minus1:3 */
++	u32 num_list_minus1;
++	struct {
++		/* zero_bits:15 + num_bytes:17 */
++		u32 num_bytes;
++		u32 plist;
++	} display_list[DISPLAY_LIST_BODY_NUM];
++	u32 pnext_header;
++	/* zero_bits:30 + current_frame_int_enable:1 + */
++	/* next_frame_auto_start:1 */
++	u32 int_auto;
++
++
++	/* External data */
++	/* TODO...       */
++};
++
++/* display list body format */
++struct display_list { /* 8byte align */
++	u32 set_address; /* resistor address */
++	u32 set_data; /* resistor data */
++};
++
++struct dl_body {
++	int size;
++	int use;
++	int reg_count;
++	dma_addr_t paddr;
++	struct display_list *dlist;
++	unsigned long dlist_offset;
++	int flag;
++	/* struct dl_body *next; */
++};
++
++struct dl_head {
++	int size;
++	int use;
++	int module;
++	dma_addr_t paddr;
++	struct display_header *dheader;
++	unsigned long dheader_offset;
++	struct dl_body *dl_body_list[DISPLAY_LIST_BODY_NUM];
++	int flag;
++	/* struct dl_head *next; */
++};
++
++struct vsp1_dl {
++	struct vsp1_device *vsp1;
++	bool active;
++	int repeat;
++	int mode;
++	unsigned int flag;
++	spinlock_t lock;
++
++	/* memory */
++	int size;
++	dma_addr_t paddr;
++	void *vaddr;
++
++	struct dl_head *setting_header;
++	struct dl_body *setting_body;
++
++	/* header mode */
++	struct dl_head head[DISPLAY_LIST_NUM];
++	struct dl_body body[DISPLAY_LIST_NUM][DISPLAY_LIST_BODY_NUM];
++	struct dl_head *active_header;
++	struct dl_head *next_header;
++
++	/* header less mode */
++	struct dl_body single_body[DISPLAY_LIST_NUM];
++	struct dl_body *active_body;
++	struct dl_body *next_body;
++	struct dl_body *pending_body;
++#if 0
++	struct dl_body *active_body_now;
++	struct dl_body *active_body_next_set;
++#endif
++};
++
++/* -----------------------------------------------------------------------------
++ * Device Access
++ */
++
++static inline u32 dl_read(struct vsp1_dl *dl, u32 reg)
++{
++	return vsp1_read(dl->vsp1, reg);
++}
++
++static inline void dl_write(struct vsp1_dl *dl, u32 reg, u32 data)
++{
++	vsp1_write(dl->vsp1, reg, data);
++}
++
++void vsp1_dl_set(struct vsp1_device *vsp1, u32 reg, u32 data)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++	struct dl_body *body = dl->setting_body;
++
++	if (body == NULL)
++		return;
++
++	body->dlist[body->reg_count].set_address = reg;
++	body->dlist[body->reg_count].set_data = data;
++	body->reg_count++;
++}
++
++int vsp1_dl_setup_control(struct vsp1_device *vsp1, int mode, int repeat)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++	int _mode, _repeat;
++
++	if (dl->active)
++		return -EBUSY;
++
++	dl->repeat = DL_REPEAT_NONE;
++	dl->mode = DL_NOT_USE;
++
++	switch (mode) {
++	case DL_NOT_USE:
++		return 0;
++
++	case DL_HEADER_MODE:
++	case DL_HEADER_LESS:
++		_mode = mode;
++		break;
++
++	default:
++		return -EINVAL;
++	}
++
++	switch (repeat) {
++	case DL_REPEAT_NONE:
++	case DL_REPEAT_MANUAL:
++	case DL_REPEAT_AUTO:
++		_repeat = repeat;
++		break;
++
++	default:
++		return -EINVAL;
++	}
++
++	dl->repeat = _repeat;
++	dl->mode = _mode;
++
++	return 0;
++}
++
++static void dl_set_control(struct vsp1_dl *dl)
++{
++	unsigned long dl_ctrl = (256 << VI6_DL_CTRL_AR_WAIT_SHIFT) |
++				 VI6_DL_CTRL_DC2 | VI6_DL_CTRL_DC1 |
++				 VI6_DL_CTRL_DC0 | VI6_DL_CTRL_DLE;
++
++	if (dl->active)
++		return;
++
++#if 0
++	dl_write(dl, VI6_WPF_IRQ_STA(0), 0);
++	dl_write(dl, VI6_DISP_IRQ_STA, 0);
++#endif
++
++	if (dl->mode == DL_HEADER_LESS) {
++		dl_ctrl |= VI6_DL_CTRL_NH0;
++
++		if (dl->repeat == DL_REPEAT_AUTO)
++			dl_ctrl |= VI6_DL_CTRL_CFM0;
++#if 0
++		dl_write(dl, VI6_WPF_IRQ_ENB(0),
++				VI6_WFP_IRQ_ENB_FREE | VI6_WFP_IRQ_ENB_DFEE);
++		dl_write(dl, VI6_DISP_IRQ_ENB, 0);
++	} else {
++		dl_write(dl, VI6_WPF_IRQ_ENB(0), VI6_WFP_IRQ_ENB_DFEE);
++		dl_write(dl, VI6_DISP_IRQ_ENB, VI6_DISP_IRQ_STA_DST);
++#endif
++	}
++
++	/* DL control */
++	dl_write(dl, VI6_DL_CTRL, dl_ctrl);
++
++	/* DL LWORD swap */
++	dl_write(dl, VI6_DL_SWAP, VI6_DL_SWAP_LWS);
++}
++
++void vsp1_dl_reset(struct vsp1_device *vsp1)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++	int i, j;
++
++	dl->active = false;
++	dl->flag = 0;
++
++	dl->setting_header = NULL;
++	dl->setting_body = NULL;
++	dl->active_header = NULL;
++	dl->next_header = NULL;
++	dl->active_body = NULL;
++	dl->next_body = NULL;
++	dl->pending_body = NULL;
++
++	for (i = 0; i < DISPLAY_LIST_NUM; i++) {
++		dl->head[i].use = DL_MEM_NO_USE;
++
++		for (j = 0; j < DISPLAY_LIST_BODY_NUM; j++)
++			dl->body[i][j].use = DL_MEM_NO_USE;
++
++		dl->single_body[i].use = DL_MEM_NO_USE;
++	}
++}
++
++
++int vsp1_dl_is_use(struct vsp1_device *vsp1)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++
++	switch (dl->mode) {
++	case DL_HEADER_MODE:
++	case DL_HEADER_LESS:
++		return dl->mode;
++	}
++
++	return 0;
++}
++
++int vsp1_dl_is_auto_repeat(struct vsp1_device *vsp1)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++
++	switch (dl->repeat) {
++	case DL_REPEAT_AUTO:
++		return 1;
++	}
++
++	return 0;
++}
++
++static inline void dl_free_body(struct dl_body *body)
++{
++	if (body == NULL)
++		return;
++
++	body->use = DL_MEM_NO_USE;
++}
++
++static inline void dl_free_header(struct dl_head *head)
++{
++	int i;
++
++	if (head == NULL)
++		return;
++
++	/* in header mode, dl_head->next is NULL */
++	for (i = 0; i < DISPLAY_LIST_BODY_NUM; i++)
++		if (head->dl_body_list[i] != NULL)
++			head->dl_body_list[i]->use = DL_MEM_NO_USE;
++
++	head->use = DL_MEM_NO_USE;
++	/* head->next = NULL; */
++}
++
++static int dl_header_mode_dl(struct vsp1_dl *dl, int module)
++{
++	struct dl_head *head = NULL;
++	struct dl_body *body = NULL;
++	int i;
++	unsigned long flags;
++
++	switch (module) {
++	case DL_BODY_RPF0:
++	case DL_BODY_RPF1:
++	case DL_BODY_RPF2:
++	case DL_BODY_RPF3:
++	case DL_BODY_RPF4:
++	case DL_BODY_WPF:
++	case DL_BODY_BRU:
++	case DL_BODY_DPR:
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	spin_lock_irqsave(&dl->lock, flags);
++	if (dl->setting_header == NULL) {
++		for (i = 0; i < DISPLAY_LIST_NUM; i++) {
++			if (dl->head[i].use == DL_MEM_NO_USE) {
++				head = &dl->head[i];
++				head->use = DL_MEM_USE;
++				break;
++			}
++		}
++
++		if (head == NULL) {
++			spin_unlock_irqrestore(&dl->lock, flags);
++			return -ENOMEM;
++		}
++
++		for (i = 0; i < DISPLAY_LIST_BODY_NUM; i++)
++			head->dl_body_list[i] = NULL;
++
++		dl->setting_header = head;
++	} else {
++		head = dl->setting_header;
++	}
++
++	if (head->dl_body_list[module] == NULL) {
++		for (i = 0; i < DISPLAY_LIST_NUM; i++) {
++			if (dl->body[i][module].use == DL_MEM_NO_USE) {
++				body = &dl->body[i][module];
++				body->use = DL_MEM_USE;
++				break;
++			}
++		}
++
++		if (body == NULL) {
++			spin_unlock_irqrestore(&dl->lock, flags);
++			return -ENOMEM;
++		}
++
++		body->reg_count = 0;
++
++		head->dl_body_list[module] = body;
++		dl->setting_body = body;
++	} else {
++		dl->setting_body = head->dl_body_list[module];
++	}
++
++
++	spin_unlock_irqrestore(&dl->lock, flags);
++
++	return 0;
++}
++
++
++static int dl_header_less_body_get(struct vsp1_dl *dl)
++{
++	struct dl_body *body = NULL;
++	int i;
++	unsigned long flags;
++
++	if (dl->setting_body != NULL)
++		return 0;
++
++	spin_lock_irqsave(&dl->lock, flags);
++
++	for (i = 0; i < DISPLAY_LIST_NUM; i++) {
++		if (dl->single_body[i].use == DL_MEM_NO_USE) {
++			body = &dl->single_body[i];
++			body->use = DL_MEM_USE;
++			break;
++		}
++	}
++
++	spin_unlock_irqrestore(&dl->lock, flags);
++
++	if (body == NULL)
++		return -ENOMEM;
++
++	body->reg_count = 0;
++
++	dl->setting_body = body;
++
++	return 0;
++}
++
++int vsp1_dl_get(struct vsp1_device *vsp1, int module)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++
++	switch (dl->mode) {
++	case DL_HEADER_MODE:
++		return dl_header_mode_dl(dl, module);
++
++	case DL_HEADER_LESS:
++		return dl_header_less_body_get(dl);
++	}
++
++	return 0;
++}
++
++static int dl_irq_dl_frame_end_header_mode(struct vsp1_dl *dl)
++{
++	struct dl_head *free_head = NULL;
++
++	spin_lock(&dl->lock);
++
++	switch (dl->repeat) {
++	case DL_REPEAT_MANUAL:
++	case DL_REPEAT_AUTO:
++		if (dl->next_header == NULL)
++			break;
++
++		/* update next frame & free old Display List */
++		free_head = dl->active_header;
++		dl->active_header = dl->next_header;
++		dl->next_header = NULL;
++		dl_write(dl, VI6_DL_HDR_ADDR(0),
++				dl->active_header->paddr);
++		break;
++
++	case DL_REPEAT_NONE:
++		free_head = dl->active_header;
++		dl->active_header = NULL;
++		break;
++	}
++
++	spin_unlock(&dl->lock);
++
++	dl_free_header(free_head);
++
++	return 0;
++}
++
++static int dl_irq_dl_frame_end_header_less(struct vsp1_dl *dl)
++{
++	struct dl_body *free_body = NULL;
++
++	spin_lock(&dl->lock);
++
++	dl->flag &= ~DL_FLAG_BODY_WRITEBLE;
++
++	switch (dl->repeat) {
++	case DL_REPEAT_MANUAL:
++	case DL_REPEAT_AUTO:
++		if (dl->next_body == NULL)
++			break;
++
++		/* free old Display List */
++		free_body = dl->active_body;
++		dl->active_body = dl->next_body;
++		dl->next_body = NULL;
++		break;
++
++	case DL_REPEAT_NONE:
++		free_body = dl->active_body;
++		dl->active_body = NULL;
++		break;
++	}
++
++	dl_free_body(free_body);
++
++	spin_unlock(&dl->lock);
++
++	return 0;
++}
++
++int vsp1_dl_irq_dl_frame_end(struct vsp1_device *vsp1)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++
++	switch (dl->mode) {
++	case DL_HEADER_MODE:
++		return dl_irq_dl_frame_end_header_mode(dl);
++
++	case DL_HEADER_LESS:
++		return dl_irq_dl_frame_end_header_less(dl);
++	}
++
++	return 0;
++}
++
++
++int vsp1_dl_irq_display_start(struct vsp1_device *vsp1)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++	struct dl_body *next_body = NULL;
++	struct dl_body *free_body = NULL;
++
++	if (dl->mode != DL_HEADER_LESS)
++		return 0;
++
++	spin_lock(&dl->lock);
++
++	dl->flag |= DL_FLAG_BODY_WRITEBLE;
++
++	if (dl->pending_body) {
++		/* update next frame for pending. */
++		free_body = dl->next_body;
++		next_body = dl->next_body = dl->pending_body;
++		dl->pending_body = NULL;
++	}
++
++	dl_free_body(free_body);
++
++	spin_unlock(&dl->lock);
++
++	if (next_body) {
++		dl_write(dl, VI6_DL_HDR_ADDR(0), next_body->paddr);
++		dl_write(dl, VI6_DL_BODY_SIZE,
++			(next_body->reg_count * 8) | VI6_DL_BODY_SIZE_UPD);
++	}
++
++	return 0;
++}
++
++static int dl_header_setup(struct vsp1_dl *dl, struct dl_head *head)
++{
++	int i;
++	struct display_header *dheader = head->dheader;
++	int dl_count = 0;
++
++	memset(dheader, 0, sizeof(*dheader));
++
++	for (i = 0; i < DISPLAY_LIST_BODY_NUM; i++) {
++		struct dl_body *dl_body_list = head->dl_body_list[i];
++
++		if (dl_body_list == NULL)
++			continue;
++
++		dheader->display_list[dl_count].num_bytes =
++			(dl_body_list->reg_count * 8) << 0;
++		dheader->display_list[dl_count].plist = dl_body_list->paddr;
++		dl_count++;
++	}
++
++	for (i = dl_count; i < DISPLAY_LIST_BODY_NUM; i++) {
++		dheader->display_list[i].num_bytes = 0;
++		dheader->display_list[i].plist = 0;
++	}
++
++	/* display list body num */
++	dheader->num_list_minus1 = (dl_count - 1) << 0;
++
++	dheader->pnext_header = (unsigned long)head->paddr;
++
++	/* Enable Display List interrupt */
++	dheader->int_auto = 1 << 1;
++
++	/* Enable auto repeat mode */
++	if (dl->repeat == DL_REPEAT_AUTO)
++		dheader->int_auto |= 1 << 0;
++
++	return 0;
++}
++
++
++/* TODO:Auto repeat mode */
++static void dl_set_header_mode(struct vsp1_dl *dl)
++{
++	struct dl_head *head = dl->setting_header;
++	unsigned long flags;
++
++	if (head == NULL)
++		return;
++
++	dl_header_setup(dl, head);
++
++	dl_set_control(dl);
++
++	/* Set Display Header address */
++	if (!dl->active)
++		dl_write(dl, VI6_DL_HDR_ADDR(0), head->paddr);
++
++	spin_lock_irqsave(&dl->lock, flags);
++	dl->setting_header = NULL;
++	dl->setting_body = NULL;
++	if (dl->active) {
++		dl->next_header = head;
++	} else {
++		dl->active_header = head;
++		dl->active = true;
++	}
++	spin_unlock_irqrestore(&dl->lock, flags);
++}
++
++static void dl_set_header_less(struct vsp1_dl *dl)
++{
++	struct dl_body *body = dl->setting_body;
++	unsigned long stat;
++	bool write_enable = true;
++	unsigned long flags;
++
++	if (body == NULL)
++		return;
++
++	if (!dl->active) {
++		/* stream start */
++		dl->flag |= DL_FLAG_BODY_WRITEBLE;
++	} else if (dl->flag & DL_FLAG_BODY_WRITEBLE) {
++		stat = dl_read(dl, VI6_DL_BODY_SIZE);
++		if (!(stat & VI6_DL_BODY_SIZE_UPD) &&
++		     (dl->next_body != NULL)) {
++			write_enable = false;
++		}
++	} else {
++		write_enable = false;
++	}
++
++	if (!write_enable) {
++		spin_lock_irqsave(&dl->lock, flags);
++		dl_free_body(dl->pending_body);
++		dl->setting_body = NULL;
++		dl->pending_body = body;
++		spin_unlock_irqrestore(&dl->lock, flags);
++		return;
++	}
++
++	dl_set_control(dl);
++
++	/* Set Single Display List Body address & size */
++	dl_write(dl, VI6_DL_HDR_ADDR(0), body->paddr);
++	dl_write(dl, VI6_DL_BODY_SIZE,
++			(body->reg_count * 8) | VI6_DL_BODY_SIZE_UPD);
++
++	spin_lock_irqsave(&dl->lock, flags);
++	dl->setting_body = NULL;
++	dl_free_body(dl->next_body);
++	if (dl->active) {
++		dl->next_body = body;
++	} else {
++		dl->active_body = body;
++		dl->active = true;
++	}
++	spin_unlock_irqrestore(&dl->lock, flags);
++}
++
++int vsp1_dl_set_stream(struct vsp1_device *vsp1)
++{
++	struct vsp1_dl *dl = vsp1->dl;
++
++	switch (dl->mode) {
++	case DL_HEADER_MODE:
++		dl_set_header_mode(dl);
++		break;
++
++	case DL_HEADER_LESS:
++		dl_set_header_less(dl);
++		break;
++
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++
++static void dl_config(struct vsp1_dl *dl)
++{
++	int i, j;
++	unsigned long offset = 0;
++	int dl_header_size = 76;
++	int dl_body_size[DISPLAY_LIST_BODY_NUM] = {
++		/* RPF0 */ 256,
++		/* RPF1 */ 256,
++		/* RPF2 */ 256,
++		/* RPF3 */ 256,
++		/* RPF4 */ 256,
++		/* WPF */ 256,
++		/* BRU */ 256,
++		/* DPR */ 256,
++	};
++
++	offset = (((dl->paddr + 15) / 16)) * 16 - dl->paddr;
++
++	/* header config */
++	for (i = 0; i < DISPLAY_LIST_NUM; i++) {
++		struct dl_head *head = &dl->head[i];
++
++		head->size = dl_header_size;
++		head->use = DL_MEM_NO_USE;
++		head->paddr = dl->paddr + offset;
++		head->dheader = dl->vaddr + offset;
++		head->dheader_offset = offset;
++		/* head->next = NULL; */
++		for (j = 0; j < DISPLAY_LIST_BODY_NUM; j++)
++			head->dl_body_list[j] = NULL;
++
++		offset += ((((head->size + 15) / 16)) * 16);
++	}
++
++	/* body config */
++	for (i = 0; i < DISPLAY_LIST_NUM; i++) {
++		for (j = 0; j < DISPLAY_LIST_BODY_NUM; j++) {
++			struct dl_body *body = &(dl->body[i][j]);
++
++			body->size = dl_body_size[j];
++			body->reg_count = 0;
++			body->use = DL_MEM_NO_USE;
++			body->paddr = dl->paddr + offset;
++			body->dlist = dl->vaddr + offset;
++			body->dlist_offset = offset;
++
++			offset += ((((body->size + 7) / 8)) * 8);
++		}
++	}
++
++	if (dl->size < offset)
++		pr_warn("[Warning] display list size over\n");
++
++	/* header less body config */
++	for (i = 0; i < DISPLAY_LIST_NUM; i++) {
++		struct dl_body *single_body = &dl->single_body[i];
++
++		single_body->size = DL_MEM_SIZE;
++		single_body->reg_count = 0;
++		single_body->use = DL_MEM_NO_USE;
++		single_body->paddr = dl->paddr + DL_MEM_SIZE * i;
++		single_body->dlist = dl->vaddr + DL_MEM_SIZE * i;
++		single_body->dlist_offset = DL_MEM_SIZE * i;
++	}
++
++}
++
++int vsp1_dl_create(struct vsp1_device *vsp1)
++{
++	struct vsp1_dl *dl;
++
++	vsp1->dl = devm_kzalloc(vsp1->dev, sizeof(*vsp1->dl), GFP_KERNEL);
++	if (!vsp1->dl)
++		return -ENOMEM;
++
++	dl = vsp1->dl;
++
++	dl->vaddr = dma_alloc_writecombine(vsp1->dev,
++			DL_MEM_SIZE * DISPLAY_LIST_NUM,
++			&dl->paddr, GFP_KERNEL);
++	if (!dl->vaddr)
++		return -ENOMEM;
++
++	dl->size = DL_MEM_SIZE * DISPLAY_LIST_NUM;
++
++	dl->setting_header = NULL;
++	dl->setting_body = NULL;
++
++	dl->active_header = NULL;
++	dl->next_header = NULL;
++
++	dl->active_body = NULL;
++	dl->next_body = NULL;
++	dl->pending_body = NULL;
++
++	dl->vsp1 = vsp1;
++	spin_lock_init(&dl->lock);
++	dl->flag = 0;
++	dl->active = false;
++	dl->repeat = DL_REPEAT_NONE;
++	dl->mode = DL_NOT_USE;
++
++	dl_config(dl);
++
++	return 0;
++}
++#endif /* VSP1_DL_SUPPORT */
+diff --git a/drivers/media/platform/vsp1/vsp1_dl.h b/drivers/media/platform/vsp1/vsp1_dl.h
+new file mode 100644
+index 0000000..b504f06
+--- /dev/null
++++ b/drivers/media/platform/vsp1/vsp1_dl.h
+@@ -0,0 +1,49 @@
++
++
++#ifndef __VSP1_DL_H__
++#define __VSP1_DL_H__
++
++/* Repeat mode */
++enum {
++	DL_REPEAT_NONE = 0, /* one shot. for mem to mem */
++	DL_REPEAT_MANUAL,
++	DL_REPEAT_AUTO,
++};
++
++/* Header mode */
++enum {
++	DL_NOT_USE = 0,
++	DL_HEADER_MODE,
++	DL_HEADER_LESS,
++};
++
++
++enum {
++	DL_BODY_RPF0 = 0,
++	DL_BODY_RPF1,
++	DL_BODY_RPF2,
++	DL_BODY_RPF3,
++	DL_BODY_RPF4,
++#if 0
++	DL_BODY_CTRL,
++	DL_BODY_LUT,
++	DL_BODY_CLUT,
++#else
++	DL_BODY_WPF,
++	DL_BODY_BRU,
++	DL_BODY_DPR,
++#endif
++};
++
++
++void vsp1_dl_set(struct vsp1_device *vsp1, u32 reg, u32 data);
++int vsp1_dl_setup_control(struct vsp1_device *vsp1, int mode, int repeat);
++void vsp1_dl_reset(struct vsp1_device *vsp1);
++int vsp1_dl_is_use(struct vsp1_device *vsp1);
++int vsp1_dl_is_auto_repeat(struct vsp1_device *vsp1);
++int vsp1_dl_get(struct vsp1_device *vsp1, int module);
++int vsp1_dl_irq_dl_frame_end(struct vsp1_device *vsp1);
++int vsp1_dl_irq_display_start(struct vsp1_device *vsp1);
++int vsp1_dl_set_stream(struct vsp1_device *vsp1);
++int vsp1_dl_create(struct vsp1_device *vsp1);
++#endif /* __VSP1_DL_H__ */
+diff --git a/drivers/media/platform/vsp1/vsp1_drm.c b/drivers/media/platform/vsp1/vsp1_drm.c
+index 7ad2024..3a5e68c 100644
+--- a/drivers/media/platform/vsp1/vsp1_drm.c
++++ b/drivers/media/platform/vsp1/vsp1_drm.c
+@@ -24,6 +24,9 @@
+ #include "vsp1_lif.h"
+ #include "vsp1_pipe.h"
+ #include "vsp1_rwpf.h"
++#ifdef VSP1_DL_SUPPORT
++#include "vsp1_dl.h"
++#endif
+ 
+ /* -----------------------------------------------------------------------------
+  * Runtime Handling
+@@ -62,6 +65,10 @@ static int vsp1_drm_pipeline_run(struct vsp1_pipeline *pipe)
+ 		vsp1->drm->update = false;
+ 	}
+ 
++#ifdef VSP1_DL_SUPPORT
++	vsp1_dl_set_stream(vsp1);
++#endif
++
+ 	vsp1_pipeline_run(pipe);
+ 
+ 	return 0;
+@@ -249,6 +256,19 @@ int vsp1_du_setup_lif(struct device *dev, unsigned int width,
+ }
+ EXPORT_SYMBOL_GPL(vsp1_du_setup_lif);
+ 
++
++#ifdef VSP1_DL_SUPPORT
++int vsp1_du_setup_dl(struct device *dev, int mode, int repeat)
++{
++	return vsp1_dl_setup_control(dev_get_drvdata(dev), mode, repeat);
++}
++
++void vsp1_du_reset_dl(struct device *dev)
++{
++	vsp1_dl_reset(dev_get_drvdata(dev));
++}
++#endif
++
+ /**
+  * vsp1_du_setup_rpf - Setup one RPF input of the VSP pipeline
+  * @dev: the VSP device
+@@ -456,7 +476,11 @@ int vsp1_du_setup_rpf(struct device *dev, unsigned int rpf_index,
+ 
+ 	/* Start the pipeline if it's currently stopped. */
+ 	vsp1->drm->update = true;
++#ifdef VSP1_DL_SUPPORT
++	if (start_stop || vsp1_dl_is_use(vsp1))
++#else
+ 	if (start_stop)
++#endif
+ 		vsp1_drm_pipeline_run(pipe);
+ 
+ 	spin_unlock_irqrestore(&pipe->irqlock, flags);
+diff --git a/drivers/media/platform/vsp1/vsp1_drv.c b/drivers/media/platform/vsp1/vsp1_drv.c
+index 68aecb9..4f294a0 100644
+--- a/drivers/media/platform/vsp1/vsp1_drv.c
++++ b/drivers/media/platform/vsp1/vsp1_drv.c
+@@ -33,6 +33,9 @@
+ #include "vsp1_sru.h"
+ #include "vsp1_uds.h"
+ #include "vsp1_video.h"
++#ifdef VSP1_DL_SUPPORT
++#include "vsp1_dl.h"
++#endif
+ 
+ /* -----------------------------------------------------------------------------
+  * Interrupt Handling
+@@ -61,6 +64,20 @@ static irqreturn_t vsp1_irq_handler(int irq, void *data)
+ 			vsp1_pipeline_frame_end(pipe);
+ 			ret = IRQ_HANDLED;
+ 		}
++
++#ifdef VSP1_DL_SUPPORT
++		if ((i != 0) || (!pipe->lif))
++			continue;
++
++		status = vsp1_read(vsp1, VI6_DISP_IRQ_STA);
++		vsp1_write(vsp1, VI6_DISP_IRQ_STA,
++				 ~status & VI6_DISP_IRQ_STA_DSE);
++
++		if (status & VI6_DISP_IRQ_STA_DSE) {
++			vsp1_pipeline_display_start(pipe);
++			ret = IRQ_HANDLED;
++		}
++#endif
+ 	}
+ 
+ 	return ret;
+@@ -371,6 +388,13 @@ static int vsp1_create_entities(struct vsp1_device *vsp1)
+ 	else
+ 		ret = vsp1_drm_init(vsp1);
+ 
++#ifdef VSP1_DL_SUPPORT
++	if (ret < 0)
++		goto done;
++
++	ret = vsp1_dl_create(vsp1);
++#endif
++
+ done:
+ 	if (ret < 0)
+ 		vsp1_destroy_entities(vsp1);
+diff --git a/drivers/media/platform/vsp1/vsp1_entity.c b/drivers/media/platform/vsp1/vsp1_entity.c
+index 27cb043..4c89065 100644
+--- a/drivers/media/platform/vsp1/vsp1_entity.c
++++ b/drivers/media/platform/vsp1/vsp1_entity.c
+@@ -20,6 +20,9 @@
+ 
+ #include "vsp1.h"
+ #include "vsp1_entity.h"
++#ifdef VSP1_DL_SUPPORT
++#include "vsp1_dl.h"
++#endif
+ 
+ bool vsp1_entity_is_streaming(struct vsp1_entity *entity)
+ {
+@@ -66,8 +69,19 @@ void vsp1_entity_route_setup(struct vsp1_entity *source)
+ 		return;
+ 
+ 	sink = container_of(source->sink, struct vsp1_entity, subdev.entity);
++#ifdef VSP1_DL_SUPPORT
++	if (vsp1_dl_is_use(source->vsp1)) {
++		vsp1_dl_get(source->vsp1, DL_BODY_DPR);
++		vsp1_dl_set(source->vsp1, source->route->reg,
++			sink->route->inputs[source->sink_pad]);
++	} else {
++		vsp1_write(source->vsp1, source->route->reg,
++		   sink->route->inputs[source->sink_pad]);
++	}
++#else
+ 	vsp1_write(source->vsp1, source->route->reg,
+ 		   sink->route->inputs[source->sink_pad]);
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+diff --git a/drivers/media/platform/vsp1/vsp1_pipe.c b/drivers/media/platform/vsp1/vsp1_pipe.c
+index ca3a79a..88b5dcf 100644
+--- a/drivers/media/platform/vsp1/vsp1_pipe.c
++++ b/drivers/media/platform/vsp1/vsp1_pipe.c
+@@ -23,6 +23,10 @@
+ #include "vsp1_pipe.h"
+ #include "vsp1_rwpf.h"
+ #include "vsp1_uds.h"
++#ifdef VSP1_DL_SUPPORT
++#include "vsp1_dl.h"
++#include <linux/delay.h>
++#endif
+ 
+ /* -----------------------------------------------------------------------------
+  * Helper Functions
+@@ -176,8 +180,16 @@ void vsp1_pipeline_run(struct vsp1_pipeline *pipe)
+ {
+ 	struct vsp1_device *vsp1 = pipe->output->entity.vsp1;
+ 
++#ifdef VSP1_DL_SUPPORT
++	if (pipe->state == VSP1_PIPELINE_STOPPED) {
++		vsp1_write(vsp1, VI6_CMD(pipe->output->entity.index),
++					VI6_CMD_STRCMD);
++		pipe->state = VSP1_PIPELINE_RUNNING;
++	}
++#else
+ 	vsp1_write(vsp1, VI6_CMD(pipe->output->entity.index), VI6_CMD_STRCMD);
+ 	pipe->state = VSP1_PIPELINE_RUNNING;
++#endif
+ 	pipe->buffers_ready = 0;
+ }
+ 
+@@ -204,9 +216,49 @@ int vsp1_pipeline_stop(struct vsp1_pipeline *pipe)
+ 		pipe->state = VSP1_PIPELINE_STOPPING;
+ 	spin_unlock_irqrestore(&pipe->irqlock, flags);
+ 
++#ifdef VSP1_DL_SUPPORT
++	if (vsp1_dl_is_auto_repeat(pipe->output->entity.vsp1)) {
++		unsigned int timeout;
++		u32 status;
++
++		ret = -ETIMEDOUT;
++
++		status = vsp1_read(pipe->output->entity.vsp1, VI6_STATUS);
++		if (!(status &
++			VI6_STATUS_SYS_ACT(pipe->output->entity.index))) {
++			ret = 0;
++			goto done;
++		}
++
++		vsp1_write(pipe->output->entity.vsp1, VI6_SRESET,
++				VI6_SRESET_SRTS(pipe->output->entity.index));
++		for (timeout = 10; timeout > 0; --timeout) {
++			status = vsp1_read(pipe->output->entity.vsp1,
++							 VI6_STATUS);
++			if (!(status &
++			     VI6_STATUS_SYS_ACT(pipe->output->entity.index))) {
++				ret = 0;
++				break;
++			}
++
++			usleep_range(1000, 2000);
++		}
++done:
++		if (ret == 0) {
++			spin_lock_irqsave(&pipe->irqlock, flags);
++			pipe->state = VSP1_PIPELINE_STOPPED;
++			spin_unlock_irqrestore(&pipe->irqlock, flags);
++		}
++	} else {
++		ret = wait_event_timeout(pipe->wq, vsp1_pipeline_stopped(pipe),
++					 msecs_to_jiffies(500));
++		ret = ret == 0 ? -ETIMEDOUT : 0;
++	}
++#else
+ 	ret = wait_event_timeout(pipe->wq, vsp1_pipeline_stopped(pipe),
+ 				 msecs_to_jiffies(500));
+ 	ret = ret == 0 ? -ETIMEDOUT : 0;
++#endif
+ 
+ 	list_for_each_entry(entity, &pipe->entities, list_pipe) {
+ 		if (entity->route && entity->route->reg)
+@@ -238,13 +290,23 @@ void vsp1_pipeline_frame_end(struct vsp1_pipeline *pipe)
+ 	if (pipe == NULL)
+ 		return;
+ 
++#ifdef VSP1_DL_SUPPORT
++	vsp1_dl_irq_dl_frame_end(pipe->output->entity.vsp1);
++#endif
++
+ 	/* Signal frame end to the pipeline handler. */
+ 	pipe->frame_end(pipe);
+ 
+ 	spin_lock_irqsave(&pipe->irqlock, flags);
+ 
+ 	state = pipe->state;
++
++#ifdef VSP1_DL_SUPPORT
++	if (!vsp1_dl_is_auto_repeat(pipe->output->entity.vsp1))
++		pipe->state = VSP1_PIPELINE_STOPPED;
++#else
+ 	pipe->state = VSP1_PIPELINE_STOPPED;
++#endif
+ 
+ 	/* If a stop has been requested, mark the pipeline as stopped and
+ 	 * return.
+@@ -262,6 +324,16 @@ done:
+ 	spin_unlock_irqrestore(&pipe->irqlock, flags);
+ }
+ 
++void vsp1_pipeline_display_start(struct vsp1_pipeline *pipe)
++{
++#ifdef VSP1_DL_SUPPORT
++	if (!pipe->lif)
++		return;
++
++	vsp1_dl_irq_display_start(pipe->output->entity.vsp1);
++#endif
++}
++
+ /*
+  * Propagate the alpha value through the pipeline.
+  *
+diff --git a/drivers/media/platform/vsp1/vsp1_pipe.h b/drivers/media/platform/vsp1/vsp1_pipe.h
+index c4c3005..7278ccf 100644
+--- a/drivers/media/platform/vsp1/vsp1_pipe.h
++++ b/drivers/media/platform/vsp1/vsp1_pipe.h
+@@ -91,6 +91,7 @@ struct vsp1_pipeline {
+ 	unsigned int num_inputs;
+ 	struct vsp1_rwpf *inputs[VSP1_MAX_RPF];
+ 	struct vsp1_rwpf *output;
++
+ 	struct vsp1_entity *bru;
+ 	struct vsp1_entity *lif;
+ 	struct vsp1_entity *uds;
+@@ -116,6 +117,7 @@ int vsp1_pipeline_stop(struct vsp1_pipeline *pipe);
+ bool vsp1_pipeline_ready(struct vsp1_pipeline *pipe);
+ 
+ void vsp1_pipeline_frame_end(struct vsp1_pipeline *pipe);
++void vsp1_pipeline_display_start(struct vsp1_pipeline *pipe);
+ 
+ void vsp1_pipeline_propagate_alpha(struct vsp1_pipeline *pipe,
+ 				   struct vsp1_entity *input,
+diff --git a/drivers/media/platform/vsp1/vsp1_rpf.c b/drivers/media/platform/vsp1/vsp1_rpf.c
+index dfe2f34..339da19 100644
+--- a/drivers/media/platform/vsp1/vsp1_rpf.c
++++ b/drivers/media/platform/vsp1/vsp1_rpf.c
+@@ -18,6 +18,9 @@
+ #include "vsp1.h"
+ #include "vsp1_rwpf.h"
+ #include "vsp1_video.h"
++#ifdef VSP1_DL_SUPPORT
++#include "vsp1_dl.h"
++#endif
+ 
+ #define RPF_MAX_WIDTH				8190
+ #define RPF_MAX_HEIGHT				8190
+@@ -34,8 +37,18 @@ static inline u32 vsp1_rpf_read(struct vsp1_rwpf *rpf, u32 reg)
+ 
+ static inline void vsp1_rpf_write(struct vsp1_rwpf *rpf, u32 reg, u32 data)
+ {
++#ifdef VSP1_DL_SUPPORT
++	if (vsp1_dl_is_use(rpf->entity.vsp1)) {
++		vsp1_dl_set(rpf->entity.vsp1,
++			reg + rpf->entity.index * VI6_RPF_OFFSET, data);
++	} else {
++		vsp1_write(rpf->entity.vsp1,
++		   reg + rpf->entity.index * VI6_RPF_OFFSET, data);
++	}
++#else
+ 	vsp1_write(rpf->entity.vsp1,
+ 		   reg + rpf->entity.index * VI6_RPF_OFFSET, data);
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -53,6 +66,13 @@ static int rpf_s_ctrl(struct v4l2_ctrl *ctrl)
+ 
+ 	switch (ctrl->id) {
+ 	case V4L2_CID_ALPHA_COMPONENT:
++#ifdef VSP1_DL_SUPPORT
++/* TODO
++		vsp1_dl_get(rpf->entity.vsp1,
++			DL_BODY_RPF0 + rpf->entity.index);
++*/
++#endif
++
+ 		vsp1_rpf_write(rpf, VI6_RPF_VRTCOL_SET,
+ 			       ctrl->val << VI6_RPF_VRTCOL_SET_LAYA_SHIFT);
+ 
+@@ -92,6 +112,10 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	if (!enable)
+ 		return 0;
+ 
++#ifdef VSP1_DL_SUPPORT
++	vsp1_dl_get(rpf->entity.vsp1, DL_BODY_RPF0 + rpf->entity.index);
++#endif
++
+ 	/* Source size, stride and crop offsets.
+ 	 *
+ 	 * The crop offsets correspond to the location of the crop rectangle top
+@@ -223,6 +247,10 @@ static void rpf_set_memory(struct vsp1_rwpf *rpf, struct vsp1_rwpf_memory *mem)
+ 	if (!vsp1_entity_is_streaming(&rpf->entity))
+ 		return;
+ 
++#ifdef VSP1_DL_SUPPORT
++	vsp1_dl_get(rpf->entity.vsp1, DL_BODY_RPF0 + rpf->entity.index);
++#endif
++
+ 	vsp1_rpf_write(rpf, VI6_RPF_SRCM_ADDR_Y,
+ 		       mem->addr[0] + rpf->offsets[0]);
+ 	if (mem->num_planes > 1)
+diff --git a/drivers/media/platform/vsp1/vsp1_wpf.c b/drivers/media/platform/vsp1/vsp1_wpf.c
+index 7d06e84..a0df493 100644
+--- a/drivers/media/platform/vsp1/vsp1_wpf.c
++++ b/drivers/media/platform/vsp1/vsp1_wpf.c
+@@ -18,6 +18,9 @@
+ #include "vsp1.h"
+ #include "vsp1_rwpf.h"
+ #include "vsp1_video.h"
++#ifdef VSP1_DL_SUPPORT
++#include "vsp1_dl.h"
++#endif
+ 
+ #define WPF_MAX_WIDTH				2048
+ #define WPF_MAX_HEIGHT				2048
+@@ -34,8 +37,19 @@ static inline u32 vsp1_wpf_read(struct vsp1_rwpf *wpf, u32 reg)
+ 
+ static inline void vsp1_wpf_write(struct vsp1_rwpf *wpf, u32 reg, u32 data)
+ {
++#ifdef VSP1_DL_SUPPORT
++	if (vsp1_dl_is_use(wpf->entity.vsp1)) {
++		vsp1_dl_set(wpf->entity.vsp1,
++			reg + wpf->entity.index * VI6_WPF_OFFSET,
++			data);
++	} else {
++		vsp1_write(wpf->entity.vsp1,
++		   reg + wpf->entity.index * VI6_WPF_OFFSET, data);
++	}
++#else
+ 	vsp1_write(wpf->entity.vsp1,
+ 		   reg + wpf->entity.index * VI6_WPF_OFFSET, data);
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -53,6 +67,9 @@ static int wpf_s_ctrl(struct v4l2_ctrl *ctrl)
+ 
+ 	switch (ctrl->id) {
+ 	case V4L2_CID_ALPHA_COMPONENT:
++#ifdef VSP1_DL_SUPPORT
++/* TODO		vsp1_dl_get(wpf->entity.vsp1, DL_BODY_WPF);*/
++#endif
+ 		value = vsp1_wpf_read(wpf, VI6_WPF_OUTFMT);
+ 		value &= ~VI6_WPF_OUTFMT_PDV_MASK;
+ 		value |= ctrl->val << VI6_WPF_OUTFMT_PDV_SHIFT;
+@@ -86,6 +103,10 @@ static int wpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	if (ret < 0)
+ 		return ret;
+ 
++#ifdef VSP1_DL_SUPPORT
++	vsp1_dl_get(wpf->entity.vsp1, DL_BODY_WPF);
++#endif
++
+ 	if (!enable) {
+ 		vsp1_write(vsp1, VI6_WPF_IRQ_ENB(wpf->entity.index), 0);
+ 		vsp1_wpf_write(wpf, VI6_WPF_SRCRPF, 0);
+@@ -167,7 +188,16 @@ static int wpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	vsp1_write(vsp1, VI6_WPF_WRBCK_CTRL, 0);
+ 
+ 	/* Enable interrupts */
++#ifdef VSP1_DL_SUPPORT
++	if ((vsp1_dl_is_use(vsp1) == 2) && vsp1_dl_is_auto_repeat(vsp1)) {
++		vsp1_write(vsp1, VI6_WPF_IRQ_STA(wpf->entity.index),
++			VI6_DISP_IRQ_STA_DSE);
++	} else {
++		vsp1_write(vsp1, VI6_WPF_IRQ_STA(wpf->entity.index), 0);
++	}
++#else
+ 	vsp1_write(vsp1, VI6_WPF_IRQ_STA(wpf->entity.index), 0);
++#endif
+ 	vsp1_write(vsp1, VI6_WPF_IRQ_ENB(wpf->entity.index),
+ 		   VI6_WFP_IRQ_ENB_FREE);
+ 
+@@ -202,6 +232,10 @@ static struct v4l2_subdev_ops wpf_ops = {
+ 
+ static void wpf_set_memory(struct vsp1_rwpf *wpf, struct vsp1_rwpf_memory *mem)
+ {
++#ifdef VSP1_DL_SUPPORT
++	vsp1_dl_get(wpf->entity.vsp1, DL_BODY_WPF);
++#endif
++
+ 	vsp1_wpf_write(wpf, VI6_WPF_DSTM_ADDR_Y, mem->addr[0]);
+ 	if (mem->num_planes > 1)
+ 		vsp1_wpf_write(wpf, VI6_WPF_DSTM_ADDR_C0, mem->addr[1]);
+diff --git a/include/media/vsp1.h b/include/media/vsp1.h
+index 9256952..f6e66bf 100644
+--- a/include/media/vsp1.h
++++ b/include/media/vsp1.h
+@@ -28,4 +28,9 @@ int vsp1_du_setup_rpf(struct device *dev, unsigned int rpf, u32 pixelformat,
+ 		      const struct v4l2_rect *src, const struct v4l2_rect *dst,
+ 		      u8 alpha);
+ 
++#ifdef VSP1_DL_SUPPORT
++int vsp1_du_setup_dl(struct device *dev, int mode, int repeat);
++void vsp1_du_reset_dl(struct device *dev);
++#endif
++
+ #endif /* __MEDIA_VSP1_H__ */
+-- 
+1.7.9.5
+

@@ -1,0 +1,38 @@
+From 2b32be51d82e32f31a96ef639fa7f64839beec1b Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 21 Aug 2015 18:57:40 +0900
+Subject: [PATCH 66/85] drm: rcar-du: Fix third argument of vsp1_du_setup_rpf
+
+Since the data specified in the third argument of vsp1_du_setup_rpf()
+does not contain anything, this patch specifies the pixel format data.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_vsp.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+index 715ad6d..4bf2dc4 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+@@ -106,7 +106,7 @@ static void rcar_du_vsp_plane_setup(struct rcar_du_vsp_plane *plane)
+ 	struct v4l2_rect src;
+ 	struct v4l2_rect dst;
+ 	dma_addr_t paddr[2] = { 0, };
+-	u32 pixelformat;
++	u32 pixelformat = 0;
+ 	unsigned int i;
+ 
+ 	src.left = state->state.src_x >> 16;
+@@ -134,7 +134,7 @@ static void rcar_du_vsp_plane_setup(struct rcar_du_vsp_plane *plane)
+ 		}
+ 	}
+ 
+-	vsp1_du_setup_rpf(plane->vsp->vsp, plane->index, state->format->fourcc,
++	vsp1_du_setup_rpf(plane->vsp->vsp, plane->index, pixelformat,
+ 			  fb->pitches[0], paddr, &src, &dst);
+ }
+ 
+-- 
+1.7.9.5
+

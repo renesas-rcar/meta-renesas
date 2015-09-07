@@ -1,0 +1,96 @@
+From 30398ba0bc103772bea8b7629e038d463b96a0b3 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 31 Aug 2015 17:48:22 +0900
+Subject: net: ravb: Fix Ethernet AVB network connection
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ board/renesas/salvatorx/salvatorx.c | 20 ++++++++++++++++++++
+ drivers/net/ravb.c                  | 11 +++++++++--
+ 2 files changed, 29 insertions(+), 2 deletions(-)
+
+diff --git a/board/renesas/salvatorx/salvatorx.c b/board/renesas/salvatorx/salvatorx.c
+index a7aae6b..079e588 100644
+--- a/board/renesas/salvatorx/salvatorx.c
++++ b/board/renesas/salvatorx/salvatorx.c
+@@ -82,9 +82,17 @@ int board_early_init_f(void)
+ 	return 0;
+ }
+ 
++/* PFC.h */
++#define	PFC_PMMR	0xE6060000	/* R/W 32 LSI Multiplexed Pin Setting Mask Register */
++#define	PFC_DRVCTRL2	0xE6060308	/* R/W 32 DRV control register2 */
++#define	PFC_DRVCTRL3	0xE606030C	/* R/W 32 DRV control register3 */
++
+ DECLARE_GLOBAL_DATA_PTR;
+ int board_init(void)
+ {
++#ifdef CONFIG_RAVB
++	u32 val;
++#endif
+ 	/* adress of boot parameters */
+ 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+ 
+@@ -116,6 +124,18 @@ int board_init(void)
+ 	/* IPSR3 */
+ 	gpio_request(GPIO_FN_AVB_AVTP_CAPTURE_B, NULL);
+ 
++	val = readl(PFC_DRVCTRL2);
++	val &= ~0x00000777;
++	val |=  0x00000333;
++	writel(~val, PFC_PMMR);
++	writel(val, PFC_DRVCTRL2);
++
++	val = readl(PFC_DRVCTRL3);
++	val &= ~0x77700000;
++	val |=  0x33300000;
++	writel(~val, PFC_PMMR);
++	writel(val, PFC_DRVCTRL3);
++
+ 	/* AVB_PHY_RST */
+ 	gpio_request(GPIO_GP_2_10, NULL);
+ 	gpio_direction_output(GPIO_GP_2_10, 0);
+diff --git a/drivers/net/ravb.c b/drivers/net/ravb.c
+index 05aa40a..5cafdca 100644
+--- a/drivers/net/ravb.c
++++ b/drivers/net/ravb.c
+@@ -349,11 +349,13 @@ static int ravb_phy_config(struct ravb_dev *eth)
+ 		return -1;
+ 
+ 	eth->phydev = phydev;
+-	phy_config(phydev);
+ 
+ 	/* 10BASE is not supported for Ethernet AVB MAC */
+ 	phydev->supported &= ~(SUPPORTED_10baseT_Full
+ 			       | SUPPORTED_10baseT_Half);
++	phydev->supported &= ~(SUPPORTED_1000baseT_Half
++			       | SUPPORTED_1000baseT_Full);
++	phy_config(phydev);
+ 
+ 	return ret;
+ }
+@@ -418,6 +420,9 @@ static int ravb_dmac_init(struct ravb_dev *eth)
+ 	/* FIFO size set */
+ 	ravb_write(eth, 0x00222210, TGC);
+ 
++	/* delay CLK: 2ns */
++	ravb_write(eth, 0x1ul << 14, APSR);
++
+ 	return ret;
+ }
+ 
+@@ -465,7 +470,9 @@ static int ravb_config(struct ravb_dev *eth, bd_t *bd)
+ 		ravb_write(eth, ECMR_CHG_DM | ECMR_RE | ECMR_TE, ECMR);
+ 	}
+ 
+-	return ret;
++	phy_write(phy, 0x02, 0x04, 0x0070);
++	phy_write(phy, 0x02, 0x06, 0x0000);
++	phy_write(phy, 0x02, 0x08, 19<<5);
+ 
+ err_phy_cfg:
+ 	return ret;
+-- 
+1.8.3.2
+

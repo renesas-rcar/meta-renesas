@@ -1,0 +1,27 @@
+From 099c2d4bf865a74f35b0b03f047bd941d829e0bd Mon Sep 17 00:00:00 2001
+From: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+Date: Tue, 1 Sep 2015 14:21:27 +0900
+Subject: [PATCH 17/85] arm64: defconfig: Add i2c-rcar support
+
+Signed-off-by: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+---
+ arch/arm64/configs/defconfig |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 6096ec4..c8a5dd9 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -121,6 +121,9 @@ CONFIG_SERIAL_XILINX_PS_UART=y
+ CONFIG_SERIAL_XILINX_PS_UART_CONSOLE=y
+ CONFIG_VIRTIO_CONSOLE=y
+ # CONFIG_HW_RANDOM is not set
++CONFIG_I2C=y
++CONFIG_I2C_CHARDEV=y
++CONFIG_I2C_RCAR=y
+ CONFIG_SPI=y
+ CONFIG_SPI_PL022=y
+ CONFIG_PINCTRL_MSM8916=y
+-- 
+1.7.9.5
+

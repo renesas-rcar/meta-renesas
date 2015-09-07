@@ -1,0 +1,33 @@
+From 7358b101ff317c02c61fa7f48f7ad77c4e53a60c Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 3 Aug 2015 21:07:28 +0900
+Subject: [PATCH 15/85] arm64: defconfig: Enable R-Car GPIO
+
+Enable building GPIO for Renesas R-Car SoC.
+
+Enable options in defconfig:
+  - GPIO_SYSFS
+  - GPIO_RCAR
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ arch/arm64/configs/defconfig |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index f4a9ef6..6096ec4 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -124,7 +124,9 @@ CONFIG_VIRTIO_CONSOLE=y
+ CONFIG_SPI=y
+ CONFIG_SPI_PL022=y
+ CONFIG_PINCTRL_MSM8916=y
++CONFIG_GPIO_SYSFS=y
+ CONFIG_GPIO_PL061=y
++CONFIG_GPIO_RCAR=y
+ CONFIG_GPIO_XGENE=y
+ CONFIG_POWER_RESET_XGENE=y
+ CONFIG_POWER_RESET_SYSCON=y
+-- 
+1.7.9.5
+

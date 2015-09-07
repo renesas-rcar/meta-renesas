@@ -1,0 +1,45 @@
+From deeee96dd51ce2f668f1321d3456d7925eaa5a47 Mon Sep 17 00:00:00 2001
+From: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+Date: Wed, 11 Jun 2014 22:11:12 +0900
+Subject: [PATCH 35/85] mmc: sh_mobile_sdhi: Add UHS-I mode support
+
+The function supports SDR50 and SDR104 modes.
+
+Signed-off-by: Shinobu Uehara <shinobu.uehara.xc@renesas.com>
+(cherry picked from commit 802218c1d6c3b91151ba086bda916b90a54bd35e)
+
+Conflicts:
+	drivers/mmc/host/sh_mobile_sdhi.c
+
+Add card busy check.
+Excluded for UHS mode support and DMA.
+
+Signed-off-by: Ai Kyuse <ai.kyuse.uw@renesas.com>
+---
+ drivers/mmc/host/sh_mobile_sdhi.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index 61671f3..1f1bc4d 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -136,6 +136,16 @@ static void sh_mobile_sdhi_clk_disable(struct platform_device *pdev)
+ 	clk_disable_unprepare(priv->clk);
+ }
+ 
++#define SH_MOBILE_SDHI_DAT0	0x0080
++static int sh_mobile_sdhi_card_busy(struct tmio_mmc_host *host)
++{
++	u16 dat0;
++
++	/* check to see DAT[3:0] */
++	dat0 = sd_ctrl_read16(host, CTL_STATUS2);
++	return !(dat0 & SH_MOBILE_SDHI_DAT0);
++}
++
+ static int sh_mobile_sdhi_wait_idle(struct tmio_mmc_host *host)
+ {
+ 	int timeout = 1000;
+-- 
+1.7.9.5
+

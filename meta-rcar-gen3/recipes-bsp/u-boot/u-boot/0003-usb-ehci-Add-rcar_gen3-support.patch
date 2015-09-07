@@ -1,0 +1,209 @@
+From 5d8a73b471604065e266278e154da938a307898b Mon Sep 17 00:00:00 2001
+From: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+Date: Mon, 31 Aug 2015 15:57:57 +0900
+Subject: usb: ehci: Add rcar_gen3 support
+
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ arch/arm/include/asm/arch-rcar_gen3/ehci-rcar.h | 77 +++++++++++++++++++++
+ drivers/usb/host/Makefile                       |  1 +
+ drivers/usb/host/ehci-rcar_gen3.c               | 91 +++++++++++++++++++++++++
+ 3 files changed, 169 insertions(+)
+ create mode 100644 arch/arm/include/asm/arch-rcar_gen3/ehci-rcar.h
+ create mode 100644 drivers/usb/host/ehci-rcar_gen3.c
+
+diff --git a/arch/arm/include/asm/arch-rcar_gen3/ehci-rcar.h b/arch/arm/include/asm/arch-rcar_gen3/ehci-rcar.h
+new file mode 100644
+index 0000000..6b47a97
+--- /dev/null
++++ b/arch/arm/include/asm/arch-rcar_gen3/ehci-rcar.h
+@@ -0,0 +1,77 @@
++/*
++ * arch/arm/include/asm/arch-rcar_gen3/ehci-rcar.h
++ *	This file is USB-related definitions.
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ *
++ * SPDX-License-Identifier:	GPL-2.0+
++ */
++
++#ifndef __EHCI_RCAR_H__
++#define __EHCI_RCAR_H__
++
++/* Register offset */
++#define OHCI_OFFSET	0x00
++#define OHCI_SIZE	0x100
++#define EHCI_OFFSET	0x100		/* offset: 0100H */
++#define EHCI_SIZE	0x100
++#define AHB_OFFSET	0x200
++
++#define EHCI_USBCMD	(EHCI_OFFSET + 0x0020)
++
++/* USBCTR */
++#define DIRPD		(1 << 2)
++#define PLL_RST		(1 << 1)
++
++/* INT_ENABLE(offset:200H) */
++#define USBH_INTBEN		(1 << 2)
++#define USBH_INTAEN		(1 << 1)
++
++/* AHB_BUS_CTR */				/* hw default is .. */
++#define PROT_TYPE_CACHEABLE	(1 << 15)	/* 0: non-cacheable trns */
++#define PROT_TYPE_BUFFERABLE	(1 << 14)	/* 0: non-bufferable trns */
++#define PROT_TYPE_PRIVILEGED	(1 << 13)	/* 0: user access */
++#define PROT_TYPE_DATA		(1 << 12)	/* 0: opcode */
++#define PROT_MODE		(1 << 8)
++#define ALIGN_ADDRESS_1K	(0 << 4)	/* h/w default */
++#define ALIGN_ADDRESS_64BYTE	(1 << 4)
++#define ALIGN_ADDRESS_32BYTE	(2 << 4)
++#define ALIGN_ADDRESS_16BYTE	(3 << 4)
++#define MAX_BURST_LEN_INCR16	(0 << 0)	/* h/w default */
++#define MAX_BURST_LEN_INCR8	(1 << 0)
++#define MAX_BURST_LEN_INCR4	(2 << 0)
++#define MAX_BURST_LEN_SINGLE	(3 << 0)
++
++#define SMSTPCR7        0xE615014C
++#define SMSTPCR701      (1 << 1)	/* EHCI2 */
++#define SMSTPCR702      (1 << 2)	/* EHCI1 */
++#define SMSTPCR703      (1 << 3)	/* EHCI0 */
++
++/* Init AHB master and slave functions of the host logic */
++#define AHB_BUS_CTR_INIT 0
++
++struct ahb_bridge {
++	u32 int_enable;
++	u32 int_status;
++	u32 ahb_bus_ctr;
++	u32 usbctr;
++};
++
++struct rmobile_ehci_reg {
++	u32 hciversion;		/* hciversion/caplength */
++	u32 hcsparams;		/* hcsparams */
++	u32 hccparams;		/* hccparams */
++	u32 hcsp_portroute;	/* hcsp_portroute */
++	u32 usbcmd;		/* usbcmd */
++	u32 usbsts;		/* usbsts */
++	u32 usbintr;		/* usbintr */
++	u32 frindex;		/* frindex */
++	u32 ctrldssegment;	/* ctrldssegment */
++	u32 periodiclistbase;	/* periodiclistbase */
++	u32 asynclistaddr;	/* asynclistaddr */
++	u32 dummy[9];
++	u32 configflag;		/* configflag */
++	u32 portsc;		/* portsc */
++};
++
++#endif /* __EHCI_RCAR_H__ */
+diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
+index eb6f34b..151a0da 100644
+--- a/drivers/usb/host/Makefile
++++ b/drivers/usb/host/Makefile
+@@ -40,6 +40,7 @@ obj-$(CONFIG_USB_EHCI_TEGRA) += ehci-tegra.o
+ obj-$(CONFIG_USB_EHCI_UNIPHIER) += ehci-uniphier.o
+ obj-$(CONFIG_USB_EHCI_VCT) += ehci-vct.o
+ obj-$(CONFIG_USB_EHCI_RMOBILE) += ehci-rmobile.o
++obj-$(CONFIG_USB_EHCI_RCAR_GEN3) += ehci-rcar_gen3.o
+ obj-$(CONFIG_USB_EHCI_ZYNQ) += ehci-zynq.o
+ 
+ # xhci
+diff --git a/drivers/usb/host/ehci-rcar_gen3.c b/drivers/usb/host/ehci-rcar_gen3.c
+new file mode 100644
+index 0000000..34aacf2
+--- /dev/null
++++ b/drivers/usb/host/ehci-rcar_gen3.c
+@@ -0,0 +1,91 @@
++/*
++ * drivers/usb/host/ehci-rcar_gen3.
++ * 	This file is EHCI HCD (Host Controller Driver) for USB.
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ *
++ * SPDX-License-Identifier:     GPL-2.0+
++ */
++
++#include <common.h>
++#include <errno.h>
++#include <asm/io.h>
++#include <asm/arch/ehci-rcar.h>
++#include "ehci.h"
++
++static u32 usb_base_address[] = {
++	0xEE080000,	/* USB0 (EHCI) */
++	0xEE0A0000,	/* USB1 (EHCI) */
++	0xEE0C0000,	/* USB2 (EHCI) */
++};
++
++int ehci_hcd_stop(int index)
++{
++	int i;
++	u32 base = usb_base_address[index];
++
++	/* reset ehci */
++	setbits_le32((uintptr_t)(base + EHCI_USBCMD), CMD_RESET);
++	for (i = 100; i > 0; i--) {
++		if (!(readl((uintptr_t)(base + EHCI_USBCMD)) & CMD_RESET))
++			break;
++		udelay(100);
++	}
++
++	if (!i)
++		printf("error : ehci(%d) reset failed.\n", index);
++
++	switch (index) {
++	case 0:
++		setbits_le32(SMSTPCR7, SMSTPCR703);
++		break;
++	case 1:
++		setbits_le32(SMSTPCR7, SMSTPCR702);
++		break;
++	case 2:
++		setbits_le32(SMSTPCR7, SMSTPCR701);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++int ehci_hcd_init(int index, enum usb_init_type init,
++	struct ehci_hccr **hccr, struct ehci_hcor **hcor)
++{
++	u32 base;
++	struct rmobile_ehci_reg *rehci;
++	struct ahb_bridge *ahb;
++	uint32_t cap_base;
++
++	base = usb_base_address[index];
++	switch (index) {
++	case 0:
++		clrbits_le32(SMSTPCR7, SMSTPCR703);
++		break;
++	case 1:
++		clrbits_le32(SMSTPCR7, SMSTPCR702);
++		break;
++	case 2:
++		clrbits_le32(SMSTPCR7, SMSTPCR701);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	rehci = (struct rmobile_ehci_reg *)(uintptr_t)(base + EHCI_OFFSET);
++	ahb = (struct ahb_bridge *)(uintptr_t)(base + AHB_OFFSET);
++
++	/* underconstruction */
++
++	/* Enable interrupt */
++	setbits_le32(&ahb->int_enable, USBH_INTBEN | USBH_INTAEN);
++
++	*hccr = (struct ehci_hccr *)((uintptr_t)&rehci->hciversion);
++	cap_base = ehci_readl(&(*hccr)->cr_capbase);
++	*hcor = (struct ehci_hcor *)((uintptr_t)*hccr + HC_LENGTH(cap_base));
++
++	return 0;
++}
+-- 
+1.8.3.2
+

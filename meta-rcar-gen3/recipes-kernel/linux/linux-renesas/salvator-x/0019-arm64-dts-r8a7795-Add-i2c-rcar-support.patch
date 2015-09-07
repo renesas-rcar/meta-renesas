@@ -1,0 +1,176 @@
+From 6195dc0f3d92028bf8ca9e3d275c1491526c8df5 Mon Sep 17 00:00:00 2001
+From: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+Date: Tue, 1 Sep 2015 14:28:58 +0900
+Subject: [PATCH 19/85] arm64: dts: r8a7795: Add i2c-rcar support
+
+Add I2C to Device Tree for R8A7795.
+
+Signed-off-by: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi  |  102 ++++++++++++++++++++++++++++-
+ include/dt-bindings/clock/r8a7795-clock.h |    7 ++
+ 2 files changed, 107 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index f91c30b..77e8f6d 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -16,6 +16,16 @@
+ 	#address-cells = <2>;
+ 	#size-cells = <2>;
+ 
++	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c4;
++		i2c5 = &i2c5;
++		i2c6 = &i2c6;
++	};
++
+ 	psci {
+ 		compatible = "arm,psci-0.2";
+ 		method = "smc";
+@@ -114,6 +124,15 @@
+ 				clock-output-names = "p";
+ 			};
+ 
++			s3d2_clk: s3d2_clk {
++				compatible = "fixed-factor-clock";
++				clocks = <&cpg_clocks R8A7795_CLK_PLL1>;
++				#clock-cells = <0>;
++				clock-div = <12>;
++				clock-mult = <1>;
++				clock-output-names = "s3d2";
++			};
++
+ 			cpg_clocks: cpg_clocks@e6150000 {
+ 				#address-cells = <2>;
+ 				#size-cells = <2>;
+@@ -163,17 +182,25 @@
+ 					reg = <0 0xe6150994 0 4>, <0 0xe61509a4 0 4>;
+ 					clocks = <&cp_clk>, <&cp_clk>, <&cp_clk>,
+ 						 <&cp_clk>, <&cp_clk>, <&cp_clk>,
+-						 <&cp_clk>, <&cp_clk>;
++						 <&cp_clk>, <&cp_clk>, <&s3d2_clk>,
++						 <&s3d2_clk>, <&s3d2_clk>, <&s3d2_clk>,
++						 <&s3d2_clk>, <&s3d2_clk>, <&s3d2_clk>;
+ 					#clock-cells = <1>;
+ 					renesas,clock-indices = <
+ 						R8A7795_CLK_GPIO7 R8A7795_CLK_GPIO6
+ 						R8A7795_CLK_GPIO5 R8A7795_CLK_GPIO4
+ 						R8A7795_CLK_GPIO3 R8A7795_CLK_GPIO2
+ 						R8A7795_CLK_GPIO1 R8A7795_CLK_GPIO0
++						R8A7795_CLK_I2C6 R8A7795_CLK_I2C5
++						R8A7795_CLK_I2C4 R8A7795_CLK_I2C3
++						R8A7795_CLK_I2C2 R8A7795_CLK_I2C1
++						R8A7795_CLK_I2C0
+ 					>;
+ 					clock-output-names =
+ 						"gpio7", "gpio6", "gpio5", "gpio4",
+-						"gpio3", "gpio2", "gpio1", "gpio0";
++						"gpio3", "gpio2", "gpio1", "gpio0",
++						"i2c6", "i2c5", "i2c4", "i2c3",
++						"i2c2", "i2c1", "i2c0";
+ 				};
+ 			};
+ 		};
+@@ -341,5 +368,76 @@
+ 			status = "disabled";
+ 		};
+ 
++		i2c0: i2c@e6500000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,i2c-r8a7795";
++			reg = <0 0xe6500000 0 0x40>;
++			interrupts = <0 287 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A7795_CLK_I2C0>;
++			status = "disabled";
++		};
++
++		i2c1: i2c@e6508000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,i2c-r8a7795";
++			reg = <0 0xe6508000 0 0x40>;
++			interrupts = <0 288 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A7795_CLK_I2C1>;
++			status = "disabled";
++		};
++
++		i2c2: i2c@e6510000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,i2c-r8a7795";
++			reg = <0 0xe6510000 0 0x40>;
++			interrupts = <0 286 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A7795_CLK_I2C2>;
++			status = "disabled";
++		};
++
++		i2c3: i2c@e66D0000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,i2c-r8a7795";
++			reg = <0 0xe66D0000 0 0x40>;
++			interrupts = <0 290 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A7795_CLK_I2C3>;
++			status = "disabled";
++		};
++
++		i2c4: i2c@e66d8000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,i2c-r8a7795";
++			reg = <0 0xe66d8000 0 0x40>;
++			interrupts = <0 19 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A7795_CLK_I2C4>;
++			status = "disabled";
++		};
++
++		i2c5: i2c@e66e0000 {
++			/* doesn't need pinmux */
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,i2c-r8a7795";
++			reg = <0 0xe66e0000 0 0x40>;
++			interrupts = <0 20 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A7795_CLK_I2C5>;
++			status = "disabled";
++		};
++
++		i2c6: i2c@e66e8000 {
++			/* doesn't need pinmux */
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,i2c-r8a7795";
++			reg = <0 0xe66e8000 0 0x40>;
++			interrupts = <0 21 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A7795_CLK_I2C6>;
++			status = "disabled";
++		};
+ 	};
+ };
+diff --git a/include/dt-bindings/clock/r8a7795-clock.h b/include/dt-bindings/clock/r8a7795-clock.h
+index 9b02ddb..1e30043 100644
+--- a/include/dt-bindings/clock/r8a7795-clock.h
++++ b/include/dt-bindings/clock/r8a7795-clock.h
+@@ -46,6 +46,13 @@
+ #define R8A7795_CLK_GPIO5		7
+ #define R8A7795_CLK_GPIO6		6
+ #define R8A7795_CLK_GPIO7		5
++#define R8A7795_CLK_I2C0		31
++#define R8A7795_CLK_I2C1		30
++#define R8A7795_CLK_I2C2		29
++#define R8A7795_CLK_I2C3		28
++#define R8A7795_CLK_I2C4		27
++#define R8A7795_CLK_I2C5		19
++#define R8A7795_CLK_I2C6		18
+ 
+ /* MSTP10 */
+ 
+-- 
+1.7.9.5
+

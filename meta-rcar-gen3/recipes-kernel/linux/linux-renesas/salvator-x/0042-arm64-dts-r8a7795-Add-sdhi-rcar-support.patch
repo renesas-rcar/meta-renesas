@@ -1,0 +1,144 @@
+From eab216121e62b49e5ce96fac04b5f8436774c6d5 Mon Sep 17 00:00:00 2001
+From: Ai Kyuse <ai.kyuse.uw@renesas.com>
+Date: Wed, 2 Sep 2015 16:51:31 +0900
+Subject: [PATCH 42/85] arm64: dts: r8a7795: Add sdhi-rcar support
+
+Add SDHI to Device Tree for R8A7795.
+
+Signed-off-by: Ai Kyuse <ai.kyuse.uw@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi  |   88 ++++++++++++++++++++++++++++-
+ include/dt-bindings/clock/r8a7795-clock.h |    4 ++
+ 2 files changed, 89 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index 828eea3..94f258a 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -133,6 +133,46 @@
+ 				clock-output-names = "s3d2";
+ 			};
+ 
++			sd0_clk: sd0_clk@e6150074 {
++				compatible = "fixed-factor-clock";
++				reg = <0 0xe6150074 0 4>;
++				clocks = <&cpg_clocks R8A7795_CLK_PLL1>;
++				#clock-cells = <0>;
++				clock-div = <16>;
++				clock-mult = <1>;
++				clock-output-names = "sd0";
++			};
++
++			sd1_clk: sd0_clk@e6150078 {
++				compatible = "fixed-factor-clock";
++				reg = <0 0xe6150078 0 4>;
++				clocks = <&cpg_clocks R8A7795_CLK_PLL1>;
++				#clock-cells = <0>;
++				clock-div = <16>;
++				clock-mult = <1>;
++				clock-output-names = "sd1";
++			};
++
++			sd2_clk: sd0_clk@e6150268 {
++				compatible = "fixed-factor-clock";
++				reg = <0 0xe6150268 0 4>;
++				clocks = <&cpg_clocks R8A7795_CLK_PLL1>;
++				#clock-cells = <0>;
++				clock-div = <16>;
++				clock-mult = <1>;
++				clock-output-names = "sd2";
++			};
++
++			sd3_clk: sd0_clk@e615026c {
++				compatible = "fixed-factor-clock";
++				reg = <0 0xe615026c 0 4>;
++				clocks = <&cpg_clocks R8A7795_CLK_PLL1>;
++				#clock-cells = <0>;
++				clock-div = <16>;
++				clock-mult = <1>;
++				clock-output-names = "sd3";
++			};
++
+ 			cpg_clocks: cpg_clocks@e6150000 {
+ 				#address-cells = <2>;
+ 				#size-cells = <2>;
+@@ -170,10 +210,16 @@
+ 					compatible = "renesas,r8a7795-mstp-clocks",
+ 						     "renesas,cpg-mstp-clocks";
+ 					reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
+-					clocks =  <&p_clk>;
++					clocks =  <&p_clk>, <&sd3_clk>, <&sd2_clk>,
++						  <&sd1_clk>, <&sd0_clk>;
+ 					#clock-cells = <1>;
+-					renesas,clock-indices = <R8A7795_CLK_SCIF2>;
+-					clock-output-names = "scif2";
++					renesas,clock-indices = <
++						R8A7795_CLK_SCIF2 R8A7795_CLK_SD3
++						R8A7795_CLK_SD2 R8A7795_CLK_SD1
++						R8A7795_CLK_SD0
++					>;
++					clock-output-names = "scif2", "sdhi3",
++						"sdhi2", "sdhi1", "sdhi0";
+ 				};
+ 
+ 				mstp8_clks: mstp8_clks@e6150990 {
+@@ -459,5 +505,41 @@
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 		};
++
++		sdhi0: sd@ee100000 {
++			compatible = "renesas,sdhi-r8a7795";
++			reg = <0 0xee100000 0 0x2000>;
++			interrupts = <0 165 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A7795_CLK_SD0>;
++			renesas,clk-rate = <50000000>;
++			status = "disabled";
++		};
++
++		sdhi1: sd@ee120000 {
++			compatible = "renesas,sdhi-r8a7795";
++			reg = <0 0xee120000 0 0x2000>;
++			interrupts = <0 166 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A7795_CLK_SD1>;
++			renesas,clk-rate = <50000000>;
++			status = "disabled";
++		};
++
++		sdhi2: sd@ee140000 {
++			compatible = "renesas,sdhi-r8a7795";
++			reg = <0 0xee140000 0 0x2000>;
++			interrupts = <0 167 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A7795_CLK_SD2>;
++			renesas,clk-rate = <50000000>;
++			status = "disabled";
++		};
++
++		sdhi3: sd@ee160000 {
++			compatible = "renesas,sdhi-r8a7795";
++			reg = <0 0xee160000 0 0x2000>;
++			interrupts = <0 168 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A7795_CLK_SD3>;
++			renesas,clk-rate = <50000000>;
++			status = "disabled";
++		};
+ 	};
+ };
+diff --git a/include/dt-bindings/clock/r8a7795-clock.h b/include/dt-bindings/clock/r8a7795-clock.h
+index b5a54bf..cfddc72 100644
+--- a/include/dt-bindings/clock/r8a7795-clock.h
++++ b/include/dt-bindings/clock/r8a7795-clock.h
+@@ -29,6 +29,10 @@
+ #define R8A7795_CLK_SCIF5		2
+ 
+ /* MSTP3 */
++#define R8A7795_CLK_SD0			14
++#define R8A7795_CLK_SD1			13
++#define R8A7795_CLK_SD2			12
++#define R8A7795_CLK_SD3			11
+ #define R8A7795_CLK_SCIF2		10
+ 
+ /* MSTP5 */
+-- 
+1.7.9.5
+

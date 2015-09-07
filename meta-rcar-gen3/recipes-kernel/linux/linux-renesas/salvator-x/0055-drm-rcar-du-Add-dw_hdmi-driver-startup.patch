@@ -1,0 +1,400 @@
+From 2ad6639ea57b2bb19b32dc3d4c694061ef5e5976 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 27 Jul 2015 11:33:20 +0900
+Subject: [PATCH 55/85] drm: rcar-du: Add dw_hdmi driver startup
+
+The HDMI driver in the R-Car Gen3 uses dw_hdmi driver.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c |    5 +-
+ drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c |  305 ++++++++++++++++++++++++++++-
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c     |    3 +-
+ 3 files changed, 310 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+index d0ae1e8..99103ff 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+@@ -1,7 +1,7 @@
+ /*
+  * rcar_du_encoder.c  --  R-Car Display Unit Encoder
+  *
+- * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ * Copyright (C) 2013-2015 Renesas Electronics Corporation
+  *
+  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+  *
+@@ -169,6 +169,9 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 
+ 	if (type == RCAR_DU_ENCODER_HDMI) {
+ 		ret = rcar_du_hdmienc_init(rcdu, renc, enc_node);
++#if IS_ENABLED(CONFIG_DRM_DW_HDMI)
++			goto done;
++#endif
+ 		if (ret < 0)
+ 			goto done;
+ 	} else {
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c b/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c
+index 81da841..7129f89 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c
+@@ -1,7 +1,7 @@
+ /*
+  * R-Car Display Unit HDMI Encoder
+  *
+- * Copyright (C) 2014 Renesas Electronics Corporation
++ * Copyright (C) 2014-2015 Renesas Electronics Corporation
+  *
+  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+  *
+@@ -13,6 +13,7 @@
+ 
+ #include <linux/slab.h>
+ 
++#include <drm/bridge/dw_hdmi.h>
+ #include <drm/drmP.h>
+ #include <drm/drm_crtc.h>
+ #include <drm/drm_crtc_helper.h>
+@@ -27,11 +28,312 @@ struct rcar_du_hdmienc {
+ 	struct rcar_du_encoder *renc;
+ 	struct device *dev;
+ 	bool enabled;
++	unsigned int index;
+ };
+ 
+ #define to_rcar_hdmienc(e)	(to_rcar_encoder(e)->hdmi)
+ #define to_slave_funcs(e)	(to_rcar_encoder(e)->slave.slave_funcs)
+ 
++#if IS_ENABLED(CONFIG_DRM_DW_HDMI)
++static void rcar_du_hdmienc_disable(struct drm_encoder *encoder)
++{
++	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
++	const struct drm_bridge_funcs *bfuncs = encoder->bridge->funcs;
++
++	if (bfuncs->post_disable)
++		bfuncs->post_disable(encoder->bridge);
++
++	if (hdmienc->renc->lvds)
++		rcar_du_lvdsenc_enable(hdmienc->renc->lvds, encoder->crtc,
++				       false);
++
++	hdmienc->enabled = false;
++}
++
++static void rcar_du_hdmienc_enable(struct drm_encoder *encoder)
++{
++	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
++	const struct drm_bridge_funcs *bfuncs = encoder->bridge->funcs;
++
++	if (hdmienc->renc->lvds)
++		rcar_du_lvdsenc_enable(hdmienc->renc->lvds, encoder->crtc,
++				       true);
++
++	if (bfuncs->enable)
++		bfuncs->enable(encoder->bridge);
++
++	hdmienc->enabled = true;
++}
++
++static int rcar_du_hdmienc_atomic_check(struct drm_encoder *encoder,
++					struct drm_crtc_state *crtc_state,
++					struct drm_connector_state *conn_state)
++{
++	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
++	const struct drm_bridge_funcs *bfuncs = encoder->bridge->funcs;
++	struct drm_display_mode *adjusted_mode = &crtc_state->adjusted_mode;
++	const struct drm_display_mode *mode = &crtc_state->mode;
++
++	/* The internal LVDS encoder has a clock frequency operating range of
++	 * 30MHz to 150MHz. Clamp the clock accordingly.
++	 */
++	if (hdmienc->renc->lvds)
++		adjusted_mode->clock = clamp(adjusted_mode->clock,
++					     30000, 150000);
++
++	if (bfuncs->mode_fixup == NULL)
++		return 0;
++
++	return bfuncs->mode_fixup(encoder->bridge, mode, adjusted_mode) ?
++								 0 : -EINVAL;
++}
++
++static void rcar_du_hdmienc_mode_set(struct drm_encoder *encoder,
++				     struct drm_display_mode *mode,
++				     struct drm_display_mode *adjusted_mode)
++{
++	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
++	const struct drm_bridge_funcs *bfuncs = encoder->bridge->funcs;
++
++	if (bfuncs->mode_set)
++		bfuncs->mode_set(encoder->bridge, mode, adjusted_mode);
++
++	rcar_du_crtc_route_output(encoder->crtc, hdmienc->renc->output);
++}
++
++static const struct drm_encoder_helper_funcs encoder_helper_funcs = {
++	.mode_set = rcar_du_hdmienc_mode_set,
++	.disable = rcar_du_hdmienc_disable,
++	.enable = rcar_du_hdmienc_enable,
++	.atomic_check = rcar_du_hdmienc_atomic_check,
++};
++
++static void rcar_du_hdmienc_cleanup(struct drm_encoder *encoder)
++{
++	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
++
++	if (hdmienc->enabled)
++		rcar_du_hdmienc_disable(encoder);
++
++	drm_encoder_cleanup(encoder);
++	put_device(hdmienc->dev);
++}
++
++static const struct drm_encoder_funcs encoder_funcs = {
++	.destroy = rcar_du_hdmienc_cleanup,
++};
++
++static const struct dw_hdmi_mpll_config rcar_du_hdmienc_mpll_cfg[] = {
++	{
++		25175000, {
++			{ 0x0003, 0x0000},
++			{ 0x0003, 0x0000},
++			{ 0x0003, 0x0000}
++		},
++	}, {
++		27000000, {
++			{ 0x0003, 0x0000},
++			{ 0x2103, 0x0000},
++			{ 0x4003, 0x0000}
++		},
++	}, {
++		31500000, {
++			{ 0x0003, 0x0000},
++			{ 0x0003, 0x0000},
++			{ 0x0003, 0x0000}
++		},
++	}, {
++		36000000, {
++			{ 0x0003, 0x0000},
++			{ 0x2103, 0x0000},
++			{ 0x4003, 0x0000}
++		},
++	}, {
++		40000000, {
++			{ 0x0003, 0x0000},
++			{ 0x2103, 0x0000},
++			{ 0x4003, 0x0000}
++		},
++	}, {
++		54000000, {
++			{ 0x0002, 0x0001},
++			{ 0x2102, 0x0001},
++			{ 0x4002, 0x0001},
++		},
++	}, {
++		65000000, {
++			{ 0x0002, 0x0001},
++			{ 0x2102, 0x0001},
++			{ 0x4002, 0x0001},
++		},
++	}, {
++		66000000, {
++			{ 0x010e, 0x0003},
++			{ 0x210e, 0x0002},
++			{ 0x4001, 0x0002}
++		},
++	}, {
++		74250000, {
++			{ 0x0002, 0x0001},
++			{ 0x2105, 0x0002},
++			{ 0x4001, 0x0002}
++		},
++	}, {
++		83500000, {
++			{ 0x0002, 0x0001},
++		},
++	}, {
++		108000000, {
++			{ 0x0001, 0x0002},
++			{ 0x2105, 0x0002},
++			{ 0x4001, 0x0002}
++		},
++	}, {
++		106500000, {
++			{ 0x0001, 0x0002},
++			{ 0x2105, 0x0002},
++			{ 0x4001, 0x0002}
++		},
++	}, {
++		146250000, {
++			{ 0x0001, 0x0002},
++			{ 0x2105, 0x0002},
++			{ 0x4001, 0x0002}
++		},
++	}, {
++		148500000, {
++			{ 0x0001, 0x0003},
++			{ 0x210c, 0x0003},
++			{ 0x4004, 0x0003}
++		},
++	}, {
++		~0UL, {
++			{ 0x0000, 0x000a },
++			{ 0x2001, 0x000f },
++			{ 0x4002, 0x000f },
++		},
++	}
++};
++
++static const struct dw_hdmi_curr_ctrl rcar_du_hdmienc_cur_ctr[] = {
++	/*      pixelclk    bpp8    bpp10   bpp12 */
++	{
++		35500000,  { 0x0344, 0x0018, 0x0018 },
++	}, {
++		65000000,  { 0x0285, 0x0028, 0x0028 },
++	}, {
++		71000000,  { 0x0184, 0x0038, 0x0038 },
++	}, {
++		90000000,  { 0x0144, 0x0038, 0x0038 },
++	}, {
++		140250000, { 0x00C4, 0x0038, 0x0038 },
++	}, {
++		297000000, { 0x0084, 0x0038, 0x0038 },
++	}, {
++		~0UL,      { 0x0000, 0x0000, 0x0000},
++	}
++};
++
++static const struct dw_hdmi_phy_config rcar_du_hdmienc_phy_config[] = {
++	/*pixelclk   symbol   term   vlev*/
++	{ 74250000,  0x8009, 0x0004, 0x0272},
++	{ 148500000, 0x802b, 0x0004, 0x028d},
++	{ 297000000, 0x8039, 0x0005, 0x028d},
++	{ ~0UL,	     0x0000, 0x0000, 0x0000}
++};
++
++static enum drm_mode_status
++rcar_du_hdmienc_mode_valid(struct drm_connector *connector,
++			    struct drm_display_mode *mode)
++{
++	return MODE_OK;
++}
++
++static const struct dw_hdmi_plat_data rcar_du_hdmienc_hdmi0_drv_data = {
++	.mode_valid = rcar_du_hdmienc_mode_valid,
++	.mpll_cfg   = rcar_du_hdmienc_mpll_cfg,
++	.cur_ctr    = rcar_du_hdmienc_cur_ctr,
++	.phy_config = rcar_du_hdmienc_phy_config,
++	.dev_type   = RK3288_HDMI,
++	.index      = 0,
++};
++static const struct dw_hdmi_plat_data rcar_du_hdmienc_hdmi1_drv_data = {
++	.mode_valid = rcar_du_hdmienc_mode_valid,
++	.mpll_cfg   = rcar_du_hdmienc_mpll_cfg,
++	.cur_ctr    = rcar_du_hdmienc_cur_ctr,
++	.phy_config = rcar_du_hdmienc_phy_config,
++	.dev_type   = RK3288_HDMI,
++	.index      = 1,
++};
++static const struct of_device_id rcar_du_hdmienc_dt_ids[] = {
++	{
++		.data = &rcar_du_hdmienc_hdmi0_drv_data
++	},
++	{
++		.data = &rcar_du_hdmienc_hdmi1_drv_data
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, rcar_du_hdmienc_dt_ids);
++
++int rcar_du_hdmienc_init(struct rcar_du_device *rcdu,
++			 struct rcar_du_encoder *renc, struct device_node *np)
++{
++	struct drm_encoder *encoder = rcar_encoder_to_drm_encoder(renc);
++	const struct dw_hdmi_plat_data *plat_data;
++	struct rcar_du_hdmienc *hdmienc;
++	struct resource *iores;
++	struct platform_device *pdev = rcdu->ddev->platformdev;
++	int ret, irq;
++	unsigned int res_offset, irq_offset;
++
++	hdmienc = devm_kzalloc(rcdu->dev, sizeof(*hdmienc), GFP_KERNEL);
++	if (hdmienc == NULL)
++		return -ENOMEM;
++
++	if (renc->output == RCAR_DU_OUTPUT_HDMI0)
++		hdmienc->index = 0;
++	else if (renc->output == RCAR_DU_OUTPUT_HDMI1)
++		hdmienc->index = 1;
++	else
++		return -EINVAL;
++
++	plat_data = rcar_du_hdmienc_dt_ids[hdmienc->index].data;
++	hdmienc->dev = &pdev->dev;
++
++	irq_offset = rcdu->info->hdmi_irq_offset;
++	irq = platform_get_irq(pdev, hdmienc->index + irq_offset);
++	if (irq < 0)
++		return irq;
++
++	res_offset = rcdu->info->hdmi_res_offset;
++	iores = platform_get_resource(pdev, IORESOURCE_MEM,
++					 hdmienc->index + res_offset);
++	if (!iores)
++		return -ENXIO;
++
++	drm_encoder_helper_add(encoder, &encoder_helper_funcs);
++	ret = drm_encoder_init(rcdu->ddev, encoder, &encoder_funcs,
++			       DRM_MODE_ENCODER_TMDS);
++	if (ret < 0)
++		goto error;
++
++	renc->hdmi = hdmienc;
++	hdmienc->renc = renc;
++
++	return dw_hdmi_bind(rcdu->dev,
++			    NULL,		/* not use */
++			    rcdu->ddev,		/* drm device structure */
++			    encoder,		/* encoder */
++			    iores,		/* HDMI Register base address */
++			    irq,		/* HDMI IRQ number */
++			    plat_data);		/* platform data */
++
++error:
++	put_device(hdmienc->dev);
++	return ret;
++}
++#else
+ static void rcar_du_hdmienc_disable(struct drm_encoder *encoder)
+ {
+ 	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
+@@ -166,3 +468,4 @@ error:
+ 	put_device(hdmienc->dev);
+ 	return ret;
+ }
++#endif
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index b610f70..2f8a052 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -1,7 +1,7 @@
+ /*
+  * rcar_du_kms.c  --  R-Car Display Unit Mode Setting
+  *
+- * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ * Copyright (C) 2013-2015 Renesas Electronics Corporation
+  *
+  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+  *
+@@ -329,6 +329,7 @@ static int rcar_du_encoders_init_one(struct rcar_du_device *rcdu,
+ 	} encoders[] = {
+ 		{ "adi,adv7123", RCAR_DU_ENCODER_VGA },
+ 		{ "adi,adv7511w", RCAR_DU_ENCODER_HDMI },
++		{ "rockchip,rcar-dw-hdmi", RCAR_DU_ENCODER_HDMI },
+ 		{ "thine,thc63lvdm83d", RCAR_DU_ENCODER_LVDS },
+ 	};
+ 
+-- 
+1.7.9.5
+

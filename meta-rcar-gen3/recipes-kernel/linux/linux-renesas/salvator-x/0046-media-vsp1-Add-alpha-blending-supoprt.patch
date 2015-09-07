@@ -1,0 +1,130 @@
+From 37cd1a5341105aa51871540e66fcccb9752fabac Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Thu, 20 Aug 2015 09:52:33 +0900
+Subject: [PATCH 46/85] media: vsp1: Add alpha blending supoprt
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/media/platform/Kconfig         |   12 ++++++++++++
+ drivers/media/platform/vsp1/vsp1_drm.c |    3 ++-
+ drivers/media/platform/vsp1/vsp1_rpf.c |   30 +++++++++++++++++++++++-------
+ include/media/vsp1.h                   |    3 ++-
+ 4 files changed, 39 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/media/platform/Kconfig b/drivers/media/platform/Kconfig
+index dc75694..3841d3e 100644
+--- a/drivers/media/platform/Kconfig
++++ b/drivers/media/platform/Kconfig
+@@ -254,6 +254,18 @@ config VIDEO_RENESAS_VSP1
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called vsp1.
+ 
++config VIDEO_RENESAS_VSP_ALPHA_BIT_ARGB1555
++	int "Renesas VSP alpha bit function of ARGB1555"
++	depends on VIDEO_RENESAS_VSP1
++	range 0 1
++	default 0
++	help
++	  Choose this option if you select A bit function of ARGB1555.
++	  If you set value to 0, pixel alpha blending is performed
++	  when the value of A is 0.
++	  If you set value to 1, pixel alpha blending is performed
++	  when the value of A is 1.
++
+ config VIDEO_TI_VPE
+ 	tristate "TI VPE (Video Processing Engine) driver"
+ 	depends on VIDEO_DEV && VIDEO_V4L2
+diff --git a/drivers/media/platform/vsp1/vsp1_drm.c b/drivers/media/platform/vsp1/vsp1_drm.c
+index b9cb5b2..c2235f1 100644
+--- a/drivers/media/platform/vsp1/vsp1_drm.c
++++ b/drivers/media/platform/vsp1/vsp1_drm.c
+@@ -287,7 +287,7 @@ EXPORT_SYMBOL_GPL(vsp1_du_setup_lif);
+ int vsp1_du_setup_rpf(struct device *dev, unsigned int rpf_index,
+ 		      u32 pixelformat, unsigned int pitch,
+ 		      dma_addr_t mem[2], const struct v4l2_rect *src,
+-		      const struct v4l2_rect *dst)
++		      const struct v4l2_rect *dst, u8 alpha)
+ {
+ 	struct vsp1_device *vsp1 = dev_get_drvdata(dev);
+ 	struct vsp1_pipeline *pipe = &vsp1->drm->pipe;
+@@ -304,6 +304,7 @@ int vsp1_du_setup_rpf(struct device *dev, unsigned int rpf_index,
+ 		return -EINVAL;
+ 
+ 	rpf = vsp1->rpf[rpf_index];
++	rpf->alpha->cur.val = alpha;
+ 
+ 	if (pixelformat == 0) {
+ 		dev_dbg(vsp1->dev, "%s: RPF%u: disable requested\n", __func__,
+diff --git a/drivers/media/platform/vsp1/vsp1_rpf.c b/drivers/media/platform/vsp1/vsp1_rpf.c
+index 328c19e..dfe2f34 100644
+--- a/drivers/media/platform/vsp1/vsp1_rpf.c
++++ b/drivers/media/platform/vsp1/vsp1_rpf.c
+@@ -1,7 +1,7 @@
+ /*
+  * vsp1_rpf.c  --  R-Car VSP1 Read Pixel Formatter
+  *
+- * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ * Copyright (C) 2013-2015 Renesas Electronics Corporation
+  *
+  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+  *
+@@ -82,6 +82,7 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	const struct v4l2_rect *crop = &rpf->crop;
+ 	u32 pstride;
+ 	u32 infmt;
++	u32 alph_sel, laya;
+ 	int ret;
+ 
+ 	ret = vsp1_entity_set_streaming(&rpf->entity, enable);
+@@ -153,14 +154,29 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	 * alpha value set through the V4L2_CID_ALPHA_COMPONENT control
+ 	 * otherwise. Disable color keying.
+ 	 */
+-	vsp1_rpf_write(rpf, VI6_RPF_ALPH_SEL, VI6_RPF_ALPH_SEL_AEXT_EXT |
+-		       (fmtinfo->alpha ? VI6_RPF_ALPH_SEL_ASEL_PACKED
+-				       : VI6_RPF_ALPH_SEL_ASEL_FIXED));
+-
++	switch (fmtinfo->fourcc) {
++	case V4L2_PIX_FMT_ARGB555:
++		if (CONFIG_VIDEO_RENESAS_VSP_ALPHA_BIT_ARGB1555 == 1)
++			alph_sel = (2 << 28) | (1 << 18) |
++				   (0xFF << 8) | (rpf->alpha->cur.val & 0xFF);
++		else
++			alph_sel = (2 << 28) | (1 << 18) |
++				   ((rpf->alpha->cur.val & 0xFF) << 8) | 0xFF;
++		laya = 0;
++		break;
++	case V4L2_PIX_FMT_ABGR32:
++		alph_sel = (1 << 18);
++		laya = 0;
++		break;
++	default:
++		alph_sel = (4 << 28) | (1 << 18);
++		laya = (rpf->alpha->cur.val & 0xFF) << 24;
++		break;
++	}
++	vsp1_rpf_write(rpf, VI6_RPF_ALPH_SEL, alph_sel);
+ 	if (vsp1->info->uapi)
+ 		mutex_lock(rpf->ctrls.lock);
+-	vsp1_rpf_write(rpf, VI6_RPF_VRTCOL_SET,
+-		       rpf->alpha->cur.val << VI6_RPF_VRTCOL_SET_LAYA_SHIFT);
++	vsp1_rpf_write(rpf, VI6_RPF_VRTCOL_SET, laya);
+ 	vsp1_pipeline_propagate_alpha(pipe, &rpf->entity, rpf->alpha->cur.val);
+ 	if (vsp1->info->uapi)
+ 		mutex_unlock(rpf->ctrls.lock);
+diff --git a/include/media/vsp1.h b/include/media/vsp1.h
+index 2c1aea7..9256952 100644
+--- a/include/media/vsp1.h
++++ b/include/media/vsp1.h
+@@ -25,6 +25,7 @@ int vsp1_du_setup_lif(struct device *dev, unsigned int width,
+ 
+ int vsp1_du_setup_rpf(struct device *dev, unsigned int rpf, u32 pixelformat,
+ 		      unsigned int pitch, dma_addr_t mem[2],
+-		      const struct v4l2_rect *src, const struct v4l2_rect *dst);
++		      const struct v4l2_rect *src, const struct v4l2_rect *dst,
++		      u8 alpha);
+ 
+ #endif /* __MEDIA_VSP1_H__ */
+-- 
+1.7.9.5
+

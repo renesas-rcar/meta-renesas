@@ -1,0 +1,27 @@
+From 387ad31a28168a25da3ddffd3aa14cc51988ff0e Mon Sep 17 00:00:00 2001
+From: Masaru Nagai <masaru.nagai.vx@renesas.com>
+Date: Thu, 20 Aug 2015 20:29:38 +0900
+Subject: [PATCH 30/85] ravb: tx timeout at no need tx align
+
+Signed-off-by: Masaru Nagai <masaru.nagai.vx@renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 94beed9..f3e6889 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1328,6 +1328,9 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	buffer = PTR_ALIGN(priv->tx_align[q], DPTR_ALIGN) +
+ 		 entry / NUM_TX_DESC * DPTR_ALIGN;
+ 	len = PTR_ALIGN(skb->data, DPTR_ALIGN) - skb->data;
++	/* quick fix */
++	if (len == 0)
++		len = 4;
+ 	memcpy(buffer, skb->data, len);
+ 	dma_addr = dma_map_single(ndev->dev.parent, buffer, len, DMA_TO_DEVICE);
+ 	if (dma_mapping_error(ndev->dev.parent, dma_addr))
+-- 
+1.7.9.5
+

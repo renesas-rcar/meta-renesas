@@ -1,0 +1,55 @@
+From 5c9daad246af140503bfb88e4bfa72e81ef8b985 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 26 Aug 2015 09:37:08 +0900
+Subject: [PATCH 68/85] drm: rcar-du: Fix compile warning
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 9139724..fde7e5d 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -154,7 +154,8 @@ int rcar_du_atomic_check_planes(struct drm_device *dev,
+ 		plane_state = to_rcar_plane_state(state->plane_states[i]);
+ 
+ 		dev_dbg(rcdu->dev, "%s: checking plane (%u,%u)\n", __func__,
+-			plane->group->index, plane - plane->group->planes);
++			plane->group->index,
++			(u32)(plane - plane->group->planes));
+ 
+ 		/* If the plane is being disabled we don't need to go through
+ 		 * the full reallocation procedure. Just mark the hardware
+@@ -223,7 +224,7 @@ int rcar_du_atomic_check_planes(struct drm_device *dev,
+ 				dev_dbg(rcdu->dev,
+ 					"%s: plane (%u,%u) has been freed, skipping\n",
+ 					__func__, plane->group->index,
+-					plane - plane->group->planes);
++					(u32)(plane - plane->group->planes));
+ 				continue;
+ 			}
+ 
+@@ -233,7 +234,7 @@ int rcar_du_atomic_check_planes(struct drm_device *dev,
+ 			dev_dbg(rcdu->dev,
+ 				"%s: plane (%u,%u) uses %u hwplanes (index %d)\n",
+ 				__func__, plane->group->index,
+-				plane - plane->group->planes,
++				(u32)(plane - plane->group->planes),
+ 				plane_state->format ?
+ 				plane_state->format->planes : 0,
+ 				plane_state->hwindex);
+@@ -261,7 +262,8 @@ int rcar_du_atomic_check_planes(struct drm_device *dev,
+ 		plane_state = to_rcar_plane_state(state->plane_states[i]);
+ 
+ 		dev_dbg(rcdu->dev, "%s: allocating plane (%u,%u)\n", __func__,
+-			plane->group->index, plane - plane->group->planes);
++			plane->group->index,
++			(u32)(plane - plane->group->planes));
+ 
+ 		/* Skip planes that are being disabled or don't need to be
+ 		 * reallocated.
+-- 
+1.7.9.5
+

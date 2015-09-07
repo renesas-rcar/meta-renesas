@@ -1,0 +1,159 @@
+From 6418cabea0d4081c0af37ba494c3e08563969a52 Mon Sep 17 00:00:00 2001
+From: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
+Date: Mon, 6 Jul 2015 14:48:50 +0700
+Subject: [PATCH 2/2] rcar-gen3: add readme for building with Linaro Gcc
+
+This patch add the dependent layer information, build instructions
+for using Linaro Gcc.
+
+Signed-off-by: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
+---
+ meta-rcar-gen3/README.linaro | 136 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 136 insertions(+)
+ create mode 100644 meta-rcar-gen3/README.linaro
+
+diff --git a/meta-rcar-gen3/README.linaro b/meta-rcar-gen3/README.linaro
+new file mode 100644
+index 0000000..17b2a15
+--- /dev/null
++++ b/meta-rcar-gen3/README.linaro
+@@ -0,0 +1,136 @@
++meta-rcar-gen3
++==============
++
++This layer provides that evaluation board is mounted ARM SoCs of Renesas
++Electronics, called the R-Car Generation 3. Currently, this supports
++board and the SoCs of the following:
++    - Board: Salvator-X   / SoC: R8A7795 (R-Car H3)
++
++Patches
++=======
++
++Please submit any patches for this layer to: takeshi.saito.xv@renesas.com
++Please see the MAINTAINERS file for more details.
++
++Dependencies
++============
++
++This layer depends on:
++
++    URI: git://git.yoctoproject.org/poky
++    layers: meta, meta-yocto, meta-yocto-bsp
++    branch: fido
++
++    URI: git://git.yoctoproject.org/meta-renesas
++    layers: meta-rcar-gen3
++    branch: fido
++
++    URI: https://git.linaro.org/openembedded/meta-linaro.git
++    layers: meta-linaro-toolchain
++    branch: fido
++
++Build Instructions
++==================
++
++The following instructions require a Poky installation (or equivalent).
++
++Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
++
++    $ source poky/oe-init-build-env
++
++After that, initialized configure bblayers.conf by adding meta-rcar-gen3 layer. e.g.:
++
++    BBLAYERS ?= " \
++        <path to layer>/poky/meta \
++        <path to layer>/poky/meta-yocto \
++        <path to layer>/poky/meta-yocto-bsp \
++        <path to layer>/meta-renesas/meta-rcar-gen3 \
++        <path to layer>/meta-linaro/meta-linaro-toolchain \
++    "
++
++To build a specific target BSP, configure the associated machine in local.conf:
++
++    MACHINE ??= "<supported board name>"
++
++Must change the package class to ipk files in local.conf:
++
++    PACKAGE_CLASSES ?= "package_ipk"
++
++Must append the 32-bit application to the image in local.conf.
++At least one 32-bit app have to be installed to run the multilib image.e.g.:
++
++    IMAGE_INSTALL_append = " lib32-coreutils"
++
++Must Change the Gcc version in local.conf.
++
++    GCCVERSION="linaro-4.9"
++
++Configure for systemd init in local.conf:
++
++    DISTRO_FEATURES_append = " systemd"
++    VIRTUAL-RUNTIME_init_manager = "systemd"
++
++Build the target file system image using bitbake:
++
++    $ bitbake core-image-minimal
++
++After completing the images for the target machine will be available in the output
++directory 'tmp/deploy/images/<supported board name>'.
++
++Images generated:
++    * Image (generic Linux Kernel binary image file)
++    * Image-<machine name>.dtb (DTB for target machine)
++    * core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
++    * core-image-minimal-<machine name>.ext4  (rootfs ext4 format)
++    * core-image-minimal-<machine name>.cpio.gz (rootfs cpio+gz format)
++
++Build Instructions for SDK
++==========================
++This may be changed in the near feature. These instructions are tentative.
++
++Should define the staticdev in SDK image feature for installing the static libs
++to SDK in local.conf.
++
++    SDKIMAGE_FEATURES_append = " staticdev-pkgs"
++
++Use bitbake -c populate_sdk for generating the toolchain SDK:
++For 64-bit target SDK (aarch64):
++
++    $ bitbake core-image-minimal -c populate_sdk
++
++For 32-bit target SDK (aarch32):
++
++    $ bitbake lib32-core-image-minimal -c populate_sdk
++
++The SDK can be found in the output directory 'tmp/deploy/sdk'
++    * poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-1.8.sh
++
++Usage of toolchain SDK:
++Install the SDK to the default: /opt/poky/1.8
++For 64-bit target SDK:
++
++    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-1.8.sh
++
++For 32-bit target SDK:
++
++    $ sh poky-glibc-x86_64-lib32-core-image-minimal-aarch64-toolchain-1.8.sh
++
++For 64-bit application use environment script in /opt/poky/1.8
++
++    $ source /opt/poky/1.8/environment-setup-aarch64-poky-linux
++
++For 32-bit application use environment script in /opt/poky/1.8
++
++    $ source /opt/poky/1.8/environment-setup-armv7ahf-vfp-pokymllib32-linux-gnueabi
++
++Restrictions
++============
++
++As the information from community, Poky doesn't well support toolchain SDK for multilib.
++This release has just been tested with core-image-minimal target only.
++Please be Noted that:
++- The poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-1.8.sh (1) only supports for 64-bit application.
++  We can't compile the 32 bit apps with (1). Please don't source the environment-setup-armv7ahf-vfp-pokymllib32-linux-gnueabi.
++- The poky-glibc-x86_64-lib32-core-image-minimal-aarch64-toolchain-1.8.sh (2) only supports for 32-bit application.
++  We can't compile the 64 bit apps with (2). Please don't source the environment-setup-aarch64-poky-linux.
++- In case, there is necessary to use both aarch64/aarch32 SDK. Please install them into different directories.
+-- 
+1.9.1
+

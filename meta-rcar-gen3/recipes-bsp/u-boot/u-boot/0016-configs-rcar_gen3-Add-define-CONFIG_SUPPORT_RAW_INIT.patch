@@ -1,0 +1,27 @@
+From 6ce56e54665fd20d0d23ab85ae6852f9523812dc Mon Sep 17 00:00:00 2001
+From: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+Date: Wed, 26 Aug 2015 09:58:55 +0900
+Subject: configs: rcar_gen3: Add define CONFIG_SUPPORT_RAW_INITRD
+
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ include/configs/rcar-gen3-common.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/configs/rcar-gen3-common.h b/include/configs/rcar-gen3-common.h
+index 9c799c2..ab9d56f 100644
+--- a/include/configs/rcar-gen3-common.h
++++ b/include/configs/rcar-gen3-common.h
+@@ -35,6 +35,9 @@
+ #define CONFIG_SYS_THUMB_BUILD
+ #define CONFIG_SYS_GENERIC_BOARD
+ 
++/* boot option */
++#define CONFIG_SUPPORT_RAW_INITRD
++
+ /* Support File sytems */
+ #define CONFIG_FAT_WRITE
+ #define CONFIG_DOS_PARTITION
+-- 
+1.8.3.2
+

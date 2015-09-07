@@ -1,0 +1,258 @@
+From 086a54a44e7b877514bda7a0e7dcab41cb004b69 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 21 Aug 2015 19:07:45 +0900
+Subject: [PATCH 70/85] arm64: dts: salvatorx: Add connector and encoder for
+ display driver
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts |  215 ++++++++++++++++++++-
+ 1 file changed, 214 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
+index b2deb4b..42d5230 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
+@@ -10,7 +10,7 @@
+ 
+ /dts-v1/;
+ #include "r8a7795.dtsi"
+-#include "../include/dt-bindings/gpio/gpio.h"
++#include <dt-bindings/gpio/gpio.h>
+ 
+ / {
+ 	model = "Renesas SalvatorX board based on r8a7795";
+@@ -80,6 +80,173 @@
+ 		states = <3300000 1
+ 			  1800000 0>;
+ 	};
++
++	lvds-encoder {
++		compatible = "thine,thc63lvdm83d";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			port@0 {
++				reg = <0>;
++				lvds_enc_in: endpoint {
++					remote-endpoint = <&du_out_lvds>;
++				};
++			};
++			port@1 {
++				reg = <1>;
++				lvds_enc_out: endpoint {
++					remote-endpoint = <&lvds_in>;
++				};
++			};
++		};
++	};
++
++	lvds {
++		compatible = "lvds-connector";
++
++		width-mm = <210>;
++		height-mm = <158>;
++
++		panel-timing {
++			/* 1024x768 @65Hz */
++			clock-frequency = <65000000>;
++			hactive = <1024>;
++			vactive = <768>;
++			hsync-len = <136>;
++			hfront-porch = <20>;
++			hback-porch = <160>;
++			vfront-porch = <3>;
++			vback-porch = <29>;
++			vsync-len = <6>;
++		};
++
++		port {
++			lvds_in: endpoint {
++				remote-endpoint = <&lvds_enc_out>;
++			};
++		};
++	};
++
++	vga-encoder {
++		compatible = "adi,adv7123";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7123_in: endpoint {
++					remote-endpoint = <&du_out_rgb>;
++				};
++			};
++			port@1 {
++				reg = <1>;
++				adv7123_out: endpoint {
++					remote-endpoint = <&vga_in>;
++				};
++			};
++		};
++	};
++
++	vga {
++		compatible = "vga-connector";
++
++		port {
++			vga_in: endpoint {
++				remote-endpoint = <&adv7123_out>;
++			};
++		};
++	};
++
++	hdmi0-encoder {
++		compatible = "rockchip,rcar-dw-hdmi";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			port@0 {
++				reg = <0>;
++				rcar_dw_hdmi0_in: endpoint {
++					remote-endpoint = <&du_out_hdmi0>;
++				};
++			};
++			port@1 {
++				reg = <1>;
++				rcar_dw_hdmi0_out: endpoint {
++					remote-endpoint = <&hdmi0_con>;
++				};
++			};
++		};
++	};
++
++	hdmi0-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi0_con: endpoint {
++				remote-endpoint = <&rcar_dw_hdmi0_out>;
++			};
++		};
++	};
++
++	hdmi1-encoder {
++		compatible = "rockchip,rcar-dw-hdmi";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			port@0 {
++				reg = <0>;
++				rcar_dw_hdmi1_in: endpoint {
++					remote-endpoint = <&du_out_hdmi1>;
++				};
++			};
++			port@1 {
++				reg = <1>;
++				rcar_dw_hdmi1_out: endpoint {
++					remote-endpoint = <&hdmi1_con>;
++				};
++			};
++		};
++	};
++
++	hdmi1-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi1_con: endpoint {
++				remote-endpoint = <&rcar_dw_hdmi1_out>;
++			};
++		};
++	};
++
++	programable_clk0: clock_out0 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <148500000>;
++	};
++
++	x21_clk: x21-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <33000000>;
++	};
++
++	x22_clk: x22-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <33000000>;
++	};
++
++	programable_clk1: clock_out1 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <108000000>;
++	};
+ };
+ 
+ &extal_clk {
+@@ -111,6 +278,12 @@
+ 		renesas,groups = "sdhi3_data4", "sdhi3_ctrl";
+ 		renesas,function = "sdhi3";
+ 	};
++
++	du_pins: du {
++		renesas,groups = "du_rgb888", "du_sync", "du_clk_out_0",
++				 "du_disp";
++		renesas,function = "du";
++	};
+ };
+ 
+ &scif1 {
+@@ -186,3 +359,43 @@
+ 	wp-gpios = <&gpio4 16 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
+ };
++
++&du {
++	pinctrl-0 = <&du_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	clocks = <&mstp7_clks R8A7795_CLK_DU0>,
++		 <&mstp7_clks R8A7795_CLK_DU1>,
++		 <&mstp7_clks R8A7795_CLK_DU2>,
++		 <&mstp7_clks R8A7795_CLK_DU3>,
++		 <&mstp7_clks R8A7795_CLK_LVDS>,
++		 <&mstp7_clks R8A7795_CLK_HDMI0>,
++		 <&mstp7_clks R8A7795_CLK_HDMI1>,
++		 <&programable_clk0>, <&x21_clk>, <&x22_clk>, <&programable_clk1>;
++	clock-names = "du.0", "du.1", "du.2", "du.3", "lvds.0", "hdmi.0",
++		     "hdmi.1", "dclkin.0", "dclkin.1", "dclkin.2", "dclkin.3";
++	backlight = <&gpio6 7 GPIO_ACTIVE_HIGH>;
++	ports {
++		port@0 {
++			endpoint {
++				remote-endpoint = <&adv7123_in>;
++			};
++		};
++		port@1 {
++			endpoint {
++				remote-endpoint = <&rcar_dw_hdmi0_in>;
++			};
++		};
++		port@2 {
++			endpoint {
++				remote-endpoint = <&rcar_dw_hdmi1_in>;
++			};
++		};
++		port@3 {
++			endpoint {
++				remote-endpoint = <&lvds_enc_in>;
++			};
++		};
++	};
++};
+-- 
+1.7.9.5
+

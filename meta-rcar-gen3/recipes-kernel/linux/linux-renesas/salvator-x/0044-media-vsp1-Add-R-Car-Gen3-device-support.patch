@@ -1,0 +1,56 @@
+From 7b66ac7475f464985ab7c38ad84706d92574dfab Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 17 Aug 2015 12:14:27 +0900
+Subject: [PATCH 44/85] media: vsp1: Add R-Car Gen3 device support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/media/platform/vsp1/vsp1_bru.h |    4 ++--
+ drivers/media/platform/vsp1/vsp1_drv.c |    6 ++++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/vsp1/vsp1_bru.h b/drivers/media/platform/vsp1/vsp1_bru.h
+index c713028..4b9fc85 100644
+--- a/drivers/media/platform/vsp1/vsp1_bru.h
++++ b/drivers/media/platform/vsp1/vsp1_bru.h
+@@ -1,7 +1,7 @@
+ /*
+  * vsp1_bru.h  --  R-Car VSP1 Blend ROP Unit
+  *
+- * Copyright (C) 2013 Renesas Corporation
++ * Copyright (C) 2013-2015 Renesas Corporation
+  *
+  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+  *
+@@ -23,7 +23,7 @@ struct vsp1_device;
+ struct vsp1_rwpf;
+ 
+ #define BRU_PAD_SINK(n)				(n)
+-#define BRU_MAX_INPUTS				4
++#define BRU_MAX_INPUTS				5
+ 
+ struct vsp1_bru {
+ 	struct vsp1_entity entity;
+diff --git a/drivers/media/platform/vsp1/vsp1_drv.c b/drivers/media/platform/vsp1/vsp1_drv.c
+index b75ef44..68aecb9 100644
+--- a/drivers/media/platform/vsp1/vsp1_drv.c
++++ b/drivers/media/platform/vsp1/vsp1_drv.c
+@@ -642,9 +642,15 @@ static const struct vsp1_device_info vsp1_gen2_vspd_info = {
+ 	.uapi = false,
+ };
+ 
++static const struct vsp1_device_info vsp2_gen3_vspd_info = {
++	.num_bru_inputs = 5,
++	.uapi = false,
++};
++
+ static const struct of_device_id vsp1_of_match[] = {
+ 	{ .compatible = "renesas,vsp1", .data = &vsp1_gen2_info },
+ 	{ .compatible = "renesas,vsp1d", .data = &vsp1_gen2_vspd_info },
++	{ .compatible = "renesas,vsp2d", .data = &vsp2_gen3_vspd_info },
+ 	{ },
+ };
+ 
+-- 
+1.7.9.5
+

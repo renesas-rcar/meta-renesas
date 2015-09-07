@@ -1,0 +1,42 @@
+From 4a524f230863f02266f2bcbd6c726127073749ab Mon Sep 17 00:00:00 2001
+From: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+Date: Tue, 1 Sep 2015 14:07:35 +0900
+Subject: [PATCH 16/85] i2c: rcar: Add r8a7795 support
+
+Signed-off-by: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+---
+ drivers/i2c/busses/i2c-rcar.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index d8361da..a265769 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -1,6 +1,8 @@
+ /*
+  * Driver for the Renesas RCar I2C unit
+  *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ *
+  * Copyright (C) 2014 Wolfram Sang <wsa@sang-engineering.com>
+  *
+  * Copyright (C) 2012-14 Renesas Solutions Corp.
+@@ -625,6 +627,7 @@ static const struct of_device_id rcar_i2c_dt_ids[] = {
+ 	{ .compatible = "renesas,i2c-r8a7792", .data = (void *)I2C_RCAR_GEN2 },
+ 	{ .compatible = "renesas,i2c-r8a7793", .data = (void *)I2C_RCAR_GEN2 },
+ 	{ .compatible = "renesas,i2c-r8a7794", .data = (void *)I2C_RCAR_GEN2 },
++	{ .compatible = "renesas,i2c-r8a7795", .data = (void *)I2C_RCAR_GEN2 },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, rcar_i2c_dt_ids);
+@@ -719,6 +722,7 @@ static const struct platform_device_id rcar_i2c_id_table[] = {
+ 	{ "i2c-rcar",		I2C_RCAR_GEN1 },
+ 	{ "i2c-rcar_gen1",	I2C_RCAR_GEN1 },
+ 	{ "i2c-rcar_gen2",	I2C_RCAR_GEN2 },
++	{ "i2c-rcar_gen3",	I2C_RCAR_GEN2 },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(platform, rcar_i2c_id_table);
+-- 
+1.7.9.5
+

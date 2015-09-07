@@ -1,0 +1,30 @@
+From 3515171051b265ededeaeba5051957175c44bb94 Mon Sep 17 00:00:00 2001
+From: Thao Nguyen <thao.nguyen.yb@rvc.renesas.com>
+Date: Tue, 23 Jun 2015 16:38:37 +0700
+Subject: [PATCH] rcar-gen3: gcc linaro: remove patch use /lib for aarch64
+
+meta-linaro-toolchain uses /lib directory to store both 32-bit and 64-bit libraries.
+In poky, they use /lib64 directory for storing 64-bit and /lib for 32-bit libraries.
+
+To support multilib with Linaro toolchain, we need to separate 32-bit and 64-bit
+libraries into 2 directories with the same style of poky.
+If not, it will be conflicted and gcc-linaro can not perform do_configure.
+
+This patch will remove the patch from gcc-linaro to use the default poky style.
+
+Signed-off-by: Thao Nguyen <thao.nguyen.yb@rvc.renesas.com>
+---
+ meta-rcar-gen3/recipes-devtools/gcc/gcc-source_linaro-4.9.bbappend | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 meta-rcar-gen3/recipes-devtools/gcc/gcc-source_linaro-4.9.bbappend
+
+diff --git a/meta-rcar-gen3/recipes-devtools/gcc/gcc-source_linaro-4.9.bbappend b/meta-rcar-gen3/recipes-devtools/gcc/gcc-source_linaro-4.9.bbappend
+new file mode 100644
+index 0000000..b4b12e1
+--- /dev/null
++++ b/meta-rcar-gen3/recipes-devtools/gcc/gcc-source_linaro-4.9.bbappend
+@@ -0,0 +1 @@
++SRC_URI_remove = "file://use-lib-for-aarch64.patch"
+-- 
+1.9.1
+

@@ -1,0 +1,79 @@
+From 86634d3bc729bf3e22bf700f450c83615ddda6a5 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 21 Aug 2015 18:55:38 +0900
+Subject: [PATCH 65/85] drm: rcar-du: Fix VSP feed plane number
+
+VSP feeds plane1 and plane3 with R-Car Gen3.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c   |    5 ++++-
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c |    4 +++-
+ drivers/gpu/drm/rcar-du/rcar_du_vsp.c   |    7 ++++++-
+ 3 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 2f8a052..74c7ce0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -548,7 +548,10 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 		 * planes 0-3 with CRTC 0 and planes 4-7 with CRTC 1 to minimize
+ 		 * flicker occurring when the association is changed.
+ 		 */
+-		rgrp->dptsr_planes = rgrp->num_crtcs > 1 ? 0xf0 : 0;
++		if (rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS))
++			rgrp->dptsr_planes = 0x00;
++		else
++			rgrp->dptsr_planes = rgrp->num_crtcs > 1 ? 0xf0 : 0;
+ 
+ 		if (!rcar_du_has(rcdu, RCAR_DU_FEATURE_VSP1_SOURCE)) {
+ 			ret = rcar_du_planes_init(rgrp);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 9c84ec2..9139724 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -489,7 +489,9 @@ static void rcar_du_plane_setup_format(struct rcar_du_group *rgrp,
+ 		rcar_du_plane_write(rgrp, index, PnDDCR2, ddcr2);
+ 
+ 	ddcr4 = state->format->edf | PnDDCR4_CODE;
+-	if (state->source != RCAR_DU_PLANE_MEMORY)
++
++	if ((state->source != RCAR_DU_PLANE_MEMORY)
++		&& (!rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS)))
+ 		ddcr4 |= PnDDCR4_VSPS;
+ 
+ 	rcar_du_plane_write(rgrp, index, PnDDCR4, ddcr4);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+index 6107449..715ad6d 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+@@ -31,6 +31,7 @@
+ void rcar_du_vsp_enable(struct rcar_du_crtc *crtc)
+ {
+ 	const struct drm_display_mode *mode = &crtc->crtc.state->adjusted_mode;
++	struct rcar_du_device *rcdu = crtc->group->dev;
+ 	struct rcar_du_plane_state state = {
+ 		.state = {
+ 			.crtc = &crtc->crtc,
+@@ -44,13 +45,17 @@ void rcar_du_vsp_enable(struct rcar_du_crtc *crtc)
+ 			.src_h = mode->vdisplay << 16,
+ 		},
+ 		.format = rcar_du_format_info(DRM_FORMAT_ARGB8888),
+-		.hwindex = crtc->index % 2,
+ 		.source = RCAR_DU_PLANE_VSPD1,
+ 		.alpha = 255,
+ 		.colorkey = 0,
+ 		.zpos = 0,
+ 	};
+ 
++	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS))
++		state.hwindex = (crtc->index % 2) ? 2 : 0;
++	else
++		state.hwindex = crtc->index % 2;
++
+ 	__rcar_du_plane_setup(crtc->group, &state);
+ 
+ 	/* Ensure that the plane source configuration takes effect by requesting
+-- 
+1.7.9.5
+

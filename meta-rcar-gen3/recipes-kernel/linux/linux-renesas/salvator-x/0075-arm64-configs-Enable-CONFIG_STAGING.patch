@@ -1,0 +1,29 @@
+From c2032150a122146f6dedbc660cf0d2ceed947805 Mon Sep 17 00:00:00 2001
+From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+Date: Fri, 21 Aug 2015 16:05:46 +0700
+Subject: [PATCH 75/85] arm64: configs: Enable CONFIG_STAGING
+
+In order to enable board staging support code of Salvator-X board,
+enable CONFIG_STAGING config and CONFIG_STAGING_BOARD config.
+
+Signed-off-by: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+---
+ arch/arm64/configs/defconfig |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 814bb5b..8859a74 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -183,6 +183,8 @@ CONFIG_RTC_DRV_XGENE=y
+ CONFIG_VIRTIO_PCI=y
+ CONFIG_VIRTIO_BALLOON=y
+ CONFIG_VIRTIO_MMIO=y
++CONFIG_STAGING=y
++CONFIG_STAGING_BOARD=y
+ CONFIG_COMMON_CLK_QCOM=y
+ CONFIG_MSM_GCC_8916=y
+ # CONFIG_IOMMU_SUPPORT is not set
+-- 
+1.7.9.5
+

@@ -1,0 +1,204 @@
+From 8edd42c07a39ca425aae18a065708888838006be Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 21 Aug 2015 18:52:54 +0900
+Subject: [PATCH 58/85] drm: rcar-du: Fix display registers for R-Car Gen3
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c  |    9 ++++--
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c   |    3 +-
+ drivers/gpu/drm/rcar-du/rcar_du_group.c |   47 ++++++++++++++++++++++---------
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c |   18 +++++++-----
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  |   15 ++++++++++
+ 5 files changed, 68 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index acda3d5..eddce5a 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -284,8 +284,13 @@ static void rcar_du_crtc_update_planes(struct rcar_du_crtc *rcrtc)
+ 
+ 	/* If VSP+DU integration is enabled the plane assignment is fixed. */
+ 	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_VSP1_SOURCE)) {
+-		dspr = (rcrtc->index % 2) + 1;
+-		hwplanes = 1 << (rcrtc->index % 2);
++		if (rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS)) {
++			dspr = (rcrtc->index % 2) ? 3 : 1;
++			hwplanes = 1 << ((rcrtc->index % 2) ? 2 : 0);
++		} else {
++			dspr = (rcrtc->index % 2) + 1;
++			hwplanes = 1 << (rcrtc->index % 2);
++		}
+ 	}
+ 
+ 	/* Update the planes to display timing and dot clock generator
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 2b9292d..99507a2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -133,7 +133,8 @@ static const struct rcar_du_device_info rcar_du_r8a7794_info = {
+ static const struct rcar_du_device_info rcar_du_r8a7795_info = {
+ 	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
+ 		  | RCAR_DU_FEATURE_EXT_CTRL_REGS
+-		  | RCAR_DU_FEATURE_VSP1_SOURCE,
++		  | RCAR_DU_FEATURE_VSP1_SOURCE
++		  | RCAR_DU_FEATURE_GEN3_REGS,
+ 	.num_crtcs = 4,
+ 	.routes = {
+ 		/* R8A7795 has one RGB output, two HDMI outputs and one
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.c b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+index 0e2b46d..fc8a1c9 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+@@ -1,7 +1,7 @@
+ /*
+  * rcar_du_group.c  --  R-Car Display Unit Channels Pair
+  *
+- * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ * Copyright (C) 2013-2015 Renesas Electronics Corporation
+  *
+  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+  *
+@@ -46,17 +46,27 @@ void rcar_du_group_write(struct rcar_du_group *rgrp, u32 reg, u32 data)
+ 
+ static void rcar_du_group_setup_defr8(struct rcar_du_group *rgrp)
+ {
+-	u32 defr8 = DEFR8_CODE | DEFR8_DEFE8;
++	struct rcar_du_device *rcdu = rgrp->dev;
++	u32 defr8;
+ 
+-	/* The DEFR8 register for the first group also controls RGB output
+-	 * routing to DPAD0 and VSPD1 routing to DU0/1/2 for DU instances that
+-	 * support it.
+-	 */
+-	if (rgrp->index == 0) {
+-		if (rgrp->dev->info->routes[RCAR_DU_OUTPUT_DPAD0].possible_crtcs > 1)
+-			defr8 |= DEFR8_DRGBS_DU(rgrp->dev->dpad0_source);
+-		if (rgrp->dev->vspd1_sink == 2)
+-			defr8 |= DEFR8_VSCS;
++	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS)) {
++		defr8 = DEFR8_CODE;
++		if (rgrp->index == 1)
++			defr8 |= DEFR8_DRGBS_DU(DU_CH_3);
++	} else {
++		/* The DEFR8 register for the first group also controls RGB
++		 * output routing to DPAD0 and VSPD1 routing to DU0/1/2 for
++		 * DU instances that support it.
++		 */
++		defr8 = DEFR8_CODE | DEFR8_DEFE8;
++		if (rgrp->index == 0) {
++			if (rgrp->dev->info->routes
++				[RCAR_DU_OUTPUT_DPAD0].possible_crtcs > 1)
++				defr8 |=
++				   DEFR8_DRGBS_DU(rgrp->dev->dpad0_source);
++			if (rgrp->dev->vspd1_sink == 2)
++				defr8 |= DEFR8_VSCS;
++		}
+ 	}
+ 
+ 	rcar_du_group_write(rgrp, DEFR8, defr8);
+@@ -64,13 +74,22 @@ static void rcar_du_group_setup_defr8(struct rcar_du_group *rgrp)
+ 
+ static void rcar_du_group_setup(struct rcar_du_group *rgrp)
+ {
++	struct rcar_du_device *rcdu = rgrp->dev;
++
+ 	/* Enable extended features */
+ 	rcar_du_group_write(rgrp, DEFR, DEFR_CODE | DEFR_DEFE);
+-	rcar_du_group_write(rgrp, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
+-	rcar_du_group_write(rgrp, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
+-	rcar_du_group_write(rgrp, DEFR4, DEFR4_CODE);
++	if (!rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS)) {
++		rcar_du_group_write(rgrp, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
++		rcar_du_group_write(rgrp, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
++		rcar_du_group_write(rgrp, DEFR4, DEFR4_CODE);
++	}
+ 	rcar_du_group_write(rgrp, DEFR5, DEFR5_CODE | DEFR5_DEFE5);
+ 
++	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS)) {
++		rcar_du_group_write(rgrp, DEFR6, DEFR6_CODE | DEFR6_ODPM22_DISP);
++		rcar_du_group_write(rgrp, DEF10R, DEF10R_CODE | DEF10R_DEFE10);
++	}
++
+ 	if (rcar_du_has(rgrp->dev, RCAR_DU_FEATURE_EXT_CTRL_REGS)) {
+ 		rcar_du_group_setup_defr8(rgrp);
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 4a38ced..9c84ec2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -1,7 +1,7 @@
+ /*
+  * rcar_du_plane.c  --  R-Car Display Unit Planes
+  *
+- * Copyright (C) 2013-2014 Renesas Electronics Corporation
++ * Copyright (C) 2013-2015 Renesas Electronics Corporation
+  *
+  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
+  *
+@@ -458,6 +458,7 @@ static void rcar_du_plane_setup_format(struct rcar_du_group *rgrp,
+ 				       unsigned int index,
+ 				       const struct rcar_du_plane_state *state)
+ {
++	struct rcar_du_device *rcdu = rgrp->dev;
+ 	u32 ddcr2 = PnDDCR2_CODE;
+ 	u32 ddcr4;
+ 
+@@ -484,7 +485,8 @@ static void rcar_du_plane_setup_format(struct rcar_du_group *rgrp,
+ 		}
+ 	}
+ 
+-	rcar_du_plane_write(rgrp, index, PnDDCR2, ddcr2);
++	if (!rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS))
++		rcar_du_plane_write(rgrp, index, PnDDCR2, ddcr2);
+ 
+ 	ddcr4 = state->format->edf | PnDDCR4_CODE;
+ 	if (state->source != RCAR_DU_PLANE_MEMORY)
+@@ -498,11 +500,13 @@ static void rcar_du_plane_setup_format(struct rcar_du_group *rgrp,
+ 	rcar_du_plane_write(rgrp, index, PnDPXR, state->state.crtc_x);
+ 	rcar_du_plane_write(rgrp, index, PnDPYR, state->state.crtc_y);
+ 
+-	/* Wrap-around and blinking, disabled */
+-	rcar_du_plane_write(rgrp, index, PnWASPR, 0);
+-	rcar_du_plane_write(rgrp, index, PnWAMWR, 4095);
+-	rcar_du_plane_write(rgrp, index, PnBTR, 0);
+-	rcar_du_plane_write(rgrp, index, PnMLR, 0);
++	if (!rcar_du_has(rcdu, RCAR_DU_FEATURE_GEN3_REGS)) {
++		/* Wrap-around and blinking, disabled */
++		rcar_du_plane_write(rgrp, index, PnWASPR, 0);
++		rcar_du_plane_write(rgrp, index, PnWAMWR, 4095);
++		rcar_du_plane_write(rgrp, index, PnBTR, 0);
++		rcar_du_plane_write(rgrp, index, PnMLR, 0);
++	}
+ }
+ 
+ void __rcar_du_plane_setup(struct rcar_du_group *rgrp,
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+index 079f821..2bb952f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_regs.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -260,6 +260,21 @@
+ #define DIDSR_PDCS_CLK(n, clk)	(clk << ((n) * 2))
+ #define DIDSR_PDCS_MASK(n)	(3 << ((n) * 2))
+ 
++#define DEF10R			0x20038
++#define DEF10R_CODE		(0x7795 << 16)
++#define DEF10R_VSPF1_RGB	(0 << 14)
++#define DEF10R_VSPF1_YC		(1 << 14)
++#define DEF10R_DOCF1_RGB	(0 << 12)
++#define DEF10R_DOCF1_YC		(1 << 12)
++#define DEF10R_VCDF0_YCBCR444	(0 << 11)
++#define DEF10R_VCDF0_YCBCR422	(1 << 11)
++#define DEF10R_VSPF0_RGB	(0 << 10)
++#define DEF10R_VSPF0_YC		(1 << 10)
++#define DEF10R_DOCF0_RGB	(0 << 8)
++#define DEF10R_DOCF0_YC		(1 << 8)
++#define DEF10R_TSEL_H3_TCON1	(0 << 1) /* DEF10R2 register only (DU2/DU3) */
++#define DEF10R_DEFE10		(1 << 0)
++
+ #define DPLLCR			0x20044
+ #define DPLLCR_CODE		(0x95 << 24)
+ #define DPLLCR_PLCS1		(1 << 23)
+-- 
+1.7.9.5
+

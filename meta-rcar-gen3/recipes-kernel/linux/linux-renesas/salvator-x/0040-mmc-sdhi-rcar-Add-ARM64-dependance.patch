@@ -1,0 +1,26 @@
+From 34d897964e4738c2daa415e91a862820adb6a671 Mon Sep 17 00:00:00 2001
+From: Ai Kyuse <ai.kyuse.uw@renesas.com>
+Date: Wed, 2 Sep 2015 16:46:08 +0900
+Subject: [PATCH 40/85] mmc: sdhi: rcar: Add ARM64 dependance
+
+Signed-off-by: Ai Kyuse <ai.kyuse.uw@renesas.com>
+---
+ drivers/mmc/host/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/Kconfig b/drivers/mmc/host/Kconfig
+index 6a0f9c7..45971b4 100644
+--- a/drivers/mmc/host/Kconfig
++++ b/drivers/mmc/host/Kconfig
+@@ -550,7 +550,7 @@ config MMC_TMIO
+ 
+ config MMC_SDHI
+ 	tristate "SH-Mobile SDHI SD/SDIO controller support"
+-	depends on SUPERH || ARM
++	depends on SUPERH || ARM || ARM64
+ 	depends on SUPERH || ARCH_SHMOBILE || COMPILE_TEST
+ 	select MMC_TMIO_CORE
+ 	help
+-- 
+1.7.9.5
+

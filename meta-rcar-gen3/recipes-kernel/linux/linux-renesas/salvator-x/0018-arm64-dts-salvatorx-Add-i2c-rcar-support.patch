@@ -1,0 +1,33 @@
+From 101ed5728b8b3a48d32b98ec7cbff319a4e20ef9 Mon Sep 17 00:00:00 2001
+From: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+Date: Tue, 1 Sep 2015 14:24:15 +0900
+Subject: [PATCH 18/85] arm64: dts: salvatorx: Add i2c-rcar support
+
+Add I2C ch2 and ch4 to Device Tree for Salvator-X board.
+
+Signed-off-by: Hiromitsu Yamasaki <hiromitsu.yamasaki.ym@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
+index e415595..74972c1 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
+@@ -59,3 +59,13 @@
+ 	pinctrl-names = "default";
+ 	status = "okay";
+ };
++
++&i2c2 {
++	status = "okay";
++	clock-frequency = <400000>;
++};
++
++&i2c4 {
++	status = "okay";
++	clock-frequency = <400000>;
++};
+-- 
+1.7.9.5
+

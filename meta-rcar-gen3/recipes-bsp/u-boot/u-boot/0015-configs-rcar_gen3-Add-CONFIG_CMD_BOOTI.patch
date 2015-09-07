@@ -1,0 +1,25 @@
+From 5d076d7ea04343d4837284012b2711f9b4afb7e5 Mon Sep 17 00:00:00 2001
+From: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+Date: Mon, 17 Aug 2015 09:29:22 +0900
+Subject: configs: rcar_gen3: Add CONFIG_CMD_BOOTI
+
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ include/configs/rcar-gen3-common.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/configs/rcar-gen3-common.h b/include/configs/rcar-gen3-common.h
+index a5b068a..9c799c2 100644
+--- a/include/configs/rcar-gen3-common.h
++++ b/include/configs/rcar-gen3-common.h
+@@ -12,6 +12,7 @@
+ 
+ #include <asm/arch/rcar_gen3.h>
+ 
++#define CONFIG_CMD_BOOTI
+ #define CONFIG_CMD_EDITENV
+ #define CONFIG_CMD_SAVEENV
+ #define CONFIG_CMD_MEMORY
+-- 
+1.8.3.2
+

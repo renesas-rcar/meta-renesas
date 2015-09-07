@@ -1,0 +1,85 @@
+From 184e2c94d1b18860271bc3ae195b8a89dca36374 Mon Sep 17 00:00:00 2001
+From: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Date: Wed, 19 Aug 2015 14:09:14 +0900
+Subject: [PATCH 82/85] arm64: dts: salvatorx: Add EHCI/OHCI pins
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts |   57 +++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
+index 42d5230..4a0af54 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-salvatorx.dts
+@@ -284,6 +284,21 @@
+ 				 "du_disp";
+ 		renesas,function = "du";
+ 	};
++
++	usb0_pins: usb0 {
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
++	};
++
++	usb2_pins: usb2 {
++		renesas,groups = "usb2";
++		renesas,function = "usb2";
++	};
+ };
+ 
+ &scif1 {
+@@ -399,3 +414,45 @@
+ 		};
+ 	};
+ };
++
++&usb2_phy0 {
++	status = "okay";
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++};
++
++&usb2_phy1 {
++	status = "okay";
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++};
++
++&usb2_phy2 {
++	status = "okay";
++	pinctrl-0 = <&usb2_pins>;
++	pinctrl-names = "default";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&ehci2 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++&ohci2 {
++	status = "okay";
++};
+-- 
+1.7.9.5
+

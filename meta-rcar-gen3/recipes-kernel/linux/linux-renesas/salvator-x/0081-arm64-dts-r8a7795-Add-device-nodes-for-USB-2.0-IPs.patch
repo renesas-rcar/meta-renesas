@@ -1,0 +1,83 @@
+From 5ad07fd42a03cecb334fa93cb711e7c0c1f68c9a Mon Sep 17 00:00:00 2001
+From: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Date: Wed, 19 Aug 2015 13:46:51 +0900
+Subject: [PATCH 81/85] arm64: dts: r8a7795: Add device nodes for USB 2.0 IPs
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi |   60 ++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index 4acc673..3d1689f 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -716,5 +716,65 @@
+ 			#phy-cells = <0>;
+ 			status = "disabled";
+ 		};
++
++		ehci0: usb@ee080100 {
++			compatible = "renesas,ehci-r8a7795", "generic-ehci";
++			reg = <0 0xee080100 0 0xff>;
++			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI0>;
++			phys = <&usb2_phy0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ehci1: usb@ee0a0100 {
++			compatible = "renesas,ehci-r8a7795", "generic-ehci";
++			reg = <0 0xee0a0100 0 0xff>;
++			interrupts = <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI1>;
++			phys = <&usb2_phy1>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ehci2: usb@ee0c0100 {
++			compatible = "renesas,ehci-r8a7795", "generic-ehci";
++			reg = <0 0xee0c0100 0 0xff>;
++			interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI2>;
++			phys = <&usb2_phy2>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ohci0: usb@ee080000 {
++			compatible = "renesas,ohci-r8a7795", "generic-ohci";
++			reg = <0 0xee080000 0 0xff>;
++			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI0>;
++			phys = <&usb2_phy0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ohci1: usb@ee0a0000 {
++			compatible = "renesas,ohci-r8a7795", "generic-ohci";
++			reg = <0 0xee0a0000 0 0xff>;
++			interrupts = <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI1>;
++			phys = <&usb2_phy1>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ohci2: usb@ee0c0000 {
++			compatible = "renesas,ohci-r8a7795", "generic-ohci";
++			reg = <0 0xee0c0000 0 0xff>;
++			interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A7795_CLK_EHCI2>;
++			phys = <&usb2_phy2>;
++			phy-names = "usb";
++			status = "disabled";
++		};
+ 	};
+ };
+-- 
+1.7.9.5
+

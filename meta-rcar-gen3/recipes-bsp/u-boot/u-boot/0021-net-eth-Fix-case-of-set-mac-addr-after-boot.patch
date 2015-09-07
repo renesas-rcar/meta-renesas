@@ -1,0 +1,36 @@
+From fb0e04c3dfc44c6bdae51180e2bfc40babf57883 Mon Sep 17 00:00:00 2001
+From: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+Date: Mon, 17 Aug 2015 11:05:18 +0900
+Subject: net: eth: Fix case of set mac addr after boot
+
+Signed-off-by: Hiroyuki Yokoyama <hiroyuki.yokoyama.vx@renesas.com>
+---
+ net/eth.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/net/eth.c b/net/eth.c
+index eac4f7b..3b13336 100644
+--- a/net/eth.c
++++ b/net/eth.c
+@@ -1,4 +1,5 @@
+ /*
++ * Copyright (C) 2015 Renesas Electronics Corporation
+  * (C) Copyright 2001-2010
+  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+  *
+@@ -381,8 +382,10 @@ int eth_init(bd_t *bis)
+ 	struct eth_device *old_current, *dev;
+ 
+ 	if (!eth_current) {
+-		puts("No ethernet found.\n");
+-		return -1;
++		if (!eth_initialize(bis)) {
++			puts("No ethernet found.\n");
++			return -1;
++		}
+ 	}
+ 
+ 	/* Sync environment with network devices */
+-- 
+1.8.3.2
+

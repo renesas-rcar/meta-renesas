@@ -1,0 +1,204 @@
+From 992187b46947fc4afe799caaf504a0349bcca4a7 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 21 Aug 2015 19:02:56 +0900
+Subject: [PATCH 69/85] arm64: dts: r8a7795: Add display driver support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi  |  140 +++++++++++++++++++++++++++++
+ include/dt-bindings/clock/r8a7795-clock.h |   15 +++-
+ 2 files changed, 154 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index 94f258a..66c71c2 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -115,6 +115,15 @@
+ 				clock-output-names = "cp";
+ 			};
+ 
++			s2d1_clk: s2d1_clk {
++				compatible = "fixed-factor-clock";
++				clocks = <&cpg_clocks R8A7795_CLK_PLL1>;
++				#clock-cells = <0>;
++				clock-div = <4>;
++				clock-mult = <1>;
++				clock-output-names = "s2d1";
++			};
++
+ 			p_clk: p_clk {
+ 				compatible = "fixed-factor-clock";
+ 				clocks = <&cpg_clocks R8A7795_CLK_PLL1>;
+@@ -232,6 +241,40 @@
+ 					clock-output-names = "avb";
+ 				};
+ 
++				mstp6_clks: mstp6_clks@e6150148 {
++					compatible = "renesas,r8a7795-mstp-clocks",
++						     "renesas,cpg-mstp-clocks";
++					reg = <0 0xe6150148 0 4>, <0 0xe61501c0 0 4>;
++					clocks = <&s2d1_clk>, <&s2d1_clk>, <&s2d1_clk>,
++						 <&s2d1_clk>;
++					#clock-cells = <1>;
++					clock-indices = <
++						R8A7795_CLK_VSPD3 R8A7795_CLK_VSPD2
++						R8A7795_CLK_VSPD1 R8A7795_CLK_VSPD0
++					>;
++					clock-output-names = "vsp1-du3", "vsp1-du2",
++							     "vsp1-du1", "vsp1-du0";
++				};
++
++				mstp7_clks: mstp7_clks@e615014c {
++					compatible = "renesas,r8a7795-mstp-clocks",
++						     "renesas,cpg-mstp-clocks";
++					reg = <0 0xe615014c 0 4>, <0 0xe61501c4 0 4>;
++					clocks = <&s2d1_clk>, <&s2d1_clk>, <&s2d1_clk>,
++						 <&s2d1_clk>, <&s2d1_clk>, <&s2d1_clk>,
++						 <&s2d1_clk>;
++					#clock-cells = <1>;
++					clock-indices = <
++						R8A7795_CLK_DU3 R8A7795_CLK_DU2
++						R8A7795_CLK_DU1 R8A7795_CLK_DU0
++						R8A7795_CLK_LVDS R8A7795_CLK_HDMI1
++						R8A7795_CLK_HDMI0
++					>;
++					clock-output-names =
++						"du3", "du2", "du1", "du0", "lvds0",
++						"hdmi1","hdmi0";
++				};
++
+ 				mstp9_clks: mstp9_clks@e6150994 {
+ 					compatible = "renesas,r8a7795-mstp-clocks",
+ 						     "renesas,cpg-mstp-clocks";
+@@ -541,5 +584,102 @@
+ 			renesas,clk-rate = <50000000>;
+ 			status = "disabled";
+ 		};
++
++		vsp2d0: vsp2@fea20000 {
++			compatible = "renesas,vsp2d";
++			reg = <0 0xfea20000 0 0x8000>;
++			interrupts = <0 466 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp6_clks R8A7795_CLK_VSPD0>;
++
++			renesas,has-lif;
++			renesas,#rpf = <5>;
++			renesas,#wpf = <1>;
++		};
++
++		vsp2d1: vsp2@fea28000 {
++			compatible = "renesas,vsp2d";
++			reg = <0 0xfea28000 0 0x8000>;
++			interrupts = <0 467 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp6_clks R8A7795_CLK_VSPD1>;
++
++			renesas,has-lif;
++			renesas,#rpf = <5>;
++			renesas,#wpf = <1>;
++		};
++
++		vsp2d2: vsp2@fea30000 {
++			compatible = "renesas,vsp2d";
++			reg = <0 0xfea30000 0 0x8000>;
++			interrupts = <0 468 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp6_clks R8A7795_CLK_VSPD2>;
++
++			renesas,has-lif;
++			renesas,#rpf = <5>;
++			renesas,#wpf = <1>;
++		};
++
++		vsp2d3: vsp2@fea38000 {
++			compatible = "renesas,vsp2d";
++			reg = <0 0xfea38000 0 0x8000>;
++			interrupts = <0 469 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp6_clks R8A7795_CLK_VSPD3>;
++
++			renesas,has-lif;
++			renesas,#rpf = <5>;
++			renesas,#wpf = <1>;
++		};
++
++		du: display@feb00000 {
++			compatible = "renesas,du-r8a7795";
++			reg = <0 0xfeb00000 0 0x80000>,
++				<0 0xfeb90000 0 0x1c>,
++				<0 0xfead0000 0 0x10000>,
++				<0 0xfeae0000 0 0x10000>;
++			reg-names = "du", "lvds.0", "hdmi.0", "hdmi.1";
++			interrupts = <0 256 IRQ_TYPE_LEVEL_HIGH>,
++				<0 268 IRQ_TYPE_LEVEL_HIGH>,
++				<0 269 IRQ_TYPE_LEVEL_HIGH>,
++				<0 270 IRQ_TYPE_LEVEL_HIGH>,
++				<0 389 IRQ_TYPE_LEVEL_HIGH>,
++				<0 436 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A7795_CLK_DU0>,
++				<&mstp7_clks R8A7795_CLK_DU1>,
++				<&mstp7_clks R8A7795_CLK_DU2>,
++				<&mstp7_clks R8A7795_CLK_DU3>,
++				<&mstp7_clks R8A7795_CLK_LVDS>,
++				<&mstp7_clks R8A7795_CLK_HDMI0>,
++				<&mstp7_clks R8A7795_CLK_HDMI1>;
++			clock-names = "du.0", "du.1", "du.2", "du.3", "lvds.0",
++					 "hdmi.0", "hdmi.1";
++			status = "disabled";
++
++			vsps = <&vsp2d0 &vsp2d1 &vsp2d2 &vsp2d3>;
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				port@0 {
++					reg = <0>;
++					du_out_rgb: endpoint {
++					};
++				};
++				port@1 {
++					reg = <1>;
++					du_out_hdmi0: endpoint {
++					};
++				};
++				port@2 {
++					reg = <2>;
++					du_out_hdmi1: endpoint {
++					};
++				};
++				port@3 {
++					reg = <3>;
++					du_out_lvds: endpoint {
++					};
++				};
++			};
++		};
+ 	};
+ };
+diff --git a/include/dt-bindings/clock/r8a7795-clock.h b/include/dt-bindings/clock/r8a7795-clock.h
+index cfddc72..735645f 100644
+--- a/include/dt-bindings/clock/r8a7795-clock.h
++++ b/include/dt-bindings/clock/r8a7795-clock.h
+@@ -37,7 +37,20 @@
+ 
+ /* MSTP5 */
+ 
+-/* MSTP7 */
++/* MSTP6 */
++#define R8A7795_CLK_VSPD3		20
++#define R8A7795_CLK_VSPD2		21
++#define R8A7795_CLK_VSPD1		22
++#define R8A7795_CLK_VSPD0		23
++
++ /* MSTP7 */
++#define R8A7795_CLK_DU3			21
++#define R8A7795_CLK_DU2			22
++#define R8A7795_CLK_DU1			23
++#define R8A7795_CLK_DU0			24
++#define R8A7795_CLK_LVDS		27
++#define R8A7795_CLK_HDMI1		28
++#define R8A7795_CLK_HDMI0		29
+ 
+ /* MSTP8 */
+ #define R8A7795_CLK_AVB		12
+-- 
+1.7.9.5
+
