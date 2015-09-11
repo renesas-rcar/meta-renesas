@@ -1,0 +1,50 @@
+Proprietary libraries for meta-rcar-gen3
+========================================
+
+The meta-rcar-gen3 layer of meta-renesas is supported Graphic GLES(GSX) libraries,
+and proprietary library of multimedia.
+This README describes how to use this feature and setting to local.conf.
+At this time, we have not supported Multimedia yet.
+
+There are 2 main paths:
+    I/  Board configuration
+    II/ Build with GLES
+
+Please check section II to config for GLES.
+However, to have a completed local.conf,
+please also refer to Build Instruction in meta-renesas/meta-rcar-gen3/README.
+
+In addition, these libraries are not provided with recipes. If you would like to use,
+you will need to get them from Renesas.
+
+I/ Board configuration
+==================
+* Add this line to local.conf
+    For Salvator-X board
+           MACHINE = "salvator-x"
+
+II/ Build with GLES
+==================
+        * For wayland with GSX
+
+        1. Copy proprietary libraries to the directory of recipes.
+        2. Set local.conf the following.
+
+                # Enable Gfx Pkgs
+                MACHINE_FEATURES_append = " gsx"
+                MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
+
+                # for Wayland/Weston
+                DISTRO_FEATURES_append = " pam"
+                PREFERRED_PROVIDER_virtual/libgles1 = ""
+                PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
+                PREFERRED_PROVIDER_virtual/egl = "libegl"
+                PREFERRED_PROVIDER_virtual/libgl = ""
+                PREFERRED_PROVIDER_virtual/mesa = ""
+                PREFERRED_PROVIDER_libgbm = "libgbm"
+                PREFERRED_PROVIDER_libgbm-dev = "libgbm"
+                BBMASK = "mesa-gl"
+
+        3. Run 'bitbake core-image-weston'
+
+END.
