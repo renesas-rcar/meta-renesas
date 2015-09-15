@@ -21,16 +21,39 @@ SRC_URI_append_r8a7795 = " \
     ", "", d)} \
 "
 
+inherit update-rc.d systemd
+
+INITSCRIPT_NAME = "rc.pvr"
+INITSCRIPT_PARAMS = "start 7 5 2 . stop 62 0 1 6 ."
+SYSTEMD_SERVICE_${PN} = "rc.pvr.service"
+
 do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install() {
     # Copy binary into sysroot
-    mkdir ${D}/${exec_prefix}
-    cp -r ${S}/${sysconfdir} ${D}
-    cp -r ${S}/${exec_prefix}/local ${D}/${exec_prefix}
-    cp -r ${S}/${includedir} ${D}/${exec_prefix}
-    cp -r ${S}/${libdir} ${D}/${exec_prefix}
+    install -d ${D}/${exec_prefix}
+    install -d ${D}/${sysconfdir}/init.d
+    install -m 644 ${S}/${sysconfdir}/powervr.ini ${D}/${sysconfdir}
+    install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${sysconfdir}/init.d/
+    install -d ${D}/${sysconfdir}/udev/rules.d
+    install -m 644 ${S}/${sysconfdir}/udev/rules.d/99-pvr-services.rules ${D}/${sysconfdir}/udev/rules.d/
+    install -d ${D}/${includedir}/EGL
+    install -m 644 ${S}/${includedir}/EGL/*.h ${D}/${includedir}/EGL/
+    install -d ${D}/${includedir}/GLES2
+    install -m 644 ${S}/${includedir}/GLES2/*.h ${D}/${includedir}/GLES2/
+    install -d ${D}/${includedir}/GLES3
+    install -m 644 ${S}/${includedir}/GLES3/*.h ${D}/${includedir}/GLES3/
+    install -d ${D}/${includedir}/KHR
+    install -m 644 ${S}/${includedir}/KHR/khrplatform.h ${D}/${includedir}/KHR/khrplatform.h
+    install -d ${D}/${libdir}
+    install -m 755 ${S}/${libdir}/*.so ${D}/${libdir}/
+    install -d ${D}/${exec_prefix}/local/bin
+    install -m 755 ${S}/${exec_prefix}/local/bin/dlcsrv_REL ${D}/${exec_prefix}/local/bin/dlcsrv_REL
+    install -m 755 ${S}/${exec_prefix}/local/bin/eglinfo ${D}/${exec_prefix}/local/bin/eglinfo
+    install -m 755 ${S}/${exec_prefix}/local/bin/gles3test1 ${D}/${exec_prefix}/local/bin/gles3test1
+    install -m 755 ${S}/${exec_prefix}/local/bin/pvrsrvctl ${D}/${exec_prefix}/local/bin/pvrsrvctl
+    install -m 644 ${S}/${exec_prefix}/local/bin/*.txt ${D}/${exec_prefix}/local/bin
 
     if [ "${USE_WAYLAND}" = "1" ]; then
         # Rename libEGL.so
@@ -44,8 +67,8 @@ do_install() {
     fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-         install -d ${D}${systemd_unitdir}/system/
-         install -m 0644 ${WORKDIR}/rc.pvr.service ${D}${systemd_unitdir}/system/
+        install -d ${D}${systemd_unitdir}/system/
+        install -m 644 ${WORKDIR}/rc.pvr.service ${D}${systemd_unitdir}/system/
     fi
 }
 
@@ -63,8 +86,6 @@ FILES_${PN} = " \
 FILES_${PN}-dev = " \
     ${includedir}/* \
 "
-
-inherit update-rc.d systemd
 
 PROVIDES = "virtual/libgles2"
 PROVIDES_append = " \
@@ -91,6 +112,3 @@ INSANE_SKIP_${PN}-dbg += "arch"
 
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 PRIVATE_LIBS_${PN} = "libEGL.so.1"
-INITSCRIPT_NAME = "rc.pvr"
-INITSCRIPT_PARAMS = "start 7 5 2 . stop 62 0 1 6 ."
-SYSTEMD_SERVICE_${PN} = "rc.pvr.service"
