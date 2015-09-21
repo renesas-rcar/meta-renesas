@@ -15,4 +15,6 @@ IMAGE_INSTALL_append_rcar-gen3 = \
     "kernel-module-gles gles-user-module", "", d)}'
 
 # Support secure environment
-IMAGE_INSTALL_append = " optee-linuxdriver optee-client"
+IMAGE_INSTALL_append = " optee-linuxdriver \
+    optee-linuxdriver-armtz \
+    optee-client"
