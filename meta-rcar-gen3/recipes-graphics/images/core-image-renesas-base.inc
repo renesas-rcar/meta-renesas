@@ -25,3 +25,7 @@ IMAGE_INSTALL_append_rcar-gen3 = \
 IMAGE_INSTALL_append = " optee-linuxdriver \
     optee-linuxdriver-armtz \
     optee-client"
+
+# Install test app for MMP Module
+IMAGE_INSTALL_append = "${@bb.utils.contains("DISTRO_FEATURES", "mm-test", \
+    " vspmif-tp-user-module lib32-vspmif-tp-user-module", "", d)}"
