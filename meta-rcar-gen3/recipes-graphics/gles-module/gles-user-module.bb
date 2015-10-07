@@ -38,8 +38,8 @@ do_install() {
 
         # Set the "WindowSystem" parameter for wayland
         if [ "${GLES}" = "gsx" ]; then
-            sed -i -e "s/;WindowSystem=libpvrWAYLAND_WSEGL.so/WindowSystem=libpvrDRM_WSEGL.so/g" \
-            ${D}/${sysconfdir}/powervr.ini
+            sed -i -e "s/WindowSystem=libpvrDRM_WSEGL.so/WindowSystem=libpvrWAYLAND_WSEGL.so/g" \
+                ${D}/${sysconfdir}/powervr.ini
         fi
     fi
 
