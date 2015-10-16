@@ -29,3 +29,17 @@ IMAGE_INSTALL_append = " optee-linuxdriver \
 # Install test app for MMP Module
 IMAGE_INSTALL_append = "${@bb.utils.contains("DISTRO_FEATURES", "mm-test", \
     " vspmif-tp-user-module lib32-vspmif-tp-user-module", "", d)}"
+
+# Install MMP packages
+MULTIMEDIA_PKGS = " \
+    packagegroup-gstreamer1.0-plugins \
+    packagegroup-multimedia-kernel-modules \
+    packagegroup-multimedia-libs \
+    lib32-packagegroup-multimedia-libs \
+    omx-user-module \
+    lib32-omx-user-module \
+"
+
+IMAGE_INSTALL_append_rcar-gen3 = \
+    '${@base_contains("MACHINE_FEATURES", "multimedia", \
+    " ${MULTIMEDIA_PKGS}", "", d)}'
