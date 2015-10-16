@@ -3,14 +3,15 @@ Proprietary libraries for meta-rcar-gen3
 
 The meta-rcar-gen3 layer of meta-renesas is supported Graphic GLES(GSX) libraries,
 and proprietary library of multimedia.
-This README describes how to use this feature and setting to local.conf.
-At this time, we have not supported Multimedia yet.
+This README describes how to use these features and setting to local.conf.
 
 There are 2 main paths:
     I/  Board configuration
     II/ Build with GLES
+    III/ Build with Renesas multimedia libraries
 
 Please check section II to config for GLES.
+Please check section III to enable Multimedia functions.
 However, to have a completed local.conf,
 please also refer to Build Instruction in meta-renesas/meta-rcar-gen3/README.
 
@@ -46,5 +47,37 @@ II/ Build with GLES
                 BBMASK = "mesa-gl"
 
         3. Run 'bitbake core-image-weston'
+
+III/ Build with Renesas multimedia libraries
+============================================
+        Multimedia portions are depended on GLES portions.
+
+        A/ Configuration for Multimedia features
+            1. Please copy proprietary libraries to the directory of recipes.
+            2. Please set local.conf the following.
+
+                # Enable multimedia features.
+                # This provides package group of plug-ins of the GStreamer, multimedia
+                # libraries and kernel drivers.
+
+                    MACHINE_FEATURES_append = " multimedia"
+
+        B/ Configuration for optional codecs and middleware
+            1. Please copy proprietary libraries to the directory of recipes.
+            2. Add features to DISTRO_FEATURES_append to local.conf
+                # Additional configuration in OMX module
+                " h264dec_lib"       - for OMX Media Component H264 Decoder Libraries
+                " aaclcdec_lib"      - for ARM AAC-LC Decoder Sample Libraries for Linux
+                " aaclcdec_mdw"      - for ARM AAC-LC Decoder Sample Middleware for Linux
+            Ex:
+                    DISTRO_FEATURES_append = " h264dec_lib aaclcdec_lib aaclcdec_mdw"
+
+        C/ Configuration for test packages
+            Must ensure that Multimedia features have been enabled.
+            (Please refer to III/A to enable Multimedia.)
+            Please add feature to DISTRO_FEATURES_append to local.conf.
+                # Configuration for multimedia test package
+
+                    DISTRO_FEATURES_append = " mm-test"
 
 END.
