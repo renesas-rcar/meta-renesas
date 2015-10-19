@@ -1,4 +1,5 @@
 require ../../include/gles-control.inc
+inherit groupadd_useradd_prepend
 
 PACKAGECONFIG_rcar-gen3 := "${@'${PACKAGECONFIG}'.replace('x11', '')}"
 PACKAGECONFIG_virtclass-multilib-lib32 := "${@'${PACKAGECONFIG}'.replace('launch', '')}"
