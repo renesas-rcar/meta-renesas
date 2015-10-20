@@ -23,3 +23,14 @@ inherit autotools pkgconfig
 
 DEPENDS = "libgbm gles-user-module"
 RDEPENDS_${PN} = "libgbm gles-user-module"
+
+PACKAGES = " \
+    ${PN} \
+    ${PN}-dev \
+    ${PN}-dbg \
+    ${PN}-staticdev \
+"
+
+FILES_${PN} += "${libdir}/*.so"
+
+INSANE_SKIP_${PN} += "dev-so"

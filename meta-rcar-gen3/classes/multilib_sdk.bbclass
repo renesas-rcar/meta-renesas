@@ -15,3 +15,5 @@ python __anonymous () {
                 list.append(pkgs)
     d.setVar('TOOLCHAIN_TARGET_TASK', ' '.join(list))
 }
+
+MULTILIBRE_ALLOW_REP =. "${includedir}|"

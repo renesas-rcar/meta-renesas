@@ -101,7 +101,7 @@ RPROVIDES_${PN} += " \
 
 RDEPENDS_${PN} += " kernel-module-gles \
     ${@bb.utils.contains("DISTRO_FEATURES", "wayland", \
-    " libegl libegl-dev", "", d)} \
+    " libegl", "", d)} \
 "
 
 INSANE_SKIP_${PN} += "ldflags build-deps file-rdeps already-stripped"
