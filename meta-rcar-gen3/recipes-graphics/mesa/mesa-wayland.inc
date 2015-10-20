@@ -21,6 +21,6 @@ do_install_append_rcar-gen3() {
     rm -f ${D}/${libdir}/libEGL.la
     rm -f ${D}/${libdir}/libEGL.so*
     rm -f ${D}/${libdir}/pkgconfig/egl.pc
-    rm -r ${D}/${includedir}/EGL
+    rm -rf ${D}/${includedir}/EGL
     rm -rf ${D}/${includedir}/KHR
 }

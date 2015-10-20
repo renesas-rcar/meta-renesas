@@ -45,9 +45,7 @@ module_sysroot_symbol() {
 CLEANFUNCS = "module_clean_symbol"
 
 module_clean_symbol() {
-    if [ -f ${STAGING_KERNEL_BUILDDIR}/GLES.symvers ]; then
-        rm ${STAGING_KERNEL_BUILDDIR}/GLES.symvers
-    fi
+    rm -f ${STAGING_KERNEL_BUILDDIR}/GLES.symvers
 }
 
 RPROVIDES_${PN} += "kernel-module-pvrsrvkm kernel-module-dc-linuxfb"
