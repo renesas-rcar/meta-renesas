@@ -1,0 +1,48 @@
+From d2d88b6e84d859124b720ce7fc3363c4391307db Mon Sep 17 00:00:00 2001
+From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
+Date: Thu, 8 Oct 2015 15:28:19 +0900
+Subject: [PATCH] add optee_client R-Car support
+
+---
+ flags.mk                            | 2 +-
+ tee-supplicant/src/tee_supplicant.c | 4 ++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/flags.mk b/flags.mk
+index 92e1853..3c8b728 100644
+--- a/flags.mk
++++ b/flags.mk
+@@ -3,7 +3,7 @@
+ #########################################################################
+ 
+ CROSS_COMPILE   ?= arm-linux-gnueabihf-
+-CC              := $(CROSS_COMPILE)gcc
++CC              ?= $(CROSS_COMPILE)gcc
+ 
+ CFLAGS          := -Wall -Wbad-function-cast -Wcast-align \
+ 		   -Werror-implicit-function-declaration -Wextra \
+diff --git a/tee-supplicant/src/tee_supplicant.c b/tee-supplicant/src/tee_supplicant.c
+index 1e1c8d8..0607ad9 100644
+--- a/tee-supplicant/src/tee_supplicant.c
++++ b/tee-supplicant/src/tee_supplicant.c
+@@ -47,6 +47,8 @@
+ #include <tee_supp_fs.h>
+ #include <teec.h>
+ 
++#define VERSION_OF_RENESAS	"1.00"
++
+ #define TEE_RPC_BUFFER_NUMBER 5
+ 
+ /* Flags of the shared memory. Also defined in tee_service.h in the kernel. */
+@@ -382,6 +384,8 @@ int main(int argc, char *argv[])
+ 	sprintf(devname1, "optee_armtz");
+ 	sprintf(devname2, "teetz");
+ 
++	fprintf(stdout, "tee-supplicant (R-Car Rev.%s)\n", VERSION_OF_RENESAS);
++
+ 	while (--argc) {
+ 		n++;
+ 		if (strncmp(argv[n], "opteearmtz00", 12) == 0) {
+-- 
+1.9.1
+

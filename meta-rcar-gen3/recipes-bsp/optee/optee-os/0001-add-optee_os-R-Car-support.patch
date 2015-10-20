@@ -1,41 +1,37 @@
-From 68a66131b80e99e948ad4788f70875be76cc7176 Mon Sep 17 00:00:00 2001
+From 92da9e0b1c39d51d7107fc6ef443e48489451742 Mon Sep 17 00:00:00 2001
 From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
-Date: Wed, 29 Jul 2015 09:58:02 +0900
-Subject: [PATCH] [OPTEE] July 28, 2015 local release
+Date: Thu, 8 Oct 2015 13:29:10 +0900
+Subject: [PATCH] add optee_os R-Car support
 
-Security local release at July 28, 2015
-
-It confirmed the following contents.
-- MaskROM start at Salvatore board.
-- BL2 be loaded the BL31 and BL32 and BL33.
-- That OP-TEE is started.
-
-build command
-make PLATFORM=rcar
 ---
- core/arch/arm32/kernel/trace_ext.c            |  83 ++-
- core/arch/arm32/plat-rcar/conf.mk             |  41 ++
- core/arch/arm32/plat-rcar/core_bootcfg.c      | 251 ++++++++++
- core/arch/arm32/plat-rcar/core_chip.c         |  33 ++
- core/arch/arm32/plat-rcar/entry.S             | 189 +++++++
- core/arch/arm32/plat-rcar/kern.ld.S           | 281 +++++++++++
- core/arch/arm32/plat-rcar/link.mk             | 132 +++++
- core/arch/arm32/plat-rcar/main.c              | 695 ++++++++++++++++++++++++++
- core/arch/arm32/plat-rcar/plat_tee_func.c     | 105 ++++
- core/arch/arm32/plat-rcar/plat_tee_func.h     |  34 ++
- core/arch/arm32/plat-rcar/platform_config.h   | 146 ++++++
- core/arch/arm32/plat-rcar/platform_flags.mk   |  37 ++
- core/arch/arm32/plat-rcar/pm_debug.h          |  37 ++
- core/arch/arm32/plat-rcar/rcar_ddr_training.c |  96 ++++
- core/arch/arm32/plat-rcar/rcar_ddr_training.h |  14 +
- core/arch/arm32/plat-rcar/rcar_gic.h          |  39 ++
- core/arch/arm32/plat-rcar/rcar_log_func.c     | 134 +++++
- core/arch/arm32/plat-rcar/rcar_log_func.h     |  61 +++
- core/arch/arm32/plat-rcar/rng_support.c       |  43 ++
- core/arch/arm32/plat-rcar/sub.mk              |  12 +
- core/arch/arm32/plat-rcar/tee_common_otp.c    |  64 +++
- core/include/kernel/tee_rpc.h                 |   1 +
- 22 files changed, 2521 insertions(+), 7 deletions(-)
+ core/arch/arm32/kernel/sub.mk                   |   3 +-
+ core/arch/arm32/kernel/tee_time_arm_cntpct.c    |   3 +-
+ core/arch/arm32/plat-rcar/conf.mk               |  44 ++
+ core/arch/arm32/plat-rcar/core_bootcfg.c        | 262 ++++++++++
+ core/arch/arm32/plat-rcar/core_chip.c           |  33 ++
+ core/arch/arm32/plat-rcar/entry.S               | 190 +++++++
+ core/arch/arm32/plat-rcar/kern.ld.S             | 283 ++++++++++
+ core/arch/arm32/plat-rcar/link.mk               | 132 +++++
+ core/arch/arm32/plat-rcar/main.c                | 658 ++++++++++++++++++++++++
+ core/arch/arm32/plat-rcar/plat_tee_func.c       | 109 ++++
+ core/arch/arm32/plat-rcar/plat_tee_func.h       |  34 ++
+ core/arch/arm32/plat-rcar/platform_config.h     |  98 ++++
+ core/arch/arm32/plat-rcar/platform_flags.mk     |  36 ++
+ core/arch/arm32/plat-rcar/pm_debug.h            |  37 ++
+ core/arch/arm32/plat-rcar/rcar_common.h         |  95 ++++
+ core/arch/arm32/plat-rcar/rcar_ddr_training.c   | 106 ++++
+ core/arch/arm32/plat-rcar/rcar_ddr_training.h   |  35 ++
+ core/arch/arm32/plat-rcar/rcar_interruptflags.S |  49 ++
+ core/arch/arm32/plat-rcar/rcar_lock.c           |  53 ++
+ core/arch/arm32/plat-rcar/rcar_log_func.c       | 175 +++++++
+ core/arch/arm32/plat-rcar/rcar_log_func.h       |  99 ++++
+ core/arch/arm32/plat-rcar/rcar_version.h        |  37 ++
+ core/arch/arm32/plat-rcar/rng_support.c         |  43 ++
+ core/arch/arm32/plat-rcar/sub.mk                |  15 +
+ core/arch/arm32/plat-rcar/tee_common_otp.c      |  64 +++
+ core/arch/arm32/plat-rcar/trace_ext.c           | 115 +++++
+ core/include/kernel/tee_time.h                  |   2 +
+ 27 files changed, 2808 insertions(+), 2 deletions(-)
  create mode 100644 core/arch/arm32/plat-rcar/conf.mk
  create mode 100644 core/arch/arm32/plat-rcar/core_bootcfg.c
  create mode 100644 core/arch/arm32/plat-rcar/core_chip.c
@@ -48,129 +44,58 @@ make PLATFORM=rcar
  create mode 100644 core/arch/arm32/plat-rcar/platform_config.h
  create mode 100644 core/arch/arm32/plat-rcar/platform_flags.mk
  create mode 100644 core/arch/arm32/plat-rcar/pm_debug.h
+ create mode 100644 core/arch/arm32/plat-rcar/rcar_common.h
  create mode 100644 core/arch/arm32/plat-rcar/rcar_ddr_training.c
  create mode 100644 core/arch/arm32/plat-rcar/rcar_ddr_training.h
- create mode 100644 core/arch/arm32/plat-rcar/rcar_gic.h
+ create mode 100644 core/arch/arm32/plat-rcar/rcar_interruptflags.S
+ create mode 100644 core/arch/arm32/plat-rcar/rcar_lock.c
  create mode 100644 core/arch/arm32/plat-rcar/rcar_log_func.c
  create mode 100644 core/arch/arm32/plat-rcar/rcar_log_func.h
+ create mode 100644 core/arch/arm32/plat-rcar/rcar_version.h
  create mode 100644 core/arch/arm32/plat-rcar/rng_support.c
  create mode 100644 core/arch/arm32/plat-rcar/sub.mk
  create mode 100644 core/arch/arm32/plat-rcar/tee_common_otp.c
+ create mode 100644 core/arch/arm32/plat-rcar/trace_ext.c
 
-diff --git a/core/arch/arm32/kernel/trace_ext.c b/core/arch/arm32/kernel/trace_ext.c
-index 1e4e0e3..6276e2d 100644
---- a/core/arch/arm32/kernel/trace_ext.c
-+++ b/core/arch/arm32/kernel/trace_ext.c
-@@ -24,9 +24,15 @@
-  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  * POSSIBILITY OF SUCH DAMAGE.
-  */
-+#include <stdio.h>
-+#include <string.h>
- #include <stdbool.h>
- #include <trace.h>
--#include <console.h>
-+#include <arm32.h>
-+#include <kernel/tee_time.h>
-+#include <rcar_log_func.h>
-+
-+#define UNUSED_VARIABLE(x) (void)(x)
- 
- const char trace_ext_prefix[] = "TEE-CORE";
- int trace_level = CFG_TRACE_LEVEL;
-@@ -34,17 +40,80 @@ int trace_level = CFG_TRACE_LEVEL;
- void trace_ext_puts(bool sync, const char *str)
- {
- 	const char *p;
-+	char buf[MAX_PRINT_SIZE];
-+	char decimalwork[7];
-+	size_t boffs = 0;
-+	TEE_Time sys_time = {0,0};
-+	int res;
-+	int msec_res;
-+	unsigned int i;
-+//	struct mutex *mutex = &log_mutex;
-+	uint32_t cpsr = read_cpsr();
-+
-+	p = str;
-+	if(!(*p)) {
-+		return;
-+	}
-+
-+	/* Disable interrupts */
-+	write_cpsr(cpsr | CPSR_FIA);
-+
-+#if defined( SELECTED_DEBUG_LOG )
-+	memcpy( buf, "[OP-TEE]", 8 );
-+	boffs += 8;
-+
-+#else /* SELECTED_DEBUG_LOG */
-+//	mutex_lock( mutex );
-+
-+#endif /* SELECTED_DEBUG_LOG */
-+
-+	/* get Sec./mSec. */
-+	//tee_time_get_sys_time( &sys_time );
-+	msec_res = snprintf( decimalwork, 7, "%u", sys_time.millis );
-+	if( 1 > msec_res ) {
-+		snprintf( decimalwork, 7, "000000" );
-+	}
-+	else if( 6 > msec_res ) {
-+		for( i=msec_res; i<=6; i++ ) {
-+			decimalwork[i] = '0';
-+		}
-+		decimalwork[6] = '\0';
-+	}
- 
--	if (sync)
--		console_flush_tx_fifo();
-+	res = snprintf( buf + boffs, sizeof(buf) - boffs, "[%u.%s]", sys_time.seconds, decimalwork );
-+	boffs += res;  /* ここサイズは、snprintfでつけられる\0は含まれない */
- 
--	for (p = str; *p; p++)
--		console_putc(*p);
-+#if defined( SELECTED_DEBUG_LOG )
-+	for (p = str; *p; p++) {
-+		buf[boffs++] = p[0];
- 
--	if (sync)
--		console_flush_tx_fifo();
-+		if( MAX_PRINT_SIZE <= boffs ) {
-+			boffs = MAX_PRINT_SIZE;
-+			break;
-+		}
-+	}
-+	/* この時点で文字列最後に\0がついていない */
-+	send_debug_log( buf, boffs );
-+
-+#else /* SELECTED_DEBUG_LOG */
-+	for( i=0; i<boffs; i++ ) {
-+		log_buf_write( buf[i] );
-+	}
-+
-+	for (p = str; *p; p++) {
-+		log_buf_write( p[0] );
-+	}
-+//	mutex_unlock( mutex );
-+
-+#endif /* SELECTED_DEBUG_LOG */
-+
-+	/* Restore interrupts */
-+	write_cpsr(cpsr);
-+
-+UNUSED_VARIABLE(sync);
+diff --git a/core/arch/arm32/kernel/sub.mk b/core/arch/arm32/kernel/sub.mk
+index 7f3190e..601c179 100644
+--- a/core/arch/arm32/kernel/sub.mk
++++ b/core/arch/arm32/kernel/sub.mk
+@@ -15,6 +15,7 @@ srcs-y += thread_asm.S
+ srcs-y += thread.c
+ srcs-$(CFG_WITH_VFP) += vfp.c
+ srcs-$(CFG_WITH_VFP) += vfp_asm.S
+-srcs-y += trace_ext.c
++WITH_TRACE_EXT ?= y
++srcs-$(WITH_TRACE_EXT) += trace_ext.c
+ srcs-y += misc.S
+ srcs-y += mutex.c
+diff --git a/core/arch/arm32/kernel/tee_time_arm_cntpct.c b/core/arch/arm32/kernel/tee_time_arm_cntpct.c
+index 2cd2661..535c907 100644
+--- a/core/arch/arm32/kernel/tee_time_arm_cntpct.c
++++ b/core/arch/arm32/kernel/tee_time_arm_cntpct.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2014, Linaro Limited
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -67,7 +68,7 @@ static uint32_t read_cntfrq(void)
+ 	return frq;
  }
  
-+
- int trace_ext_get_thread_id(void)
+-static TEE_Result arm_cntpct_get_sys_time(TEE_Time *time)
++TEE_Result arm_cntpct_get_sys_time(TEE_Time *time)
  {
- 	return -1;
+ 	uint64_t cntpct = read_cntpct();
+ 	uint32_t cntfrq = read_cntfrq();
 diff --git a/core/arch/arm32/plat-rcar/conf.mk b/core/arch/arm32/plat-rcar/conf.mk
 new file mode 100644
-index 0000000..59ef5d0
+index 0000000..c655728
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/conf.mk
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,44 @@
 +include core/arch/$(ARCH)/plat-$(PLATFORM)/platform_flags.mk
 +
 +CROSS_PREFIX	?= arm-linux-gnueabihf
@@ -183,19 +108,13 @@ index 0000000..59ef5d0
 +
 +core-platform-subdirs += \
 +	$(addprefix $(arch-dir)/, kernel mm tee sta) $(platform-dir)
-+ifeq ($(platform-flavor-armv8),1)
 +core-platform-cppflags += -DWITH_ARM_TRUSTED_FW=1
-+else
-+core-platform-subdirs += $(arch-dir)/sm
-+core-platform-cppflags += -DWITH_SEC_MON=1
-+endif
 +
 +CFG_PM_DEBUG ?= n
 +
 +libutil_with_isoc := y
 +libtomcrypt_with_optimize_size := y
 +WITH_SECURE_TIME_SOURCE_CNTPCT := y
-+WITH_UART_DRV := n
 +WITH_GIC_DRV := y
 +
 +include mk/config.mk
@@ -212,14 +131,24 @@ index 0000000..59ef5d0
 +CFG_NO_TA_HASH_SIGN ?= y
 +
 +core-platform-cppflags += -DWITH_UART_DRV=1
++
++# Not covered by compile - /core/arch/arm32/kernel/trace_ext.c
++WITH_TRACE_EXT := n
++
++# Compiler switch - Debug log(Linux terminal log)
++RCAR_DEBUG_LOG ?= 0
++ifneq ($(RCAR_DEBUG_LOG),0)
++core-platform-cppflags += -DRCAR_DEBUG_LOG
++endif
 diff --git a/core/arch/arm32/plat-rcar/core_bootcfg.c b/core/arch/arm32/plat-rcar/core_bootcfg.c
 new file mode 100644
-index 0000000..0378c16
+index 0000000..da45aca
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/core_bootcfg.c
-@@ -0,0 +1,251 @@
+@@ -0,0 +1,262 @@
 +/*
 + * Copyright (c) 2014, STMicroelectronics International N.V.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -250,6 +179,7 @@ index 0000000..0378c16
 +#include <util.h>
 +#include <kernel/tee_misc.h>
 +#include <trace.h>
++#include "rcar_common.h"
 +#include "rcar_log_func.h"
 +
 +/*
@@ -259,7 +189,7 @@ index 0000000..0378c16
 +	paddr_t paddr;
 +	size_t size;
 +};
-+#define MEMACCESS_AREA(a, s) { .paddr = a, .size = s }
++#define MEMACCESS_AREA(a, s) { .paddr = (a), .size = (s) }
 +
 +static struct memaccess_area ddr[] = {
 +	MEMACCESS_AREA(DRAM0_BASE, DRAM0_SIZE),
@@ -358,63 +288,72 @@ index 0000000..0378c16
 +
 +	{	/* LOG Area for Secure World */
 +	 .type = MEM_AREA_IO_SEC,
-+	 .pa = (OPTEE_LOG_BASE & ~SECTION_MASK), .size = SECTION_SIZE,
++	 .pa = (OPTEE_LOG_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
 +	 .cached = true, .secure = true, .rw = true, .exec = false,
 +	 },
 +
 +	{	/* LOG Area for Normal World */
 +	 .type = MEM_AREA_IO_NSEC,
-+	 .pa = (OPTEE_LOG_NS_BASE & ~SECTION_MASK), .size = SECTION_SIZE,
++	 .pa = (OPTEE_LOG_NS_BASE & ~MEM_SECTION_MASK),
++	 .size = MEM_SECTION_SIZE,
 +	 .cached = false, .secure = false, .rw = true, .exec = false,
 +	 },
 +
-+	{	/* Secure WDT */
++	{	/* System WDT */
++		/* System Timer */
 +	 .type = MEM_AREA_IO_SEC,
-+	 .pa = (SECWDT_BASE & ~SECTION_MASK), .size = SECWDT_SIZE,
++	 .pa = (SYSWDT_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
 +	 .device = true, .secure = true, .rw = true,
 +	 },
-+#if 0
-+	{	/* Secure Timer */
++
++	{	/* Reset */
++		/* System Up Time Clock */
 +	 .type = MEM_AREA_IO_SEC,
-+	 .pa = SECTIM_BASE, .size = SECTIM_SIZE,
-+	 .region_size = SMALL_PAGE_SIZE,
++	 .pa = (RST_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
 +	 .device = true, .secure = true, .rw = true,
 +	 },
-+	{	/* Secure Up Time Clock */
-+	 .type = MEM_AREA_IO_SEC,
-+	 .pa = SECUTC_BASE, .size = SECUTC_SIZE,
-+	 .device = true, .secure = true, .rw = true,
-+	 },
-+#endif
++
 +	{	/* RPC */
 +	 .type = MEM_AREA_IO_SEC,
-+	 .pa = (RPC_BASE & ~SECTION_MASK), .size = RPC_SIZE,
++	 .pa = (RPC_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
 +	 .device = true, .secure = true, .rw = true,
 +	 },
 +
 +	{	/* CryptoCell6.3 */
++		/* DxPKA */
 +	 .type = MEM_AREA_IO_SEC,
-+	 .pa = (CC_BASE & ~SECTION_MASK), .size = CC_SIZE,
++	 .pa = (CC_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
 +	 .device = true, .secure = true, .rw = true,
 +	 },
-+#if 0
-+	{	/* DxPKA */
++
++	{	/* SYS-DMAC2 */
 +	 .type = MEM_AREA_IO_SEC,
-+	 .pa = DxPKA_BASE, .size = DxPKA_SIZE,
-+	 .region_size = SMALL_PAGE_SIZE,
++	 .pa = (SYSDMAC2_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
 +	 .device = true, .secure = true, .rw = true,
 +	 },
-+#endif
++
++	{	/* DBSC */
++	 .type = MEM_AREA_IO_SEC,
++	 .pa = (DBSC_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
++	 .device = true, .secure = true, .rw = true,
++	 },
++
++	{	/* System RAM */
++	 .type = MEM_AREA_IO_SEC,
++	 .pa = (SRAM_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
++	 .secure = true, .rw = true, .exec = true,
++	 },
++
 +	{	/* GIC */
 +	 .type = MEM_AREA_IO_SEC,
-+	 .pa = (GIC_BASE & ~SECTION_MASK), .size = SECTION_SIZE,
++	 .pa = (GIC_BASE & ~MEM_SECTION_MASK), .size = MEM_SECTION_SIZE,
 +	 .device = true, .secure = true, .rw = true,
 +	 },
 +	{.type = MEM_AREA_NOTYPE}
 +};
 +
 +/*
-+ * bootcfg_get_pbuf_is_handler - return the platform specfic pbuf_is
++ * bootcfg_get_pbuf_is_handler - return the platform specific pbuf_is
 + */
 +unsigned long bootcfg_get_pbuf_is_handler(void)
 +{
@@ -510,12 +449,13 @@ index 0000000..30751c1
 +}
 diff --git a/core/arch/arm32/plat-rcar/entry.S b/core/arch/arm32/plat-rcar/entry.S
 new file mode 100644
-index 0000000..68a7117
+index 0000000..0e9a671
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/entry.S
-@@ -0,0 +1,189 @@
+@@ -0,0 +1,190 @@
 +/*
 + * Copyright (c) 2014, Linaro Limited
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -705,12 +645,13 @@ index 0000000..68a7117
 +END_FUNC cpu_on_handler
 diff --git a/core/arch/arm32/plat-rcar/kern.ld.S b/core/arch/arm32/plat-rcar/kern.ld.S
 new file mode 100644
-index 0000000..0f906ce
+index 0000000..852ffd4
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/kern.ld.S
-@@ -0,0 +1,281 @@
+@@ -0,0 +1,283 @@
 +/*
 + * Copyright (c) 2014, Linaro Limited
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -776,16 +717,14 @@ index 0000000..0f906ce
 +		KEEP(*(.text.boot.vectab2))
 +		KEEP(*(.text.boot))
 +
++		. = ALIGN(16);
++		KEEP(*(.version))
++
 +		. = ALIGN(4);
 +		__initcall_start = .;
 +		KEEP(*(.initcall1))
 +		KEEP(*(.initcall2))
 +		__initcall_end = .;
-+
-+		. = ALIGN(32);
-+		__ddr_training_sram_start = .;
-+		KEEP(*(.text.ddr))
-+		__ddr_training_sram_end = .;
 +
 +#ifdef CFG_WITH_PAGER
 +		*(.text)
@@ -854,7 +793,10 @@ index 0000000..0f906ce
 +	.data : ALIGN(4) {
 +		/* writable data  */
 +		__data_start_rom = .;
-+		/* in one segment binaries, the rom data address is on top of the ram data address */
++		/*
++		 * in one segment binaries, the rom data address
++		 * is on top of the ram data address
++		 */
 +		__data_start = .;
 +		*(.data .data.* .gnu.linkonce.d.*)
 +		. = ALIGN(4);
@@ -992,7 +934,7 @@ index 0000000..0f906ce
 +}
 diff --git a/core/arch/arm32/plat-rcar/link.mk b/core/arch/arm32/plat-rcar/link.mk
 new file mode 100644
-index 0000000..45556fd
+index 0000000..c1b929b
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/link.mk
 @@ -0,0 +1,132 @@
@@ -1052,7 +994,7 @@ index 0000000..45556fd
 +
 +objs-init-rem += core/arch/arm32/tee/arch_svc.o
 +objs-init-rem += core/arch/arm32/tee/arch_svc_asm.o
-+objs-init-rem += core/arch/arm32/plat-vexpress/plat_tee_func.o
++objs-init-rem += core/arch/arm32/plat-rcar/plat_tee_func.o
 +objs-init-rem += core/arch/arm32/tee/init.o
 +entries-init += _start
 +objs-init := \
@@ -1130,12 +1072,13 @@ index 0000000..45556fd
 +endif
 diff --git a/core/arch/arm32/plat-rcar/main.c b/core/arch/arm32/plat-rcar/main.c
 new file mode 100644
-index 0000000..4f4bc5a
+index 0000000..c6ad874
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/main.c
-@@ -0,0 +1,695 @@
-+ /*
+@@ -0,0 +1,658 @@
++/*
 + * Copyright (c) 2014, STMicroelectronics International N.V.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -1192,10 +1135,10 @@ index 0000000..4f4bc5a
 +#include <tee/entry.h>
 +#include <tee/arch_svc.h>
 +#include <malloc.h>
-+#include "platform_config.h"
 +#include "plat_tee_func.h"
++#include "platform_config.h"
++#include "rcar_common.h"
 +#include "rcar_log_func.h"
-+#include "rcar_gic.h"
 +#include "rcar_ddr_training.h"
 +
 +#include <assert.h>
@@ -1222,6 +1165,7 @@ index 0000000..4f4bc5a
 +
 +#define GET_STACK(stack) \
 +	((vaddr_t)(stack) + sizeof(stack) - STACK_CANARY_SIZE / 2)
++
 +
 +DECLARE_STACK(stack_tmp,	CFG_TEE_CORE_NB_CORE,	STACK_TMP_SIZE);
 +DECLARE_STACK(stack_abt,	CFG_TEE_CORE_NB_CORE,	STACK_ABT_SIZE);
@@ -1368,24 +1312,10 @@ index 0000000..4f4bc5a
 +{
 +}
 +
-+#ifdef CFG_WITH_VFP
-+static void main_init_cpacr(void)
-+{
-+	uint32_t cpacr = read_cpacr();
-+
-+	/* Enabled usage of CP10 and CP11 (SIMD/VFP) */
-+	cpacr &= ~CPACR_CP(10, CPACR_CP_ACCESS_FULL);
-+	cpacr |= CPACR_CP(10, CPACR_CP_ACCESS_PL1_ONLY);
-+	cpacr &= ~CPACR_CP(11, CPACR_CP_ACCESS_FULL);
-+	cpacr |= CPACR_CP(11, CPACR_CP_ACCESS_PL1_ONLY);
-+	write_cpacr(cpacr);
-+}
-+#else
 +static void main_init_cpacr(void)
 +{
 +	/* We're not using VFP/SIMD instructions, leave it disabled */
 +}
-+#endif
 +
 +static void main_init_gic(void)
 +{
@@ -1398,7 +1328,7 @@ index 0000000..4f4bc5a
 +#ifdef CFG_WITH_PAGER
 +static void main_init_runtime(uint32_t pagable_part)
 +{
-+//	size_t n;
++	size_t n;
 +	size_t init_size = (size_t)__init_size;
 +	size_t pagable_size = __pagable_end - __pagable_start;
 +	size_t hash_size = (pagable_size / SMALL_PAGE_SIZE) *
@@ -1445,7 +1375,6 @@ index 0000000..4f4bc5a
 +	memcpy(paged_store + init_size, (void *)pagable_part,
 +		__pagable_part_end - __pagable_part_start);
 +
-+#if 0
 +	/* Check that hashes of what's in pagable area is OK */
 +	DMSG("Checking hashes of pagable area");
 +	for (n = 0; (n * SMALL_PAGE_SIZE) < pagable_size; n++) {
@@ -1461,7 +1390,7 @@ index 0000000..4f4bc5a
 +			panic();
 +		}
 +	}
-+#endif
++
 +	/*
 +	 * Copy what's not initialized in the last init page. Needed
 +	 * because we're not going fault in the init pages again. We can't
@@ -1600,10 +1529,10 @@ index 0000000..4f4bc5a
 +	write_cpsr(read_cpsr() | CPSR_FIA);
 +	main_init_cpacr();
 +
-+	/* Log buffer clear */
-+	log_buf_init( true );
-+
 +	main_init_runtime(pagable_part);
++
++	/* Log buffer clear */
++	log_buf_init();
 +
 +	DMSG("TEE initializing\n");
 +
@@ -1631,8 +1560,8 @@ index 0000000..4f4bc5a
 +	/* T.B.D */
 +
 +	/* Initialize DDR training */
-+	//ddr_training_timer_init();
-+	//ddr_training_timer_start();
++	ddr_training_timer_init();
++	ddr_training_timer_start();
 +
 +	DMSG("Primary CPU switching to normal world boot\n");
 +}
@@ -1679,14 +1608,14 @@ index 0000000..4f4bc5a
 +
 +	/* Get the interrupt ID */
 +	iar = gic_read_iar();
-+	id = iar & 0x000003FF;
++	id = iar & 0x000003FFU;
 +
 +	DMSG("enter id=%d", id);
 +
 +	/* Distribution of processing */
 +	switch (id) {
-+	/* Secure Timer */
-+	case INTID_SCTM:
++	/* System Timer */
++	case INTID_SCMT:
 +		ddr_training_execute();
 +		break;
 +
@@ -1695,6 +1624,9 @@ index 0000000..4f4bc5a
 +		panic();
 +		break;
 +	}
++
++	/* Data Synchronization Barrier */
++	dsb();
 +
 +	/* End Of Interrupt */
 +	gic_write_eoir(iar);
@@ -1785,58 +1717,32 @@ index 0000000..4f4bc5a
 +	return (vaddr_t)main_mmu_ul1_ttb[thread_get_id()];
 +}
 +
-+#if 0
-+static struct map_area main_l2info_tbl[TEE_MMU_L2_NUM_ENTRIES * 8];
-+#endif
-+
 +void *core_mmu_alloc_l2(struct map_area *map)
 +{
 +	/* Can't have this in .bss since it's not initialized yet */
 +	static size_t l2_offs __attribute__((section(".data")));
 +	size_t l2_va_space = ((sizeof(main_mmu_l2_ttb) - l2_offs) /
 +			     TEE_MMU_L2_SIZE) * SECTION_SIZE;
-+//	size_t l_size = l2_offs;
 +
-+	if (l2_offs) {
-+#if 0
-+		for (l_size = 0; l_size < l2_offs; l_size++) {
-+			if (((main_l2info_tbl[l_size].pa & SECTION_SIZE) < map->pa) &&
-+				(((main_l2info_tbl[l_size].pa + main_l2info_tbl[l_size].size + SECTION_SIZE - 1) & SECTION_SIZE) > map->pa)) {
-+				return NULL;
-+			}
-+			if (((main_l2info_tbl[l_size].pa & SECTION_SIZE) < (map->pa + map->size - 1)) &&
-+				(((main_l2info_tbl[l_size].pa + main_l2info_tbl[l_size].size + SECTION_SIZE - 1) & SECTION_SIZE) > (map->pa + map->size - 1))) {
-+				return NULL;
-+			}
-+		}
-+	}
-+#else
++	if (l2_offs)
 +		return NULL;
-+	}
 +	if (map->type != MEM_AREA_TEE_RAM)
 +		return NULL;
-+#endif
 +	if (map->size > l2_va_space)
 +		return NULL;
-+
-+//	l_size = l2_offs;
 +	l2_offs += ROUNDUP(map->size, SECTION_SIZE) / SECTION_SIZE;
-+#if 0
-+	for (; l_size < l2_offs; l_size++) {
-+		main_l2info_tbl[l_size] = *map;
-+	}
-+#endif
 +	return main_mmu_l2_ttb;
 +}
 +
 diff --git a/core/arch/arm32/plat-rcar/plat_tee_func.c b/core/arch/arm32/plat-rcar/plat_tee_func.c
 new file mode 100644
-index 0000000..0d119e1
+index 0000000..8707a4e
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/plat_tee_func.c
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,109 @@
 +/*
 + * Copyright (c) 2014, STMicroelectronics International N.V.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -1868,6 +1774,7 @@ index 0000000..0d119e1
 +#include <mm/core_mmu.h>
 +#include <tee/entry.h>
 +#include "plat_tee_func.h"
++#include "rcar_log_func.h"
 +
 +void plat_tee_entry(struct thread_smc_args *args)
 +{
@@ -1882,6 +1789,8 @@ index 0000000..0d119e1
 +		args->a2 = default_nsec_shm_size;
 +		/* Should this be TEESMC cache attributes instead? */
 +		args->a3 = core_mmu_is_shm_cached();
++		/* Initialization of the normal world is now complete */
++		is_normal_world_initialized = 1;
 +		return;
 +	}
 +
@@ -1982,12 +1891,13 @@ index 0000000..14386c0
 +#endif /*PLAT_TEE_FUNC_H*/
 diff --git a/core/arch/arm32/plat-rcar/platform_config.h b/core/arch/arm32/plat-rcar/platform_config.h
 new file mode 100644
-index 0000000..bd6ab63
+index 0000000..4559f82
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/platform_config.h
-@@ -0,0 +1,146 @@
+@@ -0,0 +1,98 @@
 +/*
 + * Copyright (c) 2014, Linaro Limited
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -2017,64 +1927,40 @@ index 0000000..bd6ab63
 +#define PLATFORM_CONFIG_H
 +
 +/* Make stacks aligned to data cache line length */
-+#define STACK_ALIGNMENT		64
++#define STACK_ALIGNMENT		(64)
 +
 +#define PLATFORM_LINKER_FORMAT	"elf32-littlearm"
 +#define PLATFORM_LINKER_ARCH	arm
 +
-+#define	VE_FVP	0
++#define GIC_BASE		(0xF1000000U)
++#define GIC_SIZE		(0x00100000U)
 +
-+#if !VE_FVP
-+#define GIC_BASE		0xF1000000
-+#define GIC_SIZE		0x00100000
-+#else
-+#define GIC_BASE		0x2c000000
-+#define GIC_SIZE		0x00100000
-+#endif
-+
-+#define STACK_TMP_SIZE		1024
-+#if CFG_TRACE_LEVEL > 0
-+#define STACK_ABT_SIZE		2048
-+#else
-+#define STACK_ABT_SIZE		1024
-+#endif
-+#define STACK_THREAD_SIZE	8192
++#define STACK_TMP_SIZE		(1024)
++#define STACK_ABT_SIZE		(2048)
++#define STACK_THREAD_SIZE	(8192)
 +#define HEAP_SIZE		(24 * 1024)
 +
-+#if !VE_FVP
-+#define DRAM0_BASE		0x44000000
-+#define DRAM0_SIZE		0x04000000
-+#else
-+#define DRAM0_BASE		0x84000000
-+#define DRAM0_SIZE		0x04000000
-+#endif
++#define DRAM0_BASE		(0x44000000U)
++#define DRAM0_SIZE		(0x04000000U)
 +
 +/*
 + * Last part of DRAM is reserved as secure dram, note that the last 2MiB
 + * of DRAM0 is used by SCP dor DDR retraining.
 + */
-+#if !VE_FVP
-+#define TZDRAM_BASE		0x44000000
-+#else
-+#define TZDRAM_BASE		0x84000000
-+#endif
++#define TZDRAM_BASE		(0x44000000U)
++
 +/*
 + * Should be
 + * #define TZDRAM_SIZE		0x00FF8000
 + * but is smaller due to SECTION_SIZE alignment, can be fixed once
 + * OP-TEE OS is mapped using small pages instead.
 + */
-+#define TZDRAM_SIZE		0x03E00000
++#define TZDRAM_SIZE		(0x03E00000U)
 +
-+#define CFG_TEE_CORE_NB_CORE	8
++#define CFG_TEE_CORE_NB_CORE	(8)
 +
-+#if !VE_FVP
-+#define GICC_OFFSET		0x20000
-+#define GICD_OFFSET		0x10000
-+#else
-+#define GICC_OFFSET		0x2000
-+#define GICD_OFFSET		0x1000
-+#endif
++#define GICC_OFFSET		(0x20000)
++#define GICD_OFFSET		(0x10000)
 +
 +#define CFG_TEE_RAM_VA_SIZE	(1024 * 1024)
 +
@@ -2082,67 +1968,41 @@ index 0000000..bd6ab63
 +#define CFG_TEE_LOAD_ADDR	CFG_TEE_RAM_START
 +#endif
 +
-+#if !VE_FVP
-+#define CFG_TEE_RAM_START	0x44100000		/* TEE RAM address	*/
-+#define CFG_TEE_RAM_PH_SIZE	0x00100000		/* TEE RAM size		*/
++#define CFG_TEE_RAM_START	(0x44100000)	/* TEE RAM address	*/
++#define CFG_TEE_RAM_PH_SIZE	(0x00100000U)	/* TEE RAM size		*/
 +
-+#define CFG_TA_RAM_START	0x44300000		/* TA RAM address	*/
-+#define CFG_TA_RAM_SIZE		0x02000000		/* TA RAM size		*/
++#define CFG_TA_RAM_START	(0x44300000U)	/* TA RAM address	*/
++#define CFG_TA_RAM_SIZE		(0x02000000U)	/* TA RAM size		*/
 +
-+#define CFG_SHMEM_START		0x47E00000		/* Share Memory address	*/
-+#define CFG_SHMEM_SIZE		0x00100000		/* Share Memory size	*/
++#define CFG_SHMEM_START		(0x47E00000U)	/* Share Memory address	*/
++#define CFG_SHMEM_SIZE		(0x00100000U)	/* Share Memory size	*/
 +
++#define OPTEE_LOG_BASE		(0x46300000U)	/* OP-TEE Log Area address */
++#define OPTEE_LOG_NS_BASE	(0x47FEC000U)	/* OP-TEE Log Area NS address */
 +
-+#define TA_VERIFICATION_BASE	0x44200000	/* TA area for verification address	*/
-+#define TA_VERIFICATION_SIZE	0x00100000	/* TA area for verification size	*/
-+
-+#else
-+#define CFG_TEE_RAM_START	0x84100000		/* TEE RAM address	*/
-+#define CFG_TEE_RAM_PH_SIZE	0x00100000		/* TEE RAM size		*/
-+
-+#define CFG_TA_RAM_START	0x84300000		/* TA RAM address	*/
-+#define CFG_TA_RAM_SIZE		0x02000000		/* TA RAM size		*/
-+
-+#define CFG_SHMEM_START		0x87E00000		/* Share Memory address	*/
-+#define CFG_SHMEM_SIZE		0x00100000		/* Share Memory size	*/
-+
-+#define TA_VERIFICATION_BASE	0x84200000	/* TA area for verification address	*/
-+#define TA_VERIFICATION_SIZE	0x00100000	/* TA area for verification size	*/
-+#endif
-+
-+#define SECWDT_BASE			0xE6030000		/* Secure WDT address	*/
-+#define SECWDT_SIZE			0x00100000		/* Secure WDT size	*/
-+
-+/* no mapping */
-+#define SECTIM_BASE			0xE6040000		/* Secure Timer address	*/
-+#define SECTIM_SIZE			0x00010000		/* Secure Timer size	*/
-+
-+/* no mapping */
-+#define SECUTC_BASE			0xE61D0000		/* Secure Up Time Clock address	*/
-+#define SECUTC_SIZE			0x00100000		/* Secure Up Time Clock size	*/
-+
-+#define RPC_BASE			0xE6B10000		/* RPC address		*/
-+#define RPC_SIZE			0x00100000		/* RPC size		*/
-+
-+#define CC_BASE				0xE6600000		/* CC6.3 address	*/
-+#define CC_SIZE				0x00100000		/* CC6.3 size		*/
-+
-+/* no mapping */
-+#define DxPKA_BASE			0xE6602000		/* DxPKA address	*/
-+#define DxPKA_SIZE			0x00002000		/* DxPKA size		*/
++#define TA_VERIFICATION_BASE	(0x44200000U)	/* TA area for verification */
++#define SYSWDT_BASE		(0xE6030000U)	/* System WDT address	*/
++#define SYSTIM_BASE		(0xE6040000U)	/* System Timer address	*/
++#define SYSUTC_BASE		(0xE61D0000U)	/* System Up Time Clock */
++#define RPC_BASE		(0xE6B10000U)	/* RPC address		*/
++#define CC_BASE			(0xE6600000U)	/* CC6.3 address	*/
++#define DxPKA_BASE		(0xE6602000U)	/* DxPKA address	*/
++#define SYSDMAC2_BASE		(0xE7310000U)	/* SYS-DMAC2 address	*/
++#define SRAM_BASE		(0xE6300000U)	/* System RAM address	*/
++#define RST_BASE		(0xE6160000U)	/* Reset address	*/
++#define DBSC_BASE		(0xE6790000U)	/* DBSC address		*/
 +
 +#endif /*PLATFORM_CONFIG_H*/
 diff --git a/core/arch/arm32/plat-rcar/platform_flags.mk b/core/arch/arm32/plat-rcar/platform_flags.mk
 new file mode 100644
-index 0000000..12df5ae
+index 0000000..97322fe
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/platform_flags.mk
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,36 @@
 +PLATFORM_FLAVOR ?= rcar
 +PLATFORM_FLAVOR_$(PLATFORM_FLAVOR) := y
 +
 +platform-cpuarch = cortex-a15
-+# platform-cflags	 = -mcpu=$(platform-cpuarch) -mthumb
 +platform-cflags	 = -mcpu=$(platform-cpuarch) -marm
 +platform-cflags	+= -pipe -mthumb-interwork -mlong-calls
 +platform-cflags += -fno-short-enums -mno-apcs-float -fno-common
@@ -2218,321 +2078,14 @@ index 0000000..230483c
 +#endif
 +
 +#endif /* PM_DEBUG_H */
-diff --git a/core/arch/arm32/plat-rcar/rcar_ddr_training.c b/core/arch/arm32/plat-rcar/rcar_ddr_training.c
+diff --git a/core/arch/arm32/plat-rcar/rcar_common.h b/core/arch/arm32/plat-rcar/rcar_common.h
 new file mode 100644
-index 0000000..f7e60df
+index 0000000..e0d7c38
 --- /dev/null
-+++ b/core/arch/arm32/plat-rcar/rcar_ddr_training.c
-@@ -0,0 +1,96 @@
++++ b/core/arch/arm32/plat-rcar/rcar_common.h
+@@ -0,0 +1,95 @@
 +/*
-+ * Copyright (c) 2015, Renesas Electronics Corp.
-+ * All rights reserved.
-+ *
-+ */
-+
-+#include <io.h>
-+#include <trace.h>
-+#include "rcar_ddr_training.h"
-+#include "rcar_gic.h"
-+
-+void ddr_training_timer_init(void)
-+{
-+	uint16_t sr = 0;
-+	uint32_t interval_ms = 0;
-+	uint32_t count = 0;
-+
-+	DMSG("[IN]%s", __func__);
-+	/* Timer stop */
-+	write16(0x0000, CMSSTR);
-+	DMSG("CMSSTR=0x%x", read16(CMSSTR));
-+
-+	/* Set clock select and compare match mode */
-+	sr = read16(CMSCSR);
-+	sr = ((sr & ~(CMSCSR_BIT_CMF | CMSCSR_BIT_CMM | CMSCSR_BIT_CMR | CMSCSR_BIT_CKS))
-+		 | CMSCSR_BIT_CMM		/* CMM - Free-runnning operation */
-+		 | (2 << 4)				/* CMR - Enables an internal interrupt request */
-+		 | (1 << 3)
-+		 | FREQ_ONE);			/* CKS - 1/1 clock */
-+	write16(sr, CMSCSR);
-+	DMSG("CMSCSR=0x%x", read16(CMSCSR));
-+
-+	/* Set timer interval [ms] */
-+	interval_ms = 1;	/* T.B.D */
-+
-+	/* Calculate the match count */
-+	count = (interval_ms * 1000000) / SECTIM_CLOCK_CYCLE_NS;
-+
-+	/* Set match count */
-+	write32(count, CMSCOR);
-+	DMSG("CMSCOR=0x%x", read32(CMSCOR));
-+	DMSG("[OUT]%s", __func__);
-+}
-+
-+void ddr_training_timer_start(void)
-+{
-+	MSG("[IN]%s", __func__);
-+	/* Secure Timer enable */
-+	gic_it_add(INTID_SCTM);
-+	gic_it_set_cpu_mask(INTID_SCTM, 0x01);	/* CPU0 interface AP-System core (Cortex-A57) CPU0  */
-+	gic_it_set_prio(INTID_SCTM, 0x1);
-+	gic_it_enable(INTID_SCTM);
-+
-+	gic_dump_state();
-+
-+	/* Counter reset */
-+	write32(0x00000000, CMSCNT);
-+
-+	/* Timer start */
-+	write16(CMSSTR_BIT_STR5, CMSSTR);
-+	DMSG("CMSSTR=0x%x", read16(CMSSTR));
-+
-+	DMSG("CMSCNT=0x%x", read32(CMSCNT));
-+	{
-+		unsigned int loop = 1000;
-+		while(0 != loop){
-+			loop --;
-+		}
-+	}
-+	DMSG("CMSCNT=0x%x", read32(CMSCNT));
-+	{
-+		unsigned int loop = 1000;
-+		while(0 != loop){
-+			loop --;
-+		}
-+	}
-+	DMSG("CMSCNT=0x%x", read32(CMSCNT));
-+
-+	DMSG("[OUT]%s", __func__);
-+}
-+
-+int32_t ddr_training_execute(void)
-+{
-+	uint16_t sr = 0;
-+
-+	DMSG("[IN]%s", __func__);
-+	/* Clear an internal interrupt request */
-+	sr = read16(CMSCSR);
-+	sr &= ~(CMSCSR_BIT_CMF | CMSCSR_BIT_OVF);
-+	write16(sr, CMSCSR);
-+
-+	/* T.B.D. */
-+	DMSG("[OUT]%s", __func__);
-+
-+	return 0;
-+}
-diff --git a/core/arch/arm32/plat-rcar/rcar_ddr_training.h b/core/arch/arm32/plat-rcar/rcar_ddr_training.h
-new file mode 100644
-index 0000000..8d1a99c
---- /dev/null
-+++ b/core/arch/arm32/plat-rcar/rcar_ddr_training.h
-@@ -0,0 +1,14 @@
-+/*
-+ * Copyright (c) 2015, Renesas Electronics Corp.
-+ * All rights reserved.
-+ *
-+ */
-+
-+#ifndef RCAR_DDR_TRAINING_H
-+#define RCAR_DDR_TRAINING_H
-+
-+void ddr_training_timer_init(void);
-+void ddr_training_timer_start(void);
-+int32_t ddr_training_execute(void);
-+
-+#endif /*RCAR_DDR_TRAINING_H*/
-diff --git a/core/arch/arm32/plat-rcar/rcar_gic.h b/core/arch/arm32/plat-rcar/rcar_gic.h
-new file mode 100644
-index 0000000..3fcb586
---- /dev/null
-+++ b/core/arch/arm32/plat-rcar/rcar_gic.h
-@@ -0,0 +1,39 @@
-+#ifndef RCAR_GIC_H
-+#define RCAR_GIC_H
-+
-+#include <stdio.h>
-+#include <string.h>
-+#include <platform_config.h>
-+#include <kernel/misc.h>
-+#include <drivers/gic.h>
-+
-+/* Secure Timer Register */
-+#define CMSSTR					(SECTIM_BASE + 0x000)
-+#define CMSCSR					(SECTIM_BASE + 0x040)
-+#define CMSCNT					(SECTIM_BASE + 0x044)
-+#define CMSCOR					(SECTIM_BASE + 0x048)
-+
-+#define CMSSTR_BIT_STR5			(1 << 5)
-+
-+#define CMSCSR_BIT_CMF			(1 << 15)
-+#define CMSCSR_BIT_OVF			(1 << 14)
-+#define CMSCSR_BIT_WRFLG		(1 << 13)
-+#define CMSCSR_BIT_CMS			(1 << 9)
-+#define CMSCSR_BIT_CMM			(1 << 8)
-+#define CMSCSR_BIT_CMR			(3 << 4)
-+#define CMSCSR_BIT_DBGIVD		(1 << 3)
-+#define CMSCSR_BIT_CKS			(0x0007)
-+
-+#define FREQ_ONE				(7)			/* 131.57kHz      */
-+#define FREQ_ONE8TH				(4)			/* 16.44625kHz    */
-+#define FREQ_ONE32TH			(5)			/* 4.1115625kHz   */
-+#define FREQ_ONE128TH			(6)			/* 1.027890625kHz */
-+
-+#define SECTIM_PRIORITY			(0xA0)
-+#define SECTIM_CLOCK_HZ			(131570)	/* 131.57kHz */
-+#define SECTIM_CLOCK_CYCLE_NS	(1000000000 / SECTIM_CLOCK_HZ)
-+
-+/* Interrupt ID */
-+#define INTID_SCTM				(134 + 32)		/* Secure Timer */
-+
-+#endif /* RCAR_GIC_H */
-diff --git a/core/arch/arm32/plat-rcar/rcar_log_func.c b/core/arch/arm32/plat-rcar/rcar_log_func.c
-new file mode 100644
-index 0000000..e2260a3
---- /dev/null
-+++ b/core/arch/arm32/plat-rcar/rcar_log_func.c
-@@ -0,0 +1,134 @@
-+#include <stdio.h>
-+#include <string.h>
-+#include <platform_config.h>
-+#include <kernel/misc.h>
-+#include <kernel/tee_ta_manager.h>
-+#include <kernel/thread.h>
-+#include <kernel/tee_rpc.h>
-+#include <sm/teesmc.h>
-+#include <mm/core_mmu.h>
-+#include "rcar_log_func.h"
-+
-+unsigned int log_write_index;
-+struct mutex log_mutex;
-+
-+void log_buf_init( bool init_enable )
-+{
-+	log_buf_header_t *hd_p = (log_buf_header_t*)OPTEE_LOG_BASE;
-+
-+#if defined( SELECTED_DEBUG_LOG )
-+	struct mutex *mutex = &log_mutex;
-+#endif /* SELECTED_DEBUG_LOG */
-+
-+	if( init_enable ) {
-+		memset( (char*)OPTEE_LOG_BASE, 0, OPTEE_LOG_SIZE );
-+		memset( (char*)OPTEE_LOG_NS_BASE, 0, OPTEE_LOG_NS_SIZE );
-+	}
-+
-+	memcpy( hd_p->prefix, "TEE-LOG", 7 );
-+
-+	log_write_index = sizeof(log_buf_header_t); /* added header size */
-+
-+#if defined( SELECTED_DEBUG_LOG )
-+	mutex_init( log_mutex );
-+#endif /* SELECTED_DEBUG_LOG */
-+}
-+
-+/* SCIF2 */
-+#define	SCIF2_BASE		(0xE6E88000)	/* SCIF-2 base address */
-+#define	SCIF_BASE		(SCIF2_BASE)
-+
-+#define	SCIF_SCSMR		(0x00)		/* Serial mode register */
-+#define	SCIF_SCBRR		(0x04)		/* Bit rate register */
-+#define	SCIF_SCSCR		(0x08)		/* Serial control register */
-+#define	SCIF_SCFTDR		(0x0C)		/* Transmit FIFO data register */
-+#define	SCIF_SCFSR		(0x10)		/* Serial status register */
-+#define SCIF_SCFRDR		(0x14)		/* Receive FIFO data register */
-+#define	SCIF_SCFCR		(0x18)		/* FIFO control register */
-+#define	SCIF_SCFDR		(0x1C)		/* FIFO data count register */
-+#define SCIF_SCSPTR		(0x20)		/* Serial port register */
-+#define	SCIF_SCLSR		(0x24)		/* Line status register */
-+#define	SCIF_DL			(0x30)		/* Frequency division register */
-+#define	SCIF_CKS		(0x34)		/* Clock Select register */
-+#define	SCIF_SCSMRIR		(0x40)		/* Serial mode register */
-+
-+void log_buf_write( char log_data )
-+{
-+#if 1
-+	char *buf_adr = (char*)OPTEE_LOG_BASE;
-+	log_buf_header_t *hd_p = (log_buf_header_t*)OPTEE_LOG_BASE;
-+
-+	if( log_write_index >= OPTEE_LOG_SIZE ) {
-+		log_write_index = sizeof(log_buf_header_t);
-+		hd_p->maxflag = true;
-+	}
-+	buf_adr[log_write_index++] = log_data;
-+
-+	if( hd_p->maxflag ) {
-+		if( log_write_index >= OPTEE_LOG_SIZE ) {
-+			hd_p->index = sizeof(log_buf_header_t);
-+		}
-+		else {
-+			hd_p->index = log_write_index;
-+		}
-+	}
-+	else {
-+		hd_p->size++;
-+	}
-+#else
-+	if (log_data == 0x0A) {
-+		while(((*(volatile unsigned short *)(SCIF_BASE + SCIF_SCFDR) >> 8) & 0x1F) >= 0x10) {}
-+		*(volatile unsigned char *)(SCIF_BASE + SCIF_SCFTDR) = 0x0D;
-+	}
-+
-+	while(((*(volatile unsigned short *)(SCIF_BASE + SCIF_SCFDR) >> 8) & 0x1F) >= 0x10) {}
-+	*(volatile unsigned char *)(SCIF_BASE + SCIF_SCFTDR) = log_data;
-+
-+#endif
-+}
-+
-+void send_debug_log(char* log_data, size_t log_size)
-+{
-+	paddr_t pharg = 0;
-+	struct tee_ta_session *sess = NULL;
-+	struct teesmc32_arg *arg;
-+	struct teesmc32_param *params;
-+	uint32_t cpu_id = get_core_pos();
-+	const size_t num_params = 1;
-+
-+	memcpy( (char*)OPTEE_LOG_NS_BASE + (cpu_id * 1024), log_data, log_size );
-+
-+	tee_ta_get_current_session( &sess );
-+	if( sess ) {
-+		tee_ta_set_current_session(NULL);
-+	}
-+
-+	/* get a rpc buffer */
-+	pharg = thread_rpc_alloc_arg( TEESMC32_GET_ARG_SIZE(num_params) );
-+	if( !pharg ) {
-+		goto exit;
-+	}
-+	if( !TEE_ALIGNMENT_IS_OK(pharg, struct teesmc32_arg) ) {
-+		goto exit;
-+	}
-+	if( core_pa2va(pharg, &arg) ) {
-+		goto exit;
-+	}
-+
-+	arg->cmd = TEE_RPC_DEBUG_LOG ;
-+	arg->ret = TEE_ERROR_GENERIC;
-+	arg->num_params = num_params;
-+	params = TEESMC32_GET_PARAMS(arg);
-+	params[0].attr = TEESMC_ATTR_TYPE_VALUE_INPUT;
-+	params[0].u.value.a = cpu_id;
-+	params[0].u.value.b = log_size;
-+
-+	thread_rpc_cmd( pharg );
-+
-+exit:
-+	thread_rpc_free_arg( pharg );
-+	if( sess ) {
-+		tee_ta_set_current_session( sess );
-+	}
-+}
-+
-diff --git a/core/arch/arm32/plat-rcar/rcar_log_func.h b/core/arch/arm32/plat-rcar/rcar_log_func.h
-new file mode 100644
-index 0000000..127c017
---- /dev/null
-+++ b/core/arch/arm32/plat-rcar/rcar_log_func.h
-@@ -0,0 +1,61 @@
-+/*
-+ * Copyright (c) 2014, STMicroelectronics International N.V.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -2557,41 +2110,671 @@ index 0000000..127c017
 + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 + * POSSIBILITY OF SUCH DAMAGE.
 + */
-+#ifndef LOG_FUNC_H
-+#define LOG_FUNC_H
++
++#ifndef RCAR_COMMON_H
++#define RCAR_COMMON_H
++
++#include <string.h>
++#include <platform_config.h>
++#include <kernel/misc.h>
++#include <kernel/tz_proc.h>
++#include <kernel/panic.h>
++#include <drivers/gic.h>
++#include <arm32.h>
++#include <kernel/tee_time.h>
++
++#define MEM_SECTION_MASK	(0x000FFFFFU)
++#define MEM_SECTION_SIZE	(0x00100000U)
++
++/* System Timer Register */
++#define CMSSTR			(SYSTIM_BASE + 0x000U)
++#define CMSCSR			(SYSTIM_BASE + 0x040U)
++#define CMSCNT			(SYSTIM_BASE + 0x044U)
++#define CMSCOR			(SYSTIM_BASE + 0x048U)
++
++#define CMSSTR_BIT_STR5		(0x0020U)	/* CMSSTR Bit 5   */
++
++#define CMSCSR_BIT_CMF		(0x8000U)	/* CMSCSR Bit 15  */
++#define CMSCSR_BIT_OVF		(0x4000U)	/* CMSCSR Bit 14  */
++#define CMSCSR_BIT_WRFLG	(0x2000U)	/* CMSCSR Bit 13  */
++#define CMSCSR_BIT_CMS		(0x0200U)	/* CMSCSR Bit 9   */
++#define CMSCSR_BIT_CMM		(0x0100U)	/* CMSCSR Bit 8   */
++#define CMSCSR_BIT_CMR		(0x0030U)	/* CMSCSR Bit 4-5 */
++#define CMSCSR_BIT_DBGIVD	(0x0008U)	/* CMSCSR Bit 3   */
++#define CMSCSR_BIT_CKS		(0x0007U)	/* CMSCSR Bit 0-2 */
++
++#define CKS_DIVISION_RATIO_1	(0x7U)		/* CKS clock/1    */
++#define CKS_DIVISION_RATIO_8	(0x4U)		/* CKS clock/8    */
++#define CKS_DIVISION_RATIO_32	(0x5U)		/* CKS clock/32   */
++#define CKS_DIVISION_RATIO_128	(0x6U)		/* CKS clock/128  */
++#define CMR_INTERRUPT_ENABLE	(0x20U)		/* CMR Interrupt Enable */
++#define CMM_FREE_RUN_OPERATION	(0x100U)	/* CMM Free-running operation */
++#define CMM_ONE_SHOT_OPERATION	(0x000U)	/* CMM One-shot operation     */
++
++#define SYSTIM_PRIORITY		(0x1U)
++
++/* Reset(RST) */
++#define MODEMR			(0xE6160060U)	/* Mode Monitor Register */
++
++#define CHECK_MD13_MD14		(0x6000U)
++#define MD14_L_MD13_H		(0x2000U)
++
++/* Interrupt ID */
++#define INTID_SCMT		(134U + 32U)	/* System Timer */
++
++/* RPC No specific to R-Car */
++#define TEE_RPC_DEBUG_LOG	(0x3F000000U)
++
++/*
++ * Prototype declaration
++ */
++
++void cpu_spin_lock_irqsave(uint32_t *lock, uint32_t *flags);
++void cpu_spin_unlock_irqrestore(uint32_t *lock, uint32_t flags);
++
++uint32_t disable_interrupts(void);
++void enable_interrupts(uint32_t flags);
++void enable_abort(void);
++void enable_fiq(void);
++void enable_irq(void);
++
++#endif /* RCAR_COMMON_H */
+diff --git a/core/arch/arm32/plat-rcar/rcar_ddr_training.c b/core/arch/arm32/plat-rcar/rcar_ddr_training.c
+new file mode 100644
+index 0000000..73d1bb4
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/rcar_ddr_training.c
+@@ -0,0 +1,106 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <io.h>
++#include <trace.h>
++#include "rcar_ddr_training.h"
++#include "rcar_common.h"
++
++void ddr_training_timer_init(void)
++{
++	uint16_t sr;
++	uint32_t interval_ms;
++	uint32_t count;
++	uint32_t mdpin_data;
++	uint32_t oscclk_hz;
++	const uint16_t clear_mask = (uint16_t)~(
++			CMSCSR_BIT_CMF | CMSCSR_BIT_CMM |
++			CMSCSR_BIT_CMR | CMSCSR_BIT_CKS);
++
++	/* Timer stop */
++	write16(0x0000U, CMSSTR);
++
++	/* Set clock select and compare match mode */
++	sr = read16(CMSCSR);
++	sr &= clear_mask;
++	sr |= (CMM_FREE_RUN_OPERATION
++		| CMR_INTERRUPT_ENABLE
++		| CKS_DIVISION_RATIO_1);
++	write16(sr, CMSCSR);
++
++	/* Set timer interval [ms] */
++	interval_ms = 1U;	/* T.B.D */
++
++	/* Set the frequency of OSCCLK */
++	mdpin_data = read32(MODEMR) & CHECK_MD13_MD14;
++	switch (mdpin_data) {
++	case MD14_L_MD13_H:
++		oscclk_hz = 131570U;	/* 131.57kHz */
++		break;
++	default:
++		oscclk_hz = 130200U;	/* 130.20kHz */
++		break;
++	}
++
++	/* Calculate the match count */
++	count = (interval_ms * oscclk_hz) / 1000U;
++
++	/* Set match count */
++	write32(count, CMSCOR);
++}
++
++void ddr_training_timer_start(void)
++{
++	/* Enable GIC - System Timer*/
++	gic_it_add(INTID_SCMT);
++	gic_it_set_cpu_mask(INTID_SCMT, (uint8_t)(1U << get_core_pos()));
++	gic_it_set_prio(INTID_SCMT, SYSTIM_PRIORITY);
++	gic_it_enable(INTID_SCMT);
++
++	/* Counter reset */
++	write32(0x00000000U, CMSCNT);
++
++	/* Timer start */
++	write16(CMSSTR_BIT_STR5, CMSSTR);
++}
++
++void ddr_training_execute(void)
++{
++	uint16_t sr;
++	const uint16_t clear_mask = (uint16_t)~(
++			CMSCSR_BIT_CMF | CMSCSR_BIT_OVF);
++
++	/* Clear an internal interrupt request */
++	sr = read16(CMSCSR);
++	sr &= clear_mask;
++	write16(sr, CMSCSR);
++
++	/* Dummy read */
++	(void)read16(CMSCSR);
++
++	/* T.B.D. */
++}
+diff --git a/core/arch/arm32/plat-rcar/rcar_ddr_training.h b/core/arch/arm32/plat-rcar/rcar_ddr_training.h
+new file mode 100644
+index 0000000..c747feb
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/rcar_ddr_training.h
+@@ -0,0 +1,35 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef RCAR_DDR_TRAINING_H
++#define RCAR_DDR_TRAINING_H
++
++void ddr_training_timer_init(void);
++void ddr_training_timer_start(void);
++void ddr_training_execute(void);
++
++#endif /*RCAR_DDR_TRAINING_H*/
+diff --git a/core/arch/arm32/plat-rcar/rcar_interruptflags.S b/core/arch/arm32/plat-rcar/rcar_interruptflags.S
+new file mode 100644
+index 0000000..9e16aee
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/rcar_interruptflags.S
+@@ -0,0 +1,49 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <asm.S>
++
++FUNC disable_interrupts , :
++	mrs	r0,	cpsr
++	cpsid	aif
++	bx	lr
++END_FUNC disable_interrupts
++
++FUNC enable_abort , :
++	cpsie	a
++	bx	lr
++END_FUNC enable_abort
++
++FUNC enable_fiq , :
++	cpsie	f
++	bx	lr
++END_FUNC enable_fiq
++
++FUNC enable_irq , :
++	cpsie	i
++	bx	lr
++END_FUNC enable_irq
+diff --git a/core/arch/arm32/plat-rcar/rcar_lock.c b/core/arch/arm32/plat-rcar/rcar_lock.c
+new file mode 100644
+index 0000000..4cea7eb
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/rcar_lock.c
+@@ -0,0 +1,53 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "rcar_common.h"
++
++void cpu_spin_lock_irqsave(uint32_t *lock, uint32_t *flags)
++{
++	*flags = disable_interrupts();
++	cpu_spin_lock(lock);
++}
++
++void cpu_spin_unlock_irqrestore(uint32_t *lock, uint32_t flags)
++{
++	cpu_spin_unlock(lock);
++	enable_interrupts(flags);
++}
++
++void enable_interrupts(uint32_t flags)
++{
++	if ((flags & CPSR_A) == 0U) {
++		enable_abort();
++	}
++	if ((flags & CPSR_F) == 0U) {
++		enable_fiq();
++	}
++	if ((flags & CPSR_I) == 0U) {
++		enable_irq();
++	}
++}
+diff --git a/core/arch/arm32/plat-rcar/rcar_log_func.c b/core/arch/arm32/plat-rcar/rcar_log_func.c
+new file mode 100644
+index 0000000..82008cf
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/rcar_log_func.c
+@@ -0,0 +1,175 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <string.h>
++#include <platform_config.h>
++#include <kernel/misc.h>
++#include <kernel/tee_ta_manager.h>
++#include <kernel/thread.h>
++#include <kernel/tee_rpc.h>
++#include <kernel/tz_proc_def.h>
++#include <sm/teesmc.h>
++#include <mm/core_mmu.h>
++#include "rcar_log_func.h"
++#include "rcar_common.h"
++#include "rcar_version.h"
++
++struct log_buf_header_t *log_secram_header;
++static int8_t *log_nonsec_ptr;
++uint32_t log_spin_lock;
++int32_t is_normal_world_initialized;
++const int8_t version_of_renesas[] __attribute__((__section__(".version"))) =
++	VERSION_OF_RENESAS;
++
++void log_buf_init(void)
++{
++	const int8_t secram_prefix[] = LOG_SEC_PREFIX;
++	int32_t i;
++
++	/* initialize global variable */
++	log_secram_header = (struct log_buf_header_t *)OPTEE_LOG_BASE;
++	log_nonsec_ptr = (int8_t *)OPTEE_LOG_NS_BASE;
++	log_spin_lock = (uint32_t)UNLOCK;
++	is_normal_world_initialized = 0;
++
++	/* initialize SDRAM area */
++	for (i = 0; i < LOG_SEC_PREFIX_LEN; i++) {
++		if (secram_prefix[i] != log_secram_header->prefix[i]) {
++			break;
++		}
++	}
++	if ((i < LOG_SEC_PREFIX_LEN) ||
++	    (log_secram_header->index >= LOG_AREA_MAX_SIZE)) {
++		(void)memset((int8_t *)log_secram_header,
++			0, sizeof(struct log_buf_header_t));
++		(void)memcpy(log_secram_header->prefix,
++			secram_prefix, sizeof(log_secram_header->prefix));
++	}
++}
++
++void log_buf_write(const struct msg_block_t *msg_block, int32_t msg_block_num)
++{
++	int8_t *log_area = NULL;
++	uint32_t end_index;
++	size_t ram_wsize;
++	size_t total_wsize = 0U;
++	size_t index_wsize;
++	size_t head_wsize;
++	int32_t i;
++
++	for (i = 0; i < msg_block_num; i++) {
++		if ((log_secram_header == NULL) ||
++		    (total_wsize >= LOG_AREA_MAX_SIZE)) {
++			break;
++		}
++		if (log_area == NULL) {
++			log_area = (int8_t *)(&log_secram_header[1]);
++		}
++		ram_wsize = msg_block[i].size;
++		if ((total_wsize + ram_wsize) > LOG_AREA_MAX_SIZE) {
++			ram_wsize = LOG_AREA_MAX_SIZE - total_wsize;
++		}
++
++		end_index = log_secram_header->index + ram_wsize;
++		head_wsize = 0U;
++
++		if (end_index > LOG_AREA_MAX_SIZE) {
++			head_wsize = end_index - LOG_AREA_MAX_SIZE;
++		}
++		index_wsize = ram_wsize - head_wsize;
++
++		(void)memcpy(&log_area[log_secram_header->index],
++			&msg_block[i].addr[0], index_wsize);
++		total_wsize += index_wsize;
++
++		if (0U < head_wsize) {
++			(void)memcpy(&log_area[0],
++				&msg_block[i].addr[index_wsize], head_wsize);
++			total_wsize += head_wsize;
++			log_secram_header->index = head_wsize;
++		} else {
++			log_secram_header->index += index_wsize;
++			if (log_secram_header->index == LOG_AREA_MAX_SIZE) {
++				log_secram_header->index = 0U;
++			}
++		}
++
++		if (log_secram_header->size < LOG_AREA_MAX_SIZE) {
++			log_secram_header->size += index_wsize;
++		}
++	}
++}
++
++#ifdef RCAR_DEBUG_LOG
++void log_debug_send(const struct msg_block_t *msg_block, int32_t msg_block_num)
++{
++	paddr_t pharg;
++	struct teesmc32_arg *arg;
++	struct teesmc32_param *tparams;
++	const size_t param_num = 1U;
++	uint32_t cpu_id;
++	int8_t *log_area;
++	size_t log_offs = 0U;
++	size_t memcpy_size;
++	int32_t i;
++
++	if (log_nonsec_ptr != NULL) {
++		cpu_id = get_core_pos();
++		log_area = &log_nonsec_ptr[cpu_id * LOG_NS_CPU_AREA_SIZE];
++
++		for (i = 0; i < msg_block_num; i++) {
++			memcpy_size = msg_block[i].size;
++			if ((log_offs + memcpy_size) > LOG_SEND_MAX_SIZE) {
++				memcpy_size = LOG_SEND_MAX_SIZE - log_offs;
++			}
++			(void)memcpy(&log_area[log_offs],
++				msg_block[i].addr, memcpy_size);
++			log_offs += memcpy_size;
++		}
++		log_area[log_offs] = (int8_t)'\0';
++
++		pharg = thread_rpc_alloc_arg(TEESMC32_GET_ARG_SIZE(param_num));
++		if (pharg != 0U) {
++			if ((TEE_ALIGNMENT_IS_OK(pharg, struct teesmc32_arg)) &&
++			    (core_pa2va(pharg, &arg) == 0U)) {
++
++				arg->cmd = TEE_RPC_DEBUG_LOG;
++				arg->ret = TEE_ERROR_GENERIC;
++				arg->num_params = param_num;
++				tparams = TEESMC32_GET_PARAMS(arg);
++				tparams[0].attr = TEESMC_ATTR_TYPE_VALUE_INPUT;
++				tparams[0].u.value.a = cpu_id;
++				tparams[0].u.value.b = 0U;
++
++				/* Send RPC */
++				thread_rpc_cmd(pharg);
++			}
++			thread_rpc_free_arg(pharg);
++		}
++	}
++}
++#endif
+diff --git a/core/arch/arm32/plat-rcar/rcar_log_func.h b/core/arch/arm32/plat-rcar/rcar_log_func.h
+new file mode 100644
+index 0000000..9c8598a
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/rcar_log_func.h
+@@ -0,0 +1,99 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef RCAR_LOG_FUNC_H
++#define RCAR_LOG_FUNC_H
 +
 +#include <types_ext.h>
 +#include <kernel/mutex.h>
 +#include <platform_config.h>
 +
-+#if !VE_FVP
-+#define OPTEE_LOG_BASE		0x46300000		/* OP-TEE Log Area address	*/
-+#define OPTEE_LOG_SIZE		0x00014000		/* OP-TEE Log Area size		*/
-+#define OPTEE_LOG_NS_BASE	0x47FEC000		/* OP-TEE Log Area NS address	*/
-+#define OPTEE_LOG_NS_SIZE	0x00014000		/* OP-TEE Log Area NS address	*/
++/*
++ * Constant definition
++ */
++
++#define LOG_RAM_MAX_SIZE	(81920U)
++#define LOG_RAM_HEADER_SIZE	(16U)
++#define LOG_RAM_RESERVE_SIZE	(64U)
++#define LOG_AREA_MAX_SIZE	(LOG_RAM_MAX_SIZE - \
++				(LOG_RAM_HEADER_SIZE + LOG_RAM_RESERVE_SIZE))
++#define LOG_TIME_BUF_MAX_SIZE	(31)
++#define LOG_NS_CPU_AREA_SIZE	(1024U)
++#define LOG_SEC_PREFIX		"SLOG"
++#define LOG_SEC_PREFIX_LEN	(4)
++#define LOG_SEND_MAX_SIZE	(256U)
++
++#define SECRAM_MSG_BLK_NUM	(2)
++#define SECRAM_IDX_TIME		(0)
++#define SECRAM_IDX_MESG		(1)
++
++#define TRMLOG_MSG_BLK_NUM	(3)
++#define TRMLOG_IDX_PRFX		(0)
++#define TRMLOG_IDX_TIME		(1)
++#define TRMLOG_IDX_MESG		(2)
++
++#ifdef RCAR_DEBUG_LOG
++#define MSG_BLK_MAX_NUM		TRMLOG_MSG_BLK_NUM
 +#else
-+#define OPTEE_LOG_BASE		0x86300000		/* OP-TEE Log Area address	*/
-+#define OPTEE_LOG_SIZE		0x00014000		/* OP-TEE Log Area size		*/
-+#define OPTEE_LOG_NS_BASE	0x87FEC000		/* OP-TEE Log Area NS address	*/
-+#define OPTEE_LOG_NS_SIZE	0x00014000		/* OP-TEE Log Area NS address	*/
-+#endif
++#define MSG_BLK_MAX_NUM		SECRAM_MSG_BLK_NUM
++#endif  /* RCAR_DEBUG_LOG */
 +
-+extern unsigned int log_write_index;
-+extern struct mutex log_mutex;
++/*
++ * Struct definition
++ */
 +
-+extern void log_buf_init( bool init_enable );
-+extern void log_buf_write( char log_data );
-+extern void send_debug_log( char* log_data, size_t log_size );
++struct log_buf_header_t {
++	int8_t prefix[LOG_SEC_PREFIX_LEN];
++	uint32_t index;
++	uint32_t size;
++	uint32_t reserve;
++};
 +
-+typedef struct {
-+	char			prefix[7];	/* prefix */
-+	bool			maxflag;	/* sizemax flag */
-+	unsigned int	index;		/* index */
-+	unsigned int	size;		/* size */
-+} log_buf_header_t;
++struct msg_block_t {
++	const int8_t *addr;
++	size_t size;
++};
 +
++/*
++ * Global variable declaration
++ */
 +
-+#endif /*PLAT_TEE_FUNC_H*/
++extern struct log_buf_header_t *log_secram_header;
++extern uint32_t log_spin_lock;
++extern int32_t is_normal_world_initialized;
++
++/*
++ * Prototype declaration
++ */
++
++void log_buf_init(void);
++void log_buf_write(const struct msg_block_t *msg_block, int32_t msg_block_num);
++#ifdef RCAR_DEBUG_LOG
++void log_debug_send(const struct msg_block_t *msg_block, int32_t msg_block_num);
++#endif /* RCAR_DEBUG_LOG */
++
++#endif /* RCAR_LOG_FUNC_H */
+diff --git a/core/arch/arm32/plat-rcar/rcar_version.h b/core/arch/arm32/plat-rcar/rcar_version.h
+new file mode 100644
+index 0000000..fa13114
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/rcar_version.h
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef RCAR_VERSION_H
++#define RCAR_VERSION_H
++
++#include <stdint.h>
++
++#define VERSION_OF_RENESAS	"1.00"
++
++extern const int8_t version_of_renesas[];
++
++#endif /* RCAR_VERSION_H */
 diff --git a/core/arch/arm32/plat-rcar/rng_support.c b/core/arch/arm32/plat-rcar/rng_support.c
 new file mode 100644
 index 0000000..87c9f61
@@ -2643,10 +2826,10 @@ index 0000000..87c9f61
 +}
 diff --git a/core/arch/arm32/plat-rcar/sub.mk b/core/arch/arm32/plat-rcar/sub.mk
 new file mode 100644
-index 0000000..bf488f8
+index 0000000..5ed4ca2
 --- /dev/null
 +++ b/core/arch/arm32/plat-rcar/sub.mk
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,15 @@
 +global-incdirs-y += .
 +srcs-y += entry.S
 +srcs-y += main.c
@@ -2655,10 +2838,13 @@ index 0000000..bf488f8
 +srcs-y += core_bootcfg.c
 +srcs-y += core_chip.c
 +srcs-y += rng_support.c
++srcs-y += rcar_lock.c
 +srcs-y += rcar_log_func.c
 +srcs-y += rcar_ddr_training.c
-+# srcs-y += phy_ddr_training.c
-+# srcs-y += asm_ddr_training.S
++srcs-y += rcar_interruptflags.S
++
++# Copy the base file - /core/arch/arm32/kernel/
++srcs-y += trace_ext.c
 diff --git a/core/arch/arm32/plat-rcar/tee_common_otp.c b/core/arch/arm32/plat-rcar/tee_common_otp.c
 new file mode 100644
 index 0000000..d44c4b4
@@ -2729,18 +2915,145 @@ index 0000000..d44c4b4
 +
 +	return 0;
 +}
-diff --git a/core/include/kernel/tee_rpc.h b/core/include/kernel/tee_rpc.h
-index 5f4ea23..b24fc02 100644
---- a/core/include/kernel/tee_rpc.h
-+++ b/core/include/kernel/tee_rpc.h
-@@ -44,6 +44,7 @@
- #define TEE_WAIT_MUTEX_WAKEUP	1
- #define TEE_WAIT_MUTEX_DELETE	2
- #define TEE_RPC_WAIT		0x30000000
-+#define TEE_RPC_DEBUG_LOG	0x3F000000
- 
+diff --git a/core/arch/arm32/plat-rcar/trace_ext.c b/core/arch/arm32/plat-rcar/trace_ext.c
+new file mode 100644
+index 0000000..2d49235
+--- /dev/null
++++ b/core/arch/arm32/plat-rcar/trace_ext.c
+@@ -0,0 +1,115 @@
++/*
++ * Copyright (c) 2014, Linaro Limited
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++#include <stdio.h>
++#include <string.h>
++#include <stdbool.h>
++#include <trace.h>
++#include <arm32.h>
++#include <kernel/tee_time.h>
++#include "rcar_log_func.h"
++#include "rcar_common.h"
++
++const char trace_ext_prefix[] = "TEE-CORE";
++int trace_level = CFG_TRACE_LEVEL;
++
++void trace_ext_puts(bool sync __unused, const char *str)
++{
++	int8_t time_buf[LOG_TIME_BUF_MAX_SIZE] = {0};
++	size_t time_len = 0U;
++	TEE_Time sys_time = {0U, 0U};
++	TEE_Result ret;
++	int32_t res;
++	struct msg_block_t msg_block[MSG_BLK_MAX_NUM];
++	int32_t msg_block_num;
++	uint32_t cpsr;
++#ifdef RCAR_DEBUG_LOG
++	const int8_t TERM_LOG_PREFIX[] = "[OP-TEE]";
++	const size_t TERM_LOG_PREFIX_LEN = sizeof(TERM_LOG_PREFIX) - 1U;
++	size_t log_sum_size = 0U;
++	int32_t i;
++#endif
++
++	if ((str != NULL) && (log_secram_header != NULL)) {
++		cpu_spin_lock_irqsave(&log_spin_lock, &cpsr);
++
++		ret = arm_cntpct_get_sys_time(&sys_time);
++		if (ret == TEE_SUCCESS) {
++			res = snprintf((char *)time_buf, sizeof(time_buf),
++				"[%u.%06u][%d]",
++				sys_time.seconds,
++				sys_time.millis * 1000U,
++				(int32_t)get_core_pos());
++			if (0 < res) {
++				time_len = (size_t)res;
++			}
++		}
++
++		msg_block[SECRAM_IDX_TIME].addr = time_buf;
++		msg_block[SECRAM_IDX_TIME].size = time_len;
++		msg_block[SECRAM_IDX_MESG].addr = (const int8_t *)str;
++		msg_block[SECRAM_IDX_MESG].size = strlen(str);
++		msg_block_num = SECRAM_MSG_BLK_NUM;
++
++		log_buf_write(msg_block, msg_block_num);
++
++		cpu_spin_unlock_irqrestore(&log_spin_lock, cpsr);
++
++#ifdef RCAR_DEBUG_LOG
++		if (is_normal_world_initialized != 0) {
++			msg_block[TRMLOG_IDX_PRFX].addr = TERM_LOG_PREFIX;
++			msg_block[TRMLOG_IDX_PRFX].size = TERM_LOG_PREFIX_LEN;
++			msg_block[TRMLOG_IDX_TIME].addr = time_buf;
++			msg_block[TRMLOG_IDX_TIME].size = time_len;
++			msg_block[TRMLOG_IDX_MESG].addr = (const int8_t *)str;
++			msg_block[TRMLOG_IDX_MESG].size = strlen(str);
++			msg_block_num = TRMLOG_MSG_BLK_NUM;
++
++			/* Log size is limited to 256 byte */
++			for (i = 0; i < msg_block_num; i++) {
++				log_sum_size += msg_block[i].size;
++			}
++			if (log_sum_size > MAX_PRINT_SIZE) {
++				msg_block[msg_block_num - 1].size -=
++					log_sum_size - (uint32_t)MAX_PRINT_SIZE;
++			}
++
++			if ((cpsr & CPSR_F) == 0U) {
++				/* User context */
++				log_debug_send(msg_block, msg_block_num);
++			} else {
++				/* Interrupt context */
++			}
++		}
++#endif
++	}
++}
++
++int trace_ext_get_thread_id(void)
++{
++	return -1;
++}
+diff --git a/core/include/kernel/tee_time.h b/core/include/kernel/tee_time.h
+index 2045620..70f3fa3 100644
+--- a/core/include/kernel/tee_time.h
++++ b/core/include/kernel/tee_time.h
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2014, STMicroelectronics International N.V.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -40,5 +41,6 @@ TEE_Result tee_time_get_ta_time(const TEE_UUID *uuid, TEE_Time *time);
+ TEE_Result tee_time_get_ree_time(TEE_Time *time);
+ TEE_Result tee_time_set_ta_time(const TEE_UUID *uuid, const TEE_Time *time);
+ void tee_time_wait(uint32_t milliseconds_delay);
++TEE_Result arm_cntpct_get_sys_time(TEE_Time *time);
  
  #endif
 -- 
-1.9.5.msysgit.1
+1.9.1
 

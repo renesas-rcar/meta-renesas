@@ -1,0 +1,217 @@
+From f5130b589d57cfded3026fecf602b45bb8175000 Mon Sep 17 00:00:00 2001
+From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
+Date: Thu, 8 Oct 2015 13:35:17 +0900
+Subject: [PATCH] add optee_linuxdriver R-Car support
+
+---
+ armtz/rcar_version.h | 11 +++++++++
+ armtz/tee_tz_drv.c   | 70 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ core/tee_core.c      |  7 +++---
+ core/tee_shm.c       | 11 +++++++++
+ 4 files changed, 94 insertions(+), 5 deletions(-)
+ create mode 100644 armtz/rcar_version.h
+
+diff --git a/armtz/rcar_version.h b/armtz/rcar_version.h
+new file mode 100644
+index 0000000..0264510
+--- /dev/null
++++ b/armtz/rcar_version.h
+@@ -0,0 +1,11 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ */
++
++#ifndef RCAR_VERSION_H
++#define RCAR_VERSION_H
++
++#define VERSION_OF_RENESAS	"1.00"
++
++#endif /* RCAR_VERSION_H */
+diff --git a/armtz/tee_tz_drv.c b/armtz/tee_tz_drv.c
+index fa5e4e9..3d85530 100644
+--- a/armtz/tee_tz_drv.c
++++ b/armtz/tee_tz_drv.c
+@@ -7,6 +7,7 @@
+ #include <linux/io.h>
+ #include <linux/sched.h>
+ #include <linux/jiffies.h>
++#include <linux/slab.h>
+ 
+ #include <linux/tee_core.h>
+ #include <linux/tee_ioc.h>
+@@ -22,6 +23,7 @@
+ #include "tee_tz_op.h"
+ #include "tee_tz_priv.h"
+ #include "handle.h"
++#include "rcar_version.h"
+ 
+ #define _TEE_TZ_NAME "armtz"
+ #define DEV (ptee->tee->dev)
+@@ -47,6 +49,19 @@ static struct handle_db shm_handle_db = HANDLE_DB_INITIALIZER;
+ #define ioremap_cache	ioremap_cached
+ #endif
+ 
++/*
++ * R-Car Specification definition
++ */
++
++/* Log Buffer Address (ioremap) */
++static int8_t *remaped_log_buffer = NULL;
++
++/* Constant definition */
++#define TEE_LOG_NS_BASE		(0x0407FEC000U)
++#define TEE_LOG_NS_SIZE		(81920U)
++#define LOG_NS_CPU_AREA_SIZE	(1024U)
++#define TEE_CORE_NB_CORE	(8U)
++#define TEE_RPC_DEBUG_LOG	(0x3F000000U)
+ 
+ /*******************************************************************
+  * Calling TEE
+@@ -153,6 +168,44 @@ bad:
+ 	arg32->ret = TEEC_ERROR_BAD_PARAMETERS;
+ }
+ 
++static void debug_log_work_handler(struct work_struct *work)
++{
++	printk(KERN_ALERT "%s", (int8_t *)(&work[1]));
++	kfree(work);
++}
++
++static void handle_rpc_func_cmd_debug_log(struct teesmc32_arg *arg32)
++{
++	struct teesmc32_param *params;
++	uint32_t cpu_id;
++	int8_t *p;
++	struct work_struct *work = NULL;
++	size_t logmsg_size;
++
++	if (arg32->num_params == 1) {
++		params = TEESMC32_GET_PARAMS(arg32);
++		cpu_id = params[0].u.value.a;
++
++		if (cpu_id < TEE_CORE_NB_CORE) {
++			p = &remaped_log_buffer[cpu_id * LOG_NS_CPU_AREA_SIZE];
++			logmsg_size = strlen(p) + 1;
++			work = kmalloc(sizeof(*work) + logmsg_size, GFP_KERNEL);
++			if (work != NULL) {
++				strcpy((int8_t *)(&work[1]), p);
++				INIT_WORK(work, debug_log_work_handler);
++				schedule_work(work);
++			} else {
++				printk(KERN_ALERT "%s", p);
++			}
++			arg32->ret = TEEC_SUCCESS;
++		} else {
++			arg32->ret = TEEC_ERROR_BAD_PARAMETERS;
++		}
++	} else {
++		arg32->ret = TEEC_ERROR_BAD_PARAMETERS;
++	}
++}
++
+ static void handle_rpc_func_cmd_to_supplicant(struct tee_tz *ptee,
+ 						struct teesmc32_arg *arg32)
+ {
+@@ -240,6 +293,9 @@ static void handle_rpc_func_cmd(struct tee_tz *ptee, u32 parg32)
+ 	case TEE_RPC_WAIT:
+ 		handle_rpc_func_cmd_wait(arg32);
+ 		break;
++	case TEE_RPC_DEBUG_LOG:
++		handle_rpc_func_cmd_debug_log(arg32);
++		break;
+ 	default:
+ 		handle_rpc_func_cmd_to_supplicant(ptee, arg32);
+ 	}
+@@ -1251,7 +1307,8 @@ static int __init tee_tz_init(void)
+ {
+ 	int rc;
+ 
+-	pr_info("TEE armv7 Driver initialization\n");
++	pr_info("TEE armv7 Driver initialization (R-Car Rev.%s)\n",
++		VERSION_OF_RENESAS);
+ 
+ #ifdef _TEE_DEBUG
+ 	pr_debug("- Register the platform_driver \"%s\" %p\n",
+@@ -1271,8 +1328,17 @@ static int __init tee_tz_init(void)
+ 		goto bail1;
+ 	}
+ 
++	remaped_log_buffer = ioremap_nocache(TEE_LOG_NS_BASE, TEE_LOG_NS_SIZE);
++	if (remaped_log_buffer == NULL) {
++		pr_err("failed to ioremap_nocache(TEE_LOG_NS_BASE)\n");
++		rc = -ENOMEM;
++		goto bail2;
++	}
++
+ 	return rc;
+ 
++bail2:
++	platform_device_unregister(&tz_0_plt_device);
+ bail1:
+ 	platform_driver_unregister(&tz_tee_driver);
+ bail0:
+@@ -1294,4 +1360,4 @@ MODULE_AUTHOR("STMicroelectronics");
+ MODULE_DESCRIPTION("STM Secure TEE ARMV7 TZ driver");
+ MODULE_SUPPORTED_DEVICE("");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION("1.0");
++MODULE_VERSION(VERSION_OF_RENESAS);
+diff --git a/core/tee_core.c b/core/tee_core.c
+index 5fd3d3b..1a4d2f0 100644
+--- a/core/tee_core.c
++++ b/core/tee_core.c
+@@ -29,6 +29,7 @@
+ #include "tee_debugfs.h"
+ #include "tee_shm.h"
+ #include "tee_supp_com.h"
++#include "../armtz/rcar_version.h"
+ 
+ #define _TEE_CORE_FW_VER "1:0.1"
+ 
+@@ -501,8 +502,8 @@ EXPORT_SYMBOL(tee_core_del);
+ 
+ static int __init tee_core_init(void)
+ {
+-	pr_info("\nTEE Core Framework initialization (ver %s)\n",
+-		_TEE_CORE_FW_VER);
++	pr_info("\nTEE Core Framework initialization (R-Car Rev.%s)\n",
++		VERSION_OF_RENESAS);
+ 	tee_init_debugfs();
+ 
+ 	return 0;
+@@ -520,5 +521,5 @@ module_exit(tee_core_exit);
+ MODULE_AUTHOR("STMicroelectronics");
+ MODULE_DESCRIPTION("STM Secure TEE Framework/Core TEEC v1.0");
+ MODULE_SUPPORTED_DEVICE("");
+-MODULE_VERSION(_TEE_CORE_FW_VER);
++MODULE_VERSION(VERSION_OF_RENESAS);
+ MODULE_LICENSE("GPL");
+diff --git a/core/tee_shm.c b/core/tee_shm.c
+index b312b8e..fa3fd8f 100644
+--- a/core/tee_shm.c
++++ b/core/tee_shm.c
+@@ -223,9 +223,20 @@ static int get_fd(struct tee *tee, struct tee_shm *shm)
+ {
+ 	struct dma_buf *dmabuf;
+ 	int fd = -1;
++	/* Temporary fix to support both older and newer kernel versions. */
++#if defined(DEFINE_DMA_BUF_EXPORT_INFO)
++	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
+ 
++	exp_info.priv = shm;
++	exp_info.ops = &_tee_shm_dma_buf_ops;
++	exp_info.size = shm->size_alloc;
++	exp_info.flags = O_RDWR;
++
++	dmabuf = dma_buf_export(&exp_info);
++#else
+ 	dmabuf = dma_buf_export(shm, &_tee_shm_dma_buf_ops, shm->size_alloc,
+ 				O_RDWR, NULL);
++#endif
+ 	if (IS_ERR_OR_NULL(dmabuf)) {
+ 		dev_err(_DEV(tee), "%s: dmabuf: couldn't export buffer (%ld)\n",
+ 			__func__, PTR_ERR(dmabuf));
+-- 
+1.9.1
+

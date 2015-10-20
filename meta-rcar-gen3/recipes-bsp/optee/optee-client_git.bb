@@ -10,7 +10,7 @@ SRC_URI = \
 SRCREV = "a3dad780be00e7a5783c587adb2e3d681eeeba05"
 
 SRC_URI += " \
-    file://0001-Change-to-be-able-to-enter-the-environment-variable.patch \
+    file://0001-add-optee_client-R-Car-support.patch \
 "
 
 PV = "0.2.0+renesas+git${SRCPV}"
@@ -37,7 +37,7 @@ do_install () {
     ln -sf libteec.so.1 libteec.so
 
     install -d ${D}${includedir}
-    install -m 0755 ${S}/out/export/include/* ${D}${includedir}
+    install -m 0644 ${S}/out/export/include/* ${D}${includedir}
 }
 
 RPROVIDES_${PN} += "optee-client"

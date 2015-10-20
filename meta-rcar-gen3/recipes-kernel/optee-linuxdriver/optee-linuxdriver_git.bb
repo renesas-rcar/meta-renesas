@@ -9,10 +9,11 @@ PN = "optee-linuxdriver"
 PR = "r0"
 BRANCH = "master"
 SRC_URI = \
-    "git://github.com/OP-TEE/optee_linuxdriver.git;protocol=https;branch=${BRANCH}"
-SRCREV = "dc1c7ac1b22c86a2f346845aaaed5bc416e3577b"
+    "git://github.com/OP-TEE/optee_linuxdriver.git;protocol=https;branch=${BRANCH} \
+    file://0001-add-optee_linuxdriver-R-Car-support.patch"
+SRCREV = "724298b6e425d9ce6daae3131bb4b1029190aa2a"
 
-PV = "0.3.0+renesas+git${SRCPV}"
+PV = "0.2.0+renesas+git${SRCPV}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -28,10 +29,10 @@ do_compile() {
 
 do_install() {
     # Create shared folder
-    mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    mkdir -p ${D}/usr/src/kernel/include
-    mkdir -p ${D}/usr/src/kernel/include/arm_common
-    mkdir -p ${D}/usr/src/kernel/include/linux
+    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -d ${D}/usr/src/kernel/include
+    install -d ${D}/usr/src/kernel/include/arm_common
+    install -d ${D}/usr/src/kernel/include/linux
 
     # Copy kernel module
     install -m 0644 ${S}/core/optee.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/

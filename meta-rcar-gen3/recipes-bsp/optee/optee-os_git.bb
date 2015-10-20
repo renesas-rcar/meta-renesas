@@ -14,7 +14,7 @@ SRC_URI = "git://github.com/OP-TEE/optee_os.git;protocol=https;branch=${BRANCH}"
 SRCREV = "f5117af25f1cf77d55ef1c641a6d648c0cb143e2"
 
 SRC_URI += " \
-    file://0001-OPTEE-July-28-2015-local-release.patch \
+    file://0001-add-optee_os-R-Car-support.patch \
 "
 
 PV = "0.2.0+renesas+git${SRCPV}"

@@ -15,7 +15,7 @@ SRC_URI = \
 SRCREV = "e234ba038b0b997bd4325dad384deab5863babdd"
 
 SRC_URI += " \
-    file://0001-BL2-BL31-Sep-7-local-release.patch \
+    file://0001-add-bl2-bl31-R-Car-support.patch \
 "
 
 PV = "v1.1+renesas+git${SRCPV}"
@@ -23,7 +23,7 @@ PV = "v1.1+renesas+git${SRCPV}"
 COMPATIBLE_MACHINE = "salvator-x"
 PLATFORM = "rcar"
 ATFW_OPT = \
-    "RCAR_QOS_TYPE=3 RCAR_DRAM_SPLIT=1"
+    "RCAR_DRAM_SPLIT=1"
 
 # requires CROSS_COMPILE set by hand as there is no configure script
 export CROSS_COMPILE="${TARGET_PREFIX}"
@@ -39,7 +39,7 @@ do_configure() {
 }
 
 do_compile() {
-    oe_runmake bl2 bl31 PLAT=${PLATFORM} ${ATFW_OPT}
+    oe_runmake bl2 bl31 dummytool PLAT=${PLATFORM} ${ATFW_OPT}
 }
 
 do_install() {
@@ -54,5 +54,7 @@ do_deploy() {
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${MACHINE}.elf
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}.bin
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31.srec ${DEPLOYDIR}/bl31-${MACHINE}.srec
+    install -m 0644 ${S}/tools/dummy_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0.srec
+    install -m 0644 ${S}/tools/dummy_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6.srec
 }
 addtask deploy before do_build after do_compile
