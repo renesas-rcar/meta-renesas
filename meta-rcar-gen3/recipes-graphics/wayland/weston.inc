@@ -30,3 +30,11 @@ FILES_${PN} = " \
 
 USERADD_PACKAGES = "${PN}-bin"
 GROUPADD_PARAM_${PN}-bin = "--system weston-launch"
+
+python __anonymous () {
+    pn = d.getVar('PN', True)
+    if pn.startswith('lib32-'):
+        deps = d.getVar('RRECOMMENDS_' + pn, True).split()
+        deps.remove('liberation-fonts')
+        d.setVar('RRECOMMENDS_' + pn , ' '.join(deps))
+}
