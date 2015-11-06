@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "\
 MMNGR_LIB_URI = "git://github.com/renesas-rcar/mmngr_lib.git"
 
 SRC_URI = "${MMNGR_LIB_URI};protocol=git;branch=rcar_gen3"
-SRCREV = "23c6e15f42b86e4e673bbcd6848045ec3fd42e53"
+SRCREV = "035392a2f1d288dc91054ee91f3d8683a8bce1aa"
 
 # Get Wordsize of test app and change their names later to avoid override
 WS_aarch64 = ""
