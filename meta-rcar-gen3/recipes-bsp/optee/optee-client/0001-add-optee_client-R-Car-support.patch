@@ -1,6 +1,6 @@
-From d2d88b6e84d859124b720ce7fc3363c4391307db Mon Sep 17 00:00:00 2001
+From 1ddb63c7c5b401248e0d054efb9d8a0fedc0a4b1 Mon Sep 17 00:00:00 2001
 From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
-Date: Thu, 8 Oct 2015 15:28:19 +0900
+Date: Thu, 5 Nov 2015 13:00:30 +0900
 Subject: [PATCH] add optee_client R-Car support
 
 ---
@@ -22,19 +22,19 @@ index 92e1853..3c8b728 100644
  CFLAGS          := -Wall -Wbad-function-cast -Wcast-align \
  		   -Werror-implicit-function-declaration -Wextra \
 diff --git a/tee-supplicant/src/tee_supplicant.c b/tee-supplicant/src/tee_supplicant.c
-index 1e1c8d8..0607ad9 100644
+index 43ec0cc..90bf8bc 100644
 --- a/tee-supplicant/src/tee_supplicant.c
 +++ b/tee-supplicant/src/tee_supplicant.c
 @@ -47,6 +47,8 @@
  #include <tee_supp_fs.h>
  #include <teec.h>
  
-+#define VERSION_OF_RENESAS	"1.00"
++#define VERSION_OF_RENESAS	"1.0.1"
 +
  #define TEE_RPC_BUFFER_NUMBER 5
  
  /* Flags of the shared memory. Also defined in tee_service.h in the kernel. */
-@@ -382,6 +384,8 @@ int main(int argc, char *argv[])
+@@ -367,6 +369,8 @@ int main(int argc, char *argv[])
  	sprintf(devname1, "optee_armtz");
  	sprintf(devname2, "teetz");
  

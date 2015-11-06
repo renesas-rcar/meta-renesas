@@ -7,13 +7,13 @@ PR = "r0"
 BRANCH = "master"
 SRC_URI = \
     "git://github.com/OP-TEE/optee_client.git;protocol=https;branch=${BRANCH}"
-SRCREV = "a3dad780be00e7a5783c587adb2e3d681eeeba05"
+SRCREV = "9e29f6081db7904a057b7c336c4604c144b374f6"
 
 SRC_URI += " \
     file://0001-add-optee_client-R-Car-support.patch \
 "
 
-PV = "0.2.0+renesas+git${SRCPV}"
+PV = "1.0.0+renesas+git${SRCPV}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 

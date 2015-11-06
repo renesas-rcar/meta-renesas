@@ -1,39 +1,37 @@
-From 2091846905ad689e1919aafb41e176b855dd8e2f Mon Sep 17 00:00:00 2001
-From: Taku Imaizumi <taku.imaizumi.bx@bp.renesas.com>
-Date: Tue, 27 Oct 2015 21:05:37 +0900
+From 5290a3b1b10570519a4ce4cfc2daaf51e314bd9d Mon Sep 17 00:00:00 2001
+From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
+Date: Mon, 9 Nov 2015 16:45:46 +0900
 Subject: [PATCH] add bl2 bl31 R-Car support
 
 ---
- Makefile                                        |   18 +-
- bl2/bl2.ld.S                                    |   11 +
- bl31/aarch64/bl31_entrypoint.S                  |   16 +-
- bl31/bl31.ld.S                                  |    4 +
- common/auth/rcar/rcar.mk                        |   34 +
- common/auth/rcar/rcarboot.c                     |  157 ++
- common/auth/rcar/rcarboot.h                     |   41 +
- common/tf_printf.c                              |    7 +
- include/lib/mmio.h                              |   12 +
+ Makefile                                        |   19 +-
+ bl2/bl2.ld.S                                    |   12 +
+ bl31/aarch64/bl31_entrypoint.S                  |   11 +
+ bl31/bl31.ld.S                                  |    5 +
+ common/tf_printf.c                              |    8 +
  plat/renesas/rcar/aarch64/bl2_reset.S           |  426 +++
  plat/renesas/rcar/aarch64/rcar_common.c         |  262 ++
  plat/renesas/rcar/aarch64/rcar_helpers.S        |  379 +++
  plat/renesas/rcar/bl2_cpg_init.c                |  104 +
  plat/renesas/rcar/bl2_pfc_init.c                | 1398 +++++++++
  plat/renesas/rcar/bl2_phy_init.c                | 3452 +++++++++++++++++++++++
- plat/renesas/rcar/bl2_qos_init.c                |  614 ++++
- plat/renesas/rcar/bl2_rcar_setup.c              |  378 +++
+ plat/renesas/rcar/bl2_qos_init.c                |  616 ++++
+ plat/renesas/rcar/bl2_rcar_setup.c              |  389 +++
  plat/renesas/rcar/bl2_sdram_init.c              | 2275 +++++++++++++++
  plat/renesas/rcar/bl2_secure_setting.c          |  468 +++
  plat/renesas/rcar/bl31_rcar_setup.c             |  269 ++
- plat/renesas/rcar/ddr/boot_init_dram.c          | 3371 ++++++++++++++++++++++
+ plat/renesas/rcar/ddr/boot_init_dram.c          | 3377 ++++++++++++++++++++++
  plat/renesas/rcar/ddr/boot_init_dram.h          |   38 +
  plat/renesas/rcar/ddr/init_dram_tbl.h           | 1383 +++++++++
+ plat/renesas/rcar/drivers/auth/rcarboot.c       |  155 +
+ plat/renesas/rcar/drivers/auth/rcarboot.h       |   41 +
  plat/renesas/rcar/drivers/dma/dma_driver.c      |  193 ++
  plat/renesas/rcar/drivers/io/io_memdrv.c        |  237 ++
- plat/renesas/rcar/drivers/io/io_rcar.c          |  596 ++++
+ plat/renesas/rcar/drivers/io/io_rcar.c          |  597 ++++
  plat/renesas/rcar/drivers/memdrv/rcar_console.S |   98 +
- plat/renesas/rcar/drivers/memdrv/rcar_printf.c  |  174 ++
+ plat/renesas/rcar/drivers/memdrv/rcar_printf.c  |  169 ++
  plat/renesas/rcar/drivers/memdrv/rcar_printf.h  |   43 +
- plat/renesas/rcar/drivers/pwrc/rcar_pwrc.c      |  268 ++
+ plat/renesas/rcar/drivers/pwrc/rcar_pwrc.c      |  262 ++
  plat/renesas/rcar/drivers/pwrc/rcar_pwrc.h      |   81 +
  plat/renesas/rcar/drivers/rpc/rpc_driver.c      |   83 +
  plat/renesas/rcar/drivers/scif/scif.S           |  198 ++
@@ -50,30 +48,28 @@ Subject: [PATCH] add bl2 bl31 R-Car support
  plat/renesas/rcar/include/bl2_sdram_init.h      |   37 +
  plat/renesas/rcar/include/bl2_secure_setting.h  |   37 +
  plat/renesas/rcar/include/dma_driver.h          |   49 +
- plat/renesas/rcar/include/io_common.h           |   39 +
+ plat/renesas/rcar/include/io_common.h           |   41 +
  plat/renesas/rcar/include/io_memdrv.h           |   39 +
  plat/renesas/rcar/include/io_rcar.h             |   39 +
  plat/renesas/rcar/include/plat_macros.S         |  105 +
  plat/renesas/rcar/include/platform.h            |  199 ++
- plat/renesas/rcar/include/platform_def.h        |  231 ++
+ plat/renesas/rcar/include/platform_def.h        |  204 ++
  plat/renesas/rcar/include/rpc_driver.h          |   46 +
  plat/renesas/rcar/include/scif.h                |  145 +
- plat/renesas/rcar/platform.mk                   |  113 +
+ plat/renesas/rcar/platform.mk                   |  120 +
  plat/renesas/rcar/rcar_def.h                    |  257 ++
- plat/renesas/rcar/rcar_io_storage.c             |  327 +++
- plat/renesas/rcar/rcar_pm.c                     |  376 +++
- plat/renesas/rcar/rcar_private.h                |  162 ++
+ plat/renesas/rcar/rcar_io_storage.c             |  316 +++
+ plat/renesas/rcar/rcar_pm.c                     |  384 +++
+ plat/renesas/rcar/rcar_private.h                |  169 ++
  plat/renesas/rcar/rcar_topology.c               |  223 ++
  plat/renesas/rcar/rcar_version.h                |   42 +
+ services/spd/opteed/opteed_main.c               |    3 +-
  tools/dummy_create/makefile                     |  103 +
  tools/dummy_create/sa0.c                        |   39 +
  tools/dummy_create/sa0.ld.S                     |   42 +
  tools/dummy_create/sa6.c                        |   51 +
  tools/dummy_create/sa6.ld.S                     |   52 +
- 66 files changed, 21128 insertions(+), 15 deletions(-)
- create mode 100644 common/auth/rcar/rcar.mk
- create mode 100644 common/auth/rcar/rcarboot.c
- create mode 100644 common/auth/rcar/rcarboot.h
+ 65 files changed, 21090 insertions(+), 2 deletions(-)
  create mode 100644 plat/renesas/rcar/aarch64/bl2_reset.S
  create mode 100644 plat/renesas/rcar/aarch64/rcar_common.c
  create mode 100644 plat/renesas/rcar/aarch64/rcar_helpers.S
@@ -88,6 +84,8 @@ Subject: [PATCH] add bl2 bl31 R-Car support
  create mode 100644 plat/renesas/rcar/ddr/boot_init_dram.c
  create mode 100644 plat/renesas/rcar/ddr/boot_init_dram.h
  create mode 100644 plat/renesas/rcar/ddr/init_dram_tbl.h
+ create mode 100644 plat/renesas/rcar/drivers/auth/rcarboot.c
+ create mode 100644 plat/renesas/rcar/drivers/auth/rcarboot.h
  create mode 100644 plat/renesas/rcar/drivers/dma/dma_driver.c
  create mode 100644 plat/renesas/rcar/drivers/io/io_memdrv.c
  create mode 100644 plat/renesas/rcar/drivers/io/io_rcar.c
@@ -133,10 +131,17 @@ Subject: [PATCH] add bl2 bl31 R-Car support
  create mode 100644 tools/dummy_create/sa6.ld.S
 
 diff --git a/Makefile b/Makefile
-index d38a283..0e6d399 100644
+index 050a76e..dcfcc54 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -306,6 +306,11 @@ CRTTOOLPATH		?=	tools/cert_create
+@@ -1,5 +1,6 @@
+ #
+ # Copyright (c) 2013-2015, ARM Limited and Contributors. All rights reserved.
++# Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
+ #
+ # Redistribution and use in source and binary forms, with or without
+ # modification, are permitted provided that the following conditions are met:
+@@ -343,6 +344,11 @@ CRTTOOLPATH		?=	tools/cert_create
  CRTTOOL			?=	${CRTTOOLPATH}/cert_create
  certtool:		${CRTTOOL}
  
@@ -148,7 +153,7 @@ index d38a283..0e6d399 100644
  # CoT generation tool default parameters
  TRUSTED_KEY_CERT	:=	${BUILD_PLAT}/trusted_key.crt
  
-@@ -362,6 +367,7 @@ clean:
+@@ -386,6 +392,7 @@ clean:
  			${Q}rm -rf ${BUILD_PLAT}
  			${Q}${MAKE} --no-print-directory -C ${FIPTOOLPATH} clean
  			${Q}${MAKE} PLAT=${PLAT} --no-print-directory -C ${CRTTOOLPATH} clean
@@ -156,7 +161,7 @@ index d38a283..0e6d399 100644
  
  realclean distclean:
  			@echo "  REALCLEAN"
-@@ -369,6 +375,7 @@ realclean distclean:
+@@ -393,6 +400,7 @@ realclean distclean:
  			${Q}rm -f ${CURDIR}/cscope.*
  			${Q}${MAKE} --no-print-directory -C ${FIPTOOLPATH} clean
  			${Q}${MAKE} PLAT=${PLAT} --no-print-directory -C ${CRTTOOLPATH} clean
@@ -164,7 +169,7 @@ index d38a283..0e6d399 100644
  
  checkcodebase:		locate-checkpatch
  			@echo "  CHECKING STYLE"
-@@ -393,6 +400,10 @@ ${CRTTOOL}:
+@@ -417,6 +425,10 @@ ${CRTTOOL}:
  ${FIPTOOL}:
  			${Q}${MAKE} --no-print-directory -C ${FIPTOOLPATH}
  
@@ -175,7 +180,7 @@ index d38a283..0e6d399 100644
  define match_goals
  $(strip $(foreach goal,$(1),$(filter $(goal),$(MAKECMDGOALS))))
  endef
-@@ -531,6 +542,7 @@ define MAKE_BL
+@@ -554,6 +566,7 @@ define MAKE_BL
  	$(eval ELF        := $(BUILD_DIR)/bl$(1).elf)
  	$(eval DUMP       := $(BUILD_DIR)/bl$(1).dump)
  	$(eval BIN        := $(BUILD_PLAT)/bl$(1).bin)
@@ -183,7 +188,7 @@ index d38a283..0e6d399 100644
  
  	$(eval $(call MAKE_OBJS,$(BUILD_DIR),$(SOURCES),$(1)))
  	$(eval $(call MAKE_LD,$(LINKERFILE),$(BL$(1)_LINKERFILE)))
-@@ -557,8 +569,12 @@ $(BIN) : $(ELF)
+@@ -580,8 +593,12 @@ $(BIN) : $(ELF)
  	@echo "Built $$@ successfully"
  	@echo
  
@@ -198,10 +203,17 @@ index d38a283..0e6d399 100644
  all : bl$(1)
  
 diff --git a/bl2/bl2.ld.S b/bl2/bl2.ld.S
-index 9933339..41f1350 100644
+index a660bda..ed99a3d 100644
 --- a/bl2/bl2.ld.S
 +++ b/bl2/bl2.ld.S
-@@ -32,7 +32,11 @@
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are met:
+@@ -32,7 +33,11 @@
  
  OUTPUT_FORMAT(PLATFORM_LINKER_FORMAT)
  OUTPUT_ARCH(PLATFORM_LINKER_ARCH)
@@ -213,7 +225,7 @@ index 9933339..41f1350 100644
  
  MEMORY {
      RAM (rwx): ORIGIN = BL2_BASE, LENGTH = BL2_LIMIT - BL2_BASE
-@@ -47,7 +51,14 @@ SECTIONS
+@@ -47,7 +52,14 @@ SECTIONS
  
      ro . : {
          __RO_START__ = .;
@@ -227,53 +239,54 @@ index 9933339..41f1350 100644
 +#endif
          *(.text*)
          *(.rodata*)
-         *(.vectors)
+ 
 diff --git a/bl31/aarch64/bl31_entrypoint.S b/bl31/aarch64/bl31_entrypoint.S
-index 1777d26..c12d687 100644
+index 636b1d2..eee0cad 100644
 --- a/bl31/aarch64/bl31_entrypoint.S
 +++ b/bl31/aarch64/bl31_entrypoint.S
-@@ -44,8 +44,7 @@
- func bl31_entrypoint
- 	/* ---------------------------------------------------------------
- 	 * Preceding bootloader has populated x0 with a pointer to a
--	 * 'bl31_params' structure & x1 with a pointer to platform
--	 * specific structure
-+	 * 'bl31_params' structure & x1 to boot parameter
- 	 * ---------------------------------------------------------------
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2013-2015, ARM Limited and Contributors. All rights reserved.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are met:
+@@ -61,6 +62,15 @@ func bl31_entrypoint
+ 	 * endianness and has initialised the memory.
+ 	 * ---------------------------------------------------------------------
  	 */
- #if !RESET_TO_BL31
-@@ -63,17 +62,6 @@ func bl31_entrypoint
- 	isb
- #endif
++#if PLAT_rcar
++	el3_entrypoint_common					\
++		_set_endian=0					\
++		_warm_boot_mailbox=1				\
++		_secondary_cold_boot=1				\
++		_init_memory=1					\
++		_init_c_runtime=1				\
++		_exception_vectors=runtime_exceptions
++#else
+ 	el3_entrypoint_common					\
+ 		_set_endian=0					\
+ 		_warm_boot_mailbox=0				\
+@@ -68,6 +78,7 @@ func bl31_entrypoint
+ 		_init_memory=0					\
+ 		_init_c_runtime=1				\
+ 		_exception_vectors=runtime_exceptions
++#endif
  
--	/* ---------------------------------------------
--	 * When RESET_TO_BL31 is true, perform any
--	 * processor specific actions upon reset e.g.
--	 * cache, tlb invalidations, errata workarounds
--	 * etc.
--	 * When RESET_TO_BL31 is false, perform any
--	 * processor specific actions which undo or are
--	 * in addition to the actions performed by the
--	 * reset handler in the Boot ROM (BL1).
--	 * ---------------------------------------------
--	 */
- 	bl	reset_handler
- 
- 	/* ---------------------------------------------
-@@ -136,7 +124,7 @@ func bl31_entrypoint
- 	bic	w1, w1, #TFP_BIT
- 	msr	cptr_el3, x1
- 
--#if RESET_TO_BL31
-+#if RESET_TO_BL31 || PLAT_rcar
- 	/* -------------------------------------------------------
- 	 * Will not return from this macro if it is a warm boot.
- 	 * -------------------------------------------------------
+ 	/* ---------------------------------------------------------------------
+ 	 * Relay the previous bootloader's arguments to the platform layer
 diff --git a/bl31/bl31.ld.S b/bl31/bl31.ld.S
-index 3327f31..089b31f 100644
+index e572f9b..47084fc 100644
 --- a/bl31/bl31.ld.S
 +++ b/bl31/bl31.ld.S
-@@ -49,6 +49,10 @@ SECTIONS
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are met:
+@@ -49,6 +50,10 @@ SECTIONS
      ro . : {
          __RO_START__ = .;
          *bl31_entrypoint.o(.text*)
@@ -284,261 +297,18 @@ index 3327f31..089b31f 100644
          *(.text*)
          *(.rodata*)
  
-diff --git a/common/auth/rcar/rcar.mk b/common/auth/rcar/rcar.mk
-new file mode 100644
-index 0000000..c2271e1
---- /dev/null
-+++ b/common/auth/rcar/rcar.mk
-@@ -0,0 +1,34 @@
-+#
-+# Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
-+#
-+# Redistribution and use in source and binary forms, with or without
-+# modification, are permitted provided that the following conditions are met:
-+#
-+# Redistributions of source code must retain the above copyright notice, this
-+# list of conditions and the following disclaimer.
-+#
-+# Redistributions in binary form must reproduce the above copyright notice,
-+# this list of conditions and the following disclaimer in the documentation
-+# and/or other materials provided with the distribution.
-+#
-+# Neither the name of ARM nor the names of its contributors may be used
-+# to endorse or promote products derived from this software without specific
-+# prior written permission.
-+#
-+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+# POSSIBILITY OF SUCH DAMAGE.
-+#
-+
-+
-+BL2_SOURCES		+=	${RCARBOOT_SOURCES} 			\
-+				common/auth/rcar/rcarboot.c
-+
-diff --git a/common/auth/rcar/rcarboot.c b/common/auth/rcar/rcarboot.c
-new file mode 100644
-index 0000000..48271c6
---- /dev/null
-+++ b/common/auth/rcar/rcarboot.c
-@@ -0,0 +1,157 @@
-+/*
-+ * Copyright (c) 2015-2016, Renesas Electronics Corporation
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions are met:
-+ *
-+ *   - Redistributions of source code must retain the above copyright notice,
-+ *     this list of conditions and the following disclaimer.
-+ *
-+ *   - Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in the
-+ *     documentation and/or other materials provided with the distribution.
-+ *
-+ *   - Neither the name of Renesas nor the names of its contributors may be
-+ *     used to endorse or promote products derived from this software without
-+ *     specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <stddef.h>
-+
-+#include <assert.h>
-+#include <auth.h>
-+#include <debug.h>
-+#include <platform.h>
-+#include <platform_def.h>
-+#include <mmio.h>
-+
-+#include "rcarboot.h"
-+
-+#if MASTER_BOOT_CPU == RCAR_BOOT_CA5X
-+#define RCAR_BOOT_KEY_CERT	(0xE6300C00U)
-+#elif MASTER_BOOT_CPU == RCAR_BOOT_CR7
-+#define RCAR_BOOT_KEY_CERT	(0xE6300400U)
-+#endif
-+#define RCAR_SBROM_API		(0xeb10dd64U)
-+#define	RST_BASE		(0xE6160000U)
-+#define	RST_MODEMR		(RST_BASE + 0x0060U)
-+#define LIFEC_CC_LCS		(0xE6110028U)		/* cc_lcs  Life cycle state read */
-+#define	MFISSOFTMDR		(0xE6260600U)		/* SOFTMD register */
-+
-+static SECURE_BOOT_API	sbrom_SecureBootAPI;
-+
-+static int32_t rcarboot_mod_verify(uint32_t id, uintptr_t obj, size_t len);
-+static int32_t rcarboot_mod_init(void);
-+#if !RCAR_SECURE_BOOT
-+static int32_t local_verify(uint32_t a, uint32_t b, void *c);
-+#endif
-+
-+/*
-+ * Object verification function
-+ *
-+ * The id parameter will indicate the expected format of the object
-+ * (certificate, image, etc).
-+ *
-+ * Return: 0 = success, Otherwise = error
-+ */
-+static int32_t rcarboot_mod_verify(uint32_t id, uintptr_t obj, size_t len)
-+{
-+	int32_t ret = 0;
-+	uint32_t cert_addr;
-+
-+	switch (id) {
-+#if IMAGE_BL2
-+	case (uint32_t)AUTH_TRUSTED_KEY_CERT:
-+	case (uint32_t)AUTH_BL31_KEY_CERT:
-+	case (uint32_t)AUTH_BL32_KEY_CERT:
-+	case (uint32_t)AUTH_BL33_KEY_CERT:
-+	case (uint32_t)AUTH_BL31_IMG_CERT:
-+	case (uint32_t)AUTH_BL32_IMG_CERT:
-+	case (uint32_t)AUTH_BL33_IMG_CERT:
-+		/* no check */
-+		break;
-+	case (uint32_t)AUTH_BL31_IMG:
-+		ret = file_to_cert((const int8_t *)BL31_CERT_NAME, &cert_addr);
-+		if (0 == ret) {
-+			ret = sbrom_SecureBootAPI(RCAR_BOOT_KEY_CERT, cert_addr, NULL);
-+		}
-+		break;
-+	case (uint32_t)AUTH_BL32_IMG:
-+		ret = file_to_cert((const int8_t *)BL32_CERT_NAME, &cert_addr);
-+		if (0 == ret) {
-+			ret = sbrom_SecureBootAPI(RCAR_BOOT_KEY_CERT, cert_addr, NULL);
-+		}
-+		break;
-+	case (uint32_t)AUTH_BL33_IMG:
-+		ret = file_to_cert((const int8_t *)BL33_CERT_NAME, &cert_addr);
-+		if (0 == ret) {
-+			ret = sbrom_SecureBootAPI(RCAR_BOOT_KEY_CERT, cert_addr, NULL);
-+		}
-+		break;
-+#endif /* IMAGE_BL2 */
-+	default:
-+		ret = -1;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
-+static int32_t local_verify(uint32_t a, uint32_t b, void *c)
-+{
-+	return 0;
-+}
-+
-+/*
-+ * Module initialization function
-+ *
-+ * Return: 0 = success, Otherwise = error
-+ */
-+static int32_t rcarboot_mod_init(void)
-+{
-+#if RCAR_SECURE_BOOT
-+	uint32_t lcs = (mmio_read_32(LIFEC_CC_LCS) & 0x000000F0U) >> 4;
-+	uint32_t md = (mmio_read_32(RST_MODEMR) & 0x00000020U) >> 5;
-+	uint32_t softmd = (mmio_read_32(MFISSOFTMDR) & 0x00000001U);
-+
-+	/* default is Secure boot */
-+	sbrom_SecureBootAPI = (SECURE_BOOT_API)RCAR_SBROM_API;
-+
-+	if (lcs == 0x5U) { /* LCS=Secure */
-+		if (softmd == 0x1U) {
-+			sbrom_SecureBootAPI = &local_verify; /* LCS=Secure + Normal boot (temp setting) */
-+		}  /* else is LCS=Secure + Secure boot */
-+	} else if (md != 0U) {
-+		sbrom_SecureBootAPI = &local_verify; /* MD5=1 => LCS=CM/DM + Normal boot */
-+	} /* else is MD5=0 => LCS=CM/DM + Secure boot */
-+
-+	if (sbrom_SecureBootAPI == &local_verify) {
-+		NOTICE("BL2: Normal boot\n");
-+	} else {
-+		NOTICE("BL2: Secure boot\n");
-+	}
-+#else
-+	sbrom_SecureBootAPI = &local_verify;
-+	NOTICE("BL2: Normal boot\n");
-+#endif
-+	return 0;
-+}
-+
-+const auth_mod_t auth_mod = {
-+	.name = "RCarSecureBoot",
-+	.init = &rcarboot_mod_init,
-+	.verify = &rcarboot_mod_verify
-+};
-diff --git a/common/auth/rcar/rcarboot.h b/common/auth/rcar/rcarboot.h
-new file mode 100644
-index 0000000..61f51ea
---- /dev/null
-+++ b/common/auth/rcar/rcarboot.h
-@@ -0,0 +1,41 @@
-+/*
-+ * Copyright (c) 2015-2016, Renesas Electronics Corporation
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions are met:
-+ *
-+ *   - Redistributions of source code must retain the above copyright notice,
-+ *     this list of conditions and the following disclaimer.
-+ *
-+ *   - Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in the
-+ *     documentation and/or other materials provided with the distribution.
-+ *
-+ *   - Neither the name of Renesas nor the names of its contributors may be
-+ *     used to endorse or promote products derived from this software without
-+ *     specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef RCAR_RCARBOOT_H_
-+#define RCAR_RCARBOOT_H_
-+
-+/* Define */
-+typedef int32_t (*SECURE_BOOT_API)(uint32_t a, uint32_t b, void *c);
-+
-+/* Prototype */
-+extern int32_t file_to_cert(const int8_t *filename, uint32_t *cert_addr);
-+
-+#endif /* RCAR_RCARBOOT_H_ */
 diff --git a/common/tf_printf.c b/common/tf_printf.c
-index c68b990..f48290e 100644
+index c68b990..45b756f 100644
 --- a/common/tf_printf.c
 +++ b/common/tf_printf.c
-@@ -31,6 +31,9 @@
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2014, ARM Limited and Contributors. All rights reserved.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are met:
+@@ -31,6 +32,9 @@
  #include <stdarg.h>
  #include <stdint.h>
  
@@ -548,7 +318,7 @@ index c68b990..f48290e 100644
  /***********************************************************
   * The tf_printf implementation for all BL stages
   ***********************************************************/
-@@ -79,6 +82,10 @@ void tf_printf(const char *fmt, ...)
+@@ -79,6 +83,10 @@ void tf_printf(const char *fmt, ...)
  	uint64_t unum;
  	char *str;
  
@@ -559,29 +329,6 @@ index c68b990..f48290e 100644
  	va_start(args, fmt);
  	while (*fmt) {
  		bit64 = 0;
-diff --git a/include/lib/mmio.h b/include/lib/mmio.h
-index cb37a1c..bae901a 100644
---- a/include/lib/mmio.h
-+++ b/include/lib/mmio.h
-@@ -43,6 +43,18 @@ static inline uint8_t mmio_read_8(uintptr_t addr)
- 	return *(volatile uint8_t*)addr;
- }
- 
-+#if PLAT_rcar
-+static inline void mmio_write_16(uintptr_t addr, uint16_t value)
-+{
-+	*(volatile uint16_t*)addr = value;
-+}
-+
-+static inline uint16_t mmio_read_16(uintptr_t addr)
-+{
-+	return *(volatile uint16_t*)addr;
-+}
-+
-+#endif
- static inline void mmio_write_32(uintptr_t addr, uint32_t value)
- {
- 	*(volatile uint32_t*)addr = value;
 diff --git a/plat/renesas/rcar/aarch64/bl2_reset.S b/plat/renesas/rcar/aarch64/bl2_reset.S
 new file mode 100644
 index 0000000..001ca94
@@ -1016,7 +763,7 @@ index 0000000..001ca94
 +	check_vector_size SErrorA32
 diff --git a/plat/renesas/rcar/aarch64/rcar_common.c b/plat/renesas/rcar/aarch64/rcar_common.c
 new file mode 100644
-index 0000000..9fec7fb
+index 0000000..f90692d
 --- /dev/null
 +++ b/plat/renesas/rcar/aarch64/rcar_common.c
 @@ -0,0 +1,262 @@
@@ -1079,7 +826,7 @@ index 0000000..9fec7fb
 +					DRAM1_NS_SIZE,			\
 +					MT_MEMORY | MT_RW | MT_NS)
 +
-+#define MAP_BL32_MEM	MAP_REGION_FLAT(BL32_BASE,		\
++#define MAP_BL32_MEM	MAP_REGION_FLAT(BL32_BASE,			\
 +					BL32_LIMIT - BL32_BASE,		\
 +					MT_MEMORY | MT_RW | MT_SECURE)
 +
@@ -1191,7 +938,7 @@ index 0000000..9fec7fb
 +DEFINE_CONFIGURE_MMU_EL(3)
 +
 +#if (IMAGE_BL2)
-+extern int32_t file_to_cert(const int8_t *filename, uint32_t *cert_addr);
++extern int32_t file_to_cert(const int32_t filename, uint32_t *cert_addr);
 +extern void get_info_from_cert(uint64_t cert_addr, uint32_t *size, uint32_t *dest_addr);
 +#endif
 +
@@ -1202,7 +949,7 @@ index 0000000..9fec7fb
 +	uint32_t cert_addr;
 +	uint32_t l_image_size;
 +	uint32_t dest_addr;
-+	ret = file_to_cert((const int8_t *)BL33_CERT_NAME, &cert_addr);
++	ret = file_to_cert(BL33_CERT_ID, &cert_addr);
 +	if (0 == ret) {
 +		get_info_from_cert((uint64_t) cert_addr, &l_image_size, &dest_addr);
 +	} else {
@@ -6641,10 +6388,10 @@ index 0000000..40f422b
 +}
 diff --git a/plat/renesas/rcar/bl2_qos_init.c b/plat/renesas/rcar/bl2_qos_init.c
 new file mode 100644
-index 0000000..a3c3711
+index 0000000..efebbb0
 --- /dev/null
 +++ b/plat/renesas/rcar/bl2_qos_init.c
-@@ -0,0 +1,614 @@
+@@ -0,0 +1,616 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -6681,7 +6428,7 @@ index 0000000..a3c3711
 +#include <debug.h>
 +#include "bl2_qos_init.h"
 +
-+#define	RCAR_QOS_VERSION		"rev.0.24"
++#define	RCAR_QOS_VERSION		"rev.0.24A"
 +
 +#define	RCAR_QOS_NONE			(3U)
 +#define	RCAR_QOS_TYPE_GFX		(0U)
@@ -6811,14 +6558,14 @@ index 0000000..a3c3711
 +	{0x0248U, 0x0000000000000000U},
 +	{0x0250U, 0x0000000000000000U},
 +	{0x0258U, 0x0000000000000000U},
-+	{0x0260U, 0x0000000000000000U},
-+	{0x0268U, 0x0000000000000000U},
-+	{0x0270U, 0x0000000000000000U},
-+	{0x0278U, 0x0000000000000000U},
-+	{0x0280U, 0x0000000000000000U},
-+	{0x0288U, 0x0000000000000000U},
-+	{0x0290U, 0x0000000000000000U},
-+	{0x0298U, 0x0000000000000000U},
++	{0x0260U, 0x000C00000000FFFFU},
++	{0x0268U, 0x001410010000FFFFU},
++	{0x0270U, 0x001404010000FFFFU},
++	{0x0278U, 0x000C00000000FFFFU},
++	{0x0280U, 0x001400000000FFFFU},
++	{0x0288U, 0x001400000000FFFFU},
++	{0x0290U, 0x001410010000FFFFU},
++	{0x0298U, 0x001404010000FFFFU},
 +	{0x02A0U, 0x0000000000000000U},
 +	{0x02A8U, 0x0000000000000000U},
 +	{0x02B0U, 0x0000000000000000U},
@@ -6918,14 +6665,14 @@ index 0000000..a3c3711
 +	{0x0248U, 0x001000100C8FFC01U},
 +	{0x0250U, 0x001000100C8FFC01U},
 +	{0x0258U, 0x001000100C8FFC01U},
-+	{0x0260U, 0x0000000000000000U},
-+	{0x0268U, 0x0000000000000000U},
-+	{0x0270U, 0x0000000000000000U},
-+	{0x0278U, 0x0000000000000000U},
-+	{0x0280U, 0x0000000000000000U},
-+	{0x0288U, 0x0000000000000000U},
-+	{0x0290U, 0x0000000000000000U},
-+	{0x0298U, 0x0000000000000000U},
++	{0x0260U, 0x001000100C8FFC01U},
++	{0x0268U, 0x001000100C8FFC01U},
++	{0x0270U, 0x001000100C8FFC01U},
++	{0x0278U, 0x001000100C8FFC01U},
++	{0x0280U, 0x001000100C8FFC01U},
++	{0x0288U, 0x001000100C8FFC01U},
++	{0x0290U, 0x001000100C8FFC01U},
++	{0x0298U, 0x001000100C8FFC01U},
 +	{0x02A0U, 0x001000100C8FFC01U},
 +	{0x02A8U, 0x001000100C8FFC01U},
 +	{0x02B0U, 0x0000000000000000U},
@@ -7167,8 +6914,6 @@ index 0000000..a3c3711
 +
 +void bl2_qos_init(void)
 +{
-+	uint32_t i;
-+
 +	/* DRAM Split Address mapping */
 +#if RCAR_DRAM_SPLIT == RCAR_DRAM_SPLIT_4CH
 +	NOTICE("BL2: DRAM Split is 4ch\n");
@@ -7220,6 +6965,9 @@ index 0000000..a3c3711
 +	mmio_write_32(MSTAT_REF_ARS, 0x00330000U);
 +
 +	/* MSTAT SRAM setting */
++	{
++	uint32_t i;
++
 +	for (i = 0U; i < ARRAY_SIZE(mstat_fix); i++) {
 +		mmio_write_64(MSTAT_FIX_QOS_BANK0 + mstat_fix[i].addr,
 +				mstat_fix[i].value);
@@ -7231,6 +6979,7 @@ index 0000000..a3c3711
 +				mstat_be[i].value);
 +		mmio_write_64(MSTAT_BE_QOS_BANK1 + mstat_be[i].addr,
 +				mstat_be[i].value);
++	}
 +	}
 +
 +	/* AXI-IF arbitration setting */
@@ -7261,10 +7010,10 @@ index 0000000..a3c3711
 +}
 diff --git a/plat/renesas/rcar/bl2_rcar_setup.c b/plat/renesas/rcar/bl2_rcar_setup.c
 new file mode 100644
-index 0000000..717312f
+index 0000000..469c1da
 --- /dev/null
 +++ b/plat/renesas/rcar/bl2_rcar_setup.c
-@@ -0,0 +1,378 @@
+@@ -0,0 +1,389 @@
 +/*
 + * Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -7333,6 +7082,11 @@ index 0000000..717312f
 +#define	CPG_PLL2CR		(CPG_BASE + 0x002CU)
 +#define	CPG_PLL4CR		(CPG_BASE + 0x01F4U)
 +
++/* RST Registers */
++#define	RST_BASE		(0xE6160000U)
++#define	RST_WDTRSTCR		(RST_BASE + 0x0054U)
++#define	WDTRSTCR_PASSWORD	(0xA55A0000U)
++#define	WDTRSTCR_RWDT_RSTMSK	((uint32_t)1U << 0U)
 +
 +/*******************************************************************************
 + * Declarations of linker defined symbols which will help us find the layout
@@ -7471,7 +7225,7 @@ index 0000000..717312f
 +	/* disable Secure Watchdog Timer */
 +	mmio_write_32(0xE6030004U, 0xA5A5A500U);
 +
-+#if MASTER_BOOT_CPU == RCAR_BOOT_CA5X
++#if RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CA5X
 +	/* initialize Pin Function */
 +	bl2_pfc_init();
 +#endif
@@ -7485,7 +7239,7 @@ index 0000000..717312f
 +	/* Setup the BL2 memory layout */
 +	bl2_tzram_layout = *mem_layout;
 +
-+#if MASTER_BOOT_CPU == RCAR_BOOT_CA5X
++#if RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CA5X
 +	/* Initialize SDRAM */
 +/*	bl2_sdram_init();	*/
 +	InitDram();
@@ -7497,7 +7251,7 @@ index 0000000..717312f
 +	/* Initialize DMA */
 +	initDMA();
 +
-+#if MASTER_BOOT_CPU == RCAR_BOOT_CA5X
++#if RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CA5X
 +	/* Initialize secure configuration */
 +	bl2_secure_setting();
 +
@@ -7507,6 +7261,12 @@ index 0000000..717312f
 +	/* initialize QoS configration */
 +	bl2_qos_init();
 +#endif
++
++	/* unmask the detection of RWDT overflow */
++	reg = mmio_read_32(RST_WDTRSTCR);
++	reg &= ~WDTRSTCR_RWDT_RSTMSK;
++	reg |= WDTRSTCR_PASSWORD;
++	mmio_write_32(RST_WDTRSTCR, reg);
 +
 +	/* Release CPG write protect */
 +	mmio_write_32(CPG_CPGWPR, CPGWPR_PASSWORD);
@@ -10675,10 +10435,10 @@ index 0000000..5c5b4d7
 +}
 diff --git a/plat/renesas/rcar/ddr/boot_init_dram.c b/plat/renesas/rcar/ddr/boot_init_dram.c
 new file mode 100644
-index 0000000..53bb3cc
+index 0000000..ed1270e
 --- /dev/null
 +++ b/plat/renesas/rcar/ddr/boot_init_dram.c
-@@ -0,0 +1,3371 @@
+@@ -0,0 +1,3377 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -10717,6 +10477,10 @@ index 0000000..53bb3cc
 +#include "init_dram_tbl.h"
 +//#include "bit.h"
 +//#include "reg_rcarh3.h"
++
++
++#define	RCAR_DDR_VERSION	"rev.0.10"
++
 +
 +///////////////////////////////////////////////////////////
 +/* add start */
@@ -10909,6 +10673,7 @@ index 0000000..53bb3cc
 +#define DBSC_DBCAM0CNF1			0xE6790904
 +#define DBSC_DBCAM0CNF2			0xE6790908
 +#define DBSC_DBCAM0CNF3			0xE679090C
++#define DBSC_DBBCAMDIS			0xE67909FC
 +#define DBSC_DBSCHCNT0			0xE6791000
 +#define DBSC_DBSCHCNT1			0xE6791004
 +#define DBSC_DBSCHSZ0			0xE6791010
@@ -11091,16 +10856,16 @@ index 0000000..53bb3cc
 +	md = (*((volatile uint32_t*)RST_MODEMR) & 0x000A0000) >> 17;
 +
 +	if (md == 0x0) {
-+		NOTICE("BL2: DDR3200\n");
++		NOTICE("BL2: DDR3200(%s)\n", RCAR_DDR_VERSION);
 +	} else if (md == 0x1) {
 +		freq = DDR2800_CLK;	//MD19=0,MD17=1 : LPDDR4-3000, 4GByte(1GByte x4)
-+		NOTICE("BL2: DDR2800\n");
++		NOTICE("BL2: DDR2800(%s)\n", RCAR_DDR_VERSION);
 +	} else if (md == 0x4) {
 +		freq = DDR2400_CLK;	//MD19=1,MD17=0 : LPDDR4-2400, 4GByte(1GByte x4)
-+		NOTICE("BL2: DDR2400\n");
++		NOTICE("BL2: DDR2400(%s)\n", RCAR_DDR_VERSION);
 +	} else {
 +		freq = DDR1600_CLK;	//MD19=1,MD17=1 : LPDDR4-1600, 4GByte(1GByte x4)
-+		NOTICE("BL2: DDR1600\n");
++		NOTICE("BL2: DDR1600(%s)\n", RCAR_DDR_VERSION);
 +	}
 +	InitDDR_0917(freq);
 +}
@@ -11294,6 +11059,7 @@ index 0000000..53bb3cc
 +	*((volatile uint32_t*)DBSC_DBCAM0CNF1)	= 0x00044218;	//dbcam0cnf1 
 +	*((volatile uint32_t*)DBSC_DBCAM0CNF2)	= 0x000000F4;	//dbcam0cnf2 
 +//	*((volatile uint32_t*)DBSC_DBCAM0CNF3)	= 0x00000003;	//
++	*((volatile uint32_t*)DBSC_DBBCAMDIS)	= 0x00000002;	//Subcam Disable
 +	*((volatile uint32_t*)DBSC_DBSCHCNT0)	= 0x080F003F;	//dbschcnt0
 +	*((volatile uint32_t*)DBSC_DBSCHCNT1)	= 0x00001010;	//dbschcnt1
 +	*((volatile uint32_t*)DBSC_DBSCHSZ0)	= 0x00000001;	//dbschsz0
@@ -15483,6 +15249,214 @@ index 0000000..f571354
 +};
 +
 +#endif /* __INIT_DRAM_TBL_ */
+diff --git a/plat/renesas/rcar/drivers/auth/rcarboot.c b/plat/renesas/rcar/drivers/auth/rcarboot.c
+new file mode 100644
+index 0000000..340468f
+--- /dev/null
++++ b/plat/renesas/rcar/drivers/auth/rcarboot.c
+@@ -0,0 +1,155 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *   - Redistributions of source code must retain the above copyright notice,
++ *     this list of conditions and the following disclaimer.
++ *
++ *   - Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *
++ *   - Neither the name of Renesas nor the names of its contributors may be
++ *     used to endorse or promote products derived from this software without
++ *     specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <stddef.h>
++
++#include <assert.h>
++#include <auth_mod.h>
++#include <debug.h>
++#include <platform.h>
++#include <platform_def.h>
++#include <mmio.h>
++
++#include "rcarboot.h"
++
++#if RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CA5X
++#define RCAR_BOOT_KEY_CERT	(0xE6300C00U)
++#elif RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CR7
++#define RCAR_BOOT_KEY_CERT	(0xE6300400U)
++#endif
++#define RCAR_SBROM_API		(0xeb10dd64U)
++#define	RST_BASE		(0xE6160000U)
++#define	RST_MODEMR		(RST_BASE + 0x0060U)
++#define LIFEC_CC_LCS		(0xE6110028U)		/* cc_lcs  Life cycle state read */
++#define	MFISSOFTMDR		(0xE6260600U)		/* SOFTMD register */
++
++static SECURE_BOOT_API	sbrom_SecureBootAPI;
++
++#if !RCAR_SECURE_BOOT
++static int32_t local_verify(uint32_t a, uint32_t b, void *c);
++#endif
++
++/*
++ * Return the parent id in the output parameter '*parent_id'
++ *
++ * Return value:
++ *   0 = Image has parent, 1 = Image has no parent or parent is authenticated
++ */
++int auth_mod_get_parent_id(unsigned int img_id, unsigned int *parent_id)
++{
++	return 1;
++}
++
++/*
++ * Authenticate a certificate/image
++ *
++ * Return: 0 = success, Otherwise = error
++ */
++int auth_mod_verify_img(unsigned int img_id, void *img_ptr,
++			unsigned int img_len)
++{
++	int32_t ret = 0;
++	uint32_t cert_addr;
++
++	switch (img_id) {
++#if IMAGE_BL2
++	case (uint32_t)TRUSTED_KEY_CERT_ID:
++	case (uint32_t)BL31_KEY_CERT_ID:
++	case (uint32_t)BL32_KEY_CERT_ID:
++	case (uint32_t)BL33_KEY_CERT_ID:
++	case (uint32_t)BL31_CERT_ID:
++	case (uint32_t)BL32_CERT_ID:
++	case (uint32_t)BL33_CERT_ID:
++		/* no check */
++		break;
++	case (uint32_t)BL31_IMAGE_ID:
++		ret = file_to_cert(BL31_CERT_ID, &cert_addr);
++		if (0 == ret) {
++			ret = sbrom_SecureBootAPI(RCAR_BOOT_KEY_CERT, cert_addr, NULL);
++		}
++		break;
++	case (uint32_t)BL32_IMAGE_ID:
++		ret = file_to_cert(BL32_CERT_ID, &cert_addr);
++		if (0 == ret) {
++			ret = sbrom_SecureBootAPI(RCAR_BOOT_KEY_CERT, cert_addr, NULL);
++		}
++		break;
++	case (uint32_t)BL33_IMAGE_ID:
++		ret = file_to_cert(BL33_CERT_ID, &cert_addr);
++		if (0 == ret) {
++			ret = sbrom_SecureBootAPI(RCAR_BOOT_KEY_CERT, cert_addr, NULL);
++		}
++		break;
++#endif /* IMAGE_BL2 */
++	default:
++		ret = -1;
++		break;
++	}
++
++	return ret;
++}
++
++static int32_t local_verify(uint32_t a, uint32_t b, void *c)
++{
++	return 0;
++}
++
++/*
++ * Initialize the different modules in the authentication framework
++ */
++void auth_mod_init(void)
++{
++#if RCAR_SECURE_BOOT
++	uint32_t lcs = (mmio_read_32(LIFEC_CC_LCS) & 0x000000F0U) >> 4;
++	uint32_t md = (mmio_read_32(RST_MODEMR) & 0x00000020U) >> 5;
++	uint32_t softmd = (mmio_read_32(MFISSOFTMDR) & 0x00000001U);
++
++	/* default is Secure boot */
++	sbrom_SecureBootAPI = (SECURE_BOOT_API)RCAR_SBROM_API;
++
++	if (lcs == 0x5U) { /* LCS=Secure */
++		if (softmd == 0x1U) {
++			sbrom_SecureBootAPI = &local_verify; /* LCS=Secure + Normal boot (temp setting) */
++		}  /* else is LCS=Secure + Secure boot */
++	} else if (md != 0U) {
++		sbrom_SecureBootAPI = &local_verify; /* MD5=1 => LCS=CM/DM + Normal boot */
++	} /* else is MD5=0 => LCS=CM/DM + Secure boot */
++
++	if (sbrom_SecureBootAPI == &local_verify) {
++		NOTICE("BL2: Normal boot\n");
++	} else {
++		NOTICE("BL2: Secure boot\n");
++	}
++#else
++	sbrom_SecureBootAPI = &local_verify;
++	NOTICE("BL2: Normal boot\n");
++#endif
++}
+diff --git a/plat/renesas/rcar/drivers/auth/rcarboot.h b/plat/renesas/rcar/drivers/auth/rcarboot.h
+new file mode 100644
+index 0000000..2d015ca
+--- /dev/null
++++ b/plat/renesas/rcar/drivers/auth/rcarboot.h
+@@ -0,0 +1,41 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ *   - Redistributions of source code must retain the above copyright notice,
++ *     this list of conditions and the following disclaimer.
++ *
++ *   - Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *
++ *   - Neither the name of Renesas nor the names of its contributors may be
++ *     used to endorse or promote products derived from this software without
++ *     specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef RCAR_RCARBOOT_H_
++#define RCAR_RCARBOOT_H_
++
++/* Define */
++typedef int32_t (*SECURE_BOOT_API)(uint32_t a, uint32_t b, void *c);
++
++/* Prototype */
++extern int32_t file_to_cert(const int32_t filename, uint32_t *cert_addr);
++
++#endif /* RCAR_RCARBOOT_H_ */
 diff --git a/plat/renesas/rcar/drivers/dma/dma_driver.c b/plat/renesas/rcar/drivers/dma/dma_driver.c
 new file mode 100644
 index 0000000..c4d5519
@@ -15927,10 +15901,10 @@ index 0000000..c864b6b
 +}
 diff --git a/plat/renesas/rcar/drivers/io/io_rcar.c b/plat/renesas/rcar/drivers/io/io_rcar.c
 new file mode 100644
-index 0000000..1e12f37
+index 0000000..5a6d6fb
 --- /dev/null
 +++ b/plat/renesas/rcar/drivers/io/io_rcar.c
-@@ -0,0 +1,596 @@
+@@ -0,0 +1,597 @@
 +/*
 + * Copyright (c) 2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -15978,7 +15952,7 @@ index 0000000..1e12f37
 +
 +
 +typedef struct {
-+	const int8_t	*name;
++	const int32_t	name;
 +	const uint32_t	offset;
 +	const uint32_t	attr;
 +} plat_rcar_name_offset_t;
@@ -16016,28 +15990,28 @@ index 0000000..1e12f37
 +#define RCAR_CERT_LOAD			(1U)
 +
 +static const plat_rcar_name_offset_t name_offset[] = {		/* calc addr, no load, cert offset */
-+	{(const int8_t *)BL31_IMAGE_NAME,	RCAR_GET_FLASH_ADR(7U,0x000U),	RCAR_ATTR_SET_ALL(0,0,0)},
++	{BL31_IMAGE_ID,		RCAR_GET_FLASH_ADR(7U,0x000U),	RCAR_ATTR_SET_ALL(0,0,0)},
 +	/* BL3-2 is optional in the platform */
-+	{(const int8_t *)BL32_IMAGE_NAME,	RCAR_GET_FLASH_ADR(8U,0x000U),	RCAR_ATTR_SET_ALL(0,0,1)},
-+	{(const int8_t *)BL33_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(1,0,2)},
-+	{(const int8_t *)BL332_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(2,0,3)},
-+	{(const int8_t *)BL333_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(3,0,4)},
-+	{(const int8_t *)BL334_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(4,0,5)},
-+	{(const int8_t *)BL335_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(5,0,6)},
-+	{(const int8_t *)BL336_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(6,0,7)},
-+	{(const int8_t *)BL337_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(7,0,8)},
-+	{(const int8_t *)BL338_IMAGE_NAME,	0U,				RCAR_ATTR_SET_ALL(8,0,9)},
++	{BL32_IMAGE_ID,		RCAR_GET_FLASH_ADR(8U,0x000U),	RCAR_ATTR_SET_ALL(0,0,1)},
++	{BL33_IMAGE_ID,		0U,				RCAR_ATTR_SET_ALL(1,0,2)},
++	{BL332_IMAGE_ID,	0U,				RCAR_ATTR_SET_ALL(2,0,3)},
++	{BL333_IMAGE_ID,	0U,				RCAR_ATTR_SET_ALL(3,0,4)},
++	{BL334_IMAGE_ID,	0U,				RCAR_ATTR_SET_ALL(4,0,5)},
++	{BL335_IMAGE_ID,	0U,				RCAR_ATTR_SET_ALL(5,0,6)},
++	{BL336_IMAGE_ID,	0U,				RCAR_ATTR_SET_ALL(6,0,7)},
++	{BL337_IMAGE_ID,	0U,				RCAR_ATTR_SET_ALL(7,0,8)},
++	{BL338_IMAGE_ID,	0U,				RCAR_ATTR_SET_ALL(8,0,9)},
 +};
 +#if TRUSTED_BOARD_BOOT
 +static const plat_rcar_name_offset_t cert_offset[] = {
 +	/* Certificates */
-+	{(const int8_t *)TRUSTED_KEY_CERT_NAME,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
-+	{(const int8_t *)BL31_KEY_CERT_NAME,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
-+	{(const int8_t *)BL32_KEY_CERT_NAME,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
-+	{(const int8_t *)BL33_KEY_CERT_NAME,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
-+	{(const int8_t *)BL31_CERT_NAME,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
-+	{(const int8_t *)BL32_CERT_NAME,	0U,				RCAR_ATTR_SET_ALL(0,1,1)},
-+	{(const int8_t *)BL33_CERT_NAME,	0U,				RCAR_ATTR_SET_ALL(0,1,2)},
++	{TRUSTED_KEY_CERT_ID,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
++	{BL31_KEY_CERT_ID,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
++	{BL32_KEY_CERT_ID,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
++	{BL33_KEY_CERT_ID,	0U,				RCAR_ATTR_SET_ALL(0,1,0)},
++	{BL31_CERT_ID,		0U,				RCAR_ATTR_SET_ALL(0,1,0)},
++	{BL32_CERT_ID,		0U,				RCAR_ATTR_SET_ALL(0,1,1)},
++	{BL33_CERT_ID,		0U,				RCAR_ATTR_SET_ALL(0,1,2)},
 +};
 +#endif /* TRUSTED_BOARD_BOOT */
 +
@@ -16060,7 +16034,7 @@ index 0000000..1e12f37
 +static int32_t rcar_file_close(io_entity_t *entity);
 +static int32_t rcar_dev_init(io_dev_info_t *dev_info, const uintptr_t init_params);
 +static int32_t rcar_dev_close(io_dev_info_t *dev_info);
-+static int32_t file_to_offset(const int8_t *filename, uint32_t *offset, uint32_t *cert_addr, uint32_t *is_noload);
++static int32_t file_to_offset(const int32_t file, uint32_t *offset, uint32_t *cert_addr, uint32_t *is_noload);
 +static int32_t load_bl33x(uintptr_t handle);
 +
 +
@@ -16106,13 +16080,13 @@ index 0000000..1e12f37
 +	return IO_SUCCESS;
 +}
 +
-+int32_t file_to_cert(const int8_t *filename, uint32_t *cert_addr)
++int32_t file_to_cert(const int32_t filename, uint32_t *cert_addr)
 +{
 +	int32_t i;
 +	int32_t status = -EINVAL;
 +
 +	for (i = 0; i < (int32_t)ARRAY_SIZE(cert_offset); i++) {
-+		if (strcmp((const char *)filename, (const char *)cert_offset[i].name) == 0) {
++		if (filename == cert_offset[i].name) {
 +			*cert_addr = RCAR_CERT_SIZE;
 +			*cert_addr *= (uint32_t)RCAR_ATTR_GET_CERTOFF(cert_offset[i].attr);
 +			*cert_addr += RCAR_SDRAM_CERT_ADDRESS;
@@ -16123,7 +16097,7 @@ index 0000000..1e12f37
 +	return status;
 +}
 +
-+static int32_t file_to_offset(const int8_t *filename, uint32_t *offset, uint32_t *cert_addr, uint32_t *is_noload)
++static int32_t file_to_offset(const int32_t file, uint32_t *offset, uint32_t *cert_addr, uint32_t *is_noload)
 +{
 +	int32_t i;
 +	int32_t status = -EINVAL;
@@ -16134,7 +16108,7 @@ index 0000000..1e12f37
 +	assert(is_noload != NULL);
 +
 +	for (i = 0; i < (int32_t)ARRAY_SIZE(name_offset); i++) {
-+		if (strcmp((const char *)filename, (const char *)name_offset[i].name) == 0) {
++		if (file == name_offset[i].name) {
 +			is_calc_addr = RCAR_ATTR_GET_CALCADDR(name_offset[i].attr);
 +			if (rcar_image_header[0] >= is_calc_addr)
 +			{
@@ -16156,7 +16130,7 @@ index 0000000..1e12f37
 +
 +	if (IO_SUCCESS != status) {
 +		for (i = 0; i < (int32_t)ARRAY_SIZE(cert_offset); i++) {
-+			if (strcmp((const char *)filename, (const char *)cert_offset[i].name) == 0) {
++			if (file == cert_offset[i].name) {
 +				*offset = 0U;
 +				*cert_addr = 0U;
 +				*is_noload = RCAR_ATTR_GET_ISNOLOAD(cert_offset[i].attr);
@@ -16189,15 +16163,15 @@ index 0000000..1e12f37
 +	uint32_t l_image_size;
 +	uint32_t dest_addr;
 +	size_t bytes_read;
-+	const char *load_names[] = {
-+		BL33_IMAGE_NAME,
-+		BL332_IMAGE_NAME,
-+		BL333_IMAGE_NAME,
-+		BL334_IMAGE_NAME,
-+		BL335_IMAGE_NAME,
-+		BL336_IMAGE_NAME,
-+		BL337_IMAGE_NAME,
-+		BL338_IMAGE_NAME
++	const int32_t load_names[] = {
++		BL33_IMAGE_ID,
++		BL332_IMAGE_ID,
++		BL333_IMAGE_ID,
++		BL334_IMAGE_ID,
++		BL335_IMAGE_ID,
++		BL336_IMAGE_ID,
++		BL337_IMAGE_ID,
++		BL338_IMAGE_ID
 +	};
 +
 +	for (; loop < rcar_image_header[0]; loop++) {
@@ -16206,7 +16180,7 @@ index 0000000..1e12f37
 +			break;
 +		}
 +
-+		result = file_to_offset((const int8_t *)load_names[loop], &file_offset,
++		result = file_to_offset(load_names[loop], &file_offset,
 +			&cert_addr, &noload);
 +		if (IO_SUCCESS != result) {
 +			WARN("load_bl33x: failed to get offset\n");
@@ -16242,16 +16216,17 @@ index 0000000..1e12f37
 +static int32_t rcar_dev_init(io_dev_info_t *dev_info, const uintptr_t init_params)
 +{
 +	int32_t result;
-+	int8_t *image_name = (int8_t *)init_params;
++	int32_t image_name = (int32_t)init_params;
 +	uintptr_t backend_handle;
 +	size_t bytes_read;
 +
 +	/* Obtain a reference to the image by querying the platform layer */
 +	/* get rcar flash memory address... (certain BL2, BL31, BL32, BL33... max 64MB:RPC LBSC address) */
-+	result = plat_get_image_source((const char *)image_name, &backend_dev_handle,
++	/* sakata check image number */
++	result = plat_get_image_source(image_name, &backend_dev_handle,
 +				       &backend_image_spec);
 +	if (result != IO_SUCCESS) {
-+		WARN("Failed to obtain reference to image '%s' (%i)\n",
++		WARN("Failed to obtain reference to image '%d' (%i)\n",
 +			image_name, result);
 +		result = IO_FAIL;
 +	} else {
@@ -16266,7 +16241,7 @@ index 0000000..1e12f37
 +			result = io_open(backend_dev_handle, backend_image_spec,
 +					&backend_handle);
 +			if (result != IO_SUCCESS) {
-+				WARN("Failed to access image '%s' (%i)\n",
++				WARN("Failed to access image '%d' (%i)\n",
 +						image_name, result);
 +				result = IO_FAIL;
 +			}
@@ -16363,7 +16338,7 @@ index 0000000..1e12f37
 +	uint32_t cert_addr;
 +	uint32_t l_image_size;
 +	uint32_t dest_addr;
-+	const io_file_spec_t *file_spec = (io_file_spec_t *)spec;
++	const io_block_spec_t *file_spec = (io_block_spec_t *)spec;
 +
 +	assert(file_spec != NULL);
 +	assert(entity != NULL);
@@ -16380,11 +16355,11 @@ index 0000000..1e12f37
 +	} else {
 +
 +		/* get file offset(but BL33 image id not get) */
-+		result = file_to_offset((const int8_t *) file_spec->path,
++		result = file_to_offset(file_spec->offset,
 +			&file_offset, &cert_addr, &noload);
 +		if (result != IO_SUCCESS) {
-+			WARN("Failed to open file name %s (%i)\n",
-+				file_spec->path, result);
++			WARN("Failed to open file name %ld (%i)\n",
++				file_spec->offset, result);
 +			result = IO_FAIL;
 +		} else {
 +			if (0U != noload) {
@@ -16633,10 +16608,10 @@ index 0000000..e8f5c04
 +endfunc readreg_cntpct_el0
 diff --git a/plat/renesas/rcar/drivers/memdrv/rcar_printf.c b/plat/renesas/rcar/drivers/memdrv/rcar_printf.c
 new file mode 100644
-index 0000000..41478b5
+index 0000000..15a4bcf
 --- /dev/null
 +++ b/plat/renesas/rcar/drivers/memdrv/rcar_printf.c
-@@ -0,0 +1,174 @@
+@@ -0,0 +1,169 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -16674,9 +16649,12 @@ index 0000000..41478b5
 +
 +#include	<arch_helpers.h>
 +#include	<platform_def.h>
++#include	<bakery_lock.h>
 +#include	"../../rcar_def.h"
 +#include	"../../rcar_private.h"
 +#include	"rcar_printf.h"
++
++extern RCAR_INSTANTIATE_LOCK
 +
 +typedef struct log_head
 +{
@@ -16692,14 +16670,6 @@ index 0000000..41478b5
 +	uint8_t log_data[RCAR_BL31_LOG_MAX];
 +	uint8_t res_data[RCAR_LOG_RES_SIZE];
 +} logmap_t;
-+
-+#if USE_COHERENT_MEM
-+static bakery_lock_t log_lock __attribute__((section("tzfw_coherent_mem")));
-+#define	LOG_LOCK	(&log_lock)
-+#else
-+#define	LOG_LOCK	ERROR("not use coherent memory");	\
-+			panic();
-+#endif
 +
 +void rcar_set_log_time(void)
 +{
@@ -16755,7 +16725,7 @@ index 0000000..41478b5
 +
 +	t_log = (logmap_t *)RCAR_BL31_LOG_BASE;
 +
-+	rcar_lock_get(LOG_LOCK);
++	rcar_lock_get();
 +
 +	/*
 +	 * If index is broken, then index and size initialize
@@ -16776,7 +16746,7 @@ index 0000000..41478b5
 +		t_log->header.index = 0U;
 +	}
 +
-+	rcar_lock_release(LOG_LOCK);
++	rcar_lock_release();
 +
 +	return(1);
 +}
@@ -16807,7 +16777,7 @@ index 0000000..41478b5
 +		t_log->header.index = 0U;
 +		t_log->header.size = 0U;
 +	}
-+	rcar_lock_init(LOG_LOCK);
++	rcar_lock_init();
 +
 +	return(1);
 +}
@@ -16862,10 +16832,10 @@ index 0000000..f9e4e54
 +#endif	/* RCAR_PRINTF_H__	*/
 diff --git a/plat/renesas/rcar/drivers/pwrc/rcar_pwrc.c b/plat/renesas/rcar/drivers/pwrc/rcar_pwrc.c
 new file mode 100644
-index 0000000..0b91fd5
+index 0000000..6a4fb03
 --- /dev/null
 +++ b/plat/renesas/rcar/drivers/pwrc/rcar_pwrc.c
-@@ -0,0 +1,268 @@
+@@ -0,0 +1,262 @@
 +/*
 + * Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -16909,13 +16879,7 @@ index 0000000..0b91fd5
 + * TODO: Someday there will be a generic power controller api. At the moment
 + * each platform has its own pwrc so just exporting functions is fine.
 + */
-+#if USE_COHERENT_MEM
-+static bakery_lock_t pwrc_lock __attribute__ ((section("tzfw_coherent_mem")));
-+#define PWRC_LOCK	(&pwrc_lock)
-+#else
-+#define PWRC_LOCK	ERROR("not use coherent memory");	\
-+			panic();
-+#endif
++RCAR_INSTANTIATE_LOCK
 +
 +#define	WUP_IRQ_SHIFT	(0U)
 +#define	WUP_FIQ_SHIFT	(8U)
@@ -16945,7 +16909,7 @@ index 0000000..0b91fd5
 +	uint64_t cpu_no;
 +	uint32_t prr_data;
 +
-+	rcar_lock_get(PWRC_LOCK);
++	rcar_lock_get();
 +	prr_data = mmio_read_32((uintptr_t)RCAR_PRR);
 +	cpu_no = mpidr & (uint64_t)MPIDR_CPU_MASK;
 +	if ((mpidr & ((uint64_t)MPIDR_CLUSTER_MASK)) != 0U) {
@@ -16964,7 +16928,7 @@ index 0000000..0b91fd5
 +		}
 +	}
 +	NOTICE("BL31: - rcar_pwrc_read_psysr : rc=0x%x\n", rc);
-+	rcar_lock_release(PWRC_LOCK);
++	rcar_lock_release();
 +
 +	return rc;
 +}
@@ -16978,7 +16942,7 @@ index 0000000..0b91fd5
 +	uint64_t cpu_no;
 +	uint32_t upper_value;
 +
-+	rcar_lock_get(PWRC_LOCK);
++	rcar_lock_get();
 +
 +	cpu_no = mpidr & (uint64_t)MPIDR_CPU_MASK;
 +	if ((mpidr & ((uint64_t)MPIDR_CLUSTER_MASK)) != 0U) {
@@ -16996,7 +16960,7 @@ index 0000000..0b91fd5
 +	mmio_write_32(on_reg, (uint32_t)((uint32_t)1U << cpu_no));
 +	res_data = mmio_read_32(res_reg) | upper_value;
 +	mmio_write_32(res_reg, (res_data & (~((uint32_t)1U << (3U - cpu_no)))));
-+	rcar_lock_release(PWRC_LOCK);
++	rcar_lock_release();
 +}
 +
 +static void SCU_power_up(uint64_t mpidr)
@@ -17052,7 +17016,7 @@ index 0000000..0b91fd5
 +	uint32_t *off_reg;
 +	uint64_t cpu_no;
 +
-+	rcar_lock_get(PWRC_LOCK);
++	rcar_lock_get();
 +	cpu_no = mpidr & (uint64_t)MPIDR_CPU_MASK;
 +	if ((mpidr & (uint64_t)MPIDR_CLUSTER_MASK) != 0U) {
 +		/* A53 side				*/
@@ -17063,7 +17027,7 @@ index 0000000..0b91fd5
 +	}
 +	mmio_write_32(off_reg+(cpu_no*10), (uint32_t)0x03U);
 +	wfi();
-+	rcar_lock_release(PWRC_LOCK);
++	rcar_lock_release();
 +#endif
 +}
 +
@@ -17074,7 +17038,7 @@ index 0000000..0b91fd5
 +	uint32_t shift_irq;
 +	uint32_t shift_fiq;
 +
-+	rcar_lock_get(PWRC_LOCK);
++	rcar_lock_get();
 +	cpu_no = mpidr & (uint64_t)MPIDR_CPU_MASK;
 +	if ((mpidr & ((uint64_t)MPIDR_CLUSTER_MASK)) != 0U) {
 +		/* A53 side				*/
@@ -17086,7 +17050,7 @@ index 0000000..0b91fd5
 +	shift_irq = WUP_IRQ_SHIFT + (uint32_t)cpu_no;
 +	shift_fiq = WUP_FIQ_SHIFT + (uint32_t)cpu_no;
 +	mmio_write_32(reg, (uint32_t)((~((uint32_t)1U << shift_irq)) & (~((uint32_t)1U << shift_fiq))));
-+	rcar_lock_release(PWRC_LOCK);
++	rcar_lock_release();
 +}
 +
 +void rcar_pwrc_disable_interrupt_wakeup(uint64_t mpidr)
@@ -17096,7 +17060,7 @@ index 0000000..0b91fd5
 +	uint32_t shift_irq;
 +	uint32_t shift_fiq;
 +
-+	rcar_lock_get(PWRC_LOCK);
++	rcar_lock_get();
 +	cpu_no = mpidr & (uint64_t)MPIDR_CPU_MASK;
 +	if ((mpidr & ((uint64_t)MPIDR_CLUSTER_MASK)) != 0U) {
 +		/* A53 side				*/
@@ -17108,7 +17072,7 @@ index 0000000..0b91fd5
 +	shift_irq = WUP_IRQ_SHIFT + (uint32_t)cpu_no;
 +	shift_fiq = WUP_FIQ_SHIFT + (uint32_t)cpu_no;
 +	mmio_write_32(reg, (uint32_t)(((uint32_t)1U << shift_irq) | ((uint32_t)1U << shift_fiq)));
-+	rcar_lock_release(PWRC_LOCK);
++	rcar_lock_release();
 +}
 +
 +#if 0
@@ -17116,7 +17080,7 @@ index 0000000..0b91fd5
 +{
 +	uintptr_t off_reg;
 +
-+	rcar_lock_get(PWRC_LOCK);
++	rcar_lock_get();
 +	if ((mpidr & (uint64_t)MPIDR_CLUSTER_MASK) != 0U) {
 +		/* A53 side				*/
 +		off_reg = (uintptr_t)RCAR_CA53CPUCMCR;
@@ -17125,14 +17089,14 @@ index 0000000..0b91fd5
 +		off_reg = (uintptr_t)RCAR_CA57CPUCMCR;
 +	}
 +	mmio_write_32(off_reg, (uint32_t)0x03U);
-+	rcar_lock_release(PWRC_LOCK);
++	rcar_lock_release();
 +}
 +#endif
 +
 +/* Nothing else to do here apart from initializing the lock */
 +void rcar_pwrc_setup(void)
 +{
-+	rcar_lock_init(PWRC_LOCK);
++	rcar_lock_init();
 +}
 diff --git a/plat/renesas/rcar/drivers/pwrc/rcar_pwrc.h b/plat/renesas/rcar/drivers/pwrc/rcar_pwrc.h
 new file mode 100644
@@ -19019,10 +18983,10 @@ index 0000000..85c0718
 +#endif	/* DMA_DRIVER_H__ */
 diff --git a/plat/renesas/rcar/include/io_common.h b/plat/renesas/rcar/include/io_common.h
 new file mode 100644
-index 0000000..d414c1b
+index 0000000..1619ad2
 --- /dev/null
 +++ b/plat/renesas/rcar/include/io_common.h
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,41 @@
 +/*
 + * Copyright (c) 2014 ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -19058,8 +19022,10 @@ index 0000000..d414c1b
 +#define IO_COMMON_H__
 +
 +extern void rcar_io_setup (void);
-+extern int plat_get_image_source(const char *image_name, uintptr_t *dev_handle,
-+		  uintptr_t *image_spec);
++extern int plat_get_image_source(unsigned int image_id,
++			uintptr_t *dev_handle,
++			uintptr_t *image_spec);
++
 +
 +#endif /* IO_COMMON_H__ */
 diff --git a/plat/renesas/rcar/include/io_memdrv.h b/plat/renesas/rcar/include/io_memdrv.h
@@ -19109,7 +19075,7 @@ index 0000000..4eafa5e
 +#endif /* IO_MEMDRV_H__ */
 diff --git a/plat/renesas/rcar/include/io_rcar.h b/plat/renesas/rcar/include/io_rcar.h
 new file mode 100644
-index 0000000..8efe406
+index 0000000..b176112
 --- /dev/null
 +++ b/plat/renesas/rcar/include/io_rcar.h
 @@ -0,0 +1,39 @@
@@ -19148,7 +19114,7 @@ index 0000000..8efe406
 +#define IO_RCAR_H__
 +
 +int32_t register_io_dev_rcar(const io_dev_connector_t **dev_con);
-+int32_t file_to_cert(const int8_t *filename, uint32_t *cert_addr);
++int32_t file_to_cert(const int32_t filename, uint32_t *cert_addr);
 +void get_info_from_cert(uint64_t cert_addr, uint32_t *size, uint32_t *dest_addr);
 +
 +#endif /* IO_FIP_H__ */
@@ -19470,10 +19436,10 @@ index 0000000..8ddfaad
 +#endif /* RCAR_PLATFORM_H__ */
 diff --git a/plat/renesas/rcar/include/platform_def.h b/plat/renesas/rcar/include/platform_def.h
 new file mode 100644
-index 0000000..58a4fff
+index 0000000..25fb62b
 --- /dev/null
 +++ b/plat/renesas/rcar/include/platform_def.h
-@@ -0,0 +1,231 @@
+@@ -0,0 +1,204 @@
 +/*
 + * Copyright (c) 2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -19549,40 +19515,13 @@ index 0000000..58a4fff
 +
 +#define FIRMWARE_WELCOME_STR		"Booting Trusted Firmware\n"
 +
-+/* Trusted Boot Firmware BL2 */
-+#define BL2_IMAGE_NAME			"bl2.bin"
-+
-+/* EL3 Runtime Firmware BL31 */
-+#define BL31_IMAGE_NAME			"bl31.bin"
-+
-+/* Secure Payload BL32 (Trusted OS) */
-+#define BL32_IMAGE_NAME			"bl32.bin"
-+
-+/* Non-Trusted Firmware BL33 */
-+#define BL33_IMAGE_NAME			"bl33.bin" /* e.g. UEFI */
-+#define BL332_IMAGE_NAME		"bl332.bin"
-+#define BL333_IMAGE_NAME		"bl333.bin"
-+#define BL334_IMAGE_NAME		"bl334.bin"
-+#define BL335_IMAGE_NAME		"bl335.bin"
-+#define BL336_IMAGE_NAME		"bl336.bin"
-+#define BL337_IMAGE_NAME		"bl337.bin"
-+#define BL338_IMAGE_NAME		"bl338.bin"
-+
-+#if TRUSTED_BOARD_BOOT
-+/* Certificates */
-+# define BL2_CERT_NAME			"bl2.crt"
-+# define TRUSTED_KEY_CERT_NAME		"trusted_key.crt"
-+
-+# define BL30_KEY_CERT_NAME		"bl30_key.crt"
-+# define BL31_KEY_CERT_NAME		"bl31_key.crt"
-+# define BL32_KEY_CERT_NAME		"bl32_key.crt"
-+# define BL33_KEY_CERT_NAME		"bl33_key.crt"
-+
-+# define BL30_CERT_NAME			"bl30.crt"
-+# define BL31_CERT_NAME			"bl31.crt"
-+# define BL32_CERT_NAME			"bl32.crt"
-+# define BL33_CERT_NAME			"bl33.crt"
-+#endif /* TRUSTED_BOARD_BOOT */
++#define BL332_IMAGE_ID		(BL33_CERT_ID + 1U)
++#define BL333_IMAGE_ID		(BL33_CERT_ID + 2U)
++#define BL334_IMAGE_ID		(BL33_CERT_ID + 3U)
++#define BL335_IMAGE_ID		(BL33_CERT_ID + 4U)
++#define BL336_IMAGE_ID		(BL33_CERT_ID + 5U)
++#define BL337_IMAGE_ID		(BL33_CERT_ID + 6U)
++#define BL338_IMAGE_ID		(BL33_CERT_ID + 7U)
 +
 +/*
 + * R-Car H3 Cortex-A57
@@ -19633,10 +19572,10 @@ index 0000000..58a4fff
 + * size plus a little space for growth.
 + */
 +#define	RCAR_SECRAM_BASE		(0xE6300000)
-+#if MASTER_BOOT_CPU == RCAR_BOOT_CA5X
++#if RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CA5X
 +#define BL2_BASE			(0xE6302000)
 +#define BL2_LIMIT			(0xE632E800)
-+#elif MASTER_BOOT_CPU == RCAR_BOOT_CR7
++#elif RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CR7
 +#define BL2_BASE			(0x43F20000)
 +#define BL2_LIMIT			(0x43F4C800)
 +#endif
@@ -19910,10 +19849,10 @@ index 0000000..20265b4
 +#endif	/* __SCIF_H__ */
 diff --git a/plat/renesas/rcar/platform.mk b/plat/renesas/rcar/platform.mk
 new file mode 100644
-index 0000000..5bc3489
+index 0000000..9dc0a5d
 --- /dev/null
 +++ b/plat/renesas/rcar/platform.mk
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,120 @@
 +#
 +# Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
 +# Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -19948,17 +19887,19 @@ index 0000000..5bc3489
 +
 +# Process flags
 +
-+PLAT_INCLUDES		:=	-Iplat/renesas/rcar/include/
++PLAT_INCLUDES		:=	-Iinclude/common/tbbr				\
++				-Iplat/renesas/rcar/include/
 +
 +PLAT_BL_COMMON_SOURCES	:=	lib/aarch64/xlat_tables.c			\
 +				plat/common/aarch64/plat_common.c
 +
 +BL2_SOURCES		+=	plat/common/aarch64/platform_up_stack.S		\
 +				plat/renesas/rcar/bl2_rcar_setup.c		\
-+				plat/renesas/rcar/aarch64/rcar_common.c	\
-+				plat/renesas/rcar/drivers/io/io_rcar.c	\
++				plat/renesas/rcar/aarch64/rcar_common.c		\
++				plat/renesas/rcar/drivers/io/io_rcar.c		\
 +				plat/renesas/rcar/drivers/io/io_memdrv.c	\
 +				plat/renesas/rcar/drivers/scif/scif.S		\
++				plat/renesas/rcar/drivers/auth/rcarboot.c	\
 +				plat/renesas/rcar/rcar_io_storage.c		\
 +				drivers/io/io_storage.c				\
 +				plat/renesas/rcar/bl2_pfc_init.c		\
@@ -19996,7 +19937,6 @@ index 0000000..5bc3489
 +SPD			:= opteed
 +ARM_CCI_PRODUCT_ID	:= 500
 +TRUSTED_BOARD_BOOT	:= 1
-+AUTH_MOD		:= rcar
 +
 +# Process RCAR_SECURE_BOOT flag
 +ifndef RCAR_SECURE_BOOT
@@ -20016,20 +19956,26 @@ index 0000000..5bc3489
 +endif
 +$(eval $(call add_define,RCAR_DRAM_SPLIT))
 +
-+# Process MASTER_BOOT_CPU flag
-+ifndef MASTER_BOOT_CPU
-+MASTER_BOOT_CPU := 0
++# Process RCAR_MASTER_BOOT_CPU flag
++ifndef RCAR_MASTER_BOOT_CPU
++RCAR_MASTER_BOOT_CPU := 0
 +endif
-+$(eval $(call add_define,MASTER_BOOT_CPU))
++$(eval $(call add_define,RCAR_MASTER_BOOT_CPU))
 +
 +# Process RCAR_BL33_EXECUTION_EL flag
 +ifndef RCAR_BL33_EXECUTION_EL
 +RCAR_BL33_EXECUTION_EL := 0
 +endif
 +$(eval $(call add_define,RCAR_BL33_EXECUTION_EL))
++
++# Process PSCI_DISABLE_BIGLITTLE_IN_CA57BOOT flag
++ifndef PSCI_DISABLE_BIGLITTLE_IN_CA57BOOT
++PSCI_DISABLE_BIGLITTLE_IN_CA57BOOT := 1
++endif
++$(eval $(call add_define,PSCI_DISABLE_BIGLITTLE_IN_CA57BOOT))
 diff --git a/plat/renesas/rcar/rcar_def.h b/plat/renesas/rcar/rcar_def.h
 new file mode 100644
-index 0000000..26892e1
+index 0000000..7419842
 --- /dev/null
 +++ b/plat/renesas/rcar/rcar_def.h
 @@ -0,0 +1,257 @@
@@ -20067,10 +20013,10 @@ index 0000000..26892e1
 +#ifndef RCAR_DEF_H__
 +#define RCAR_DEF_H__
 +
++#include <tbbr_img_def.h>
++
 +/* Firmware Image Package */
 +#define RCAR_PRIMARY_CPU			0x0
-+
-+#define RCAR_IMAGE_NAME			"rcar.bin"
 +
 +/*
 + * Some of the definitions in this file use the 'ull' suffix in order to avoid
@@ -20292,10 +20238,10 @@ index 0000000..26892e1
 +#endif /* RCAR_DEF_H__ */
 diff --git a/plat/renesas/rcar/rcar_io_storage.c b/plat/renesas/rcar/rcar_io_storage.c
 new file mode 100644
-index 0000000..3b566f4
+index 0000000..ddbde1c
 --- /dev/null
 +++ b/plat/renesas/rcar/rcar_io_storage.c
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,316 @@
 +/*
 + * Copyright (c) 2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -20328,12 +20274,12 @@ index 0000000..3b566f4
 + */
 +
 +#include <assert.h>
++#include <bl_common.h>		/* For ARRAY_SIZE */
 +#include <debug.h>
 +#include <io_driver.h>
 +#include <io_storage.h>
 +#include <io_semihosting.h>
 +#include <platform_def.h>
-+#include <semihosting.h>	/* For FOPEN_MODE_... */
 +#include <string.h>
 +#include "io_common.h"
 +#include "io_rcar.h"
@@ -20348,185 +20294,184 @@ index 0000000..3b566f4
 +	.length = FLASH0_SIZE
 +};
 +
-+static const io_file_spec_t bl2_file_spec = {
-+	.path = BL2_IMAGE_NAME,
++static const io_block_spec_t bl2_file_spec = {
++	.offset = BL2_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl31_file_spec = {
-+	.path = BL31_IMAGE_NAME,
++static const io_block_spec_t bl31_file_spec = {
++	.offset = BL31_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl32_file_spec = {
-+	.path = BL32_IMAGE_NAME,
++static const io_block_spec_t bl32_file_spec = {
++	.offset = BL32_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl33_file_spec = {
-+	.path = BL33_IMAGE_NAME,
++static const io_block_spec_t bl33_file_spec = {
++	.offset = BL33_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl332_file_spec = {
-+	.path = BL332_IMAGE_NAME,
++static const io_block_spec_t bl332_file_spec = {
++	.offset = BL332_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl333_file_spec = {
-+	.path = BL333_IMAGE_NAME,
++static const io_block_spec_t bl333_file_spec = {
++	.offset = BL333_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl334_file_spec = {
-+	.path = BL334_IMAGE_NAME,
++static const io_block_spec_t bl334_file_spec = {
++	.offset = BL334_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl335_file_spec = {
-+	.path = BL335_IMAGE_NAME,
++static const io_block_spec_t bl335_file_spec = {
++	.offset = BL335_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl336_file_spec = {
-+	.path = BL336_IMAGE_NAME,
++static const io_block_spec_t bl336_file_spec = {
++	.offset = BL336_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl337_file_spec = {
-+	.path = BL337_IMAGE_NAME,
++static const io_block_spec_t bl337_file_spec = {
++	.offset = BL337_IMAGE_ID,
 +};
 +
-+static const io_file_spec_t bl338_file_spec = {
-+	.path = BL338_IMAGE_NAME,
++static const io_block_spec_t bl338_file_spec = {
++	.offset = BL338_IMAGE_ID,
 +};
 +
 +
 +#if TRUSTED_BOARD_BOOT
-+static const io_file_spec_t trusted_key_cert_file_spec = {
-+	.path = TRUSTED_KEY_CERT_NAME,
++static const io_block_spec_t trusted_key_cert_file_spec = {
++	.offset = TRUSTED_KEY_CERT_ID,
 +};
 +
-+static const io_file_spec_t bl31_key_cert_file_spec = {
-+	.path = BL31_KEY_CERT_NAME,
++static const io_block_spec_t bl31_key_cert_file_spec = {
++	.offset = BL31_KEY_CERT_ID,
 +};
 +
-+static const io_file_spec_t bl32_key_cert_file_spec = {
-+	.path = BL32_KEY_CERT_NAME,
++static const io_block_spec_t bl32_key_cert_file_spec = {
++	.offset = BL32_KEY_CERT_ID,
 +};
 +
-+static const io_file_spec_t bl33_key_cert_file_spec = {
-+	.path = BL33_KEY_CERT_NAME,
++static const io_block_spec_t bl33_key_cert_file_spec = {
++	.offset = BL33_KEY_CERT_ID,
 +};
 +
-+static const io_file_spec_t bl31_cert_file_spec = {
-+	.path = BL31_CERT_NAME,
++static const io_block_spec_t bl31_cert_file_spec = {
++	.offset = BL31_CERT_ID,
 +};
 +
-+static const io_file_spec_t bl32_cert_file_spec = {
-+	.path = BL32_CERT_NAME,
++static const io_block_spec_t bl32_cert_file_spec = {
++	.offset = BL32_CERT_ID,
 +};
 +
-+static const io_file_spec_t bl33_cert_file_spec = {
-+	.path = BL33_CERT_NAME,
++static const io_block_spec_t bl33_cert_file_spec = {
++	.offset = BL33_CERT_ID,
 +};
 +#endif /* TRUSTED_BOARD_BOOT */
 +
 +static int32_t open_rcar(const uintptr_t spec);
 +static int32_t open_memmap(const uintptr_t spec);
 +
++/* sakata check table info */
 +struct plat_io_policy {
-+	int8_t *image_name;
 +	uintptr_t *dev_handle;
 +	uintptr_t image_spec;
 +	int32_t (*check)(const uintptr_t spec);
 +};
 +
 +static const struct plat_io_policy policies[] = {
-+	{
-+		(int8_t *)RCAR_IMAGE_NAME,
++	[FIP_IMAGE_ID] = {
 +		&memdrv_dev_handle,
 +		(uintptr_t)&rcar_block_spec,
 +		&open_memmap
-+	}, {
-+		(int8_t *)BL2_IMAGE_NAME,
++	},
++	[BL2_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl2_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL31_IMAGE_NAME,
++	},
++	[BL31_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl31_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL32_IMAGE_NAME,
++	},
++	[BL32_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl32_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL33_IMAGE_NAME,
++	},
++	[BL33_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl33_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL332_IMAGE_NAME,
++	},
++	[BL332_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl332_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL333_IMAGE_NAME,
++	},
++	[BL333_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl333_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL334_IMAGE_NAME,
++	},
++	[BL334_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl334_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL335_IMAGE_NAME,
++	},
++	[BL335_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl335_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL336_IMAGE_NAME,
++	},
++	[BL336_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl336_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL337_IMAGE_NAME,
++	},
++	[BL337_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl337_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL338_IMAGE_NAME,
++	},
++	[BL338_IMAGE_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl338_file_spec,
 +		&open_rcar
-+	}, {
++	},
 +#if TRUSTED_BOARD_BOOT
-+		(int8_t *)TRUSTED_KEY_CERT_NAME,
++	[TRUSTED_KEY_CERT_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&trusted_key_cert_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL31_KEY_CERT_NAME,
++	},
++	[BL31_KEY_CERT_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl31_key_cert_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL32_KEY_CERT_NAME,
++	},
++	[BL32_KEY_CERT_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl32_key_cert_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL33_KEY_CERT_NAME,
++	},
++	[BL33_KEY_CERT_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl33_key_cert_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL31_CERT_NAME,
++	},
++	[BL31_CERT_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl31_cert_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL32_CERT_NAME,
++	},
++	[BL32_CERT_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl32_cert_file_spec,
 +		&open_rcar
-+	}, {
-+		(int8_t *)BL33_CERT_NAME,
++	},
++	[BL33_CERT_ID] = {
 +		&rcar_dev_handle,
 +		(uintptr_t)&bl33_cert_file_spec,
 +		&open_rcar
@@ -20542,7 +20487,7 @@ index 0000000..3b566f4
 +	int32_t result;
 +
 +	/* See if a Firmware Image Package is available */
-+	result = io_dev_init(rcar_dev_handle, (uintptr_t)RCAR_IMAGE_NAME);
++	result = io_dev_init(rcar_dev_handle, (uintptr_t)FIP_IMAGE_ID);
 +	if (result == IO_SUCCESS) {
 +		VERBOSE("Using RCar File Manager\n");
 +	}
@@ -20596,39 +20541,29 @@ index 0000000..3b566f4
 +
 +/* Return an IO device handle and specification which can be used to access
 + * an image. Use this to enforce platform load policy */
-+int plat_get_image_source(const char *image_name, uintptr_t *dev_handle,
++int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
 +			  uintptr_t *image_spec)
 +{
-+	int32_t result = IO_FAIL;
++	int result = IO_FAIL;
 +	const struct plat_io_policy *policy;
-+	int32_t loop = 0;
 +
-+	if ((image_name != NULL) && (dev_handle != NULL) &&
-+	    (image_spec != NULL)) {
-+		policy = &policies[0];
-+		while (policy->image_name != NULL) {
-+			if (strcmp((const char *)policy->image_name, image_name) == 0) {
-+				result = policy->check(policy->image_spec);
-+				if (result == IO_SUCCESS) {
-+					*image_spec = policy->image_spec;
-+					*dev_handle = *(policy->dev_handle);
-+					break;
-+				}
-+			}
-+			loop++;
-+			policy = &policies[loop];
-+		}
-+	} else {
-+		result = IO_FAIL;
++	assert(image_id < ARRAY_SIZE(policies));
++
++	policy = &policies[image_id];
++	result = policy->check(policy->image_spec);
++	if (result == IO_SUCCESS) {
++		*image_spec = policy->image_spec;
++		*dev_handle = *(policy->dev_handle);
 +	}
++
 +	return result;
 +}
 diff --git a/plat/renesas/rcar/rcar_pm.c b/plat/renesas/rcar/rcar_pm.c
 new file mode 100644
-index 0000000..abe739e
+index 0000000..ccccd81
 --- /dev/null
 +++ b/plat/renesas/rcar/rcar_pm.c
-@@ -0,0 +1,376 @@
+@@ -0,0 +1,384 @@
 +/*
 + * Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -20778,6 +20713,14 @@ index 0000000..abe739e
 +{
 +	int rc = PSCI_E_SUCCESS;
 +
++#if PSCI_DISABLE_BIGLITTLE_IN_CA57BOOT
++	uint64_t	boot_cluster = read_mpidr_el1() & ((uint64_t)MPIDR_CLUSTER_MASK);
++	if (boot_cluster == 0x0000U) {
++		if ((mpidr & ((uint64_t)MPIDR_CLUSTER_MASK)) != boot_cluster) {
++			return PSCI_E_INTERN_FAIL;
++		}
++	}
++#endif
 +	/*
 +	 * It's possible to turn on only affinity level 0 i.e. a cpu
 +	 * on the RCAR. Ignore any other affinity level.
@@ -21007,10 +20950,10 @@ index 0000000..abe739e
 +}
 diff --git a/plat/renesas/rcar/rcar_private.h b/plat/renesas/rcar/rcar_private.h
 new file mode 100644
-index 0000000..42807d5
+index 0000000..5b5aae9
 --- /dev/null
 +++ b/plat/renesas/rcar/rcar_private.h
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,169 @@
 +/*
 + * Copyright (c) 2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -21073,11 +21016,18 @@ index 0000000..42807d5
 +
 +#if USE_COHERENT_MEM
 +/*
++ * Use this macro to instantiate lock before it is used in below
++ * rcar_lock_xxx() macros
++ */
++#define RCAR_INSTANTIATE_LOCK	DEFINE_BAKERY_LOCK(rcar_lock);
++
++/*
 + * These are wrapper macros to the Coherent Memory Bakery Lock API.
 + */
-+#define rcar_lock_init(_lock_arg)	bakery_lock_init(_lock_arg)
-+#define rcar_lock_get(_lock_arg)	bakery_lock_get(_lock_arg)
-+#define rcar_lock_release(_lock_arg)	bakery_lock_release(_lock_arg)
++#define rcar_lock_init()	bakery_lock_init(&rcar_lock)
++#define rcar_lock_get()		bakery_lock_get(&rcar_lock)
++#define rcar_lock_release()	bakery_lock_release(&rcar_lock)
++
 +
 +#else
 +
@@ -21404,7 +21354,7 @@ index 0000000..78dcdd9
 +}
 diff --git a/plat/renesas/rcar/rcar_version.h b/plat/renesas/rcar/rcar_version.h
 new file mode 100644
-index 0000000..cc834bb
+index 0000000..4dc2f93
 --- /dev/null
 +++ b/plat/renesas/rcar/rcar_version.h
 @@ -0,0 +1,42 @@
@@ -21444,12 +21394,32 @@ index 0000000..cc834bb
 +
 +#include	<arch_helpers.h>
 +
-+#define		VER_SIZE		4
-+#define		VERSION_OF_RENESAS	"1.00"
++#define		VER_SIZE		5
++#define		VERSION_OF_RENESAS	"1.0.1"
 +
 +extern const uint8_t	version_of_renesas[VER_SIZE];
 +
 +#endif	/* RCAR_VERSION_H__	*/
+diff --git a/services/spd/opteed/opteed_main.c b/services/spd/opteed/opteed_main.c
+index fefc8a7..6e58173 100644
+--- a/services/spd/opteed/opteed_main.c
++++ b/services/spd/opteed/opteed_main.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2013-2015, ARM Limited and Contributors. All rights reserved.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are met:
+@@ -153,7 +154,7 @@ int32_t opteed_setup(void)
+ 	 * state i.e whether AArch32 or AArch64. Assuming it's AArch32
+ 	 * for the time being.
+ 	 */
+-	opteed_rw = OPTEE_AARCH32;
++	opteed_rw = OPTEE_AARCH64;
+ 	opteed_init_optee_ep_state(optee_ep_info,
+ 				opteed_rw,
+ 				optee_ep_info->pc,
 diff --git a/tools/dummy_create/makefile b/tools/dummy_create/makefile
 new file mode 100644
 index 0000000..4f40932

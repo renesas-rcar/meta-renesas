@@ -11,9 +11,9 @@ BRANCH = "master"
 SRC_URI = \
     "git://github.com/OP-TEE/optee_linuxdriver.git;protocol=https;branch=${BRANCH} \
     file://0001-add-optee_linuxdriver-R-Car-support.patch"
-SRCREV = "724298b6e425d9ce6daae3131bb4b1029190aa2a"
+SRCREV = "4136b9d5a139c89ffe4a05b29ba2a3e436ac5f6f"
 
-PV = "0.2.0+renesas+git${SRCPV}"
+PV = "1.0.0+renesas+git${SRCPV}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 

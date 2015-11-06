@@ -12,7 +12,7 @@ S = "${WORKDIR}/git"
 BRANCH = "master"
 SRC_URI = \
     "git://github.com/ARM-software/arm-trusted-firmware.git;protocol=https;branch=${BRANCH}"
-SRCREV = "e234ba038b0b997bd4325dad384deab5863babdd"
+SRCREV = "41099f4e7468d872857c52608dcc2a51bae68174"
 
 SRC_URI += " \
     file://0001-add-bl2-bl31-R-Car-support.patch \
