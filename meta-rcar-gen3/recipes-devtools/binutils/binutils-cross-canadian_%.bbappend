@@ -1,0 +1,1 @@
+inherit cross-canadian-multilib
