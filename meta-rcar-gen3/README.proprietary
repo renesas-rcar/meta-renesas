@@ -78,7 +78,8 @@ III/ Build with Renesas multimedia libraries
                 " mpeg2dec_lib"      - for OMX Media Component MPEG2 Decoder Libraries
                 " aaclcdec_lib"      - for ARM AAC-LC Decoder Sample Libraries for Linux
                 " aaclcdec_mdw"      - for ARM AAC-LC Decoder Sample Middleware for Linux
-                " cmsbcm"            - for CMS Basic Color Management Middleware for Linux
+                " cmsbcmv"           - for CMS VSP2 Basic Color Management Middleware for Linux
+                " cmsbcmc"           - for CMS CMM3 Basic Color Management Middleware for Linux
                 " cmsblc"            - for CMS CMM3 Backlight Control Middleware for Linux
                 " cmsdgc"            - for CMS VSP2 Dynamic Gamma Correction Middleware for Linux
                 " dtv"               - for ISDB-T DTV Software Package for Linux
