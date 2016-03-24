@@ -66,7 +66,8 @@ _video_enc_list="H264_encoder,RTM0AC0000XV264E30SL40C,RTM0AC0000XV264E30SL40C.ta
 # cms_list="<software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name>"
-_cms_list="bcm,RTM0AC0000JRCMBCV0SL40C,RTM0AC0000JRCMBCV0SL40C.tar.gz \
+_cms_list="bcmc,RTM0AC0000JRCMBCC0SL40C,RTM0AC0000JRCMBCC0SL40C.tar.gz \
+           bcmv,RTM0AC0000JRCMBCV0SL40C,RTM0AC0000JRCMBCV0SL40C.tar.gz \
            blc,RTM0AC0000JRCMBLC0SL40C,RTM0AC0000JRCMBLC0SL40C.tar.gz \
            dgc,RTM0AC0000JRCMDGV0SL40C,RTM0AC0000JRCMDGV0SL40C.tar.gz"
 
@@ -848,7 +849,7 @@ func_dvd_lib()
     echo /=======================================================/
 }
 
-# For DTV/DVD main rutine
+# For DTV/DVD main routine
 func_dtv_dvd()
 {
     echo ""
@@ -881,11 +882,13 @@ func_dtv_dvd()
     echo /=======================================================/
 }
 
-# For CMS main rutine
+# For CMS main routine
 func_cms()
 {
     echo ""
     echo "Copying for CMS Packages"
+
+    copy_flag=0
 
     for i in ${_cms_list}
     do
@@ -906,6 +909,7 @@ func_cms()
             echo "${sw_name} not found!"
         else
             # install searched library
+            copy_flag=1
             file_top_dir=${_extract_top_dir_name}
             install -d ${_CMS_UM_INST_DIR}
             install -m 644 ${file_top_dir}/${pkg_name}/Software/${copyfile_name} ${_CMS_UM_INST_DIR}
@@ -913,6 +917,10 @@ func_cms()
             echo "                : ${pkg_name}"
         fi
     done
+
+    if [ ${copy_flag} -eq 0 ]; then
+        return
+    fi
 
     echo ""
     echo "Packages for CMS were found and copied."
