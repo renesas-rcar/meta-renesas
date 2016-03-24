@@ -1,0 +1,296 @@
+From cfd78916389d46419700c13ffb2121535144d9b9 Mon Sep 17 00:00:00 2001
+From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
+Date: Wed, 9 Mar 2016 17:14:54 +0900
+Subject: [PATCH] add optee_linuxdriver R-Car support
+
+---
+ armtz/rcar_version.h | 11 ++++++++
+ armtz/tee_tz_drv.c   | 71 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ core/tee_core.c      |  8 +++---
+ core/tee_core_priv.h |  6 +++++
+ core/tee_session.c   | 22 +++++++++++-----
+ 5 files changed, 107 insertions(+), 11 deletions(-)
+ create mode 100644 armtz/rcar_version.h
+
+diff --git a/armtz/rcar_version.h b/armtz/rcar_version.h
+new file mode 100644
+index 0000000..916023a
+--- /dev/null
++++ b/armtz/rcar_version.h
+@@ -0,0 +1,11 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ */
++
++#ifndef RCAR_VERSION_H
++#define RCAR_VERSION_H
++
++#define VERSION_OF_RENESAS	"1.0.2"
++
++#endif /* RCAR_VERSION_H */
+diff --git a/armtz/tee_tz_drv.c b/armtz/tee_tz_drv.c
+index 6541b02..70595c4 100644
+--- a/armtz/tee_tz_drv.c
++++ b/armtz/tee_tz_drv.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2014, STMicroelectronics International N.V.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License Version 2 as
+@@ -19,6 +20,7 @@
+ #include <linux/io.h>
+ #include <linux/sched.h>
+ #include <linux/jiffies.h>
++#include <linux/slab.h>
+ 
+ #include <linux/tee_core.h>
+ #include <linux/tee_ioc.h>
+@@ -35,6 +37,7 @@
+ #include "tee_tz_op.h"
+ #include "tee_tz_priv.h"
+ #include "handle.h"
++#include "rcar_version.h"
+ 
+ #define _TEE_TZ_NAME "armtz"
+ #define DEV (ptee->tee->dev)
+@@ -60,6 +63,19 @@ static struct handle_db shm_handle_db = HANDLE_DB_INITIALIZER;
+ #define ioremap_cache	ioremap_cached
+ #endif
+ 
++/*
++ * R-Car Specification definition
++ */
++
++/* Log Buffer Address (ioremap) */
++static int8_t *remaped_log_buffer = NULL;
++
++/* Constant definition */
++#define TEE_LOG_NS_BASE		(0x0407FEC000U)
++#define TEE_LOG_NS_SIZE		(81920U)
++#define LOG_NS_CPU_AREA_SIZE	(1024U)
++#define TEE_CORE_NB_CORE	(8U)
++#define TEE_RPC_DEBUG_LOG	(0x3F000000U)
+ 
+ /*******************************************************************
+  * Calling TEE
+@@ -204,6 +220,44 @@ bad:
+ 	arg32->ret = TEEC_ERROR_BAD_PARAMETERS;
+ }
+ 
++static void debug_log_work_handler(struct work_struct *work)
++{
++	printk(KERN_ALERT "%s", (int8_t *)(&work[1]));
++	kfree(work);
++}
++
++static void handle_rpc_func_cmd_debug_log(struct teesmc32_arg *arg32)
++{
++	struct teesmc32_param *params;
++	uint32_t cpu_id;
++	int8_t *p;
++	struct work_struct *work = NULL;
++	size_t logmsg_size;
++
++	if (arg32->num_params == 1) {
++		params = TEESMC32_GET_PARAMS(arg32);
++		cpu_id = params[0].u.value.a;
++
++		if (cpu_id < TEE_CORE_NB_CORE) {
++			p = &remaped_log_buffer[cpu_id * LOG_NS_CPU_AREA_SIZE];
++			logmsg_size = strlen(p) + 1;
++			work = kmalloc(sizeof(*work) + logmsg_size, GFP_KERNEL);
++			if (work != NULL) {
++				strcpy((int8_t *)(&work[1]), p);
++				INIT_WORK(work, debug_log_work_handler);
++				schedule_work(work);
++			} else {
++				printk(KERN_ALERT "%s", p);
++			}
++			arg32->ret = TEEC_SUCCESS;
++		} else {
++			arg32->ret = TEEC_ERROR_BAD_PARAMETERS;
++		}
++	} else {
++		arg32->ret = TEEC_ERROR_BAD_PARAMETERS;
++	}
++}
++
+ static void handle_rpc_func_cmd_to_supplicant(struct tee_tz *ptee,
+ 						struct teesmc32_arg *arg32)
+ {
+@@ -298,6 +352,9 @@ static void handle_rpc_func_cmd(struct tee_tz *ptee, u32 parg32)
+ 	case TEE_RPC_WAIT:
+ 		handle_rpc_func_cmd_wait(arg32);
+ 		break;
++	case TEE_RPC_DEBUG_LOG:
++		handle_rpc_func_cmd_debug_log(arg32);
++		break;
+ 	default:
+ 		handle_rpc_func_cmd_to_supplicant(ptee, arg32);
+ 	}
+@@ -1323,7 +1380,8 @@ static int __init tee_tz_init(void)
+ {
+ 	int rc;
+ 
+-	pr_info("TEE armv7 Driver initialization\n");
++	pr_info("TEE armv7 Driver initialization (R-Car Rev.%s)\n",
++		VERSION_OF_RENESAS);
+ 
+ #ifdef _TEE_DEBUG
+ 	pr_debug("- Register the platform_driver \"%s\" %p\n",
+@@ -1343,8 +1401,17 @@ static int __init tee_tz_init(void)
+ 		goto bail1;
+ 	}
+ 
++	remaped_log_buffer = ioremap_nocache(TEE_LOG_NS_BASE, TEE_LOG_NS_SIZE);
++	if (remaped_log_buffer == NULL) {
++		pr_err("failed to ioremap_nocache(TEE_LOG_NS_BASE)\n");
++		rc = -ENOMEM;
++		goto bail2;
++	}
++
+ 	return rc;
+ 
++bail2:
++	platform_device_unregister(&tz_0_plt_device);
+ bail1:
+ 	platform_driver_unregister(&tz_tee_driver);
+ bail0:
+@@ -1366,4 +1433,4 @@ MODULE_AUTHOR("STMicroelectronics");
+ MODULE_DESCRIPTION("STM Secure TEE ARMV7 TZ driver");
+ MODULE_SUPPORTED_DEVICE("");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION("1.0");
++MODULE_VERSION(VERSION_OF_RENESAS);
+diff --git a/core/tee_core.c b/core/tee_core.c
+index b65fafd..b23afde 100644
+--- a/core/tee_core.c
++++ b/core/tee_core.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2014, STMicroelectronics International N.V.
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License Version 2 as
+@@ -36,6 +37,7 @@
+ #include "tee_debugfs.h"
+ #include "tee_shm.h"
+ #include "tee_supp_com.h"
++#include "../armtz/rcar_version.h"
+ 
+ #define _TEE_CORE_FW_VER "1:0.1"
+ 
+@@ -538,8 +540,8 @@ EXPORT_SYMBOL(tee_core_del);
+ 
+ static int __init tee_core_init(void)
+ {
+-	pr_info("\nTEE Core Framework initialization (ver %s)\n",
+-		_TEE_CORE_FW_VER);
++	pr_info("\nTEE Core Framework initialization (R-Car Rev.%s)\n",
++		VERSION_OF_RENESAS);
+ 	tee_init_debugfs();
+ 
+ 	return 0;
+@@ -557,5 +559,5 @@ module_exit(tee_core_exit);
+ MODULE_AUTHOR("STMicroelectronics");
+ MODULE_DESCRIPTION("STM Secure TEE Framework/Core TEEC v1.0");
+ MODULE_SUPPORTED_DEVICE("");
+-MODULE_VERSION(_TEE_CORE_FW_VER);
++MODULE_VERSION(VERSION_OF_RENESAS);
+ MODULE_LICENSE("GPL");
+diff --git a/core/tee_core_priv.h b/core/tee_core_priv.h
+index 933f55f..e4d422e 100644
+--- a/core/tee_core_priv.h
++++ b/core/tee_core_priv.h
+@@ -49,4 +49,10 @@ int tee_session_close_and_destroy(struct tee_session *sess);
+ struct tee *tee_get_tee(const char *devname);
+ int tee_session_invoke_be(struct tee_session *sess, struct tee_cmd_io *cmd_io);
+ 
++#ifdef CONFIG_COMPAT
++#define GET_USER_PTR(a)		((is_compat_task()) ? compat_ptr(((uint32_t)((uint64_t)a & 0xFFFFFFFF))) : (void __user *)a)
++#else
++	GET_USER_PTR(a)		((void __user *)a)
++#endif
++
+ #endif
+diff --git a/core/tee_session.c b/core/tee_session.c
+index e72d87e..5734f78 100644
+--- a/core/tee_session.c
++++ b/core/tee_session.c
+@@ -318,6 +318,7 @@ static long tee_session_ioctl(struct file *filp, unsigned int cmd,
+ 	struct tee *tee;
+ 	struct tee_session *sess = filp->private_data;
+ 	int ret;
++	void __user *u_arg;
+ 
+ 	BUG_ON(!sess || !sess->ctx || !sess->ctx->tee);
+ 
+@@ -325,14 +326,23 @@ static long tee_session_ioctl(struct file *filp, unsigned int cmd,
+ 
+ 	dev_dbg(_DEV(tee), "%s: > cmd nr=%d\n", __func__, _IOC_NR(cmd));
+ 
++#ifdef CONFIG_COMPAT
++	if (is_compat_task())
++		u_arg = compat_ptr(arg);
++	else
++		u_arg = (void __user *)arg;
++#else
++	u_arg = (void __user *)arg;
++#endif
++
+ 	switch (cmd) {
+ 	case TEE_INVOKE_COMMAND_IOC:
+ 		ret =
+ 		    tee_do_invoke_command(sess,
+-					  (struct tee_cmd_io __user *)arg);
++					  (struct tee_cmd_io __user *)u_arg);
+ 		break;
+ 	case TEE_REQUEST_CANCELLATION_IOC:
+-		ret = tee_do_cancel_cmd(sess, (struct tee_cmd_io __user *)arg);
++		ret = tee_do_cancel_cmd(sess, (struct tee_cmd_io __user *)u_arg);
+ 		break;
+ 	default:
+ 		ret = -ENOSYS;
+@@ -582,7 +592,7 @@ static int _init_tee_cmd(struct tee_session *sess, struct tee_cmd_io *cmd_io,
+ 			param->params[idx].shm =
+ 			    tee_context_create_tmpref_buffer(ctx,
+ 					     op.params[idx].tmpref.size,
+-					     op.params[idx].tmpref.buffer,
++					     GET_USER_PTR(op.params[idx].tmpref.buffer),
+ 					     type);
+ 			if (IS_ERR_OR_NULL(param->params[idx].shm))
+ 				goto out;
+@@ -597,7 +607,7 @@ static int _init_tee_cmd(struct tee_session *sess, struct tee_cmd_io *cmd_io,
+ 		case TEEC_MEMREF_PARTIAL_INOUT:
+ 		case TEEC_MEMREF_WHOLE:
+ 			if (tee_copy_from_user(ctx, &param->c_shm[idx],
+-						op.params[idx].memref.parent,
++						GET_USER_PTR(op.params[idx].memref.parent),
+ 						sizeof(param->c_shm[idx]))) {
+ 				goto out;
+ 			}
+@@ -747,7 +757,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
+ 
+ 			else if (tee_copy_to_user
+ 				 (ctx,
+-				  cmd_io->op->params[idx].tmpref.buffer,
++				  GET_USER_PTR(cmd_io->op->params[idx].tmpref.buffer),
+ 				  cmd->param.params[idx].shm->kaddr,
+ 				  size_new))
+ 				dev_err(_DEV_TEE,
+@@ -780,7 +790,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
+ 				if (parent->buffer &&
+ 					offset + size_new <= parent->size) {
+ 					if (tee_copy_to_user(ctx,
+-					   parent->buffer + offset,
++					   GET_USER_PTR(parent->buffer) + offset,
+ 					   cmd->param.params[idx].shm->kaddr,
+ 					   size_new))
+ 							dev_err(_DEV_TEE,
+-- 
+1.9.1
+

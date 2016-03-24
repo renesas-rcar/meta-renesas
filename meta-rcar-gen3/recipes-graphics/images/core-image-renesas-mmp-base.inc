@@ -1,0 +1,58 @@
+require include/omx-options.inc
+require include/cms-options.inc
+require include/dtv-dvd-control.inc
+
+# Common Multi Media Packages (MMP)
+MULTIMEDIA_PKGS = " \
+    packagegroup-multimedia-kernel-modules \
+    packagegroup-multimedia-libs \
+    lib32-packagegroup-multimedia-libs \
+"
+
+# MMP test Packages
+MULTIMEDIA_TP_PKGS = " \
+    vspmif-tp-user-module \
+    lib32-vspmif-tp-user-module \
+"
+
+# OMX MMP Packages
+OMX_MULTIMEDIA_PKGS = " \
+    omx-user-module \
+    lib32-omx-user-module \
+"
+
+# CMS MMP Packages
+CMS_MULTIMEDIA_PKGS = " \
+    cms-user-module \
+    lib32-cms-user-module \
+"
+
+# Kernel modules of DTV
+DTV_KERNEL_PKGS = " \
+    kernel-module-scu-src \
+    kernel-module-ssp \
+    kernel-module-tddmac \
+    kernel-module-tsif \
+"
+
+# DTV Packages
+DTV_PKGS = " \
+    ${DTV_KERNEL_PKGS} \
+    dtv-user-module \
+    lib32-dtv-user-module \
+"
+
+# DVD Packages
+DVD_PKGS = " \
+    dvd-user-module \
+    lib32-dvd-user-module \
+"
+
+# Install pkg selection
+IMAGE_INSTALL_append_rcar-gen3 = " \
+    ${@base_conditional("USE_MULTIMEDIA", "1", " ${MULTIMEDIA_PKGS} ${OMX_MULTIMEDIA_PKGS}", "", d)} \
+    ${@base_conditional("USE_MULTIMEDIA_TP", "1", " ${MULTIMEDIA_TP_PKGS}", "", d)} \
+    ${@base_conditional("USE_CMS", "1", " ${CMS_MULTIMEDIA_PKGS}", "", d)} \
+    ${@base_conditional("USE_DTV", "1", " ${DTV_PKGS}", "", d)} \
+    ${@base_conditional("USE_DVD", "1", " ${DVD_PKGS}", "", d)} \
+"

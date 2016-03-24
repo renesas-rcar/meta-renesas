@@ -1,0 +1,91 @@
+Proprietary libraries for meta-rcar-gen3
+========================================
+
+The meta-rcar-gen3 layer of meta-renesas is supported Graphic GLES(GSX) libraries,
+and proprietary library of multimedia.
+This README describes how to use these features and setting to local.conf.
+
+There are 2 main paths:
+    I/   Board configuration
+    II/  Build with GLES
+    III/ Build with Renesas multimedia libraries
+
+Please check section II to config for GLES.
+Please check section III to enable Multimedia functions.
+
+However, to have a completed local.conf,
+please also refer to Build Instruction in meta-renesas/meta-rcar-gen3/README.
+
+In addition, these libraries are not provided with recipes. If you would like to use,
+you will need to get them from Renesas.
+
+I/ Board configuration
+==================
+* Add this line to local.conf
+    For Salvator-X board
+           MACHINE = "salvator-x"
+
+II/ Build with GLES
+==================
+        * For wayland with GSX
+
+        1. Please copy proprietary libraries to the directory of recipes.
+        2. Set local.conf the following.
+
+                # Enable Gfx Pkgs
+                MACHINE_FEATURES_append = " gsx"
+                MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
+
+                # for Wayland/Weston
+                DISTRO_FEATURES_append = " pam"
+                PREFERRED_PROVIDER_virtual/libgles1 = ""
+                PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
+                PREFERRED_PROVIDER_virtual/egl = "libegl"
+                PREFERRED_PROVIDER_virtual/libgl = ""
+                PREFERRED_PROVIDER_virtual/mesa = ""
+                PREFERRED_PROVIDER_libgbm = "libgbm"
+                PREFERRED_PROVIDER_libgbm-dev = "libgbm"
+                BBMASK = "mesa-gl"
+
+        3. Run 'bitbake core-image-weston'
+
+III/ Build with Renesas multimedia libraries
+============================================
+        Multimedia portions depend on GLES portions.
+
+        A/ Configuration for Multimedia features
+            1. Please copy proprietary libraries to the directory of recipes.
+            2. Please set local.conf the following.
+
+                # Enable multimedia features.
+                # This provides package group of plug-ins of the GStreamer, multimedia
+                # libraries and kernel drivers.
+
+                    MACHINE_FEATURES_append = " multimedia"
+
+        B/ Configuration for optional codecs and middleware
+            1. Please copy proprietary libraries to the directory of recipes.
+            2. Add features to DISTRO_FEATURES_append to local.conf
+                # Additional configuration in OMX module
+                " h264dec_lib"       - for OMX Media Component H264 Decoder Libraries
+                " h265dec_lib"       - for OMX Media Component H265 Decoder Libraries
+                " mpeg2dec_lib"      - for OMX Media Component MPEG2 Decoder Libraries
+                " aaclcdec_lib"      - for ARM AAC-LC Decoder Sample Libraries for Linux
+                " aaclcdec_mdw"      - for ARM AAC-LC Decoder Sample Middleware for Linux
+                " cmsbcm"            - for CMS Basic Color Management Middleware for Linux
+                " cmsblc"            - for CMS CMM3 Backlight Control Middleware for Linux
+                " cmsdgc"            - for CMS VSP2 Dynamic Gamma Correction Middleware for Linux
+                " dtv"               - for ISDB-T DTV Software Package for Linux
+                " dvd"               - for DVD Core-Middleware for Linux
+
+            Ex:
+                    DISTRO_FEATURES_append = " h264dec_lib h265dec_lib mpeg2dec_lib aaclcdec_lib aaclcdec_mdw"
+
+        C/ Configuration for test packages
+            Must ensure that Multimedia features have been enabled.
+            (Please refer to III/A to enable Multimedia.)
+            Please add feature to DISTRO_FEATURES_append to local.conf.
+                # Configuration for multimedia test package
+
+                    DISTRO_FEATURES_append = " mm-test"
+END.
