@@ -14,10 +14,9 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-vspm"
 PR = "r0"
 
-VSPM_DRV_URL = " \
-    git://github.com/renesas-rcar/vspm_drv.git"
+VSPM_DRV_URL = "git://github.com/renesas-rcar/vspm_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "5c617b65773949e5596222c6371f76ab0150ec6e"
+SRCREV = "9793992774dd8f9f7d225f379c07a983fb223f75"
 
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH}"
 
@@ -47,7 +46,7 @@ do_install () {
     install -m 644 ${KERNELSRC}/include/fdp_drv.h ${D}/usr/src/kernel/include
 }
 
-PACKAGES = "\
+PACKAGES = " \
     ${PN} \
     ${PN}-dev \
 "

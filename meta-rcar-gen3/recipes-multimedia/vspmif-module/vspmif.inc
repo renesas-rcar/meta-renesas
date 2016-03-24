@@ -5,10 +5,9 @@ LIC_FILES_CHKSUM = " \
 
 require include/rcar-gen3-modules-common.inc
 
-VSPMIF_LIB_URL = " \
-    git://github.com/renesas-rcar/vspmif_lib.git"
+VSPMIF_LIB_URL = "git://github.com/renesas-rcar/vspmif_lib.git"
 BRANCH = "rcar_gen3"
-SRCREV = "4ab883c5f78b8f2becf2df93affa081f8ad15ace"
+SRCREV = "3be8246f1b8e6804c9f9a69f57e3cd4a5e8c7446"
 
 SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH}"
 
