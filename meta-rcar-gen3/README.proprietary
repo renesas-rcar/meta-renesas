@@ -93,6 +93,7 @@ III/ Build with Renesas multimedia libraries
                 " cmsdgc"            - for CMS VSP2 Dynamic Gamma Correction Middleware for Linux
                 " dtv"               - for ISDB-T DTV Software Package for Linux
                 " dvd"               - for DVD Core-Middleware for Linux
+                " adsp"              - for ADSP driver, ADSP interface and ADSP framework for Linux
 
             Ex:
                     DISTRO_FEATURES_append = " h264dec_lib h265dec_lib mpeg2dec_lib aaclcdec_lib aaclcdec_mdw"

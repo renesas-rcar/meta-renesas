@@ -1,5 +1,6 @@
 require include/omx-options.inc
 require include/cms-options.inc
+require include/adsp-options.inc
 require include/dtv-dvd-control.inc
 
 # Common Multi Media Packages (MMP)
@@ -48,6 +49,14 @@ DVD_PKGS = " \
     lib32-dvd-user-module \
 "
 
+# ADSP Packages
+ADSP_PKGS = " \
+    kernel-module-xtensa-hifi \
+    adsp-if-module \
+    lib32-adsp-if-module \
+    adsp-fw-module \
+"
+
 # Install pkg selection
 IMAGE_INSTALL_append_rcar-gen3 = " \
     ${@base_conditional("USE_MULTIMEDIA", "1", " ${MULTIMEDIA_PKGS} ${OMX_MULTIMEDIA_PKGS}", "", d)} \
@@ -55,4 +64,5 @@ IMAGE_INSTALL_append_rcar-gen3 = " \
     ${@base_conditional("USE_CMS", "1", " ${CMS_MULTIMEDIA_PKGS}", "", d)} \
     ${@base_conditional("USE_DTV", "1", " ${DTV_PKGS}", "", d)} \
     ${@base_conditional("USE_DVD", "1", " ${DVD_PKGS}", "", d)} \
+    ${@base_conditional("USE_ADSP", "1", " ${ADSP_PKGS}", "", d)} \
 "
