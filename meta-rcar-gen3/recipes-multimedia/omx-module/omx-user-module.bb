@@ -27,7 +27,13 @@ SRC_URI_H265D = '${@base_conditional("USE_H265D_OMX", "1", "file://RTM0AC0000XV2
 SRC_URI_MPEG2D = '${@base_conditional("USE_MPEG2D_OMX", "1", "file://RTM0AC0000XVM2VD30SL40C.tar.bz2", "", d )}'
 SRC_URI_ACMND = '${@base_conditional("USE_AUDIO_OMX", "1", "file://RTM0AC0000XACMND30SL40C.tar.gz", "", d )}'
 SRC_URI_AACLC = '${@base_conditional("USE_AACLCD_OMX", "1", "file://RTM0AC0000XAAACD30SL40C.tar.gz", "", d )}'
+SRC_URI_AACPV2 = '${@base_conditional("USE_AACPV2D_OMX", "1", "file://RTM0AC0000XAAAPD30SL40C.tar.gz", "", d )}'
+SRC_URI_MP3 = '${@base_conditional("USE_MP3D_OMX", "1", "file://RTM0AC0000XAMP3D30SL40C.tar.gz", "", d )}'
+SRC_URI_WMA = '${@base_conditional("USE_WMAD_OMX", "1", "file://RTM0AC0000XAWMAD30SL40C.tar.gz", "", d )}'
 SRC_URI_AACMZ = '${@base_conditional("USE_AACLC_MDW", "1", "file://RTM0AC0000ADAACMZ1SL40C.tar.gz", "", d )}'
+SRC_URI_AACPV2MZ = '${@base_conditional("USE_AACPV2_MDW", "1", "file://RTM0AC0000ADAAPMZ1SL40C.tar.gz", "", d )}'
+SRC_URI_MP3MZ = '${@base_conditional("USE_MP3_MDW", "1", "file://RTM0AC0000ADMP3MZ1SL40C.tar.gz", "", d )}'
+SRC_URI_WMAMZ = '${@base_conditional("USE_WMA_MDW", "1", "file://RTM0AC0000ADWMAMZ1SL40C.tar.gz", "", d )}'
 
 SRC_URI = " \
     ${SRC_URI_OMX} \
@@ -37,7 +43,13 @@ SRC_URI = " \
     ${SRC_URI_MPEG2D} \
     ${SRC_URI_ACMND} \
     ${SRC_URI_AACLC} \
+    ${SRC_URI_AACPV2} \
+    ${SRC_URI_MP3} \
+    ${SRC_URI_WMA} \
     ${SRC_URI_AACMZ} \
+    ${SRC_URI_AACPV2MZ} \
+    ${SRC_URI_MP3MZ} \
+    ${SRC_URI_WMAMZ} \
 "
 
 # SRC directory name
@@ -57,13 +69,22 @@ OMX_VIDEO_SRC_LIST = " \
 "
 
 AAC_MIDDLEWARE_SRC = "RTM0AC0000ADAACMZ1SL40C"
+AACPV2_MIDDLEWARE_SRC = "RTM0AC0000ADAAPMZ1SL40C"
+MP3_MIDDLEWARE_SRC = "RTM0AC0000ADMP3MZ1SL40C"
+WMA_MIDDLEWARE_SRC = "RTM0AC0000ADWMAMZ1SL40C"
 
 OMX_AUDIO_COMMON_SRC = '${@base_conditional("USE_AUDIO_OMX", "1", "RTM0AC0000XACMND30SL40C", "", d )}'
 OMX_AACLC_DEC_SRC = '${@base_conditional("USE_AACLCD_OMX", "1", "RTM0AC0000XAAACD30SL40C", "", d )}'
+OMX_AACPV2_DEC_SRC = '${@base_conditional("USE_AACPV2D_OMX", "1", "RTM0AC0000XAAAPD30SL40C", "", d )}'
+OMX_MP3_DEC_SRC = '${@base_conditional("USE_MP3D_OMX", "1", "RTM0AC0000XAMP3D30SL40C", "", d )}'
+OMX_WMA_DEC_SRC = '${@base_conditional("USE_WMAD_OMX", "1", "RTM0AC0000XAWMAD30SL40C", "", d )}'
 
 OMX_AUDIO_SRC_LIST = " \
     ${OMX_AUDIO_COMMON_SRC} \
     ${OMX_AACLC_DEC_SRC} \
+    ${OMX_AACPV2_DEC_SRC} \
+    ${OMX_MP3_DEC_SRC} \
+    ${OMX_WMA_DEC_SRC} \
 "
 
 S = "${WORKDIR}/omx/"
@@ -152,6 +173,7 @@ do_install_omx_video() {
 
 do_install_audio_middleware() {
     cd ${D}${libdir}
+
     if [ "X${USE_AACLC_MDW}" = "X1" ]; then
         install -m 755 ${WORKDIR}/${AAC_MIDDLEWARE_SRC}/${baselib}/libAACDLA_L.so.3.0 \
         ${D}${libdir}
@@ -159,6 +181,33 @@ do_install_audio_middleware() {
 
         ln -s libAACDLA_L.so.3.0 libAACDLA_L.so.3
         ln -s libAACDLA_L.so.3 libAACDLA_L.so
+    fi
+
+    if [ "X${USE_AACPV2_MDW}" = "X1" ]; then
+        install -m 755 ${WORKDIR}/${AACPV2_MIDDLEWARE_SRC}/${baselib}/libRSACPDLA_L.so.2.0 \
+        ${D}${libdir}
+        install -m 644 ${WORKDIR}/${AACPV2_MIDDLEWARE_SRC}/include/*.h ${D}${includedir}
+
+        ln -s libRSACPDLA_L.so.2.0 libRSACPDLA_L.so.2
+        ln -s libRSACPDLA_L.so.2 libRSACPDLA_L.so
+    fi
+
+    if [ "X${USE_MP3_MDW}" = "X1" ]; then
+        install -m 755 ${WORKDIR}/${MP3_MIDDLEWARE_SRC}/${baselib}/libMP3DLA_L.so.2.0 \
+        ${D}${libdir}
+        install -m 644 ${WORKDIR}/${MP3_MIDDLEWARE_SRC}/include/*.h ${D}${includedir}
+
+        ln -s libMP3DLA_L.so.2.0 libMP3DLA_L.so.2
+        ln -s libMP3DLA_L.so.2 libMP3DLA_L.so
+    fi
+
+    if [ "X${USE_WMA_MDW}" = "X1" ]; then
+        install -m 755 ${WORKDIR}/${WMA_MIDDLEWARE_SRC}/${baselib}/libWMASTDLA_L.so.2.0 \
+        ${D}${libdir}
+        install -m 644 ${WORKDIR}/${WMA_MIDDLEWARE_SRC}/include/*.h ${D}${includedir}
+
+        ln -s libWMASTDLA_L.so.2.0 libWMASTDLA_L.so.2
+        ln -s libWMASTDLA_L.so.2 libWMASTDLA_L.so
     fi
 }
 
@@ -184,6 +233,21 @@ do_install_omx_audio() {
         ln -s libomxr_mc_aacd.so.3.0.0 libomxr_mc_aacd.so.3
         ln -s libomxr_mc_aacd.so.3 libomxr_mc_aacd.so
     fi
+
+    if [ "X${USE_AACPV2D_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_aapd.so.3.0.0 libomxr_mc_aapd.so.3
+        ln -s libomxr_mc_aapd.so.3 libomxr_mc_aapd.so
+    fi
+
+    if [ "X${USE_MP3D_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_mp3d.so.3.0.0 libomxr_mc_mp3d.so.3
+        ln -s libomxr_mc_mp3d.so.3 libomxr_mc_mp3d.so
+    fi
+
+    if [ "X${USE_WMAD_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_wmad.so.3.0.0 libomxr_mc_wmad.so.3
+        ln -s libomxr_mc_wmad.so.3 libomxr_mc_wmad.so
+    fi
 }
 
 do_install () {
@@ -197,14 +261,18 @@ do_install () {
 }
 
 do_install_append() {
+    # Create destination directory
     install -d ${D}${libdir}
     install -d ${D}${includedir}
     if [ "X${USE_OMX_COMMON}" = "X1" ]; then
         install -d ${D}${sysconfdir}/omxr
     fi
 
+    # Copy omx video library
     do_install_omx_video
+    # Copy audio middleware library
     do_install_audio_middleware
+    # Copy omx audio library
     do_install_omx_audio
 }
 

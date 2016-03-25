@@ -15,8 +15,26 @@ USE_MPEG2D_OMX = "${@'1' if 'mpeg2dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 # USE_AACLCD_OMX for OMX Media Component AACLC OMX Library
 USE_AACLCD_OMX = "${@'1' if 'aaclcdec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
+# USE_AACPV2D_OMX for OMX Media Component aacPlus V2 OMX Library
+USE_AACPV2D_OMX = "${@'1' if 'aacpv2dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_MP3D_OMX for OMX Media Component MP3 OMX Library
+USE_MP3D_OMX = "${@'1' if 'mp3dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_WMAD_OMX for OMX Media Component WMA OMX Library
+USE_WMAD_OMX = "${@'1' if 'wmadec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
 # USE_AACLC_MDW for AACLC MDW Library
 USE_AACLC_MDW =  "${@'1' if 'aaclcdec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_AACPV2_MDW for aacPlus V2 MDW Library
+USE_AACPV2_MDW =  "${@'1' if 'aacpv2dec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_MP3_MDW for MP3 MDW Library
+USE_MP3_MDW =  "${@'1' if 'mp3dec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_WMA_MDW for WMA MDW Library
+USE_WMA_MDW =  "${@'1' if 'wmadec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 
 # OMX Video Decoder Flag list
 LIST_OMX_VIDEO_DEC_FLAG = " \
@@ -32,6 +50,9 @@ LIST_OMX_VIDEO_ENC_FLAG = " \
 # OMX Audio Flag list (except MDW)
 LIST_OMX_AUDIO_FLAG = " \
     ${USE_AACLCD_OMX} \
+    ${USE_AACPV2D_OMX} \
+    ${USE_MP3D_OMX} \
+    ${USE_WMAD_OMX} \
 "
 
 # USE_OMX_VIDEO_DEC for Video Decoder Common Libs
