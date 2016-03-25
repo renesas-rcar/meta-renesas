@@ -24,7 +24,10 @@ EOF
 # audio_list="<software_name>,<package_name>,<copy_file_name> \
 #             <software_name>,<package_name>,<copy_file_name> \
 #             <software_name>,<package_name>,<copy_file_name>"
-_audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL40C,RTM0AC0000XAAACD30SL40C.tar.gz"
+_audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL40C,RTM0AC0000XAAACD30SL40C.tar.gz \
+             aacPlusV2_decoder_lib,RTM0AC0000XAAAPD30SL40C,RTM0AC0000XAAAPD30SL40C.tar.gz \
+             MP3_decoder_lib,RTM0AC0000XAMP3D30SL40C,RTM0AC0000XAMP3D30SL40C.tar.gz \
+             WMA_decoder_lib,RTM0AC0000XAWMAD30SL40C,RTM0AC0000XAWMAD30SL40C.tar.gz"
 
 # Audio M/W Library
 # Please add omx audio library to "_audio_mw_list"
@@ -32,7 +35,10 @@ _audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL40C,RTM0AC0000XAAACD30SL40C.
 # audio_mw_list="<software_name>,<package_name>,<copy_file_name> \
 #                <software_name>,<package_name>,<copy_file_name> \
 #                <software_name>,<package_name>,<copy_file_name>"
-_audio_mw_list="AAC-LC_decoder_M/W,RTM0AC0000ADAACMZ1SL40C,RTM0AC0000ADAACMZ1SL40C.tar.gz"
+_audio_mw_list="AAC-LC_decoder_M/W,RTM0AC0000ADAACMZ1SL40C,RTM0AC0000ADAACMZ1SL40C.tar.gz \
+                aacPlusV2_decoder_M/W,RTM0AC0000ADAAPMZ1SL40C,RTM0AC0000ADAAPMZ1SL40C.tar.gz \
+                MP3_decoder_M/W,RTM0AC0000ADMP3MZ1SL40C,RTM0AC0000ADMP3MZ1SL40C.tar.gz \
+                WMA_decoder_M/W,RTM0AC0000ADWMAMZ1SL40C,RTM0AC0000ADWMAMZ1SL40C.tar.gz"
 
 # Video Decoder Library
 # Please add omx video decoder library to "_video_dec_list"
@@ -436,6 +442,8 @@ func_audio_mw()
     echo ""
     echo "Copying for Audio M/W Packages"
 
+    copy_flag=0
+
     for i in ${_audio_mw_list}
     do
         sw_name=`echo $i | cut -d "," -f 1`
@@ -455,6 +463,7 @@ func_audio_mw()
             echo "${sw_name} not found!"
         else
             # install audio m/w lib
+            copy_flag=1
             file_top_dir=${_extract_top_dir_name}
             install -d ${_OMX_UM_INST_DIR}
             install -m 0644 ${file_top_dir}/${pkg_name}/Software/${copyfile_name} ${_OMX_UM_INST_DIR}
@@ -462,6 +471,10 @@ func_audio_mw()
             echo "                : ${pkg_name}"
         fi
     done
+
+    if [ ${copy_flag} -eq 0 ]; then
+        return
+    fi
 
     echo ""
     echo "Packages for Audio M/W module were found and copied."
