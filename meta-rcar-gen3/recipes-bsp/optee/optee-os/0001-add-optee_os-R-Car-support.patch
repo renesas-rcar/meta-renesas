@@ -1,14 +1,14 @@
-From 7d6bbfcbc133b925b54d0b853703cc97da022e6d Mon Sep 17 00:00:00 2001
-From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
-Date: Wed, 9 Mar 2016 17:14:54 +0900
+From 78d12af496f331a796deca52dac8823abbe5bc8b Mon Sep 17 00:00:00 2001
+From: Hiromasa Kitaki <hiromasa.kitaki.fz@bp.renesas.com>
+Date: Fri, 15 Apr 2016 09:59:59 +0900
 Subject: [PATCH] add optee_os R-Car support
 
 ---
  Makefile                                          |   2 +
  core/arch/arm/include/mm/tee_mmu_defs.h           |   4 +
  core/arch/arm/kernel/elf_load.c                   |   7 +
- core/arch/arm/kernel/generic_boot.c               |  20 +-
- core/arch/arm/kernel/generic_core_bootcfg.c       |  49 ++++
+ core/arch/arm/kernel/generic_boot.c               |  21 +-
+ core/arch/arm/kernel/generic_core_bootcfg.c       |  57 +++++
  core/arch/arm/kernel/sub.mk                       |   3 +-
  core/arch/arm/kernel/tee_ta_manager.c             |  41 ++-
  core/arch/arm/kernel/tee_time_arm_cntpct.c        |   3 +-
@@ -19,9 +19,11 @@ Subject: [PATCH] add optee_os R-Car support
  core/arch/arm/plat-rcar/kern.ld.S                 | 288 ++++++++++++++++++++++
  core/arch/arm/plat-rcar/link.mk                   | 170 +++++++++++++
  core/arch/arm/plat-rcar/main.c                    | 127 ++++++++++
- core/arch/arm/plat-rcar/platform_config.h         | 197 +++++++++++++++
+ core/arch/arm/plat-rcar/platform_config.h         | 199 +++++++++++++++
  core/arch/arm/plat-rcar/platform_flags.mk         |  57 +++++
- core/arch/arm/plat-rcar/rcar_common.h             |  92 +++++++
+ core/arch/arm/plat-rcar/rcar_call_maskrom_a32.S   |  39 +++
+ core/arch/arm/plat-rcar/rcar_call_maskrom_a64.S   |  73 ++++++
+ core/arch/arm/plat-rcar/rcar_common.h             | 102 ++++++++
  core/arch/arm/plat-rcar/rcar_ddr_training.c       | 106 ++++++++
  core/arch/arm/plat-rcar/rcar_ddr_training.h       |  35 +++
  core/arch/arm/plat-rcar/rcar_interruptflags_a32.S |  49 ++++
@@ -29,24 +31,26 @@ Subject: [PATCH] add optee_os R-Car support
  core/arch/arm/plat-rcar/rcar_lock.c               |  53 ++++
  core/arch/arm/plat-rcar/rcar_log_func.c           | 170 +++++++++++++
  core/arch/arm/plat-rcar/rcar_log_func.h           | 108 ++++++++
- core/arch/arm/plat-rcar/rcar_ta_auth.c            | 262 ++++++++++++++++++++
- core/arch/arm/plat-rcar/rcar_ta_auth.h            |  40 +++
- core/arch/arm/plat-rcar/rcar_ta_auth_a32.S        |  38 +++
- core/arch/arm/plat-rcar/rcar_ta_auth_a64.S        |  69 ++++++
+ core/arch/arm/plat-rcar/rcar_maskrom.c            |  84 +++++++
+ core/arch/arm/plat-rcar/rcar_maskrom.h            |  49 ++++
+ core/arch/arm/plat-rcar/rcar_ta_auth.c            | 247 +++++++++++++++++++
+ core/arch/arm/plat-rcar/rcar_ta_auth.h            |  38 +++
  core/arch/arm/plat-rcar/rcar_version.h            |  37 +++
- core/arch/arm/plat-rcar/sub.mk                    |  16 ++
+ core/arch/arm/plat-rcar/sub.mk                    |  15 ++
  core/arch/arm/plat-rcar/tee_common_otp.c          |  64 +++++
  core/arch/arm/plat-rcar/trace_ext.c               | 121 +++++++++
  core/include/kernel/tee_time.h                    |   2 +
  core/tee/tee_fs_key_manager.c                     |   3 +-
  core/tee/tee_svc_cryp.c                           |   2 +-
- 36 files changed, 2333 insertions(+), 11 deletions(-)
+ 38 files changed, 2474 insertions(+), 11 deletions(-)
  create mode 100644 core/arch/arm/plat-rcar/conf.mk
  create mode 100644 core/arch/arm/plat-rcar/kern.ld.S
  create mode 100644 core/arch/arm/plat-rcar/link.mk
  create mode 100644 core/arch/arm/plat-rcar/main.c
  create mode 100644 core/arch/arm/plat-rcar/platform_config.h
  create mode 100644 core/arch/arm/plat-rcar/platform_flags.mk
+ create mode 100644 core/arch/arm/plat-rcar/rcar_call_maskrom_a32.S
+ create mode 100644 core/arch/arm/plat-rcar/rcar_call_maskrom_a64.S
  create mode 100644 core/arch/arm/plat-rcar/rcar_common.h
  create mode 100644 core/arch/arm/plat-rcar/rcar_ddr_training.c
  create mode 100644 core/arch/arm/plat-rcar/rcar_ddr_training.h
@@ -55,10 +59,10 @@ Subject: [PATCH] add optee_os R-Car support
  create mode 100644 core/arch/arm/plat-rcar/rcar_lock.c
  create mode 100644 core/arch/arm/plat-rcar/rcar_log_func.c
  create mode 100644 core/arch/arm/plat-rcar/rcar_log_func.h
+ create mode 100644 core/arch/arm/plat-rcar/rcar_maskrom.c
+ create mode 100644 core/arch/arm/plat-rcar/rcar_maskrom.h
  create mode 100644 core/arch/arm/plat-rcar/rcar_ta_auth.c
  create mode 100644 core/arch/arm/plat-rcar/rcar_ta_auth.h
- create mode 100644 core/arch/arm/plat-rcar/rcar_ta_auth_a32.S
- create mode 100644 core/arch/arm/plat-rcar/rcar_ta_auth_a64.S
  create mode 100644 core/arch/arm/plat-rcar/rcar_version.h
  create mode 100644 core/arch/arm/plat-rcar/sub.mk
  create mode 100644 core/arch/arm/plat-rcar/tee_common_otp.c
@@ -136,7 +140,7 @@ index d5c26b8..af985f1 100644
  	return res;
  }
 diff --git a/core/arch/arm/kernel/generic_boot.c b/core/arch/arm/kernel/generic_boot.c
-index 9c76559..98e08e8 100644
+index 9c76559..8ee7a8f 100644
 --- a/core/arch/arm/kernel/generic_boot.c
 +++ b/core/arch/arm/kernel/generic_boot.c
 @@ -1,5 +1,6 @@
@@ -146,7 +150,7 @@ index 9c76559..98e08e8 100644
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -54,6 +55,12 @@
+@@ -54,6 +55,13 @@
  #include <kernel/vfp.h>
  #endif
  
@@ -154,12 +158,13 @@ index 9c76559..98e08e8 100644
 +#include "rcar_common.h"
 +#include "rcar_log_func.h"
 +#include "rcar_ddr_training.h"
++#include "rcar_maskrom.h"
 +#endif
 +
  #define PADDR_INVALID		0xffffffff
  
  #ifdef CFG_BOOT_SYNC_CPU
-@@ -307,7 +314,10 @@ static void init_primary_helper(uint32_t pageable_part, uint32_t nsec_entry)
+@@ -307,7 +315,10 @@ static void init_primary_helper(uint32_t pageable_part, uint32_t nsec_entry)
  	init_vfp_sec();
  
  	init_runtime(pageable_part);
@@ -171,13 +176,13 @@ index 9c76559..98e08e8 100644
  	IMSG("Initializing (%s)\n", core_v_str);
  
  	thread_init_primary(generic_boot_get_handlers());
-@@ -320,6 +330,14 @@ static void init_primary_helper(uint32_t pageable_part, uint32_t nsec_entry)
+@@ -320,6 +331,14 @@ static void init_primary_helper(uint32_t pageable_part, uint32_t nsec_entry)
  
  	if (init_teecore() != TEE_SUCCESS)
  		panic();
 +#ifdef PLATFORM_RCAR
-+	/* Read LSI model(H3/M3) (ES1/ES2) */
-+	/* T.B.D */
++	/* LSI Product setup */
++	product_setup();
 +
 +	/* Initialize DDR training */
 +	ddr_training_timer_init();
@@ -187,7 +192,7 @@ index 9c76559..98e08e8 100644
  }
  
 diff --git a/core/arch/arm/kernel/generic_core_bootcfg.c b/core/arch/arm/kernel/generic_core_bootcfg.c
-index 1f6a918..7f498db 100644
+index 1f6a918..d23c3e1 100644
 --- a/core/arch/arm/kernel/generic_core_bootcfg.c
 +++ b/core/arch/arm/kernel/generic_core_bootcfg.c
 @@ -1,5 +1,6 @@
@@ -197,7 +202,7 @@ index 1f6a918..7f498db 100644
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -166,6 +167,54 @@ static struct map_area bootcfg_memory_map[] = {
+@@ -166,6 +167,62 @@ static struct map_area bootcfg_memory_map[] = {
  	 .device = true, .secure = true, .rw = true,
  	 },
  #endif
@@ -247,6 +252,14 @@ index 1f6a918..7f498db 100644
 +	 .pa = MEMORY6_BASE, .size = MEMORY6_SIZE,
 +	 .secure = MEMORY6_SECURE, .cached = MEMORY6_CACHED,
 +	 .device = MEMORY6_DEVICE, .rw = MEMORY6_RW, .exec = MEMORY6_EXEC,
++	 },
++#endif
++#ifdef MEMORY7_BASE
++	{
++	 .type = MEMORY7_TYPE,
++	 .pa = MEMORY7_BASE, .size = MEMORY7_SIZE,
++	 .secure = MEMORY7_SECURE, .cached = MEMORY7_CACHED,
++	 .device = MEMORY7_DEVICE, .rw = MEMORY7_RW, .exec = MEMORY7_EXEC,
 +	 },
 +#endif
  	{.type = MEM_AREA_NOTYPE}
@@ -1151,10 +1164,10 @@ index 0000000..0e3fa68
 +}
 diff --git a/core/arch/arm/plat-rcar/platform_config.h b/core/arch/arm/plat-rcar/platform_config.h
 new file mode 100644
-index 0000000..222e5c2
+index 0000000..70cd08b
 --- /dev/null
 +++ b/core/arch/arm/plat-rcar/platform_config.h
-@@ -0,0 +1,197 @@
+@@ -0,0 +1,199 @@
 +/*
 + * Copyright (c) 2014, Linaro Limited
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
@@ -1249,19 +1262,15 @@ index 0000000..222e5c2
 +#define DBSC_BASE		(0xE6790000U)	/* DBSC address		*/
 +#define RPC_BASE		(0xE6B10000U)	/* RPC address		*/
 +#define SYSDMAC2_BASE		(0xE7310000U)	/* SYS-DMAC2 address	*/
-+
 +#define SRAM_BASE		(0xE6300000U)	/* System RAM address	*/
-+
 +#define ROMAPI_BASE		(0xEB100000U)	/* MaskROM API address	*/
++#define PRR_BASE		(0xFFF00000U)	/* Product Register address */
 +
 +#define MEM_SECTION_MASK	(0x000FFFFFU)
 +#define MEM_SECTION_SIZE	(0x00100000U)
 +
-+#ifndef RCAR_DYNAMIC_TA_AUTH_BY_HWENGINE
-+#define MAX_MMAP_REGIONS	(11)
-+#else
-+#define MAX_MMAP_REGIONS	(13)
-+#endif
++#define MAX_MMAP_REGIONS	(14)
++
 +#ifdef CFG_WITH_LPAE
 +#define MAX_XLAT_TABLES		MAX_MMAP_REGIONS
 +#endif
@@ -1292,7 +1301,7 @@ index 0000000..222e5c2
 +#define MEMORY1_SIZE		(MEM_SECTION_SIZE)
 +#define MEMORY1_TYPE		MEM_AREA_IO_SEC
 +#define MEMORY1_SECURE		true
-+#define MEMORY1_CACHED		true
++#define MEMORY1_CACHED		false
 +#define MEMORY1_DEVICE		false
 +#define MEMORY1_RW		true
 +#define MEMORY1_EXEC		false
@@ -1327,8 +1336,6 @@ index 0000000..222e5c2
 +#define MEMORY4_RW		true
 +#define MEMORY4_EXEC		false
 +
-+#ifdef RCAR_DYNAMIC_TA_AUTH_BY_HWENGINE
-+
 +/* TA area for verification */
 +#define MEMORY5_BASE		(TA_VERIFICATION_BASE & ~MEM_SECTION_MASK)
 +#define MEMORY5_SIZE		(TA_VERIFICATION_SIZE)
@@ -1349,7 +1356,15 @@ index 0000000..222e5c2
 +#define MEMORY6_RW		true
 +#define MEMORY6_EXEC		true
 +
-+#endif /* RCAR_DYNAMIC_TA_AUTH_BY_HWENGINE */
++/* Product Register (PRR) */
++#define MEMORY7_BASE		(PRR_BASE & ~MEM_SECTION_MASK)
++#define MEMORY7_SIZE		(MEM_SECTION_SIZE)
++#define MEMORY7_TYPE		MEM_AREA_IO_SEC
++#define MEMORY7_SECURE		true
++#define MEMORY7_CACHED		false
++#define MEMORY7_DEVICE		true
++#define MEMORY7_RW		true
++#define MEMORY7_EXEC		false
 +
 +#endif /*PLATFORM_CONFIG_H*/
 diff --git a/core/arch/arm/plat-rcar/platform_flags.mk b/core/arch/arm/plat-rcar/platform_flags.mk
@@ -1415,12 +1430,136 @@ index 0000000..0a13713
 +CFG_TEE_MANUFACTURER ?= LINARO & Renesas Electronics
 +CFG_TEE_FW_IMPL_VERSION ?= $(CFG_TEE_IMPL_VERSION)
 +CFG_TEE_FW_MANUFACTURER ?= ARM & Renesas Electronics
+diff --git a/core/arch/arm/plat-rcar/rcar_call_maskrom_a32.S b/core/arch/arm/plat-rcar/rcar_call_maskrom_a32.S
+new file mode 100644
+index 0000000..8198e78
+--- /dev/null
++++ b/core/arch/arm/plat-rcar/rcar_call_maskrom_a32.S
+@@ -0,0 +1,39 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <asm.S>
++
++.global asm_switch_stack_pointer
++
++/* R0 : Jump address */
++/* R1 : Stack address */
++/* R2 : arg */
++FUNC asm_switch_stack_pointer , :
++
++	mov	r0, #-1		/* not supported */
++	bx	lr
++END_FUNC asm_switch_stack_pointer
+diff --git a/core/arch/arm/plat-rcar/rcar_call_maskrom_a64.S b/core/arch/arm/plat-rcar/rcar_call_maskrom_a64.S
+new file mode 100644
+index 0000000..9bb6267
+--- /dev/null
++++ b/core/arch/arm/plat-rcar/rcar_call_maskrom_a64.S
+@@ -0,0 +1,73 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <asm.S>
++#include <arm64_macros.S>
++#include <arm64.h>
++
++.global asm_switch_stack_pointer
++
++/* X0 : Jump address */
++/* X1 : Stack address */
++/* X2 : arg */
++FUNC asm_switch_stack_pointer , :
++
++	/* lr to stack */
++	mov	x3, x2
++	mov	x2, x30
++	sub	sp, sp, #16
++	store_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
++
++	/* change stack pointer */
++	mov	x2, sp
++	mov	sp, x1
++
++	/* save stack pointer */
++	sub	sp, sp, #16
++	store_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
++
++	/* data synchronization barrier */
++	dsb	sy
++
++	/* jump to code */
++	mov	x1, x0
++	mov	x0, x3
++	blr	x1
++
++	/* load stack pointer */
++	load_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
++
++	/* change stack pointer */
++	add	sp, sp, #16
++	mov	sp, x2
++
++	/* return */
++	load_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
++	add	sp, sp, #16
++	mov	x30, x2
++	ret
++END_FUNC asm_switch_stack_pointer
 diff --git a/core/arch/arm/plat-rcar/rcar_common.h b/core/arch/arm/plat-rcar/rcar_common.h
 new file mode 100644
-index 0000000..4a57ab3
+index 0000000..05e29ed
 --- /dev/null
 +++ b/core/arch/arm/plat-rcar/rcar_common.h
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,102 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -1498,6 +1637,16 @@ index 0000000..4a57ab3
 +
 +/* RPC No specific to R-Car */
 +#define TEE_RPC_DEBUG_LOG	(0x3F000000U)
++
++/* Product Register */
++#define PRR			(0xFFF00044U)
++#define PRR_PRODUCT_MASK	(0x00007F00U)
++#define PRR_PRODUCT_UNKNOWN	(0x000000FFU)
++#define PRR_PRODUCT_H3		(0x00004F00U)	/* R-Car H3 */
++#define PRR_PRODUCT_M3		(0x00005200U)	/* R-Car M3 */
++
++extern uint32_t product_type;
++extern const int8_t *product_name;
 +
 +/*
 + * Prototype declaration
@@ -2125,12 +2274,157 @@ index 0000000..f95505f
 +#endif /* RCAR_DEBUG_LOG */
 +
 +#endif /* RCAR_LOG_FUNC_H */
+diff --git a/core/arch/arm/plat-rcar/rcar_maskrom.c b/core/arch/arm/plat-rcar/rcar_maskrom.c
+new file mode 100644
+index 0000000..c8439df
+--- /dev/null
++++ b/core/arch/arm/plat-rcar/rcar_maskrom.c
+@@ -0,0 +1,84 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <string.h>
++#include <io.h>
++#include <tee_api_types.h>
++#include <trace.h>
++#include "platform_config.h"
++#include "rcar_common.h"
++#include "rcar_maskrom.h"
++
++/* Definitions */
++
++#ifdef ARM32
++/* H3 */
++#define ADDR_ROM_SECURE_API_H3		(0xeb101f54U)
++#define ADDR_ROM_GETLCS_API_H3		(0xeb1021b4U)
++/* M3 */
++#define ADDR_ROM_SECURE_API_M3		(0xeb103efcU)
++#define ADDR_ROM_GETLCS_API_M3		(0xeb10415cU)
++#else /* ARM64 */
++/* H3 */
++#define ADDR_ROM_SECURE_API_H3		(0xeb10dd64U)
++#define ADDR_ROM_GETLCS_API_H3		(0xeb10dfe0U)
++/* M3 */
++#define ADDR_ROM_SECURE_API_M3		(0xeb1102fcU)
++#define ADDR_ROM_GETLCS_API_M3		(0xeb110578U)
++#endif
++
++/* default value : R-Car H3 */
++uint32_t product_type = PRR_PRODUCT_H3;
++const int8_t *product_name = (const int8_t *)"H3";
++ROM_SECURE_API ROM_SecureBootAPI = (ROM_SECURE_API)ADDR_ROM_SECURE_API_H3;
++ROM_GETLCS_API ROM_GetLcs = (ROM_GETLCS_API)ADDR_ROM_GETLCS_API_H3;
++
++void product_setup(void)
++{
++	uint32_t reg;
++	uint32_t type;
++
++	reg = read32(PRR);
++	type = reg & PRR_PRODUCT_MASK;
++
++	switch (type) {
++	case PRR_PRODUCT_H3:
++		/* No Operation */
++		break;
++	case PRR_PRODUCT_M3:
++		product_type = PRR_PRODUCT_M3;
++		product_name = (const int8_t *)"M3";
++		ROM_SecureBootAPI = (ROM_SECURE_API)ADDR_ROM_SECURE_API_M3;
++		ROM_GetLcs = (ROM_GETLCS_API)ADDR_ROM_GETLCS_API_M3;
++		break;
++	default:
++		EMSG("Unknown product. PRR=0x%x", reg);
++		product_type = type | PRR_PRODUCT_UNKNOWN;
++		product_name = (const int8_t *)"unknown";
++		break;
++	}
++}
+diff --git a/core/arch/arm/plat-rcar/rcar_maskrom.h b/core/arch/arm/plat-rcar/rcar_maskrom.h
+new file mode 100644
+index 0000000..e99f156
+--- /dev/null
++++ b/core/arch/arm/plat-rcar/rcar_maskrom.h
+@@ -0,0 +1,49 @@
++/*
++ * Copyright (c) 2015-2016, Renesas Electronics Corporation
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ * this list of conditions and the following disclaimer in the documentation
++ * and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef RCAR_MASKROM_H_
++#define RCAR_MASKROM_H_
++
++typedef uint32_t (*ROM_FuncReadFlash) (
++			uint64_t srcAddr,
++			uint8_t *pDest,
++			uint32_t sizeToRead);
++
++typedef uint32_t (*ROM_SECURE_API)(uint32_t *pKeyCert,
++			uint32_t *pContentCert,
++			ROM_FuncReadFlash pFuncReadFlash);
++
++typedef uint32_t(*ROM_GETLCS_API)(uint32_t *pLcs);
++
++extern ROM_SECURE_API ROM_SecureBootAPI;
++extern ROM_GETLCS_API ROM_GetLcs;
++
++void product_setup(void);
++
++uint32_t asm_switch_stack_pointer(uintptr_t jump, uint32_t stack, void *arg);
++
++#endif /* RCAR_MASKROM_H_ */
 diff --git a/core/arch/arm/plat-rcar/rcar_ta_auth.c b/core/arch/arm/plat-rcar/rcar_ta_auth.c
 new file mode 100644
-index 0000000..ab2dd9b
+index 0000000..1ec2966
 --- /dev/null
 +++ b/core/arch/arm/plat-rcar/rcar_ta_auth.c
-@@ -0,0 +1,262 @@
+@@ -0,0 +1,247 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -2162,6 +2456,8 @@ index 0000000..ab2dd9b
 +#include <io.h>
 +#include <trace.h>
 +
++#include "rcar_common.h"
++#include "rcar_maskrom.h"
 +#include "rcar_ta_auth.h"
 +#include "platform_config.h"
 +
@@ -2197,27 +2493,6 @@ index 0000000..ab2dd9b
 +#define LCS_FA				(0x7U)
 +#define SECURE_BOOT_MODE		(0U)
 +#define NORMAL_BOOT_MODE		(1U)
-+
-+/* MaskROM API - ROM_SecureBootAPI() */
-+#ifdef ARM32
-+#define ADDR_ROM_SECURE_API_FUNC	(0xeb101f54U)
-+#else
-+#define ADDR_ROM_SECURE_API_FUNC	(0xeb10dd64U)
-+#endif
-+
-+typedef uint32_t (*ROM_FuncReadFlash) (
-+	uint64_t srcAddr,
-+	uint8_t *pDest,
-+	uint32_t sizeToRead
-+);
-+
-+#define ROM_SecureBootAPI(A, B, C) ((uint32_t (*)(uint32_t *pKeyCert, \
-+		uint32_t *pContentCert, ROM_FuncReadFlash pFuncReadFlash)) \
-+		ADDR_ROM_SECURE_API_FUNC)((A), (B), (C))
-+
-+/* MaskROM API - ROM_GetLcs() */
-+typedef uint32_t(*ROM_GETLCS_API)(uint32_t *pLcs);
-+static const ROM_GETLCS_API ROM_GetLcs = ((ROM_GETLCS_API)0xEB10DFE0U);
 +
 +/* Declaration of internal function */
 +static uint32_t get_key_cert_size(const uint32_t *cert_header);
@@ -2355,7 +2630,10 @@ index 0000000..ab2dd9b
 +	 * | Non-cache Stack area      | [3]=TA_NONCACHE_STACK_AREA_SIZE |
 +	 * ---------------------------------------------------------------
 +	 */
-+	if ((fixed_base + object_size) <= fixed_key_cert) {
++	if ((product_type & PRR_PRODUCT_UNKNOWN) != 0U) {
++		EMSG("Unknown product error. product=0x%x r=0x%x",
++			product_type & PRR_PRODUCT_MASK, res);
++	} else if ((fixed_base + object_size) <= fixed_key_cert) {
 +
 +		/* copy to fixed memory */
 +		(void)memcpy(fixed_base,
@@ -2374,16 +2652,17 @@ index 0000000..ab2dd9b
 +			/* call the MaskROM API */
 +			ret = asm_switch_stack_pointer(
 +				(uintptr_t)call_maskrom_api,
-+				TA_NONCACHE_STACK_ADDR);
++				TA_NONCACHE_STACK_ADDR, NULL);
 +			if (ret == 0U) {
-+				DMSG("Secure boot success!");
++				DMSG("[%s] Secure boot success!", product_name);
 +				*secmem_ta = fixed_ta;
 +				res = TEE_SUCCESS;
 +			} else {
-+				EMSG("Secure boot error. 0x%x", ret);
++				EMSG("[%s] Secure boot error. 0x%x",
++					product_name, ret);
 +			}
 +		} else {
-+			DMSG("Normal boot");
++			DMSG("[%s] Normal boot", product_name);
 +			*secmem_ta = fixed_ta;
 +			res = TEE_SUCCESS;
 +		}
@@ -2395,10 +2674,10 @@ index 0000000..ab2dd9b
 +}
 diff --git a/core/arch/arm/plat-rcar/rcar_ta_auth.h b/core/arch/arm/plat-rcar/rcar_ta_auth.h
 new file mode 100644
-index 0000000..4d588ff
+index 0000000..be77284
 --- /dev/null
 +++ b/core/arch/arm/plat-rcar/rcar_ta_auth.h
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,38 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -2436,131 +2715,10 @@ index 0000000..4d588ff
 +TEE_Result rcar_auth_ta_certificate(const void *key_cert,
 +				struct shdr **secmem_ta);
 +
-+uint32_t asm_switch_stack_pointer(uintptr_t jump, uint32_t stack);
-+
 +#endif /* RCAR_TA_AUTH_H */
-diff --git a/core/arch/arm/plat-rcar/rcar_ta_auth_a32.S b/core/arch/arm/plat-rcar/rcar_ta_auth_a32.S
-new file mode 100644
-index 0000000..148af77
---- /dev/null
-+++ b/core/arch/arm/plat-rcar/rcar_ta_auth_a32.S
-@@ -0,0 +1,38 @@
-+/*
-+ * Copyright (c) 2015-2016, Renesas Electronics Corporation
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions are met:
-+ *
-+ * 1. Redistributions of source code must retain the above copyright notice,
-+ * this list of conditions and the following disclaimer.
-+ *
-+ * 2. Redistributions in binary form must reproduce the above copyright notice,
-+ * this list of conditions and the following disclaimer in the documentation
-+ * and/or other materials provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <asm.S>
-+
-+.global asm_switch_stack_pointer
-+
-+/* R0 : Jump address */
-+/* R1 : Stack address */
-+FUNC asm_switch_stack_pointer , :
-+
-+	mov	r0, #-1		/* not supported */
-+	bx	lr
-+END_FUNC asm_switch_stack_pointer
-diff --git a/core/arch/arm/plat-rcar/rcar_ta_auth_a64.S b/core/arch/arm/plat-rcar/rcar_ta_auth_a64.S
-new file mode 100644
-index 0000000..a943ab0
---- /dev/null
-+++ b/core/arch/arm/plat-rcar/rcar_ta_auth_a64.S
-@@ -0,0 +1,69 @@
-+/*
-+ * Copyright (c) 2015-2016, Renesas Electronics Corporation
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions are met:
-+ *
-+ * 1. Redistributions of source code must retain the above copyright notice,
-+ * this list of conditions and the following disclaimer.
-+ *
-+ * 2. Redistributions in binary form must reproduce the above copyright notice,
-+ * this list of conditions and the following disclaimer in the documentation
-+ * and/or other materials provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <asm.S>
-+#include <arm64_macros.S>
-+#include <arm64.h>
-+
-+.global asm_switch_stack_pointer
-+
-+/* X0 : Jump address */
-+/* X1 : Stack address */
-+FUNC asm_switch_stack_pointer , :
-+
-+	/* lr to stack */
-+	mov	x2, x30
-+	sub	sp, sp, #16
-+	store_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
-+
-+	/* change stack pointer */
-+	mov	x2, sp
-+	mov	sp, x1
-+
-+	/* save stack pointer */
-+	sub	sp, sp, #16
-+	store_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
-+
-+	/* data synchronization barrier */
-+	dsb	sy
-+
-+	/* jump to code */
-+	blr	x0
-+
-+	/* load stack pointer */
-+	load_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
-+
-+	/* change stack pointer */
-+	add	sp, sp, #16
-+	mov	sp, x2
-+
-+	/* return */
-+	load_xregs sp, 0, 1, 2	/* x1 is dummy (sp is 16byte alignment) */
-+	add	sp, sp, #16
-+	mov	x30, x2
-+	ret
-+END_FUNC asm_switch_stack_pointer
 diff --git a/core/arch/arm/plat-rcar/rcar_version.h b/core/arch/arm/plat-rcar/rcar_version.h
 new file mode 100644
-index 0000000..f24babc
+index 0000000..2b29177
 --- /dev/null
 +++ b/core/arch/arm/plat-rcar/rcar_version.h
 @@ -0,0 +1,37 @@
@@ -2596,17 +2754,17 @@ index 0000000..f24babc
 +
 +#include <stdint.h>
 +
-+#define VERSION_OF_RENESAS	"1.0.2"
++#define VERSION_OF_RENESAS	"1.0.3"
 +
 +extern const int8_t version_of_renesas[];
 +
 +#endif /* RCAR_VERSION_H */
 diff --git a/core/arch/arm/plat-rcar/sub.mk b/core/arch/arm/plat-rcar/sub.mk
 new file mode 100644
-index 0000000..fb49c78
+index 0000000..f0ae7c8
 --- /dev/null
 +++ b/core/arch/arm/plat-rcar/sub.mk
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,15 @@
 +global-incdirs-y += .
 +srcs-y += main.c
 +srcs-$(CFG_OTP_SUPPORT) += tee_common_otp.c
@@ -2616,10 +2774,9 @@ index 0000000..fb49c78
 +srcs-$(CFG_ARM32_core) += rcar_interruptflags_a32.S
 +srcs-$(CFG_ARM64_core) += rcar_interruptflags_a64.S
 +srcs-$(CFG_DYNAMIC_TA_AUTH_BY_HWENGINE) += rcar_ta_auth.c
-+ifeq ($(CFG_DYNAMIC_TA_AUTH_BY_HWENGINE),y)
-+srcs-$(CFG_ARM32_core) += rcar_ta_auth_a32.S
-+srcs-$(CFG_ARM64_core) += rcar_ta_auth_a64.S
-+endif
++srcs-$(CFG_ARM32_core) += rcar_call_maskrom_a32.S
++srcs-$(CFG_ARM64_core) += rcar_call_maskrom_a64.S
++srcs-y += rcar_maskrom.c
 +
 +# Copy the base file - /core/arch/arm/kernel/
 +srcs-y += trace_ext.c

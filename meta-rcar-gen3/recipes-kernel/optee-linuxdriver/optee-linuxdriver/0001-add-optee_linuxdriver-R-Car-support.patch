@@ -1,6 +1,6 @@
-From cfd78916389d46419700c13ffb2121535144d9b9 Mon Sep 17 00:00:00 2001
+From de8715f97c417b19029fdfb5575d0e3db89a8e7a Mon Sep 17 00:00:00 2001
 From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
-Date: Wed, 9 Mar 2016 17:14:54 +0900
+Date: Fri, 8 Apr 2016 10:52:42 +0900
 Subject: [PATCH] add optee_linuxdriver R-Car support
 
 ---
@@ -14,7 +14,7 @@ Subject: [PATCH] add optee_linuxdriver R-Car support
 
 diff --git a/armtz/rcar_version.h b/armtz/rcar_version.h
 new file mode 100644
-index 0000000..916023a
+index 0000000..bf025e0
 --- /dev/null
 +++ b/armtz/rcar_version.h
 @@ -0,0 +1,11 @@
@@ -26,7 +26,7 @@ index 0000000..916023a
 +#ifndef RCAR_VERSION_H
 +#define RCAR_VERSION_H
 +
-+#define VERSION_OF_RENESAS	"1.0.2"
++#define VERSION_OF_RENESAS	"1.0.3"
 +
 +#endif /* RCAR_VERSION_H */
 diff --git a/armtz/tee_tz_drv.c b/armtz/tee_tz_drv.c

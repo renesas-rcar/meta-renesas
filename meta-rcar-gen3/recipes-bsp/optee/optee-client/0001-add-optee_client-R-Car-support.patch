@@ -1,6 +1,6 @@
-From e1c55e6b68d7ff5da77d63cd781d70b1ea8ef9bb Mon Sep 17 00:00:00 2001
+From b36e4fa46fa96bec38d4c1fc3e4b25b3ccc9e664 Mon Sep 17 00:00:00 2001
 From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
-Date: Wed, 9 Mar 2016 17:14:54 +0900
+Date: Fri, 8 Apr 2016 10:52:42 +0900
 Subject: [PATCH] add optee_client R-Car support
 
 ---
@@ -22,14 +22,14 @@ index 92e1853..3c8b728 100644
  CFLAGS          := -Wall -Wbad-function-cast -Wcast-align \
  		   -Werror-implicit-function-declaration -Wextra \
 diff --git a/tee-supplicant/src/tee_supplicant.c b/tee-supplicant/src/tee_supplicant.c
-index 3a6a5f1..c286823 100644
+index 3a6a5f1..b744cd7 100644
 --- a/tee-supplicant/src/tee_supplicant.c
 +++ b/tee-supplicant/src/tee_supplicant.c
 @@ -47,6 +47,8 @@
  #include <tee_supp_fs.h>
  #include <teec.h>
  
-+#define VERSION_OF_RENESAS	"1.0.2"
++#define VERSION_OF_RENESAS	"1.0.3"
 +
  #define TEE_RPC_BUFFER_NUMBER 5
  
