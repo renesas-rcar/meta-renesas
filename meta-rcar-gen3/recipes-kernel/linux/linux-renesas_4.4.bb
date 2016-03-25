@@ -18,4 +18,5 @@ PR = "r1"
 
 SRC_URI_append_salvator-x = " \
     file://defconfig \
+    file://touch.cfg \
 "
