@@ -71,6 +71,16 @@ _cms_list="bcmc,RTM0AC0000JRCMBCC0SL40C,RTM0AC0000JRCMBCC0SL40C.tar.gz \
            blc,RTM0AC0000JRCMBLC0SL40C,RTM0AC0000JRCMBLC0SL40C.tar.gz \
            dgc,RTM0AC0000JRCMDGV0SL40C,RTM0AC0000JRCMDGV0SL40C.tar.gz"
 
+# ADSP
+# Please add ADSP to "_adsp_list"
+# Don't use space in xxx_name.
+# adsp_list="<software_name>,<package_name>,<copy_file_name> \
+#            <software_name>,<package_name>,<copy_file_name> \
+#            <software_name>,<package_name>,<copy_file_name>"
+_adsp_list="adsp_fw,RCG3AHFWN0101ZDP,RCG3AHFWN0101ZDP.tar.gz \
+            adsp_if,RCG3AHIFL4001ZDP,RCG3AHIFL4001ZDP.tar.gz \
+            adsp_driver,RCG3AHPDL4001ZDO,RCG3AHPDL4001ZDO.tar.gz"
+
 ##### static value
 _MODE_ZIP=1
 _MODE_TAR=2
@@ -82,6 +92,8 @@ _DTV_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-dtv/files"
 _DTV_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dtv-module/dtv-user-module"
 _DVD_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dvd-module/dvd-user-module"
 _CMS_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/cms-module/cms-user-module"
+_ADSP_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-adsp/xtensa-hifi"
+_ADSP_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/adsp-module/files"
 
 ##### common function
 
@@ -927,6 +939,75 @@ func_cms()
     echo /=======================================================/
 }
 
+# For ADSP main routine
+func_adsp()
+{
+    echo ""
+    echo "Copying for ADSP Packages"
+
+    # file check only
+    for i in ${_adsp_list}
+    do
+        sw_name=`echo $i | cut -d "," -f 1`
+        pkg_name=`echo $i | cut -d "," -f 2`
+        copyfile_name=`echo $i | cut -d "," -f 3`
+        md5_val=`eval echo '$_MD5_'$pkg_name`
+        if [ -n "${_debug}" ]; then
+            echo ""
+            echo "sw_name         = $sw_name"
+            echo "pkg_name        = $pkg_name"
+            echo "copyfile_name   = $copyfile_name"
+            echo "md5_val         = $md5_val"
+        fi
+
+        func_search_and_md5check "${pkg_name}" "${copyfile_name}" "${md5_val}" "${_src_full}"
+        if [ -z "${_find_filename}" ]; then
+            echo "${sw_name} not found!"
+            echo "Skip ADSP Package"
+            echo ""
+            return
+        fi
+    done
+
+    # file check and install
+    for i in ${_adsp_list}
+    do
+        sw_name=`echo $i | cut -d "," -f 1`
+        pkg_name=`echo $i | cut -d "," -f 2`
+        copyfile_name=`echo $i | cut -d "," -f 3`
+        md5_val=`eval echo '$_MD5_'$pkg_name`
+        if [ -n "${_debug}" ]; then
+            echo ""
+            echo "sw_name         = $sw_name"
+            echo "pkg_name        = $pkg_name"
+            echo "copyfile_name   = $copyfile_name"
+            echo "md5_val         = $md5_val"
+        fi
+
+        func_search_and_md5check "${pkg_name}" "${copyfile_name}" "${md5_val}" "${_src_full}"
+        if [ -z "${_find_filename}" ]; then
+            echo "${sw_name} not found!"
+        else
+            # install searched library
+            file_top_dir=${_extract_top_dir_name}
+            install -d ${_ADSP_KM_INST_DIR}
+            install -d ${_ADSP_UM_INST_DIR}
+            if [ "${sw_name}" = "adsp_driver" ]; then
+                install -m 644 ${file_top_dir}/${pkg_name}/Software/${copyfile_name} ${_ADSP_KM_INST_DIR}
+            else
+                install -m 644 ${file_top_dir}/${pkg_name}/Software/${copyfile_name} ${_ADSP_UM_INST_DIR}
+            fi
+            echo "Installed ${sw_name}"
+            echo "                : ${pkg_name}"
+        fi
+    done
+
+    echo ""
+    echo "Packages for ADSP were found and copied."
+    echo /=======================================================/
+}
+
+
 ################################
 # Copy Script Main routine
 ################################
@@ -1001,6 +1082,7 @@ func_video_decoder
 func_video_encoder
 func_dtv_dvd
 func_cms
+func_adsp
 
 ##### 5) cleanup temp directory
 func_clean_tempdir
