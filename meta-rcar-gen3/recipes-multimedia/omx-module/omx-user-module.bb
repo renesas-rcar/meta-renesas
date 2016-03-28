@@ -22,9 +22,13 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 # SRC file name
 SRC_URI_OMX = '${@base_conditional("USE_OMX_COMMON", "1", "file://RTM0AC0000XCMCTL30SL40C.tar.bz2;unpack=0", "", d )}'
 SRC_URI_VCMND = '${@base_conditional("USE_VIDEO_DEC", "1", "file://RTM0AC0000XVCMND30SL40C.tar.bz2;unpack=0", "", d )}'
+SRC_URI_VCMNE = '${@base_conditional("USE_VIDEO_ENC", "1", "file://RTM0AC0000XVCMNE30SL40C.tar.bz2;unpack=0", "", d )}'
 SRC_URI_H264D = '${@base_conditional("USE_H264D_OMX", "1", "file://RTM0AC0000XV264D30SL40C.tar.bz2", "", d )}'
+SRC_URI_H264E = '${@base_conditional("USE_H264E_OMX", "1", "file://RTM0AC0000XV264E30SL40C.tar.bz2", "", d )}'
 SRC_URI_H265D = '${@base_conditional("USE_H265D_OMX", "1", "file://RTM0AC0000XV265D30SL40C.tar.bz2", "", d )}'
 SRC_URI_MPEG2D = '${@base_conditional("USE_MPEG2D_OMX", "1", "file://RTM0AC0000XVM2VD30SL40C.tar.bz2", "", d )}'
+SRC_URI_MPEG4D = '${@base_conditional("USE_MPEG4D_OMX", "1", "file://RTM0AC0000XVM4VD30SL40C.tar.bz2", "", d )}'
+SRC_URI_VC1D = '${@base_conditional("USE_VC1D_OMX", "1", "file://RTM0AC0000XVVC1D30SL40C.tar.bz2", "", d )}'
 SRC_URI_ACMND = '${@base_conditional("USE_AUDIO_OMX", "1", "file://RTM0AC0000XACMND30SL40C.tar.gz", "", d )}'
 SRC_URI_AACLC = '${@base_conditional("USE_AACLCD_OMX", "1", "file://RTM0AC0000XAAACD30SL40C.tar.gz", "", d )}'
 SRC_URI_AACPV2 = '${@base_conditional("USE_AACPV2D_OMX", "1", "file://RTM0AC0000XAAAPD30SL40C.tar.gz", "", d )}'
@@ -38,9 +42,13 @@ SRC_URI_WMAMZ = '${@base_conditional("USE_WMA_MDW", "1", "file://RTM0AC0000ADWMA
 SRC_URI = " \
     ${SRC_URI_OMX} \
     ${SRC_URI_VCMND} \
+    ${SRC_URI_VCMNE} \
     ${SRC_URI_H264D} \
+    ${SRC_URI_H264E} \
     ${SRC_URI_H265D} \
     ${SRC_URI_MPEG2D} \
+    ${SRC_URI_MPEG4D} \
+    ${SRC_URI_VC1D} \
     ${SRC_URI_ACMND} \
     ${SRC_URI_AACLC} \
     ${SRC_URI_AACPV2} \
@@ -55,17 +63,25 @@ SRC_URI = " \
 # SRC directory name
 OMX_COMMON_SRC = '${@base_conditional("USE_OMX_COMMON", "1", "RTM0AC0000XCMCTL30SL40C", "", d )}'
 OMX_VIDEO_DEC_COMMON_SRC = '${@base_conditional("USE_VIDEO_DEC", "1", "RTM0AC0000XVCMND30SL40C", "", d )}'
+OMX_VIDEO_ENC_COMMON_SRC = '${@base_conditional("USE_VIDEO_ENC", "1", "RTM0AC0000XVCMNE30SL40C", "", d )}'
 
 OMX_H264_DEC_SRC = '${@base_conditional("USE_H264D_OMX", "1", "RTM0AC0000XV264D30SL40C", "", d )}'
+OMX_H264_ENC_SRC = '${@base_conditional("USE_H264E_OMX", "1", "RTM0AC0000XV264E30SL40C", "", d )}'
 OMX_H265_DEC_SRC = '${@base_conditional("USE_H265D_OMX", "1", "RTM0AC0000XV265D30SL40C", "", d )}'
 OMX_MPEG2_DEC_SRC = '${@base_conditional("USE_MPEG2D_OMX", "1", "RTM0AC0000XVM2VD30SL40C", "", d )}'
+OMX_MPEG4_DEC_SRC = '${@base_conditional("USE_MPEG4D_OMX", "1", "RTM0AC0000XVM4VD30SL40C", "", d )}'
+OMX_VC1_DEC_SRC = '${@base_conditional("USE_VC1D_OMX", "1", "RTM0AC0000XVVC1D30SL40C", "", d )}'
 
 OMX_VIDEO_SRC_LIST = " \
     ${OMX_COMMON_SRC} \
     ${OMX_VIDEO_DEC_COMMON_SRC} \
+    ${OMX_VIDEO_ENC_COMMON_SRC} \
     ${OMX_H264_DEC_SRC} \
+    ${OMX_H264_ENC_SRC} \
     ${OMX_H265_DEC_SRC} \
     ${OMX_MPEG2_DEC_SRC} \
+    ${OMX_MPEG4_DEC_SRC} \
+    ${OMX_VC1_DEC_SRC} \
 "
 
 AAC_MIDDLEWARE_SRC = "RTM0AC0000ADAACMZ1SL40C"
@@ -99,7 +115,7 @@ do_unpack_append() {
 }
 
 setup_build_tree() {
-    for omxmc in ${OMX_COMMON_SRC} ${OMX_VIDEO_DEC_COMMON_SRC}
+    for omxmc in ${OMX_COMMON_SRC} ${OMX_VIDEO_DEC_COMMON_SRC} ${OMX_VIDEO_ENC_COMMON_SRC}
     do
         tar xf ${WORKDIR}/${omxmc}.tar.bz2 -C ${WORKDIR}
         tar xf ${WORKDIR}/${omxmc}.tar.bz2 ${omxmc}/src --strip=2 -C ${S}
@@ -135,15 +151,25 @@ do_install_omx_video() {
         ln -s libomxr_mc_cmn.so.3 libomxr_mc_cmn.so
     fi
 
-    if [ "X${USE_VIDEO_DEC}" = "X1" ] ; then
+    if [ "X${USE_VIDEO_OMX}" = "X1" ] ; then
         ln -s libomxr_mc_vcmn.so.3.0.0 libomxr_mc_vcmn.so.3
         ln -s libomxr_mc_vcmn.so.3 libomxr_mc_vcmn.so
+    fi
 
+    if [ "X${USE_VIDEO_DEC}" = "X1" ] ; then
         ln -s libomxr_mc_vdcmn.so.3.0.0 libomxr_mc_vdcmn.so.3
         ln -s libomxr_mc_vdcmn.so.3 libomxr_mc_vdcmn.so
 
         ln -s libuvcs_dec.so.3.0.0 libuvcs_dec.so.3
         ln -s libuvcs_dec.so.3 libuvcs_dec.so
+    fi
+
+    if [ "X${USE_VIDEO_ENC}" = "X1" ] ; then
+        ln -s libomxr_mc_vecmn.so.3.0.0 libomxr_mc_vecmn.so.3
+        ln -s libomxr_mc_vecmn.so.3 libomxr_mc_vecmn.so
+
+        ln -s libuvcs_enc.so.3.0.0 libuvcs_enc.so.3
+        ln -s libuvcs_enc.so.3 libuvcs_enc.so
     fi
 
     if [ "X${USE_H264D_OMX}" = "X1" ]; then
@@ -152,6 +178,14 @@ do_install_omx_video() {
 
         ln -s libuvcs_avcd.so.3.0.0 libuvcs_avcd.so.3
         ln -s libuvcs_avcd.so.3 libuvcs_avcd.so
+    fi
+
+    if [ "X${USE_H264E_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_h264e.so.3.0.0 libomxr_mc_h264e.so.3
+        ln -s libomxr_mc_h264e.so.3 libomxr_mc_h264e.so
+
+        ln -s libuvcs_avce.so.3.0.0 libuvcs_avce.so.3
+        ln -s libuvcs_avce.so.3 libuvcs_avce.so
     fi
 
     if [ "X${USE_H265D_OMX}" = "X1" ]; then
@@ -168,6 +202,22 @@ do_install_omx_video() {
 
         ln -s libuvcs_m2vd.so.3.0.0 libuvcs_m2vd.so.3
         ln -s libuvcs_m2vd.so.3 libuvcs_m2vd.so
+    fi
+
+    if [ "X${USE_MPEG4D_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_m4vd.so.3.0.0 libomxr_mc_m4vd.so.3
+        ln -s libomxr_mc_m4vd.so.3 libomxr_mc_m4vd.so
+
+        ln -s libuvcs_m4vd.so.3.0.0 libuvcs_m4vd.so.3
+        ln -s libuvcs_m4vd.so.3 libuvcs_m4vd.so
+    fi
+
+    if [ "X${USE_VC1D_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_vc1d.so.3.0.0 libomxr_mc_vc1d.so.3
+        ln -s libomxr_mc_vc1d.so.3 libomxr_mc_vc1d.so
+
+        ln -s libuvcs_vc1d.so.3.0.0 libuvcs_vc1d.so.3
+        ln -s libuvcs_vc1d.so.3 libuvcs_vc1d.so
     fi
 }
 

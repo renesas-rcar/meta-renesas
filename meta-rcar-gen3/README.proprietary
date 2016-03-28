@@ -74,8 +74,11 @@ III/ Build with Renesas multimedia libraries
             2. Add features to DISTRO_FEATURES_append to local.conf
                 # Additional configuration in OMX module
                 " h264dec_lib"       - for OMX Media Component H264 Decoder Libraries
+                " h264enc_lib"       - for OMX Media Component H.264 Encoder Libraries
                 " h265dec_lib"       - for OMX Media Component H265 Decoder Libraries
                 " mpeg2dec_lib"      - for OMX Media Component MPEG2 Decoder Libraries
+                " mpeg4dec_lib"      - for OMX Media Component MPEG4 Decoder Libraries
+                " vc1dec_lib"        - for OMX Media Component VC-1 Decoder Libraries
                 " aaclcdec_lib"      - for ARM AAC-LC Decoder Sample Libraries for Linux
                 " aaclcdec_mdw"      - for ARM AAC-LC Decoder Sample Middleware for Linux
                 " aacpv2dec_lib"     - for aacplus V2 Decoder Libraries for Linux

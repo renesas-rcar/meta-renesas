@@ -6,11 +6,20 @@ USE_MULTIMEDIA_TP = "${@'1' if 'mm-test' in '${DISTRO_FEATURES}' else '0'}"
 # USE_H264D_OMX for OMX Media Component H264 OMX Library
 USE_H264D_OMX = "${@'1' if 'h264dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
+# USE_H264E_OMX for OMX Media Component H264 Encoder Library
+USE_H264E_OMX = "${@'1' if 'h264enc_lib' in '${DISTRO_FEATURES}' else '0'}"
+
 # USE_H265D_OMX for OMX Media Component H265 OMX Library
 USE_H265D_OMX = "${@'1' if 'h265dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 # USE_MPEG2_OMX for OMX Media Component MPEG2 OMX Library
 USE_MPEG2D_OMX = "${@'1' if 'mpeg2dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_MPEG4D_OMX for OMX Media Component MPEG4 Decoder Library
+USE_MPEG4D_OMX = "${@'1' if 'mpeg4dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_VC1D_OMX for OMX Media Component VC-1 Decoder Library
+USE_VC1D_OMX = "${@'1' if 'vc1dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 # USE_AACLCD_OMX for OMX Media Component AACLC OMX Library
 USE_AACLCD_OMX = "${@'1' if 'aaclcdec_lib' in '${DISTRO_FEATURES}' else '0'}"
@@ -41,10 +50,13 @@ LIST_OMX_VIDEO_DEC_FLAG = " \
     ${USE_H264D_OMX} \
     ${USE_H265D_OMX} \
     ${USE_MPEG2D_OMX} \
+    ${USE_MPEG4D_OMX} \
+    ${USE_VC1D_OMX} \
 "
 
 # OMX Video Encoder Flag list
 LIST_OMX_VIDEO_ENC_FLAG = " \
+    ${USE_H264E_OMX} \
 "
 
 # OMX Audio Flag list (except MDW)
