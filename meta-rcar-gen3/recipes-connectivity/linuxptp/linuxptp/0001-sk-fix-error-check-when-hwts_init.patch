@@ -1,0 +1,32 @@
+From 8c6831227431d1c90c2dc3785d57f29a175c9f94 Mon Sep 17 00:00:00 2001
+From: Masaru Nagai <masaru.nagai.vx@renesas.com>
+Date: Tue, 8 Apr 2014 10:48:43 +0900
+Subject: [PATCH 1/2] sk: fix error check when hwts_init
+
+In hwts_init, The results check of the ioctl(SIOCHWTSTAMP) is using
+HWTSTAMP_FILTER_ALL and HWTSTAMP_FILTER_PTP_V2_EVENT as constant values.
+But the rx_filter is not these values, It will be the error even
+though will be set correctly.
+
+Signed-off-by: Mitsuhiro Kimura <mitsuhiro.kimura.kc@renesas.com>
+Signed-off-by: Masaru Nagai <masaru.nagai.vx@renesas.com>
+---
+ sk.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sk.c b/sk.c
+index 8d70d1a..5265988 100644
+--- a/sk.c
++++ b/sk.c
+@@ -67,7 +67,7 @@ static int hwts_init(int fd, const char *device, int rx_filter, int one_step)
+ 
+ 		if (cfg.tx_type != req.tx_type ||
+ 		    (cfg.rx_filter != HWTSTAMP_FILTER_ALL &&
+-		     cfg.rx_filter != HWTSTAMP_FILTER_PTP_V2_EVENT)) {
++		     cfg.rx_filter != rx_filter)) {
+ 			return -1;
+ 		}
+ 	}
+-- 
+1.8.3.2
+
