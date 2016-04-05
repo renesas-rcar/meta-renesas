@@ -6,14 +6,15 @@ LICENSE = "CLOSED"
 PN = "gles-user-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "r8a7795"
+COMPATIBLE_MACHINE = "(r8a7795|r8a7796)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-S_r8a7795 = "${WORKDIR}/rogue"
-GLES_r8a7795 = "gsx"
+S = "${WORKDIR}/rogue"
+GLES = "gsx"
 
 SRC_URI_r8a7795 = "file://r8a7795_linux_gsx_binaries_gles3.tar.bz2"
-SRC_URI_append_r8a7795 = " \
+SRC_URI_r8a7796 = "file://r8a7796_linux_gsx_binaries_gles3.tar.bz2"
+SRC_URI_append = " \
     ${@bb.utils.contains("DISTRO_FEATURES", "wayland", " \
     file://EGL_headers_for_wayland.patch \
     file://change-shell.patch \

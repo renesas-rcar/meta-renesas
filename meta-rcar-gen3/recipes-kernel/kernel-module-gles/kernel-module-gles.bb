@@ -8,15 +8,19 @@ inherit module
 PN = "kernel-module-gles"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "r8a7795"
+COMPATIBLE_MACHINE = "(r8a7795|r8a7796)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI_r8a7795 = 'file://GSX_KM_H3.tar.bz2'
-S_r8a7795 = "${WORKDIR}/rogue_km"
+SRC_URI_r8a7796 = 'file://GSX_KM_M3.tar.bz2'
+S = "${WORKDIR}/rogue_km"
 
 KBUILD_DIR_r8a7795 = "${S}/build/linux/r8a7795_linux"
-B_r8a7795 = "${KBUILD_DIR}"
+KBUILD_DIR_r8a7796 = "${S}/build/linux/r8a7796_linux"
 KBUILD_OUTDIR_r8a7795 = "binary_r8a7795_linux_release/target_aarch64/kbuild/"
+KBUILD_OUTDIR_r8a7796 = "binary_r8a7796_linux_release/target_aarch64/kbuild/"
+
+B = "${KBUILD_DIR}"
 
 EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR}"
 EXTRA_OEMAKE += "CROSS_COMPILE=${CROSS_COMPILE}"

@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = " \
     file://egl.c;beginline=5;endline=15;md5=3677623633a6e459b1f60b1e541c4212 \
 "
 
-COMPATIBLE_MACHINE = "r8a7795"
+COMPATIBLE_MACHINE = "(r8a7795|r8a7796)"
 
 RPROVIDES_${PN} = \
     "${@bb.utils.contains("DISTRO_FEATURES", "wayland", "libEGL.so", "", d)}"
