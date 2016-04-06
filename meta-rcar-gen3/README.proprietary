@@ -25,6 +25,12 @@ I/ Board configuration
     For Salvator-X board
            MACHINE = "salvator-x"
 
+* Set SOC family name:
+   For H3: r8a7795
+   SOC_FAMILY = "r8a7795"
+   For M3: r8a7796
+   SOC_FAMILY = "r8a7796"
+
 II/ Build with GLES
 ==================
         * For wayland with GSX

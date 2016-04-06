@@ -4,7 +4,7 @@ meta-rcar-gen3
 This layer provides that evaluation board is mounted ARM SoCs of Renesas
 Electronics, called the R-Car Generation 3. Currently, this supports
 board and the SoCs of the following:
-     - Board: Salvator-X   / SoC: R8A7795 (R-Car H3)
+     - Board: Salvator-X   / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3)
 
 Patches
 =======
@@ -51,6 +51,14 @@ After that, initialized configure bblayers.conf by adding meta-rcar-gen3 layer. 
 To build a specific target BSP, configure the associated machine in local.conf:
 
     MACHINE ??= "<supported board name>"
+
+Select the SOC
+
+    For H3: r8a7795
+    SOC_FAMILY = "r8a7795"
+
+    For M3: r8a7796
+    SOC_FAMILY = "r8a7796"
 
 Must change the package class to ipk files in local.conf:
 
