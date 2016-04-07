@@ -81,6 +81,15 @@ _adsp_list="adsp_fw,RCG3AHFWN0101ZDP,RCG3AHFWN0101ZDP.tar.gz \
             adsp_if,RCG3AHIFL4001ZDP,RCG3AHIFL4001ZDP.tar.gz \
             adsp_driver,RCG3AHPDL4001ZDO,RCG3AHPDL4001ZDO.tar.gz"
 
+# GFX
+# Please add GFX to "_gfx_list"
+# Don't use space in xxx_name.
+# gfx_list="<package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)> \
+#           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)> \
+#           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)>"
+_gfx_list="RTM0RC7795GLTG0001SL40C,r8a7795_linux_gsx_binaries_gles3.tar.bz2,RCH3G001L4001ZDO,GSX_KM_H3.tar.bz2 \
+           RTM0RC7796GLTG0001SL40C,r8a7796_linux_gsx_binaries_gles3.tar.bz2,RCM3G001L4001ZDO,GSX_KM_M3.tar.bz2"
+
 ##### static value
 _MODE_ZIP=1
 _MODE_TAR=2
@@ -322,38 +331,66 @@ func_gfx()
 {
     echo ""
     echo "Copying for Graphic Packages"
-    # package1
-    func_search_and_md5check "RTM0RC7795GLTG0001SL40C" \
-        "r8a7795_linux_gsx_binaries_gles3.tar.bz2" "${_MD5_r8a7795_linux_gsx_binaries_gles3}" "${_src_full}"
 
-    if [ -z "${_find_filename}" ]; then
-        echo "GFX not found!"
+    copy_flag=0
+
+    for i in ${_gfx_list}
+    do
+        user_pkg_name=`echo $i | cut -d "," -f 1`
+        user_copyfile_name=`echo $i | cut -d "," -f 2`
+        user_md5_val=`eval echo '$_MD5_'${user_pkg_name}`
+        kern_pkg_name=`echo $i | cut -d "," -f 3`
+        kern_copyfile_name=`echo $i | cut -d "," -f 4`
+        kern_md5_val=`eval echo '$_MD5_'${kern_pkg_name}`
+
+        if [ -n "${_debug}" ]; then
+            echo ""
+            echo "user_pkg_name   = ${user_pkg_name}"
+            echo "user_copyfile_name= ${user_copyfile_name}"
+            echo "user_md5_val    = ${user_md5_val}"
+            echo "kern_pkg_name   = ${kern_pkg_name}"
+            echo "kern_copyfile_name= ${kern_copyfile_name}"
+            echo "kern_md5_val    = ${kern_md5_val}"
+        fi
+
+        # user module (file1)
+        func_search_and_md5check "${user_pkg_name}" "${user_copyfile_name}" "${user_md5_val}" "${_src_full}"
+
+        if [ -z "${_find_filename}" ]; then
+            echo "${user_pkg_name} not found!"
+            continue
+        fi
+
+        file1_top_dir=${_extract_top_dir_name}
+        echo "file1 top       : ${file1_top_dir}"
+
+        # kernel module (file2)
+        func_search_and_md5check "${kern_pkg_name}" "${kern_copyfile_name}" "${kern_md5_val}" "${_src_full}"
+
+        # file1 exist, but file2 not exist
+        if [ -z "${_find_filename}" ]; then
+            func_error "ERROR: func_gfx: package file for Graphic is incomplete."
+        fi
+
+        file2_top_dir=${_extract_top_dir_name}
+        echo "file2 top       : ${file2_top_dir}"
+
+        # Finally copy is performed
+        copy_flag=1
+        install -d ${_GFX_UM_INST_DIR}
+        install -m 0644 ${file1_top_dir}/${user_pkg_name}/Software/${user_copyfile_name} ${_GFX_UM_INST_DIR}
+        install -d ${_GFX_KM_INST_DIR}
+        install -m 0644 ${file2_top_dir}/${kern_pkg_name}/Software/${kern_copyfile_name} ${_GFX_KM_INST_DIR}
+        echo "Installed GFX package"
+        echo "                : ${user_pkg_name}"
+        echo "                : ${kern_pkg_name}"
+        echo ""
+    done
+
+    if [ ${copy_flag} -eq 0 ]; then
         return
     fi
 
-    file1_top_dir=${_extract_top_dir_name}
-    echo "file1 top       : ${file1_top_dir}"
-
-    # package2
-    func_search_and_md5check "RCH3G001L4001ZDO" \
-        "GSX_KM_H3.tar.bz2" "${_MD5_GSX_KM_H3}" "${_src_full}"
-
-    # file1 exist, but file2 not exist
-    if [ -z "${_find_filename}" ]; then
-        func_error "ERROR: func_gfx: package file for Graphic is incomplete."
-    fi
-
-    file2_top_dir=${_extract_top_dir_name}
-    echo "file2 top       : ${file2_top_dir}"
-
-    # Finally copy is performed
-    install -d ${_GFX_UM_INST_DIR}
-    install -m 0644 ${file1_top_dir}/RTM0RC7795GLTG0001SL40C/Software/r8a7795_linux_gsx_binaries_gles3.tar.bz2 ${_GFX_UM_INST_DIR}
-    install -d ${_GFX_KM_INST_DIR}
-    install -m 0644 ${file2_top_dir}/RCH3G001L4001ZDO/Software/GSX_KM_H3.tar.bz2 ${_GFX_KM_INST_DIR}
-    echo "Installed GFX package"
-    echo "                : RTM0RC7795GLTG0001SL40C"
-    echo "                : RCH3G001L4001ZDO"
     echo ""
     echo "Packages for GFX module were found and copied."
     echo /=======================================================/
