@@ -16,10 +16,10 @@ SRC_URI_r8a7795 = "file://r8a7795_linux_gsx_binaries_gles3.tar.bz2"
 SRC_URI_r8a7796 = "file://r8a7796_linux_gsx_binaries_gles3.tar.bz2"
 SRC_URI_append = " \
     ${@bb.utils.contains("DISTRO_FEATURES", "wayland", " \
-    file://EGL_headers_for_wayland.patch \
-    file://change-shell.patch \
-    file://rc.pvr.service \
-    ", "", d)} \
+        file://EGL_headers_for_wayland.patch \
+        file://change-shell.patch \
+        file://rc.pvr.service \
+        ", "", d)} \
 "
 
 inherit update-rc.d systemd
@@ -64,9 +64,9 @@ do_install() {
         fi
     fi
 
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-        install -d ${D}${systemd_unitdir}/system/
-        install -m 644 ${WORKDIR}/rc.pvr.service ${D}${systemd_unitdir}/system/
+    if [ ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ]; then
+        install -d ${D}/${systemd_unitdir}/system/
+        install -m 644 ${WORKDIR}/rc.pvr.service ${D}/${systemd_unitdir}/system/
     fi
 }
 
@@ -97,17 +97,22 @@ RPROVIDES_${PN} += " \
     libgles2-dev \
 "
 
-RDEPENDS_${PN} += " kernel-module-gles \
-    ${@bb.utils.contains("DISTRO_FEATURES", "wayland", \
-    " libegl", "", d)} \
+RDEPENDS_${PN} += " \
+    kernel-module-gles \
+    ${@bb.utils.contains("DISTRO_FEATURES", "wayland", " libegl", "", d)} \
 "
 
-INSANE_SKIP_${PN} += "ldflags build-deps file-rdeps already-stripped"
-INSANE_SKIP_${PN}-dev += "ldflags build-deps file-rdeps"
+INSANE_SKIP_${PN} = "ldflags build-deps file-rdeps"
+INSANE_SKIP_${PN}-dev = "ldflags build-deps file-rdeps"
 INSANE_SKIP_${PN} += "arch"
 INSANE_SKIP_${PN}-dev += "arch"
-INSANE_SKIP_${PN}-dbg += "arch"
+INSANE_SKIP_${PN}-dbg = "arch"
 
-INHIBIT_SYSROOT_STRIP = "1"
-INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 PRIVATE_LIBS_${PN} = "libEGL.so.1"
+
+# Skip debug strip of do_populate_sysroot()
+INHIBIT_SYSROOT_STRIP = "1"
+
+# Skip debug split and strip of do_package()
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+INHIBIT_PACKAGE_STRIP = "1"

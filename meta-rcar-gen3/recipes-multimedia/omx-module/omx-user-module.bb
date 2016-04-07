@@ -134,13 +134,13 @@ do_configure() {
 }
 
 do_install_omx_video() {
-    cd ${D}${libdir}
+    cd ${D}/${libdir}
     for omxmc in ${OMX_VIDEO_SRC_LIST}
     do
         src="${WORKDIR}/${omxmc}"
-        install -m 755 ${src}/${baselib}/lib*.so.* ${D}${libdir}
-        install -m 644 ${src}/include/*.h ${D}${includedir}
-        install -m 644 ${src}/config/*.txt ${D}${sysconfdir}/omxr
+        install -m 755 ${src}/${baselib}/lib*.so.* ${D}/${libdir}
+        install -m 644 ${src}/include/*.h ${D}/${includedir}
+        install -m 644 ${src}/config/*.txt ${D}/${sysconfdir}/omxr
     done
 
     if [ "X${USE_OMX_COMMON}" = "X1" ] ; then
@@ -222,12 +222,12 @@ do_install_omx_video() {
 }
 
 do_install_audio_middleware() {
-    cd ${D}${libdir}
+    cd ${D}/${libdir}
 
     if [ "X${USE_AACLC_MDW}" = "X1" ]; then
         install -m 755 ${WORKDIR}/${AAC_MIDDLEWARE_SRC}/${baselib}/libAACDLA_L.so.3.0 \
-        ${D}${libdir}
-        install -m 644 ${WORKDIR}/${AAC_MIDDLEWARE_SRC}/include/*.h ${D}${includedir}
+            ${D}/${libdir}
+        install -m 644 ${WORKDIR}/${AAC_MIDDLEWARE_SRC}/include/*.h ${D}/${includedir}
 
         ln -s libAACDLA_L.so.3.0 libAACDLA_L.so.3
         ln -s libAACDLA_L.so.3 libAACDLA_L.so
@@ -235,8 +235,8 @@ do_install_audio_middleware() {
 
     if [ "X${USE_AACPV2_MDW}" = "X1" ]; then
         install -m 755 ${WORKDIR}/${AACPV2_MIDDLEWARE_SRC}/${baselib}/libRSACPDLA_L.so.2.0 \
-        ${D}${libdir}
-        install -m 644 ${WORKDIR}/${AACPV2_MIDDLEWARE_SRC}/include/*.h ${D}${includedir}
+            ${D}/${libdir}
+        install -m 644 ${WORKDIR}/${AACPV2_MIDDLEWARE_SRC}/include/*.h ${D}/${includedir}
 
         ln -s libRSACPDLA_L.so.2.0 libRSACPDLA_L.so.2
         ln -s libRSACPDLA_L.so.2 libRSACPDLA_L.so
@@ -244,8 +244,8 @@ do_install_audio_middleware() {
 
     if [ "X${USE_MP3_MDW}" = "X1" ]; then
         install -m 755 ${WORKDIR}/${MP3_MIDDLEWARE_SRC}/${baselib}/libMP3DLA_L.so.2.0 \
-        ${D}${libdir}
-        install -m 644 ${WORKDIR}/${MP3_MIDDLEWARE_SRC}/include/*.h ${D}${includedir}
+            ${D}/${libdir}
+        install -m 644 ${WORKDIR}/${MP3_MIDDLEWARE_SRC}/include/*.h ${D}/${includedir}
 
         ln -s libMP3DLA_L.so.2.0 libMP3DLA_L.so.2
         ln -s libMP3DLA_L.so.2 libMP3DLA_L.so
@@ -253,8 +253,8 @@ do_install_audio_middleware() {
 
     if [ "X${USE_WMA_MDW}" = "X1" ]; then
         install -m 755 ${WORKDIR}/${WMA_MIDDLEWARE_SRC}/${baselib}/libWMASTDLA_L.so.2.0 \
-        ${D}${libdir}
-        install -m 644 ${WORKDIR}/${WMA_MIDDLEWARE_SRC}/include/*.h ${D}${includedir}
+            ${D}/${libdir}
+        install -m 644 ${WORKDIR}/${WMA_MIDDLEWARE_SRC}/include/*.h ${D}/${includedir}
 
         ln -s libWMASTDLA_L.so.2.0 libWMASTDLA_L.so.2
         ln -s libWMASTDLA_L.so.2 libWMASTDLA_L.so
@@ -262,16 +262,15 @@ do_install_audio_middleware() {
 }
 
 do_install_omx_audio() {
-    cd ${D}${libdir}
+    cd ${D}/${libdir}
     for omxmc in ${OMX_AUDIO_SRC_LIST}
     do
         src="${WORKDIR}/${omxmc}/"
-        install -m 755 ${src}/${baselib}/lib*.so.* \
-        ${D}${libdir}
+        install -m 755 ${src}/${baselib}/lib*.so.* ${D}/${libdir}
         if [ -d ${src}/include ]; then
-            install -m 644 ${src}/include/*.h ${D}${includedir}
+            install -m 644 ${src}/include/*.h ${D}/${includedir}
         fi
-        install -m 644 ${src}/config/*.txt ${D}${sysconfdir}/omxr
+        install -m 644 ${src}/config/*.txt ${D}/${sysconfdir}/omxr
     done
 
     if [ "X${USE_AUDIO_OMX}" = "X1" ]; then
@@ -304,18 +303,18 @@ do_install () {
     if [ "X${USE_OMX_COMMON}" = "X1" ]; then
         oe_runmake 'DESTDIR=${D}' install
         # Info dir listing isn't interesting at this point so remove it if it exists.
-        if [ -e "${D}${infodir}/dir" ]; then
-                rm -f ${D}${infodir}/dir
+        if [ -e "${D}/${infodir}/dir" ]; then
+            rm -f ${D}/${infodir}/dir
         fi
     fi
 }
 
 do_install_append() {
     # Create destination directory
-    install -d ${D}${libdir}
-    install -d ${D}${includedir}
+    install -d ${D}/${libdir}
+    install -d ${D}/${includedir}
     if [ "X${USE_OMX_COMMON}" = "X1" ]; then
-        install -d ${D}${sysconfdir}/omxr
+        install -d ${D}/${sysconfdir}/omxr
     fi
 
     # Copy omx video library
@@ -326,10 +325,7 @@ do_install_append() {
     do_install_omx_audio
 }
 
-INSANE_SKIP_${PN}= "already-stripped"
-INSANE_SKIP_${PN} += "dev-so"
-
-INHIBIT_SYSROOT_STRIP = "1"
+INSANE_SKIP_${PN} = "dev-so"
 
 FILES_${PN} += " \
     ${libdir}/*.so \
@@ -341,3 +337,10 @@ FILES_${PN}-dev = " \
 "
 
 RDEPENDS_${PN} += "mmngr-user-module vspmif-user-module"
+
+# Skip debug strip of do_populate_sysroot()
+INHIBIT_SYSROOT_STRIP = "1"
+
+# Skip debug split and strip of do_package()
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+INHIBIT_PACKAGE_STRIP = "1"
