@@ -15,14 +15,12 @@ inherit module
 PN = "kernel-module-uvcs"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "r8a7795"
-
-UVCS_SRC_r8a7795 = "${@base_conditional('USE_VIDEO_OMX', '1', 'file://RCG3VUDRL4001ZDO.tar.bz2', '', d)}"
+UVCS_SRC = "${@base_conditional('USE_VIDEO_OMX', '1', 'file://RCG3VUDRL4001ZDO.tar.bz2', '', d)}"
 SRC_URI = "${UVCS_SRC}"
-S_r8a7795 = "${WORKDIR}/RCG3VUDRL4001ZDO"
+S = "${WORKDIR}/RCG3VUDRL4001ZDO"
 
-KBUILD_DIR_r8a7795 = "${S}/src/makefile"
-KBUILD_OUTDIR_r8a7795 = "${KBUILD_DIR}"
+KBUILD_DIR = "${S}/src/makefile"
+KBUILD_OUTDIR = "${KBUILD_DIR}"
 
 EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR}"
 EXTRA_OEMAKE += "CROSS_COMPILE=${CROSS_COMPILE}"
