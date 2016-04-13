@@ -4,3 +4,5 @@ do_configure_prepend () {
         sed -i 's,AR = $(CROSS_COMPILE)ar,#AR,' ${S}/tools/lib/subcmd/Makefile
     fi
 }
+
+RDEPENDS_${PN}-python =+ "python-modules"
