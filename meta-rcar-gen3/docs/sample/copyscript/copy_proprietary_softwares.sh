@@ -575,10 +575,6 @@ func_search_uvcs()
     func_search_and_md5check "RCG3VUDRL4001ZDO" \
         "RCG3VUDRL4001ZDO.tar.bz2" "${_MD5_RCG3VUDRL4001ZDO}" "${_src_full}"
 
-    if [ -z "${_find_filename}" ]; then
-        func_error "ERROR: UVCS Driver not found!"
-    fi
-
     _video_uvcs_top_dir=${_extract_top_dir_name}
 }
 
