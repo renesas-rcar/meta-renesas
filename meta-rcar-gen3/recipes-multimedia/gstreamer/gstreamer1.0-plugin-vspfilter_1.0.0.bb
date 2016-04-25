@@ -9,10 +9,14 @@ PN = "gstreamer1.0-plugin-vspfilter"
 
 EXTRA_AUTORECONF_append = " -I ${STAGING_DATADIR}/aclocal"
 
+VSPFILTER_CONF_r8a7795 = "gstvspfilter-${MACHINE}_r8a7795.conf"
+VSPFILTER_CONF_r8a7796 = "gstvspfilter-${MACHINE}_r8a7796.conf"
+
 SRC_URI = " \
     git://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.0 \
-    file://gstvspfilter-salvator-x.conf \
+    file://${VSPFILTER_CONF} \
 "
+
 SRCREV = "9c241922b8ed7cd64017234326a7ed315b7c5d94"
 
 S = "${WORKDIR}/git"
@@ -28,7 +32,7 @@ FILES_${PN}-dbg = " \
 
 do_install_append() {
     mkdir ${D}/etc/
-    install -m 644 ${WORKDIR}/gstvspfilter-${MACHINE}.conf ${D}/etc/gstvspfilter.conf
+    install -m 644 ${WORKDIR}/${VSPFILTER_CONF} ${D}/etc/gstvspfilter.conf
 }
 
 RDEPENDS_${PN} = "kernel-module-vsp2driver"
