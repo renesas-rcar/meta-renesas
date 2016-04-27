@@ -16,7 +16,7 @@ PR = "r0"
 
 VSPM_DRV_URL = "git://github.com/renesas-rcar/vspm_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "9793992774dd8f9f7d225f379c07a983fb223f75"
+SRCREV = "95298abddca04fe80f7e5104a3b03b2f06baf6f6"
 
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH}"
 
