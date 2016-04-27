@@ -1,6 +1,6 @@
-From 42095a80177a719cc7d56535e61b6950dddf52bc Mon Sep 17 00:00:00 2001
-From: Taku Imaizumi <taku.imaizumi.bx@bp.renesas.com>
-Date: Thu, 21 Apr 2016 09:35:47 +0900
+From 8af3d7d681bd54615886c8c69945748ef7a41784 Mon Sep 17 00:00:00 2001
+From: Hiromasa Kitaki <hiromasa.kitaki.fz@bp.renesas.com>
+Date: Fri, 20 May 2016 11:04:52 +0900
 Subject: [PATCH 3/3] add bl2 QoS setting
 
 ---
@@ -1562,7 +1562,7 @@ index 0000000..820e732
 +#endif	/* QOS_INIT_H_H3_WS11__ */
 diff --git a/plat/renesas/rcar/qos/M3/qos_init_m3_es10.c b/plat/renesas/rcar/qos/M3/qos_init_m3_es10.c
 new file mode 100644
-index 0000000..307934d
+index 0000000..3a68305
 --- /dev/null
 +++ b/plat/renesas/rcar/qos/M3/qos_init_m3_es10.c
 @@ -0,0 +1,825 @@
@@ -1602,7 +1602,7 @@ index 0000000..307934d
 +#include "qos_init_m3_es10.h"
 +
 +
-+#define	RCAR_QOS_VERSION		"rev.0.12"
++#define	RCAR_QOS_VERSION		"rev.0.13"
 +
 +#define	RCAR_QOS_NONE			(3U)
 +#define	RCAR_QOS_TYPE_GFX		(0U)
@@ -2333,7 +2333,7 @@ index 0000000..307934d
 +	io_write_32(RALLOC_FIXTH, 0x000F0005U);
 +	io_write_32(RALLOC_RAEN,  0x00000001U);
 +	io_write_32(RALLOC_REGGD, 0x00000000U);
-+	io_write_64(RALLOC_DANN,  0x0202020204040404U);
++	io_write_64(RALLOC_DANN,  0x0202000004040404U);
 +	io_write_32(RALLOC_DANT,  0x00181008U);
 +	io_write_32(RALLOC_EC,    0x00000000U);
 +	io_write_64(RALLOC_EMS,   0x0000000000000000U);
@@ -2368,14 +2368,14 @@ index 0000000..307934d
 +
 +	/* 3DG bus Leaf setting */
 +	io_write_32(0xFD820808U, 0x00001234U);
-+	io_write_32(0xFD820800U, 0x0000003FU);
-+	io_write_32(0xFD821800U, 0x0000003FU);
-+	io_write_32(0xFD822800U, 0x0000003FU);
-+	io_write_32(0xFD823800U, 0x0000003FU);
-+	io_write_32(0xFD824800U, 0x0000003FU);
-+	io_write_32(0xFD825800U, 0x0000003FU);
-+	io_write_32(0xFD826800U, 0x0000003FU);
-+	io_write_32(0xFD827800U, 0x0000003FU);
++	io_write_32(0xFD820800U, 0x00000006U);
++	io_write_32(0xFD821800U, 0x00000006U);
++	io_write_32(0xFD822800U, 0x00000006U);
++	io_write_32(0xFD823800U, 0x00000006U);
++	io_write_32(0xFD824800U, 0x00000006U);
++	io_write_32(0xFD825800U, 0x00000006U);
++	io_write_32(0xFD826800U, 0x00000006U);
++	io_write_32(0xFD827800U, 0x00000006U);
 +
 +	/* Resource Alloc start */
 +	io_write_32(RALLOC_RAEN,  0x00000001U);

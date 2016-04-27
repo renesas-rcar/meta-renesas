@@ -1,6 +1,6 @@
-From bca08b273ff285c9c51210478f60065957bf3582 Mon Sep 17 00:00:00 2001
-From: Taku Imaizumi <taku.imaizumi.bx@bp.renesas.com>
-Date: Thu, 21 Apr 2016 09:35:47 +0900
+From 0c86796f3fbaa8498922b5de8f6d0101fdd6b99f Mon Sep 17 00:00:00 2001
+From: Hiromasa Kitaki <hiromasa.kitaki.fz@bp.renesas.com>
+Date: Fri, 20 May 2016 11:04:52 +0900
 Subject: [PATCH 1/3] add bl2 bl31 R-Car support
 
 ---
@@ -11,35 +11,34 @@ Subject: [PATCH 1/3] add bl2 bl31 R-Car support
  common/tf_printf.c                              |    8 +
  plat/renesas/rcar/aarch64/bl2_reset.S           |  426 +++++++
  plat/renesas/rcar/aarch64/rcar_common.c         |  263 ++++
- plat/renesas/rcar/aarch64/rcar_helpers.S        |  430 +++++++
- plat/renesas/rcar/bl2_cpg_init.c                |  136 +++
- plat/renesas/rcar/bl2_rcar_setup.c              |  636 ++++++++++
- plat/renesas/rcar/bl2_secure_setting.c          |  468 ++++++++
+ plat/renesas/rcar/aarch64/rcar_helpers.S        |  443 +++++++
+ plat/renesas/rcar/bl2_cpg_init.c                |  142 +++
+ plat/renesas/rcar/bl2_rcar_setup.c              |  630 +++++++++
+ plat/renesas/rcar/bl2_secure_setting.c          |  468 +++++++
  plat/renesas/rcar/bl31_rcar_setup.c             |  257 ++++
  plat/renesas/rcar/drivers/auth/rcarboot.c       |  245 ++++
  plat/renesas/rcar/drivers/auth/rcarboot.h       |   41 +
  plat/renesas/rcar/drivers/avs/avs_driver.c      |  654 ++++++++++
- plat/renesas/rcar/drivers/dma/dma_driver.c      |  193 +++
+ plat/renesas/rcar/drivers/dma/dma_driver.c      |  194 +++
  plat/renesas/rcar/drivers/error/bl2_int_error.c |  102 ++
  plat/renesas/rcar/drivers/io/io_memdrv.c        |  236 ++++
- plat/renesas/rcar/drivers/io/io_rcar.c          |  620 ++++++++++
+ plat/renesas/rcar/drivers/io/io_rcar.c          |  620 +++++++++
  plat/renesas/rcar/drivers/memdrv/rcar_console.S |   98 ++
  plat/renesas/rcar/drivers/memdrv/rcar_printf.c  |  169 +++
  plat/renesas/rcar/drivers/memdrv/rcar_printf.h  |   43 +
  plat/renesas/rcar/drivers/pwrc/rcar_pwrc.c      |  291 +++++
  plat/renesas/rcar/drivers/pwrc/rcar_pwrc.h      |   80 ++
- plat/renesas/rcar/drivers/rpc/rpc_driver.c      |   83 ++
- plat/renesas/rcar/drivers/scif/scif.S           |  208 ++++
+ plat/renesas/rcar/drivers/rpc/rpc_driver.c      |   84 ++
+ plat/renesas/rcar/drivers/scif/scif.S           |  313 +++++
  plat/renesas/rcar/drivers/timer/bl2_swdt.c      |  171 +++
  plat/renesas/rcar/include/avs_driver.h          |   44 +
- plat/renesas/rcar/include/bl2_axi_register.h    |  272 +++++
- plat/renesas/rcar/include/bl2_cpg_init.h        |   37 +
- plat/renesas/rcar/include/bl2_cpg_register.h    |  135 +++
- plat/renesas/rcar/include/bl2_cpg_write.h       |   45 +
- plat/renesas/rcar/include/bl2_dma_register.h    |   67 ++
+ plat/renesas/rcar/include/bl2_axi_register.h    |  272 ++++
+ plat/renesas/rcar/include/bl2_cpg_init.h        |   38 +
+ plat/renesas/rcar/include/bl2_cpg_register.h    |  135 ++
+ plat/renesas/rcar/include/bl2_dma_register.h    |   67 +
  plat/renesas/rcar/include/bl2_int_error.h       |   41 +
  plat/renesas/rcar/include/bl2_lifec_register.h  |  305 +++++
- plat/renesas/rcar/include/bl2_rpc_register.h    |   68 ++
+ plat/renesas/rcar/include/bl2_rpc_register.h    |   68 +
  plat/renesas/rcar/include/bl2_secure_setting.h  |   37 +
  plat/renesas/rcar/include/bl2_swdt.h            |   43 +
  plat/renesas/rcar/include/dma_driver.h          |   49 +
@@ -51,18 +50,18 @@ Subject: [PATCH 1/3] add bl2 bl31 R-Car support
  plat/renesas/rcar/include/platform.h            |  199 +++
  plat/renesas/rcar/include/platform_def.h        |  220 ++++
  plat/renesas/rcar/include/rpc_driver.h          |   46 +
- plat/renesas/rcar/include/scif.h                |  150 +++
- plat/renesas/rcar/pfc/H3/pfc_init_h3.c          | 1352 +++++++++++++++++++++
+ plat/renesas/rcar/include/scif.h                |   47 +
+ plat/renesas/rcar/pfc/H3/pfc_init_h3.c          | 1352 ++++++++++++++++++++
  plat/renesas/rcar/pfc/H3/pfc_init_h3.h          |   37 +
- plat/renesas/rcar/pfc/M3/pfc_init_m3.c          | 1463 +++++++++++++++++++++++
+ plat/renesas/rcar/pfc/M3/pfc_init_m3.c          | 1562 +++++++++++++++++++++++
  plat/renesas/rcar/pfc/M3/pfc_init_m3.h          |   37 +
  plat/renesas/rcar/pfc/pfc.mk                    |   39 +
  plat/renesas/rcar/pfc/pfc_init.c                |   49 +
  plat/renesas/rcar/platform.mk                   |  170 +++
- plat/renesas/rcar/rcar_def.h                    |  267 +++++
+ plat/renesas/rcar/rcar_def.h                    |  267 ++++
  plat/renesas/rcar/rcar_io_storage.c             |  442 +++++++
  plat/renesas/rcar/rcar_pm.c                     |  427 +++++++
- plat/renesas/rcar/rcar_private.h                |  169 +++
+ plat/renesas/rcar/rcar_private.h                |  172 +++
  plat/renesas/rcar/rcar_topology.c               |  223 ++++
  plat/renesas/rcar/rcar_version.h                |   41 +
  services/spd/opteed/opteed_main.c               |    3 +-
@@ -71,7 +70,7 @@ Subject: [PATCH 1/3] add bl2 bl31 R-Car support
  tools/dummy_create/sa0.ld.S                     |   42 +
  tools/dummy_create/sa6.c                        |   51 +
  tools/dummy_create/sa6.ld.S                     |   52 +
- 67 files changed, 12928 insertions(+), 2 deletions(-)
+ 66 files changed, 13003 insertions(+), 2 deletions(-)
  create mode 100644 plat/renesas/rcar/aarch64/bl2_reset.S
  create mode 100644 plat/renesas/rcar/aarch64/rcar_common.c
  create mode 100644 plat/renesas/rcar/aarch64/rcar_helpers.S
@@ -98,7 +97,6 @@ Subject: [PATCH 1/3] add bl2 bl31 R-Car support
  create mode 100644 plat/renesas/rcar/include/bl2_axi_register.h
  create mode 100644 plat/renesas/rcar/include/bl2_cpg_init.h
  create mode 100644 plat/renesas/rcar/include/bl2_cpg_register.h
- create mode 100644 plat/renesas/rcar/include/bl2_cpg_write.h
  create mode 100644 plat/renesas/rcar/include/bl2_dma_register.h
  create mode 100644 plat/renesas/rcar/include/bl2_int_error.h
  create mode 100644 plat/renesas/rcar/include/bl2_lifec_register.h
@@ -1036,10 +1034,10 @@ index 0000000..3d86090
 +}
 diff --git a/plat/renesas/rcar/aarch64/rcar_helpers.S b/plat/renesas/rcar/aarch64/rcar_helpers.S
 new file mode 100644
-index 0000000..d8883c3
+index 0000000..998c229
 --- /dev/null
 +++ b/plat/renesas/rcar/aarch64/rcar_helpers.S
-@@ -0,0 +1,430 @@
+@@ -0,0 +1,443 @@
 +/*
 + * Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -1088,6 +1086,7 @@ index 0000000..d8883c3
 +	.globl	plat_crash_console_init
 +	.globl	plat_crash_console_putc
 +	.globl	plat_reset_handler
++	.globl	iciallu
 +
 +	.extern	platform_set_stack
 +	.extern	rcar_log_init
@@ -1470,12 +1469,24 @@ index 0000000..d8883c3
 +
 +	ret
 +endfunc plat_reset_handler
++
++
++	/* ---------------------------------------------
++	 * void iciallu(void)
++	 * Instruction Cache Invalidate All to PoU
++	 * ---------------------------------------------
++	 */
++func iciallu
++	ic	iallu
++
++	ret
++endfunc iciallu
 diff --git a/plat/renesas/rcar/bl2_cpg_init.c b/plat/renesas/rcar/bl2_cpg_init.c
 new file mode 100644
-index 0000000..33dc71f
+index 0000000..e3e903d
 --- /dev/null
 +++ b/plat/renesas/rcar/bl2_cpg_init.c
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,142 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -1510,7 +1521,6 @@ index 0000000..33dc71f
 +#include <mmio.h>
 +#include "rcar_def.h"
 +#include "bl2_cpg_register.h"
-+#include "bl2_cpg_write.h"
 +#include "bl2_cpg_init.h"
 +
 +typedef struct {
@@ -1575,7 +1585,7 @@ index 0000000..33dc71f
 +	/* CPG (REALTIME) registers */
 +
 +	/* Realtime Module Stop Control Register 0 */
-+	{RMSTPCR0,		0x00200000U},
++	{RMSTPCR0,		0x00000000U},
 +	/* Realtime Module Stop Control Register 1 */
 +	{RMSTPCR1,		0xFFFFFFFFU},
 +	/* Realtime Module Stop Control Register 2 */
@@ -1612,12 +1622,19 @@ index 0000000..33dc71f
 +		cpg_write(reg_setting[i].adr, reg_setting[i].val);
 +	}
 +}
++
++void cpg_write(uintptr_t regadr, uint32_t regval)
++{
++	uint32_t value = (regval);
++	mmio_write_32((uintptr_t)CPG_CPGWPR,~value);
++	mmio_write_32(regadr,value);
++}
 diff --git a/plat/renesas/rcar/bl2_rcar_setup.c b/plat/renesas/rcar/bl2_rcar_setup.c
 new file mode 100755
-index 0000000..bec9cfc
+index 0000000..8bc1218
 --- /dev/null
 +++ b/plat/renesas/rcar/bl2_rcar_setup.c
-@@ -0,0 +1,636 @@
+@@ -0,0 +1,630 @@
 +/*
 + * Copyright (c) 2013-2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -1673,6 +1690,7 @@ index 0000000..bec9cfc
 +#include "rcar_version.h"
 +#include "bl2_swdt.h"
 +#include "avs_driver.h"
++#include "scif.h"
 +
 +
 +/* CPG write protect registers */
@@ -1725,8 +1743,6 @@ index 0000000..bec9cfc
 +#define TARGET_NAME		"R-Car M3"
 +#endif
 +
-+/* Instruction Cache Invalidate All to PoU */
-+DEFINE_SYSOP_TYPE_FUNC(ic, iallu)	/* ICIALLU instruction macro */
 +
 +/*******************************************************************************
 + * Declarations of linker defined symbols which will help us find the layout
@@ -1948,6 +1964,9 @@ index 0000000..bec9cfc
 +	pfc_init();
 +#endif
 +
++	/* Initialize CPG configuration */
++	bl2_cpg_init();
++
 +	/* Initialize the console to provide early debug support */
 +	(void)console_init(0U, 0U, 0U);
 +
@@ -2046,6 +2065,11 @@ index 0000000..bec9cfc
 +	InitDram();
 +
 +	bl2_avs_setting();	/*  Proceed with separated AVS processing */
++
++	/* initialize QoS configration */
++	qos_init();
++
++	bl2_avs_setting();	/*  Proceed with separated AVS processing */
 +#endif
 +
 +	/* Initialize RPC */
@@ -2061,18 +2085,6 @@ index 0000000..bec9cfc
 +
 +	/* Initialize secure configuration */
 +	bl2_secure_setting();
-+#endif
-+
-+	bl2_avs_setting();	/*  Proceed with separated AVS processing */
-+
-+	/* Initialize CPG configuration */
-+	bl2_cpg_init();
-+
-+#if RCAR_MASTER_BOOT_CPU == RCAR_BOOT_CA5X
-+	bl2_avs_setting();	/*  Proceed with separated AVS processing */
-+
-+	/* initialize QoS configration */
-+	qos_init();
 +#endif
 +
 +	bl2_avs_end();		/* End of AVS Settings */
@@ -2146,14 +2158,13 @@ index 0000000..bec9cfc
 +/* Flush the TF params and the TF plat params */
 +void bl2_plat_flush_bl31_params(void)
 +{
-+#if 0
-+	flush_dcache_range((unsigned long)PARAMS_BASE, \
-+				sizeof(bl2_to_bl31_params_mem_t));
-+#endif
 +	uint32_t val;
 +
 +	/* disable the System WDT, FIQ and GIC	*/
 +	bl2_swdt_release();
++
++	/* Finalize a console of provide early debug support */
++	console_finalize();
 +
 +	/* Disable instruction cache */
 +	val = (uint32_t)read_sctlr_el1();
@@ -3291,7 +3302,7 @@ index 0000000..2d015ca
 +#endif /* RCAR_RCARBOOT_H_ */
 diff --git a/plat/renesas/rcar/drivers/avs/avs_driver.c b/plat/renesas/rcar/drivers/avs/avs_driver.c
 new file mode 100644
-index 0000000..291a442
+index 0000000..415d670
 --- /dev/null
 +++ b/plat/renesas/rcar/drivers/avs/avs_driver.c
 @@ -0,0 +1,654 @@
@@ -3328,7 +3339,7 @@ index 0000000..291a442
 +
 +#include <mmio.h>
 +#include <debug.h>
-+#include "bl2_cpg_write.h"
++#include "bl2_cpg_init.h"
 +#include "bl2_cpg_register.h"
 +#include "avs_driver.h"
 +
@@ -3951,10 +3962,10 @@ index 0000000..291a442
 +#endif	/* AVS_SETTING_ENABLE */
 diff --git a/plat/renesas/rcar/drivers/dma/dma_driver.c b/plat/renesas/rcar/drivers/dma/dma_driver.c
 new file mode 100644
-index 0000000..7856cf6
+index 0000000..ac3650e
 --- /dev/null
 +++ b/plat/renesas/rcar/drivers/dma/dma_driver.c
-@@ -0,0 +1,193 @@
+@@ -0,0 +1,194 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -3988,8 +3999,9 @@ index 0000000..7856cf6
 +
 +#include <stdint.h>
 +#include <string.h>
++#include <mmio.h>
 +#include "bl2_cpg_register.h"
-+#include "bl2_cpg_write.h"
++#include "bl2_cpg_init.h"
 +#include "bl2_dma_register.h"
 +#include "dma_driver.h"
 +#include "debug.h"
@@ -5837,10 +5849,10 @@ index 0000000..4b83dc5
 +#endif /* RCAR_PWRC_H__ */
 diff --git a/plat/renesas/rcar/drivers/rpc/rpc_driver.c b/plat/renesas/rcar/drivers/rpc/rpc_driver.c
 new file mode 100644
-index 0000000..c6697c3
+index 0000000..1c92ea6
 --- /dev/null
 +++ b/plat/renesas/rcar/drivers/rpc/rpc_driver.c
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,84 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -5874,8 +5886,9 @@ index 0000000..c6697c3
 +
 +#include <stdint.h>
 +#include <string.h>
++#include <mmio.h>
 +#include "bl2_cpg_register.h"
-+#include "bl2_cpg_write.h"
++#include "bl2_cpg_init.h"
 +#include "bl2_rpc_register.h"
 +#include "rpc_driver.h"
 +#include "debug.h"
@@ -5926,10 +5939,10 @@ index 0000000..c6697c3
 +#endif
 diff --git a/plat/renesas/rcar/drivers/scif/scif.S b/plat/renesas/rcar/drivers/scif/scif.S
 new file mode 100644
-index 0000000..3d8960b
+index 0000000..816ed95
 --- /dev/null
 +++ b/plat/renesas/rcar/drivers/scif/scif.S
-@@ -0,0 +1,208 @@
+@@ -0,0 +1,313 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -5963,13 +5976,98 @@ index 0000000..3d8960b
 +
 +#include <arch.h>
 +#include <asm_macros.S>
-+#include <scif.h>
++#include "scif.h"
++
++/* Product Register */
++#define	PRR			(0xFFF00044)
++#define	PRR_PRODUCT_MASK	(0x00007FFF)
++#define	PRR_PRODUCT_H3_ES_1_0	(0x00004F00)	/* R-Car H3 ES1.0 */
++
++/* module stop */
++#define	CPG_BASE		(0xE6150000)
++#define	CPG_SMSTPCR3		(0x013C)
++#define	MSTP310			(1 << 10)
++#define	CPG_CPGWPR		(0x0900)
++
++/* SCIF2 */
++#define	SCIF2_BASE		(0xE6E88000)	/* SCIF-2 base address */
++
++#define	SCIF_SCSMR		(0x00)		/* Serial mode register */
++#define	SCIF_SCBRR		(0x04)		/* Bit rate register */
++#define	SCIF_SCSCR		(0x08)		/* Serial control register */
++#define	SCIF_SCFTDR		(0x0C)		/* Transmit FIFO data register */
++#define	SCIF_SCFSR		(0x10)		/* Serial status register */
++#define SCIF_SCFRDR		(0x14)		/* Receive FIFO data register */
++#define	SCIF_SCFCR		(0x18)		/* FIFO control register */
++#define	SCIF_SCFDR		(0x1C)		/* FIFO data count register */
++#define SCIF_SCSPTR		(0x20)		/* Serial port register */
++#define	SCIF_SCLSR		(0x24)		/* Line status register */
++#define	SCIF_DL			(0x30)		/* Frequency division register */
++#define	SCIF_CKS		(0x34)		/* Clock Select register */
++#define	SCIF_SCSMRIR		(0x40)		/* Serial mode register */
++
++
++#define	SCSMR_CA_MASK		(1 << 7)
++#define	SCSMR_CA_ASYNC		(0x0000)
++#define	SCSMR_CHR_MASK		(1 << 6)
++#define	SCSMR_CHR_8		(0x0000)
++#define	SCSMR_PE_MASK		(1 << 5)
++#define	SCSMR_PE_DIS		(0x0000)
++#define	SCSMR_STOP_MASK		(1 << 3)
++#define	SCSMR_STOP_1		(0x0000)
++#define	SCSMR_CKS_MASK		(3 << 0)
++#define	SCSMR_CKS_DIV1		(0x0000)
++#define	SCSMR_INIT_DATA		(SCSMR_CA_ASYNC + SCSMR_CHR_8 + \
++				SCSMR_PE_DIS + SCSMR_STOP_1 + \
++				SCSMR_CKS_DIV1)
++
++#define	SCBRR_115200BPS		(17)		/* 115200bps@66MHz */
++#define	SCBRR_230400BPS		(8)		/* 230400bps@66MHz */
++
++#define	SCSCR_TE_MASK		(1 << 5)
++#define	SCSCR_TE_DIS		(0x0000)
++#define	SCSCR_TE_EN		(0x0020)
++#define	SCSCR_RE_MASK		(1 << 4)
++#define	SCSCR_RE_DIS		(0x0000)
++#define	SCSCR_RE_EN		(0x0010)
++#define	SCSCR_CKE_MASK		(3 << 0)
++#define SCSCR_CKE_INT		(0x0000)
++#define SCSCR_CKE_BRG		(0x0002)
++#if SCIF_CLK == SCIF_EXTARNAL_CLK
++#define	SCSCR_CKE_INT_CLK	(SCSCR_CKE_BRG)
++#else
++#define	SCSCR_CKE_INT_CLK	(SCSCR_CKE_INT)
++#endif
++
++#define	SCFSR_INIT_DATA		(0x0000)
++
++#define	SCFCR_TTRG_MASK		(3 << 4)
++#define	SCFCR_TTRG_8		(0x0000)
++#define	SCFCR_TTRG_0		(0x0030)
++#define	SCFCR_TFRST_MASK	(1 << 2)
++#define	SCFCR_TFRST_DIS		(0x0000)
++#define	SCFCR_TFRST_EN		(0x0004)
++#define	SCFCR_RFRS_MASK		(1 << 1)
++#define	SCFCR_RFRS_DIS		(0x0000)
++#define	SCFCR_RFRS_EN		(0x0002)
++#define	SCFCR_INIT_DATA		(SCFCR_TTRG_8)
++
++#define SCFDR_T_MASK		(0x1f << 8)
++
++#define	DL_INIT_DATA		(8)		/* 14.7456MHz/(115200bps*16)*/
++			
++#define	CKS_CKS_DIV_MASK		(1 << 15)
++#define	CKS_CKS_DIV_CLK		(0x0000)
++#define	CKS_XIN_MASK		(1 << 14)
++#define	CKS_XIN_SCIF_CLK		(0x0000)
++#define	CKS_INIT_DATA		(CKS_CKS_DIV_CLK + CKS_XIN_SCIF_CLK)
 +
 +	.globl	console_init
 +	.globl	console_putc
 +	.globl	console_core_init
 +	.globl	console_core_putc
 +	.globl	console_getc
++	.globl	console_finalize
 +
 +	/*
 +	 *  The console base is in the data section and not in .bss
@@ -6138,6 +6236,26 @@ index 0000000..3d8960b
 +	mov	w0, #-1			/* no support */
 +	ret
 +endfunc console_getc
++
++	/* -----------------------------------------------
++	 * void console_finalize(void)
++	 * -----------------------------------------------
++	 */
++func console_finalize
++	ldr	x0, =SCIF2_BASE
++1:
++	ldrh	w1, [x0, #SCIF_SCFDR]
++	ubfx	w1, w1, #8, #5
++	cmp	w1, #0
++	bne	1b
++
++	ldrh	w1, [x0, #SCIF_SCSCR]
++	and	w1, w1, #~(SCSCR_TE_EN + SCSCR_RE_EN)	/* TE=0,RE=0 */
++	strh	w1, [x0, #SCIF_SCSCR]
++
++	ret
++endfunc console_finalize
++
 diff --git a/plat/renesas/rcar/drivers/timer/bl2_swdt.c b/plat/renesas/rcar/drivers/timer/bl2_swdt.c
 new file mode 100644
 index 0000000..a2b2b0a
@@ -6645,10 +6763,10 @@ index 0000000..da449c2
 +
 diff --git a/plat/renesas/rcar/include/bl2_cpg_init.h b/plat/renesas/rcar/include/bl2_cpg_init.h
 new file mode 100644
-index 0000000..529bc58
+index 0000000..0c45767
 --- /dev/null
 +++ b/plat/renesas/rcar/include/bl2_cpg_init.h
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,38 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -6684,6 +6802,7 @@ index 0000000..529bc58
 +#define	BL2_CPG_INIT_H__
 +
 +void bl2_cpg_init(void);
++void cpg_write(uintptr_t regadr, uint32_t regval);
 +
 +#endif	/* BL2_CPG_INIT_H__ */
 diff --git a/plat/renesas/rcar/include/bl2_cpg_register.h b/plat/renesas/rcar/include/bl2_cpg_register.h
@@ -6827,57 +6946,6 @@ index 0000000..4339793
 +
 +
 +#endif	/* BL2_CPG_REGISTER_H__ */
-diff --git a/plat/renesas/rcar/include/bl2_cpg_write.h b/plat/renesas/rcar/include/bl2_cpg_write.h
-new file mode 100644
-index 0000000..638371e
---- /dev/null
-+++ b/plat/renesas/rcar/include/bl2_cpg_write.h
-@@ -0,0 +1,45 @@
-+/*
-+ * Copyright (c) 2015-2016, Renesas Electronics Corporation
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions are met:
-+ *
-+ *   - Redistributions of source code must retain the above copyright notice,
-+ *     this list of conditions and the following disclaimer.
-+ *
-+ *   - Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in the
-+ *     documentation and/or other materials provided with the distribution.
-+ *
-+ *   - Neither the name of Renesas nor the names of its contributors may be
-+ *     used to endorse or promote products derived from this software without
-+ *     specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef	BL2_CPG_WRITE_H__
-+#define	BL2_CPG_WRITE_H__
-+
-+#include "bl2_cpg_register.h"
-+#include "mmio.h"
-+
-+static inline void cpg_write(uintptr_t regadr, uint32_t regval)
-+{
-+	uint32_t val = (regval);
-+	mmio_write_32((uintptr_t)CPG_CPGWPR,~val);
-+	mmio_write_32(regadr,val);
-+}
-+
-+#endif	/* BL2_CPG_WRITE_H__ */
 diff --git a/plat/renesas/rcar/include/bl2_dma_register.h b/plat/renesas/rcar/include/bl2_dma_register.h
 new file mode 100644
 index 0000000..e168add
@@ -8306,10 +8374,10 @@ index 0000000..0089504
 +#endif	/* RPC_DRIVER_H__ */
 diff --git a/plat/renesas/rcar/include/scif.h b/plat/renesas/rcar/include/scif.h
 new file mode 100644
-index 0000000..da5a09f
+index 0000000..fe1fb25
 --- /dev/null
 +++ b/plat/renesas/rcar/include/scif.h
-@@ -0,0 +1,150 @@
+@@ -0,0 +1,47 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -8341,125 +8409,22 @@ index 0000000..da5a09f
 + * POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#ifndef __SCIF_H__
-+#define __SCIF_H__
++#ifndef SCIF_H__
++#define SCIF_H__
 +
 +
 +#define	SCIF_INTERNAL_CLK	0	/* Internal clock(S3D4:66.66MHz) */
 +#define	SCIF_EXTARNAL_CLK	1	/* External clock(SCK2:14.7456MHz) */
 +#define	SCIF_CLK		SCIF_INTERNAL_CLK
 +
-+/* Product Register */
-+#define	PRR			(0xFFF00044)
-+#define	PRR_PRODUCT_MASK	(0x00007FFF)
-+#define	PRR_PRODUCT_H3_ES_1_0	(0x00004F00)	/* R-Car H3 ES1.0 */
 +
-+/* Pin functon */
-+#define	PFC_BASE		(0xE6060000)
-+#define	PMMR			(0x0000)
-+#define	GPSR5			(0x0114)
-+#define	IPSR12			(0x0230)
-+#define	MOD_SEL1		(0x0504)
++#ifndef __ASSEMBLY__
 +
-+/* module stop */
-+#define	CPG_BASE		(0xE6150000)
-+#define	CPG_SMSTPCR3		(0x013C)
-+#define	MSTP310			(1 << 10)
-+#define	CPG_CPGWPR		(0x0900)
++void console_finalize(void);
 +
-+/* SCIF2 */
-+#define	SCIF2_BASE		(0xE6E88000)	/* SCIF-2 base address */
-+#define	SCIF_BASE		(SCIF2_BASE)
++#endif /* __ASSEMBLY__ */
 +
-+#define	SCIF_SCSMR		(0x00)		/* Serial mode register */
-+#define	SCIF_SCBRR		(0x04)		/* Bit rate register */
-+#define	SCIF_SCSCR		(0x08)		/* Serial control register */
-+#define	SCIF_SCFTDR		(0x0C)		/* Transmit FIFO data register */
-+#define	SCIF_SCFSR		(0x10)		/* Serial status register */
-+#define SCIF_SCFRDR		(0x14)		/* Receive FIFO data register */
-+#define	SCIF_SCFCR		(0x18)		/* FIFO control register */
-+#define	SCIF_SCFDR		(0x1C)		/* FIFO data count register */
-+#define SCIF_SCSPTR		(0x20)		/* Serial port register */
-+#define	SCIF_SCLSR		(0x24)		/* Line status register */
-+#define	SCIF_DL			(0x30)		/* Frequency division register */
-+#define	SCIF_CKS		(0x34)		/* Clock Select register */
-+#define	SCIF_SCSMRIR		(0x40)		/* Serial mode register */
-+
-+
-+#define	SCSMR_CA_MASK		(1 << 7)
-+#define	SCSMR_CA_ASYNC		(0x0000)
-+#define	SCSMR_CHR_MASK		(1 << 6)
-+#define	SCSMR_CHR_8		(0x0000)
-+#define	SCSMR_PE_MASK		(1 << 5)
-+#define	SCSMR_PE_DIS		(0x0000)
-+#define	SCSMR_STOP_MASK		(1 << 3)
-+#define	SCSMR_STOP_1		(0x0000)
-+#define	SCSMR_CKS_MASK		(3 << 0)
-+#define	SCSMR_CKS_DIV1		(0x0000)
-+#define	SCSMR_INIT_DATA		(SCSMR_CA_ASYNC + SCSMR_CHR_8 + \
-+				SCSMR_PE_DIS + SCSMR_STOP_1 + \
-+				SCSMR_CKS_DIV1)
-+
-+#define	SCBRR_115200BPS		(17)		/* 115200bps@66MHz */
-+#define	SCBRR_230400BPS		(8)		/* 230400bps@66MHz */
-+
-+#define	SCSCR_TE_MASK		(1 << 5)
-+#define	SCSCR_TE_DIS		(0x0000)
-+#define	SCSCR_TE_EN		(0x0020)
-+#define	SCSCR_RE_MASK		(1 << 4)
-+#define	SCSCR_RE_DIS		(0x0000)
-+#define	SCSCR_RE_EN		(0x0010)
-+#define	SCSCR_CKE_MASK		(3 << 0)
-+#define SCSCR_CKE_INT		(0x0000)
-+#define SCSCR_CKE_BRG		(0x0002)
-+#if SCIF_CLK == SCIF_EXTARNAL_CLK
-+#define	SCSCR_CKE_INT_CLK	(SCSCR_CKE_BRG)
-+#else
-+#define	SCSCR_CKE_INT_CLK	(SCSCR_CKE_INT)
-+#endif
-+
-+#define	SCFSR_INIT_DATA		(0x0000)
-+
-+#define	SCFCR_TTRG_MASK		(3 << 4)
-+#define	SCFCR_TTRG_8		(0x0000)
-+#define	SCFCR_TTRG_0		(0x0030)
-+#define	SCFCR_TFRST_MASK	(1 << 2)
-+#define	SCFCR_TFRST_DIS		(0x0000)
-+#define	SCFCR_TFRST_EN		(0x0004)
-+#define	SCFCR_RFRS_MASK		(1 << 1)
-+#define	SCFCR_RFRS_DIS		(0x0000)
-+#define	SCFCR_RFRS_EN		(0x0002)
-+#define	SCFCR_INIT_DATA		(SCFCR_TTRG_8)
-+
-+#define SCFDR_T_MASK		(0x1f << 8)
-+
-+#define	DL_INIT_DATA		(8)		/* 14.7456MHz/(115200bps*16)*/
-+			
-+#define	CKS_CKS_DIV_MASK		(1 << 15)
-+#define	CKS_CKS_DIV_CLK		(0x0000)
-+#define	CKS_XIN_MASK		(1 << 14)
-+#define	CKS_XIN_SCIF_CLK		(0x0000)
-+#define	CKS_INIT_DATA		(CKS_CKS_DIV_CLK + CKS_XIN_SCIF_CLK)
-+
-+#define	GPSR5_MASK		(3 << 10)
-+#define	GPSR5_RX2_A	(1 << 11)
-+#define	GPSR5_TX2_A	(1 << 10)
-+#define	GPSR5_SCK2	(1 << 9)
-+#if SCIF_CLK == SCIF_EXTARNAL_CLK
-+#define	GPSR5_INIT_DATA		(GPSR5_RX2_A + GPSR5_TX2_A + GPSR5_SCK2)
-+#else
-+#define	GPSR5_INIT_DATA		(GPSR5_RX2_A + GPSR5_TX2_A)
-+#endif
-+
-+#define	IPSR12_MASK		(255 << 0)
-+#define	IPSR12_RX2_A		(0 << 4)
-+#define	IPSR12_TX2_A		(0 << 0)
-+#define	IPSR12_INIT_DATA	(IPSR12_RX2_A + IPSR12_TX2_A)
-+
-+#define	MOD_SEL1_SCIF2_MASK	(1 << 12)
-+#define	MOD_SEL1_SCIF2		(0 << 12)
-+
-+#endif	/* __SCIF_H__ */
++#endif	/* SCIF_H__ */
 diff --git a/plat/renesas/rcar/pfc/H3/pfc_init_h3.c b/plat/renesas/rcar/pfc/H3/pfc_init_h3.c
 new file mode 100644
 index 0000000..fc3160c
@@ -9863,10 +9828,10 @@ index 0000000..31fde81
 +#endif	/* PFC_INIT_H3_H__ */
 diff --git a/plat/renesas/rcar/pfc/M3/pfc_init_m3.c b/plat/renesas/rcar/pfc/M3/pfc_init_m3.c
 new file mode 100644
-index 0000000..82a6ac1
+index 0000000..a711740
 --- /dev/null
 +++ b/plat/renesas/rcar/pfc/M3/pfc_init_m3.c
-@@ -0,0 +1,1463 @@
+@@ -0,0 +1,1562 @@
 +/*
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation
 + * All rights reserved.
@@ -9900,7 +9865,9 @@ index 0000000..82a6ac1
 +
 +#include <stdint.h>		/* for uint32_t */
 +#include <mmio.h>
++#include "bl2_cpg_init.h"
 +#include "pfc_init_m3.h"
++#include "../../rcar_def.h"
 +
 +
 +/* GPIO base address */
@@ -10685,18 +10652,115 @@ index 0000000..82a6ac1
 +#define	MOD_SEL2_VIN4_B		((uint32_t)1U << 0U)
 +
 +
++/* SCIF3 Registers for Dummy write */
++#define SCIF3_BASE		(0xE6C50000U)
++#define SCIF3_SCFCR		(SCIF3_BASE + 0x0018U)
++#define SCIF3_SCFDR		(SCIF3_BASE + 0x001CU)
++#define SCFCR_DATA		(0x0000U)
++
++/* Realtime module stop control */
++#define	CPG_BASE		(0xE6150000U)
++#define CPG_MSTPSR0		(CPG_BASE + 0x0030U)
++#define CPG_RMSTPCR0		(CPG_BASE + 0x0110U)
++#define RMSTPCR0_RTDMAC		(0x00200000U)
++
++/* RT-DMAC Registers */
++#define RTDMAC_CH		(0U)		/* choose 0 to 15 */
++
++#define RTDMAC_BASE		(0xFFC10000U)
++#define RTDMAC_RDMOR		(RTDMAC_BASE + 0x0060U)
++#define RTDMAC_RDMCHCLR		(RTDMAC_BASE + 0x0080U)
++#define RTDMAC_RDMSAR(x)	(RTDMAC_BASE + 0x8000U + (0x80U * (x)))
++#define RTDMAC_RDMDAR(x)	(RTDMAC_BASE + 0x8004U + (0x80U * (x)))
++#define RTDMAC_RDMTCR(x)	(RTDMAC_BASE + 0x8008U + (0x80U * (x)))
++#define RTDMAC_RDMCHCR(x)	(RTDMAC_BASE + 0x800CU + (0x80U * (x)))
++#define RTDMAC_RDMCHCRB(x)	(RTDMAC_BASE + 0x801CU + (0x80U * (x)))
++#define RTDMAC_RDMDPBASE(x)	(RTDMAC_BASE + 0x8050U + (0x80U * (x)))
++#define RTDMAC_DESC_BASE	(RTDMAC_BASE + 0xA000U)
++#define RTDMAC_DESC_RDMSAR	(RTDMAC_DESC_BASE + 0x0000U)
++#define RTDMAC_DESC_RDMDAR	(RTDMAC_DESC_BASE + 0x0004U)
++#define RTDMAC_DESC_RDMTCR	(RTDMAC_DESC_BASE + 0x0008U)
++
++#define RDMOR_DME		(0x0001U)
++#define RDMCHCR_DPM_INFINITE	(0x30000000U)
++#define RDMCHCR_RPT_TCR		(0x02000000U)
++#define RDMCHCR_TS_2		(0x00000010U)
++#define RDMCHCR_RS_AUTO		(0x00000400U)
++#define RDMCHCR_DE		(0x00000001U)
++#define RDMCHCRB_DRST		(0x00008000U)
++#define RDMDPBASE_SEL_EXT	(0x00000001U)
++
++
++static void StartRtDma0_Descriptor(void);
 +static void pfc_reg_write(uint32_t addr, uint32_t data);
++
++
++static void StartRtDma0_Descriptor(void)
++{
++	uint32_t reg;
++
++	reg = mmio_read_32(RCAR_PRR);
++	reg &= (RCAR_PRODUCT_MASK | RCAR_CUT_MASK);
++	if (reg == (RCAR_PRODUCT_M3_CUT10)) {
++		/* Module stop clear */
++		while((mmio_read_32(CPG_MSTPSR0) & RMSTPCR0_RTDMAC) != 0U) {
++			reg = mmio_read_32(CPG_RMSTPCR0);
++			reg &= ~RMSTPCR0_RTDMAC;
++			cpg_write(CPG_RMSTPCR0, reg);
++		}
++
++		/* Initialize ch0, Reset Descriptor */
++		mmio_write_32(RTDMAC_RDMCHCLR, ((uint32_t)1U << RTDMAC_CH));
++		mmio_write_32(RTDMAC_RDMCHCRB(RTDMAC_CH), RDMCHCRB_DRST);
++
++		/* Enable DMA */
++		mmio_write_16(RTDMAC_RDMOR, RDMOR_DME);
++
++		/* Set first transfer */
++		mmio_write_32(RTDMAC_RDMSAR(RTDMAC_CH), RCAR_PRR);
++		mmio_write_32(RTDMAC_RDMDAR(RTDMAC_CH), SCIF3_SCFDR);
++		mmio_write_32(RTDMAC_RDMTCR(RTDMAC_CH), 0x00000001U);
++
++		/* Set descriptor */
++		mmio_write_32(RTDMAC_DESC_RDMSAR, 0x00000000U);
++		mmio_write_32(RTDMAC_DESC_RDMDAR, 0x00000000U);
++		mmio_write_32(RTDMAC_DESC_RDMTCR, 0x00200000U);
++		mmio_write_32(RTDMAC_RDMCHCRB(RTDMAC_CH),  RDMCHCRB_DRST);
++		mmio_write_32(RTDMAC_RDMDPBASE(RTDMAC_CH), RDMDPBASE_SEL_EXT);
++
++		/* Set transfer parameter, Start transfer */
++		mmio_write_32(RTDMAC_RDMCHCR(RTDMAC_CH), RDMCHCR_DPM_INFINITE
++						       | RDMCHCR_RPT_TCR
++						       | RDMCHCR_TS_2
++						       | RDMCHCR_RS_AUTO
++						       | RDMCHCR_DE);
++	}
++}
 +
 +static void pfc_reg_write(uint32_t addr, uint32_t data)
 +{
++	uint32_t prr;
++
++	prr = mmio_read_32(RCAR_PRR);
++	prr &= (RCAR_PRODUCT_MASK | RCAR_CUT_MASK);
++
 +	mmio_write_32(PFC_PMMR, ~data);
++	if (prr == (RCAR_PRODUCT_M3_CUT10)) {
++		mmio_write_16(SCIF3_SCFCR, SCFCR_DATA);	/* Dummy write */
++	}
 +	mmio_write_32((uintptr_t)addr, data);
++	if (prr == (RCAR_PRODUCT_M3_CUT10)) {
++		mmio_write_16(SCIF3_SCFCR, SCFCR_DATA);	/* Dummy write */
++	}
 +}
 +
 +
 +void pfc_init_m3(void)
 +{
 +	uint32_t reg;
++
++	/* Work around for PFC eratta */
++	StartRtDma0_Descriptor();
 +
 +	/* initialize module select */
 +	pfc_reg_write(PFC_MOD_SEL0, MOD_SEL0_MSIOF3_A
@@ -11475,7 +11539,7 @@ index 0000000..dc4fe17
 +}
 diff --git a/plat/renesas/rcar/platform.mk b/plat/renesas/rcar/platform.mk
 new file mode 100644
-index 0000000..909f054
+index 0000000..153c70c
 --- /dev/null
 +++ b/plat/renesas/rcar/platform.mk
 @@ -0,0 +1,170 @@
@@ -11604,7 +11668,7 @@ index 0000000..909f054
 +
 +# Process RCAR_SECURE_BOOT flag
 +ifndef RCAR_SECURE_BOOT
-+RCAR_SECURE_BOOT := 0
++RCAR_SECURE_BOOT := 1
 +endif
 +$(eval $(call add_define,RCAR_SECURE_BOOT))
 +
@@ -12805,10 +12869,10 @@ index 0000000..7750169
 +}
 diff --git a/plat/renesas/rcar/rcar_private.h b/plat/renesas/rcar/rcar_private.h
 new file mode 100644
-index 0000000..5b5aae9
+index 0000000..b5894a1
 --- /dev/null
 +++ b/plat/renesas/rcar/rcar_private.h
-@@ -0,0 +1,169 @@
+@@ -0,0 +1,172 @@
 +/*
 + * Copyright (c) 2014, ARM Limited and Contributors. All rights reserved.
 + * Copyright (c) 2015-2016, Renesas Electronics Corporation. All rights reserved.
@@ -12976,6 +13040,9 @@ index 0000000..5b5aae9
 +void rcar_affinst_on_finish(unsigned int afflvl, unsigned int state);
 +void rcar_affinst_suspend_finish(unsigned int afflvl, unsigned int state);
 +int rcar_validate_power_state(unsigned int power_state);
++
++/* Function prototypes for read and write to the CPU system registers */
++void iciallu(void);
 +
 +#endif /* RCAR_PRIVATE_H__ */
 diff --git a/plat/renesas/rcar/rcar_topology.c b/plat/renesas/rcar/rcar_topology.c
@@ -13209,7 +13276,7 @@ index 0000000..78dcdd9
 +}
 diff --git a/plat/renesas/rcar/rcar_version.h b/plat/renesas/rcar/rcar_version.h
 new file mode 100644
-index 0000000..c50db4d
+index 0000000..6d4e23a
 --- /dev/null
 +++ b/plat/renesas/rcar/rcar_version.h
 @@ -0,0 +1,41 @@
@@ -13249,7 +13316,7 @@ index 0000000..c50db4d
 +
 +#include	<arch_helpers.h>
 +
-+#define		VERSION_OF_RENESAS	"1.0.6"
++#define		VERSION_OF_RENESAS	"1.0.7"
 +
 +extern const uint8_t	version_of_renesas[];
 +
