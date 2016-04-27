@@ -1,0 +1,66 @@
+diff --git a/Makefile.am b/Makefile.am
+index 62719c9..ab0122a 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -183,7 +183,7 @@ endif
+ endif # BUILD_WESTON_LAUNCH
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+-pkgconfig_DATA = src/weston.pc
++pkgconfig_DATA = src/weston.pc protocol/wayland-protocols.pc
+ 
+ wayland_sessiondir = $(datadir)/wayland-sessions
+ dist_wayland_session_DATA = src/weston.desktop
+diff --git a/configure.ac b/configure.ac
+index acb9b02..06b860a 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -4,6 +4,13 @@ m4_define([weston_micro_version], [0])
+ m4_define([weston_version],
+           [weston_major_version.weston_minor_version.weston_micro_version])
+ 
++m4_define([wayland_protocols_package], [wayland-protocols])
++m4_define([wayland_protocols_major_version], [0])
++m4_define([wayland_protocols_minor_version], [0])
++m4_define([wayland_protocols_micro_version], [1])
++m4_define([wayland_protocols_version],
++          [wayland_protocols_major_version.wayland_protocols_minor_version.wayland_protocols_micro_version])
++
+ AC_PREREQ([2.64])
+ AC_INIT([weston],
+         [weston_version],
+@@ -16,6 +23,9 @@ AC_SUBST([WESTON_VERSION_MINOR], [weston_minor_version])
+ AC_SUBST([WESTON_VERSION_MICRO], [weston_micro_version])
+ AC_SUBST([WESTON_VERSION], [weston_version])
+ 
++AC_SUBST([WAYLAND_PROTOCOLS_PACKAGE], [wayland_protocols_package])
++AC_SUBST([WAYLAND_PROTOCOLS_VERSION], [wayland_protocols_version])
++
+ AC_CONFIG_AUX_DIR([build-aux])
+ AC_CONFIG_HEADERS([config.h])
+ AC_CONFIG_MACRO_DIR([m4])
+@@ -565,7 +575,7 @@ if test x$wayland_scanner = x; then
+ 	wayland_scanner=`$PKG_CONFIG --variable=wayland_scanner wayland-scanner`
+ fi
+ 
+-AC_CONFIG_FILES([Makefile src/version.h src/weston.pc])
++AC_CONFIG_FILES([Makefile src/version.h src/weston.pc protocol/wayland-protocols.pc])
+ 
+ AM_CONDITIONAL([HAVE_GIT_REPO], [test -f $srcdir/.git/logs/HEAD])
+ 
+diff --git a/protocol/wayland-protocols.pc.in b/protocol/wayland-protocols.pc.in
+new file mode 100644
+index 0000000..15c9e17
+--- /dev/null
++++ b/protocol/wayland-protocols.pc.in
+@@ -0,0 +1,7 @@
++prefix=@prefix@
++datarootdir=@datarootdir@
++pkgdatadir=@datadir@/@WAYLAND_PROTOCOLS_PACKAGE@
++
++Name: Wayland Protocols
++Description: Wayland protocol files
++Version: @WAYLAND_PROTOCOLS_VERSION@
+-- 
+1.9.1
+
