@@ -11,7 +11,7 @@ RPROVIDES_${PN} = \
 PROVIDES = \
     "${@bb.utils.contains("DISTRO_FEATURES", "wayland", "virtual/egl", "", d)}"
 
-SRCREV = "02b559098042a0aeb9ac63eece547868a140fa46"
+SRCREV = "7b09cce97e8658ba927e71f1af43360c4cc392b7"
 SRC_URI = " \
     git://github.com/thayama/libegl;branch=master \
     file://0001-libegl-Remove-duplicate-header-files-of-gles-user-mo.patch \
