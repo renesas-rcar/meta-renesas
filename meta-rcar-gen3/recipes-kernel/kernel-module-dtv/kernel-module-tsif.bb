@@ -39,10 +39,10 @@ do_install () {
 
     # Copy shared header files
     install -m 644 ${S}/tsif_drv/include/*.h ${KERNELSRC}/include
-    install -m 644 ${S}/tsif_drv/drv/Module.symvers ${KERNELSRC}/include/tsif_drv.sysmvers
+    install -m 644 ${S}/tsif_drv/drv/Module.symvers ${KERNELSRC}/include/tsif_drv.symvers
     # Export SDK
     install -m 644 ${S}/tsif_drv/include/*.h ${D}/usr/src/kernel/include
-    install -m 644 ${S}/tsif_drv/drv/Module.symvers ${D}/usr/src/kernel/include/tsif_drv.sysmvers
+    install -m 644 ${S}/tsif_drv/drv/Module.symvers ${D}/usr/src/kernel/include/tsif_drv.symvers
 }
 
 PACKAGES = "\
@@ -55,7 +55,7 @@ FILES_${PN} = " \
 "
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/*.h \
-    /usr/src/kernel/include/tsif_drv.sysmvers \
+    /usr/src/kernel/include/tsif_drv.symvers \
 "
 
 RPROVIDES_${PN} += "kernel-module-tsif kernel-module-tsif-drv"

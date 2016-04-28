@@ -40,10 +40,10 @@ do_install () {
 
     # Copy shared header files
     install -m 644 ${S}/tddmac_drv/include/*.h ${KERNELSRC}/include
-    install -m 644 ${S}/tddmac_drv/drv/Module.symvers ${KERNELSRC}/include/tddmac_drv.sysmvers
+    install -m 644 ${S}/tddmac_drv/drv/Module.symvers ${KERNELSRC}/include/tddmac_drv.symvers
     # Export SDK
     install -m 644 ${S}/tddmac_drv/include/*.h ${D}/usr/src/kernel/include
-    install -m 644 ${S}/tddmac_drv/drv/Module.symvers ${D}/usr/src/kernel/include/tddmac_drv.sysmvers
+    install -m 644 ${S}/tddmac_drv/drv/Module.symvers ${D}/usr/src/kernel/include/tddmac_drv.symvers
 }
 
 PACKAGES = "\
@@ -56,7 +56,7 @@ FILES_${PN} = " \
 "
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/*.h \
-    /usr/src/kernel/include/tddmac_drv.sysmvers \
+    /usr/src/kernel/include/tddmac_drv.symvers \
 "
 
 RPROVIDES_${PN} += "kernel-module-tddmac"
