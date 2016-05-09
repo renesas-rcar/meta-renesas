@@ -2,6 +2,7 @@ require include/omx-options.inc
 require include/cms-options.inc
 require include/adsp-options.inc
 require include/dtv-dvd-control.inc
+require include/avb-control.inc
 
 # Common Multi Media Packages (MMP)
 MULTIMEDIA_PKGS = " \
@@ -57,6 +58,25 @@ ADSP_PKGS = " \
     adsp-fw-module \
 "
 
+# Kernel modules of AVB
+AVB_KERNEL_PKGS = " \
+    kernel-module-avb-streaming \
+    kernel-module-avb-mse \
+"
+
+# AVB Packages
+AVB_PKGS = " \
+    ${AVB_KERNEL_PKGS} \
+    avbtool \
+    linuxptp \
+    open-avb-mrpd \
+    open-avb-gptp \
+    open-avb-maap \
+    avb-demoapps-avblauncher \
+    avb-demoapps-mrpdummy \
+    avb-demoapps-simple \
+"
+
 # Install pkg selection
 IMAGE_INSTALL_append_rcar-gen3 = " \
     ${@base_conditional("USE_MULTIMEDIA", "1", " ${MULTIMEDIA_PKGS} ${OMX_MULTIMEDIA_PKGS}", "", d)} \
@@ -65,4 +85,5 @@ IMAGE_INSTALL_append_rcar-gen3 = " \
     ${@base_conditional("USE_DTV", "1", " ${DTV_PKGS}", "", d)} \
     ${@base_conditional("USE_DVD", "1", " ${DVD_PKGS}", "", d)} \
     ${@base_conditional("USE_ADSP", "1", " ${ADSP_PKGS}", "", d)} \
+    ${@base_conditional("USE_AVB", "1", " ${AVB_PKGS}", "", d)} \
 "

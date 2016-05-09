@@ -1,5 +1,6 @@
 DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 
+require include/avb-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/${MACHINE}:"
@@ -18,4 +19,5 @@ PR = "r1"
 SRC_URI_append = " \
     file://defconfig \
     file://touch.cfg \
+    ${@base_conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
