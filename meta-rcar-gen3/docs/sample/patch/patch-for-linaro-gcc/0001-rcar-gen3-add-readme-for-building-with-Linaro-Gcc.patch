@@ -96,7 +96,7 @@ index 0000000..be0ff31
 +
 +Must Change the Gcc version in local.conf.
 +
-+    GCCVERSION="linaro-5.1"
++    GCCVERSION="linaro-5.2"
 +
 +Configure for systemd init in local.conf:
 +
