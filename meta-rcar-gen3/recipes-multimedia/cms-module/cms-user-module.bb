@@ -3,10 +3,10 @@ LICENSE = "CLOSED"
 
 require include/cms-options.inc
 
-SRC_CMSBCMV = "${@base_contains('USE_CMSBCMV', '1', 'file://RTM0AC0000JRCMBCV0SL40C.tar.gz;subdir=cms/bcmv', '', d)}"
-SRC_CMSBCMC = "${@base_contains('USE_CMSBCMC', '1', 'file://RTM0AC0000JRCMBCC0SL40C.tar.gz;subdir=cms/bcmc', '', d)}"
-SRC_CMSBLC = "${@base_contains('USE_CMSBLC', '1', 'file://RTM0AC0000JRCMBLC0SL40C.tar.gz;subdir=cms/blc', '', d)}"
-SRC_CMSDGC = "${@base_contains('USE_CMSDGC', '1', 'file://RTM0AC0000JRCMDGV0SL40C.tar.gz;subdir=cms/dgc', '', d)}"
+SRC_CMSBCMV = "${@bb.utils.contains('USE_CMSBCMV', '1', 'file://RTM0AC0000JRCMBCV0SL40C.tar.gz;subdir=cms/bcmv', '', d)}"
+SRC_CMSBCMC = "${@bb.utils.contains('USE_CMSBCMC', '1', 'file://RTM0AC0000JRCMBCC0SL40C.tar.gz;subdir=cms/bcmc', '', d)}"
+SRC_CMSBLC = "${@bb.utils.contains('USE_CMSBLC', '1', 'file://RTM0AC0000JRCMBLC0SL40C.tar.gz;subdir=cms/blc', '', d)}"
+SRC_CMSDGC = "${@bb.utils.contains('USE_CMSDGC', '1', 'file://RTM0AC0000JRCMDGV0SL40C.tar.gz;subdir=cms/dgc', '', d)}"
 
 SRC_URI = " \
     ${SRC_CMSBCMV} \

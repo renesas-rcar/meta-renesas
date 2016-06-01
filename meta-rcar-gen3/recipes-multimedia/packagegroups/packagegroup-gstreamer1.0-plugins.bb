@@ -65,7 +65,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-video = " \
     gstreamer1.0-plugins-good-videomixer \
     gstreamer1.0-plugins-good-videocrop \
     gstreamer1.0-plugins-good-video4linux2 \
-    ${@base_contains('DISTRO_FEATURES', 'wayland', \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', \
     'gstreamer1.0-plugins-bad-waylandsink', '', d)} \
     gstreamer1.0-plugins-bad-videoparsersbad \
     gstreamer1.0-plugins-bad-mpegtsdemux \
