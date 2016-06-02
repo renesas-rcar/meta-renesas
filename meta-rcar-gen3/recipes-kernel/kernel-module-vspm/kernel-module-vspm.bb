@@ -54,6 +54,7 @@ PACKAGES = " \
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vspm.ko \
 "
+
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/vspm.symvers \
     /usr/src/kernel/include/*.h \
@@ -62,3 +63,6 @@ FILES_${PN}-dev = " \
 RPROVIDES_${PN} += "kernel-module-vspm"
 
 do_configure[noexec] = "1"
+
+# Autoload VSPM
+KERNEL_MODULE_AUTOLOAD = "vspm"

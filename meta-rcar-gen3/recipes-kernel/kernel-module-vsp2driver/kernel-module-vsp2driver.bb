@@ -51,6 +51,7 @@ PACKAGES = "\
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
 "
+
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/vsp2.symvers \
     /usr/src/kernel/include/*.h \
@@ -59,3 +60,6 @@ FILES_${PN}-dev = " \
 RPROVIDES_${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
 
 do_configure[noexec] = "1"
+
+# Autoload VSP2Driver
+KERNEL_MODULE_AUTOLOAD = "vsp2"
