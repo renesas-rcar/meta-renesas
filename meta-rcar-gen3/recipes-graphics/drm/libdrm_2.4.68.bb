@@ -11,9 +11,12 @@ PROVIDES = "drm"
 DEPENDS = "libpthread-stubs udev libpciaccess"
 
 SRC_URI = "http://dri.freedesktop.org/libdrm/${BP}.tar.bz2 \
-           file://installtests.patch "
-SRC_URI[md5sum] = "de49916e5f8aef4eba55223c79709b05"
-SRC_URI[sha256sum] = "71960ac8bde7d710992b1bc8879935e8300a870c36bd06f22412d0447e3d96c4"
+           file://installtests.patch \
+           file://fix_O_CLOEXEC_undeclared.patch \
+          "
+
+SRC_URI[md5sum] = "bcc96848d969cecf28223f668eeff354"
+SRC_URI[sha256sum] = "5b4bd9a5922929bc716411cb74061fbf31b06ba36feb89bc1358a91a8d0ca9df"
 
 inherit autotools pkgconfig
 
@@ -26,12 +29,12 @@ EXTRA_OECONF += "--disable-cairo-tests \
 
 ALLOW_EMPTY_${PN}-drivers = "1"
 PACKAGES =+ "${PN}-tests ${PN}-drivers ${PN}-radeon ${PN}-nouveau ${PN}-omap \
-             ${PN}-intel ${PN}-exynos ${PN}-kms ${PN}-freedreno"
+             ${PN}-intel ${PN}-exynos ${PN}-kms ${PN}-freedreno ${PN}-amdgpu"
 
 RRECOMMENDS_${PN}-drivers = "${PN}-radeon ${PN}-nouveau ${PN}-omap ${PN}-intel \
-                             ${PN}-exynos ${PN}-freedreno"
+                             ${PN}-exynos ${PN}-freedreno ${PN}-amdgpu"
 
-FILES_${PN}-tests = "${bindir}/dr* ${bindir}/mode* ${bindir}/*test"
+FILES_${PN}-tests = "${bindir}/*"
 FILES_${PN}-radeon = "${libdir}/libdrm_radeon.so.*"
 FILES_${PN}-nouveau = "${libdir}/libdrm_nouveau.so.*"
 FILES_${PN}-omap = "${libdir}/libdrm_omap.so.*"
@@ -39,3 +42,4 @@ FILES_${PN}-intel = "${libdir}/libdrm_intel.so.*"
 FILES_${PN}-exynos = "${libdir}/libdrm_exynos.so.*"
 FILES_${PN}-kms = "${libdir}/libkms*.so.*"
 FILES_${PN}-freedreno = "${libdir}/libdrm_freedreno.so.*"
+FILES_${PN}-amdgpu = "${libdir}/libdrm_amdgpu.so.*"
