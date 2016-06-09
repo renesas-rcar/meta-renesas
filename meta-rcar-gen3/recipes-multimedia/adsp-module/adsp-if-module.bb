@@ -27,6 +27,7 @@ do_install() {
     install -d ${D}/${includedir}
     install -d ${D}/${includedir}/sys/fio
     install -d ${D}/${includedir}/os/linux
+    install -d ${D}/${includedir}/audio
 
     # Copy library
     install -m 0755 ${S}/libRCG3AHIFL4001ZDP.so.1.0 ${D}/${libdir}
@@ -35,6 +36,7 @@ do_install() {
     install -m 0644 ${S}/include/*.h ${D}/${includedir}
     install -m 0644 ${S}/include/sys/fio/*.h ${D}/${includedir}/sys/fio/
     install -m 0644 ${S}/include/os/linux/*.h ${D}/${includedir}/os/linux/
+    install -m 0644 ${S}/include/audio/*.h ${D}/${includedir}/audio/
 
     # Create the symbolic link
     cd ${D}/${libdir}

@@ -3,6 +3,7 @@ LICENSE = "GPLv2 & MIT"
 
 LIC_FILES_CHKSUM = " \
     file://COPYING;md5=55979d94ccbb973fdea772250e0c54d6 \
+    file://MIT-COPYING;md5=f53fd03793886ba8757dca9adc13603e \
 "
 
 require include/adsp-options.inc
