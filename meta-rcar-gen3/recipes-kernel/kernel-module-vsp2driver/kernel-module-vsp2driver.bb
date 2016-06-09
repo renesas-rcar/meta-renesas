@@ -17,7 +17,7 @@ PR = "r0"
 VSP2DRIVER_URL = " \
     git://github.com/renesas-rcar/vsp2driver.git"
 BRANCH = "rcar-gen3"
-SRCREV = "400adc2e31f6510390bd820c23ffa392edd08e2d"
+SRCREV = "8884c714ef3da6d5cd333ccc99b06056146e4860"
 
 SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH}"
 
