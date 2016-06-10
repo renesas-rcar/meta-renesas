@@ -6,6 +6,7 @@ IMAGE_INSTALL_append_rcar-gen3 = " \
     bash \
     lib32-libstdc++ \
     v4l-utils \
+    i2c-tools \
 "
 
 # Support secure environment
