@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = " \
 PV_append = "+git${SRCREV}"
 
 SRCREV = "229a635a7972ac38532f944c799ecd16abf6aea2"
-SRC_URI = "git://github.com/thayama/wayland-kms;branch=master"
+SRC_URI = "git://github.com/renesas-rcar/wayland-kms.git;branch=rcar-gen3"
 
 COMPATIBLE_MACHINE = "(r8a7795|r8a7796)"
 S = "${WORKDIR}/git"
