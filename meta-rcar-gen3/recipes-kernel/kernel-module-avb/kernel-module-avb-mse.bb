@@ -15,6 +15,6 @@ DEPENDS = "linux-renesas"
 REQUIRED_DISTRO_FEATURES = "avb"
 
 SRC_URI = "git://github.com/renesas-rcar/avb-mse.git;branch=rcar-gen3"
-SRCREV = "a09d751f5793d6c26b781b7c0eb01ddf945de809"
+SRCREV = "84038ea9bf7caf12afdf599c89b9dd069ac4c964"
 
 S = "${WORKDIR}/git"
