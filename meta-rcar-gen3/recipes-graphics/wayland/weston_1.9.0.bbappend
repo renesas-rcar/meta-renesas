@@ -1,5 +1,8 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-SRC_URI_append_rcar-gen3 = " file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-clie.patch"
+SRC_URI_append_rcar-gen3 = " \
+    file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-clie.patch \
+    file://0001-configure-don-t-control-egl-version.patch \
+"
 
 do_install_append_rcar-gen3() {
     # install xml for client applications

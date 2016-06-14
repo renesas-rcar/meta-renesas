@@ -14,7 +14,7 @@ WAYLAND_BASE_PKGS = " \
 "
 
 # GFX for Wayland packages
-WAYLAND_GLES_PKGS = "libegl libegl-dev libgbm-dev"
+WAYLAND_GLES_PKGS = "libgbm-dev"
 
 # GFX driver and library packages
 GLES_PKGS = " \

@@ -4,12 +4,12 @@ inherit groupadd_useradd_prepend
 PACKAGECONFIG_rcar-gen3 := "${@'${PACKAGECONFIG}'.replace('x11', '')}"
 PACKAGECONFIG_virtclass-multilib-lib32 := "${@'${PACKAGECONFIG}'.replace('launch', '')}"
 DEPENDS_append_rcar-gen3 = " \
-    ${@base_conditional('USE_GLES', '1', 'libegl', '', d)}"
+    ${@base_conditional('USE_GLES', '1', ' libgbm', '', d)}"
 
 RDEPENDS_${PN}_append_rcar-gen3 = " \
-    ${@base_conditional('USE_GLES', '1', 'libegl', '', d)}"
+    ${@base_conditional('USE_GLES', '1', ' libgbm', '', d)}"
 RDEPENDS_${PN}-examples_append_rcar-gen3 = " \
-    ${@base_conditional('USE_GLES', '1', 'libegl', '', d)}"
+    ${@base_conditional('USE_GLES', '1', ' libgbm', '', d)}"
 
 EXTRA_OECONF_append = " \
     ${@base_conditional('USE_GLES', '1', '', \
