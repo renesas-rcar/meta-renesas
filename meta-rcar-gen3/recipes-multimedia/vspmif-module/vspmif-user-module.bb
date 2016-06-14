@@ -11,6 +11,10 @@ VSPMIF_LIB_DIR = "vspm_if-module/files/vspm_if"
 
 EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
+SRC_URI += "file://0001-Do-not-copy-header-files-to-builddir.patch"
+
+includedir="/usr/local/include"
+
 do_compile() {
     export VSPM_LEGACY_IF="1"
 
@@ -32,31 +36,11 @@ do_install() {
     ln -sf libvspm.so.1 libvspm.so
 
     # Copy shared header files
-    install -m 644 ${BUILDDIR}/include/vspm_public.h ${D}/usr/local/include
-    install -m 644 ${BUILDDIR}/include/vsp_drv.h ${D}/usr/local/include
-    install -m 644 ${BUILDDIR}/include/fdp_drv.h ${D}/usr/local/include
-    install -m 644 ${BUILDDIR}/include/fdpm_api.h ${D}/usr/local/include
+    install -m 644 ${S}/${VSPMIF_LIB_DIR}/include/vspm_public.h ${D}/usr/local/include
+    install -m 644 ${S}/${VSPMIF_LIB_DIR}/include/vsp_drv.h ${D}/usr/local/include
+    install -m 644 ${S}/${VSPMIF_LIB_DIR}/include/fdp_drv.h ${D}/usr/local/include
+    install -m 644 ${S}/${VSPMIF_LIB_DIR}/include/fdpm_api.h ${D}/usr/local/include
 }
-
-PACKAGES = "\
-    ${PN} \
-    ${PN}-dev \
-    ${PN}-dbg \
-"
-
-FILES_${PN} = " \
-    ${libdir}/libvspm.so.* \
-"
-
-FILES_${PN}-dev = " \
-    /usr/local/include \
-    /usr/local/include/*.h \
-    ${libdir}/libvspm.so \
-"
-
-FILES_${PN}-dbg = " \
-    ${libdir}/.debug/* \
-"
 
 RPROVIDES_${PN} += "vspmif-user-module"
 INSANE_SKIP_${PN} += "libdir"

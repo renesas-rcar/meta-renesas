@@ -1,0 +1,33 @@
+From b2ab247f17274ae6cf5c4554b2f5b55e78f32e92 Mon Sep 17 00:00:00 2001
+From: Frederico Cadete <frederico.cadete@awtce.be>
+Date: Tue, 14 Jun 2016 09:37:44 +0200
+Subject: [PATCH] Do not copy header files to builddir
+
+Signed-off-by: Frederico Cadete <frederico.cadete@awtce.be>
+---
+ vspm_if-module/files/vspm_if/if/Makefile | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/if/Makefile b/vspm_if-module/files/vspm_if/if/Makefile
+index 436afcb..ddf10e7 100644
+--- a/vspm_if-module/files/vspm_if/if/Makefile
++++ b/vspm_if-module/files/vspm_if/if/Makefile
+@@ -1,13 +1,9 @@
+ all:
+-	$(CP) ../include/vspm_public.h $(BUILDDIR)/include
+-	$(CP) ../include/vsp_drv.h $(BUILDDIR)/include
+-	$(CP) ../include/fdp_drv.h $(BUILDDIR)/include
+ ifeq ($(VSPM_LEGACY_IF),1)
+-	$(CP) ../include/fdpm_api.h $(BUILDDIR)/include
+-	${CC} -fPIC -c vspm_api.c vspm_api_vsp.c vspm_api_fdp.c -I$(BUILDDIR)/include -Wall
++	${CC} -fPIC -c vspm_api.c vspm_api_vsp.c vspm_api_fdp.c -I../include -Wall
+ 	${CC} -shared -Wl,-soname=libvspm.so.1 -o libvspm.so.1.0.0 vspm_api.o vspm_api_vsp.o vspm_api_fdp.o
+ else
+-	${CC} -fPIC -c vspm_api.c -I$(BUILDDIR)/include -Wall
++	${CC} -fPIC -c vspm_api.c -I../include -Wall
+ 	${CC} -shared -Wl,-soname=libvspm.so.1 -o libvspm.so.1.0.0 vspm_api.o
+ endif
+ 	ln -s ./libvspm.so.1.0.0 libvspm.so.1
+-- 
+2.5.0
+
