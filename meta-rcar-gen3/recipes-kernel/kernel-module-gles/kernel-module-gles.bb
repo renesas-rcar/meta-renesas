@@ -33,6 +33,7 @@ module_do_compile() {
 
 module_do_install() {
     unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
+    install -d ${D}/lib/modules/${KERNEL_VERSION}
     cd ${KBUILD_DIR}
     oe_runmake DISCIMAGE="${D}" install
 }
