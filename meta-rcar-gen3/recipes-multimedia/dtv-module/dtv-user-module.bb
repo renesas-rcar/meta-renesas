@@ -2,7 +2,7 @@ DESCRIPTION = "ISDB-T DTV Software Package for Linux for the R-Car Gen3"
 LICENSE = "CLOSED"
 
 require include/rcar-gen3-modules-common.inc
-require include/dtv-dvd-control.inc
+require include/rcar-gen3-dtv-dvd-control.inc
 
 DEPENDS = " \
     kernel-module-vspmif mmngr-user-module \

@@ -1,7 +1,7 @@
 DESCRIPTION = "ADSP Interface for Linux"
 LICENSE = "CLOSED"
 
-require include/adsp-options.inc
+require include/rcar-gen3-adsp-options.inc
 
 SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHIFL4001ZDP.tar.gz', '', d )}"
 

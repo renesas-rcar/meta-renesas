@@ -1,7 +1,7 @@
 DESCRIPTION = "DTV Driver part of scu_src for Linux for the R-Car Gen3"
 
 require include/rcar-gen3-modules-common.inc
-require include/dtv-dvd-control.inc
+require include/rcar-gen3-dtv-dvd-control.inc
 
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \

@@ -1,7 +1,7 @@
 DESCRIPTION = "R-Car Gen3 Color Management System"
 LICENSE = "CLOSED"
 
-require include/cms-options.inc
+require include/rcar-gen3-cms-options.inc
 
 SRC_CMSBCMV = "${@base_contains('USE_CMSBCMV', '1', 'file://RTM0AC0000JRCMBCV0SL40C.tar.gz;subdir=cms/bcmv', '', d)}"
 SRC_CMSBCMC = "${@base_contains('USE_CMSBCMC', '1', 'file://RTM0AC0000JRCMBCC0SL40C.tar.gz;subdir=cms/bcmc', '', d)}"

@@ -1,4 +1,4 @@
-require include/gles-control.inc
+require include/rcar-gen3-gles-control.inc
 inherit groupadd_useradd_prepend
 
 PACKAGECONFIG_rcar-gen3 := "${@'${PACKAGECONFIG}'.replace('x11', '')}"

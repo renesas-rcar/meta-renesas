@@ -1,6 +1,6 @@
 DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 
-require include/avb-control.inc
+require include/rcar-gen3-avb-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/${MACHINE}:"

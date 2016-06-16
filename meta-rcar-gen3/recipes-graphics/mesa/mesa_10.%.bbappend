@@ -1,4 +1,4 @@
-require include/gles-control.inc
+require include/rcar-gen3-gles-control.inc
 
 def map_libs(d):
     if base_conditional('USE_GLES_WAYLAND', "1", "1", "0", d) == "1":

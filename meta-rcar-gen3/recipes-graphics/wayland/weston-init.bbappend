@@ -1,4 +1,4 @@
-require include/gles-control.inc
+require include/rcar-gen3-gles-control.inc
 inherit systemd
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"

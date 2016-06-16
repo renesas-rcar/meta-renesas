@@ -1,4 +1,4 @@
-require include/gles-control.inc
+require include/rcar-gen3-gles-control.inc
 DEPENDS_append_rcar-gen3 = " \
     ${@'libegl' if '${USE_GLES_WAYLAND}' == '1'  else ''}"
 

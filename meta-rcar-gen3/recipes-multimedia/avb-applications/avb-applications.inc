@@ -1,4 +1,4 @@
-require include/avb-control.inc
+require include/rcar-gen3-avb-control.inc
 
 REQUIRED_DISTRO_FEATURES = "avb"
 

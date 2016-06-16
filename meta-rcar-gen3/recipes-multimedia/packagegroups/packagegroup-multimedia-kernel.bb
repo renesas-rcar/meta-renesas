@@ -1,7 +1,7 @@
 SUMMARY = "Multimedia kernel modules package groups"
 LICENSE = "GPLv2 & MIT"
 
-require include/omx-options.inc
+require include/rcar-gen3-omx-options.inc
 
 DEPENDS = "kernel-module-mmngr kernel-module-mmngrbuf \
     kernel-module-vspm kernel-module-vspmif \
