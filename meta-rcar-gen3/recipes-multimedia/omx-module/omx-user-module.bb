@@ -1,6 +1,6 @@
 DESCRIPTION = "OMX Media Components R-Car Gen3"
 LICENSE = "CLOSED"
-require include/omx-options.inc
+require include/rcar-gen3-omx-options.inc
 
 DEPENDS = " \
     kernel-module-mmngr mmngr-user-module \

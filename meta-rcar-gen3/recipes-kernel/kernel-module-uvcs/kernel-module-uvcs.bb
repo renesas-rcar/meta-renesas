@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = " \
     file://src/core/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
     file://src/cmn/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
-require include/omx-options.inc
+require include/rcar-gen3-omx-options.inc
 inherit module
 PN = "kernel-module-uvcs"
 PR = "r0"

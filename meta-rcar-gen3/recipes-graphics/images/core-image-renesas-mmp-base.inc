@@ -1,8 +1,8 @@
-require include/omx-options.inc
-require include/cms-options.inc
-require include/adsp-options.inc
-require include/dtv-dvd-control.inc
-require include/avb-control.inc
+require include/rcar-gen3-omx-options.inc
+require include/rcar-gen3-cms-options.inc
+require include/rcar-gen3-adsp-options.inc
+require include/rcar-gen3-dtv-dvd-control.inc
+require include/rcar-gen3-avb-control.inc
 
 # Common Multi Media Packages (MMP)
 MULTIMEDIA_PKGS = " \

@@ -1,6 +1,6 @@
 DESCRIPTION = "AVB MSE Driver for Linux for the R-Car Gen3"
 
-require include/avb-control.inc
+require include/rcar-gen3-avb-control.inc
 
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \

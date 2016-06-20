@@ -1,7 +1,7 @@
 DESCRIPTION = "Memory Manager Kernel module for Renesas R-Car Gen3"
 
 require mmngr_drv.inc
-require include/dtv-dvd-control.inc
+require include/rcar-gen3-dtv-dvd-control.inc
 
 DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngr"

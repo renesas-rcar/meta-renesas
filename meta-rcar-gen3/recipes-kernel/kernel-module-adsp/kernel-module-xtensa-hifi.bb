@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = " \
     file://COPYING;md5=55979d94ccbb973fdea772250e0c54d6 \
 "
 
-require include/adsp-options.inc
+require include/rcar-gen3-adsp-options.inc
 inherit module
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/xtensa-hifi:"

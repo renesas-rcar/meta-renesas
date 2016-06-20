@@ -1,7 +1,7 @@
 SUMMARY = "GStreamer 1.0 package groups"
 LICENSE = "MIT"
 
-require include/omx-options.inc
+require include/rcar-gen3-omx-options.inc
 
 DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good"
 DEPENDS += "gstreamer1.0-plugins-bad"
