@@ -8,25 +8,21 @@ require include/avb-control.inc
 MULTIMEDIA_PKGS = " \
     packagegroup-multimedia-kernel-modules \
     packagegroup-multimedia-libs \
-    lib32-packagegroup-multimedia-libs \
 "
 
 # MMP test Packages
 MULTIMEDIA_TP_PKGS = " \
     vspmif-tp-user-module \
-    lib32-vspmif-tp-user-module \
 "
 
 # OMX MMP Packages
 OMX_MULTIMEDIA_PKGS = " \
     omx-user-module \
-    lib32-omx-user-module \
 "
 
 # CMS MMP Packages
 CMS_MULTIMEDIA_PKGS = " \
     cms-user-module \
-    lib32-cms-user-module \
 "
 
 # Kernel modules of DTV
@@ -41,20 +37,17 @@ DTV_KERNEL_PKGS = " \
 DTV_PKGS = " \
     ${DTV_KERNEL_PKGS} \
     dtv-user-module \
-    lib32-dtv-user-module \
 "
 
 # DVD Packages
 DVD_PKGS = " \
     dvd-user-module \
-    lib32-dvd-user-module \
 "
 
 # ADSP Packages
 ADSP_PKGS = " \
     kernel-module-xtensa-hifi \
     adsp-if-module \
-    lib32-adsp-if-module \
     adsp-fw-module \
 "
 
@@ -77,6 +70,16 @@ AVB_PKGS = " \
     avb-demoapps-simple \
 "
 
+# Renesas MMP 32bit packages
+MMP_32BIT_PKGS = " \
+    ${@base_conditional("USE_MULTIMEDIA", "1", "lib32-packagegroup-multimedia-libs lib32-omx-user-module", "", d)} \
+    ${@base_conditional("USE_MULTIMEDIA_TP", "1", "lib32-vspmif-tp-user-module", "", d)} \
+    ${@base_conditional("USE_CMS", "1", "lib32-cms-user-module", "", d)} \
+    ${@base_conditional("USE_DTV", "1", "lib32-dtv-user-module", "", d)} \
+    ${@base_conditional("USE_DVD", "1", "lib32-dvd-user-module", "", d)} \
+    ${@base_conditional("USE_ADSP", "1", "lib32-adsp-if-module", "", d)} \
+"
+
 # Install pkg selection
 IMAGE_INSTALL_append_rcar-gen3 = " \
     ${@base_conditional("USE_MULTIMEDIA", "1", " ${MULTIMEDIA_PKGS} ${OMX_MULTIMEDIA_PKGS}", "", d)} \
@@ -86,4 +89,5 @@ IMAGE_INSTALL_append_rcar-gen3 = " \
     ${@base_conditional("USE_DVD", "1", " ${DVD_PKGS}", "", d)} \
     ${@base_conditional("USE_ADSP", "1", " ${ADSP_PKGS}", "", d)} \
     ${@base_conditional("USE_AVB", "1", " ${AVB_PKGS}", "", d)} \
+    ${@base_conditional("USE_32BIT_MMP", "1", " ${MMP_32BIT_PKGS}", "", d)} \
 "
