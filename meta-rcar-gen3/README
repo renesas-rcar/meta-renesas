@@ -64,11 +64,6 @@ Must change the package class to ipk files in local.conf:
 
     PACKAGE_CLASSES ?= "package_ipk"
 
-Must append the 32-bit application to the image in local.conf.
-At least one 32-bit app have to be installed to run the multilib image.e.g.:
-
-    IMAGE_INSTALL_append = " lib32-coreutils"
-
 Configure for systemd init in local.conf:
 
     DISTRO_FEATURES_append = " systemd"
@@ -102,39 +97,15 @@ For 64-bit target SDK (aarch64):
 
     $ bitbake core-image-minimal -c populate_sdk
 
-For 32-bit target SDK (aarch32):
-
-    $ bitbake lib32-core-image-minimal -c populate_sdk
-
 The SDK can be found in the output directory 'tmp/deploy/sdk'
-    * poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-1.8.sh
+    * poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh
 
 Usage of toolchain SDK:
-Install the SDK to the default: /opt/poky/1.8
+Install the SDK to the default: /opt/poky/x.x
 For 64-bit target SDK:
 
-    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-1.8.sh
+    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh
 
-For 32-bit target SDK:
+For 64-bit application use environment script in /opt/poky/x.x
 
-    $ sh poky-glibc-x86_64-lib32-core-image-minimal-aarch64-toolchain-1.8.sh
-
-For 64-bit application use environment script in /opt/poky/1.8
-
-    $ source /opt/poky/1.8/environment-setup-aarch64-poky-linux
-
-For 32-bit application use environment script in /opt/poky/1.8
-
-    $ source /opt/poky/1.8/environment-setup-armv7ahf-vfp-pokymllib32-linux-gnueabi
-
-Restrictions
-============
-
-As the information from community, Poky doesn't well support toolchain SDK for multilib.
-This release has just been tested with core-image-minimal target only.
-Please be Noted that:
-- The poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-1.8.sh (1) only supports for 64-bit application.
-  We can't compile the 32 bit apps with (1). Please don't source the environment-setup-armv7ahf-vfp-pokymllib32-linux-gnueabi.
-- The poky-glibc-x86_64-lib32-core-image-minimal-aarch64-toolchain-1.8.sh (2) only supports for 32-bit application.
-  We can't compile the 64 bit apps with (2). Please don't source the environment-setup-aarch64-poky-linux.
-- In case, there is necessary to use both aarch64/aarch32 SDK. Please install them into different directories.
+    $ source /opt/poky/x.x/environment-setup-aarch64-poky-linux

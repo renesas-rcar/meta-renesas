@@ -1,4 +1,4 @@
-From 55b88dff59ece317a40bfbaf2070531d485322be Mon Sep 17 00:00:00 2001
+From 577fcbda06e4dcd896b8df986887fb7535a37a39 Mon Sep 17 00:00:00 2001
 From: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
 Date: Mon, 6 Jul 2015 14:48:50 +0700
 Subject: [PATCH] rcar-gen3: add readme for building with Linaro Gcc
@@ -8,16 +8,16 @@ for using Linaro Gcc.
 
 Signed-off-by: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
 ---
- meta-rcar-gen3/README.linaro | 149 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 149 insertions(+)
+ meta-rcar-gen3/README.linaro | 120 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 120 insertions(+)
  create mode 100644 meta-rcar-gen3/README.linaro
 
 diff --git a/meta-rcar-gen3/README.linaro b/meta-rcar-gen3/README.linaro
 new file mode 100644
-index 0000000..be0ff31
+index 0000000..d57be1b
 --- /dev/null
 +++ b/meta-rcar-gen3/README.linaro
-@@ -0,0 +1,149 @@
+@@ -0,0 +1,120 @@
 +meta-rcar-gen3
 +==============
 +
@@ -89,11 +89,6 @@ index 0000000..be0ff31
 +
 +    PACKAGE_CLASSES ?= "package_ipk"
 +
-+Must append the 32-bit application to the image in local.conf.
-+At least one 32-bit app have to be installed to run the multilib image.e.g.:
-+
-+    IMAGE_INSTALL_append = " lib32-coreutils"
-+
 +Must Change the Gcc version in local.conf.
 +
 +    GCCVERSION="linaro-5.2"
@@ -131,42 +126,18 @@ index 0000000..be0ff31
 +
 +    $ bitbake core-image-minimal -c populate_sdk
 +
-+For 32-bit target SDK (aarch32):
-+
-+    $ bitbake lib32-core-image-minimal -c populate_sdk
-+
 +The SDK can be found in the output directory 'tmp/deploy/sdk'
-+    * poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-2.0.sh
++    * poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh
 +
 +Usage of toolchain SDK:
-+Install the SDK to the default: /opt/poky/2.0
++Install the SDK to the default: /opt/poky/x.x
 +For 64-bit target SDK:
 +
-+    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-2.0.sh
++    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh
 +
-+For 32-bit target SDK:
-+
-+    $ sh poky-glibc-x86_64-lib32-core-image-minimal-aarch64-toolchain-2.0.sh
-+
-+For 64-bit application use environment script in /opt/poky/2.0
++For 64-bit application use environment script in /opt/poky/x.x
 +
 +    $ source /opt/poky/1.8/environment-setup-aarch64-poky-linux
-+
-+For 32-bit application use environment script in /opt/poky/2.0
-+
-+    $ source /opt/poky/1.8/environment-setup-armv7ahf-vfp-pokymllib32-linux-gnueabi
-+
-+Restrictions
-+============
-+
-+As the information from community, Poky doesn't well support toolchain SDK for multilib.
-+This release has just been tested with core-image-minimal target only.
-+Please be Noted that:
-+- The poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-2.0.sh (1) only supports for 64-bit application.
-+  We can't compile the 32 bit apps with (1). Please don't source the environment-setup-armv7ahf-vfp-pokymllib32-linux-gnueabi.
-+- The poky-glibc-x86_64-lib32-core-image-minimal-aarch64-toolchain-2.0.sh (2) only supports for 32-bit application.
-+  We can't compile the 64 bit apps with (2). Please don't source the environment-setup-aarch64-poky-linux.
-+- In case, there is necessary to use both aarch64/aarch32 SDK. Please install them into different directories.
 -- 
 1.9.1
 
