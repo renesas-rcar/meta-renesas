@@ -20,8 +20,6 @@ do_install_append() {
     install -d ${D}/${sysconfdir}/linuxptp
     install -d ${D}/${sysconfdir}/daemon_cl
     install -d ${D}/${sysconfdir}/avblauncher
-    install -m 644 ${S}/etc/linuxptp/default.cfg ${D}/${sysconfdir}/linuxptp
-    install -m 644 ${S}/etc/linuxptp/gPTP.cfg ${D}/${sysconfdir}/linuxptp
     install -m 644 ${S}/etc/linuxptp/avb-demoapps.cfg ${D}/${sysconfdir}/linuxptp
     install -m 644 ${S}/etc/daemon_cl/gptp_cfg_100mb.ini ${D}/${sysconfdir}/daemon_cl
     install -m 644 ${S}/etc/daemon_cl/gptp_cfg.ini ${D}/${sysconfdir}/daemon_cl
@@ -50,8 +48,6 @@ FILES_${PN}-avblauncher = " \
 "
 
 FILES_${PN}-simple = " \
-    ${sysconfdir}/linuxptp/default.cfg \
-    ${sysconfdir}/linuxptp/gPTP.cfg \
     ${sysconfdir}/linuxptp/avb-demoapps.cfg \
     ${bindir}/simple_talker \
     ${bindir}/simple_listener \
