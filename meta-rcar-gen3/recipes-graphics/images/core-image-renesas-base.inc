@@ -1,3 +1,5 @@
+require include/iccom-control.inc
+
 # Basic packages
 IMAGE_INSTALL_append_rcar-gen3 = " \
     bash \
@@ -38,4 +40,28 @@ BASIC_32BIT_PKGS = " \
 # Installation for 32bit packages
 IMAGE_INSTALL_append = " \
     ${@base_conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
+"
+
+# Kernel modules of ICCOM
+ICCOM_KERNEL_PKGS = " \
+    kernel-module-iccom-mfis \
+    kernel-module-iccom-hwspinlock-sample \
+"
+
+# User modules of ICCOM only supports 64bit
+ICCOM_USER_PKGS = ""
+ICCOM_USER_PKGS_aarch64-poky-linux = " \
+    iccom-user-module \
+    iccom-tp-user-module \
+"
+
+# ICCOM Packages
+ICCOM_PKGS = " \
+    ${ICCOM_KERNEL_PKGS} \
+    ${ICCOM_USER_PKGS} \
+"
+
+# Installation for ICCOM Packages
+IMAGE_INSTALL_append = " \
+    ${@base_conditional("USE_ICCOM", "1", " ${ICCOM_PKGS}", "", d)} \
 "

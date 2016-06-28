@@ -2,7 +2,7 @@ Proprietary libraries for meta-rcar-gen3
 ========================================
 
 The meta-rcar-gen3 layer of meta-renesas is supported Graphic GLES(GSX) libraries,
-and proprietary library of multimedia.
+proprietary library of multimedia, and ICCOM software.
 This README describes how to use these features and setting to local.conf.
 
 There are 2 main paths:
@@ -12,6 +12,9 @@ There are 2 main paths:
 
 Please check section II to config for GLES.
 Please check section III to enable Multimedia functions.
+
+If you would like to use Linux ICCOM driver and Linux ICCOM library,
+please check section IV.
 
 However, to have a completed local.conf,
 please also refer to Build Instruction in meta-renesas/meta-rcar-gen3/README.
@@ -114,4 +117,13 @@ III/ Build with Renesas multimedia libraries
                 # Configuration for multimedia test package
 
                     DISTRO_FEATURES_append = " mm-test"
+
+IV/ Enable Linux ICCOM driver and Linux ICCOM library
+=====================================================
+        For Linux ICCOM driver and Linux ICCOM library
+
+        1. Please copy proprietary libraries to the directory of recipes.
+        2. Please set local.conf the following.
+
+                DISTRO_FEATURES_append = " iccom"
 END.
