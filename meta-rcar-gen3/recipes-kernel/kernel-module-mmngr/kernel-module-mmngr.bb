@@ -26,36 +26,29 @@ do_compile() {
 }
 
 do_install () {
-    # Create destination folders
+    # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${D}/usr/src/kernel/include
+    install -d ${KERNELSRC}/include
 
-    # Copy shared library for reference from other modules
+    # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${S}/${MMNGR_DRV_DIR}/drv/Module.symvers ${KERNELSRC}/include/mmngr.symvers
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/drv/Module.symvers ${D}/usr/src/kernel/include/mmngr.symvers
 
-    # Copy kernel module
+    # Install kernel module
     install -m 644 ${S}/${MMNGR_DRV_DIR}/drv/mmngr.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
-    # Copy shared header files
-    install -m 644 ${KERNELSRC}/include/mmngr_public.h ${D}/usr/src/kernel/include
-    install -m 644 ${KERNELSRC}/include/mmngr_private.h ${D}/usr/src/kernel/include
+    # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
+    # This file installed in SDK by kernel-devsrc pkg.
+    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_public.h ${KERNELSRC}/include/
+    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_private.h ${KERNELSRC}/include/
 }
 
 PACKAGES = "\
     ${PN} \
-    ${PN}-dev \
 "
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/mmngr.ko \
 "
 
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include/mmngr.symvers \
-    /usr/src/kernel/include/*.h \
-"
-
 RPROVIDES_${PN} += "kernel-module-mmngr"
-
-do_configure[noexec] = "1"

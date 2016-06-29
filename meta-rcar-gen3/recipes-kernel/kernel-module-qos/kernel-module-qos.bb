@@ -23,36 +23,27 @@ SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
 S = "${WORKDIR}/git"
 QOS_DRV_DIR = "qos-module/files/qos/drv"
 
-# do_configure() nothing
-do_configure[noexec] = "1"
-
 do_compile() {
     cd ${S}/${QOS_DRV_DIR}/
     oe_runmake
 }
 
 do_install () {
-    # Create destination directories
+    # Create destination directory
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${D}/usr/src/kernel/include
 
-    # Copy shared library for reference from other modules
+    # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${S}/${QOS_DRV_DIR}/Module.symvers ${KERNELSRC}/include/qos.symvers
-    install -m 644 ${S}/${QOS_DRV_DIR}/Module.symvers ${D}/usr/src/kernel/include/qos.symvers
 
-    # Copy kernel module
+    # Install kernel module
     install -m 644 ${S}/${QOS_DRV_DIR}/qos.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 }
 
 PACKAGES = " \
     ${PN} \
-    ${PN}-dev \
 "
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/qos.ko \
-"
-
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include/qos.symvers \
 "

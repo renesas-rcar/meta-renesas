@@ -23,13 +23,8 @@ S = "${WORKDIR}/git"
 do_install_append () {
     # Create destination directories
     install -d ${KERNELSRC}/include
-    install -d ${D}/usr/src/kernel/include
 
-    # Copy shared header files and export SDK
+    # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR).
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${S}/ravb_eavb.h ${KERNELSRC}/include
-    install -m 644 ${S}/ravb_eavb.h ${D}/usr/src/kernel/include
 }
-
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include/*.h \
-"

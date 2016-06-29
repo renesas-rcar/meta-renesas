@@ -31,22 +31,24 @@ do_compile() {
 }
 
 do_install () {
-    # Create destination folders
-    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${D}/usr/src/kernel/include
+    # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
     install -d ${D}/usr/local/include
+    install -d ${KERNELSRC}/include
 
-    # Copy shared library for reference from other modules
+    # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${S}/${VSPMIF_DRV_DIR}/drv/Module.symvers ${KERNELSRC}/include/vspm_if.symvers
-    install -m 644 ${S}/${VSPMIF_DRV_DIR}/drv/Module.symvers ${D}/usr/src/kernel/include/vspm_if.symvers
 
-    # Copy kernel module
+    # Install kernel module
     install -m 644 ${S}/${VSPMIF_DRV_DIR}/drv/vspm_if.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
-    # copy shared header files
-    install -m 644 ${KERNELSRC}/include/vspm_if.h ${D}/usr/src/kernel/include
-    install -m 644 ${KERNELSRC}/include/vspm_if.h ${D}/usr/local/include
+    # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
+    # This file installed in SDK by kernel-devsrc pkg.
+    install -m 644 ${S}/${VSPMIF_DRV_DIR}/include/vspm_if.h ${KERNELSRC}/include/
+
+    # Install shared header file
+    install -m 644 ${S}/${VSPMIF_DRV_DIR}/include/vspm_if.h ${D}/usr/local/include/
 }
 
 PACKAGES = "\
@@ -58,11 +60,7 @@ FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vspm_if.ko \
 "
 FILES_${PN}-dev = " \
-    /usr/src/kernel/include/vspm_if.symvers \
-    /usr/src/kernel/include/*.h \
     /usr/local/include/*.h \
 "
 
 RPROVIDES_${PN} += "kernel-module-vspmif kernel-module-vspm-if"
-
-do_configure[noexec] = "1"

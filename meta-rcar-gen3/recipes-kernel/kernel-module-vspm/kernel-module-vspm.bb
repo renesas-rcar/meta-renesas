@@ -29,40 +29,33 @@ do_compile() {
 }
 
 do_install () {
-    # Create destination folders
+    # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${D}/usr/src/kernel/include
+    install -d ${KERNELSRC}/include
 
-    # Copy shared library for reference from other modules
+    # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${S}/${VSPM_DRV_DIR}/drv/Module.symvers ${KERNELSRC}/include/vspm.symvers
-    install -m 644 ${S}/${VSPM_DRV_DIR}/drv/Module.symvers ${D}/usr/src/kernel/include/vspm.symvers
 
-    # Copy kernel module
+    # Install kernel module
     install -m 644 ${S}/${VSPM_DRV_DIR}/drv/vspm.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
-    # copy shared header files
-    install -m 644 ${KERNELSRC}/include/vspm_public.h ${D}/usr/src/kernel/include
-    install -m 644 ${KERNELSRC}/include/vsp_drv.h ${D}/usr/src/kernel/include
-    install -m 644 ${KERNELSRC}/include/fdp_drv.h ${D}/usr/src/kernel/include
+    # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
+    # This file installed in SDK by kernel-devsrc pkg.
+    install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_public.h ${KERNELSRC}/include/
+    install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${KERNELSRC}/include/
+    install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${KERNELSRC}/include/
 }
 
 PACKAGES = " \
     ${PN} \
-    ${PN}-dev \
 "
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vspm.ko \
 "
 
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include/vspm.symvers \
-    /usr/src/kernel/include/*.h \
-"
-
 RPROVIDES_${PN} += "kernel-module-vspm"
-
-do_configure[noexec] = "1"
 
 # Autoload VSPM
 KERNEL_MODULE_AUTOLOAD = "vspm"

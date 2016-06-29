@@ -29,37 +29,31 @@ do_compile() {
 }
 
 do_install () {
-    # Create destination folders
-    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include
+    # Create destination directories
+    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -d ${KERNELSRC}/include
 
-    # Copy shared library for reference from other modules
+    # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${S}/vsp2driver/Module.symvers ${KERNELSRC}/include/vsp2.symvers
-    install -m 644 ${S}/vsp2driver/Module.symvers ${D}/usr/src/kernel/include/vsp2.symvers
 
     # Copy kernel module
     install -m 644 ${S}/vsp2driver/vsp2.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
-    # copy shared header files
-    install -m 644 ${S}/vsp2driver/linux/vsp2.h ${D}/usr/src/kernel/include
+    # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
+    # This file installed in SDK by kernel-devsrc pkg.
+    install -m 644 ${S}/vsp2driver/linux/vsp2.h ${KERNELSRC}/include/
 }
 
 PACKAGES = "\
     ${PN} \
-    ${PN}-dev \
 "
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
 "
 
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include/vsp2.symvers \
-    /usr/src/kernel/include/*.h \
-"
-
 RPROVIDES_${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
-
-do_configure[noexec] = "1"
 
 # Autoload VSP2Driver
 KERNEL_MODULE_AUTOLOAD = "vsp2"

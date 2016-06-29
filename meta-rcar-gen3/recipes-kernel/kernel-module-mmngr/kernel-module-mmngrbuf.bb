@@ -15,32 +15,28 @@ do_compile() {
 }
 
 do_install () {
-    # Create destination folders
+    # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${D}/usr/src/kernel/include
+    install -d ${KERNELSRC}/include
 
-    # Copy shared library for reference from other modules
+    # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/drv/Module.symvers ${KERNELSRC}/include/mmngrbuf.symvers
-    install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/drv/Module.symvers ${D}/usr/src/kernel/include/mmngrbuf.symvers
 
-    # Copy kernel module
+    # Install kernel module
     install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/drv/mmngrbuf.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+
+    # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
+    # This file installed in SDK by kernel-devsrc pkg.
+    install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/include/mmngr_buf_private.h ${KERNELSRC}/include/
 }
 
 PACKAGES = "\
     ${PN} \
-    ${PN}-dev \
 "
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/mmngrbuf.ko \
 "
 
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include/mmngrbuf.symvers \
-    /usr/src/kernel/include/*.h \
-"
-
 RPROVIDES_${PN} += "kernel-module-mmngrbuf"
-
-do_configure[noexec] = "1"

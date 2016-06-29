@@ -22,6 +22,10 @@ S = "${WORKDIR}/git"
 
 LDFLAGS[unexport] = "1"
 
+do_configure[noexec] = "1"
+# We need to be staged before do_complie. This recipe does not execute do_configure.
+do_complile[depends] += "virtual/kernel:do_shared_workdir"
+
 do_compile() {
     # Build kernel module
     cd ${S}/
@@ -29,31 +33,34 @@ do_compile() {
 }
 
 do_install() {
-    # Create shared folder
+    # Create shared directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${D}/usr/src/kernel/include
-    install -d ${D}/usr/src/kernel/include/arm_common
-    install -d ${D}/usr/src/kernel/include/linux
+    install -d ${STAGING_KERNEL_DIR}/include
+    install -d ${STAGING_KERNEL_DIR}/include/arm_common
+    install -d ${STAGING_KERNEL_DIR}/include/linux
 
-    # Copy kernel module
+    # Install kernel module
     install -m 0644 ${S}/core/optee.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
     install -m 0644 ${S}/armtz/optee_armtz.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
-    # Copy shared header files
+
+    # Install shared library to STAGING_KERNEL_DIR for reference from other modules
+    # This file installed in SDK by kernel-devsrc pkg.
     install -m 0644 ${S}/Module.symvers ${STAGING_KERNEL_DIR}/include/optee.symvers
-    install -m 0644 ${S}/include/arm_common/optee_msg.h ${D}/usr/src/kernel/include/arm_common
-    install -m 0644 ${S}/include/arm_common/optee_smc.h ${D}/usr/src/kernel/include/arm_common
-    install -m 0644 ${S}/include/linux/tee_client_api.h ${D}/usr/src/kernel/include/linux
-    install -m 0644 ${S}/include/linux/tee_core.h ${D}/usr/src/kernel/include/linux
-    install -m 0644 ${S}/include/linux/tee_ioc.h ${D}/usr/src/kernel/include/linux
-    install -m 0644 ${S}/include/linux/tee_kernel_api.h ${D}/usr/src/kernel/include/linux
-    install -m 0644 ${S}/Module.symvers ${D}/usr/src/kernel/include/optee.symvers
+
+    # Install shared header files to STAGING_KERNEL_DIR
+    # This file installed in SDK by kernel-devsrc pkg.
+    install -m 0644 ${S}/include/arm_common/optee_msg.h ${STAGING_KERNEL_DIR}/include/arm_common/
+    install -m 0644 ${S}/include/arm_common/optee_smc.h ${STAGING_KERNEL_DIR}/include/arm_common/
+    install -m 0644 ${S}/include/linux/tee_client_api.h ${STAGING_KERNEL_DIR}/include/linux/
+    install -m 0644 ${S}/include/linux/tee_core.h ${STAGING_KERNEL_DIR}/include/linux/
+    install -m 0644 ${S}/include/linux/tee_ioc.h ${STAGING_KERNEL_DIR}/include/linux/
+    install -m 0644 ${S}/include/linux/tee_kernel_api.h ${STAGING_KERNEL_DIR}/include/linux/
 }
 
 PACKAGES = "\
     ${PN} \
     ${PN}-armtz \
-    ${PN}-dev \
 "
 
 FILES_${PN} = " \
@@ -64,17 +71,6 @@ FILES_${PN}-armtz = " \
     /lib/modules/${KERNEL_VERSION}/extra/optee_armtz.ko \
 "
 
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include \
-    /usr/src/kernel/include/arm_common \
-    /usr/src/kernel/include/arm_common/*.h \
-    /usr/src/kernel/include/linux \
-    /usr/src/kernel/include/linux/*.h \
-    /usr/src/kernel/include/optee.symvers  \
-"
-
 RPROVIDES_${PN} += "optee-linuxdriver"
 RPROVIDES_${PN} += "kernel-module-optee"
 RPROVIDES_${PN} += "kernel-module-optee-armtz"
-
-do_configure[noexec] = "1"
