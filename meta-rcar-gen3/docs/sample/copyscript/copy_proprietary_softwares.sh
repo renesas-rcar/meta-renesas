@@ -98,6 +98,16 @@ _adsp_list="adsp_fw,RCG3AHFWN0101ZDP,RCG3AHFWN0101ZDP.tar.gz \
 _gfx_list="RTM0RC7795GLTG0001SL40C,r8a7795_linux_gsx_binaries_gles3.tar.bz2,RCH3G001L4001ZDO,GSX_KM_H3.tar.bz2 \
            RTM0RC7796GLTG0001SL40C,r8a7796_linux_gsx_binaries_gles3.tar.bz2,RCM3G001L4001ZDO,GSX_KM_M3.tar.bz2"
 
+# ICCOM
+# Please add ICCOM to "_iccom_list"
+# Don't use space in xxx_name.
+# iccom_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
+#             <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
+#             <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
+_iccom_list="iccom_mfis,RCG3ZLIDL4001ZNO,iccom-mfis.tar.bz2,RCG3ZLIDL4001ZNO1 \
+             iccom_sample,RCG3ZLIDL4001ZNO,iccom-hwspinlock-sample.tar.bz2,RCG3ZLIDL4001ZNO2 \
+             iccom_lib,RCG3ZLILL4001ZNO,libiccom.tar.bz2,RCG3ZLILL4001ZNO"
+
 # Crypto Packgae list
 # Please add crypto (zip) package name to "_crypto_pkg_list"
 # Don't use space in xxx_name.
@@ -118,6 +128,8 @@ _DVD_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dvd-module/dvd-user-modul
 _CMS_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/cms-module/cms-user-module"
 _ADSP_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-adsp/xtensa-hifi"
 _ADSP_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/adsp-module/files"
+_ICCOM_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-iccom/files"
+_ICCOM_UM_INST_DIR="../meta-rcar-gen3/recipes-connectivity/iccom-module/files"
 
 ##### common function
 
@@ -1079,6 +1091,75 @@ func_adsp()
     echo /=======================================================/
 }
 
+# For ICCOM main routine
+func_iccom()
+{
+    echo ""
+    echo "Copying for ICCOM Packages"
+
+    # file check only
+    for i in ${_iccom_list}
+    do
+        sw_name=`echo $i | cut -d "," -f 1`
+        pkg_name=`echo $i | cut -d "," -f 2`
+        copyfile_name=`echo $i | cut -d "," -f 3`
+        md5_name=`echo $i | cut -d "," -f 4`
+        md5_val=`eval echo '$_MD5_'${md5_name}`
+        if [ -n "${_debug}" ]; then
+            echo ""
+            echo "sw_name         = $sw_name"
+            echo "pkg_name        = $pkg_name"
+            echo "copyfile_name   = $copyfile_name"
+            echo "md5_val         = $md5_val"
+        fi
+
+        func_search_and_md5check "${pkg_name}" "${copyfile_name}" "${md5_val}" "${_src_full}"
+        if [ -z "${_find_filename}" ]; then
+            echo "${sw_name} not found!"
+            echo "Skip ICCOM Package"
+            echo ""
+            return
+        fi
+    done
+
+    # file check and install
+    for i in ${_iccom_list}
+    do
+        sw_name=`echo $i | cut -d "," -f 1`
+        pkg_name=`echo $i | cut -d "," -f 2`
+        copyfile_name=`echo $i | cut -d "," -f 3`
+        md5_name=`echo $i | cut -d "," -f 4`
+        md5_val=`eval echo '$_MD5_'${md5_name}`
+        if [ -n "${_debug}" ]; then
+            echo ""
+            echo "sw_name         = $sw_name"
+            echo "pkg_name        = $pkg_name"
+            echo "copyfile_name   = $copyfile_name"
+            echo "md5_val         = $md5_val"
+        fi
+
+        func_search_and_md5check "${pkg_name}" "${copyfile_name}" "${md5_val}" "${_src_full}"
+        if [ -z "${_find_filename}" ]; then
+            echo "${sw_name} not found!"
+        else
+            # install searched library
+            file_top_dir=${_extract_top_dir_name}
+            install -d ${_ICCOM_KM_INST_DIR}
+            install -d ${_ICCOM_UM_INST_DIR}
+            if [ "${sw_name}" = "iccom_lib" ]; then
+                install -m 644 ${file_top_dir}/${pkg_name}/Software/${copyfile_name} ${_ICCOM_UM_INST_DIR}
+            else
+                install -m 644 ${file_top_dir}/${pkg_name}/Software/${copyfile_name} ${_ICCOM_KM_INST_DIR}
+            fi
+            echo "Installed ${sw_name}"
+            echo "                : ${pkg_name}"
+        fi
+    done
+
+    echo ""
+    echo "Packages for ICCOM were found and copied."
+    echo /=======================================================/
+}
 
 ################################
 # Copy Script Main routine
@@ -1155,6 +1236,7 @@ func_video_encoder
 func_dtv_dvd
 func_cms
 func_adsp
+func_iccom
 
 ##### 5) cleanup temp directory
 func_clean_tempdir
