@@ -1,0 +1,25 @@
+From 6f800a1eb8bb032b0db4b922de3c665e3ef1fc31 Mon Sep 17 00:00:00 2001
+From: Frederico Cadete <frederico.cadete@awtce.be>
+Date: Tue, 5 Jul 2016 16:37:27 +0200
+Subject: [PATCH] Do not copy header files to builddir
+
+Signed-off-by: Frederico Cadete <frederico.cadete@awtce.be>
+---
+ qos_if-module/files/qos_if/if/Makefile | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/qos_if-module/files/qos_if/if/Makefile b/qos_if-module/files/qos_if/if/Makefile
+index 7fd88ce..67e1ac3 100644
+--- a/qos_if-module/files/qos_if/if/Makefile
++++ b/qos_if-module/files/qos_if/if/Makefile
+@@ -1,6 +1,5 @@
+ all:
+-	$(CP) ../include/qos_public.h $(BUILDDIR)/include/
+-	${CC} -fPIC -c qos_lib.c -I$(BUILDDIR)/include -Wall
++	${CC} -fPIC -c qos_lib.c -I../include -Wall
+ 	${CC} -shared -Wl,-soname=libqos.so.1 -o libqos.so.1.0.0 qos_lib.o
+ 	ln -s ./libqos.so.1.0.0 libqos.so.1
+ 	ln -s ./libqos.so.1 libqos.so
+-- 
+2.5.0
+
