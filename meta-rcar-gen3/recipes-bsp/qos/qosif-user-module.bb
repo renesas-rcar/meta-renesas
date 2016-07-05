@@ -11,6 +11,10 @@ QOSIF_LIB_DIR = "qos_if-module/files/qos_if/if"
 
 EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
+SRC_URI += "file://0001-Do-not-copy-header-files-to-builddir.patch"
+
+includedir="/usr/local/include"
+
 # do_configure() nothing
 do_configure[noexec] = "1"
 
@@ -33,27 +37,6 @@ do_install() {
     ln -sf libqos.so.1 libqos.so
 
     # Copy shared header files
-    install -m 644 ${BUILDDIR}/include/qos_public.h ${D}/usr/local/include
+    install -m 644 ${S}/qos_if-module/files/qos_if/include/qos_public.h ${D}/usr/local/include
 }
 
-PACKAGES = " \
-    ${PN} \
-    ${PN}-dev \
-    ${PN}-dbg \
-"
-
-FILES_${PN} = " \
-    ${libdir}/libqos.so* \
-"
-
-FILES_${PN}-dev = " \
-    /usr/local/include \
-    /usr/local/include/*.h \
-    ${libdir}/libqos.so* \
-"
-
-FILES_${PN}-dbg = " \
-    ${libdir}/.debug/* \
-"
-
-INSANE_SKIP_${PN} = "dev-so"
