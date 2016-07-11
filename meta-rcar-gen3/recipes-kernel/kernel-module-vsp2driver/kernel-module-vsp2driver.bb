@@ -3,7 +3,7 @@ DESCRIPTION = "VSP2Driver for the R-Car Gen3"
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
-    file://MIT-COPYING;md5=0ebf15a927e436cec699371cd890775c \
+    file://MIT-COPYING;md5=192063521ce782a445a3c9f99a8ad560 \
 "
 
 require include/rcar-gen3-modules-common.inc
@@ -17,7 +17,7 @@ PR = "r0"
 VSP2DRIVER_URL = " \
     git://github.com/renesas-rcar/vsp2driver.git"
 BRANCH = "rcar-gen3"
-SRCREV = "8884c714ef3da6d5cd333ccc99b06056146e4860"
+SRCREV = "60e8d21d6d34f0c2cc96587274000ac6a0f3e728"
 
 SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH}"
 
