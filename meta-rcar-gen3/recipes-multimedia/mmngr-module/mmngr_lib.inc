@@ -1,12 +1,12 @@
 # Common path of MMNGR and MMNGRBUF module
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "\
-    file://${WORKDIR}/git/MIT-COPYING;md5=0ebf15a927e436cec699371cd890775c"
+    file://${WORKDIR}/git/COPYING.MIT;md5=30a99e0d36a3da1f5cf93c070ad7888a"
 
 MMNGR_LIB_URI = "git://github.com/renesas-rcar/mmngr_lib.git"
 
 SRC_URI = "${MMNGR_LIB_URI};branch=rcar_gen3"
-SRCREV = "ab61815df4283e6073ee27661b6686b73ce9e182"
+SRCREV = "848d79f5089883ac54dbbebd0fa9f13430801cbf"
 
 # Get Wordsize of test app and change their names later to avoid override
 WS_aarch64 = ""
