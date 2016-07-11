@@ -1,13 +1,13 @@
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = " \
-    file://MIT-COPYING;md5=0ebf15a927e436cec699371cd890775c \
+    file://COPYING.MIT;md5=30a99e0d36a3da1f5cf93c070ad7888a \
 "
 
 require include/rcar-gen3-modules-common.inc
 
 VSPMIF_LIB_URL = "git://github.com/renesas-rcar/vspmif_lib.git"
 BRANCH = "rcar_gen3"
-SRCREV = "3be8246f1b8e6804c9f9a69f57e3cd4a5e8c7446"
+SRCREV = "0918b85b3784d63ecd1e1bf68441171d100e8b72"
 
 SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH}"
 

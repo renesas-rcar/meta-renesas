@@ -61,5 +61,3 @@ FILES_${PN}-dbg = " \
 RPROVIDES_${PN} += "vspmif-user-module"
 INSANE_SKIP_${PN} += "libdir"
 INSANE_SKIP_${PN}-dev += "libdir"
-
-do_configure[noexec] = "1"
