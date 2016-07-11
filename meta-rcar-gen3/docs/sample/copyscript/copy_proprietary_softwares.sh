@@ -27,7 +27,11 @@ EOF
 _audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL40C,RTM0AC0000XAAACD30SL40C.tar.gz \
              aacPlusV2_decoder_lib,RTM0AC0000XAAAPD30SL40C,RTM0AC0000XAAAPD30SL40C.tar.gz \
              MP3_decoder_lib,RTM0AC0000XAMP3D30SL40C,RTM0AC0000XAMP3D30SL40C.tar.gz \
-             WMA_decoder_lib,RTM0AC0000XAWMAD30SL40C,RTM0AC0000XAWMAD30SL40C.tar.gz"
+             WMA_decoder_lib,RTM0AC0000XAWMAD30SL40C,RTM0AC0000XAWMAD30SL40C.tar.gz \
+             AAC-LC_encoder_lib,RTM0AC0000XAAACE30SL40C,RTM0AC0000XAAACE30SL40C.tar.gz \
+             ALAC_decoder_lib,RTM0AC0000XAALAD30SL40C,RTM0AC0000XAALAD30SL40C.tar.gz \
+             FLAC_decoder_lib,RTM0AC0000XAFLAD30SL40C,RTM0AC0000XAFLAD30SL40C.tar.gz \
+             Dolby_decoder_lib,RTM0AC0000XADD5D30SL40C,RTM0AC0000XADD5D30SL40C.tar.gz"
 
 # Audio M/W Library
 # Please add omx audio library to "_audio_mw_list"
@@ -38,7 +42,9 @@ _audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL40C,RTM0AC0000XAAACD30SL40C.
 _audio_mw_list="AAC-LC_decoder_M/W,RTM0AC0000ADAACMZ1SL40C,RTM0AC0000ADAACMZ1SL40C.tar.gz \
                 aacPlusV2_decoder_M/W,RTM0AC0000ADAAPMZ1SL40C,RTM0AC0000ADAAPMZ1SL40C.tar.gz \
                 MP3_decoder_M/W,RTM0AC0000ADMP3MZ1SL40C,RTM0AC0000ADMP3MZ1SL40C.tar.gz \
-                WMA_decoder_M/W,RTM0AC0000ADWMAMZ1SL40C,RTM0AC0000ADWMAMZ1SL40C.tar.gz"
+                WMA_decoder_M/W,RTM0AC0000ADWMAMZ1SL40C,RTM0AC0000ADWMAMZ1SL40C.tar.gz \
+                AAC-LC_encoder_M/W,RTM0AC0000AEAACMZ1SL40C,RTM0AC0000AEAACMZ1SL40C.tar.gz \
+                DDD_decoder_M/W,RTM0AC0000ADDD5MZ1SL40C,RTM0AC0000ADDD5MZ1SL40C.tar.gz"
 
 # Video Decoder Library
 # Please add omx video decoder library to "_video_dec_list"
@@ -50,7 +56,9 @@ _video_dec_list="H264_decoder,RTM0AC0000XV264D30SL40C,RTM0AC0000XV264D30SL40C.ta
                  H265_decoder,RTM0AC0000XV265D30SL40C,RTM0AC0000XV265D30SL40C.tar.bz2 \
                  MPEG2_decoder,RTM0AC0000XVM2VD30SL40C,RTM0AC0000XVM2VD30SL40C.tar.bz2 \
                  MPEG4_decoder,RTM0AC0000XVM4VD30SL40C,RTM0AC0000XVM4VD30SL40C.tar.bz2 \
-                 VC1_decoder,RTM0AC0000XVVC1D30SL40C,RTM0AC0000XVVC1D30SL40C.tar.bz2"
+                 VC1_decoder,RTM0AC0000XVVC1D30SL40C,RTM0AC0000XVVC1D30SL40C.tar.bz2 \
+                 DivX_decoder,RTM0AC0000XVDVXD30SL40C,RTM0AC0000XVDVXD30SL40C.tar.bz2 \
+                 RealVideo_decoder,RTM0AC0000XVRLVD30SL40C,RTM0AC0000XVRLVD30SL40C.tar.bz2"
 
 # Video Encoder Library
 # Please add omx video encoder library to "_video_enc_list"
@@ -90,9 +98,16 @@ _adsp_list="adsp_fw,RCG3AHFWN0101ZDP,RCG3AHFWN0101ZDP.tar.gz \
 _gfx_list="RTM0RC7795GLTG0001SL40C,r8a7795_linux_gsx_binaries_gles3.tar.bz2,RCH3G001L4001ZDO,GSX_KM_H3.tar.bz2 \
            RTM0RC7796GLTG0001SL40C,r8a7796_linux_gsx_binaries_gles3.tar.bz2,RCM3G001L4001ZDO,GSX_KM_M3.tar.bz2"
 
+# Crypto Packgae list
+# Please add crypto (zip) package name to "_crypto_pkg_list"
+# Don't use space in xxx_name.
+# crypto_pkg_list="<packgae name> <packgae name> <packgae name>"
+_crypto_pkg_list="RTM0AC0000ADDD5MZ1SL40C"
+
 ##### static value
 _MODE_ZIP=1
 _MODE_TAR=2
+_MODE_CRYPTO_ZIP=3
 _GFX_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-gles/kernel-module-gles"
 _GFX_UM_INST_DIR="../meta-rcar-gen3/recipes-graphics/gles-module/gles-user-module"
 _UVCS_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-uvcs/kernel-module-uvcs"
@@ -140,6 +155,15 @@ func_cmn_find_file()
         func_error "ERROR: $1: too many files"
     fi
 
+    crypto_zip_count=0
+    for i in ${_crypto_pkg_list}
+    do
+        if [ $1 = $i ]; then
+            crypto_zip_count=$zip_count
+            zip_count=0
+        fi
+    done
+
     # set result
     if [ 1 = $zip_count ]; then
         _find_filename=$(ls ${_search_dir}/$1*.zip)
@@ -147,6 +171,9 @@ func_cmn_find_file()
     elif [ 1 = $tar_count ]; then
         _find_filename=$(ls ${_search_dir}/$1*.tar.*)
         _extract_mode=${_MODE_TAR}
+    elif [ 1 = $crypto_zip_count ]; then
+        _find_filename=$(ls ${_search_dir}/$1*.zip)
+        _extract_mode=${_MODE_CRYPTO_ZIP}
     else
         _find_filename=""
     fi
@@ -164,6 +191,18 @@ func_cmn_extract_archive()
         $_MODE_TAR)
 #           echo "Tar mode"
             tar xf $2
+            ;;
+        $_MODE_CRYPTO_ZIP)
+#           echo "Crypto Zip mode"
+            unzip -oq $2
+            top_dir=$(basename $2)
+            top_dir=${top_dir%.*}
+            cd ${top_dir}
+            unzip -oq *.zip
+            if [ $? -gt 0 ]; then
+                func_error "ERROR: FAILED ZIP PASSWORD"
+            fi
+            cd ${TMPWORK}
             ;;
         *)
             func_error "ERROR: func_cmn_extract_archive: mode error."
