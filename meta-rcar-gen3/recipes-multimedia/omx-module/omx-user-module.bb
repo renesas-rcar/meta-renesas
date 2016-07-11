@@ -29,15 +29,23 @@ SRC_URI_H265D = '${@base_conditional("USE_H265D_OMX", "1", "file://RTM0AC0000XV2
 SRC_URI_MPEG2D = '${@base_conditional("USE_MPEG2D_OMX", "1", "file://RTM0AC0000XVM2VD30SL40C.tar.bz2", "", d )}'
 SRC_URI_MPEG4D = '${@base_conditional("USE_MPEG4D_OMX", "1", "file://RTM0AC0000XVM4VD30SL40C.tar.bz2", "", d )}'
 SRC_URI_VC1D = '${@base_conditional("USE_VC1D_OMX", "1", "file://RTM0AC0000XVVC1D30SL40C.tar.bz2", "", d )}'
+SRC_URI_DIVXD = '${@base_conditional("USE_DIVXD_OMX", "1", "file://RTM0AC0000XVDVXD30SL40C.tar.bz2", "", d )}'
+SRC_URI_RVD = '${@base_conditional("USE_RVD_OMX", "1", "file://RTM0AC0000XVRLVD30SL40C.tar.bz2", "", d )}'
 SRC_URI_ACMND = '${@base_conditional("USE_AUDIO_OMX", "1", "file://RTM0AC0000XACMND30SL40C.tar.gz", "", d )}'
 SRC_URI_AACLC = '${@base_conditional("USE_AACLCD_OMX", "1", "file://RTM0AC0000XAAACD30SL40C.tar.gz", "", d )}'
 SRC_URI_AACPV2 = '${@base_conditional("USE_AACPV2D_OMX", "1", "file://RTM0AC0000XAAAPD30SL40C.tar.gz", "", d )}'
 SRC_URI_MP3 = '${@base_conditional("USE_MP3D_OMX", "1", "file://RTM0AC0000XAMP3D30SL40C.tar.gz", "", d )}'
+SRC_URI_AACLCE = '${@base_conditional("USE_AACLCE_OMX", "1", "file://RTM0AC0000XAAACE30SL40C.tar.gz", "", d )}'
 SRC_URI_WMA = '${@base_conditional("USE_WMAD_OMX", "1", "file://RTM0AC0000XAWMAD30SL40C.tar.gz", "", d )}'
+SRC_URI_ALACD = '${@base_conditional("USE_ALACD_OMX", "1", "file://RTM0AC0000XAALAD30SL40C.tar.gz", "", d )}'
+SRC_URI_FLACD = '${@base_conditional("USE_FLACD_OMX", "1", "file://RTM0AC0000XAFLAD30SL40C.tar.gz", "", d )}'
+SRC_URI_DDD = '${@base_conditional("USE_DDD_OMX", "1", "file://RTM0AC0000XADD5D30SL40C.tar.gz", "", d )}'
 SRC_URI_AACMZ = '${@base_conditional("USE_AACLC_MDW", "1", "file://RTM0AC0000ADAACMZ1SL40C.tar.gz", "", d )}'
 SRC_URI_AACPV2MZ = '${@base_conditional("USE_AACPV2_MDW", "1", "file://RTM0AC0000ADAAPMZ1SL40C.tar.gz", "", d )}'
 SRC_URI_MP3MZ = '${@base_conditional("USE_MP3_MDW", "1", "file://RTM0AC0000ADMP3MZ1SL40C.tar.gz", "", d )}'
 SRC_URI_WMAMZ = '${@base_conditional("USE_WMA_MDW", "1", "file://RTM0AC0000ADWMAMZ1SL40C.tar.gz", "", d )}'
+SRC_URI_DDMZ = '${@base_conditional("USE_DD_MDW", "1", "file://RTM0AC0000ADDD5MZ1SL40C.tar.gz", "", d )}'
+SRC_URI_AEAACMZ = '${@base_conditional("USE_AACLCE_MDW", "1", "file://RTM0AC0000AEAACMZ1SL40C.tar.gz", "", d )}'
 
 SRC_URI = " \
     ${SRC_URI_OMX} \
@@ -49,15 +57,23 @@ SRC_URI = " \
     ${SRC_URI_MPEG2D} \
     ${SRC_URI_MPEG4D} \
     ${SRC_URI_VC1D} \
+    ${SRC_URI_DIVXD} \
+    ${SRC_URI_RVD} \
     ${SRC_URI_ACMND} \
     ${SRC_URI_AACLC} \
     ${SRC_URI_AACPV2} \
     ${SRC_URI_MP3} \
     ${SRC_URI_WMA} \
+    ${SRC_URI_ALACD} \
+    ${SRC_URI_FLACD} \
+    ${SRC_URI_DDD} \
+    ${SRC_URI_AACLCE} \
     ${SRC_URI_AACMZ} \
     ${SRC_URI_AACPV2MZ} \
     ${SRC_URI_MP3MZ} \
     ${SRC_URI_WMAMZ} \
+    ${SRC_URI_DDMZ} \
+    ${SRC_URI_AEAACMZ} \
 "
 
 # SRC directory name
@@ -71,6 +87,8 @@ OMX_H265_DEC_SRC = '${@base_conditional("USE_H265D_OMX", "1", "RTM0AC0000XV265D3
 OMX_MPEG2_DEC_SRC = '${@base_conditional("USE_MPEG2D_OMX", "1", "RTM0AC0000XVM2VD30SL40C", "", d )}'
 OMX_MPEG4_DEC_SRC = '${@base_conditional("USE_MPEG4D_OMX", "1", "RTM0AC0000XVM4VD30SL40C", "", d )}'
 OMX_VC1_DEC_SRC = '${@base_conditional("USE_VC1D_OMX", "1", "RTM0AC0000XVVC1D30SL40C", "", d )}'
+OMX_DIVX_DEC_SRC = '${@base_conditional("USE_DIVXD_OMX", "1", "RTM0AC0000XVDVXD30SL40C", "", d )}'
+OMX_RV_DEC_SRC = '${@base_conditional("USE_RVD_OMX", "1", "RTM0AC0000XVRLVD30SL40C", "", d )}'
 
 OMX_VIDEO_SRC_LIST = " \
     ${OMX_COMMON_SRC} \
@@ -82,18 +100,26 @@ OMX_VIDEO_SRC_LIST = " \
     ${OMX_MPEG2_DEC_SRC} \
     ${OMX_MPEG4_DEC_SRC} \
     ${OMX_VC1_DEC_SRC} \
+    ${OMX_DIVX_DEC_SRC} \
+    ${OMX_RV_DEC_SRC} \
 "
 
 AAC_MIDDLEWARE_SRC = "RTM0AC0000ADAACMZ1SL40C"
 AACPV2_MIDDLEWARE_SRC = "RTM0AC0000ADAAPMZ1SL40C"
 MP3_MIDDLEWARE_SRC = "RTM0AC0000ADMP3MZ1SL40C"
 WMA_MIDDLEWARE_SRC = "RTM0AC0000ADWMAMZ1SL40C"
+DD_MIDDLEWARE_SRC = "RTM0AC0000ADDD5MZ1SL40C"
+AEAAC_MIDDLEWARE_SRC = "RTM0AC0000AEAACMZ1SL40C"
 
 OMX_AUDIO_COMMON_SRC = '${@base_conditional("USE_AUDIO_OMX", "1", "RTM0AC0000XACMND30SL40C", "", d )}'
 OMX_AACLC_DEC_SRC = '${@base_conditional("USE_AACLCD_OMX", "1", "RTM0AC0000XAAACD30SL40C", "", d )}'
 OMX_AACPV2_DEC_SRC = '${@base_conditional("USE_AACPV2D_OMX", "1", "RTM0AC0000XAAAPD30SL40C", "", d )}'
 OMX_MP3_DEC_SRC = '${@base_conditional("USE_MP3D_OMX", "1", "RTM0AC0000XAMP3D30SL40C", "", d )}'
 OMX_WMA_DEC_SRC = '${@base_conditional("USE_WMAD_OMX", "1", "RTM0AC0000XAWMAD30SL40C", "", d )}'
+OMX_ALAC_DEC_SRC = '${@base_conditional("USE_ALACD_OMX", "1", "RTM0AC0000XAALAD30SL40C", "", d )}'
+OMX_FLAC_DEC_SRC = '${@base_conditional("USE_FLACD_OMX", "1", "RTM0AC0000XAFLAD30SL40C", "", d )}'
+OMX_DD_DEC_SRC = '${@base_conditional("USE_DDD_OMX", "1", "RTM0AC0000XADD5D30SL40C", "", d )}'
+OMX_AACLC_ENC_SRC = '${@base_conditional("USE_AACLCE_OMX", "1", "RTM0AC0000XAAACE30SL40C", "", d )}'
 
 OMX_AUDIO_SRC_LIST = " \
     ${OMX_AUDIO_COMMON_SRC} \
@@ -101,6 +127,10 @@ OMX_AUDIO_SRC_LIST = " \
     ${OMX_AACPV2_DEC_SRC} \
     ${OMX_MP3_DEC_SRC} \
     ${OMX_WMA_DEC_SRC} \
+    ${OMX_ALAC_DEC_SRC} \
+    ${OMX_FLAC_DEC_SRC} \
+    ${OMX_DD_DEC_SRC} \
+    ${OMX_AACLC_ENC_SRC} \
 "
 
 S = "${WORKDIR}/omx/"
@@ -219,6 +249,22 @@ do_install_omx_video() {
         ln -s libuvcs_vc1d.so.3.0.0 libuvcs_vc1d.so.3
         ln -s libuvcs_vc1d.so.3 libuvcs_vc1d.so
     fi
+
+    if [ "X${USE_DIVXD_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_divxd.so.3.0.0 libomxr_mc_divxd.so.3
+        ln -s libomxr_mc_divxd.so.3 libomxr_mc_divxd.so
+
+        ln -s libuvcs_dvxd.so.3.0.0 libuvcs_dvxd.so.3
+        ln -s libuvcs_dvxd.so.3 libuvcs_dvxd.so
+    fi
+
+    if [ "X${USE_RVD_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_rlvd.so.3.0.0 libomxr_mc_rlvd.so.3
+        ln -s libomxr_mc_rlvd.so.3 libomxr_mc_rlvd.so
+
+        ln -s libuvcs_rlvd.so.3.0.0 libuvcs_rlvd.so.3
+        ln -s libuvcs_rlvd.so.3 libuvcs_rlvd.so
+    fi
 }
 
 do_install_audio_middleware() {
@@ -259,6 +305,24 @@ do_install_audio_middleware() {
         ln -s libWMASTDLA_L.so.2.0 libWMASTDLA_L.so.2
         ln -s libWMASTDLA_L.so.2 libWMASTDLA_L.so
     fi
+
+    if [ "X${USE_DD_MDW}" = "X1" ]; then
+        install -m 755 ${WORKDIR}/${DD_MIDDLEWARE_SRC}/${baselib}/libRSDACDLA_L.so.2.0 \
+            ${D}/${libdir}
+        install -m 644 ${WORKDIR}/${DD_MIDDLEWARE_SRC}/include/*.h ${D}/${includedir}
+
+        ln -s libRSDACDLA_L.so.2.0 libRSDACDLA_L.so.2
+        ln -s libRSDACDLA_L.so.2 libRSDACDLA_L.so
+    fi
+
+    if [ "X${USE_AACLCE_MDW}" = "X1" ]; then
+        install -m 755 ${WORKDIR}/${AEAAC_MIDDLEWARE_SRC}/${baselib}/libRSAACELA_L.so.3.0 \
+            ${D}/${libdir}
+        install -m 644 ${WORKDIR}/${AEAAC_MIDDLEWARE_SRC}/include/*.h ${D}/${includedir}
+
+        ln -s libRSAACELA_L.so.3.0 libRSAACELA_L.so.3
+        ln -s libRSAACELA_L.so.3 libRSAACELA_L.so
+    fi
 }
 
 do_install_omx_audio() {
@@ -296,6 +360,26 @@ do_install_omx_audio() {
     if [ "X${USE_WMAD_OMX}" = "X1" ]; then
         ln -s libomxr_mc_wmad.so.3.0.0 libomxr_mc_wmad.so.3
         ln -s libomxr_mc_wmad.so.3 libomxr_mc_wmad.so
+    fi
+
+    if [ "X${USE_ALACD_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_alacd.so.3.0.0 libomxr_mc_alacd.so.3
+        ln -s libomxr_mc_alacd.so.3 libomxr_mc_alacd.so
+    fi
+
+    if [ "X${USE_FLACD_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_flacd.so.3.0.0 libomxr_mc_flacd.so.3
+        ln -s libomxr_mc_flacd.so.3 libomxr_mc_flacd.so
+    fi
+
+    if [ "X${USE_AACLCE_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_aace.so.3.0.0 libomxr_mc_aace.so.3
+        ln -s libomxr_mc_aace.so.3 libomxr_mc_aace.so
+    fi
+
+    if [ "X${USE_DDD_OMX}" = "X1" ]; then
+        ln -s libomxr_mc_ddd.so.3.0.0 libomxr_mc_ddd.so.3
+        ln -s libomxr_mc_ddd.so.3 libomxr_mc_ddd.so
     fi
 }
 
@@ -337,6 +421,8 @@ FILES_${PN}-dev = " \
 "
 
 RDEPENDS_${PN} += "mmngr-user-module vspmif-user-module"
+RDEPENDS_${PN} += '${@base_conditional("USE_ALACD_OMX", "1", "libalacdla-l", "", d )}'
+RDEPENDS_${PN} += '${@base_conditional("USE_FLACD_OMX", "1", "libflacdla-l", "", d )}'
 
 # Skip debug strip of do_populate_sysroot()
 INHIBIT_SYSROOT_STRIP = "1"

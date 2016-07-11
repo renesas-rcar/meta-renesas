@@ -24,6 +24,12 @@ USE_MPEG4D_OMX = "${@'1' if 'mpeg4dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 # USE_VC1D_OMX for OMX Media Component VC-1 Decoder Library
 USE_VC1D_OMX = "${@'1' if 'vc1dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
+# USE_DIVXD_OMX for OMX Media Component DivX Decoder Library
+USE_DIVXD_OMX = "${@'1' if 'divxdec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_RVD_OMX for OMX Media Component RealVideo Decoder Library
+USE_RVD_OMX = "${@'1' if 'rvdec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
 # USE_AACLCD_OMX for OMX Media Component AACLC OMX Library
 USE_AACLCD_OMX = "${@'1' if 'aaclcdec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
@@ -35,6 +41,18 @@ USE_MP3D_OMX = "${@'1' if 'mp3dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 # USE_WMAD_OMX for OMX Media Component WMA OMX Library
 USE_WMAD_OMX = "${@'1' if 'wmadec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_ALACD_OMX for OMX Media Component ALAC decoder Library
+USE_ALACD_OMX = "${@'1' if 'alacdec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_FLACD_OMX for OMX Media Component FLAC decoder Library
+USE_FLACD_OMX = "${@'1' if 'flacdec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_DDD_OMX for OMX Media Component Dolby(R) Digital decoder Library
+USE_DDD_OMX = "${@'1' if 'dddec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_AACLCE_OMX for OMX Media Component AAC-LC encoder Library
+USE_AACLCE_OMX = "${@'1' if 'aaclcenc_lib' in '${DISTRO_FEATURES}' else '0'}"
 
 # USE_AACLC_MDW for AACLC MDW Library
 USE_AACLC_MDW =  "${@'1' if 'aaclcdec_mdw' in '${DISTRO_FEATURES}' else '0'}"
@@ -48,6 +66,12 @@ USE_MP3_MDW =  "${@'1' if 'mp3dec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 # USE_WMA_MDW for WMA MDW Library
 USE_WMA_MDW =  "${@'1' if 'wmadec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 
+# USE_DD_MDW for Dolby(R) Digital MDW Library
+USE_DD_MDW =  "${@'1' if 'dddec_mdw' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_AACLCE_OMX for AAC-LC encoder middleware Library
+USE_AACLCE_MDW = "${@'1' if 'aaclcenc_mdw' in '${DISTRO_FEATURES}' else '0'}"
+
 # OMX Video Decoder Flag list
 LIST_OMX_VIDEO_DEC_FLAG = " \
     ${USE_H264D_OMX} \
@@ -55,6 +79,8 @@ LIST_OMX_VIDEO_DEC_FLAG = " \
     ${USE_MPEG2D_OMX} \
     ${USE_MPEG4D_OMX} \
     ${USE_VC1D_OMX} \
+    ${USE_DIVXD_OMX} \
+    ${USE_RVD_OMX} \
 "
 
 # OMX Video Encoder Flag list
@@ -68,6 +94,10 @@ LIST_OMX_AUDIO_FLAG = " \
     ${USE_AACPV2D_OMX} \
     ${USE_MP3D_OMX} \
     ${USE_WMAD_OMX} \
+    ${USE_AACLCE_OMX} \
+    ${USE_ALACD_OMX} \
+    ${USE_FLACD_OMX} \
+    ${USE_DDD_OMX} \
 "
 
 # USE_OMX_VIDEO_DEC for Video Decoder Common Libs

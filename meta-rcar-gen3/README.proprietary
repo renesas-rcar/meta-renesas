@@ -73,20 +73,28 @@ III/ Build with Renesas multimedia libraries
             1. Please copy proprietary libraries to the directory of recipes.
             2. Add features to DISTRO_FEATURES_append to local.conf
                 # Additional configuration in OMX module
-                " h264dec_lib"       - for OMX Media Component H264 Decoder Libraries
-                " h264enc_lib"       - for OMX Media Component H.264 Encoder Libraries
-                " h265dec_lib"       - for OMX Media Component H265 Decoder Libraries
-                " mpeg2dec_lib"      - for OMX Media Component MPEG2 Decoder Libraries
-                " mpeg4dec_lib"      - for OMX Media Component MPEG4 Decoder Libraries
-                " vc1dec_lib"        - for OMX Media Component VC-1 Decoder Libraries
-                " aaclcdec_lib"      - for ARM AAC-LC Decoder Sample Libraries for Linux
-                " aaclcdec_mdw"      - for ARM AAC-LC Decoder Sample Middleware for Linux
-                " aacpv2dec_lib"     - for aacplus V2 Decoder Libraries for Linux
-                " aacpv2dec_mdw"     - for aacplus V2 Decoder Middleware for Linux
-                " mp3dec_lib"        - for MP3 Decoder Libraries for Linux
+                " h264dec_lib"       - for OMX Media Component H264 Decoder Library
+                " h264enc_lib"       - for OMX Media Component H.264 Encoder Library
+                " h265dec_lib"       - for OMX Media Component H265 Decoder Library
+                " mpeg2dec_lib"      - for OMX Media Component MPEG2 Decoder Library
+                " mpeg4dec_lib"      - for OMX Media Component MPEG4 Decoder Library
+                " vc1dec_lib"        - for OMX Media Component VC-1 Decoder Library
+                " divxdec_lib"       - for OMX Media Component DivX Decoder Library
+                " rvdec_lib"         - for OMX Media Component RealVideo Decoder Library
+                " alacdec_lib"       - for OMX Media Component ALAC Decoder Library
+                " flacdec_lib"       - for OMX Media Component FLAC Decoder Library
+                " aaclcdec_lib"      - for OMX Media Component AAC-LC Decoder Library
+                " aaclcdec_mdw"      - for AAC-LC 2ch Decoder Middleware for Linux
+                " aacpv2dec_lib"     - for OMX Media Component aacPlus V2 Decoder Library
+                " aacpv2dec_mdw"     - for aacPlus V2 Decoder Middleware for Linux
+                " mp3dec_lib"        - for OMX Media Component MP3 Decoder Library
                 " mp3dec_mdw"        - for MP3 Decoder Middleware for Linux
-                " wmadec_lib"        - for WMA Decoder Libraries for Linux
-                " wmadec_mdw"        - for WMA Decoder Middleware for Linux
+                " wmadec_lib"        - for OMX Media Component WMA Standard Decoder Library
+                " wmadec_mdw"        - for WMA Standard Decoder Middleware for Linux
+                " dddec_lib"         - for OMX Media Component Dolby(R) Digital Decoder Library
+                " dddec_mdw"         - for Dolby(R) Digital Decoder Middleware for Linux
+                " aaclcenc_lib"      - for OMX Media Component AAC-LC Encoder Library
+                " aaclcenc_mdw"      - for AAC-LC Encoder Middleware for Linux
                 " cmsbcmv"           - for CMS VSP2 Basic Color Management Middleware for Linux
                 " cmsbcmc"           - for CMS CMM3 Basic Color Management Middleware for Linux
                 " cmsblc"            - for CMS CMM3 Backlight Control Middleware for Linux
