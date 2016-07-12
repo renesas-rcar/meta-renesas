@@ -20,6 +20,9 @@ SRC_URI = "file://tsif_drv.tar.gz"
 
 S = "${WORKDIR}"
 
+EXTRA_OEMAKE_r8a7795 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_H3"
+EXTRA_OEMAKE_r8a7796 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_M3"
+
 do_compile() {
     cd ${S}/tsif_drv/drv
     oe_runmake
