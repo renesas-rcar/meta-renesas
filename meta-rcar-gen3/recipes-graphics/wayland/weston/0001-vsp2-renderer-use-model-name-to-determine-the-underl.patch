@@ -1,0 +1,41 @@
+From 5945ebf608336ca0bc89b2569acf99923ddd391b Mon Sep 17 00:00:00 2001
+From: Takanari Hayama <taki@igel.co.jp>
+Date: Wed, 13 Jul 2016 10:54:02 +0900
+Subject: [PATCH] vsp2-renderer: use model name to determine the underlying
+ device.
+
+We used to refer bus_info to determine the underlying VSP device.
+Instead, the model name is the information we should refer to determine
+the devie.
+
+However, as of Linux Kernel 4.6.0, the model name doesn't allow us to
+distinguish between VSPI and VSPB. This needs to be fixed in the future
+in the kernel driver.
+
+Reported-by: Tomohito Esaki <etom@igel.co.jp>
+---
+ src/vsp2-renderer.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/vsp2-renderer.c b/src/vsp2-renderer.c
+index 32881aa..bfcc47d 100644
+--- a/src/vsp2-renderer.c
++++ b/src/vsp2-renderer.c
+@@ -255,7 +255,13 @@ vsp2_init(struct media_device *media, struct weston_config *config)
+ 	else
+ 		device_name = info->bus_info;
+ 
+-	if (strncmp(device_name, "soc:vsp", 7)) {
++	/*
++	 * XXX: The model name that V4L2 media controller passes should be fixed in the future,
++	 * so that we can distinguish the capability of the VSP device. R-Car Gen3 has VSPB,
++	 * VSPI, and VSPD as 'VSP2', but they all have different capabilities. Right now,
++	 * the model name is always 'VSP2'.
++	 */
++	if (strncmp(info->model, "VSP2", 4)) {
+ 		weston_log("The device is not VSP.");
+ 		goto error;
+ 	}
+-- 
+1.9.1
+

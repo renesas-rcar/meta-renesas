@@ -2,7 +2,7 @@ SUMMARY = "Multimedia user libraries modules package groups"
 LICENSE = "MIT"
 
 DEPENDS = "mmngr-user-module mmngrbuf-user-module \
-    vspmif-user-module \
+    vspmif-user-module libmediactl-v4l2 \
 "
 
 PR = "r0"
@@ -16,4 +16,5 @@ PACKAGES = " \
 RDEPENDS_packagegroup-multimedia-libs = " \
     mmngr-user-module mmngrbuf-user-module \
     vspmif-user-module \
+    libmediactl-v4l2 \
 "
