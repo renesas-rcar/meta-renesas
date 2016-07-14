@@ -66,10 +66,12 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-video = " \
     gstreamer1.0-plugins-good-videomixer \
     gstreamer1.0-plugins-good-videocrop \
     gstreamer1.0-plugins-good-video4linux2 \
+    gstreamer1.0-plugins-good-jpeg \
     ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', \
     'gstreamer1.0-plugins-bad-waylandsink', '', d)} \
     gstreamer1.0-plugins-bad-videoparsersbad \
     gstreamer1.0-plugins-bad-mpegtsdemux \
+    gstreamer1.0-plugins-bad-jpegformat \
     gstreamer1.0-plugins-ugly-asf \
     gstreamer1.0-libav \
 "
