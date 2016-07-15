@@ -3,7 +3,7 @@ LICENSE = "MIT"
 
 DEPENDS = "mmngr-user-module mmngrbuf-user-module \
     vspmif-user-module libmediactl-v4l2 \
-    libalacdla-l \
+    libalacdla-l libflacdla-l \
 "
 
 PR = "r0"
@@ -18,5 +18,5 @@ RDEPENDS_packagegroup-multimedia-libs = " \
     mmngr-user-module mmngrbuf-user-module \
     vspmif-user-module \
     libmediactl-v4l2 \
-    libalacdla-l \
+    libalacdla-l libflacdla-l \
 "
