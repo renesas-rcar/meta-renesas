@@ -54,6 +54,7 @@ ADSP_PKGS = " \
 # Kernel modules of AVB
 AVB_KERNEL_PKGS = " \
     kernel-module-avb-streaming \
+    kernel-module-avb-mch \
     kernel-module-avb-mse \
 "
 

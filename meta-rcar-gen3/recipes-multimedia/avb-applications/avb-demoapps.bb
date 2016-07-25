@@ -17,14 +17,34 @@ EXTRA_OEMAKE = "'CC=${CC}' 'AR=${AR}' 'SYSROOT=${STAGING_DIR_HOST}'"
 
 do_install_append() {
     oe_runmake install INSTALL_DIR=${D}/${bindir}
+
+    # Create intall directories
     install -d ${D}/${sysconfdir}/linuxptp
     install -d ${D}/${sysconfdir}/daemon_cl
     install -d ${D}/${sysconfdir}/avblauncher
+
+    # Install
     install -m 644 ${S}/etc/linuxptp/avb-demoapps.cfg ${D}/${sysconfdir}/linuxptp
     install -m 644 ${S}/etc/daemon_cl/gptp_cfg_100mb.ini ${D}/${sysconfdir}/daemon_cl
     install -m 644 ${S}/etc/daemon_cl/gptp_cfg.ini ${D}/${sysconfdir}/daemon_cl
-    install -m 644 ${S}/etc/avblauncher/simple_talker.ini ${D}/${sysconfdir}/avblauncher
+    install -m 755 ${S}/etc/avblauncher/mse_aaf_pcm.sh ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_aaf_pcm_listener.ini ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_aaf_pcm_talker.ini ${D}/${sysconfdir}/avblauncher
+    install -m 755 ${S}/etc/avblauncher/mse_cvf_h264.sh ${D}/${sysconfdir}/avblauncher
+    install -m 755 ${S}/etc/avblauncher/mse_cvf_h264_d13.sh ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_cvf_h264_d13_listener.ini ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_cvf_h264_d13_talker.ini ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_cvf_h264_listener.ini ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_cvf_h264_talker.ini ${D}/${sysconfdir}/avblauncher
+    install -m 755 ${S}/etc/avblauncher/mse_cvf_mjpeg.sh ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_cvf_mjpeg_listener.ini ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_cvf_mjpeg_talker.ini ${D}/${sysconfdir}/avblauncher
+    install -m 755 ${S}/etc/avblauncher/mse_iec61883_6.sh ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_iec61883_6_listener.ini ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/mse_iec61883_6_talker.ini ${D}/${sysconfdir}/avblauncher
+    install -m 755 ${S}/etc/avblauncher/simple_application.sh ${D}/${sysconfdir}/avblauncher
     install -m 644 ${S}/etc/avblauncher/simple_listener.ini ${D}/${sysconfdir}/avblauncher
+    install -m 644 ${S}/etc/avblauncher/simple_talker.ini ${D}/${sysconfdir}/avblauncher
 }
 
 PACKAGES =+ " \
@@ -42,8 +62,24 @@ FILES_${PN}-mrpdummy = " \
 FILES_${PN}-avblauncher = " \
     ${sysconfdir}/daemon_cl/gptp_cfg_100mb.ini \
     ${sysconfdir}/daemon_cl/gptp_cfg.ini \
-    ${sysconfdir}/avblauncher/simple_talker.ini \
+    ${sysconfdir}/avblauncher/mse_aaf_pcm.sh \
+    ${sysconfdir}/avblauncher/mse_aaf_pcm_listener.ini \
+    ${sysconfdir}/avblauncher/mse_aaf_pcm_talker.ini \
+    ${sysconfdir}/avblauncher/mse_cvf_h264.sh \
+    ${sysconfdir}/avblauncher/mse_cvf_h264_d13.sh \
+    ${sysconfdir}/avblauncher/mse_cvf_h264_d13_listener.ini \
+    ${sysconfdir}/avblauncher/mse_cvf_h264_d13_talker.ini \
+    ${sysconfdir}/avblauncher/mse_cvf_h264_listener.ini \
+    ${sysconfdir}/avblauncher/mse_cvf_h264_talker.ini \
+    ${sysconfdir}/avblauncher/mse_cvf_mjpeg.sh \
+    ${sysconfdir}/avblauncher/mse_cvf_mjpeg_listener.ini \
+    ${sysconfdir}/avblauncher/mse_cvf_mjpeg_talker.ini \
+    ${sysconfdir}/avblauncher/mse_iec61883_6.sh \
+    ${sysconfdir}/avblauncher/mse_iec61883_6_listener.ini \
+    ${sysconfdir}/avblauncher/mse_iec61883_6_talker.ini \
+    ${sysconfdir}/avblauncher/simple_application.sh \
     ${sysconfdir}/avblauncher/simple_listener.ini \
+    ${sysconfdir}/avblauncher/simple_talker.ini \
     ${bindir}/avblauncher \
 "
 
