@@ -14,16 +14,15 @@ SRC_URI_rcar-gen3 = " \
 "
 
 GL_SRCREV = "02a9ef290df887a815b71a49e8521c7909d7acc1"
-V4L2_SRCREV = "3859758c97de269711c80b10164732e6c3db384a"
+V4L2_SRCREV = "c768fef3ebba70ec410c5dc4d0960b064062dc78"
 
 SRCREV_rcar-gen3 = '${@base_conditional("USE_MULTIMEDIA", "1", "${V4L2_SRCREV}", "${GL_SRCREV}", d)}'
 
 SRC_URI_append_rcar-gen3 = " \
     file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-clie.patch \
     file://0001-configure-don-t-control-egl-version.patch \
-    ${@base_conditional("USE_MULTIMEDIA", "1", " \
-        file://weston.ini \
-        file://0001-vsp2-renderer-use-model-name-to-determine-the-underl.patch", "", d)} \
+    file://weston.ini \
+    ${@base_conditional("USE_MULTIMEDIA", "1", " file://weston_v4l2.ini", "", d)} \
 "
 
 S = "${WORKDIR}/git"
@@ -43,10 +42,14 @@ do_install_append_rcar-gen3() {
 
         # install weston.ini as sample settings of v4l2-renderer
         install -d ${D}/${sysconfdir}/xdg/weston
+        install -m 644 ${WORKDIR}/weston_v4l2.ini ${D}/${sysconfdir}/xdg/weston/weston.ini
+    else
+        # install weston.ini as sample settings of gl-renderer
+        install -d ${D}/${sysconfdir}/xdg/weston
         install -m 644 ${WORKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/
     fi
 }
 
 FILES_${PN}_append_rcar-gen3 = " \
-    ${@base_conditional("USE_MULTIMEDIA", "1", "${sysconfdir}/xdg/weston/weston.ini", "", d)} \
+    ${sysconfdir}/xdg/weston/weston.ini \
 "
