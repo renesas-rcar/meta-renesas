@@ -52,7 +52,6 @@ do_install() {
     install -m 644 ${S}/${libdir}/pkgconfig/*.pc ${D}/${libdir}/pkgconfig/
     install -d ${D}/${exec_prefix}/local/bin
     install -m 755 ${S}/${exec_prefix}/local/bin/dlcsrv_REL ${D}/${exec_prefix}/local/bin/dlcsrv_REL
-    install -m 755 ${S}/${exec_prefix}/local/bin/pvrsrvctl ${D}/${exec_prefix}/local/bin/pvrsrvctl
     install -d ${D}/lib/firmware
     install -m 644 ${S}/lib/firmware/rgx.fw ${D}/lib/firmware/
 
