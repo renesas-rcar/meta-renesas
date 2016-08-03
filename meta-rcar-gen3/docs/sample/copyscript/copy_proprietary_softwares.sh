@@ -74,8 +74,7 @@ _video_enc_list="H264_encoder,RTM0AC0000XV264E30SL40C,RTM0AC0000XV264E30SL40C.ta
 # cms_list="<software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name>"
-_cms_list="bcmc,RTM0AC0000JRCMBCC0SL40C,RTM0AC0000JRCMBCC0SL40C.tar.gz \
-           bcmv,RTM0AC0000JRCMBCV0SL40C,RTM0AC0000JRCMBCV0SL40C.tar.gz \
+_cms_list="bcm,RTM0AC0000JRCMBCV0SL40C,RTM0AC0000JRCMBCV0SL40C.tar.gz \
            blc,RTM0AC0000JRCMBLC0SL40C,RTM0AC0000JRCMBLC0SL40C.tar.gz \
            dgc,RTM0AC0000JRCMDGV0SL40C,RTM0AC0000JRCMDGV0SL40C.tar.gz"
 
