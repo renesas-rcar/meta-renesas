@@ -5,7 +5,7 @@ require include/rcar-gen3-modules-common.inc
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
-    file://MIT-COPYING;md5=0ebf15a927e436cec699371cd890775c \
+    file://MIT-COPYING;md5=192063521ce782a445a3c9f99a8ad560 \
 "
 
 inherit module
@@ -16,7 +16,7 @@ PR = "r0"
 
 QOS_DRV_URL = "git://github.com/renesas-rcar/qos_drv.git"
 BRANCH = "rcar-gen3"
-SRCREV = "a3d7db9e8090646816e3981656f8581b040be4a5"
+SRCREV = "5a0f8fa5e5f9d4e9b553d3bc27a2a58186dc3663"
 
 SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
 

@@ -11,9 +11,6 @@ QOSIF_LIB_DIR = "qos_if-module/files/qos_if/if"
 
 EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
-# do_configure() nothing
-do_configure[noexec] = "1"
-
 do_compile() {
     # Build shared library
     cd ${S}/${QOSIF_LIB_DIR}
