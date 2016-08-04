@@ -1,8 +1,5 @@
-# USE_CMSBCMV for VSP2 Basic Color Management Middleware for Linux
-USE_CMSBCMV = "${@bb.utils.contains('DISTRO_FEATURES', 'cmsbcmv', '1', '0', d)}"
-
-# USE_CMSBCMC for CMM3 Basic Color Management Middleware for Linux
-USE_CMSBCMC = "${@bb.utils.contains('DISTRO_FEATURES', 'cmsbcmc', '1', '0', d)}"
+# USE_CMSBCM for Basic Color Management Middleware for Linux
+USE_CMSBCM = "${@bb.utils.contains('DISTRO_FEATURES', 'cmsbcm', '1', '0', d)}"
 
 # USE_CMSBLC for Backlight Control Middleware for Linux
 USE_CMSBLC = "${@bb.utils.contains('DISTRO_FEATURES', 'cmsblc', '1', '0', d)}"
@@ -12,8 +9,7 @@ USE_CMSDGC = "${@bb.utils.contains('DISTRO_FEATURES', 'cmsdgc', '1', '0', d)}"
 
 # CMS Flag list
 LIST_CMS_FLAG = " \
-    ${USE_CMSBCMV} \
-    ${USE_CMSBCMC} \
+    ${USE_CMSBCM} \
     ${USE_CMSBLC} \
     ${USE_CMSDGC} \
 "

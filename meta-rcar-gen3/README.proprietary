@@ -98,8 +98,7 @@ III/ Build with Renesas multimedia libraries
                 " dddec_mdw"         - for Dolby(R) Digital Decoder Middleware for Linux
                 " aaclcenc_lib"      - for OMX Media Component AAC-LC Encoder Library
                 " aaclcenc_mdw"      - for AAC-LC Encoder Middleware for Linux
-                " cmsbcmv"           - for CMS VSP2 Basic Color Management Middleware for Linux
-                " cmsbcmc"           - for CMS CMM3 Basic Color Management Middleware for Linux
+                " cmsbcm"            - for CMS Basic Color Management Middleware for Linux
                 " cmsblc"            - for CMS CMM3 Backlight Control Middleware for Linux
                 " cmsdgc"            - for CMS VSP2 Dynamic Gamma Correction Middleware for Linux
                 " dtv"               - for ISDB-T DTV Software Package for Linux
