@@ -6,7 +6,9 @@ SRC_URI += " \
     file://decrease_asteriskh263_rank.patch \
 "
 
-SRCREV = "3838360c67e4ad219ba6a26486b800ca986ca607"
+SRCREV = "5aedbd67d8cfb0faf42602f8abb0c9049b50c8e7"
+
+DEPENDS += "mmngrbuf-user-module"
 
 S = "${WORKDIR}/git"
 

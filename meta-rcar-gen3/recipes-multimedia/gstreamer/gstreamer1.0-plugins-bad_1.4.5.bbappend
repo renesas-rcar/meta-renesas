@@ -2,7 +2,7 @@ SRC_URI = "git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.
 SRC_URI += " \
     file://0001-gl-do-not-check-for-GL-GLU-EGL-GLES2-libs-if-disable.patch \
     file://configure-allow-to-disable-libssh2.patch"
-SRCREV = "befee08af6129f6019d40b49053bc78560be9f4b"
+SRCREV = "3c3ebbb4b14ebf5f311a66d7e43b71e8ab32388a"
 
 DEPENDS += "weston"
 
