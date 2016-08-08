@@ -1,12 +1,12 @@
 DESCRIPTION = "OP-TEE Client"
-LICENSE = "BSD"
+LICENSE = "BSD-2-Clause"
 
-LIC_FILES_CHKSUM = "file://LICENSE;md5=f0fb2f357d31d6a98213b19f57abf927"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 PN = "optee-client"
 PR = "r0"
 BRANCH = "master"
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH}"
-SRCREV = "6b08c092f79e1aade3a5ee1b78c4ddb345f8a1f0"
+SRCREV = "db9c64d45818d146200297eaaedbd421a8b59e3a"
 
 SRC_URI += " \
     file://0001-add-optee_client-R-Car-support.patch \
@@ -22,8 +22,6 @@ COMPATIBLE_MACHINE = "salvator-x"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 S = "${WORKDIR}/git"
-
-do_configure[noexec] = "1"
 
 do_compile() {
     cd ${S}/

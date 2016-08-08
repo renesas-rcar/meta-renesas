@@ -1,7 +1,9 @@
 DESCRIPTION = "OP-TEE OS"
 
-LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
+LICENSE = "BSD-2-Clause & BSD-3-Clause"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b \
+                    file://lib/libpng/LICENSE;md5=06a1b6fde6d93170bb72201c8000bf3d \
+"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -11,7 +13,7 @@ S = "${WORKDIR}/git"
 
 BRANCH = "master"
 SRC_URI = "git://github.com/OP-TEE/optee_os.git;branch=${BRANCH}"
-SRCREV = "9542214673e9d48f34c0ae21951143005fca08b7"
+SRCREV = "f06bddf5c0bc9be8013820e86523793c44930148"
 
 SRC_URI += " \
     file://0001-add-optee_os-R-Car-support.patch \
@@ -22,7 +24,7 @@ PV = "1.0.0+renesas+git${SRCPV}"
 COMPATIBLE_MACHINE = "salvator-x"
 PLATFORM = "rcar"
 
-export CROSS_COMPILE="${TARGET_PREFIX}"
+export CROSS_COMPILE64="${TARGET_PREFIX}"
 
 # Let the Makefile handle setting up the flags as it is a standalone application
 LD[unexport] = "1"
@@ -30,9 +32,6 @@ LDFLAGS[unexport] = "1"
 export CCcore="${CC}"
 export LDcore="${LD}"
 libdir[unexport] = "1"
-
-# do_configure() nothing
-do_configure[noexec] = "1"
 
 do_compile() {
     oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y

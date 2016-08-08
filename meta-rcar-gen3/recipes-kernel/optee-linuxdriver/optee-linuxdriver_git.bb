@@ -12,7 +12,7 @@ SRC_URI = " \
     git://github.com/OP-TEE/optee_linuxdriver.git;branch=${BRANCH} \
     file://0001-add-optee_linuxdriver-R-Car-support.patch \
 "
-SRCREV = "d4463ddb6be6f5737ff819113ba846567a3db773"
+SRCREV = "f9779c6095dd2e2f492e27a6d79f2c766d3e5714"
 
 PV = "1.0.0+renesas+git${SRCPV}"
 
@@ -41,8 +41,8 @@ do_install() {
 
     # Copy shared header files
     install -m 0644 ${S}/Module.symvers ${STAGING_KERNEL_DIR}/include/optee.symvers
-    install -m 0644 ${S}/include/arm_common/teesmc.h ${D}/usr/src/kernel/include/arm_common
-    install -m 0644 ${S}/include/arm_common/teesmc_st.h ${D}/usr/src/kernel/include/arm_common
+    install -m 0644 ${S}/include/arm_common/optee_msg.h ${D}/usr/src/kernel/include/arm_common
+    install -m 0644 ${S}/include/arm_common/optee_smc.h ${D}/usr/src/kernel/include/arm_common
     install -m 0644 ${S}/include/linux/tee_client_api.h ${D}/usr/src/kernel/include/linux
     install -m 0644 ${S}/include/linux/tee_core.h ${D}/usr/src/kernel/include/linux
     install -m 0644 ${S}/include/linux/tee_ioc.h ${D}/usr/src/kernel/include/linux

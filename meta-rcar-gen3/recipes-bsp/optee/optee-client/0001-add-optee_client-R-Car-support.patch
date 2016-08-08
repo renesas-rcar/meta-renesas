@@ -1,40 +1,26 @@
-From b36e4fa46fa96bec38d4c1fc3e4b25b3ccc9e664 Mon Sep 17 00:00:00 2001
+From 2ebbeeef2354d2d49c03efba11b1a41074db94c0 Mon Sep 17 00:00:00 2001
 From: Takuya Sakata <takuya.sakata.wz@bp.renesas.com>
-Date: Fri, 8 Apr 2016 10:52:42 +0900
+Date: Fri, 5 Aug 2016 09:28:29 +0900
 Subject: [PATCH] add optee_client R-Car support
 
 ---
- flags.mk                            | 2 +-
  tee-supplicant/src/tee_supplicant.c | 4 ++++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ 1 file changed, 4 insertions(+)
 
-diff --git a/flags.mk b/flags.mk
-index 92e1853..3c8b728 100644
---- a/flags.mk
-+++ b/flags.mk
-@@ -3,7 +3,7 @@
- #########################################################################
- 
- CROSS_COMPILE   ?= arm-linux-gnueabihf-
--CC              := $(CROSS_COMPILE)gcc
-+CC              ?= $(CROSS_COMPILE)gcc
- 
- CFLAGS          := -Wall -Wbad-function-cast -Wcast-align \
- 		   -Werror-implicit-function-declaration -Wextra \
 diff --git a/tee-supplicant/src/tee_supplicant.c b/tee-supplicant/src/tee_supplicant.c
-index 3a6a5f1..b744cd7 100644
+index 23b2511..ba41341 100644
 --- a/tee-supplicant/src/tee_supplicant.c
 +++ b/tee-supplicant/src/tee_supplicant.c
-@@ -47,6 +47,8 @@
- #include <tee_supp_fs.h>
- #include <teec.h>
+@@ -49,6 +49,8 @@
+ #include <pthread.h>
+ #include <rpmb.h>
  
-+#define VERSION_OF_RENESAS	"1.0.3"
++#define VERSION_OF_RENESAS	"1.0.5"
 +
  #define TEE_RPC_BUFFER_NUMBER 5
  
  /* Flags of the shared memory. Also defined in tee_service.h in the kernel. */
-@@ -375,6 +377,8 @@ int main(int argc, char *argv[])
+@@ -479,6 +481,8 @@ int main(int argc, char *argv[])
  	sprintf(devname1, "optee_armtz");
  	sprintf(devname2, "teetz");
  
