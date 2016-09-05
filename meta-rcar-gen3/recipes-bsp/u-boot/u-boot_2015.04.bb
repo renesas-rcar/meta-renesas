@@ -10,6 +10,11 @@ LIC_FILES_CHKSUM = "file://Licenses/README;md5=c7383a594871c03da76b3707929d2919"
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
 SRCREV = "7c0de7c397808a4cc7307ca8aa183ab2fec04265"
 
+SRC_URI_append = " \
+    file://0001-board-renesas-Add-H3ULCB-board.patch \
+    file://0002-mmc-add-Micron-eMMC-fixup.patch \
+"
+
 PV = "v2015.04+git${SRCPV}"
 
 EXTRA_OEMAKE_append = " KCFLAGS=-fgnu89-inline"

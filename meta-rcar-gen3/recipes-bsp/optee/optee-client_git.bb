@@ -17,7 +17,7 @@ inherit systemd
 SYSTEMD_SERVICE_${PN} = "optee.service"
 
 PV = "1.0.0+renesas+git${SRCPV}"
-COMPATIBLE_MACHINE = "salvator-x"
+COMPATIBLE_MACHINE = "(salvator-x|h3ulcb)"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 

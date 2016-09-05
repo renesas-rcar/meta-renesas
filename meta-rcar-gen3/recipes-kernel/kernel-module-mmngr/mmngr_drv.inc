@@ -10,4 +10,5 @@ inherit module
 MMNGR_DRV_URI = "git://github.com/renesas-rcar/mmngr_drv.git"
 
 SRC_URI = "${MMNGR_DRV_URI};branch=rcar_gen3"
+SRC_URI_append = " file://0001-mmngr-Add-H3ULCB-board.patch"
 SRCREV = "6eab0d30c9704b12362e2f27d25b79c0c39c66f5"

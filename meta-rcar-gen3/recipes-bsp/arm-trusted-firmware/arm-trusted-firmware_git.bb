@@ -17,7 +17,7 @@ SRCREV = "3ad02acfc46bfbebb4a5986b250b31a1f871d2b1"
 
 PV = "v1.1+renesas+git${SRCPV}"
 
-COMPATIBLE_MACHINE = "salvator-x"
+COMPATIBLE_MACHINE = "(salvator-x|h3ulcb)"
 PLATFORM = "rcar"
 ATFW_OPT_LOSSY = "${@base_conditional("USE_MULTIMEDIA", "1", "RCAR_LOSSY_ENABLE=1", "", d)}"
 ATFW_OPT_r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 ${ATFW_OPT_LOSSY}"
