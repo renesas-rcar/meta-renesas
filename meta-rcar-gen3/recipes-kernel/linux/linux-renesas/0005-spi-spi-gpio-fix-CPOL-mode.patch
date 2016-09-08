@@ -1,0 +1,42 @@
+From db37427756bc9e42723f58067a3f387a2861fbbb Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sun, 29 May 2016 23:18:49 +0300
+Subject: [PATCH] spi: spi-gpio: fix CPOL mode
+
+This fixes the SPI SPOL mode, since the cs_gpios is already used
+in generic code spi.c
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/spi/spi-gpio.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/spi/spi-gpio.c b/drivers/spi/spi-gpio.c
+index 1c34c93..428417d 100644
+--- a/drivers/spi/spi-gpio.c
++++ b/drivers/spi/spi-gpio.c
+@@ -218,10 +218,6 @@ static void spi_gpio_chipselect(struct spi_device *spi, int is_active)
+ 	struct spi_gpio *spi_gpio = spi_to_spi_gpio(spi);
+ 	unsigned long cs = spi_gpio->cs_gpios[spi->chip_select];
+ 
+-	/* set initial clock polarity */
+-	if (is_active)
+-		setsck(spi, spi->mode & SPI_CPOL);
+-
+ 	if (cs != SPI_GPIO_NO_CHIPSELECT) {
+ 		/* SPI is normally active-low */
+ 		gpio_set_value_cansleep(cs, (spi->mode & SPI_CS_HIGH) ? is_active : !is_active);
+@@ -257,6 +253,10 @@ static int spi_gpio_setup(struct spi_device *spi)
+ 					!(spi->mode & SPI_CS_HIGH));
+ 		}
+ 	}
++
++	/* set initial clock polarity */
++	setsck(spi, spi->mode & SPI_CPOL);
++
+ 	if (!status) {
+ 		/* in case it was initialized from static board data */
+ 		spi_gpio->cs_gpios[spi->chip_select] = cs;
+-- 
+1.9.1
+

@@ -13,7 +13,16 @@ SRCREV = "7c0de7c397808a4cc7307ca8aa183ab2fec04265"
 SRC_URI_append = " \
     file://0001-board-renesas-Add-H3ULCB-board.patch \
     file://0002-mmc-add-Micron-eMMC-fixup.patch \
+    file://0009-rcar-gen3-add-CMD_GPIO.patch \
 "
+
+SRC_URI_append_h3ulcb = '${@ \
+    " file://0003-uboot-H3ULCB-support-fixed-PHY.patch \
+      file://0004-uboot-H3ULCB-console-on-scif1.patch \
+      file://0005-uboot-ravb-r8a7795-remove-PHY-skews.patch \
+      file://0006-uboot-h3ulcb-set-all-RAVB-pins-strengh-to-maximum.patch " \
+    if 'h3ulcb-had' in '${MACHINE_FEATURES}' else \
+    ""}'
 
 PV = "v2015.04+git${SRCPV}"
 
