@@ -5,6 +5,21 @@ IMAGE_INSTALL_append_rcar-gen3 = " \
     bash \
     v4l-utils \
     i2c-tools \
+    can-utils \
+    libsocketcan \
+    iproute2 \
+    spidev-dbg \
+    e2fsprogs \
+    ethtool \
+    pciutils \
+    usbutils \
+    util-linux \
+    mtd-utils \
+    capture \
+    v4l2-fw \
+    iperf \
+    bonnie++ \
+    lmbench \
 "
 
 # Support secure environment
