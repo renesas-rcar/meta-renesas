@@ -1,0 +1,334 @@
+From 02ed02f5b18086a5db11a7f4fa22bfb84ad91f1c Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Tue, 15 Sep 2015 20:26:28 +0900
+Subject: [PATCH] Revert: media: soc_camera: rcar_vin: Fix VIDIOC_S_CROP ioctl
+ miscalculation
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+
+This fixes broken scaling by sensor.
+
+Signed-off-by:  Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/media/platform/soc_camera/rcar_vin.c | 292 +--------------------------
+ 1 file changed, 2 insertions(+), 290 deletions(-)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 19bc400..9cfde0e 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -2007,294 +2007,6 @@ static void rcar_vin_put_formats(struct soc_camera_device *icd)
+ 	icd->host_priv = NULL;
+ }
+ 
+-static bool rcar_vin_is_smaller(const struct v4l2_rect *r1,
+-				const struct v4l2_rect *r2)
+-{
+-	return r1->width < r2->width || r1->height < r2->height;
+-}
+-
+-static bool rcar_vin_is_inside(const struct v4l2_rect *r1,
+-			       const struct v4l2_rect *r2)
+-{
+-	return r1->left > r2->left || r1->top > r2->top ||
+-		r1->left + r1->width < r2->left + r2->width ||
+-		r1->top + r1->height < r2->top + r2->height;
+-}
+-
+-static void rcar_vin_update_subrect(struct v4l2_rect *rect,
+-				    struct v4l2_rect *subrect)
+-{
+-	if (rect->width < subrect->width)
+-		subrect->width = rect->width;
+-
+-	if (rect->height < subrect->height)
+-		subrect->height = rect->height;
+-
+-	if (rect->left > subrect->left)
+-		subrect->left = rect->left;
+-	else if (rect->left + rect->width <
+-		 subrect->left + subrect->width)
+-		subrect->left = rect->left + rect->width -
+-			subrect->width;
+-
+-	if (rect->top > subrect->top)
+-		subrect->top = rect->top;
+-	else if (rect->top + rect->height <
+-		 subrect->top + subrect->height)
+-		subrect->top = rect->top + rect->height -
+-			subrect->height;
+-}
+-
+-/* Iterative set_fmt, also updates cached client crop on success */
+-static int rcar_vin_client_set_fmt(struct soc_camera_device *icd,
+-			struct v4l2_rect *rect, struct v4l2_rect *subrect,
+-			unsigned int max_width, unsigned int max_height,
+-			struct v4l2_subdev_format *format, bool host_can_scale)
+-{
+-	struct v4l2_subdev *sd = soc_camera_to_subdev(icd);
+-	struct device *dev = icd->parent;
+-	struct v4l2_mbus_framefmt *mf = &format->format;
+-	unsigned int width = mf->width, height = mf->height, tmp_w, tmp_h;
+-	struct v4l2_cropcap cap;
+-	bool host_1to1;
+-	int ret;
+-
+-	ret = v4l2_device_call_until_err(sd->v4l2_dev,
+-					 soc_camera_grp_id(icd), pad,
+-					 set_fmt, NULL, format);
+-	if (ret < 0)
+-		return ret;
+-
+-	dev_dbg(dev, "camera scaled to %ux%u\n", mf->width, mf->height);
+-
+-	if (width == mf->width && height == mf->height) {
+-		/* Perfect! The client has done it all. */
+-		host_1to1 = true;
+-		goto update_cache;
+-	}
+-
+-	host_1to1 = false;
+-	if (!host_can_scale)
+-		goto update_cache;
+-
+-	cap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+-
+-	ret = v4l2_subdev_call(sd, video, cropcap, &cap);
+-	if (ret < 0)
+-		return ret;
+-
+-	if (max_width > cap.bounds.width)
+-		max_width = cap.bounds.width;
+-	if (max_height > cap.bounds.height)
+-		max_height = cap.bounds.height;
+-
+-	/* Camera set a format, but geometry is not precise, try to improve */
+-	tmp_w = mf->width;
+-	tmp_h = mf->height;
+-
+-	/* width <= max_width && height <= max_height - guaranteed by try_fmt */
+-	while ((width > tmp_w || height > tmp_h) &&
+-	       tmp_w < max_width && tmp_h < max_height) {
+-		tmp_w = min(2 * tmp_w, max_width);
+-		tmp_h = min(2 * tmp_h, max_height);
+-		mf->width = tmp_w;
+-		mf->height = tmp_h;
+-		ret = v4l2_device_call_until_err(sd->v4l2_dev,
+-					soc_camera_grp_id(icd), pad,
+-					set_fmt, NULL, format);
+-		dev_dbg(dev, "Camera scaled to %ux%u\n",
+-			mf->width, mf->height);
+-		if (ret < 0) {
+-			/* This shouldn't happen */
+-			dev_err(dev, "Client failed to set format: %d\n", ret);
+-			return ret;
+-		}
+-	}
+-
+-update_cache:
+-	/* Update cache */
+-	ret = soc_camera_client_g_rect(sd, rect);
+-	if (ret < 0)
+-		return ret;
+-
+-	if (!host_1to1)
+-		rcar_vin_update_subrect(rect, subrect);
+-
+-	return 0;
+-}
+-
+-int rcar_vin_client_scale(struct soc_camera_device *icd,
+-			struct v4l2_rect *rect, struct v4l2_rect *subrect,
+-			struct v4l2_mbus_framefmt *mf,
+-			unsigned int *width, unsigned int *height,
+-			bool host_can_scale, unsigned int shift)
+-{
+-	struct device *dev = icd->parent;
+-	struct v4l2_subdev_format fmt_tmp = {
+-		.which = V4L2_SUBDEV_FORMAT_ACTIVE,
+-		.format = *mf,
+-	};
+-	struct v4l2_mbus_framefmt *mf_tmp = &fmt_tmp.format;
+-	unsigned int scale_h, scale_v;
+-	int ret;
+-
+-	/*
+-	 * 5. Apply iterative camera S_FMT for camera user window (also updates
+-	 *    client crop cache and the imaginary sub-rectangle).
+-	 */
+-	ret = rcar_vin_client_set_fmt(icd, rect, subrect, *width, *height,
+-			   &fmt_tmp, host_can_scale);
+-	if (ret < 0)
+-		return ret;
+-
+-	dev_dbg(dev, "5: camera scaled to %ux%u\n",
+-		mf_tmp->width, mf_tmp->height);
+-
+-	/* 6. Retrieve camera output window (g_fmt) */
+-
+-	/* unneeded - it is already in "mf_tmp" */
+-
+-	/* 7. Calculate new client scales. */
+-	scale_h = soc_camera_calc_scale(rect->width, shift, mf_tmp->width);
+-	scale_v = soc_camera_calc_scale(rect->height, shift, mf_tmp->height);
+-
+-	mf->width	= mf_tmp->width;
+-	mf->height	= mf_tmp->height;
+-	mf->colorspace	= mf_tmp->colorspace;
+-
+-	/*
+-	 * 8. Calculate new host crop - apply camera scales to previously
+-	 *    updated "effective" crop.
+-	 */
+-	*width = soc_camera_shift_scale(subrect->width, shift, scale_h);
+-	*height = soc_camera_shift_scale(subrect->height, shift, scale_v);
+-
+-	dev_dbg(dev, "8: new client sub-window %ux%u\n", *width, *height);
+-
+-	return 0;
+-}
+-
+-int rcar_vin_client_s_crop(struct v4l2_subdev *sd,
+-			struct v4l2_crop *crop, struct v4l2_crop *cam_crop,
+-			struct v4l2_rect *target_rect,
+-			struct v4l2_rect *subrect)
+-{
+-	struct v4l2_rect *rect = &crop->c, *cam_rect = &cam_crop->c;
+-	struct device *dev = sd->v4l2_dev->dev;
+-	struct v4l2_cropcap cap;
+-	int ret;
+-	unsigned int width, height;
+-
+-	v4l2_subdev_call(sd, video, s_crop, crop);
+-	ret = soc_camera_client_g_rect(sd, cam_rect);
+-	if (ret < 0)
+-		return ret;
+-
+-	/*
+-	 * Now cam_crop contains the current camera input rectangle, and it must
+-	 * be within camera cropcap bounds
+-	 */
+-	if (!memcmp(rect, cam_rect, sizeof(*rect))) {
+-		/* Even if camera S_CROP failed, but camera rectangle matches */
+-		dev_dbg(dev, "Camera S_CROP successful for %dx%d@%d:%d\n",
+-			rect->width, rect->height, rect->left, rect->top);
+-		*target_rect = *cam_rect;
+-		*subrect = *rect;
+-		return 0;
+-	}
+-
+-	/* Try to fix cropping, that camera hasn't managed to set */
+-	dev_dbg(dev, "Fix camera S_CROP for %dx%d@%d:%d to %dx%d@%d:%d\n",
+-		cam_rect->width, cam_rect->height,
+-		cam_rect->left, cam_rect->top,
+-		rect->width, rect->height, rect->left, rect->top);
+-
+-	/* We need sensor maximum rectangle */
+-	ret = v4l2_subdev_call(sd, video, cropcap, &cap);
+-	if (ret < 0)
+-		return ret;
+-
+-	/* Put user requested rectangle within sensor bounds */
+-	soc_camera_limit_side(&rect->left, &rect->width, cap.bounds.left, 2,
+-			      cap.bounds.width);
+-	soc_camera_limit_side(&rect->top, &rect->height, cap.bounds.top, 4,
+-			      cap.bounds.height);
+-
+-	/*
+-	 * Popular special case - some cameras can only handle fixed sizes like
+-	 * QVGA, VGA,... Take care to avoid infinite loop.
+-	 */
+-	width = max_t(unsigned int, cam_rect->width, 2);
+-	height = max_t(unsigned int, cam_rect->height, 2);
+-
+-	/*
+-	 * Loop as long as sensor is not covering the requested rectangle and
+-	 * is still within its bounds
+-	 */
+-	while (!ret && (rcar_vin_is_smaller(cam_rect, rect) ||
+-			rcar_vin_is_inside(cam_rect, rect)) &&
+-	       (cap.bounds.width > width || cap.bounds.height > height)) {
+-
+-		width *= 2;
+-		height *= 2;
+-
+-		cam_rect->width = width;
+-		cam_rect->height = height;
+-
+-		/*
+-		 * We do not know what capabilities the camera has to set up
+-		 * left and top borders. We could try to be smarter in iterating
+-		 * them, e.g., if camera current left is to the right of the
+-		 * target left, set it to the middle point between the current
+-		 * left and minimum left. But that would add too much
+-		 * complexity: we would have to iterate each border separately.
+-		 * Instead we just drop to the left and top bounds.
+-		 */
+-		if (cam_rect->left > rect->left)
+-			cam_rect->left = cap.bounds.left;
+-
+-		if (cam_rect->left + cam_rect->width < rect->left + rect->width)
+-			cam_rect->width = rect->left + rect->width -
+-				cam_rect->left;
+-
+-		if (cam_rect->top > rect->top)
+-			cam_rect->top = cap.bounds.top;
+-
+-		if (cam_rect->top + cam_rect->height < rect->top + rect->height)
+-			cam_rect->height = rect->top + rect->height -
+-				cam_rect->top;
+-
+-		v4l2_subdev_call(sd, video, s_crop, cam_crop);
+-		ret = soc_camera_client_g_rect(sd, cam_rect);
+-		dev_dbg(dev, "Camera S_CROP %d for %dx%d@%d:%d\n", ret,
+-			cam_rect->width, cam_rect->height,
+-			cam_rect->left, cam_rect->top);
+-	}
+-
+-	/* S_CROP must not modify the rectangle */
+-	if (rcar_vin_is_smaller(cam_rect, rect) ||
+-		rcar_vin_is_inside(cam_rect, rect)) {
+-		/*
+-		 * The camera failed to configure a suitable cropping,
+-		 * we cannot use the current rectangle, set to max
+-		 */
+-		*cam_rect = cap.bounds;
+-		v4l2_subdev_call(sd, video, s_crop, cam_crop);
+-		ret = soc_camera_client_g_rect(sd, cam_rect);
+-		dev_dbg(dev, "Camera S_CROP %d for max %dx%d@%d:%d\n", ret,
+-			cam_rect->width, cam_rect->height,
+-			cam_rect->left, cam_rect->top);
+-	}
+-
+-	if (!ret) {
+-		*target_rect = *cam_rect;
+-		*subrect = *rect;
+-		rcar_vin_update_subrect(target_rect, subrect);
+-	}
+-
+-	return ret;
+-}
+-
+ static int rcar_vin_set_crop(struct soc_camera_device *icd,
+ 			     const struct v4l2_crop *a)
+ {
+@@ -2322,7 +2034,7 @@ static int rcar_vin_set_crop(struct soc_camera_device *icd,
+ 	dev_dbg(dev, "VNMC_REG 0x%x\n", vnmc);
+ 
+ 	/* Apply iterative camera S_CROP for new input window. */
+-	ret = rcar_vin_client_s_crop(sd, &a_writable, &cam_crop,
++	ret = soc_camera_client_s_crop(sd, &a_writable, &cam_crop,
+ 				       &cam->rect, &cam->subrect);
+ 	if (ret < 0)
+ 		return ret;
+@@ -2475,7 +2187,7 @@ static int rcar_vin_set_fmt(struct soc_camera_device *icd,
+ 
+ 	dev_dbg(dev, "request camera output %ux%u\n", mf.width, mf.height);
+ 
+-	ret = rcar_vin_client_scale(icd, &cam->rect, &cam->subrect,
++	ret = soc_camera_client_scale(icd, &cam->rect, &cam->subrect,
+ 				      &mf, &vin_sub_width, &vin_sub_height,
+ 				      can_scale, 12);
+ 
+-- 
+1.9.1
+

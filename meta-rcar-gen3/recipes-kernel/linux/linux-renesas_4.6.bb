@@ -28,6 +28,7 @@ SRC_URI_append = " \
     file://0006-xhci-rcar-add-firmware-for-R-Car-H2-M2-USB-3.0-host-.patch \
     file://0007-usb-host-xhci-plat-add-support-for-the-R-Car-H3-xHCI.patch \
     file://0008-spi-spi-gpio-fix-set-CPOL-default-inverted.patch \
+    file://0009-Revert-media-soc_camera-rcar_vin-Fix-VIDIOC_S_CROP-ioctl-mi.patch \
     file://0019-can-rcar_can-add-enable-and-standby-control-pins.patch \
     file://0020-can-rcar-canfd-Add-Renesas-R-Car-CAN-FD-driver.patch \
     file://0021-arm64-dts-r8a7795-Add-CAN-FD-support.patch \
