@@ -13,6 +13,8 @@ S = "${WORKDIR}/git"
 BRANCH = "rcar_gen3"
 SRC_URI = \
     "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
+SRC_URI_append = \
+    " file://0001-Add-RCAR_BKUP_ENABLE-flag.patch"
 SRCREV = "3ad02acfc46bfbebb4a5986b250b31a1f871d2b1"
 
 PV = "v1.1+renesas+git${SRCPV}"
@@ -20,8 +22,9 @@ PV = "v1.1+renesas+git${SRCPV}"
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb)"
 PLATFORM = "rcar"
 ATFW_OPT_LOSSY = "${@base_conditional("USE_MULTIMEDIA", "1", "RCAR_LOSSY_ENABLE=1", "", d)}"
-ATFW_OPT_r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 ${ATFW_OPT_LOSSY}"
-ATFW_OPT_r8a7796 = "LSI=M3 RCAR_DRAM_SPLIT=2 ${ATFW_OPT_LOSSY}"
+ATFW_OPT_BKUP_h3ulcb = "RCAR_BKUP_ENABLE=0"
+ATFW_OPT_r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 ${ATFW_OPT_LOSSY} ${ATFW_OPT_BKUP}"
+ATFW_OPT_r8a7796 = "LSI=M3 RCAR_DRAM_SPLIT=2 ${ATFW_OPT_LOSSY} ${ATFW_OPT_BKUP}"
 
 # requires CROSS_COMPILE set by hand as there is no configure script
 export CROSS_COMPILE="${TARGET_PREFIX}"
