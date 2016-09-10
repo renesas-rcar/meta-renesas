@@ -14,7 +14,8 @@ BRANCH = "rcar_gen3"
 SRC_URI = \
     "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
 SRC_URI_append = \
-    " file://0001-Add-RCAR_BKUP_ENABLE-flag.patch"
+    " file://0001-Add-RCAR_BKUP_ENABLE-flag.patch \
+      file://0002-plat-rcar-bl2_secure_setting-Enable-access-to-RPC.patch"
 SRCREV = "3ad02acfc46bfbebb4a5986b250b31a1f871d2b1"
 
 PV = "v1.1+renesas+git${SRCPV}"
