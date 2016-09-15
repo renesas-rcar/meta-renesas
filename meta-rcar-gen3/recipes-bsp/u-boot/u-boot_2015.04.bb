@@ -14,7 +14,7 @@ SRC_URI_append = " \
     file://0002-mmc-add-Micron-eMMC-fixup.patch \
     file://0003-board-renesas-Add-H3ULCB-board.patch \
     file://0004-board-renesas-Add-M3ULCB-board.patch \
-    file://u-boot/0009-rcar-gen3-add-CMD_GPIO.patch \
+    file://0009-rcar-gen3-add-CMD_GPIO.patch \
 "
 SRC_URI_append_h3ulcb = '${@ \
     " file://0005-uboot-H3ULCB-support-fixed-PHY.patch \
