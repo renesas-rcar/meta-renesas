@@ -69,8 +69,8 @@ KERNEL_DEVICETREE_append_h3ulcb = '${@ \
     ""}'
 
 KERNEL_DEVICETREE_append_salvator-x = '${@ \
-    " renesas/r8a7795-salvator-x-view.dtb " if 'salvator-x-view' in '${MACHINE_FEATURES}' and '${SOC_FAMILY}' == 'r8a7795' else \
-    " renesas/r8a7796-salvator-x-view.dtb " if 'salvator-x-view' in '${MACHINE_FEATURES}' and '${SOC_FAMILY}' == 'r8a7796' else \
+    " renesas/r8a7795-salvator-x-view.dtb " if 'salvator-x-view' in '${MACHINE_FEATURES}' and 'r8a7795' in '${SOC_FAMILY}' else \
+    " renesas/r8a7796-salvator-x-view.dtb " if 'salvator-x-view' in '${MACHINE_FEATURES}' and 'r8a7796' in '${SOC_FAMILY}' else \
     ""}'
 
 KERNEL_DEVICETREE_append_m3ulcb = '${@ \
