@@ -1,17 +1,19 @@
 From cb44ea5eeadb1a95de4b81e93788b75ecb239b29 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Fri, 22 Apr 2016 23:27:23 +0300
-Subject: [PATCH] arm64: dts: r8a7795 view boards: stream from 1 cam
+Subject: [PATCH] arm64: dts: Gen3 view boards: stream from 1 cam
 
-csi2 stream from 1 camera on view boards:
+csi2 stream from 1 camera on Gen3 view boards:
 VIN0 or VIN4
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
  arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts   | 12 ++++++++----------
+ arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts   | 12 ++++++++----------
  arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts       | 12 ++++++++----------
  arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts        | 12 ++++++++----------
- 3 files changed, 16 insertions(+), 16 deletions(-)
+ arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts       | 12 ++++++++----------
+ 5 files changed, 40 insertions(+), 40 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
 index 42555a6..0987aab 100644
@@ -89,6 +91,46 @@ index 42555a6..0987aab 100644
  		};
  
  		csi2_41_in_ep: endpoint@1 {
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
+index 42555a6..0987aab 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
+@@ -675,7 +675,7 @@
+ 		port {
+ 			ov106xx_in0: endpoint {
+ 				clock-lanes = <0>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 				remote-endpoint = <&vin0ep0>;
+ 				ov106xx_out0: endpoint@ {
+ 					remote-endpoint = <&csi2_40_in_ep>;
+@@ -783,7 +783,7 @@
+ 		reg = <0x4c>;
+ 		gpios = <&gpio6 30 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+-		maxim,links = <4>;
++		maxim,links = <1>;
+ 	};
+ 
+ 	max9286-max9271@1 {
+@@ -988,7 +988,7 @@
+ 			vin0ep0: endpoint {
+ 				csi,select = "csi40";
+ 				virtual,channel = <0>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 				remote-endpoint = <&ov106xx_in0>;
+ 
+ 			};
+@@ -1230,7 +1230,7 @@
+ 		csi2_40_ep: endpoint@0 {
+ 			remote-endpoint = <&vin0ep0>;
+ 			clock-lanes = <0>;
+-			data-lanes = <1 2 3 4>;
++			data-lanes = <1>;
+ 		};
+ 
+ 		csi2_40_in_ep: endpoint@1 {
 diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
 index 42555a6..0987aab 100644
 --- a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
@@ -241,6 +283,46 @@ index 42555a6..0987aab 100644
  		};
  
  		csi2_41_in_ep: endpoint@1 {
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
+index 42555a6..0987aab 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
+@@ -420,7 +420,7 @@
+ 		port {
+ 			ov106xx_in0: endpoint {
+ 				clock-lanes = <0>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 				remote-endpoint = <&vin0ep0>;
+ 				ov106xx_out0: endpoint@ {
+ 					remote-endpoint = <&csi2_40_in_ep>;
+@@ -528,7 +528,7 @@
+ 		reg = <0x4c>;
+ 		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+-		maxim,links = <4>;
++		maxim,links = <1>;
+ 	};
+ 
+ 	max9286-max9271@1 {
+@@ -665,7 +665,7 @@
+ 			vin0ep0: endpoint {
+ 				csi,select = "csi40";
+ 				virtual,channel = <0>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 				remote-endpoint = <&ov106xx_in0>;
+ 
+ 			};
+@@ -893,7 +893,7 @@
+ 		csi2_40_ep: endpoint@0 {
+ 			remote-endpoint = <&vin0ep0>;
+ 			clock-lanes = <0>;
+-			data-lanes = <1 2 3 4>;
++			data-lanes = <1>;
+ 		};
+ 
+ 		csi2_40_in_ep: endpoint@1 {
 -- 
 1.9.1
 

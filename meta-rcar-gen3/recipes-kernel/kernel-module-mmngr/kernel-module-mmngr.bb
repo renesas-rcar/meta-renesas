@@ -11,7 +11,8 @@ S = "${WORKDIR}/git"
 MMNGR_DRV_DIR = "mmngr_drv/mmngr/mmngr-module/files/mmngr"
 
 MMNGR_CFG_salvator-x = "MMNGR_SALVATORX"
-MMNGR_CFG_h3ulcb = "MMNGR_H3ULCB"
+MMNGR_CFG_h3ulcb = "MMNGR_ULCB"
+MMNGR_CFG_m3ulcb = "MMNGR_ULCB"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}

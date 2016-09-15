@@ -6,6 +6,7 @@ Subject: [PATCH] mmc: add Micron eMMC fixup
 The following eMMC needs delay between switching to HS mode and
 sending new cmd:
 {name = "R1J57L", manfid = 0x13, oemid = 0x14e}
+{name = "R1J55A", manfid = 0x13, oemid = 0x14e}
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
@@ -32,7 +33,7 @@ index a13769e..b724590 100644
 +		(mmc->cid[2] >> 24) & 0xff);
 +
 +	/* This Micron eMMC needs delay after switch to HS mode */
-+	if (manfid == 0x13 && oemid == 0x14e && !strncmp(name, "R1J57L", 6))
++	if (manfid == 0x13 && oemid == 0x14e && !strncmp(name, "R1J5", 4))
 +		udelay(100);
 +}
  

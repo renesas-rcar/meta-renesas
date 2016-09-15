@@ -20,7 +20,7 @@ index d397b11..a8b373d 100644
  dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb \
 -			      r8a7795-salvator-x-view.dtb
 +			      r8a7795-salvator-x-view.dtb r8a7795-h3ulcb-had.dtb
- dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb
+ dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb r8a7796-m3ulcb.dtb
  
  always		:= $(dtb-y)
 diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts

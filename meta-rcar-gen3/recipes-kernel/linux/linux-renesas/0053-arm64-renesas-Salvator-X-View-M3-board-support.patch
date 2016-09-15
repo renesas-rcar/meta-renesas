@@ -1,39 +1,41 @@
-From 8e9a25327ce9500f78cbc52be23ec30a5562641e Mon Sep 17 00:00:00 2001
+From fe0468b7d127a37e210886ddecd168b0f73f217b Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
-Date: Wed, 7 Sep 2016 22:50:47 +0300
-Subject: [PATCH] arm64: renesas: Salvator-X.View board support
+Date: Thu, 15 Sep 2016 16:28:30 +0300
+Subject: [PATCH] arm64: renesas: Salvator-X.View M3 board support
 
-Salvator-X.View suport with 10635/10640 cameras
+Salvator-X.View M3 suport with 10635/10640 cameras
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
  arch/arm64/boot/dts/renesas/Makefile               |    3 +-
- .../boot/dts/renesas/r8a7795-salvator-x-view.dts   | 1369 ++++++++++++++++++++
- 2 files changed, 1371 insertions(+), 1 deletion(-)
- create mode 100644 arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
+ .../boot/dts/renesas/r8a7796-salvator-x-view.dts   | 1132 ++++++++++++++++++++
+ 2 files changed, 1134 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
 
 diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
-index eb72830..d397b11 100644
+index 6a2c09c..377524f 100644
 --- a/arch/arm64/boot/dts/renesas/Makefile
 +++ b/arch/arm64/boot/dts/renesas/Makefile
-@@ -1,4 +1,5 @@
--dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb
-+dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb \
-+			      r8a7795-salvator-x-view.dtb
- dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb
+@@ -1,7 +1,8 @@
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb \
+ 			      r8a7795-salvator-x-view.dtb r8a7795-h3ulcb-had.dtb \
+ 			      r8a7795-h3ulcb-view.dtb
+-dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb r8a7796-m3ulcb.dtb
++dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb r8a7796-m3ulcb.dtb \
++			      r8a7796-salvator-x-view.dtb
  
  always		:= $(dtb-y)
-diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
+ clean-files	:= *.dtb
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
 new file mode 100644
-index 0000000..d9cb8e7
+index 0000000..3a1ef51
 --- /dev/null
-+++ b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
-@@ -0,0 +1,1369 @@
++++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
+@@ -0,0 +1,1132 @@
 +/*
-+ * Device Tree Source for the Salvator-X.View board
++ * Device Tree Source for the Salvator-X board
 + *
-+ * Copyright (C) 2015-2016 Renesas Electronics Corp.
-+ * Copyright (C) 2016 Cogent Embedded, Inc.
++ * Copyright (C) 2016 Renesas Electronics Corp.
 + *
 + * This file is licensed under the terms of the GNU General Public License
 + * version 2.  This program is licensed "as is" without any warranty of any
@@ -64,18 +66,16 @@ index 0000000..d9cb8e7
 + */
 +
 +/dts-v1/;
-+#include "r8a7795.dtsi"
++#include "r8a7796.dtsi"
 +#include <dt-bindings/gpio/gpio.h>
 +
 +/ {
-+	model = "Renesas Salvator-X.View board based on r8a7795";
-+	compatible = "renesas,salvator-x", "renesas,r8a7795";
++	model = "Renesas Salvator-X board based on r8a7796";
++	compatible = "renesas,salvator-x", "renesas,r8a7796";
 +
 +	aliases {
 +		serial0 = &scif2;
 +		serial1 = &scif1;
-+		serial2 = &scif3;
-+		serial3 = &hscif3;
 +		ethernet0 = &avb;
 +	};
 +
@@ -87,22 +87,12 @@ index 0000000..d9cb8e7
 +	memory@48000000 {
 +		device_type = "memory";
 +		/* first 128MB is reserved for secure area. */
-+		reg = <0x0 0x48000000 0x0 0x38000000>;
-+	};
-+
-+	memory@500000000 {
-+		device_type = "memory";
-+		reg = <0x5 0x00000000 0x0 0x40000000>;
++		reg = <0x0 0x48000000 0x0 0x78000000>;
 +	};
 +
 +	memory@600000000 {
 +		device_type = "memory";
-+		reg = <0x6 0x00000000 0x0 0x40000000>;
-+	};
-+
-+	memory@700000000 {
-+		device_type = "memory";
-+		reg = <0x7 0x00000000 0x0 0x40000000>;
++		reg = <0x6 0x00000000 0x0 0x80000000>;
 +	};
 +
 +	reserved-memory {
@@ -291,7 +281,7 @@ index 0000000..d9cb8e7
 +			port@0 {
 +				reg = <0>;
 +				lvds_enc_in: endpoint {
-+					remote-endpoint = <&du_out_lvds0>;
++					remote-endpoint = <&du_out_lvds>;
 +				};
 +			};
 +			port@1 {
@@ -329,7 +319,7 @@ index 0000000..d9cb8e7
 +		};
 +	};
 +
-+	hdmi0-encoder {
++	hdmi-encoder {
 +		compatible = "rockchip,rcar-dw-hdmi";
 +
 +		ports {
@@ -337,58 +327,26 @@ index 0000000..d9cb8e7
 +			#size-cells = <0>;
 +			port@0 {
 +				reg = <0>;
-+				rcar_dw_hdmi0_in: endpoint {
-+					remote-endpoint = <&du_out_hdmi0>;
++				rcar_dw_hdmi_in: endpoint {
++					remote-endpoint = <&du_out_hdmi>;
 +				};
 +			};
 +			port@1 {
 +				reg = <1>;
-+				rcar_dw_hdmi0_out: endpoint {
-+					remote-endpoint = <&hdmi0_con>;
++				rcar_dw_hdmi_out: endpoint {
++					remote-endpoint = <&hdmi_con>;
 +				};
 +			};
 +		};
 +	};
 +
-+	hdmi0-out {
++	hdmi-out {
 +		compatible = "hdmi-connector";
 +		type = "a";
 +
 +		port {
-+			hdmi0_con: endpoint {
-+				remote-endpoint = <&rcar_dw_hdmi0_out>;
-+			};
-+		};
-+	};
-+
-+	hdmi1-encoder {
-+		compatible = "rockchip,rcar-dw-hdmi";
-+
-+		ports {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+			port@0 {
-+				reg = <0>;
-+				rcar_dw_hdmi1_in: endpoint {
-+					remote-endpoint = <&du_out_hdmi1>;
-+				};
-+			};
-+			port@1 {
-+				reg = <1>;
-+				rcar_dw_hdmi1_out: endpoint {
-+					remote-endpoint = <&hdmi1_con>;
-+				};
-+			};
-+		};
-+	};
-+
-+	hdmi1-out {
-+		compatible = "hdmi-connector";
-+		type = "a";
-+
-+		port {
-+			hdmi1_con: endpoint {
-+				remote-endpoint = <&rcar_dw_hdmi1_out>;
++			hdmi_con: endpoint {
++				remote-endpoint = <&rcar_dw_hdmi_out>;
 +			};
 +		};
 +	};
@@ -405,13 +363,7 @@ index 0000000..d9cb8e7
 +		clock-frequency = <33000000>;
 +	};
 +
-+	x22_clk: x22-clock {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <33000000>;
-+	};
-+
-+	dclkin_p3: clock_out1 {
++	programmable_clk1: clock_out1 {
 +		compatible = "fixed-clock";
 +		#clock-cells = <0>;
 +		clock-frequency = <108000000>;
@@ -448,10 +400,7 @@ index 0000000..d9cb8e7
 +};
 +
 +&du {
-+	pinctrl-0 = <&du_pins>;
-+	pinctrl-names = "default";
 +	status = "okay";
-+
 +	backlight = <&gpio6 7 GPIO_ACTIVE_HIGH>;
 +
 +	ports {
@@ -462,15 +411,10 @@ index 0000000..d9cb8e7
 +		};
 +		port@1 {
 +			endpoint {
-+				remote-endpoint = <&rcar_dw_hdmi0_in>;
++				remote-endpoint = <&rcar_dw_hdmi_in>;
 +			};
 +		};
 +		port@2 {
-+			endpoint {
-+				remote-endpoint = <&rcar_dw_hdmi1_in>;
-+			};
-+		};
-+		port@3 {
 +			endpoint {
 +				remote-endpoint = <&lvds_enc_in>;
 +			};
@@ -482,10 +426,6 @@ index 0000000..d9cb8e7
 +	clock-frequency = <16666666>;
 +};
 +
-+&extalr_clk {
-+	clock-frequency = <32768>;
-+};
-+
 +&pfc {
 +	pinctrl-0 = <&scif_clk_pins>;
 +	pinctrl-names = "default";
@@ -494,7 +434,6 @@ index 0000000..d9cb8e7
 +		groups = "pwm1_a", "pwm1_b";
 +		function = "pwm1";
 +	};
-+
 +	pwm2_pins: pwm2 {
 +		groups = "pwm2_a", "pwm2_b";
 +		function = "pwm2";
@@ -504,18 +443,12 @@ index 0000000..d9cb8e7
 +		groups = "scif1_data_a", "scif1_ctrl";
 +		function = "scif1";
 +	};
++
 +	scif2_pins: scif2 {
 +		groups = "scif2_data_a";
 +		function = "scif2";
 +	};
-+	scif3_pins: scif3 { /* TX: 1_11, RX: 1_8 */
-+		groups = "scif3_data_b";
-+		function = "scif3";
-+	};
-+	hscif3_pins: hscif3 { /* TX: 2_8, RX: 2_7 */
-+		groups = "hscif3_data_d";
-+		function = "hscif3";
-+	};
++
 +	scif_clk_pins: scif_clk {
 +		groups = "scif_clk_a";
 +		function = "scif_clk";
@@ -586,7 +519,7 @@ index 0000000..d9cb8e7
 +
 +	msiof3_pins: spi4 {
 +		groups = "msiof3_clk_d", "msiof3_sync_d",
-+				"msiof3_rxd_d",  "msiof3_txd_d";
++						"msiof3_rxd_d",  "msiof3_txd_d";
 +		function = "msiof3";
 +	};
 +
@@ -597,7 +530,7 @@ index 0000000..d9cb8e7
 +
 +	sound_clk_pins: sound_clk {
 +		groups = "audio_clk_a_a", "audio_clk_b_a", "audio_clk_c_a",
-+			 "audio_clkout_a", "audio_clkout3_a";
++				 "audio_clkout_a", "audio_clkout3_a";
 +		function = "audio_clk";
 +	};
 +
@@ -610,16 +543,6 @@ index 0000000..d9cb8e7
 +		groups = "usb1";
 +		function = "usb1";
 +	};
-+
-+	usb2_pins: usb2 {
-+		groups = "usb2";
-+		function = "usb2";
-+	};
-+
-+	du_pins: du {
-+		groups = "du_rgb888", "du_sync", "du_clk_out_0", "du_disp";
-+		function = "du";
-+	};
 +};
 +
 +&adsp {
@@ -630,26 +553,7 @@ index 0000000..d9cb8e7
 +&scif1 {
 +	pinctrl-0 = <&scif1_pins>;
 +	pinctrl-names = "default";
-+
-+	uart-has-rtscts;
-+	/* Please use exclusively to the hscif1 node */
 +	status = "okay";
-+};
-+
-+&scif3 {
-+	pinctrl-0 = <&scif3_pins>;
-+	pinctrl-names = "default";
-+	/* Please use exclusively to the pwm1 node */
-+	/* status = "okay"; */
-+};
-+
-+/* SCIF3 TX -> HSCIF3 RX, HSCIF3 TX -> SCIF3 RX */
-+
-+&hscif3 {
-+	pinctrl-0 = <&hscif3_pins>;
-+	pinctrl-names = "default";
-+	/* Please use exclusively to the pwm1 node */
-+	/* status = "okay"; */
 +};
 +
 +&scif2 {
@@ -709,6 +613,7 @@ index 0000000..d9cb8e7
 +
 +&i2c4 {
 +	status = "okay";
++
 +	clock-frequency = <400000>;
 +
 +	ov106xx@0 {
@@ -776,47 +681,8 @@ index 0000000..d9cb8e7
 +				data-lanes = <1 2 3 4>;
 +				remote-endpoint = <&vin4ep0>;
 +				ov106xx_out4: endpoint@ {
-+					remote-endpoint = <&csi2_41_in_ep>;
++					remote-endpoint = <&csi2_20_in_ep>;
 +				};
-+			};
-+		};
-+	};
-+
-+	ov106xx@5 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x65>;
-+
-+		port {
-+			ov106xx_in5: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin5ep0>;
-+			};
-+		};
-+	};
-+
-+	ov106xx@6 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x66>;
-+
-+		port {
-+			ov106xx_in6: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin6ep0>;
-+			};
-+		};
-+	};
-+
-+	ov106xx@7 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x67>;
-+
-+		port {
-+			ov106xx_in7: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin7ep0>;
 +			};
 +		};
 +	};
@@ -833,22 +699,23 @@ index 0000000..d9cb8e7
 +		compatible = "maxim,max9286-max9271";
 +		reg = <0x6c>;
 +		maxim,sensor_delay = <0>;
-+		maxim,links = <4>;
++		maxim,links = <1>;
 +	};
 +
 +	clk_5p49v5923a: programmable_clk@6a {
 +		compatible = "idt,5p49v5923a";
 +		reg = <0x6a>;
 +
-+		programable_clk0: 5p49v5923a_clk1@6a {
++		programmable_clk0: 5p49v5923a_clk1@6a {
 +			#clock-cells = <0>;
 +			clocks = <&dclkin_p0>;
 +		};
-+
-+		programable_clk1: 5p49v5923a_clk2@6a {
-+			#clock-cells = <0>;
-+			clocks = <&dclkin_p3>;
-+		};
++/*
++ *		programmable_clk1: 5p49v5923a_clk2@6a {
++ *			#clock-cells = <0>;
++ *			clocks = <&dclkin_p2>;
++ *		};
++ */
 +	};
 +};
 +
@@ -883,7 +750,7 @@ index 0000000..d9cb8e7
 +		 <&cpg CPG_MOD 1019>, <&cpg CPG_MOD 1018>,
 +		 <&audio_clk_a>, <&cs2000>,
 +		 <&audio_clk_c>,
-+		 <&cpg CPG_CORE R8A7795_CLK_S0D4>;
++		 <&cpg CPG_CORE R8A7796_CLK_S0D4>;
 +
 +	rcar_sound,dai {
 +		dai0 {
@@ -891,10 +758,6 @@ index 0000000..d9cb8e7
 +			capture  = <&ssi1 &src1 &dvc1>;
 +		};
 +	};
-+};
-+
-+&sata {
-+	status = "okay";
 +};
 +
 +&sdhi0 {
@@ -984,7 +847,6 @@ index 0000000..d9cb8e7
 +		reg = <0>;
 +		interrupt-parent = <&gpio2>;
 +		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
-+		max-speed = <1000>;
 +	};
 +};
 +
@@ -1007,13 +869,6 @@ index 0000000..d9cb8e7
 +	status = "okay";
 +};
 +
-+&usb2_phy2 {
-+	pinctrl-0 = <&usb2_pins>;
-+	pinctrl-names = "default";
-+
-+	status = "okay";
-+};
-+
 +&hsusb {
 +	status = "okay";
 +};
@@ -1026,19 +881,11 @@ index 0000000..d9cb8e7
 +	status = "okay";
 +};
 +
-+&ehci2 {
-+	status = "okay";
-+};
-+
 +&ohci0 {
 +	status = "okay";
 +};
 +
 +&ohci1 {
-+	status = "okay";
-+};
-+
-+&ohci2 {
 +	status = "okay";
 +};
 +
@@ -1224,76 +1071,7 @@ index 0000000..d9cb8e7
 +		};
 +		port@1 {
 +			csi2ep0: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin5 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin5ep0: endpoint@0 {
-+				csi,select = "csi41";
-+				virtual,channel = <1>;
-+				remote-endpoint = <&ov106xx_in5>;
-+				data-lanes = <1 2 3 4>;
-+			};
-+		};
-+		port@1 {
-+			csi2ep1: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin6 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin6ep0: endpoint@0 {
-+				csi,select = "csi41";
-+				virtual,channel = <2>;
-+				remote-endpoint = <&ov106xx_in6>;
-+				data-lanes = <1 2 3 4>;
-+			};
-+		};
-+		port@1 {
-+			csi2ep2: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin7 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin7ep0: endpoint@0 {
-+				csi,select = "csi41";
-+				virtual,channel = <3>;
-+				remote-endpoint = <&ov106xx_in7>;
-+				data-lanes = <1 2 3 4>;
-+			};
-+		};
-+		port@1 {
-+			csi2ep3: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
++				remote-endpoint = <&csi2_20_ep>;
 +			};
 +		};
 +	};
@@ -1339,7 +1117,7 @@ index 0000000..d9cb8e7
 +	};
 +};
 +
-+&csi2_41 {
++&csi2_20 {
 +	status = "okay";
 +
 +	adi,input-interface = "ycbcr422";
@@ -1367,35 +1145,23 @@ index 0000000..d9cb8e7
 +		#address-cells = <1>;
 +		#size-cells = <0>;
 +
-+		csi2_41_ep: endpoint@0 {
++		csi2_20_ep: endpoint@0 {
 +			remote-endpoint = <&vin4ep0>;
 +			clock-lanes = <0>;
-+			data-lanes = <1 2 3 4>;
++			data-lanes = <1>;
 +		};
 +
-+		csi2_41_in_ep: endpoint@1 {
++		csi2_20_in_ep: endpoint@1 {
 +			remote-endpoint = <&ov106xx_out4>;
 +		};
 +	};
 +};
 +
-+&vspbc {
-+	status = "okay";
-+};
-+
-+&vspbd {
++&vspb {
 +	status = "okay";
 +};
 +
 +&vspi0 {
-+	status = "okay";
-+};
-+
-+&vspi1 {
-+	status = "okay";
-+};
-+
-+&vspi2 {
 +	status = "okay";
 +};
 -- 

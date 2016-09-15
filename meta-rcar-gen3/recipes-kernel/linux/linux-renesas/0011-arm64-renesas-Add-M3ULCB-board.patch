@@ -1,37 +1,50 @@
-From 51e96cd87b7cbf4c26784e06247022b6ab8f526d Mon Sep 17 00:00:00 2001
+From 46ffe3b24405bd955f8865f4260f4101672148e5 Mon Sep 17 00:00:00 2001
 From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
-Date: Wed, 7 Sep 2016 22:45:53 +0300
-Subject: [PATCH] arm64: renesas: H3ULCB.View board support
+Date: Mon, 12 Sep 2016 14:00:24 +0300
+Subject: [PATCH] arm64: renesas: Add M3ULCB board
 
-H3ULCB.View suport with 10635/10640 cameras
+This adds M3ULCB board support
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
- arch/arm64/boot/dts/renesas/Makefile               |   3 +-
- .../arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts | 966 +++++++++++++++++++++
- 2 files changed, 968 insertions(+), 1 deletion(-)
- create mode 100644 arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+ Documentation/devicetree/bindings/arm/shmobile.txt |   2 +
+ arch/arm64/boot/dts/renesas/Makefile               |   2 +-
+ arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts     | 534 +++++++++++++++++++++
+ 3 files changed, 537 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts
 
+diff --git a/Documentation/devicetree/bindings/arm/shmobile.txt b/Documentation/devicetree/bindings/arm/shmobile.txt
+index 72d349a..4429960 100644
+--- a/Documentation/devicetree/bindings/arm/shmobile.txt
++++ b/Documentation/devicetree/bindings/arm/shmobile.txt
+@@ -59,6 +59,8 @@ Boards:
+     compatible = "renesas,kzm9g", "renesas,sh73a0"
+   - Lager (RTP0RC7790SEB00010S)
+     compatible = "renesas,lager", "renesas,r8a7790"
++  - M3ULCB (RTP0RC7796SKB00010S)
++    compatible = "renesas,m3ulcb", "renesas,r8a7796";
+   - Marzen
+     compatible = "renesas,marzen", "renesas,r8a7779"
+   - Porter (M2-LCDP)
 diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
-index a8b373d..44cea84 100644
+index eb72830..1618e0a 100644
 --- a/arch/arm64/boot/dts/renesas/Makefile
 +++ b/arch/arm64/boot/dts/renesas/Makefile
-@@ -1,5 +1,6 @@
- dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb \
--			      r8a7795-salvator-x-view.dtb r8a7795-h3ulcb-had.dtb
-+			      r8a7795-salvator-x-view.dtb r8a7795-h3ulcb-had.dtb \
-+			      r8a7795-h3ulcb-view.dtb
- dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb r8a7796-m3ulcb.dtb
+@@ -1,5 +1,5 @@
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb
+-dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb
++dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb r8a7796-m3ulcb.dtb
  
  always		:= $(dtb-y)
-diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+ clean-files	:= *.dtb
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts
 new file mode 100644
-index 0000000..2b266cc
+index 0000000..7956df8
 --- /dev/null
-+++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
-@@ -0,0 +1,966 @@
++++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts
+@@ -0,0 +1,534 @@
 +/*
-+ * Device Tree Source for the H3ULCB.View board
++ * Device Tree Source for the M3ULCB board
 + *
 + * Copyright (C) 2016 Renesas Electronics Corp.
 + * Copyright (C) 2016 Cogent Embedded, Inc.
@@ -42,13 +55,13 @@ index 0000000..2b266cc
 + */
 +
 +/dts-v1/;
-+#include "r8a7795.dtsi"
++#include "r8a7796.dtsi"
 +#include <dt-bindings/gpio/gpio.h>
 +#include <dt-bindings/input/input.h>
 +
 +/ {
-+	model = "Renesas H3ULCB.View board based on r8a7795";
-+	compatible = "renesas,h3ulcb-view", "renesas,r8a7795";
++	model = "Renesas M3ULCB board based on r8a7796";
++	compatible = "renesas,m3ulcb", "renesas,r8a7796";
 +
 +	aliases {
 +		serial0 = &scif2;
@@ -63,22 +76,12 @@ index 0000000..2b266cc
 +	memory@48000000 {
 +		device_type = "memory";
 +		/* first 128MB is reserved for secure area. */
-+		reg = <0x0 0x48000000 0x0 0x38000000>;
-+	};
-+
-+	memory@500000000 {
-+		device_type = "memory";
-+		reg = <0x5 0x00000000 0x0 0x40000000>;
++		reg = <0x0 0x48000000 0x0 0x78000000>;
 +	};
 +
 +	memory@600000000 {
 +		device_type = "memory";
-+		reg = <0x6 0x00000000 0x0 0x40000000>;
-+	};
-+
-+	memory@700000000 {
-+		device_type = "memory";
-+		reg = <0x7 0x00000000 0x0 0x40000000>;
++		reg = <0x6 0x00000000 0x0 0x80000000>;
 +	};
 +
 +	reserved-memory {
@@ -225,7 +228,7 @@ index 0000000..2b266cc
 +		compatible = "renesas,vspm_if";
 +	};
 +
-+	hdmi0-encoder {
++	hdmi-encoder {
 +		compatible = "rockchip,rcar-dw-hdmi";
 +
 +		ports {
@@ -233,31 +236,31 @@ index 0000000..2b266cc
 +			#size-cells = <0>;
 +			port@0 {
 +				reg = <0>;
-+				rcar_dw_hdmi0_in: endpoint {
-+					remote-endpoint = <&du_out_hdmi0>;
++				rcar_dw_hdmi_in: endpoint {
++					remote-endpoint = <&du_out_hdmi>;
 +				};
 +			};
 +			port@1 {
 +				reg = <1>;
-+				rcar_dw_hdmi0_out: endpoint {
-+					remote-endpoint = <&hdmi0_con>;
++				rcar_dw_hdmi_out: endpoint {
++					remote-endpoint = <&hdmi_con>;
 +				};
 +			};
 +		};
 +	};
 +
-+	hdmi0-out {
++	hdmi-out {
 +		compatible = "hdmi-connector";
 +		type = "a";
 +
 +		port {
-+			hdmi0_con: endpoint {
-+				remote-endpoint = <&rcar_dw_hdmi0_out>;
++			hdmi_con: endpoint {
++				remote-endpoint = <&rcar_dw_hdmi_out>;
 +			};
 +		};
 +	};
 +
-+	programable_clk0: 5p49v5923a_clk0 {
++	programmable_clk0: 5p49v5923a_clk0 {
 +		compatible = "fixed-clock";
 +		#clock-cells = <0>;
 +		clock-frequency = <148500000>;
@@ -269,13 +272,7 @@ index 0000000..2b266cc
 +		clock-frequency = <33000000>;
 +	};
 +
-+	x22_clk: 5p49v5923a_clk3 {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <33000000>;
-+	};
-+
-+	programable_clk1: 5p49v5923a_clk1 {
++	programmable_clk1: 5p49v5923a_clk1 {
 +		compatible = "fixed-clock";
 +		#clock-cells = <0>;
 +		clock-frequency = <108000000>;
@@ -294,7 +291,7 @@ index 0000000..2b266cc
 +	ports {
 +		port@1 {
 +			endpoint {
-+				remote-endpoint = <&rcar_dw_hdmi0_in>;
++				remote-endpoint = <&rcar_dw_hdmi_in>;
 +			};
 +		};
 +	};
@@ -302,10 +299,6 @@ index 0000000..2b266cc
 +
 +&extal_clk {
 +	clock-frequency = <16666666>;
-+};
-+
-+&extalr_clk {
-+	clock-frequency = <32768>;
 +};
 +
 +&pfc {
@@ -363,7 +356,7 @@ index 0000000..2b266cc
 +
 +	sound_clk_pins: sound_clk {
 +		groups = "audio_clk_a_a", "audio_clk_b_a", "audio_clk_c_a",
-+			 "audio_clkout_a", "audio_clkout3_a";
++				 "audio_clkout_a", "audio_clkout3_a";
 +		function = "audio_clk";
 +	};
 +
@@ -381,6 +374,7 @@ index 0000000..2b266cc
 +&scif2 {
 +	pinctrl-0 = <&scif2_pins>;
 +	pinctrl-names = "default";
++
 +	status = "okay";
 +};
 +
@@ -428,132 +422,6 @@ index 0000000..2b266cc
 +&i2c4 {
 +	status = "okay";
 +	clock-frequency = <400000>;
-+
-+	ov106xx@0 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x60>;
-+
-+		port {
-+			ov106xx_in0: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin0ep0>;
-+				ov106xx_out0: endpoint@ {
-+					remote-endpoint = <&csi2_40_in_ep>;
-+				};
-+			};
-+		};
-+	};
-+
-+	ov106xx@1 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x61>;
-+
-+		port {
-+			ov106xx_in1: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin1ep0>;
-+			};
-+		};
-+	};
-+
-+	ov106xx@2 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x62>;
-+
-+		port {
-+			ov106xx_in2: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin2ep0>;
-+			};
-+		};
-+	};
-+
-+	ov106xx@3 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x63>;
-+
-+		port {
-+			ov106xx_in3: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin3ep0>;
-+			};
-+		};
-+	};
-+
-+	ov106xx@4 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x64>;
-+
-+		port {
-+			ov106xx_in4: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin4ep0>;
-+				ov106xx_out4: endpoint@ {
-+					remote-endpoint = <&csi2_41_in_ep>;
-+				};
-+			};
-+		};
-+	};
-+
-+	ov106xx@5 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x65>;
-+
-+		port {
-+			ov106xx_in5: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin5ep0>;
-+			};
-+		};
-+	};
-+
-+	ov106xx@6 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x66>;
-+
-+		port {
-+			ov106xx_in6: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin6ep0>;
-+			};
-+		};
-+	};
-+
-+	ov106xx@7 {
-+		compatible = "maxim,max9286-max9271-ov106xx";
-+		reg = <0x67>;
-+
-+		port {
-+			ov106xx_in7: endpoint {
-+				clock-lanes = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&vin7ep0>;
-+			};
-+		};
-+	};
-+
-+	max9286-max9271@0 {
-+		compatible = "maxim,max9286-max9271";
-+		reg = <0x4c>;
-+		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
-+		maxim,sensor_delay = <0>;
-+		maxim,links = <4>;
-+	};
-+
-+	max9286-max9271@1 {
-+		compatible = "maxim,max9286-max9271";
-+		reg = <0x6c>;
-+		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
-+		maxim,sensor_delay = <0>;
-+		maxim,links = <4>;
-+	};
 +};
 +
 +&rcar_sound {
@@ -587,205 +455,12 @@ index 0000000..2b266cc
 +		 <&cpg CPG_MOD 1019>, <&cpg CPG_MOD 1018>,
 +		 <&audio_clk_a>, <&cs2000>,
 +		 <&audio_clk_c>,
-+		 <&cpg CPG_CORE R8A7795_CLK_S0D4>;
++		 <&cpg CPG_CORE R8A7796_CLK_S0D4>;
 +
 +	rcar_sound,dai {
 +		dai0 {
 +			playback = <&ssi0 &src0 &dvc0>;
 +			capture  = <&ssi1 &src1 &dvc1>;
-+		};
-+	};
-+};
-+
-+&pcie_bus_clk {
-+	status = "okay";
-+};
-+
-+&pciec1 {
-+	status = "okay";
-+};
-+
-+&vin0 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin0ep0: endpoint {
-+				csi,select = "csi40";
-+				virtual,channel = <0>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&ov106xx_in0>;
-+
-+			};
-+		};
-+		port@1 {
-+			csi0ep0: endpoint {
-+				remote-endpoint = <&csi2_40_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin1 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin1ep0: endpoint {
-+				csi,select = "csi40";
-+				virtual,channel = <1>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&ov106xx_in1>;
-+			};
-+		};
-+		port@1 {
-+			csi0ep1: endpoint {
-+				remote-endpoint = <&csi2_40_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin2 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin2ep0: endpoint {
-+				csi,select = "csi40";
-+				virtual,channel = <2>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&ov106xx_in2>;
-+			};
-+		};
-+		port@1 {
-+			csi0ep2: endpoint {
-+				remote-endpoint = <&csi2_40_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin3 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin3ep0: endpoint {
-+				csi,select = "csi40";
-+				virtual,channel = <3>;
-+				data-lanes = <1 2 3 4>;
-+				remote-endpoint = <&ov106xx_in3>;
-+			};
-+		};
-+		port@1 {
-+			csi0ep3: endpoint {
-+				remote-endpoint = <&csi2_40_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin4 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin4ep0: endpoint {
-+				csi,select = "csi41";
-+				virtual,channel = <0>;
-+				remote-endpoint = <&ov106xx_in4>;
-+				data-lanes = <1 2 3 4>;
-+			};
-+		};
-+		port@1 {
-+			csi2ep0: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin5 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin5ep0: endpoint@0 {
-+				csi,select = "csi41";
-+				virtual,channel = <1>;
-+				remote-endpoint = <&ov106xx_in5>;
-+				data-lanes = <1 2 3 4>;
-+			};
-+		};
-+		port@1 {
-+			csi2ep1: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin6 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin6ep0: endpoint@0 {
-+				csi,select = "csi41";
-+				virtual,channel = <2>;
-+				remote-endpoint = <&ov106xx_in6>;
-+				data-lanes = <1 2 3 4>;
-+			};
-+		};
-+		port@1 {
-+			csi2ep2: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
-+			};
-+		};
-+	};
-+};
-+
-+&vin7 {
-+	status = "okay";
-+
-+	ports {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		port@0 {
-+			vin7ep0: endpoint@0 {
-+				csi,select = "csi41";
-+				virtual,channel = <3>;
-+				remote-endpoint = <&ov106xx_in7>;
-+				data-lanes = <1 2 3 4>;
-+			};
-+		};
-+		port@1 {
-+			csi2ep3: endpoint {
-+				remote-endpoint = <&csi2_41_ep>;
-+			};
 +		};
 +	};
 +};
@@ -863,7 +538,6 @@ index 0000000..2b266cc
 +		reg = <0>;
 +		interrupt-parent = <&gpio2>;
 +		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
-+		max-speed = <1000>;
 +	};
 +};
 +
@@ -882,7 +556,6 @@ index 0000000..2b266cc
 +	status = "okay";
 +};
 +
-+
 +&msiof1 {
 +	pinctrl-0 = <&msiof1_pins>;
 +	pinctrl-names = "default";
@@ -891,109 +564,17 @@ index 0000000..2b266cc
 +	spidev@0 {
 +		compatible = "renesas,sh-msiof";
 +		reg = <0>;
-+		spi-max-frequency = <66666666>;
++		spi-max-frequency = <33333333>;
 +		spi-cpha;
 +		spi-cpol;
 +	};
 +};
 +
-+&csi2_40 {
-+	status = "okay";
-+
-+	adi,input-interface = "ycbcr422";
-+
-+	virtual,channel {
-+		csi2_vc0 {
-+			data,type = "ycbcr422";
-+			receive,vc = <0>;
-+		};
-+		csi2_vc1 {
-+			data,type = "ycbcr422";
-+			receive,vc = <1>;
-+		};
-+		csi2_vc2 {
-+			data,type = "ycbcr422";
-+			receive,vc = <2>;
-+		};
-+		csi2_vc3 {
-+			data,type = "ycbcr422";
-+			receive,vc = <3>;
-+		};
-+	};
-+
-+	port {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		csi2_40_ep: endpoint@0 {
-+			remote-endpoint = <&vin0ep0>;
-+			clock-lanes = <0>;
-+			data-lanes = <1 2 3 4>;
-+		};
-+
-+		csi2_40_in_ep: endpoint@1 {
-+			remote-endpoint = <&ov106xx_out0>;
-+		};
-+	};
-+};
-+
-+&csi2_41 {
-+	status = "okay";
-+
-+	adi,input-interface = "ycbcr422";
-+
-+	virtual,channel {
-+		csi2_vc0 {
-+			data,type = "ycbcr422";
-+			receive,vc = <0>;
-+		};
-+		csi2_vc1 {
-+			data,type = "ycbcr422";
-+			receive,vc = <1>;
-+		};
-+		csi2_vc2 {
-+			data,type = "ycbcr422";
-+			receive,vc = <2>;
-+		};
-+		csi2_vc3 {
-+			data,type = "ycbcr422";
-+			receive,vc = <3>;
-+		};
-+	};
-+
-+	port {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		csi2_41_ep: endpoint@0 {
-+			remote-endpoint = <&vin4ep0>;
-+			clock-lanes = <0>;
-+			data-lanes = <1 2 3 4>;
-+		};
-+
-+		csi2_41_in_ep: endpoint@1 {
-+			remote-endpoint = <&ov106xx_out4>;
-+		};
-+	};
-+};
-+
-+&vspbc {
-+	status = "okay";
-+};
-+
-+&vspbd {
++&vspb {
 +	status = "okay";
 +};
 +
 +&vspi0 {
-+	status = "okay";
-+};
-+
-+&vspi1 {
-+	status = "okay";
-+};
-+
-+&vspi2 {
 +	status = "okay";
 +};
 -- 

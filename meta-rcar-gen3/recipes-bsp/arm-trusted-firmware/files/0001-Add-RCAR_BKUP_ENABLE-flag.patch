@@ -3,8 +3,8 @@ From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Sat, 10 Sep 2016 23:48:31 +0300
 Subject: [PATCH] Add RCAR_BKUP_ENABLE flag
 
-This makes possible to disable Suspend to RAM feature
-for hardware that has no BKUP_TRG signal populated to H3 gpio
+This make possible to disable Suspend to RAM feature
+for hardware that has no BKUP_TRG signal populated to H3/M3 gpio
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---

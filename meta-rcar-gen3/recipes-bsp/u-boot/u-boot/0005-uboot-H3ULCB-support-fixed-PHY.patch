@@ -7,7 +7,7 @@ Add support for fixed-PHY on H3ULCB
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
- board/renesas/h3ulcb/h3ulcb.c |  5 +++++
+ board/renesas/ulcb/ulcb.c     |  5 +++++
  drivers/net/phy/Makefile      |  1 +
  drivers/net/phy/fixed.c       | 43 +++++++++++++++++++++++++++++++++++++++++++
  drivers/net/phy/phy.c         |  5 ++++-
@@ -16,10 +16,10 @@ Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
  6 files changed, 57 insertions(+), 1 deletion(-)
  create mode 100644 drivers/net/phy/fixed.c
 
-diff --git a/board/renesas/h3ulcb/h3ulcb.c b/board/renesas/h3ulcb/h3ulcb.c
+diff --git a/board/renesas/ulcb/ulcb.c b/board/renesas/ulcb/ulcb.c
 index 32a63c9..dcca4f8 100644
---- a/board/renesas/h3ulcb/h3ulcb.c
-+++ b/board/renesas/h3ulcb/h3ulcb.c
+--- a/board/renesas/ulcb/ulcb.c
++++ b/board/renesas/ulcb/ulcb.c
 @@ -26,6 +26,7 @@
  #include <asm/arch/sh_sdhi.h>
  #include <i2c.h>
@@ -29,7 +29,7 @@ index 32a63c9..dcca4f8 100644
  DECLARE_GLOBAL_DATA_PTR;
  
 @@ -193,6 +193,10 @@ int board_eth_init(bd_t *bis)
- /* H3ULCB has KSZ9031RNX */
+ /* ULCB has KSZ9031RNX */
  int board_phy_config(struct phy_device *phydev)
  {
 +#ifdef CONFIG_PHY_FIXED

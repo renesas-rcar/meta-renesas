@@ -8,19 +8,19 @@ H3ULCB is an entry level development board based on R-Car H3 SoC (R8A7795)
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
  arch/arm/cpu/armv8/Kconfig       |   6 +-
- board/renesas/h3ulcb/Kconfig     |  18 +++
- board/renesas/h3ulcb/MAINTAINERS |   6 +
- board/renesas/h3ulcb/Makefile    |  10 ++
- board/renesas/h3ulcb/h3ulcb.c    | 301 +++++++++++++++++++++++++++++++++++++++
+ board/renesas/ulcb/Kconfig       |  18 +++
+ board/renesas/ulcb/MAINTAINERS   |   6 +
+ board/renesas/ulcb/Makefile      |  10 ++
+ board/renesas/ulcb/ulcb.c        | 301 +++++++++++++++++++++++++++++++++++++++
  common/cmd_load.c                |   2 +-
  configs/h3ulcb_defconfig         |   7 +
  drivers/serial/serial_sh.c       |   4 +-
  include/configs/h3ulcb.h         | 120 ++++++++++++++++
  9 files changed, 470 insertions(+), 4 deletions(-)
- create mode 100644 board/renesas/h3ulcb/Kconfig
- create mode 100644 board/renesas/h3ulcb/MAINTAINERS
- create mode 100644 board/renesas/h3ulcb/Makefile
- create mode 100644 board/renesas/h3ulcb/h3ulcb.c
+ create mode 100644 board/renesas/ulcb/Kconfig
+ create mode 100644 board/renesas/ulcb/MAINTAINERS
+ create mode 100644 board/renesas/ulcb/Makefile
+ create mode 100644 board/renesas/ulcb/ulcb.c
  create mode 100644 configs/h3ulcb_defconfig
  create mode 100644 include/configs/h3ulcb.h
 
@@ -32,37 +32,37 @@ index 2daadc9..353df92 100644
  config TARGET_SALVATOR_X
          bool "Salvator-X board"
  
-+config TARGET_H3ULCB
-+        bool "H3ULCB board"
++config TARGET_ULCB
++        bool "ULCB board"
 +
  endchoice
  
- config SYS_SOC
+ choice
 @@ -20,9 +23,10 @@ config SYS_SOC
  
  config RMOBILE_EXTRAM_BOOT
          bool "Enable boot from RAM"
 -        depends on TARGET_SALVATOR_X
-+        depends on TARGET_SALVATOR_X || TARGET_H3ULCB
++        depends on TARGET_SALVATOR_X || TARGET_ULCB
          default n
  
  source "board/renesas/salvator-x/Kconfig"
-+source "board/renesas/h3ulcb/Kconfig"
++source "board/renesas/ulcb/Kconfig"
  
  endif
-diff --git a/board/renesas/h3ulcb/Kconfig b/board/renesas/h3ulcb/Kconfig
+diff --git a/board/renesas/ulcb/Kconfig b/board/renesas/ulcb/Kconfig
 new file mode 100644
 index 0000000..1fc4b47
 --- /dev/null
-+++ b/board/renesas/h3ulcb/Kconfig
-@@ -0,0 +1,18 @@
-+if TARGET_H3ULCB
++++ b/board/renesas/ulcb/Kconfig
+@@ -0,0 +1,15 @@
++if TARGET_ULCB
 +
 +config SYS_SOC
 +	default "rcar_gen3"
 +
 +config SYS_BOARD
-+	default "h3ulcb"
++	default "ulcb"
 +
 +config SYS_VENDOR
 +	default "renesas"
@@ -70,30 +70,27 @@ index 0000000..1fc4b47
 +config SYS_CONFIG_NAME
 +	default "h3ulcb"
 +
-+config R8A7795
-+	default y
-+
 +endif
-diff --git a/board/renesas/h3ulcb/MAINTAINERS b/board/renesas/h3ulcb/MAINTAINERS
+diff --git a/board/renesas/ulcb/MAINTAINERS b/board/renesas/ulcb/MAINTAINERS
 new file mode 100644
 index 0000000..bceea97
 --- /dev/null
-+++ b/board/renesas/h3ulcb/MAINTAINERS
++++ b/board/renesas/ulcb/MAINTAINERS
 @@ -0,0 +1,6 @@
-+H3ULCB BOARD
++ULCB BOARD
 +M:	Cogent Embedded, Inc. <source@cogentembedded.com>
 +S:	Maintained
-+F:	board/renesas/h3ulcb/
++F:	board/renesas/ulcb/
 +F:	include/configs/h3ulcb.h
 +F:	configs/h3ulcb_defconfig
-diff --git a/board/renesas/h3ulcb/Makefile b/board/renesas/h3ulcb/Makefile
+diff --git a/board/renesas/ulcb/Makefile b/board/renesas/ulcb/Makefile
 new file mode 100644
 index 0000000..5c03383
 --- /dev/null
-+++ b/board/renesas/h3ulcb/Makefile
++++ b/board/renesas/ulcb/Makefile
 @@ -0,0 +1,10 @@
 +#
-+# board/renesas/h3ulcb/Makefile
++# board/renesas/ulcb/Makefile
 +#
 +# Copyright (C) 2016 Renesas Electronics Corporation
 +# Copyright (C) 2016 Cogent Embedded, Inc.
@@ -101,16 +98,16 @@ index 0000000..5c03383
 +# SPDX-License-Identifier: GPL-2.0+
 +#
 +
-+obj-y	:= h3ulcb.o ../rcar-gen3-common/common.o
-diff --git a/board/renesas/h3ulcb/h3ulcb.c b/board/renesas/h3ulcb/h3ulcb.c
++obj-y	:= ulcb.o ../rcar-gen3-common/common.o
+diff --git a/board/renesas/ulcb/ulcb.c b/board/renesas/ulcb/ulcb.c
 new file mode 100644
 index 0000000..e46a132
 --- /dev/null
-+++ b/board/renesas/h3ulcb/h3ulcb.c
++++ b/board/renesas/ulcb/ulcb.c
 @@ -0,0 +1,291 @@
 +/*
-+ * board/renesas/h3ulcb/h3ulcb.c
-+ *     This file is H3ULCB board support.
++ * board/renesas/ulcb/ulcb.c
++ *     This file is ULCB board support.
 + *
 + * Copyright (C) 2016 Renesas Electronics Corporation
 + * Copyright (C) 2016 Cogent Embedded, Inc.
@@ -290,7 +287,7 @@ index 0000000..e46a132
 +	return ret;
 +}
 +
-+/* H3ULCB has KSZ9031RNX */
++/* ULCB has KSZ9031RNX */
 +int board_phy_config(struct phy_device *phydev)
 +{
 +	return 0;
@@ -408,7 +405,7 @@ index 6962e39..c796e65 100644
  		case SREC_DATA4:
  		    store_addr = addr + offset;
 -#ifdef CONFIG_TARGET_SALVATOR_X
-+#if defined(CONFIG_TARGET_SALVATOR_X) || defined(CONFIG_TARGET_H3ULCB)
++#if defined(CONFIG_TARGET_SALVATOR_X) || defined(CONFIG_TARGET_ULCB)
  		    if ((store_addr >= CONFIG_SYS_TEXT_BASE) &&
  				(store_addr <= CONFIG_SYS_INIT_SP_ADDR)) {
  			printf("Program area is can't over write(0x%08lX)\n",
@@ -421,7 +418,7 @@ index 0000000..5249122
 +CONFIG_ARM=y
 +CONFIG_RCAR_GEN3=y
 +CONFIG_DM_SERIAL=y
-+CONFIG_TARGET_H3ULCB=y
++CONFIG_TARGET_ULCB=y
 +CONFIG_R8A7795=y
 +CONFIG_SPL=y
 +CONFIG_SH_SDHI=y
@@ -434,7 +431,7 @@ index 77b20f6..9c11f37 100644
  #include <linux/compiler.h>
  #include <dm/platform_data/serial_sh.h>
 -#ifdef CONFIG_TARGET_SALVATOR_X
-+#if defined(CONFIG_TARGET_SALVATOR_X) || defined(CONFIG_TARGET_H3ULCB)
++#if defined(CONFIG_TARGET_SALVATOR_X) || defined(CONFIG_TARGET_ULCB)
  #include <asm/arch/prr_depend.h>
  #endif
  #include "serial_sh.h"
@@ -443,7 +440,7 @@ index 77b20f6..9c11f37 100644
  	DECLARE_GLOBAL_DATA_PTR;
  	struct uart_port *port = &sh_sci;
 -#ifdef CONFIG_TARGET_SALVATOR_X
-+#if defined(CONFIG_TARGET_SALVATOR_X) || defined(CONFIG_TARGET_H3ULCB)
++#if defined(CONFIG_TARGET_SALVATOR_X) || defined(CONFIG_TARGET_ULCB)
  	int freq;
  
  	freq = rcar_get_serial_config_clk();
@@ -454,8 +451,8 @@ index 0000000..726bccf
 +++ b/include/configs/h3ulcb.h
 @@ -0,0 +1,120 @@
 +/*
-+ * include/configs/r8a7795_h3ulcb.h
-+ *     This file is H3ULCB board configuration.
++ * include/configs/h3ulcb.h
++ *     This file is ULCB board configuration.
 + *     CPU r8a7795.
 + *
 + * Copyright (C) 2016 Renesas Electronics Corporation

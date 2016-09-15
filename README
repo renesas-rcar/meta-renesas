@@ -14,9 +14,12 @@ SoCs that Renesas build. Layer and board that supports following:
     * meta-rcar-gen3
         - Renesas Electronics Corporation. Salvator-X (R8A7795/R8A7796)
         - Renesas Electronics Corporation. Salvator-X.View (R8A7795)
+        - Renesas Electronics Corporation. Salvator-X.View (R8A7796)
         - Renesas Electronics Corporation. H3ULCB (R8A7795)
         - Renesas Electronics Corporation. H3ULCB.HAD (R8A7795)
         - Renesas Electronics Corporation. H3ULCB.View (R8A7795)
+        - Renesas Electronics Corporation. M3ULCB (R8A7796)
+        - Renesas Electronics Corporation. M3ULCB.View (R8A7796)
 
 Please see README in the layer directory about the description of the board.
 

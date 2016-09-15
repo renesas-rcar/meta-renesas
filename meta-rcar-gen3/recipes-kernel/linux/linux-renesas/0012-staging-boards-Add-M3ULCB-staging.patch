@@ -1,0 +1,76 @@
+From 72d99caad9955a3750668fb0d6f814fe973b01cd Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Mon, 12 Sep 2016 14:04:56 +0300
+Subject: [PATCH] staging: boards: Add M3ULCB staging
+
+This adds CMA staging for M3ULCB board
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/staging/board/Makefile |  1 +
+ drivers/staging/board/m3ulcb.c | 44 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 45 insertions(+)
+ create mode 100644 drivers/staging/board/m3ulcb.c
+
+diff --git a/drivers/staging/board/Makefile b/drivers/staging/board/Makefile
+index 76c3b04..073cd8d 100644
+--- a/drivers/staging/board/Makefile
++++ b/drivers/staging/board/Makefile
+@@ -2,3 +2,4 @@ obj-y	:= board.o
+ obj-$(CONFIG_ARCH_EMEV2)	+= kzm9d.o
+ obj-$(CONFIG_ARCH_R8A7740)	+= armadillo800eva.o
+ obj-$(CONFIG_ARCH_R8A7795)	+= salvator-x.o h3ulcb.o
++obj-$(CONFIG_ARCH_R8A7796)	+= m3ulcb.o
+diff --git a/drivers/staging/board/m3ulcb.c b/drivers/staging/board/m3ulcb.c
+new file mode 100644
+index 0000000..1573879
+--- /dev/null
++++ b/drivers/staging/board/m3ulcb.c
+@@ -0,0 +1,44 @@
++/*
++ * Staging board support for M3ULCB.
++ *
++ * Copyright (C) 2016 Renesas Electronics Corp.
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/kernel.h>
++#include <linux/cma.h>
++#include <linux/dma-contiguous.h>
++#include <linux/errno.h>
++#include <linux/platform_device.h>
++#include "board.h"
++#include "../../../mm/cma.h"
++
++extern struct cma *find_largest_nondefault_cma(void);
++extern struct cma *rcar_gen3_dma_contiguous;
++
++static void __init rcar_m3ulcb_board_staging_init(void)
++{
++	phys_addr_t cma_base;
++	unsigned long cma_size;
++
++	rcar_gen3_dma_contiguous = find_largest_nondefault_cma();
++
++	if (rcar_gen3_dma_contiguous) {
++		cma_base = cma_get_base(rcar_gen3_dma_contiguous);
++		cma_size = cma_get_size(rcar_gen3_dma_contiguous) / SZ_1M;
++
++		pr_info("%s: Located CMA at %pa, size %ld MiB\n",
++			__func__, &cma_base, cma_size);
++	}
++}
++
++board_staging("renesas,m3ulcb", rcar_m3ulcb_board_staging_init);
+-- 
+1.9.1
+

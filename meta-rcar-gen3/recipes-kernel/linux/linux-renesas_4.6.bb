@@ -4,7 +4,7 @@ require include/avb-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/${MACHINE}:"
-COMPATIBLE_MACHINE = "(salvator-x|h3ulcb)"
+COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb)"
 
 RENESAS_BSP_URL = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
 BRANCH = "v4.6/rcar-3.3.x"
@@ -29,6 +29,8 @@ SRC_URI_append = " \
     file://0007-usb-host-xhci-plat-add-support-for-the-R-Car-H3-xHCI.patch \
     file://0008-spi-spi-gpio-fix-set-CPOL-default-inverted.patch \
     file://0009-Revert-media-soc_camera-rcar_vin-Fix-VIDIOC_S_CROP-ioctl-mi.patch \
+    file://0011-arm64-renesas-Add-M3ULCB-board.patch \
+    file://0012-staging-boards-Add-M3ULCB-staging.patch \
     file://0019-can-rcar_can-add-enable-and-standby-control-pins.patch \
     file://0020-can-rcar-canfd-Add-Renesas-R-Car-CAN-FD-driver.patch \
     file://0021-arm64-dts-r8a7795-Add-CAN-FD-support.patch \
@@ -37,14 +39,17 @@ SRC_URI_append = " \
     file://0024-mtd-Add-RPC-HyperFlash-driver.patch \
     file://0025-IMR-driver-interim-patch.patch \
     file://0040-H3-Maxim-MAX9286-support-support-10635-10640-cameras.patch \
-    file://0050-arm64-renesas-Salvator-X-View-board-support.patch \
+    file://0050-arm64-renesas-Salvator-X-View-H3-board-support.patch \
     file://0051-arm64-renesas-H3ULCB-HAD-support.patch \
     file://0052-arm64-renesas-H3ULCB-View-board-support.patch \
-    file://0053-arm64-dts-r8a7795-h3ulcb-had-set-console-from-rdrive.patch \
-    file://0054-arm64-dts-r8a7795-h3ulcb-had-route-RAVB-to-rdrive.patch \
-    ${@base_conditional("LVDSCAMERA_ONE", "1", " file://0055-arm64-dts-r8a7795-view-boards-stream-from-1-cam.patch", "", d)} \
-    ${@base_conditional("RAVB_DEBUG", "1", " file://0056-net-ethernet-renesas-ravb-packets-dump.patch", "", d)} \
-    ${@base_conditional("LVDSCAMERA_FIVE", "1", " file://0057-arm64-dts-r8a7795-view-boards-stream-from-5-cam.patch", "", d)} \
+    file://0053-arm64-renesas-Salvator-X-View-M3-board-support.patch \
+    file://0054-arm64-renesas-M3ULCB-View-board-support.patch \
+    file://0055-arm64-dts-r8a7795-h3ulcb-had-set-console-from-rdrive.patch \
+    file://0056-arm64-dts-r8a7795-h3ulcb-had-route-RAVB-to-rdrive.patch \
+    ${@base_conditional("LVDSCAMERA_ONE", "1", " file://0057-arm64-dts-Gen3-view-boards-stream-from-1-cam.patch", "", d)} \
+    ${@base_conditional("LVDSCAMERA_FIVE", "1", " file://0058-arm64-dts-Gen3-view-boards-stream-from-5-cam.patch", "", d)} \
+    ${@base_conditional("RAVB_DEBUG", "1", " file://0059-net-ethernet-renesas-ravb-packets-dump.patch", "", d)} \
+ "
 "
 
 SRC_URI_append_h3ulcb = " \
@@ -55,11 +60,20 @@ SRC_URI_append_salvator-x = " \
     file://salvator-x.cfg \
 "
 
+SRC_URI_append_m3ulcb = " \
+    file://m3ulcb.cfg \
+"
+
 KERNEL_DEVICETREE_append_h3ulcb = '${@ \
     " renesas/r8a7795-h3ulcb-had.dtb " if 'h3ulcb-had' in '${MACHINE_FEATURES}' else \
     " renesas/r8a7795-h3ulcb-view.dtb " if 'h3ulcb-view' in '${MACHINE_FEATURES}' else \
     ""}'
 
 KERNEL_DEVICETREE_append_salvator-x = '${@ \
-    " renesas/r8a7795-salvator-x-view.dtb " if 'salvator-x-view' in '${MACHINE_FEATURES}' else \
+    " renesas/r8a7795-salvator-x-view.dtb " if 'salvator-x-view' in '${MACHINE_FEATURES}' and '${SOC_FAMILY}' == 'r8a7795' else \
+    " renesas/r8a7796-salvator-x-view.dtb " if 'salvator-x-view' in '${MACHINE_FEATURES}' and '${SOC_FAMILY}' == 'r8a7796' else \
+    ""}'
+
+KERNEL_DEVICETREE_append_m3ulcb = '${@ \
+    " renesas/r8a7796-m3ulcb-view.dtb " if 'm3ulcb-view' in '${MACHINE_FEATURES}' else \
     ""}'

@@ -22,14 +22,14 @@ in both uboot and kernel.
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
- board/renesas/h3ulcb/h3ulcb.c         | 6 ++++--
+ board/renesas/ulcb/ulcb.c             | 6 ++++--
  drivers/net/ravb.c                    | 3 ---
  2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/board/renesas/h3ulcb/h3ulcb.c b/board/renesas/h3ulcb/h3ulcb.c
+diff --git a/board/renesas/ulcb/ulcb.c b/board/renesas/ulcb/ulcb.c
 index 3808d3e..7e83b60 100644
---- a/board/renesas/h3ulcb/h3ulcb.c
-+++ b/board/renesas/h3ulcb/h3ulcb.c
+--- a/board/renesas/ulcb/ulcb.c
++++ b/board/renesas/ulcb/ulcb.c
 @@ -73,6 +73,7 @@ int board_early_init_f(void)
  
  /* PFC */
