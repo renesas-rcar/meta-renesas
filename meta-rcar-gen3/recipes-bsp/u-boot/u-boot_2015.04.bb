@@ -20,7 +20,8 @@ SRC_URI_append_h3ulcb = '${@ \
     " file://0005-uboot-H3ULCB-support-fixed-PHY.patch \
       file://0006-uboot-H3ULCB-console-on-scif1.patch \
       file://0007-uboot-ravb-r8a7795-remove-PHY-skews.patch \
-      file://0008-uboot-h3ulcb-set-all-RAVB-pins-strengh-to-maximum.patch " \
+      file://0008-uboot-h3ulcb-set-all-RAVB-pins-strengh-to-maximum.patch \
+      file://0010-net-ravb-fix-unsafe-phy-access.patch " \
     if 'h3ulcb-had' in '${MACHINE_FEATURES}' else \
     ""}'
 
