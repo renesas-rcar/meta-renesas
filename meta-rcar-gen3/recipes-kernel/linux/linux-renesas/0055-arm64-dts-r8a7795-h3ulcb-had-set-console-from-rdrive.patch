@@ -15,7 +15,7 @@ index dbed953..b1811cb 100644
 --- a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
 +++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
 @@ -44,8 +44,8 @@
- 	compatible = "renesas,h3ulcb-had", "renesas,r8a7795";
+ 	compatible = "renesas,h3ulcb", "renesas,r8a7795";
  
  	aliases {
 -		serial0 = &scif2;

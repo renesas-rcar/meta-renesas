@@ -48,7 +48,7 @@ index 0000000..2b266cc
 +
 +/ {
 +	model = "Renesas H3ULCB.View board based on r8a7795";
-+	compatible = "renesas,h3ulcb-view", "renesas,r8a7795";
++	compatible = "renesas,h3ulcb", "renesas,r8a7795";
 +
 +	aliases {
 +		serial0 = &scif2;
