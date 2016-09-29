@@ -30,7 +30,7 @@ new file mode 100644
 index 0000000..bdbecd6
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
-@@ -0,0 +1,825 @@
+@@ -0,0 +1,826 @@
 +/*
 + * Device Tree Source for the M3ULCB board
 + *
@@ -737,6 +737,7 @@ index 0000000..bdbecd6
 +		reg = <0>;
 +		interrupt-parent = <&gpio2>;
 +		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
++		max-speed = <100>;
 +	};
 +};
 +

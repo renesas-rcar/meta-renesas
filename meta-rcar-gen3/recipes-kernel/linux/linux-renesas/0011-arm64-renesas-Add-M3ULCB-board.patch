@@ -42,7 +42,7 @@ new file mode 100644
 index 0000000..7956df8
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts
-@@ -0,0 +1,534 @@
+@@ -0,0 +1,535 @@
 +/*
 + * Device Tree Source for the M3ULCB board
 + *
@@ -538,6 +538,7 @@ index 0000000..7956df8
 +		reg = <0>;
 +		interrupt-parent = <&gpio2>;
 +		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
++		max-speed = <100>;
 +	};
 +};
 +

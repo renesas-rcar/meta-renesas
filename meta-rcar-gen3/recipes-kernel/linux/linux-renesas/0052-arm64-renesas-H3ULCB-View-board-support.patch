@@ -863,7 +863,7 @@ index 0000000..2b266cc
 +		reg = <0>;
 +		interrupt-parent = <&gpio2>;
 +		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
-+		max-speed = <1000>;
++		max-speed = <100>;
 +	};
 +};
 +
