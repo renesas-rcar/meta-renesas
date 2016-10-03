@@ -9,8 +9,8 @@ Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
  drivers/media/i2c/soc_camera/Kconfig               |   32 +
  drivers/media/i2c/soc_camera/Makefile              |    4 +
- drivers/media/i2c/soc_camera/max9286_max9271.c     |  213 ++++
- drivers/media/i2c/soc_camera/max9286_max9271.h     |  234 ++++
+ drivers/media/i2c/soc_camera/max9286_max9271.c     |  292 +++++
+ drivers/media/i2c/soc_camera/max9286_max9271.h     |  230 ++++
  .../media/i2c/soc_camera/max9286_max9271_ov10635.c |  614 +++++++++++
  .../media/i2c/soc_camera/max9286_max9271_ov10635.h | 1149 ++++++++++++++++++++
  .../media/i2c/soc_camera/max9286_max9271_ov106xx.c |   94 ++
@@ -20,7 +20,7 @@ Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
  drivers/media/platform/soc_camera/rcar_vin.c       |    4 +
  drivers/media/platform/soc_camera/soc_mediabus.c   |   16 +
  include/media/drv-intf/soc_mediabus.h              |    3 +
- 13 files changed, 2847 insertions(+), 3 deletions(-)
+ 13 files changed, 2922 insertions(+), 3 deletions(-)
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.c
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.h
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
@@ -87,10 +87,10 @@ index d0421fe..05944d8 100644
  obj-$(CONFIG_SOC_CAMERA_MT9T031)	+= mt9t031.o
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271.c b/drivers/media/i2c/soc_camera/max9286_max9271.c
 new file mode 100644
-index 0000000..ed1e841
+index 0000000..7d524b0
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271.c
-@@ -0,0 +1,213 @@
+@@ -0,0 +1,292 @@
 +/*
 + * MAXIM R-Car H3 Demo board setup driver
 + *
@@ -109,18 +109,190 @@ index 0000000..ed1e841
 +
 +#include "max9286_max9271.h"
 +
-+#define MAXIM_I2C_I2C_SPEED_400KHZ	(0x5 << 2) /* 339 kbps - unstable */
-+#define MAXIM_I2C_I2C_SPEED_100KHZ	(0x3 << 2) /* 105 kbps */
-+#define MAXIM_I2C_SPEED			MAXIM_I2C_I2C_SPEED_100KHZ
++#define MAXIM_I2C_I2C_SPEED_837KHZ	(0x7 << 2) /* 837kbps */
++#define MAXIM_I2C_I2C_SPEED_533KHZ	(0x6 << 2) /* 533kbps */
++#define MAXIM_I2C_I2C_SPEED_339KHZ	(0x5 << 2) /* 339 kbps */
++#define MAXIM_I2C_I2C_SPEED_173KHZ	(0x4 << 2) /* 174kbps */
++#define MAXIM_I2C_I2C_SPEED_105KHZ	(0x3 << 2) /* 105 kbps */
++#define MAXIM_I2C_I2C_SPEED_085KHZ	(0x2 << 2) /* 84.7 kbps */
++#define MAXIM_I2C_I2C_SPEED_028KHZ	(0x1 << 2) /* 28.3 kbps */
++#define MAXIM_I2C_I2C_SPEED		MAXIM_I2C_I2C_SPEED_339KHZ
++
++#define FSYNC_PERIOD			(1280*800*2)
++
++struct max9286_max9271_priv {
++	int	des_addr;
++	int	links;
++	int	offset;
++	int	is10bit;
++};
++
++static void max9286_max9271_preinit(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	switch (priv->des_addr) {
++	case DES0:
++		client->addr = DES0;			/* MAX9286-CAMx I2C */
++		maxim_reg8_write(client, 0x0a, 0x00);	/* disable reverse control for all cams */
++		maxim_reg8_write(client, 0x00, 0x00);	/* disable all GMSL links [0:3] */
++
++		client->addr = DES1;			/* MAX9286-CAMx I2C */
++		maxim_reg8_write(client, 0x0a, 0x00);	/* disable reverse control for all cams */
++		maxim_reg8_write(client, 0x00, 0x00);	/* disable all GMSL links [0:3] */
++		usleep_range(2000, 2500);		/* wait 2ms after any change of reverse channel settings */
++
++		priv->offset = 0;
++		break;
++	case DES1:
++		priv->offset = 4;
++		break;
++	default:
++		dev_err(&client->dev, "invalid deserializer address\n");
++	}
++}
++
++static void max9286_max9271_reverse_channel_setup(struct i2c_client *client, int idx)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++	u8 val = 0;
++	int timeout = 100;
++
++	/* Reverse channel setup */
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x3f, 0x4f);			/* enable custom reverse channel & first pulse length */
++	maxim_reg8_write(client, 0x34, 0xa2 | MAXIM_I2C_I2C_SPEED); /* enable artificial ACKs, I2C speed set */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++	maxim_reg8_write(client, 0x00, 0x1 << (idx - priv->offset)); /* enable GMSL link for CAMx */
++	maxim_reg8_write(client, 0x0a, 0x11 << (idx - priv->offset)); /* enable reverse control only for CAMx */
++	maxim_reg8_write(client, 0x69, (0x1 << (idx - priv->offset)) ^ 0x0f); /* unmask link only for CAMx */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++again:
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x3b, 0x1e);			/* first pulse length rise time changed from 300ns to 200ns, amplitude 100mV */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	i2c_smbus_read_byte(client);				/* ping to wake-up */
++	maxim_reg8_write(client, 0x04, 0x43);			/* wake-up, enable reverse_control/conf_link */
++//	usleep_range(5000, 5500);				/* wait 5ms for conf_link to establish */
++	maxim_reg8_write(client, 0x08, 0x1);			/* reverse channel receiver high threshold enable */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x3b, 0x19);			/* reverse channel increase amplitude 170mV to compensate high threshold enabled */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	i2c_smbus_read_byte(client);				/* ping to wake-up */
++	maxim_reg8_write(client, 0x04, 0x43);			/* wake-up, enable reverse_control/conf_link */
++//	usleep_range(5000, 5500);				/* wait 5ms for conf_link to establish */
++	maxim_reg8_write(client, 0x08, 0x1);			/* reverse channel receiver high threshold enable */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	maxim_reg8_read(client, 0x1e, &val);			/* read max9271 ID */
++	if (val != 0x09 && --timeout > 0)
++		goto again;
++
++	if (!timeout)
++		dev_info(&client->dev, "timeout GMSL link establish, max9271 not found\n");
++}
++
++static void max9286_max9271_initial_setup(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* Initial setup */
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x15, 0x13);			/* disable CSI output, VC is set accordingly to Link number */
++	if (priv->links == 1)
++		maxim_reg8_write(client, 0x12, priv->is10bit ? 0x34 : 0x33);	/* enable CSI-2 Lane D0 only, DBL mode, YUV422 8-bit*/
++	else
++		maxim_reg8_write(client, 0x12, priv->is10bit ? 0xf4 : 0xf3);	/* enable CSI-2 Lanes D[0:3], DBL mode, YUV422 8-bit*/
++#if 0
++	maxim_reg8_write(client, 0x01, 0x00);			/* manual: FRAMESYNC set manually via [0x06:0x08] regs */
++	maxim_reg8_write(client, 0x06, FSYNC_PERIOD & 0xff);
++	maxim_reg8_write(client, 0x07, (FSYNC_PERIOD >> 8) & 0xff);
++	maxim_reg8_write(client, 0x08, FSYNC_PERIOD >> 16);
++#endif
++	maxim_reg8_write(client, 0x63, 0);			/* disable overlap window */
++	maxim_reg8_write(client, 0x64, 0);
++	if (priv->links == 1)
++		maxim_reg8_write(client, 0x01, 0xc0);		/* ECU (aka MCU) based FrameSync using GPI-to-GPO */
++	else
++		maxim_reg8_write(client, 0x01, 0x02);		/* automatic: FRAMESYNC taken from the slowest Link */
++	maxim_reg8_write(client, 0x0c, 0x89);			/* enable HS/VS encoding, use D14/15 for HS/VS, invert VS */
++}
++
++static void max9286_max9271_gmsl_link_setup(struct i2c_client *client, int idx)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* GMSL setup */
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	maxim_reg8_write(client, 0x0d, 0x22 | MAXIM_I2C_I2C_SPEED); /* disable artificial ACK, I2C speed set */
++	maxim_reg8_write(client, 0x07, 0x94);			/* RAW/YUV, PCLK rising edge, HS/VS encoding enabled */
++	usleep_range(2000, 2500);				/* wait 2ms */
++	maxim_reg8_write(client, 0x02, 0xff);			/* spread spectrum +-4%, pclk range automatic, Gbps automatic  */
++	usleep_range(2000, 2500);				/* wait 2ms */
++
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x34, 0x22 | MAXIM_I2C_I2C_SPEED); /* disable artificial ACK, I2C speed set */
++	usleep_range(2000, 2500);				/* wait 2ms */
++
++	/* I2C translator setup */
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	maxim_reg8_write(client, 0x09, maxim_map[2][idx] << 1);	/* SENSOR I2C new */
++	maxim_reg8_write(client, 0x0A, 0x30 << 1);		/* SENSOR I2C address - must be set by sensor driver */
++	maxim_reg8_write(client, 0x0B, BROADCAST << 1);		/* broadcast I2C */
++	maxim_reg8_write(client, 0x0C, maxim_map[1][idx] << 1);	/* MAX9271-CAMx I2C new */
++	/* I2C addresse change */
++	maxim_reg8_write(client, 0x01, maxim_map[0][idx] << 1);	/* MAX9286-CAM0 I2C */
++	maxim_reg8_write(client, 0x00, maxim_map[1][idx] << 1);	/* MAX9271-CAM0 I2C new */
++	usleep_range(2000, 2500);				/* wait 2ms */
++#ifdef MAXIM_DUMP
++	client->addr = maxim_map[0][idx];			/* MAX9286-CAMx I2C */
++	maxim_max927x_dump_regs(client);
++	client->addr = maxim_map[1][idx];			/* MAX9271-CAMx I2C new */
++	maxim_max927x_dump_regs(client);
++	client->addr = maxim_map[2][idx];			/* SENSOR-CAMx I2C */
++	maxim_ovsensor_dump_regs(client);
++#endif
++}
++
++static void max9286_max9271_gmsl_enable(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* Reverse channel setup */
++	client->addr = priv->des_addr;			/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x1b, 0x0f);		/* enable equalizer for all links */
++	if (priv->links == 1) {
++		maxim_reg8_write(client, 0x00, 0xe1);	/* enable GMSL link 0, auto detect link used for CSI clock source */
++		maxim_reg8_write(client, 0x0a, 0xf1);	/* enable reverse control only for link0 */
++		maxim_reg8_write(client, 0x69, 0x0e);	/* mask Links 1 2 3, unmask link 0 */
++	} else {
++		maxim_reg8_write(client, 0x00, 0xef);	/* enable GMSL links [0:3], auto detect link used for CSI clock source */
++		maxim_reg8_write(client, 0x0a, 0xff);	/* enable reverse control for all links */
++		maxim_reg8_write(client, 0x69, 0x00);	/* unmask all links */
++	}
++	usleep_range(2000, 2500);			/* wait 2ms after any change of reverse channel settings */
++}
 +
 +static int max9286_max9271_probe(struct i2c_client *client,
 +				 const struct i2c_device_id *did)
 +{
-+	int err;
-+	int pwen;
-+	int cam_idx, des_addr, cam_offset;
++	struct max9286_max9271_priv *priv;
++	int err, pwen;
++	int idx;
 +	int sensor_delay = 0;
 +	int links = 4;
++
++	priv = devm_kzalloc(&client->dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
 +
 +	if (client->dev.of_node) {
 +		err = of_property_read_u32(client->dev.of_node, "maxim,links", &links);
@@ -149,131 +321,38 @@ index 0000000..ed1e841
 +		}
 +	}
 +
-+	des_addr = client->addr;
++	i2c_set_clientdata(client, priv);
++	priv->des_addr = client->addr;
++	priv->links = links;
++	priv->is10bit = 0;
 +
-+	switch (des_addr) {
-+	case DES0:
-+		cam_offset = 0;
-+		client->addr = DES1;			/* MAX9286-CAMx I2C */
-+		maxim_reg8_write(client, 0x0a, 0x00);	/* disable reverse control for all cams */
-+		break;
-+	case DES1:
-+		cam_offset = 4;
-+		break;
-+	default:
-+		dev_err(&client->dev, "invalid deserializer address\n");
-+		return -EINVAL;
++	max9286_max9271_preinit(client);
++	max9286_max9271_initial_setup(client);
++
++	for (idx = priv->offset; idx < links + priv->offset; idx++) {
++		/* SETUP CAMx (MAX9286/MAX9271/SENSOR) I2C */
++		dev_info(&client->dev, "link%d (MAX9286/MAX9271/SENSOR) i2c: 0x%x<->0x%x<->0x%x\n", idx,
++				       maxim_map[0][idx], maxim_map[1][idx], maxim_map[2][idx]);
++
++		max9286_max9271_reverse_channel_setup(client, idx);
++		max9286_max9271_gmsl_link_setup(client, idx);
 +	}
 +
-+	for (cam_idx = cam_offset; cam_idx < links + cam_offset; cam_idx++) {
-+		/*
-+		 * SETUP CAMx (MAX9286/MAX9271/SENSOR) I2C
-+		 */
-+		dev_info(&client->dev, "link%d (MAX9286/MAX9271/SENSOR) i2c: 0x%x<->0x%x<->0x%x\n", cam_idx,
-+				       maxim_map[0][cam_idx], maxim_map[1][cam_idx], maxim_map[2][cam_idx]);
++	max9286_max9271_gmsl_enable(client);
 +
-+		/* Reverse channel setup */
-+		client->addr = des_addr;				/* MAX9286-CAMx I2C */
-+		maxim_reg8_write(client, 0x0a, 0xf0 | (1 << (cam_idx - cam_offset)));	/* enable reverse control only for cam_idx */
-+		mdelay(2);						/* wait 2ms after any change of reverse channel settings */
-+
-+		client->addr = des_addr;				/* MAX9286-CAMx I2C */
-+		maxim_reg8_write(client, 0x3f, 0x4f);			/* enable custom reverse channel & first pulse length */
-+		maxim_reg8_write(client, 0x34, 0xa2 | MAXIM_I2C_SPEED);	/* enable artificial ACKs, I2C speed set */
-+		mdelay(2);						/* wait 2ms after any change of reverse channel settings */
-+		maxim_reg8_write(client, 0x3b, 0x1e);			/* first pulse length rise time changed from 300ns to 200ns */
-+		mdelay(2);						/* wait 2ms after any change of reverse channel settings */
-+
-+		client->addr = 0x40;					/* MAX9271-CAMx I2C */
-+		i2c_smbus_read_byte(client);				/* ping to wake-up */
-+		maxim_reg8_write(client, 0x04, 0x43);			/* wake-up, enable reverse_control/conf_link */
-+		mdelay(5);						/* wait 5ms for conf_link to establish */
-+		maxim_reg8_write(client, 0x08, 0x1);			/* reverse channel receiver high threshold enable */
-+		mdelay(2);						/* wait 2ms after any change of reverse channel settings */
-+
-+		client->addr = des_addr;				/* MAX9286-CAMx I2C */
-+		maxim_reg8_write(client, 0x3b, 0x19);			/* reverse channel increase amplitude 170mV to compensate high threshold enabled */
-+		mdelay(2);						/* wait 2ms after any change of reverse channel settings */
-+
-+		/* Initial setup */
-+		client->addr = des_addr;				/* MAX9286-CAMx I2C */
-+		maxim_reg8_write(client, 0x15, 0x13);			/* disable CSI output, VC is set accordingly to Link number */
-+		if (links == 1)
-+			maxim_reg8_write(client, 0x12, 0x33);		/* enable CSI-2 Lane D0 only, DBL mode, YUV422 8-bit*/
-+		else
-+			maxim_reg8_write(client, 0x12, 0xf3);		/* enable CSI-2 Lanes D[0:3], DBL mode, YUV422 8-bit*/
-+#if 0
-+#define FSYNC_PERIOD	(1280*800*2)
-+		maxim_reg8_write(client, 0x01, 0x00);			/* manual: FRAMESYNC set manually via [0x06:0x08] regs */
-+		maxim_reg8_write(client, 0x06, FSYNC_PERIOD & 0xff);
-+		maxim_reg8_write(client, 0x07, (FSYNC_PERIOD >> 8) & 0xff);
-+		maxim_reg8_write(client, 0x08, FSYNC_PERIOD >> 16);
-+#endif
-+		maxim_reg8_write(client, 0x63, 0);			/* disable overlap window */
-+		maxim_reg8_write(client, 0x64, 0);
-+		if (links == 1) {
-+			maxim_reg8_write(client, 0x01, 0xc0);		/* ECU (aka MCU) based FrameSync using GPI-to-GPO */
-+			maxim_reg8_write(client, 0x00, 0xe1);		/* enable GMSL link 0, auto detect link used for CSI clock source */
-+			maxim_reg8_write(client, 0x69, 0x0e);		/* Mask Links 1 2 3, unmask link 0 */
-+		} else {
-+			maxim_reg8_write(client, 0x01, 0x02);		/* automatic: FRAMESYNC taken from the slowest Link */
-+			maxim_reg8_write(client, 0x00, 0xef);		/* enable GMSL links [0:3], auto detect link used for CSI clock source */
-+			maxim_reg8_write(client, 0x69, 0x00);		/* unmask all links */
-+		}
-+		maxim_reg8_write(client, 0x0c, 0x89);			/* enable HS/VS encoding, use D14/15 for HS/VS, invert VS */
-+
-+		/* GMSL setup */
-+		client->addr = 0x40;					/* MAX9271-CAMx I2C */
-+		maxim_reg8_write(client, 0x0d, 0x22 | MAXIM_I2C_SPEED);	/* disable artificial ACK, I2C speed set */
-+		maxim_reg8_write(client, 0x07, 0x94);			/* RAW/YUV, PCLK rising edge, HS/VS encoding enabled */
-+//		maxim_reg8_write(client, 0x02, 0xff);			/* spread spectrum +-4%, pclk range automatic, Gbps automatic  */
-+
-+		client->addr = des_addr;				/* MAX9286-CAMx I2C */
-+		maxim_reg8_write(client, 0x34, 0x22 | MAXIM_I2C_SPEED);	/* disable artificial ACK, I2C speed set */
-+		mdelay(2);						/* wait 2ms */
-+
-+		/* I2C translator setup */
-+		client->addr = 0x40;					/* MAX9271-CAMx I2C */
-+		maxim_reg8_write(client, 0x09, maxim_map[2][cam_idx] << 1); /* SENSOR I2C new */
-+		maxim_reg8_write(client, 0x0A, 0x30 << 1);		/* SENSOR I2C address - must be set by sensor driver */
-+		maxim_reg8_write(client, 0x0B, BROADCAST << 1);		/* broadcast I2C */
-+		maxim_reg8_write(client, 0x0C, maxim_map[1][cam_idx] << 1); /* MAX9271-CAMx I2C new */
-+
-+		/* I2C addresses change */
-+		client->addr = 0x40;					/* MAX9271-CAMx I2C */
-+		maxim_reg8_write(client, 0x01, maxim_map[0][cam_idx] << 1); /* MAX9286-CAM0 I2C new */
-+		maxim_reg8_write(client, 0x00, maxim_map[1][cam_idx] << 1); /* MAX9271-CAM0 I2C new */
-+#ifdef MAXIM_DUMP
-+		client->addr = maxim_map[0][cam_idx];			/* MAX9286-CAMx I2C new */
-+		maxim_max927x_dump_regs(client);
-+		client->addr = maxim_map[1][cam_idx];			/* MAX9271-CAMx I2C new */
-+		maxim_max927x_dump_regs(client);
-+		client->addr = maxim_map[2][cam_idx];			/* SENSOR-CAMx I2C */
-+		maxim_ovsensor_dump_regs(client);
-+#endif
-+		/* make sure that the conf_link enabled - needed for reset/reboot, due to I2C addr runtime change */
-+		client->addr = maxim_map[1][cam_idx];			/* MAX9271-CAMx I2C new */
-+		maxim_reg8_write(client, 0x04, 0x43);			/* wake-up, enable reverse_control/conf_link */
-+		mdelay(5);						/* wait 5ms for conf_link to establish */
-+	}
-+
-+	/* Reverse channel setup */
-+	client->addr = des_addr;				/* MAX9286-CAMx I2C */
-+	maxim_reg8_write(client, 0x1b, 0x0f);			/* enable equalizer for all links */
-+	if (links == 1)
-+		maxim_reg8_write(client, 0x0a, 0xf1);		/* enable reverse control only for link0 */
-+	else
-+		maxim_reg8_write(client, 0x0a, 0xff);		/* enable reverse control for all links */
-+	mdelay(2);						/* wait 2ms after any change of reverse channel settings */
-+
-+	/* NOTE: release des_addr to be used in sensor subdevice */
-+	client->addr = des_addr - 0x40;
++	/* release des_addr to use it in sensor subdevice */
++	client->addr = priv->des_addr - 0x40;
 +
 +	return 0;
 +}
 +
 +static int max9286_max9271_remove(struct i2c_client *client)
 +{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* revert des_addr - needed when used as module */
++	client->addr = priv->des_addr;
++
 +	return 0;
 +}
 +
@@ -306,10 +385,10 @@ index 0000000..ed1e841
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271.h b/drivers/media/i2c/soc_camera/max9286_max9271.h
 new file mode 100644
-index 0000000..57303a4
+index 0000000..ecc39d5
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271.h
-@@ -0,0 +1,234 @@
+@@ -0,0 +1,230 @@
 +/*
 + * MAXIM R-Car H2/H3 Demo boards setup include file
 + *
@@ -357,8 +436,7 @@ index 0000000..57303a4
 +
 +static inline int maxim_reg8_read(struct i2c_client *client, u8 reg, u8 *val)
 +{
-+	int ret;
-+	int retries = MAXIM_NUM_RETRIES;
++	int ret, retries;
 +
 +	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
 +		ret = i2c_smbus_read_byte_data(client, reg);
@@ -367,20 +445,19 @@ index 0000000..57303a4
 +	}
 +
 +	if (ret < 0) {
-+		dev_err(&client->dev,
-+			"read fail: chip 0x%x register 0x%x\n", client->addr,
-+								reg);
++		dev_dbg(&client->dev,
++			"read fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
 +	} else {
 +		*val = ret;
 +	}
 +
-+	return ret;
++	return ret < 0 ? ret : 0;
 +}
 +
 +static inline int maxim_reg8_write(struct i2c_client *client, u8 reg, u8 val)
 +{
-+	int ret;
-+	int retries = MAXIM_NUM_RETRIES;
++	int ret, retries;
 +
 +	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
 +		ret = i2c_smbus_write_byte_data(client, reg, val);
@@ -391,8 +468,8 @@ index 0000000..57303a4
 +	if (ret < 0) {
 +		/* _dbg here for skipping error messaging on reset/reboot case */
 +		dev_dbg(&client->dev,
-+			"write fail: chip 0x%x register 0x%x\n", client->addr,
-+								 reg);
++			"write fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
 +	} else {
 +#ifdef WRITE_VERIFY
 +		u8 val2;
@@ -404,13 +481,12 @@ index 0000000..57303a4
 +#endif
 +	}
 +
-+	return ret;
++	return ret < 0 ? ret : 0;
 +}
 +
 +static inline int maxim_reg16_read(struct i2c_client *client, u16 reg, u8 *val)
 +{
-+	int ret;
-+	int retries = MAXIM_NUM_RETRIES;
++	int ret, retries;
 +	u8 buf[2] = {reg >> 8, reg & 0xff};
 +
 +	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
@@ -424,8 +500,8 @@ index 0000000..57303a4
 +
 +	if (ret < 0) {
 +		dev_err(&client->dev,
-+			"read fail: chip 0x%x register 0x%x\n", client->addr,
-+								reg);
++			"read fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
 +	} else {
 +		*val = buf[0];
 +	}
@@ -435,8 +511,7 @@ index 0000000..57303a4
 +
 +static inline int maxim_reg16_write(struct i2c_client *client, u16 reg, u8 val)
 +{
-+	int ret;
-+	int retries = MAXIM_NUM_RETRIES;
++	int ret, retries;
 +	u8 buf[3] = {reg >> 8, reg & 0xff, val};
 +
 +	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
@@ -447,8 +522,8 @@ index 0000000..57303a4
 +
 +	if (ret < 0) {
 +		dev_err(&client->dev,
-+			"write fail: chip 0x%x register 0x%x\n", client->addr,
-+								 reg);
++			"write fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
 +	} else {
 +#ifdef WRITE_VERIFY
 +		u8 val2;
@@ -491,8 +566,8 @@ index 0000000..57303a4
 +		ret = maxim_reg16_read(client, regs[i], &val);
 +		if (ret < 0)
 +			dev_err(&client->dev,
-+				"read fail: chip 0x%x register 0x%02x\n",
-+				client->addr, regs[i]);
++				"read fail: chip 0x%x register 0x%02x: %d\n",
++				client->addr, regs[i], ret);
 +		printk("0x%02x -> 0x%x\n", regs[i], val);
 +	}
 +}
@@ -517,8 +592,8 @@ index 0000000..57303a4
 +		ret = maxim_reg16_read(client, regs[i], &val);
 +		if (ret < 0)
 +			dev_err(&client->dev,
-+				"read fail: chip 0x%x register 0x%02x\n",
-+				client->addr, regs[i]);
++				"read fail: chip 0x%x register 0x%02x: %d\n",
++				client->addr, regs[i], ret);
 +		printk("0x%02x -> 0x%x\n", regs[i], val);
 +	}
 +}
@@ -534,8 +609,8 @@ index 0000000..57303a4
 +		ret = i2c_smbus_read_byte_data(client, reg);
 +		if (ret < 0)
 +			dev_err(&client->dev,
-+				"read fail: chip 0x%x register 0x%x\n",
-+				client->addr, reg);
++				"read fail: chip 0x%x register 0x%x: %d\n",
++				client->addr, reg, ret);
 +		printk("0x%02x ", ret);
 +		if (((reg + 1) % 0x10) == 0)
 +			printk("\n");
@@ -547,7 +622,7 @@ index 0000000..57303a4
 \ No newline at end of file
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
 new file mode 100644
-index 0000000..13658c4
+index 0000000..ef769d2
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
 @@ -0,0 +1,614 @@
@@ -2422,7 +2497,7 @@ index 0000000..3670ded
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
 new file mode 100644
-index 0000000..d233a37
+index 0000000..d984056
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
 @@ -0,0 +1,409 @@
@@ -2959,10 +3034,10 @@ index 851a4ca..a4f5af3 100644
  		sprintf(csi_name, "csi2_vc%d", i);
  
 diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
-index 5993846..5d78cc6 100644
+index 0c0027e..19bc400 100644
 --- a/drivers/media/platform/soc_camera/rcar_vin.c
 +++ b/drivers/media/platform/soc_camera/rcar_vin.c
-@@ -1187,6 +1187,10 @@ error:
+@@ -1165,6 +1165,10 @@ error:
   */
  static void rcar_vin_wait_stop_streaming(struct rcar_vin_priv *priv)
  {
