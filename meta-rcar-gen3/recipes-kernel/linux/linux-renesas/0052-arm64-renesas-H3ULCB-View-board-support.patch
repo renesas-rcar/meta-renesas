@@ -545,6 +545,10 @@ index 0000000..2b266cc
 +		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +
 +	max9286-max9271@1 {
@@ -553,6 +557,10 @@ index 0000000..2b266cc
 +		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +};
 +

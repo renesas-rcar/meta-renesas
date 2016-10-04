@@ -30,7 +30,7 @@ new file mode 100644
 index 0000000..bdbecd6
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
-@@ -0,0 +1,826 @@
+@@ -0,0 +1,834 @@
 +/*
 + * Device Tree Source for the M3ULCB board
 + *
@@ -488,6 +488,10 @@ index 0000000..bdbecd6
 +		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +
 +	max9286-max9271@1 {
@@ -496,6 +500,10 @@ index 0000000..bdbecd6
 +		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <1>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +};
 +

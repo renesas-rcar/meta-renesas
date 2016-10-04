@@ -31,7 +31,7 @@ new file mode 100644
 index 0000000..3a1ef51
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
-@@ -0,0 +1,1132 @@
+@@ -0,0 +1,1140 @@
 +/*
 + * Device Tree Source for the Salvator-X board
 + *
@@ -693,6 +693,10 @@ index 0000000..3a1ef51
 +		gpios = <&gpio6 30 GPIO_ACTIVE_LOW>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +
 +	max9286-max9271@1 {
@@ -700,6 +704,10 @@ index 0000000..3a1ef51
 +		reg = <0x6c>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <1>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +
 +	clk_5p49v5923a: programmable_clk@6a {

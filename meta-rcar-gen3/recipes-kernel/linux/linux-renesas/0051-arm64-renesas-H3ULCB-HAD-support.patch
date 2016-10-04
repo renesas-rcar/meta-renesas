@@ -28,7 +28,7 @@ new file mode 100644
 index 0000000..87f0f4a
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
-@@ -0,0 +1,1132 @@
+@@ -0,0 +1,1140 @@
 +/*
 + * Device Tree Source for the H3ULCB.HAD board
 + *
@@ -659,6 +659,10 @@ index 0000000..87f0f4a
 +		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +
 +	max9286-max9271@1 {
@@ -667,6 +671,10 @@ index 0000000..87f0f4a
 +		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
 +	};
 +};
 +
