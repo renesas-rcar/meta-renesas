@@ -688,7 +688,7 @@ new file mode 100644
 index 0000000..9123c0d
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
-@@ -0,0 +1,598 @@
+@@ -0,0 +1,597 @@
 +/*
 + * MAXIM max9286-max9271 with OmniVision ov10635 sensor camera driver
 + *
@@ -772,10 +772,9 @@ index 0000000..9123c0d
 +
 +	tmp_addr = client->addr;
 +	client->addr = maxim_map[0][cam_idx];		/* MAX9286-CAMx */
++	maxim_reg8_write(client, 0x15, 0x13);		/* disable CSI output, VC is set accordingly to Link number */
 +	if (enable)
 +		maxim_reg8_write(client, 0x15, 0x9b);	/* enable CSI output, VC is set accordingly to Link number, BIT7 magic must be set */
-+	else
-+		maxim_reg8_write(client, 0x15, 0x13);	/* disable CSI output, VC is set accordingly to Link number */
 +	client->addr = tmp_addr;
 +
 +	return 0;
@@ -2559,7 +2558,7 @@ new file mode 100644
 index 0000000..5a38b32
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
-@@ -0,0 +1,456 @@
+@@ -0,0 +1,455 @@
 +/*
 + * MAXIM max9286-max9271 with OmniVision ov490-ov10640 sensor camera driver
 + *
@@ -2639,10 +2638,9 @@ index 0000000..5a38b32
 +
 +	tmp_addr = client->addr;
 +	client->addr = maxim_map[0][cam_idx];		/* MAX9286-CAMx */
++	maxim_reg8_write(client, 0x15, 0x13);	/* disable CSI output, VC is set accordingly to Link number */
 +	if (enable)
 +		maxim_reg8_write(client, 0x15, 0x9b);	/* enable CSI output, VC is set accordingly to Link number, BIT7 magic must be set */
-+	else
-+		maxim_reg8_write(client, 0x15, 0x13);	/* disable CSI output, VC is set accordingly to Link number */
 +	client->addr = tmp_addr;
 +
 +	return 0;
