@@ -29,6 +29,7 @@ SRC_URI_append = " \
     file://0007-usb-host-xhci-plat-add-support-for-the-R-Car-H3-xHCI.patch \
     file://0008-spi-spi-gpio-fix-set-CPOL-default-inverted.patch \
     file://0009-Revert-media-soc_camera-rcar_vin-Fix-VIDIOC_S_CROP-ioctl-mi.patch \
+    file://0010-mmc-sh_mobile_sdhi-Add-R-CarGen3-SDHI-SEQUENCER-supp.patch \
     file://0011-arm64-renesas-Add-M3ULCB-board.patch \
     file://0012-staging-boards-Add-M3ULCB-staging.patch \
     file://0019-can-rcar_can-add-enable-and-standby-control-pins.patch \
