@@ -2,8 +2,8 @@
 Description=PowerVR consumer services
 
 [Service]
-ExecStart=/etc/init.d/rc.pvr start
-ExecStop=/etc/init.d/rc.pvr stop
+ExecStart=/usr/bin/rc.pvr start
+ExecStop=/usr/bin/rc.pvr stop
 Type=oneshot
 RemainAfterExit=yes
 

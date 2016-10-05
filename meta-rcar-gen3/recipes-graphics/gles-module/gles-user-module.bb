@@ -76,6 +76,8 @@ do_install() {
     if [ ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ]; then
         install -d ${D}/${systemd_system_unitdir}/
         install -m 644 ${WORKDIR}/rc.pvr.service ${D}/${systemd_system_unitdir}/
+        install -d ${D}/${exec_prefix}/bin
+        install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${exec_prefix}/bin/
     fi
 }
 
@@ -89,6 +91,7 @@ FILES_${PN} = " \
     ${libdir}/* \
     /lib/firmware/rgx.fw* \
     /usr/local/bin/* \
+    ${exec_prefix}/bin/* \
 "
 
 FILES_${PN}-dev = " \
