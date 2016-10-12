@@ -28,7 +28,7 @@ new file mode 100644
 index 0000000..d9cb8e7
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
-@@ -0,0 +1,1377 @@
+@@ -0,0 +1,1404 @@
 +/*
 + * Device Tree Source for the Salvator-X.View board
 + *
@@ -620,6 +620,17 @@ index 0000000..d9cb8e7
 +		groups = "du_rgb888", "du_sync", "du_clk_out_0", "du_disp";
 +		function = "du";
 +	};
++
++	can0_pins: can0 {
++		groups = "can0_data_a";
++		function = "can0";
++	};
++
++	can1_pins: can1 {
++		groups = "can1_data";
++		function = "can1";
++	};
++
 +};
 +
 +&adsp {
@@ -1405,6 +1416,22 @@ index 0000000..d9cb8e7
 +
 +&vspi2 {
 +	status = "okay";
++};
++
++&can0 {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	renesas,can-clock-select = <0x0>;
++};
++
++&can1 {
++	pinctrl-0 = <&can1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	renesas,can-clock-select = <0x0>;
 +};
 -- 
 1.9.1
