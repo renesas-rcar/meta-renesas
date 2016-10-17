@@ -1,0 +1,29 @@
+From 15a07fdc2ec68fd2772319e4cd4701752059fa3b Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Thu, 13 Oct 2016 17:48:29 +0300
+Subject: [PATCH] ARM: dts: wheat: fix DU support
+
+The name should be synced with name from:
+drivers/gpu/drm/rcar-du/rcar_du_kms.c
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm/boot/dts/r8a7792-wheat.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7792-wheat.dts b/arch/arm/boot/dts/r8a7792-wheat.dts
+index c24f26f..8fc3d97 100644
+--- a/arch/arm/boot/dts/r8a7792-wheat.dts
++++ b/arch/arm/boot/dts/r8a7792-wheat.dts
+@@ -241,7 +241,7 @@
+ 	clock-frequency = <400000>;
+ 
+ 	hdmi@3d {
+-		compatible = "adi,adv7513";
++		compatible = "adi,adv7511w";
+ 		reg = <0x3d>;
+ 
+ 		adi,input-depth = <8>;
+-- 
+1.9.1
+

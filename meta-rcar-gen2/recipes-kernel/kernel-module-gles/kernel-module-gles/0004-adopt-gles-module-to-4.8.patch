@@ -1,0 +1,91 @@
+From 2db372fde9870bc5c49f51e93c93f5c050f919aa Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Tue, 16 Aug 2016 23:54:17 +0300
+Subject: [PATCH] adopt gles module to 4.8
+
+---
+ services4/3rdparty/dc_linuxfb/memwrap.c | 9 ++++++++-
+ services4/srvkm/env/linux/mmap.c        | 7 +++++++
+ services4/srvkm/env/linux/osfunc.c      | 9 ++++++++-
+ 3 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/services4/3rdparty/dc_linuxfb/memwrap.c b/services4/3rdparty/dc_linuxfb/memwrap.c
+index a2d0cc4..bb68304 100644
+--- a/services4/3rdparty/dc_linuxfb/memwrap.c
++++ b/services4/3rdparty/dc_linuxfb/memwrap.c
+@@ -246,7 +246,11 @@ PVRSRV_ERROR DC_OSReleasePhysPageAddr(IMG_HANDLE hOSWrapMem)
+                         SetPageDirty(psPage);
+                     }
+ 	        }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
++		put_page(psPage); 
++#else
+                 page_cache_release(psPage);
++#endif
+ 	    }
+             break;
+         }
+@@ -381,8 +385,11 @@ PVRSRV_ERROR DC_OSAcquirePhysPageAddr(IMG_VOID *pvCPUVAddr,
+     bMMapSemHeld = IMG_TRUE;
+ 
+     /* Get page list */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
++    psInfo->iNumPagesMapped = get_user_pages(uStartAddr, psInfo->iNumPages, 1, 0, psInfo->ppsPages, NULL);
++#else
+     psInfo->iNumPagesMapped = get_user_pages(current, current->mm, uStartAddr, psInfo->iNumPages, 1, 0, psInfo->ppsPages, NULL);
+-
++#endif
+     if (psInfo->iNumPagesMapped >= 0)
+     {
+         /* See if we got all the pages we wanted */
+diff --git a/services4/srvkm/env/linux/mmap.c b/services4/srvkm/env/linux/mmap.c
+index 9b9f2b0..1d6135b 100644
+--- a/services4/srvkm/env/linux/mmap.c
++++ b/services4/srvkm/env/linux/mmap.c
+@@ -777,7 +777,14 @@ DoMapToUser(LinuxMemArea *psLinuxMemArea,
+ #if defined(PVR_MAKE_ALL_PFNS_SPECIAL)
+ 		    if (bMixedMap)
+ 		    {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
++			pfn_t _pfn = {
++				.val = pfn,
++			};
++			result = vm_insert_mixed(ps_vma, ulVMAPos, _pfn);
++#else
+ 			result = vm_insert_mixed(ps_vma, ulVMAPos, pfn);
++#endif
+ 	                if(result != 0)
+ 	                {
+ 	                    PVR_DPF((PVR_DBG_ERROR,"%s: Error - vm_insert_mixed failed (%d)", __FUNCTION__, result));
+diff --git a/services4/srvkm/env/linux/osfunc.c b/services4/srvkm/env/linux/osfunc.c
+index 0f71945..d4d096e 100644
+--- a/services4/srvkm/env/linux/osfunc.c
++++ b/services4/srvkm/env/linux/osfunc.c
+@@ -3428,7 +3428,11 @@ PVRSRV_ERROR OSReleasePhysPageAddr(IMG_HANDLE hOSWrapMem)
+                         SetPageDirty(psPage);
+                     }
+ 	        }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
++		put_page(psPage);
++#else
+                 page_cache_release(psPage);
++#endif
+ 	    }
+             break;
+         }
+@@ -3634,8 +3638,11 @@ PVRSRV_ERROR OSAcquirePhysPageAddr(IMG_VOID *pvCPUVAddr,
+     bMMapSemHeld = IMG_TRUE;
+ 
+     /* Get page list */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
++    psInfo->iNumPagesMapped = get_user_pages(uStartAddr, psInfo->iNumPages, 1, 0, psInfo->ppsPages, NULL);
++#else
+     psInfo->iNumPagesMapped = get_user_pages(current, current->mm, uStartAddr, psInfo->iNumPages, 1, 0, psInfo->ppsPages, NULL);
+-
++#endif
+     if (psInfo->iNumPagesMapped >= 0)
+     {
+         /* See if we got all the pages we wanted */
+-- 
+2.7.4
+

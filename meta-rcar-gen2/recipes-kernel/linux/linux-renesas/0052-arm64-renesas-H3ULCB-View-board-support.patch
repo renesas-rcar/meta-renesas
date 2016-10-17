@@ -1,0 +1,1009 @@
+From 51e96cd87b7cbf4c26784e06247022b6ab8f526d Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 7 Sep 2016 22:45:53 +0300
+Subject: [PATCH] arm64: renesas: H3ULCB.View board support
+
+H3ULCB.View suport with 10635/10640 cameras
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm64/boot/dts/renesas/Makefile               |   3 +-
+ .../arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts | 966 +++++++++++++++++++++
+ 2 files changed, 968 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index a8b373d..44cea84 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -1,5 +1,6 @@
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb \
+-			      r8a7795-salvator-x-view.dtb r8a7795-h3ulcb-had.dtb
++			      r8a7795-salvator-x-view.dtb r8a7795-h3ulcb-had.dtb \
++			      r8a7795-h3ulcb-view.dtb
+ dtb-$(CONFIG_ARCH_R8A7796) += r8a7796-salvator-x.dtb r8a7796-m3ulcb.dtb
+ 
+ always		:= $(dtb-y)
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+new file mode 100644
+index 0000000..2b266cc
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+@@ -0,0 +1,966 @@
++/*
++ * Device Tree Source for the H3ULCB.View board
++ *
++ * Copyright (C) 2016 Renesas Electronics Corp.
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++/dts-v1/;
++#include "r8a7795.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "Renesas H3ULCB.View board based on r8a7795";
++	compatible = "renesas,h3ulcb", "renesas,r8a7795";
++
++	aliases {
++		serial0 = &scif2;
++		ethernet0 = &avb;
++	};
++
++	chosen {
++		bootargs = "ignore_loglevel rw root=/dev/nfs ip=dhcp";
++		stdout-path = "serial0:115200n8";
++	};
++
++	memory@48000000 {
++		device_type = "memory";
++		/* first 128MB is reserved for secure area. */
++		reg = <0x0 0x48000000 0x0 0x38000000>;
++	};
++
++	memory@500000000 {
++		device_type = "memory";
++		reg = <0x5 0x00000000 0x0 0x40000000>;
++	};
++
++	memory@600000000 {
++		device_type = "memory";
++		reg = <0x6 0x00000000 0x0 0x40000000>;
++	};
++
++	memory@700000000 {
++		device_type = "memory";
++		reg = <0x7 0x00000000 0x0 0x40000000>;
++	};
++
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		/* device specific region for Lossy Decompression */
++		lossy_decompress: linux,lossy_decompress {
++			no-map;
++			reg = <0x00000000 0x54000000 0x0 0x03000000>;
++		};
++
++		/* For Audio DSP */
++		adsp_reserved: linux,adsp {
++			compatible = "shared-dma-pool";
++			reusable;
++			reg = <0x00000000 0x57000000 0x0 0x01000000>;
++		};
++
++		/* global autoconfigured region for contiguous allocations */
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			reg = <0x00000000 0x58000000 0x0 0x18000000>;
++			linux,cma-default;
++		};
++
++		/* device specific region for contiguous allocations */
++		linux,multimedia {
++			compatible = "shared-dma-pool";
++			reusable;
++			reg = <0x00000000 0x70000000 0x0 0x10000000>;
++		};
++	};
++
++	mmngr {
++		compatible = "renesas,mmngr";
++		memory-region = <&lossy_decompress>;
++	};
++
++	mmngrbuf {
++		compatible = "renesas,mmngrbuf";
++	};
++
++	keyboard {
++		compatible = "gpio-keys";
++
++		key-1 {
++			linux,code = <KEY_1>;
++			label = "SW3";
++			wakeup-source;
++			debounce-interval = <20>;
++			gpios = <&gpio6 11 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led5 {
++			gpios = <&gpio6 12 GPIO_ACTIVE_HIGH>;
++		};
++		led6 {
++			gpios = <&gpio6 13 GPIO_ACTIVE_HIGH>;
++		};
++	};
++
++	x12_clk: x12_clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <24576000>;
++	};
++
++	fixedregulator3v3: regulator@0 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	fixedregulator1v8: regulator@1 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vcc_sdhi0: regulator@2 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI0 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio5 2 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vccq_sdhi0: regulator@3 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI0 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio5 1 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++
++	audio_clkout: audio_clkout {
++		/*
++		 * This is same as <&rcar_sound 0>
++		 * but needed to avoid cs2000/rcar_sound probe dead-lock
++		 */
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <11289600>;
++	};
++
++	rsnd_ak4613: sound {
++		compatible = "simple-audio-card";
++
++		simple-audio-card,format = "left_j";
++		simple-audio-card,bitclock-master = <&sndcpu>;
++		simple-audio-card,frame-master = <&sndcpu>;
++
++		sndcpu: simple-audio-card,cpu {
++			sound-dai = <&rcar_sound>;
++		};
++
++		sndcodec: simple-audio-card,codec {
++			sound-dai = <&ak4613>;
++		};
++	};
++
++	vspm_if {
++		compatible = "renesas,vspm_if";
++	};
++
++	hdmi0-encoder {
++		compatible = "rockchip,rcar-dw-hdmi";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			port@0 {
++				reg = <0>;
++				rcar_dw_hdmi0_in: endpoint {
++					remote-endpoint = <&du_out_hdmi0>;
++				};
++			};
++			port@1 {
++				reg = <1>;
++				rcar_dw_hdmi0_out: endpoint {
++					remote-endpoint = <&hdmi0_con>;
++				};
++			};
++		};
++	};
++
++	hdmi0-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi0_con: endpoint {
++				remote-endpoint = <&rcar_dw_hdmi0_out>;
++			};
++		};
++	};
++
++	programable_clk0: 5p49v5923a_clk0 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <148500000>;
++	};
++
++	x21_clk: 5p49v5923a_clk2 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <33000000>;
++	};
++
++	x22_clk: 5p49v5923a_clk3 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <33000000>;
++	};
++
++	programable_clk1: 5p49v5923a_clk1 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <108000000>;
++	};
++
++	msiof_ref_clk: msiof-ref-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <66666666>;
++	};
++};
++
++&du {
++	status = "okay";
++
++	ports {
++		port@1 {
++			endpoint {
++				remote-endpoint = <&rcar_dw_hdmi0_in>;
++			};
++		};
++	};
++};
++
++&extal_clk {
++	clock-frequency = <16666666>;
++};
++
++&extalr_clk {
++	clock-frequency = <32768>;
++};
++
++&pfc {
++	pinctrl-0 = <&scif_clk_pins>;
++	pinctrl-names = "default";
++
++	scif2_pins: scif2 {
++		groups = "scif2_data_a";
++		function = "scif2";
++	};
++
++	scif_clk_pins: scif_clk {
++		groups = "scif_clk_a";
++		function = "scif_clk";
++	};
++
++	i2c2_pins: i2c2 {
++		groups = "i2c2_a";
++		function = "i2c2";
++	};
++
++	avb_pins: avb {
++		groups = "avb_mdc";
++		function = "avb";
++	};
++
++	sdhi0_pins_3v3: sd0_3v3 {
++		groups = "sdhi0_data4", "sdhi0_ctrl";
++		function = "sdhi0";
++		power-source = <3300>;
++	};
++
++	sdhi0_pins_1v8: sd0_1v8 {
++		groups = "sdhi0_data4", "sdhi0_ctrl";
++		function = "sdhi0";
++		power-source = <1800>;
++	};
++
++	mmc0_pins_1v8: mmc0_1v8 {
++		groups = "sdhi2_data8", "sdhi2_ctrl";
++		function = "sdhi2";
++		power-source = <1800>;
++	};
++
++	msiof1_pins: spi2 {
++		groups = "msiof1_clk_a", "msiof1_sync_a",
++				"msiof1_rxd_a",  "msiof1_txd_a";
++		function = "msiof1";
++	};
++
++	sound_pins: sound {
++		groups = "ssi01239_ctrl", "ssi0_data", "ssi1_data_a";
++		function = "ssi";
++	};
++
++	sound_clk_pins: sound_clk {
++		groups = "audio_clk_a_a", "audio_clk_b_a", "audio_clk_c_a",
++			 "audio_clkout_a", "audio_clkout3_a";
++		function = "audio_clk";
++	};
++
++	usb1_pins: usb1 {
++		groups = "usb1";
++		function = "usb1";
++	};
++};
++
++&adsp {
++	status = "okay";
++	memory-region = <&adsp_reserved>;
++};
++
++&scif2 {
++	pinctrl-0 = <&scif2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif_clk {
++	clock-frequency = <14745600>;
++	status = "okay";
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	clock-frequency = <100000>;
++
++	ak4613: codec@10 {
++		compatible = "asahi-kasei,ak4613";
++		#sound-dai-cells = <0>;
++		reg = <0x10>;
++		clocks = <&rcar_sound 3>;
++
++		asahi-kasei,in1-single-end;
++		asahi-kasei,in2-single-end;
++		asahi-kasei,out1-single-end;
++		asahi-kasei,out2-single-end;
++		asahi-kasei,out3-single-end;
++		asahi-kasei,out4-single-end;
++		asahi-kasei,out5-single-end;
++		asahi-kasei,out6-single-end;
++	};
++
++	cs2000: clk_multiplier@4f {
++		#clock-cells = <0>;
++		compatible = "cirrus,cs2000-cp";
++		reg = <0x4f>;
++		clocks = <&audio_clkout>, <&x12_clk>;
++		clock-names = "clk_in", "ref_clk";
++
++		assigned-clocks = <&cs2000>;
++		assigned-clock-rates = <24576000>; /* 1/1 divide */
++	};
++};
++
++&i2c4 {
++	status = "okay";
++	clock-frequency = <400000>;
++
++	ov106xx@0 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x60>;
++
++		port {
++			ov106xx_in0: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin0ep0>;
++				ov106xx_out0: endpoint@ {
++					remote-endpoint = <&csi2_40_in_ep>;
++				};
++			};
++		};
++	};
++
++	ov106xx@1 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x61>;
++
++		port {
++			ov106xx_in1: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin1ep0>;
++			};
++		};
++	};
++
++	ov106xx@2 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x62>;
++
++		port {
++			ov106xx_in2: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin2ep0>;
++			};
++		};
++	};
++
++	ov106xx@3 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x63>;
++
++		port {
++			ov106xx_in3: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin3ep0>;
++			};
++		};
++	};
++
++	ov106xx@4 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x64>;
++
++		port {
++			ov106xx_in4: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin4ep0>;
++				ov106xx_out4: endpoint@ {
++					remote-endpoint = <&csi2_41_in_ep>;
++				};
++			};
++		};
++	};
++
++	ov106xx@5 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x65>;
++
++		port {
++			ov106xx_in5: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin5ep0>;
++			};
++		};
++	};
++
++	ov106xx@6 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x66>;
++
++		port {
++			ov106xx_in6: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin6ep0>;
++			};
++		};
++	};
++
++	ov106xx@7 {
++		compatible = "maxim,max9286-max9271-ov106xx";
++		reg = <0x67>;
++
++		port {
++			ov106xx_in7: endpoint {
++				clock-lanes = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&vin7ep0>;
++			};
++		};
++	};
++
++	max9286-max9271@0 {
++		compatible = "maxim,max9286-max9271";
++		reg = <0x4c>;
++		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
++		maxim,sensor_delay = <0>;
++		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
++	};
++
++	max9286-max9271@1 {
++		compatible = "maxim,max9286-max9271";
++		reg = <0x6c>;
++		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
++		maxim,sensor_delay = <0>;
++		maxim,links = <4>;
++		maxim,resetb-gpio = <1>;
++		maxim,resetb-active-low;
++		maxim,fsync-mode = "automatic";
++		maxim,timeout = <10>;
++	};
++};
++
++&rcar_sound {
++	pinctrl-0 = <&sound_pins &sound_clk_pins>;
++	pinctrl-names = "default";
++
++	/* Single DAI */
++	#sound-dai-cells = <0>;
++
++	/* audio_clkout0/1/2/3 */
++	#clock-cells = <1>;
++	clock-frequency = <11289600>;
++	clkout-lr-synchronous;
++
++	status = "okay";
++
++	/* update <audio_clk_b> to <cs2000> */
++	clocks = <&cpg CPG_MOD 1005>,
++		 <&cpg CPG_MOD 1006>, <&cpg CPG_MOD 1007>,
++		 <&cpg CPG_MOD 1008>, <&cpg CPG_MOD 1009>,
++		 <&cpg CPG_MOD 1010>, <&cpg CPG_MOD 1011>,
++		 <&cpg CPG_MOD 1012>, <&cpg CPG_MOD 1013>,
++		 <&cpg CPG_MOD 1014>, <&cpg CPG_MOD 1015>,
++		 <&cpg CPG_MOD 1022>, <&cpg CPG_MOD 1023>,
++		 <&cpg CPG_MOD 1024>, <&cpg CPG_MOD 1025>,
++		 <&cpg CPG_MOD 1026>, <&cpg CPG_MOD 1027>,
++		 <&cpg CPG_MOD 1028>, <&cpg CPG_MOD 1029>,
++		 <&cpg CPG_MOD 1030>, <&cpg CPG_MOD 1031>,
++		 <&cpg CPG_MOD 1021>, <&cpg CPG_MOD 1020>,
++		 <&cpg CPG_MOD 1021>, <&cpg CPG_MOD 1020>,
++		 <&cpg CPG_MOD 1019>, <&cpg CPG_MOD 1018>,
++		 <&audio_clk_a>, <&cs2000>,
++		 <&audio_clk_c>,
++		 <&cpg CPG_CORE R8A7795_CLK_S0D4>;
++
++	rcar_sound,dai {
++		dai0 {
++			playback = <&ssi0 &src0 &dvc0>;
++			capture  = <&ssi1 &src1 &dvc1>;
++		};
++	};
++};
++
++&pcie_bus_clk {
++	status = "okay";
++};
++
++&pciec1 {
++	status = "okay";
++};
++
++&vin0 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin0ep0: endpoint {
++				csi,select = "csi40";
++				virtual,channel = <0>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&ov106xx_in0>;
++
++			};
++		};
++		port@1 {
++			csi0ep0: endpoint {
++				remote-endpoint = <&csi2_40_ep>;
++			};
++		};
++	};
++};
++
++&vin1 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin1ep0: endpoint {
++				csi,select = "csi40";
++				virtual,channel = <1>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&ov106xx_in1>;
++			};
++		};
++		port@1 {
++			csi0ep1: endpoint {
++				remote-endpoint = <&csi2_40_ep>;
++			};
++		};
++	};
++};
++
++&vin2 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin2ep0: endpoint {
++				csi,select = "csi40";
++				virtual,channel = <2>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&ov106xx_in2>;
++			};
++		};
++		port@1 {
++			csi0ep2: endpoint {
++				remote-endpoint = <&csi2_40_ep>;
++			};
++		};
++	};
++};
++
++&vin3 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin3ep0: endpoint {
++				csi,select = "csi40";
++				virtual,channel = <3>;
++				data-lanes = <1 2 3 4>;
++				remote-endpoint = <&ov106xx_in3>;
++			};
++		};
++		port@1 {
++			csi0ep3: endpoint {
++				remote-endpoint = <&csi2_40_ep>;
++			};
++		};
++	};
++};
++
++&vin4 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin4ep0: endpoint {
++				csi,select = "csi41";
++				virtual,channel = <0>;
++				remote-endpoint = <&ov106xx_in4>;
++				data-lanes = <1 2 3 4>;
++			};
++		};
++		port@1 {
++			csi2ep0: endpoint {
++				remote-endpoint = <&csi2_41_ep>;
++			};
++		};
++	};
++};
++
++&vin5 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin5ep0: endpoint@0 {
++				csi,select = "csi41";
++				virtual,channel = <1>;
++				remote-endpoint = <&ov106xx_in5>;
++				data-lanes = <1 2 3 4>;
++			};
++		};
++		port@1 {
++			csi2ep1: endpoint {
++				remote-endpoint = <&csi2_41_ep>;
++			};
++		};
++	};
++};
++
++&vin6 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin6ep0: endpoint@0 {
++				csi,select = "csi41";
++				virtual,channel = <2>;
++				remote-endpoint = <&ov106xx_in6>;
++				data-lanes = <1 2 3 4>;
++			};
++		};
++		port@1 {
++			csi2ep2: endpoint {
++				remote-endpoint = <&csi2_41_ep>;
++			};
++		};
++	};
++};
++
++&vin7 {
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			vin7ep0: endpoint@0 {
++				csi,select = "csi41";
++				virtual,channel = <3>;
++				remote-endpoint = <&ov106xx_in7>;
++				data-lanes = <1 2 3 4>;
++			};
++		};
++		port@1 {
++			csi2ep3: endpoint {
++				remote-endpoint = <&csi2_41_ep>;
++			};
++		};
++	};
++};
++
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins_3v3>;
++	pinctrl-1 = <&sdhi0_pins_1v8>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&vcc_sdhi0>;
++	vqmmc-supply = <&vccq_sdhi0>;
++	cd-gpios = <&gpio3 12 GPIO_ACTIVE_LOW>;
++	bus-width = <4>;
++	status = "okay";
++};
++
++&mmc0 {
++	pinctrl-0 = <&mmc0_pins_1v8>;
++	pinctrl-1 = <&mmc0_pins_1v8>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&fixedregulator3v3>;
++	vqmmc-supply = <&fixedregulator1v8>;
++	bus-width = <8>;
++	status = "okay";
++};
++
++&ssi1 {
++	shared-pin;
++};
++
++&wdt0 {
++	status = "okay";
++};
++
++&audio_clk_a {
++	clock-frequency = <22579200>;
++};
++
++&i2c_dvfs {
++	status = "okay";
++
++	vdd_dvfs: regulator@30 {
++		compatible = "rohm,bd9571mwv";
++		reg = <0x30>;
++
++		regulator-min-microvolt = <750000>;
++		regulator-max-microvolt = <1030000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++};
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++	renesas,no-ether-link;
++	phy-handle = <&phy0>;
++	status = "okay";
++	phy-int-gpio = <&gpio2 11 GPIO_ACTIVE_LOW>;
++
++	phy0: ethernet-phy@0 {
++		rxc-skew-ps = <1500>;
++		rxdv-skew-ps = <420>; /* default */
++		rxd0-skew-ps = <420>; /* default */
++		rxd1-skew-ps = <420>; /* default */
++		rxd2-skew-ps = <420>; /* default */
++		rxd3-skew-ps = <420>; /* default */
++		txc-skew-ps = <900>; /* default */
++		txen-skew-ps = <420>; /* default */
++		txd0-skew-ps = <420>; /* default */
++		txd1-skew-ps = <420>; /* default */
++		txd2-skew-ps = <420>; /* default */
++		txd3-skew-ps = <420>; /* default */
++		reg = <0>;
++		interrupt-parent = <&gpio2>;
++		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
++		max-speed = <100>;
++	};
++};
++
++&usb2_phy1 {
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++
++&msiof1 {
++	pinctrl-0 = <&msiof1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	spidev@0 {
++		compatible = "renesas,sh-msiof";
++		reg = <0>;
++		spi-max-frequency = <66666666>;
++		spi-cpha;
++		spi-cpol;
++	};
++};
++
++&csi2_40 {
++	status = "okay";
++
++	adi,input-interface = "ycbcr422";
++
++	virtual,channel {
++		csi2_vc0 {
++			data,type = "ycbcr422";
++			receive,vc = <0>;
++		};
++		csi2_vc1 {
++			data,type = "ycbcr422";
++			receive,vc = <1>;
++		};
++		csi2_vc2 {
++			data,type = "ycbcr422";
++			receive,vc = <2>;
++		};
++		csi2_vc3 {
++			data,type = "ycbcr422";
++			receive,vc = <3>;
++		};
++	};
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		csi2_40_ep: endpoint@0 {
++			remote-endpoint = <&vin0ep0>;
++			clock-lanes = <0>;
++			data-lanes = <1 2 3 4>;
++		};
++
++		csi2_40_in_ep: endpoint@1 {
++			remote-endpoint = <&ov106xx_out0>;
++		};
++	};
++};
++
++&csi2_41 {
++	status = "okay";
++
++	adi,input-interface = "ycbcr422";
++
++	virtual,channel {
++		csi2_vc0 {
++			data,type = "ycbcr422";
++			receive,vc = <0>;
++		};
++		csi2_vc1 {
++			data,type = "ycbcr422";
++			receive,vc = <1>;
++		};
++		csi2_vc2 {
++			data,type = "ycbcr422";
++			receive,vc = <2>;
++		};
++		csi2_vc3 {
++			data,type = "ycbcr422";
++			receive,vc = <3>;
++		};
++	};
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		csi2_41_ep: endpoint@0 {
++			remote-endpoint = <&vin4ep0>;
++			clock-lanes = <0>;
++			data-lanes = <1 2 3 4>;
++		};
++
++		csi2_41_in_ep: endpoint@1 {
++			remote-endpoint = <&ov106xx_out4>;
++		};
++	};
++};
++
++&vspbc {
++	status = "okay";
++};
++
++&vspbd {
++	status = "okay";
++};
++
++&vspi0 {
++	status = "okay";
++};
++
++&vspi1 {
++	status = "okay";
++};
++
++&vspi2 {
++	status = "okay";
++};
+-- 
+1.9.1
+

@@ -1,0 +1,96 @@
+From 0f55d888c83aed7ea5a10761edaff52de8dc06a1 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Mon, 30 May 2016 01:51:47 +0300
+Subject: [PATCH] can: rcar_canfd: add enable and standby control pins
+
+Add enable and standby can transceiver control pins
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ .../devicetree/bindings/net/can/rcar_canfd.txt     |  5 ++++
+ drivers/net/can/rcar_canfd.c                       | 31 +++++++++++++++++++++-
+ 2 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/net/can/rcar_canfd.txt b/Documentation/devicetree/bindings/net/can/rcar_canfd.txt
+index 4299bd8..eede77a 100644
+--- a/Documentation/devicetree/bindings/net/can/rcar_canfd.txt
++++ b/Documentation/devicetree/bindings/net/can/rcar_canfd.txt
+@@ -16,6 +16,7 @@ Required properties:
+ - clock-names: 3 clock input name strings: "fck", "canfd", "can_clk".
+ - pinctrl-0: pin control group to be used for this controller.
+ - pinctrl-names: must be "default".
++- gpios: GPIO used for controlling the enable pin and standby pin
+ 
+ Required properties for "renesas,r8a7795-canfd" compatible:
+ In R8A7795 SoC, canfd clock is a div6 clock and can be used by both CAN
+@@ -49,6 +50,10 @@ SoC common .dtsi file:
+ 			power-domains = <&cpg>;
+ 			status = "disabled";
+ 
++			gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable */
++				 &gpio5 30 GPIO_ACTIVE_LOW /* standby */
++				>;
++
+ 			channel0 {
+ 				status = "disabled";
+ 			};
+diff --git a/drivers/net/can/rcar_canfd.c b/drivers/net/can/rcar_canfd.c
+index 15a14c5..def17cd 100644
+--- a/drivers/net/can/rcar_canfd.c
++++ b/drivers/net/can/rcar_canfd.c
+@@ -21,6 +21,7 @@
+ #include <linux/clk.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
++#include <linux/of_gpio.h>
+ #include <linux/bitmap.h>
+ #include <linux/bitops.h>
+ #include <linux/iopoll.h>
+@@ -1409,8 +1410,10 @@ static int rcar_canfd_probe(struct platform_device *pdev)
+ 	struct rcar_canfd_global *gpriv;
+ 	struct device_node *of_child;
+ 	unsigned long channels_mask = 0;
+-	int err, ch_irq, g_irq;
++	int err, ret, ch_irq, g_irq;
+ 	u32 clock_select = RCANFD_CANFDCLK;
++	unsigned int enable_pin, standby_pin;
++	enum of_gpio_flags enable_flags, standby_flags;
+ 
+ 	of_property_read_u32(pdev->dev.of_node,
+ 			     "renesas,can-clock-select", &clock_select);
+@@ -1419,6 +1422,32 @@ static int rcar_canfd_probe(struct platform_device *pdev)
+ 		dev_err(&pdev->dev, "invalid CAN clock selected\n");
+ 		goto fail_dev;
+ 	}
++	enable_pin = of_get_gpio_flags(pdev->dev.of_node, 0, &enable_flags);
++	standby_pin = of_get_gpio_flags(pdev->dev.of_node, 1, &standby_flags);
++
++	if (gpio_is_valid(enable_pin)) {
++		ret = devm_gpio_request(&pdev->dev, enable_pin, "enable");
++		if (!ret) {
++			if (enable_flags & OF_GPIO_ACTIVE_LOW)
++				gpio_set_value(enable_pin, 0);
++			else
++				gpio_set_value(enable_pin, 1);
++		} else {
++			dev_info(&pdev->dev, "Failed to request enable pin\n");
++		}
++	}
++
++	if (gpio_is_valid(standby_pin)) {
++		ret = devm_gpio_request(&pdev->dev, standby_pin, "standby");
++		if (!ret) {
++			if (standby_flags & OF_GPIO_ACTIVE_LOW)
++				gpio_set_value(standby_pin, 1);
++			else
++				gpio_set_value(standby_pin, 0);
++		} else {
++			dev_info(&pdev->dev, "Failed to request standby pin\n");
++		}
++	}
+ 
+ 	of_child = of_get_child_by_name(pdev->dev.of_node, "channel0");
+ 	if (of_child && of_device_is_available(of_child))
+-- 
+1.9.1
+

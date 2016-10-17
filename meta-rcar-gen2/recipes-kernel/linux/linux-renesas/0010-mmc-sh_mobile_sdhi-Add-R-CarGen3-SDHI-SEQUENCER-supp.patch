@@ -1,0 +1,1022 @@
+From 19a49f82151cbdd3031999d309dcd8d3f1ff9493 Mon Sep 17 00:00:00 2001
+From: Kouei Abe <kouei.abe.cp@renesas.com>
+Date: Wed, 10 Aug 2016 19:53:02 +0900
+Subject: [PATCH] mmc: sh_mobile_sdhi: Add R-CarGen3 SDHI-SEQUENCER support
+
+This is Workaround patch for SDHI-DMAC restriction of R-Car H3(WS1.1)/M3(WS1.0).
+Restriction: Mismatch of the transfer completion interrupt time and data transfer
+completion time.
+Overview: It does not take into account the bus response, the transfer completion
+interrupt IP outputs is in the early out.Therefore, when carrying out the data
+verification data read from the SD card, there is a possibility that the data of
+the last sector might be missing.(MMC Interface is also the same.)
+
+S/W Workaround: The last sector data is preserved by reading data for 2 sectors
+extra in the SDHI Driver of Linux kernel.
+
+The SDHI Driver achieves a dummy read for 2 sectors by the SDHI-SEQ function.
+In case of eMMC: CMD17(MMC_READ_SINGLE_BLOCK) and CMD18(MMC_READ_MULTIPLE_BLOCK)
+              were requested, CMD8(SEND_EXT_CSD) is carried out additionally twice.
+In case of SD card: CMD17(MMC_READ_SINGLE_BLOCK) and CMD18(MMC_READ_MULTIPLE_BLOCK)
+              were requested, 1024 bytes are read additionally by CMD18.
+In other cases: CMD17 and CMD53(SD_IO_RW_EXTENDED) is carried out additionally twice.
+---
+ drivers/mmc/host/Kconfig             |  10 +
+ drivers/mmc/host/sh_mobile_sdhi.c    |  14 ++
+ drivers/mmc/host/tmio_mmc.h          |  56 +++++
+ drivers/mmc/host/tmio_mmc_dma_gen3.c | 416 +++++++++++++++++++++++++++++++++++
+ drivers/mmc/host/tmio_mmc_pio.c      | 259 ++++++++++++++++++++++
+ 5 files changed, 755 insertions(+)
+
+diff --git a/drivers/mmc/host/Kconfig b/drivers/mmc/host/Kconfig
+index f0bb76d..5f8f6e8 100644
+--- a/drivers/mmc/host/Kconfig
++++ b/drivers/mmc/host/Kconfig
+@@ -578,6 +578,16 @@ config MMC_SDHI_PIO
+ 	  When switching the transfer mode from DMA to PIO, say Y here.
+ 	  When switching the transfer mode from PIO to DMA, say N here.
+ 
++config MMC_SDHI_PRE_REQ
++	bool "SDHI pre_req/post_req API support"
++	depends on MMC_SDHI && ARM64
++	default y
++
++config MMC_SDHI_SEQ
++	bool "SDHI Sequencer read/write support"
++	depends on MMC_SDHI && ARM64
++	default y
++
+ config MMC_CB710
+ 	tristate "ENE CB710 MMC/SD Interface support"
+ 	depends on PCI
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index c707dbc..cc4c40b 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -110,8 +110,22 @@ static const struct sh_mobile_sdhi_of_data of_rcar_gen3_compatible = {
+ 			  MMC_CAP_CMD23,
+ 	.bus_shift	= 2,
+ 	/* Gen3 SDHI DMAC can handle 0xffffffff blk count, but seg = 1 */
++#ifdef CONFIG_MMC_SDHI_SEQ
++	/* Gen3 SDHI SEQ can handle 0xffffffff/DM_SEQ_SIZE blk count */
++	.max_blk_count  = 0xffffffff / 512,
++	/* Gen3 SDHI SEQ can handle max 8 commands */
++#ifdef CONFIG_MMC_BLOCK_BOUNCE
++	/* (CMD23+CMD18)*1 + (dummy read command) */
++	.max_segs = 1,
++#else
++	/* (CMD23+CMD18)*3 + (dummy read command) */
++	.max_segs = 3,
++#endif
++#else //CONFIG_MMC_SDHI_SEQ
++	/* Gen3 SDHI DMAC can handle 0xffffffff blk count, but seg = 1 */
+ 	.max_blk_count	= 0xffffffff,
+ 	.max_segs = 1,
++#endif //CONFIG_MMC_SDHI_SEQ
+ 	.sdbuf_64bit = true,
+ 	.scc_offset = 0x1000,
+ 	.taps = rcar_gen3_scc_taps,
+diff --git a/drivers/mmc/host/tmio_mmc.h b/drivers/mmc/host/tmio_mmc.h
+index 5ec0f90..f19a74c 100644
+--- a/drivers/mmc/host/tmio_mmc.h
++++ b/drivers/mmc/host/tmio_mmc.h
+@@ -51,6 +51,29 @@
+ #define CTL_CLK_AND_WAIT_CTL 0x138
+ #define CTL_RESET_SDIO 0x1e0
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++#define DM_CM_SEQ_REGSET	0x800
++#define DM_CM_SEQ_MODE		0x808
++#define DM_CM_SEQ_CTRL		0x810
++#define DM_CM_DTRAN_MODE	0x820
++#define DM_CM_DTRAN_CTRL	0x828
++#define DM_CM_RST		0x830
++#define DM_CM_INFO1		0x840
++#define DM_CM_INFO1_MASK	0x848
++#define DM_CM_INFO2		0x850
++#define DM_CM_INFO2_MASK	0x858
++#define DM_CM_TUNING_STAT	0x860
++#define DM_CM_SEQ_STAT		0x868
++#define DM_DTRAN_ADDR		0x880
++#define DM_SEQ_CMD		0x8a0
++#define DM_SEQ_ARG		0x8a8
++#define DM_SEQ_SIZE		0x8b0
++#define DM_SEQ_SECCNT		0x8b8
++#define DM_SEQ_RSP		0x8c0
++#define DM_SEQ_RSP_CHK		0x8c8
++#define DM_SEQ_ADDR		0x8d0
++#endif
++
+ /* Definitions for values the CTRL_STATUS register can take. */
+ #define TMIO_STAT_CMDRESPEND    BIT(0)
+ #define TMIO_STAT_DATAEND       BIT(2)
+@@ -78,6 +101,14 @@
+ #define TMIO_STAT_CMD_BUSY      BIT(30)
+ #define TMIO_STAT_ILL_ACCESS    BIT(31)
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++/* Definitions for values the DM_CM_INFO1 register can take. */
++#define DM_CM_INFO_SEQEND	0x00000001
++#define DM_CM_INFO_SEQSUSPEND	0x00000100
++#define DM_CM_INFO_DTRAEND_CH0	0x00010000
++#define DM_CM_INFO_DTRAEND_CH1	0x00020000
++#endif
++
+ #define	CLK_CTL_DIV_MASK	0xff
+ #define	CLK_CTL_SCLKEN		BIT(8)
+ 
+@@ -101,6 +132,13 @@
+ struct tmio_mmc_data;
+ struct tmio_mmc_host;
+ 
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++enum tmio_cookie {
++	COOKIE_UNMAPPED,
++	COOKIE_PRE_MAPPED,
++};
++#endif
++
+ struct tmio_mmc_dma {
+ 	enum dma_slave_buswidth dma_buswidth;
+ 	bool sdbuf_64bit;
+@@ -136,6 +174,9 @@ struct tmio_mmc_host {
+ 	struct dma_chan		*chan_tx;
+ 	struct tasklet_struct	dma_complete;
+ 	struct tasklet_struct	dma_issue;
++#ifdef CONFIG_MMC_SDHI_SEQ
++	struct tasklet_struct	seq_complete;
++#endif
+ 	struct scatterlist	bounce_sg;
+ 	u8			*bounce_buf;
+ 
+@@ -208,6 +249,9 @@ void tmio_mmc_enable_dma(struct tmio_mmc_host *host, bool enable);
+ void tmio_mmc_request_dma(struct tmio_mmc_host *host, struct tmio_mmc_data *pdata);
+ void tmio_mmc_release_dma(struct tmio_mmc_host *host);
+ void tmio_mmc_abort_dma(struct tmio_mmc_host *host);
++#ifdef CONFIG_MMC_SDHI_SEQ
++void tmio_mmc_start_sequencer(struct tmio_mmc_host *host);
++#endif
+ #else
+ static inline void tmio_mmc_start_dma(struct tmio_mmc_host *host,
+ 			       struct mmc_data *data)
+@@ -285,4 +329,16 @@ static inline void sd_ctrl_write32_as_16_and_16(struct tmio_mmc_host *host, int
+ 
+ extern void mmc_set_initial_state(struct mmc_host *host);
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++static inline u64 tmio_dm_read(struct tmio_mmc_host *host, int addr)
++{
++	return readq(host->ctl + addr);
++}
++
++static inline void tmio_dm_write(struct tmio_mmc_host *host, int addr, u64 val)
++{
++	writeq(val, host->ctl + addr);
++}
++#endif
++
+ #endif
+diff --git a/drivers/mmc/host/tmio_mmc_dma_gen3.c b/drivers/mmc/host/tmio_mmc_dma_gen3.c
+index b289dfa..fee2716 100644
+--- a/drivers/mmc/host/tmio_mmc_dma_gen3.c
++++ b/drivers/mmc/host/tmio_mmc_dma_gen3.c
+@@ -18,9 +18,15 @@
+ #include <linux/mmc/host.h>
+ #include <linux/pagemap.h>
+ #include <linux/scatterlist.h>
++#ifdef CONFIG_MMC_SDHI_SEQ
++#include <linux/mmc/mmc.h>
++#include <linux/mmc/sd.h>
++#include <linux/mmc/sdio.h>
++#endif
+ 
+ #include "tmio_mmc.h"
+ 
++#if !defined(CONFIG_MMC_SDHI_SEQ)
+ #define DM_CM_DTRAN_MODE	0x820
+ #define DM_CM_DTRAN_CTRL	0x828
+ #define DM_CM_RST		0x830
+@@ -29,6 +35,7 @@
+ #define DM_CM_INFO2		0x850
+ #define DM_CM_INFO2_MASK	0x858
+ #define DM_DTRAN_ADDR		0x880
++#endif
+ 
+ /* DM_CM_DTRAN_MODE */
+ #define DTRAN_MODE_CH_NUM_CH0	0	/* "downstream" = for write commands */
+@@ -42,6 +49,9 @@
+ /* DM_CM_RST */
+ #define RST_DTRANRST1		BIT(9)
+ #define RST_DTRANRST0		BIT(8)
++#ifdef CONFIG_MMC_SDHI_SEQ
++#define RST_SEQRST		BIT(0)
++#endif
+ #define RST_RESERVED_BITS	GENMASK_ULL(32, 0)
+ 
+ /* DM_CM_INFO1 and DM_CM_INFO1_MASK */
+@@ -60,10 +70,12 @@
+  *   this driver cannot use original sd_ctrl_{write,read}32 functions.
+  */
+ 
++#if !defined(CONFIG_MMC_SDHI_SEQ)
+ static void tmio_dm_write(struct tmio_mmc_host *host, int addr, u64 val)
+ {
+ 	writeq(val, host->ctl + addr);
+ }
++#endif
+ 
+ void tmio_mmc_enable_dma(struct tmio_mmc_host *host, bool enable)
+ {
+@@ -79,7 +91,11 @@ void tmio_mmc_enable_dma(struct tmio_mmc_host *host, bool enable)
+ 
+ void tmio_mmc_abort_dma(struct tmio_mmc_host *host)
+ {
++#ifdef CONFIG_MMC_SDHI_SEQ
++	u64 val = RST_SEQRST | RST_DTRANRST1 | RST_DTRANRST0;
++#else
+ 	u64 val = RST_DTRANRST1 | RST_DTRANRST0;
++#endif
+ 
+ 	dev_dbg(&host->pdev->dev, "%s\n", __func__);
+ 
+@@ -125,11 +141,17 @@ void tmio_mmc_start_dma(struct tmio_mmc_host *host, struct mmc_data *data)
+ 		irq_mask = TMIO_STAT_TXRQ;
+ 	}
+ 
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++	if (host->data->host_cookie != COOKIE_PRE_MAPPED) {
++#endif
+ 	ret = dma_map_sg(&host->pdev->dev, sg, host->sg_len, dir);
+ 	if (ret < 0) {
+ 		dev_err(&host->pdev->dev, "%s: dma_map_sg failed\n", __func__);
+ 		return;
+ 	}
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++	}
++#endif
+ 
+ 	tmio_mmc_enable_dma(host, true);
+ 
+@@ -170,11 +192,384 @@ static void tmio_mmc_complete_tasklet_fn(unsigned long arg)
+ 		dir = DMA_TO_DEVICE;
+ 
+ 	tmio_mmc_enable_dma(host, false);
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++	if (host->data->host_cookie != COOKIE_PRE_MAPPED)
++#endif
+ 	dma_unmap_sg(&host->pdev->dev, host->sg_ptr, host->sg_len, dir);
+ 	tmio_mmc_do_data_irq(host);
+ }
+ #endif
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++/* DM_CM_SEQ_REGSET bits */
++#define DM_CM_SEQ_REGSET_TABLE_NUM	BIT(8)
++/* DM_CM_SEQ_CTRL bits */
++#define DM_CM_SEQ_CTRL_SEQ_TABLE	BIT(28)
++#define DM_CM_SEQ_CTRL_T_NUM		BIT(24)
++#define DM_CM_SEQ_CTRL_SEQ_TYPE_SD	BIT(16)
++#define DM_CM_SEQ_CTRL_START_NUM(x)	((x) << 12)
++#define DM_CM_SEQ_CTRL_END_NUM(x)	((x) << 8)
++#define DM_CM_SEQ_CTRL_SEQ_START	BIT(0)
++/* DM_SEQ_CMD bits */
++#define DM_SEQ_CMD_MULTI		BIT(13)
++#define DM_SEQ_CMD_DIO			BIT(12)
++#define DM_SEQ_CMD_CMDTYP		BIT(11)
++#define DM_SEQ_CMD_RSP_NONE		(BIT(9) | BIT(8))
++#define DM_SEQ_CMD_RSP_R1		BIT(10)
++#define DM_SEQ_CMD_RSP_R1B		(BIT(10) | BIT(8))
++#define DM_SEQ_CMD_RSP_R2		(BIT(10) | BIT(9))
++#define DM_SEQ_CMD_RSP_R3		(BIT(10) | BIT(9) | BIT(8))
++#define DM_SEQ_CMD_NONAUTOSTP		BIT(7)
++#define DM_SEQ_CMD_APP			BIT(6)
++
++#define MAX_CONTEXT_NUM			8
++
++struct tmio_mmc_context {
++	u64	seq_cmd;
++	u64	seq_arg;
++	u64	seq_size;
++	u64	seq_seccnt;
++	u64	seq_rsp;
++	u64	seq_rsp_chk;
++	u64	seq_addr;
++};
++
++static void tmio_mmc_set_seq_context(struct tmio_mmc_host *host, int ctxt_num,
++				struct tmio_mmc_context *ctxt)
++{
++	u64 val;
++
++	WARN_ON(ctxt_num >= MAX_CONTEXT_NUM);
++
++	/* set sequencer table/context number */
++	if (ctxt_num < 4)
++		val = ctxt_num;
++	else
++		val = DM_CM_SEQ_REGSET_TABLE_NUM | (ctxt_num - 4);
++	tmio_dm_write(host, DM_CM_SEQ_REGSET, val);
++
++	/* set command parameter */
++	tmio_dm_write(host, DM_SEQ_CMD, ctxt->seq_cmd);
++	tmio_dm_write(host, DM_SEQ_ARG, ctxt->seq_arg);
++	tmio_dm_write(host, DM_SEQ_SIZE, ctxt->seq_size);
++	tmio_dm_write(host, DM_SEQ_SECCNT, ctxt->seq_seccnt);
++	tmio_dm_write(host, DM_SEQ_RSP, ctxt->seq_rsp);
++	tmio_dm_write(host, DM_SEQ_RSP_CHK, ctxt->seq_rsp_chk);
++	tmio_dm_write(host, DM_SEQ_ADDR, ctxt->seq_addr);
++}
++
++static int tmio_mmc_set_seq_table(struct tmio_mmc_host *host,
++				  struct mmc_request *mrq,
++				  struct scatterlist *sg)
++{
++	struct mmc_card *card = host->mmc->card;
++	struct mmc_data *data = mrq->data;
++	struct scatterlist *sg_tmp;
++	struct tmio_mmc_context ctxt;
++	unsigned int blksz, blocks;
++	u32 cmd_opcode, cmd_flag, cmd_arg;
++	u32 sbc_opcode = 0, sbc_arg = 0;
++	int i, ctxt_cnt = 0;
++
++	/* FIXME: SDIO CMD53(SD_IO_RW_EXTENDED) not tested */
++	cmd_opcode = (mrq->cmd->opcode & 0x3f);
++	cmd_flag = DM_SEQ_CMD_CMDTYP;
++	if (data->flags & MMC_DATA_READ)
++		cmd_flag |= DM_SEQ_CMD_DIO;
++	if (mmc_op_multi(mrq->cmd->opcode) ||
++	    (cmd_opcode == SD_IO_RW_EXTENDED && mrq->cmd->arg & 0x08000000)) //FIXME
++		cmd_flag |= DM_SEQ_CMD_MULTI;
++	if (mrq->sbc ||
++	    cmd_opcode == SD_IO_RW_EXTENDED) //FIXME
++		cmd_flag |= DM_SEQ_CMD_NONAUTOSTP;
++
++	switch (mmc_resp_type(mrq->cmd)) {
++	case MMC_RSP_NONE:
++		cmd_flag |= DM_SEQ_CMD_RSP_NONE;
++		break;
++	case MMC_RSP_R1:
++	case MMC_RSP_R1 & ~MMC_RSP_CRC:
++		cmd_flag |= DM_SEQ_CMD_RSP_R1;
++		break;
++	case MMC_RSP_R1B:
++		cmd_flag |= DM_SEQ_CMD_RSP_R1B;
++		break;
++	case MMC_RSP_R2:
++		cmd_flag |= DM_SEQ_CMD_RSP_R2;
++		break;
++	case MMC_RSP_R3:
++		cmd_flag |= DM_SEQ_CMD_RSP_R3;
++		break;
++	default:
++		pr_debug("Unknown response type %d\n", mmc_resp_type(mrq->cmd));
++		return -EINVAL;
++	}
++
++	if (cmd_opcode == SD_IO_RW_EXTENDED &&
++	    mrq->cmd->arg & 0x08000000) {
++		/* SDIO CMD53 block mode */
++		cmd_arg = mrq->cmd->arg & ~0x1ff;
++	} else
++		cmd_arg = mrq->cmd->arg;
++
++	if (mrq->sbc) {
++		sbc_opcode = (mrq->sbc->opcode & 0x3f) | DM_SEQ_CMD_RSP_R1;
++		sbc_arg = mrq->sbc->arg & (MMC_CMD23_ARG_REL_WR |
++			  MMC_CMD23_ARG_PACKED | MMC_CMD23_ARG_TAG_REQ);
++	}
++
++	blksz = data->blksz;
++	for_each_sg(sg, sg_tmp, host->sg_len, i) {
++		blocks = sg_tmp->length / blksz;
++		memset(&ctxt, 0, sizeof(ctxt));
++
++		if (sbc_opcode) {
++			/* set CMD23 */
++			ctxt.seq_cmd = sbc_opcode;
++			ctxt.seq_arg = sbc_arg | blocks;
++			if (sbc_arg & MMC_CMD23_ARG_TAG_REQ &&
++			    card->ext_csd.data_tag_unit_size &&
++			    blksz * blocks < card->ext_csd.data_tag_unit_size)
++				ctxt.seq_arg &= ~MMC_CMD23_ARG_TAG_REQ;
++			tmio_mmc_set_seq_context(host, ctxt_cnt, &ctxt);
++			ctxt_cnt++;
++		}
++
++		/* set CMD */
++		ctxt.seq_cmd = cmd_opcode | cmd_flag;
++		if (cmd_opcode == SD_IO_RW_EXTENDED && cmd_arg & 0x08000000) {
++			/* SDIO CMD53 block mode */
++			ctxt.seq_arg = cmd_arg | blocks;
++		} else
++			ctxt.seq_arg = cmd_arg;
++		ctxt.seq_size = blksz;
++		ctxt.seq_seccnt = blocks;
++		ctxt.seq_addr = sg_dma_address(sg_tmp);
++		tmio_mmc_set_seq_context(host, ctxt_cnt, &ctxt);
++
++		if (i < (host->sg_len - 1)) {
++			/* increment address */
++			if (cmd_opcode == SD_IO_RW_EXTENDED) {
++				/* sg_len should be 1 in SDIO CMD53 byte mode */
++				WARN_ON(!(cmd_arg & 0x08000000));
++				if (cmd_arg & 0x04000000) {
++					/* SDIO CMD53 address increment mode */
++					cmd_arg += (blocks * blksz) << 9;
++				}
++			} else {
++				if (!mmc_card_blockaddr(card))
++					cmd_arg += blocks * blksz;
++				else
++					cmd_arg += blocks;
++			}
++			ctxt_cnt++;
++		}
++	}
++
++	if (data->flags & MMC_DATA_READ) {
++		/* dummy read */
++		if (cmd_opcode == MMC_READ_MULTIPLE_BLOCK && sbc_opcode &&
++		    !mmc_card_mmc(card) && data->blocks > 1) {
++			memset(&ctxt, 0, sizeof(ctxt));
++			/* set CMD23 */
++			ctxt.seq_cmd = sbc_opcode;
++			ctxt.seq_arg = sbc_arg | 2;
++			if (sbc_arg & MMC_CMD23_ARG_TAG_REQ &&
++			    card->ext_csd.data_tag_unit_size &&
++			    blksz * 2 < card->ext_csd.data_tag_unit_size)
++				ctxt.seq_arg &= ~MMC_CMD23_ARG_TAG_REQ;
++			ctxt_cnt++;
++			tmio_mmc_set_seq_context(host, ctxt_cnt, &ctxt);
++
++			/* set CMD18 */
++			ctxt.seq_cmd = cmd_opcode | cmd_flag;
++			ctxt.seq_arg = mrq->cmd->arg;
++			ctxt.seq_size = 512;
++			ctxt.seq_seccnt = 2;
++			ctxt.seq_addr = sg_dma_address(&host->bounce_sg);
++			ctxt_cnt++;
++			tmio_mmc_set_seq_context(host, ctxt_cnt, &ctxt);
++		} else {
++			if (card && mmc_card_mmc(card)) {
++				/* set CMD8 twice */
++				memset(&ctxt, 0, sizeof(ctxt));
++				ctxt.seq_cmd = MMC_SEND_EXT_CSD |
++					       DM_SEQ_CMD_CMDTYP |
++					       DM_SEQ_CMD_DIO |
++					       DM_SEQ_CMD_RSP_R1;
++				ctxt.seq_arg = 0;
++				ctxt.seq_size = 512;
++				ctxt.seq_seccnt = 1;
++				ctxt.seq_addr = sg_dma_address(&host->bounce_sg);
++			} else if (cmd_opcode == SD_SWITCH) {
++				/* set SD CMD6 twice  */
++				ctxt.seq_addr = sg_dma_address(&host->bounce_sg);
++			} else if (cmd_opcode == SD_IO_RW_EXTENDED) {
++				/* FIXME:
++				 * In case of SDIO CMD53,
++				 * read Common I/O Area 0x0-0x1FF twice.
++				 */
++				memset(&ctxt, 0, sizeof(ctxt));
++				ctxt.seq_cmd = SD_IO_RW_EXTENDED |
++					       DM_SEQ_CMD_CMDTYP |
++					       DM_SEQ_CMD_DIO |
++					       DM_SEQ_CMD_NONAUTOSTP |
++					       DM_SEQ_CMD_RSP_R1;
++				/*
++				 * SD_IO_RW_EXTENDED argument format:
++				 * [31] R/W flag -> 0
++				 * [30:28] Function number -> 0x0 selects
++				 *                            Common I/O Area
++				 * [27] Block mode -> 0
++				 * [26] Increment address -> 1
++				 * [25:9] Regiser address -> 0x0
++				 * [8:0] Byte/block count -> 0x0 -> 512Bytes
++				 */
++				ctxt.seq_arg = 0x04000000;
++				ctxt.seq_size = 512;
++				ctxt.seq_seccnt = 1;
++				ctxt.seq_addr = sg_dma_address(&host->bounce_sg);
++			} else {
++				/* set CMD17 twice */
++				memset(&ctxt, 0, sizeof(ctxt));
++				ctxt.seq_cmd = MMC_READ_SINGLE_BLOCK |
++					       DM_SEQ_CMD_CMDTYP |
++					       DM_SEQ_CMD_DIO |
++					       DM_SEQ_CMD_RSP_R1;
++				if (cmd_opcode == MMC_READ_SINGLE_BLOCK ||
++				    cmd_opcode == MMC_READ_MULTIPLE_BLOCK)
++					ctxt.seq_arg = mrq->cmd->arg;
++				else
++					ctxt.seq_arg = 0; //FIXME
++				ctxt.seq_size = 512;
++				ctxt.seq_seccnt = 1;
++				ctxt.seq_addr = sg_dma_address(&host->bounce_sg);
++			}
++
++			for (i = 0; i < 2; i++) {
++				ctxt_cnt++;
++				tmio_mmc_set_seq_context(host, ctxt_cnt, &ctxt);
++			}
++		}
++	}
++
++	return ctxt_cnt;
++}
++
++void tmio_mmc_start_sequencer(struct tmio_mmc_host *host)
++{
++	struct scatterlist *sg = host->sg_ptr, *sg_tmp;
++	struct mmc_host *mmc = host->mmc;
++	struct mmc_request *mrq = host->mrq;
++	struct mmc_data *data = mrq->data;
++	enum dma_data_direction dir;
++	int ret, i, ctxt_num;
++	u32 val;
++
++	/* This DMAC cannot handle if sg_len larger than max_segs */
++	WARN_ON(host->sg_len > mmc->max_segs);
++
++	dev_dbg(&host->pdev->dev, "%s: %d, %x\n", __func__, host->sg_len,
++		data->flags);
++
++	for_each_sg(sg, sg_tmp, host->sg_len, i) {
++		/* This DMAC cannot handle if buffer is not 8-bytes alignment */
++		if (!IS_ALIGNED(sg_tmp->offset, 8) ||
++		    !IS_ALIGNED(sg_tmp->length, data->blksz) ||
++		    ((sg_dma_address(sg_tmp) + sg_tmp->length) > GENMASK_ULL(32, 0))) {
++			dev_dbg(&host->pdev->dev, "%s: force pio\n", __func__);
++			host->force_pio = true;
++			tmio_mmc_enable_dma(host, false);
++			return;
++		}
++	}
++
++	if (data->flags & MMC_DATA_READ) {
++		dir = DMA_FROM_DEVICE;
++
++		/* setup bounce_sg for dummy read */
++		sg_init_one(&host->bounce_sg, host->bounce_buf, 1024);
++		ret = dma_map_sg(&host->pdev->dev, &host->bounce_sg, 1, dir);
++		if (ret <= 0) {
++			dev_err(&host->pdev->dev, "%s: dma_map_sg failed\n", __func__);
++			host->force_pio = true;
++			tmio_mmc_enable_dma(host, false);
++			return;
++		}
++	} else
++		dir = DMA_TO_DEVICE;
++
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++	if (host->data->host_cookie != COOKIE_PRE_MAPPED) {
++#endif
++		ret = dma_map_sg(&host->pdev->dev, sg, host->sg_len, dir);
++		if (ret <= 0) {
++			dev_err(&host->pdev->dev, "%s: dma_map_sg failed\n", __func__);
++			host->force_pio = true;
++			tmio_mmc_enable_dma(host, false);
++			return;
++		}
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++	}
++#endif
++
++	tmio_mmc_enable_dma(host, true);
++	/* set context */
++	ctxt_num = tmio_mmc_set_seq_table(host, mrq, sg);
++	if (ctxt_num < 0) {
++		host->force_pio = true;
++		tmio_mmc_enable_dma(host, false);
++		return;
++	}
++	/* set dma mode */
++	//FIXME
++	tmio_dm_write(host, DM_CM_DTRAN_MODE,
++		      DTRAN_MODE_BUS_WID_TH);
++		      //DTRAN_MODE_BUS_WID_TH | DTRAN_MODE_ADDR_MODE);
++	/* enable SEQEND irq */
++	tmio_dm_write(host, DM_CM_INFO1_MASK,
++		      GENMASK_ULL(32, 0) & ~DM_CM_INFO_SEQEND);
++
++	if (ctxt_num < 4) {
++		/* issue table0 commands */
++		val = DM_CM_SEQ_CTRL_SEQ_TYPE_SD |
++		      DM_CM_SEQ_CTRL_START_NUM(0) |
++		      DM_CM_SEQ_CTRL_END_NUM(ctxt_num) |
++		      DM_CM_SEQ_CTRL_SEQ_START;
++		tmio_dm_write(host, DM_CM_SEQ_CTRL, val);
++	} else {
++		/* issue table0 commands */
++		val = DM_CM_SEQ_CTRL_SEQ_TYPE_SD |
++		      DM_CM_SEQ_CTRL_T_NUM |
++		      DM_CM_SEQ_CTRL_START_NUM(0) |
++		      DM_CM_SEQ_CTRL_END_NUM(3) |
++		      DM_CM_SEQ_CTRL_SEQ_START;
++		tmio_dm_write(host, DM_CM_SEQ_CTRL, val);
++		/* issue table1 commands */
++		val = DM_CM_SEQ_CTRL_SEQ_TABLE |
++		      DM_CM_SEQ_CTRL_SEQ_TYPE_SD |
++		      DM_CM_SEQ_CTRL_T_NUM |
++		      DM_CM_SEQ_CTRL_START_NUM(0) |
++		      DM_CM_SEQ_CTRL_END_NUM(ctxt_num - 4) |
++		      DM_CM_SEQ_CTRL_SEQ_START;
++		tmio_dm_write(host, DM_CM_SEQ_CTRL, val);
++	}
++
++	return;
++}
++
++static void tmio_mmc_seq_complete_tasklet_fn(unsigned long arg)
++{
++	struct tmio_mmc_host *host = (struct tmio_mmc_host *)arg;
++
++	/* unmap bounce_sg for dummy read */
++	if (host->data->flags & MMC_DATA_READ)
++		dma_unmap_sg(&host->pdev->dev, &host->bounce_sg, 1, DMA_FROM_DEVICE);
++
++	tmio_mmc_complete_tasklet_fn(arg);
++}
++#endif //CONFIG_MMC_SDHI_SEQ
++
+ void tmio_mmc_request_dma(struct tmio_mmc_host *host,
+ 			  struct tmio_mmc_data *pdata)
+ {
+@@ -186,6 +581,20 @@ void tmio_mmc_request_dma(struct tmio_mmc_host *host,
+ 		     (unsigned long)host);
+ 	tasklet_init(&host->dma_issue, tmio_mmc_issue_tasklet_fn,
+ 		     (unsigned long)host);
++#ifdef CONFIG_MMC_SDHI_SEQ
++	tasklet_init(&host->seq_complete, tmio_mmc_seq_complete_tasklet_fn,
++		     (unsigned long)host);
++	/* alloc bounce_buf for dummy read */
++	host->bounce_buf = (u8 *)__get_free_page(GFP_KERNEL | GFP_DMA);
++	if (!host->bounce_buf)
++		goto ebouncebuf;
++
++	return;
++
++ebouncebuf:
++	host->chan_rx = host->chan_tx = NULL;
++	return;
++#endif
+ #endif
+ }
+ 
+@@ -193,4 +602,11 @@ void tmio_mmc_release_dma(struct tmio_mmc_host *host)
+ {
+ 	/* Each value is set to zero to assume "disabling" each DMA */
+ 	host->chan_rx = host->chan_tx = NULL;
++#ifdef CONFIG_MMC_SDHI_SEQ
++	/* free bounce_buf for dummy read */
++	if (host->bounce_buf) {
++		free_pages((unsigned long)host->bounce_buf, 0);
++		host->bounce_buf = NULL;
++	}
++#endif
+ }
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index add0f6e..0c110ce 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -50,12 +50,22 @@
+ #include <linux/scatterlist.h>
+ #include <linux/spinlock.h>
+ #include <linux/workqueue.h>
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++#include <linux/dma-mapping.h>
++#endif
+ 
+ #include "tmio_mmc.h"
+ 
+ static int tmio_mmc_execute_tuning(struct mmc_host *mmc, u32 opcode);
++#ifdef CONFIG_MMC_SDHI_SEQ
++static int tmio_mmc_start_seq(struct tmio_mmc_host *host,
++	struct mmc_request *mrq);
++static void tmio_mmc_set_blklen_and_blkcnt(struct tmio_mmc_host *host,
++	struct mmc_data *data);
++#else
+ static int tmio_mmc_start_data(struct tmio_mmc_host *host,
+ 	struct mmc_data *data);
++#endif
+ static int tmio_mmc_start_command(struct tmio_mmc_host *host,
+ 	struct mmc_command *cmd);
+ static void tmio_mmc_hw_reset(struct mmc_host *mmc);
+@@ -445,6 +455,21 @@ static int _tmio_mmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
+ 
+ 		spin_unlock_irqrestore(&host->lock, flags);
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++		/* Start SEQ */
++		ret = tmio_mmc_start_seq(host, &mrq);
++		if (ret)
++			goto out;
++		else if (host->force_pio) {
++			/*
++			 * Failed to start SEQ, transfer in PIO mode
++			 */
++			tmio_mmc_set_blklen_and_blkcnt(host, mrq.data);
++			ret = tmio_mmc_start_command(host, mrq.cmd);
++			if (ret)
++				goto out;
++		}
++#else
+ 		ret = tmio_mmc_start_data(host, mrq.data);
+ 		if (ret)
+ 			goto out;
+@@ -452,6 +477,7 @@ static int _tmio_mmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
+ 		ret = tmio_mmc_start_command(host, mrq.cmd);
+ 		if (ret)
+ 			goto out;
++#endif
+ 
+ 		timeleft = wait_for_completion_timeout(&host->completion,
+ 						       msecs_to_jiffies(tm));
+@@ -727,6 +753,79 @@ void tmio_mmc_do_data_irq(struct tmio_mmc_host *host)
+ 	schedule_work(&host->done);
+ }
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++static void tmio_mmc_seq_irq(struct tmio_mmc_host *host, unsigned int stat,
++			     u32 seq_stat1, u32 seq_stat2)
++{
++	struct mmc_data *data;
++	struct mmc_command *cmd, *sbc;
++
++	spin_lock(&host->lock);
++	data = host->data;
++	cmd = host->mrq->cmd;
++	sbc = host->mrq->sbc;
++
++	//FIXME: How to get SEQ commands response?
++
++	if (seq_stat2) {
++		//FIXME
++		pr_debug("sequencer error, CMD%d SD_INFO2=0x%x\n",
++			cmd->opcode, stat >> 16);
++		if (stat & TMIO_STAT_CMDTIMEOUT) {
++			cmd->error = -ETIMEDOUT;
++			if (sbc)
++				sbc->error = -ETIMEDOUT;
++		} else if ((stat & TMIO_STAT_CRCFAIL &&
++			   cmd->flags & MMC_RSP_CRC) ||
++			   stat & TMIO_STAT_STOPBIT_ERR ||
++			   stat & TMIO_STAT_CMD_IDX_ERR) {
++			cmd->error = -EILSEQ;
++			if (sbc)
++				sbc->error = -EILSEQ;
++		}
++
++		if (stat & TMIO_STAT_DATATIMEOUT)
++			data->error = -ETIMEDOUT;
++		else if (stat & TMIO_STAT_CRCFAIL ||
++			 stat & TMIO_STAT_STOPBIT_ERR ||
++			 stat & TMIO_STAT_TXUNDERRUN)
++			data->error = -EILSEQ;
++	}
++
++	if (host->chan_tx && (data->flags & MMC_DATA_WRITE)) {
++		//FIXME
++		u32 status = sd_ctrl_read16_and_16_as_32(host, CTL_STATUS);
++		bool done = false;
++
++		/*
++		 * Has all data been written out yet? Testing on SuperH showed,
++		 * that in most cases the first interrupt comes already with the
++		 * BUSY status bit clear, but on some operations, like mount or
++		 * in the beginning of a write / sync / umount, there is one
++		 * DATAEND interrupt with the BUSY bit set, in this cases
++		 * waiting for one more interrupt fixes the problem.
++		 */
++		if (host->pdata->flags & TMIO_MMC_HAS_IDLE_WAIT) {
++			if (status & TMIO_STAT_ILL_FUNC)
++				done = true;
++		} else {
++			if (!(status & TMIO_STAT_CMD_BUSY))
++				done = true;
++		}
++
++		if (!done)
++			goto out;
++	}
++
++	/* mask sequencer irq */
++	tmio_dm_write(host, DM_CM_INFO1_MASK, 0xffffffff);
++	tasklet_schedule(&host->seq_complete);
++
++out:
++	spin_unlock(&host->lock);
++}
++#endif //CONFIG_MMC_SDHI_SEQ
++
+ static void tmio_mmc_data_irq(struct tmio_mmc_host *host, unsigned int stat)
+ {
+ 	struct mmc_data *data;
+@@ -857,6 +956,22 @@ static bool __tmio_mmc_card_detect_irq(struct tmio_mmc_host *host,
+ static bool __tmio_mmc_sdcard_irq(struct tmio_mmc_host *host,
+ 				 int ireg, int status)
+ {
++#ifdef CONFIG_MMC_SDHI_SEQ
++	u64 dm_cm_info1;
++
++	dm_cm_info1 = tmio_dm_read(host, DM_CM_INFO1);
++	if (dm_cm_info1 & DM_CM_INFO_SEQEND) {
++		u64 dm_cm_info2;
++		dm_cm_info2 = tmio_dm_read(host, DM_CM_INFO2);
++		tmio_dm_write(host, DM_CM_INFO1, 0x0);
++		tmio_dm_write(host, DM_CM_INFO2, 0x0);
++		tmio_mmc_ack_mmc_irqs(host,
++				      TMIO_MASK_IRQ & ~(TMIO_STAT_CARD_REMOVE |
++				      TMIO_STAT_CARD_INSERT));
++		tmio_mmc_seq_irq(host, status, dm_cm_info1, dm_cm_info2);
++		return true;
++	}
++#endif //CONFIG_MMC_SDHI_SEQ
+ 	/* Command completion */
+ 	if (ireg & (TMIO_STAT_CMDRESPEND | TMIO_STAT_CMDTIMEOUT)) {
+ 		tmio_mmc_ack_mmc_irqs(host,
+@@ -932,6 +1047,61 @@ irqreturn_t tmio_mmc_irq(int irq, void *devid)
+ }
+ EXPORT_SYMBOL(tmio_mmc_irq);
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++static int tmio_mmc_start_seq(struct tmio_mmc_host *host,
++	struct mmc_request *mrq)
++{
++	struct tmio_mmc_data *pdata = host->pdata;
++	struct mmc_data *data = mrq->data;
++
++	pr_debug("setup data transfer: blocksize %08x  nr_blocks %d\n",
++		 data->blksz, data->blocks);
++
++	if (!host->chan_rx || !host->chan_tx) {
++		host->force_pio = true;
++		return 0;
++	}
++
++	/* Some hardware cannot perform 2 byte requests in 4 bit mode */
++	if (host->mmc->ios.bus_width == MMC_BUS_WIDTH_4) {
++		int blksz_2bytes = pdata->flags & TMIO_MMC_BLKSZ_2BYTES;
++
++		if (data->blksz < 2 || (data->blksz < 4 && !blksz_2bytes)) {
++			pr_err("%s: %d byte block unsupported in 4 bit mode\n",
++			       mmc_hostname(host->mmc), data->blksz);
++			return -EINVAL;
++		}
++	}
++
++	tmio_mmc_init_sg(host, data);
++	host->cmd = mrq->cmd;
++	host->data = data;
++
++	//FIXME
++	sd_ctrl_write16(host, CTL_STOP_INTERNAL_ACTION, 0x000);
++	//sd_ctrl_write16(host, CTL_STOP_INTERNAL_ACTION, 0x100);
++
++	tmio_mmc_start_sequencer(host);
++
++	if (host->force_pio) {
++		host->cmd = NULL;
++		host->data = NULL;
++	}
++
++	return 0;
++}
++
++static void tmio_mmc_set_blklen_and_blkcnt(struct tmio_mmc_host *host,
++	struct mmc_data *data)
++{
++	host->force_pio = true;
++	tmio_mmc_init_sg(host, data);
++	host->data = data;
++
++	sd_ctrl_write16(host, CTL_SD_XFER_LEN, data->blksz);
++	sd_ctrl_write16(host, CTL_XFER_BLK_COUNT, data->blocks);
++}
++#else
+ static int tmio_mmc_start_data(struct tmio_mmc_host *host,
+ 	struct mmc_data *data)
+ {
+@@ -962,6 +1132,49 @@ static int tmio_mmc_start_data(struct tmio_mmc_host *host,
+ 
+ 	return 0;
+ }
++#endif //CONFIG_MMC_SDHI_SEQ
++
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++static void tmio_mmc_post_req(struct mmc_host *mmc, struct mmc_request *req,
++			int err)
++{
++	struct tmio_mmc_host *host = mmc_priv(mmc);
++	struct mmc_data *data = req->data;
++	enum dma_data_direction dir;
++
++	if (data && data->host_cookie == COOKIE_PRE_MAPPED) {
++		if (req->data->flags & MMC_DATA_READ)
++			dir = DMA_FROM_DEVICE;
++		else
++			dir = DMA_TO_DEVICE;
++
++		dma_unmap_sg(&host->pdev->dev, data->sg, data->sg_len, dir);
++		data->host_cookie = COOKIE_UNMAPPED;
++	}
++}
++
++static void tmio_mmc_pre_req(struct mmc_host *mmc, struct mmc_request *req,
++			bool is_first_req)
++{
++	struct tmio_mmc_host *host = mmc_priv(mmc);
++	struct mmc_data *data = req->data;
++	enum dma_data_direction dir;
++	int ret;
++
++	if (data && data->host_cookie == COOKIE_UNMAPPED) {
++		if (req->data->flags & MMC_DATA_READ)
++			dir = DMA_FROM_DEVICE;
++		else
++			dir = DMA_TO_DEVICE;
++
++		ret = dma_map_sg(&host->pdev->dev, data->sg, data->sg_len, dir);
++		if (ret <= 0)
++			dev_err(&host->pdev->dev, "%s: dma_map_sg failed\n", __func__);
++		else
++			data->host_cookie = COOKIE_PRE_MAPPED;
++	}
++}
++#endif //CONFIG_MMC_SDHI_PRE_REQ
+ 
+ /* Process requests from the MMC layer */
+ static void tmio_mmc_request(struct mmc_host *mmc, struct mmc_request *mrq)
+@@ -1003,6 +1216,25 @@ static void tmio_mmc_request(struct mmc_host *mmc, struct mmc_request *mrq)
+ 		host->mrq = mrq;
+ 	}
+ 
++#ifdef CONFIG_MMC_SDHI_SEQ
++	//FIXME: CMD53(SD_IO_RW_EXTENDED) not tested
++	if (mrq->data) {
++		/* Start SEQ */
++		ret = tmio_mmc_start_seq(host, mrq);
++		if (ret)
++			goto fail;
++		else if (!host->force_pio) {
++			/*
++			 * Successed to start SEQ
++			 * Wait SEQ interrupt
++			 */
++			schedule_delayed_work(&host->delayed_reset_work,
++					      msecs_to_jiffies(CMDREQ_TIMEOUT));
++			return;
++		}
++	}
++#endif //CONFIG_MMC_SDHI_SEQ
++
+ 	if (mrq->sbc) {
+ 		init_completion(&host->completion);
+ 		ret = tmio_mmc_start_command(host, mrq->sbc);
+@@ -1034,9 +1266,32 @@ static void tmio_mmc_request(struct mmc_host *mmc, struct mmc_request *mrq)
+ 	}
+ 
+ 	if (mrq->data) {
++#ifdef CONFIG_MMC_SDHI_SEQ
++		/*
++		 * Failed to start SEQ
++		 * Set blklen and blkcnt to transfer in PIO mode
++		 */
++		tmio_mmc_set_blklen_and_blkcnt(host, mrq->data);
++#else
+ 		ret = tmio_mmc_start_data(host, mrq->data);
+ 		if (ret)
+ 			goto fail;
++#endif
++
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++		if (host->force_pio &&
++		    mrq->data->host_cookie == COOKIE_PRE_MAPPED) {
++			/* PIO mode, unmap pre_dma_mapped sg */
++			enum dma_data_direction dir;
++			if (mrq->data->flags & MMC_DATA_READ)
++				dir = DMA_FROM_DEVICE;
++			else
++				dir = DMA_TO_DEVICE;
++			dma_unmap_sg(&host->pdev->dev, mrq->data->sg,
++				     mrq->data->sg_len, dir);
++			mrq->data->host_cookie = COOKIE_UNMAPPED;
++		}
++#endif
+ 	}
+ 
+ 	ret = tmio_mmc_start_command(host, mrq->cmd);
+@@ -1276,6 +1531,10 @@ static void tmio_mmc_hw_reset(struct mmc_host *mmc)
+ }
+ 
+ static struct mmc_host_ops tmio_mmc_ops = {
++#ifdef CONFIG_MMC_SDHI_PRE_REQ
++	.post_req	= tmio_mmc_post_req,
++	.pre_req	= tmio_mmc_pre_req,
++#endif
+ 	.request	= tmio_mmc_request,
+ 	.set_ios	= tmio_mmc_set_ios,
+ 	.get_ro         = tmio_mmc_get_ro,
+-- 
+2.5.0
+

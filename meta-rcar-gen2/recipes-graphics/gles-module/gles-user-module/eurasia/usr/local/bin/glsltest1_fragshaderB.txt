@@ -1,0 +1,11 @@
+varying highp vec2 texcoord;
+varying mediump vec4 basecolor;
+
+uniform sampler2D basetexture;
+
+void main(void)
+{
+	mediump vec4 texlookup = texture2D(basetexture, texcoord);
+
+	gl_FragColor = texlookup * basecolor;
+}

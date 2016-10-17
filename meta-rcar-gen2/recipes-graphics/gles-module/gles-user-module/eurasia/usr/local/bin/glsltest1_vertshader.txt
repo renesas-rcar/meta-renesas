@@ -1,0 +1,17 @@
+varying vec2 texcoord;
+varying mediump vec4 basecolor;
+
+attribute vec4 position;
+attribute vec4 inputcolor;
+attribute vec2 inputtexcoord;
+
+uniform mat4 mvp;
+
+
+void main(void)
+{
+	basecolor = inputcolor;
+	texcoord = inputtexcoord;
+
+	gl_Position = mvp * position;
+}

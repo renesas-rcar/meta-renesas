@@ -1,0 +1,26 @@
+From 57de5aade24d5e5db398fa35c8bb884ee14c32de Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Thu, 13 Oct 2016 18:33:08 +0300
+Subject: [PATCH 2/5] Revert "mmc: sh_mobile_sdhi: Add r8a7796 support"
+
+This reverts commit c4fc37990549541007ec55a2caabbb0f86173e22.
+---
+ drivers/mmc/host/sh_mobile_sdhi.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index aeba98a..7a759c0 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -132,8 +132,6 @@ static const struct of_device_id sh_mobile_sdhi_of_match[] = {
+ 	{ .compatible = "renesas,sdhi-r8a7794", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7795", .data = &of_rcar_gen3_compatible, },
+ 	{ .compatible = "renesas,mmc-r8a7795", .data = &of_rcar_gen3_compatible, },
+-	{ .compatible = "renesas,sdhi-r8a7796", .data = &of_rcar_gen3_compatible, },
+-	{ .compatible = "renesas,mmc-r8a7796", .data = &of_rcar_gen3_compatible, },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, sh_mobile_sdhi_of_match);
+-- 
+1.9.1
+

@@ -1,0 +1,33 @@
+From 02183a5250193aae6913ed3ee720be021ae92b03 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Fri, 15 Jul 2016 00:00:05 +0300
+Subject: [PATCH] ARM: dts: r8a7792: add PFC support
+
+Define the generic R8A7792 part of the PFC device node.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7792.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792.dtsi b/arch/arm/boot/dts/r8a7792.dtsi
+index 3fd61d7..0b746dd 100644
+--- a/arch/arm/boot/dts/r8a7792.dtsi
++++ b/arch/arm/boot/dts/r8a7792.dtsi
+@@ -108,6 +108,11 @@
+ 			#power-domain-cells = <1>;
+ 		};
+ 
++		pfc: pin-controller@e6060000 {
++			compatible = "renesas,pfc-r8a7792";
++			reg = <0 0xe6060000 0 0x144>;
++		};
++
+ 		dmac0: dma-controller@e6700000 {
+ 			compatible = "renesas,dmac-r8a7792",
+ 				     "renesas,rcar-dmac";
+-- 
+1.9.1
+

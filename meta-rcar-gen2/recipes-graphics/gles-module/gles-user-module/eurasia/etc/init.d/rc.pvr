@@ -1,0 +1,162 @@
+#!/bin/sh
+#@Copyright     Copyright (c) Imagination Technologies Ltd. All Rights Reserved
+#@License       MIT
+# The contents of this file are subject to the MIT license as set out below.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Auto-generated for r8a7792_linux from build: sgxddk_1.12@3497023
+#
+
+load_pvr()
+{
+    # powervr.ini parser
+	if [ -e /etc/powervr.ini ]; then
+        eval `sed -e 's/:space:*\=:space:*/=/g' \
+        -e 's/;.*$//' \
+        -e 's/:/_/g' \
+        -e 's/:space:*$//' \
+        -e 's/^:space:*//' \
+        -e "s/^\(.*\)=\([^\"']*\)$/\1=\"\2\"/" \
+        < /etc/powervr.ini \
+        | sed -n -e "/^\[default\]/,/^\s*\[/{/^[^;].*\=.*/p;}"`
+        # save params
+        PRE_PVRSRVKM_PARAMS=${PVRSRVKM_PARAMS}
+        # set DebugLogOutputLevel
+        if [ ! ${DebugLogOutputLevel} = "" ]; then
+            export PVRSRVKM_PARAMS="DebugLogOutputLevel=${DebugLogOutputLevel} ${PRE_PVRSRVKM_PARAMS}"
+        fi
+        # set DebugLogBufferEntryKM
+        if [ ! ${DebugLogBufferEntryKM} = "" ]; then
+            PRE_PVRSRVKM_PARAMS=${PVRSRVKM_PARAMS}
+            export PVRSRVKM_PARAMS="DebugLogBufferEntryKM=${DebugLogBufferEntryKM} ${PRE_PVRSRVKM_PARAMS}"
+        fi
+        echo "PVRSRVKM_PARAMS=$PVRSRVKM_PARAMS"
+    fi
+
+		# Load the PVR Services module.
+	#
+	
+	if ! /sbin/modprobe -q pvrsrvkm $PVRSRVKM_PARAMS; then
+		echo "Module pvrsrvkm failed to load. Retrying."
+		if [ -z $depmod_has_been_run ]; then
+			if [ -e /sbin/depmod ]; then
+				echo "Running /sbin/depmod"
+				/sbin/depmod && depmod_has_been_run=1
+			fi
+		fi
+		if ! /sbin/modprobe -q pvrsrvkm; then return; fi
+	fi
+
+	# Delete the device for PVR services device and recreate with the
+	# correct major number.
+	#
+	pvr_maj=`grep "pvrsrvkm$" /proc/devices | cut -b1,2,3`
+	/bin/rm -f /dev/pvrsrvkm
+	/bin/mknod /dev/pvrsrvkm c $pvr_maj 0
+	/bin/chmod 666 /dev/pvrsrvkm
+
+	# Run the PVR initialisation server
+	if ! /usr/local/bin/pvrsrvctl --start --no-module; then return; fi
+
+	# Load remaining modules.
+	#
+			
+	if ! /sbin/modprobe -q dc_linuxfb $PVR_DISPLAY_PARAMS; then
+		echo "Module dc_linuxfb failed to load. Retrying."
+		if [ -z $depmod_has_been_run ]; then
+			if [ -e /sbin/depmod ]; then
+				echo "Running /sbin/depmod"
+				/sbin/depmod && depmod_has_been_run=1
+			fi
+		fi
+		if ! /sbin/modprobe -q dc_linuxfb $PVR_DISPLAY_PARAMS; then echo "Continuing to load PowerVR services"; dc_linuxfb_failed=1; fi
+	fi
+				
+	if ! /sbin/modprobe -q bc_example ; then
+		echo "Module bc_example failed to load. Retrying."
+		if [ -z $depmod_has_been_run ]; then
+			if [ -e /sbin/depmod ]; then
+				echo "Running /sbin/depmod"
+				/sbin/depmod && depmod_has_been_run=1
+			fi
+		fi
+		if ! /sbin/modprobe -q bc_example ; then echo "Continuing to load PowerVR services"; bc_example_failed=1; fi
+	fi
+	
+	# Delete the device for bc_example and recreate with the
+	# correct major number.
+	#
+	if [ -z $bc_example_failed ]; then
+		bcd_maj=`grep "bc_example$" /proc/devices | cut -b1,2,3`
+		/bin/rm -f /dev/bc_example
+		/bin/mknod /dev/bc_example c $bcd_maj 0
+		/bin/chmod 666 /dev/bc_example
+	fi
+
+	echo "Loaded PowerVR consumer services."
+	return 0;
+}
+
+unload_pvr()
+{
+	# Stop the DRM Layer Compositor REL.
+	if ! /usr/local/bin/dlcsrv_REL -q ; then return; fi
+
+	# Unload modules.  This won't pick up cases where a further module
+	# has been added which has a dependency on one of these modules.
+	#
+	if rmmod dc_linuxfb; then :; else echo "Warning: Could not unload dc_linuxfb"; fi
+	if rmmod bc_example; then :; else echo "Warning: Could not unload bc_example"; fi
+
+	# Run the PVR initialisation server to delete resources of debuglog
+	if ! /usr/local/bin/pvrsrvctl --stop --no-module --debuglog; then return; fi
+
+	# Unload the PVR Services module.
+	#
+	if rmmod pvrsrvkm; then :; else return 1; fi
+	
+	
+	echo "Unloaded PowerVR consumer services."
+	return 0;
+}
+
+# Deal with the type of invocation we get.
+#
+case "$1" in
+"start")
+	load_pvr
+	;;
+stop)
+	if ! unload_pvr; then
+		echo "Couldn't unload modules" >&2;
+	fi
+	;;
+reload|restart)
+	if unload_pvr; then
+		load_pvr
+	else
+		echo "Couldn't unload modules" >&2;
+	fi
+	;;
+*)
+	echo "$0: unknown argument $1." >&2;
+	;;
+esac
+

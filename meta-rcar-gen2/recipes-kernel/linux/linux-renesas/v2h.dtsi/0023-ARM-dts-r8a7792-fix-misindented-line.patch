@@ -1,0 +1,30 @@
+From d6f5fe84b5f99ab3fad6911b825098ebdeb4a921 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Sat, 6 Aug 2016 00:52:39 +0300
+Subject: [PATCH] ARM: dts: r8a7792: fix misindented line
+
+Commit 2a0900655d5e (ARM: dts: r8a7792: add I2C support) had a wrongly
+indented line at the end of the "aliases" subnode -- fix it.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7792.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7792.dtsi b/arch/arm/boot/dts/r8a7792.dtsi
+index e1f85a9..eaa0c48 100644
+--- a/arch/arm/boot/dts/r8a7792.dtsi
++++ b/arch/arm/boot/dts/r8a7792.dtsi
+@@ -31,7 +31,7 @@
+ 		vin3 = &vin3;
+ 		vin4 = &vin4;
+ 		vin5 = &vin5;
+-};
++	};
+ 
+ 	cpus {
+ 		#address-cells = <1>;
+-- 
+1.9.1
+

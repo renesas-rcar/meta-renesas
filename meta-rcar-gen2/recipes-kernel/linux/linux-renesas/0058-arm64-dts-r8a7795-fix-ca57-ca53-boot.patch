@@ -1,0 +1,52 @@
+From cb44ea5eeadb1a95de4b81e93788b75ecb239b39 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Fri, 29 Jul 2016 15:27:23 +0300
+Subject: [PATCH] arm64: dts: r8a7795: fix ca57 ca53 boot
+
+This patch fixes freeze of ca53 at ca57-ca53 boot.
+After idle ca53 goes to freeze, hence disable idle.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dts   | 4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index a4f12c8..017a73c 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -113,7 +113,6 @@
+ 			device_type = "cpu";
+ 			enable-method = "psci";
+ 			clocks = <&cpg CPG_CORE R8A7795_CLK_Z2>;
+-			cpu-idle-states = <&CPU_SLEEP_0>;
+ 			operating-points-v2 = <&group1_opp_tb>;
+ 		};
+ 
+@@ -122,7 +121,6 @@
+ 			reg = <0x101>;
+ 			device_type = "cpu";
+ 			enable-method = "psci";
+-			cpu-idle-states = <&CPU_SLEEP_0>;
+ 			operating-points-v2 = <&group1_opp_tb>;
+ 		};
+ 
+@@ -131,7 +129,6 @@
+ 			reg = <0x102>;
+ 			device_type = "cpu";
+ 			enable-method = "psci";
+-			cpu-idle-states = <&CPU_SLEEP_0>;
+ 			operating-points-v2 = <&group1_opp_tb>;
+ 		};
+ 
+@@ -140,7 +137,6 @@
+ 			reg = <0x103>;
+ 			device_type = "cpu";
+ 			enable-method = "psci";
+-			cpu-idle-states = <&CPU_SLEEP_0>;
+ 			operating-points-v2 = <&group1_opp_tb>;
+ 		};
+ 
+-- 
+1.9.1
+

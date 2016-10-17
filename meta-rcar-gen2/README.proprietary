@@ -1,0 +1,55 @@
+Proprietary libraries for meta-rcar-gen2
+========================================
+
+The meta-rcar-gen2 layer of meta-renesas is supported Graphic GLES(GSX) libraries.
+This README describes how to use these features and setting to local.conf.
+
+There are 2 main paths:
+    I/   Board configuration
+    II/  Build with GLES
+    III/ Build with Renesas multimedia libraries
+
+Please check section II to config for GLES.
+
+However, to have a completed local.conf,
+please also refer to Build Instruction in meta-renesas/meta-rcar-gen2/README.
+
+In addition, these libraries are not provided with recipes. If you would like to use,
+you will need to get them from Renesas.
+
+I/ Board configuration
+==================
+* Add this line to local.conf
+    For Blacnhe board
+           MACHINE = "blanche"
+    For Wheat board
+           MACHINE = "wheat"
+
+II/ Build with GLES
+==================
+        * For wayland with GSX
+
+        1. Please copy proprietary libraries to the directory of recipes
+
+              cp SGX_KM_V2H.tar.bz2 meta-rcar-gen2/recipes-kernel/kernel-module-gles/kernel-module-gles
+              cp r8a7792_linux_sgx_binaries_gles2.tar.bz2 meta-rcar-gen2/recipes-graphics/gles-user-module/gles-user-module
+	      
+        2. Set local.conf the following.
+
+              # Enable Gfx Pkgs
+              MACHINE_FEATURES_append = " sgx"
+	      MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
+
+	      # for Wayland/Weston
+	      PREFERRED_PROVIDER_virtual/libgles1 = ""
+	      PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
+	      PREFERRED_PROVIDER_virtual/egl = "libegl"
+	      PREFERRED_PROVIDER_virtual/libgl = ""
+	      PREFERRED_PROVIDER_virtual/mesa = ""
+	      PREFERRED_PROVIDER_libgbm = "libgbm"
+	      PREFERRED_PROVIDER_libgbm-dev = "libgbm"
+	      BBMASK = "mesa-gl"
+
+        3. Run 'bitbake core-image-weston'
+
+END.

@@ -1,0 +1,29 @@
+From db12efca899c0bd692436e10f76cc630a18e4595 Mon Sep 17 00:00:00 2001
+From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Date: Tue, 17 May 2016 18:35:19 +0300
+Subject: [PATCH] adopt module to kernel 4.4.6
+
+---
+ services4/srvkm/env/linux/mutils.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/services4/srvkm/env/linux/mutils.h b/services4/srvkm/env/linux/mutils.h
+index a66e927..a07061e 100644
+--- a/services4/srvkm/env/linux/mutils.h
++++ b/services4/srvkm/env/linux/mutils.h
+@@ -80,7 +80,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ 	#define	IOREMAP(pa, bytes)	ioremap_cache(pa, bytes)
+ #else	
+ 	#if defined(__arm__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
+-		#define	IOREMAP(pa, bytes)	ioremap_cached(pa, bytes)
++		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,6))
++			#define	IOREMAP(pa, bytes)	ioremap_cache(pa, bytes)
++		#else		
++			#define	IOREMAP(pa, bytes)	ioremap_cached(pa, bytes)
++		#endif
+ 	#else
+ 		#define IOREMAP(pa, bytes)	ioremap(pa, bytes)
+ 	#endif
+-- 
+1.9.1
+
