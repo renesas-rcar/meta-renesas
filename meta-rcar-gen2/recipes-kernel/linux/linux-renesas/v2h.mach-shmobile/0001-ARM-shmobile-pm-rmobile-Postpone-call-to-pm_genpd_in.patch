@@ -1,0 +1,37 @@
+From 85d9bf152bdaa7e98a05cc460aa6880efdf0b433 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Wed, 4 May 2016 10:27:46 +0200
+Subject: [PATCH] ARM: shmobile: pm-rmobile: Postpone call to pm_genpd_init()
+
+All local setup of the generic_pm_domain structure should have been
+completed before calling pm_genpd_init().
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/pm-rmobile.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/pm-rmobile.c b/arch/arm/mach-shmobile/pm-rmobile.c
+index c0b05e9..45a1955 100644
+--- a/arch/arm/mach-shmobile/pm-rmobile.c
++++ b/arch/arm/mach-shmobile/pm-rmobile.c
+@@ -131,13 +131,13 @@ static void rmobile_init_pm_domain(struct rmobile_pm_domain *rmobile_pd)
+ 	struct dev_power_governor *gov = rmobile_pd->gov;
+ 
+ 	genpd->flags = GENPD_FLAG_PM_CLK;
+-	pm_genpd_init(genpd, gov ? : &simple_qos_governor, false);
+ 	genpd->dev_ops.active_wakeup	= rmobile_pd_active_wakeup;
+ 	genpd->power_off		= rmobile_pd_power_down;
+ 	genpd->power_on			= rmobile_pd_power_up;
+ 	genpd->attach_dev		= cpg_mstp_attach_dev;
+ 	genpd->detach_dev		= cpg_mstp_detach_dev;
+ 	__rmobile_pd_power_up(rmobile_pd, false);
++	pm_genpd_init(genpd, gov ? : &simple_qos_governor, false);
+ }
+ 
+ static int rmobile_pd_suspend_busy(void)
+-- 
+1.9.1
+

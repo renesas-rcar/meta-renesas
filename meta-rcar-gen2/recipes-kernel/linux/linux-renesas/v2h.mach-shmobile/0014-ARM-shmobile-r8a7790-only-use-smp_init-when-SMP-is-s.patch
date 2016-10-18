@@ -1,0 +1,31 @@
+From 274607942b789f3a26a11f68464f1f0c15995e87 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Fri, 12 Aug 2016 18:45:09 +0200
+Subject: [PATCH] ARM: shmobile: r8a7790: only use smp_init when SMP is
+ selected
+
+We use the helper function which populates the smp_init pointer only in
+case of SMP.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/setup-r8a7790.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7790.c b/arch/arm/mach-shmobile/setup-r8a7790.c
+index 3506327..78d3e85 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7790.c
++++ b/arch/arm/mach-shmobile/setup-r8a7790.c
+@@ -28,7 +28,7 @@ static const char * const r8a7790_boards_compat_dt[] __initconst = {
+ };
+ 
+ DT_MACHINE_START(R8A7790_DT, "Generic R8A7790 (Flattened Device Tree)")
+-	.smp_init	= shmobile_smp_init_fallback_ops,
++	.smp_init	= smp_init_ops(shmobile_smp_init_fallback_ops),
+ 	.smp		= smp_ops(r8a7790_smp_ops),
+ 	.init_early	= shmobile_init_delay,
+ 	.init_time	= rcar_gen2_timer_init,
+-- 
+1.9.1
+

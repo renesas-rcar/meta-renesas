@@ -1,0 +1,53 @@
+From 2cfc14e8eb569f984e335cd0c6b72cead18cf00d Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 23 Aug 2016 05:27:41 +0300
+Subject: [PATCH] ARM: shmobile: apmu: Add debug resource reset for secondary CPU boot
+
+Add debug resource reset for secondary CPU boot
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+diff --git a/arch/arm/mach-shmobile/platsmp-apmu.c b/arch/arm/mach-shmobile/platsmp-apmu.c
+index 933f9b9024050223..7e4ca6788be521dc 100644
+--- a/arch/arm/mach-shmobile/platsmp-apmu.c
++++ b/arch/arm/mach-shmobile/platsmp-apmu.c
+@@ -35,12 +35,18 @@ static struct {
+ #define PSTR_OFFS	 0x40		/* Power Status Register */
+ #define CPUNCR_OFFS(n)	(0x100 + (0x10 * (n)))
+ 					/* CPUn Power Status Control Register */
++#define DBGRCR_OFFS	0x180		/* Debug Resource Reset Control Reg. */
+ 
+ /* Power Status Register */
+ #define CPUNST(r, n)	(((r) >> (n * 4)) & 3)	/* CPUn Status Bit */
+ #define CPUST_RUN	0		/* Run Mode */
+ #define CPUST_STANDBY	3		/* CoreStandby Mode */
+ 
++/* Debug Resource Reset Control Register */
++#define DBGCPUREN	BIT(24)		/* CPU Other Reset Request Enable */
++#define DBGCPUNREN(n)	BIT((n) + 20)	/* CPUn Reset Request Enable */
++#define DBGCPUPREN	BIT(19)		/* CPU Peripheral Reset Req. Enable */
++
+ static int __maybe_unused apmu_power_on(void __iomem *p, int bit)
+ {
+ 	/* request power on */
+@@ -84,6 +90,8 @@ static int __maybe_unused apmu_wrap(int cpu, int (*fn)(void __iomem *p, int cpu)
+ #ifdef CONFIG_SMP
+ static void apmu_init_cpu(struct resource *res, int cpu, int bit)
+ {
++	u32 x;
++
+ 	if ((cpu >= ARRAY_SIZE(apmu_cpus)) || apmu_cpus[cpu].iomem)
+ 		return;
+ 
+@@ -91,6 +99,11 @@ static void apmu_init_cpu(struct resource *res, int cpu, int bit)
+ 	apmu_cpus[cpu].bit = bit;
+ 
+ 	pr_debug("apmu ioremap %d %d %pr\n", cpu, bit, res);
++
++	/* Setup for debug mode */
++	x = readl(apmu_cpus[cpu].iomem + DBGRCR_OFFS);
++	x |= DBGCPUREN | DBGCPUNREN(bit) | DBGCPUPREN;
++	writel(x, apmu_cpus[cpu].iomem + DBGRCR_OFFS);
+ }
+ 
+ static void apmu_parse_cfg(void (*fn)(struct resource *res, int cpu, int bit),

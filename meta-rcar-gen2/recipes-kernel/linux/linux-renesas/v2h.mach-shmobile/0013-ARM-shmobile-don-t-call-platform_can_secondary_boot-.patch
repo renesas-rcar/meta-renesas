@@ -1,0 +1,38 @@
+From 869ec056fa8450184423c8076e0a342db127795c Mon Sep 17 00:00:00 2001
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 30 Jun 2016 14:25:19 +0200
+Subject: [PATCH] ARM: shmobile: don't call platform_can_secondary_boot on UP
+
+For rcar-gen2, we build the SMP files even for UP configurations,
+and that just broke:
+
+arch/arm/mach-shmobile/built-in.o: In function `shmobile_smp_init_fallback_ops':
+pm-rcar-gen2.c:(.init.text+0x40c): undefined reference to `platform_can_secondary_boot'
+
+This adds an compile-time check before the call to platform_can_secondary_boot,
+turning the function into an empty stub for UP configurations.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: c21af444eace ("ARM: shmobile: smp: Add function to prioritize DT SMP")
+Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Olof Johansson <olof@lixom.net>
+---
+ arch/arm/mach-shmobile/platsmp.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/platsmp.c b/arch/arm/mach-shmobile/platsmp.c
+index f3dba6f..02e21bc 100644
+--- a/arch/arm/mach-shmobile/platsmp.c
++++ b/arch/arm/mach-shmobile/platsmp.c
+@@ -40,5 +40,8 @@ bool shmobile_smp_cpu_can_disable(unsigned int cpu)
+ bool __init shmobile_smp_init_fallback_ops(void)
+ {
+ 	/* fallback on PSCI/smp_ops if no other DT based method is detected */
++	if (!IS_ENABLED(CONFIG_SMP))
++		return false;
++
+ 	return platform_can_secondary_boot() ? true : false;
+ }
+-- 
+1.9.1
+

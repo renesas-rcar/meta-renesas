@@ -1,0 +1,36 @@
+From 4cfc14e8eb569f984e335cd0c6b72cead18cf00d Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 23 Aug 2016 05:27:41 +0300
+Subject: [PATCH] ARM: shmobile: r8a7791: Allow booting secondary CPU cores in debug mode
+
+Allow booting secondary CPU cores in debug mode
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+diff --git a/arch/arm/mach-shmobile/smp-r8a7791.c b/arch/arm/mach-shmobile/smp-r8a7791.c
+index 2d6417af73b5b722..2948c22cfc53026c 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7791.c
++++ b/arch/arm/mach-shmobile/smp-r8a7791.c
+@@ -42,21 +42,9 @@ static void __init r8a7791_smp_prepare_cpus(unsigned int max_cpus)
+ 	rcar_gen2_pm_init();
+ }
+ 
+-static int r8a7791_smp_boot_secondary(unsigned int cpu,
+-				      struct task_struct *idle)
+-{
+-	/* Error out when hardware debug mode is enabled */
+-	if (rcar_gen2_read_mode_pins() & BIT(21)) {
+-		pr_warn("Unable to boot CPU%u when MD21 is set\n", cpu);
+-		return -ENOTSUPP;
+-	}
+-
+-	return shmobile_smp_apmu_boot_secondary(cpu, idle);
+-}
+-
+ const struct smp_operations r8a7791_smp_ops __initconst = {
+ 	.smp_prepare_cpus	= r8a7791_smp_prepare_cpus,
+-	.smp_boot_secondary	= r8a7791_smp_boot_secondary,
++	.smp_boot_secondary	= shmobile_smp_apmu_boot_secondary,
+ #ifdef CONFIG_HOTPLUG_CPU
+ 	.cpu_can_disable	= shmobile_smp_cpu_can_disable,
+ 	.cpu_die		= shmobile_smp_apmu_cpu_die,

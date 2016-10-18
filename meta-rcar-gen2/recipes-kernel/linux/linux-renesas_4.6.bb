@@ -96,11 +96,30 @@ SRC_URI_append = " \
     file://v2h.dts/0018-ARM-dts-wheat-add-max9272-ov10635-cameras.patch \
     file://v2h.configs/0001-ARM-shmobile-defconfig-Enable-r8a7792-SoC.patch \
     file://v2h.configs/0002-ARM-multi_v7_defconfig-defconfig-Enable-r8a7792-SoC.patch \
-    file://v2h.mach-shmobile/0001-ARM-shmobile-r8a7792-basic-SoC-support.patch \
-    file://v2h.mach-shmobile/0002-ARM-shmobile-rcar-gen2-Obtain-extal-frequency-from-D.patch \
-    file://v2h.mach-shmobile/0003-ARM-shmobile-rcar-gen2-Correct-arch-timer-frequency-.patch \
-    file://v2h.arm/0001-ARM-debug-ll-Add-support-for-r8a7992.patch \
     file://v2h.drivers.soc/0001-soc-renesas-rcar-sysc-add-R8A7792-support.patch \
+    file://v2h.drivers.soc/0002-soc-renesas-rcar-sysc-Make-rcar_sysc_init-init-the-P.patch \
+    file://v2h.mach-shmobile/0001-ARM-shmobile-pm-rmobile-Postpone-call-to-pm_genpd_in.patch \
+    file://v2h.mach-shmobile/0002-ARM-shmobile-rcar-gen2-Use-ICRAM1-for-jump-stub-on-a.patch \
+    file://v2h.mach-shmobile/0003-soc-renesas-rcar-sysc-Move-SYSC-interrupt-config-to-.patch \
+    file://v2h.mach-shmobile/0004-soc-renesas-rcar-sysc-Improve-SYSC-interrupt-config-.patch \
+    file://v2h.mach-shmobile/0005-ARM-shmobile-r8a7792-basic-SoC-support.patch \
+    file://v2h.mach-shmobile/0006-ARM-shmobile-rcar-gen2-Obtain-extal-frequency-from-D.patch \
+    file://v2h.mach-shmobile/0007-ARM-shmobile-rcar-gen2-Correct-arch-timer-frequency-.patch \
+    file://v2h.mach-shmobile/0008-ARM-shmobile-apmu-Move-ifdef-CONFIG_SMP-to-cover-mor.patch \
+    file://v2h.mach-shmobile/0009-ARM-shmobile-apmu-Add-APMU-DT-support-via-Enable-met.patch \
+    file://v2h.mach-shmobile/0010-ARM-shmobile-smp-Add-function-to-prioritize-DT-SMP.patch \
+    file://v2h.mach-shmobile/0011-ARM-shmobile-r8a7790-Prioritize-DT-APMU-support.patch \
+    file://v2h.mach-shmobile/0012-ARM-shmobile-r8a7791-Prioritize-DT-APMU-support.patch \
+    file://v2h.mach-shmobile/0013-ARM-shmobile-don-t-call-platform_can_secondary_boot-.patch \
+    file://v2h.mach-shmobile/0014-ARM-shmobile-r8a7790-only-use-smp_init-when-SMP-is-s.patch \
+    file://v2h.mach-shmobile/0015-ARM-shmobile-r8a7791-only-use-smp_init-when-SMP-is-s.patch \
+    file://v2h.mach-shmobile/0016-ARM-shmobile-fix-regulator-quirk-for-Gen2.patch \
+    file://v2h.mach-shmobile/0017-ARM-shmobile-r8a7743-basic-SoC-support.patch \
+    file://v2h.mach-shmobile/0018-ARM-shmobile-apmu-Add-more-register-documentation.patch \
+    file://v2h.mach-shmobile/0019-ARM-shmobile-apmu-Add-debug-resource-reset-for-secondary-CPU-boot.patch \
+    file://v2h.mach-shmobile/0020-ARM-shmobile-apmu-Allow-booting-secondary-CPU-cores-in-debug-mode.patch \
+    file://v2h.mach-shmobile/0021-ARM-shmobile-r8a7791-Allow-booting-secondary-CPU-cores-in-debug-mode.patch \
+    file://v2h.arm/0001-ARM-debug-ll-Add-support-for-r8a7992.patch \
     file://v2h.drivers.pinctrl/0000-pinctrl-sh-pfc-Fix-overly-long-lines.patch \
     file://v2h.drivers.pinctrl/0001-pinctrl-sh-pfc-Add-R8A7792-PFC-support.patch \
     file://v2h.drivers.pinctrl/0002-pinctrl-sh-pfc-r8a7792-Add-EtherAVB-pin-groups.patch \
