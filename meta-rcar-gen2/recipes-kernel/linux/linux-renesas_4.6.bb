@@ -93,7 +93,6 @@ SRC_URI_append = " \
     file://v2h.dts/0014-ARM-dts-wheat-add-QSPI-support.patch \
     file://v2h.dts/0015-ARM-dts-wheat-add-support-for-tactile-switches.patch \
     file://v2h.dts/0016-ARM-dts-wheat-add-DU-support.patch \
-    file://v2h.dts/0017-ARM-dts-wheat-fix-DU-support.patch \
     file://v2h.dts/0018-ARM-dts-wheat-add-max9272-ov10635-cameras.patch \
     file://v2h.configs/0001-ARM-shmobile-defconfig-Enable-r8a7792-SoC.patch \
     file://v2h.configs/0002-ARM-multi_v7_defconfig-defconfig-Enable-r8a7792-SoC.patch \
@@ -121,6 +120,7 @@ SRC_URI_append = " \
     file://v2h.drivers.ethernet/0001-net-ethernet-smsc9111x-backport-from-4.8-kernel.patch \
     file://v2h.drivers.gpu/0001-gpu-rcar-du-add-R8A7792-support.patch \
     file://v2h.drivers.gpu/0003-drm-bridge-adv7511-add-support-for-the-2nd-chip.patch \
+    file://v2h.drivers.gpu/0004-drm-rcar-du-add-ADV7513-HDMI-encoder.patch \
     file://v2h.drivers.mmc/0001-Revert-mmc-sh_mobile_sdhi-Add-eMMC-HS400-mode-suppor.patch \
     file://v2h.drivers.mmc/0002-Revert-mmc-sh_mobile_sdhi-Add-r8a7796-support.patch \
     file://v2h.drivers.mmc/0003-Revert-mmc-sh_mobile_sdhi-Replace-the-voltage-change.patch \
