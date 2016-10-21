@@ -63,7 +63,7 @@ index 1abe133..08f400e 100644
  	} else {
  		pdata = dev_get_platdata(&pdev->dev);
  		if (!pdata) {
-@@ -753,6 +758,32 @@ static int rcar_can_probe(struct platform_device *pdev)
+@@ -753,6 +758,24 @@ static int rcar_can_probe(struct platform_device *pdev)
  			goto fail;
  		}
  		clock_select = pdata->clock_select;
@@ -72,27 +72,19 @@ index 1abe133..08f400e 100644
 +	}
 +
 +	if (gpio_is_valid(enable_pin)) {
-+		ret = devm_gpio_request(&pdev->dev, enable_pin, "enable");
-+		if (!ret) {
-+			if (enable_flags & OF_GPIO_ACTIVE_LOW)
-+				gpio_set_value(enable_pin, 0);
-+			else
-+				gpio_set_value(enable_pin, 1);
-+		} else {
++		int val = standby_flags & OF_GPIO_ACTIVE_LOW ?
++			  GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
++		ret = devm_gpio_request_one(&pdev->dev, enable_pin, val, "enable");
++		if (ret)
 +			dev_info(&pdev->dev, "Failed to request enable pin\n");
-+		}
 +	}
 +
 +	if (gpio_is_valid(standby_pin)) {
-+		ret = devm_gpio_request(&pdev->dev, standby_pin, "standby");
-+		if (!ret) {
-+			if (standby_flags & OF_GPIO_ACTIVE_LOW)
-+				gpio_set_value(standby_pin, 1);
-+			else
-+				gpio_set_value(standby_pin, 0);
-+		} else {
++		int val = standby_flags & OF_GPIO_ACTIVE_LOW ?
++			  GPIOF_OUT_INIT_HIGH : GPIOF_OUT_INIT_LOW;
++		ret = devm_gpio_request_one(&pdev->dev, standby_pin, val, "standby");
++		if (ret)
 +			dev_info(&pdev->dev, "Failed to request standby pin\n");
-+		}
  	}
  
  	irq = platform_get_irq(pdev, 0);

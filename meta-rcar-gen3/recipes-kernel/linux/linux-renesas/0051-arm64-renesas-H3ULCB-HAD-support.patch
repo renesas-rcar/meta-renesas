@@ -1144,8 +1144,8 @@ index 0000000..87f0f4a
 +	status = "disabled";
 +
 +	renesas,can-clock-select = <0x0>;
-+	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable */
-+		 &gpio5 30 GPIO_ACTIVE_LOW /* standby */
++	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable - NC */
++		 &gpio2 7 GPIO_ACTIVE_LOW /* standby */
 +		>;
 +};
 +
@@ -1155,8 +1155,8 @@ index 0000000..87f0f4a
 +	status = "okay";
 +
 +	renesas,can-clock-select = <0x0>;
-+	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable */
-+		 &gpio5 30 GPIO_ACTIVE_LOW /* standby */
++	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable - NC */
++		 &gpio2 7 GPIO_ACTIVE_LOW /* standby */
 +		>;
 +
 +	channel0 {
