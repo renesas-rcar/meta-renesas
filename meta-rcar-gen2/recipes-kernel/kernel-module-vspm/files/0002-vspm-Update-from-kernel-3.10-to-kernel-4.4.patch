@@ -1,0 +1,1264 @@
+From d3adbc59b2ca0f659dbd359f9b6a74c7e1c5d2e1 Mon Sep 17 00:00:00 2001
+From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Date: Fri, 12 Aug 2016 11:56:58 +0300
+Subject: [PATCH] add DT support for vspm driver
+
+---
+ vspm/drv/manager/vspm_common.h     |   5 +-
+ vspm/drv/manager/vspm_drv_2ddmac.c |   4 +-
+ vspm/drv/manager/vspm_drv_vsp.c    |   4 +-
+ vspm/drv/manager/vspm_lib.c        |   6 +-
+ vspm/drv/tddmac/tddmac_drv.c       |   8 +-
+ vspm/drv/tddmac/tddmac_drv_table.c |   4 +-
+ vspm/drv/tddmac_drv_public.h       |   2 +-
+ vspm/drv/vsp/vsp_drv.c             |  63 ++++----
+ vspm/drv/vsp/vsp_drv_local.h       |  17 +-
+ vspm/drv/vsp/vsp_drv_par.c         |   6 +-
+ vspm/drv/vsp/vsp_drv_phy.c         |  34 ++--
+ vspm/drv/vsp_drv_public.h          |   3 +-
+ vspm/drv/vspm_main.c               | 355 ++++++++----------------------------------
+ vspm/drv/vspm_main.h               |  18 ++-
+ vspm/drv/vspm_private.h            |   4 +-
+ vspm/drv/vspm_sub.c                | 158 +++++--------------
+ 16 files changed, 205 insertions(+), 486 deletions(-)
+
+diff --git a/vspm/drv/manager/vspm_common.h b/vspm/drv/manager/vspm_common.h
+index 3ce9995..980a433 100755
+--- a/vspm/drv/manager/vspm_common.h
++++ b/vspm/drv/manager/vspm_common.h
+@@ -63,6 +63,7 @@
+ #define VSPM_COMMON_H
+ 
+ #include <linux/platform_device.h>
++struct vspm_drvdata;
+ 
+ /*
+  * Function id of VSPM task
+@@ -324,7 +325,7 @@ long vspm_inc_sort_queue_find_item(
+ 
+ /* vsp control functions */
+ long vspm_ins_vsp_ch(unsigned short module_id, unsigned char *ch);
+-long vspm_ins_vsp_initialize(struct platform_device *pdev);
++long vspm_ins_vsp_initialize(struct vspm_drvdata *pdrv);
+ long vspm_ins_vsp_execute(
+ 	unsigned short module_id,
+ 	VSPM_VSP_PAR *vsp_par,
+@@ -336,7 +337,7 @@ long vspm_ins_vsp_quit(void);
+ 
+ /* 2ddmac control functions */
+ long vspm_ins_2ddmac_ch(unsigned short module_id, unsigned char *ch);
+-long vspm_ins_2ddmac_initialize(struct platform_device *pdev);
++long vspm_ins_2ddmac_initialize(struct vspm_drvdata *pdrv);
+ long vspm_ins_2ddmac_execute(
+ 	unsigned short module_id, VSPM_2DDMAC_PAR *tddmac_par);
+ long vspm_ins_2ddmac_exec_complete(unsigned short module_id);
+diff --git a/vspm/drv/manager/vspm_drv_2ddmac.c b/vspm/drv/manager/vspm_drv_2ddmac.c
+index 51a0665..cceba20 100755
+--- a/vspm/drv/manager/vspm_drv_2ddmac.c
++++ b/vspm/drv/manager/vspm_drv_2ddmac.c
+@@ -152,7 +152,7 @@ static void vspm_cb_2ddmac(T_TDDMAC_CB *tddmac_cb)
+  * @pdev: Platform device
+  * Returns: On success R_VSPM_OK is returned. On error, R_VSPM_NG is returned.
+  */
+-long vspm_ins_2ddmac_initialize(struct platform_device *pdev)
++long vspm_ins_2ddmac_initialize(struct vspm_drvdata *pdrv)
+ {
+ 	int ercd;
+ 	long sub_ercd;
+@@ -161,7 +161,7 @@ long vspm_ins_2ddmac_initialize(struct platform_device *pdev)
+ 	tddmac_init.intlvl_1 = INTLEVEL_2DDMAC;
+ 	tddmac_init.pm_req = NULL;
+ 
+-	ercd = tddmac_lib_init(pdev, &tddmac_init, &sub_ercd);
++	ercd = tddmac_lib_init(pdrv, &tddmac_init, &sub_ercd);
+ 	if (ercd) {
+ 		EPRINT(
+ 			"[%s] tddmac_lib_init() Failed!! ercd=%d, sub_ercd=%ld\n",
+diff --git a/vspm/drv/manager/vspm_drv_vsp.c b/vspm/drv/manager/vspm_drv_vsp.c
+index 3b6de27..3a454e3 100755
+--- a/vspm/drv/manager/vspm_drv_vsp.c
++++ b/vspm/drv/manager/vspm_drv_vsp.c
+@@ -197,7 +197,7 @@ static void vspm_cb_vsp(T_VSP_CB *vsp_cb)
+  * @pdev: Platform device
+  * Returns: On success R_VSPM_OK is returned. On error, R_VSPM_NG is returned.
+  */
+-long vspm_ins_vsp_initialize(struct platform_device *pdev)
++long vspm_ins_vsp_initialize(struct vspm_drvdata *pdrv)
+ {
+ 	int ercd;
+ 	long sub_ercd;
+@@ -206,7 +206,7 @@ long vspm_ins_vsp_initialize(struct platform_device *pdev)
+ 	init_param.intlvl[0] = INTLEVEL_VSPS;
+ 	init_param.intlvl[1] = INTLEVEL_VSPR;
+ 
+-	ercd = vsp_lib_init(pdev, &init_param, &sub_ercd);
++	ercd = vsp_lib_init(pdrv, &init_param, &sub_ercd);
+ 	if (ercd) {
+ 		EPRINT("[%s] vsp_lib_init() Failed!! ercd=%d, sub_ercd=%ld\n",
+ 			__func__, ercd, sub_ercd);
+diff --git a/vspm/drv/manager/vspm_lib.c b/vspm/drv/manager/vspm_lib.c
+index 6150620..5ecc24d 100755
+--- a/vspm/drv/manager/vspm_lib.c
++++ b/vspm/drv/manager/vspm_lib.c
+@@ -74,18 +74,18 @@
+  * Description: Initialize the driver of each IP (VSPS, 2DDAMC).
+  * Returns: On success R_VSPM_OK is returned. On error, R_VSPM_NG is returned.
+  */
+-long vspm_lib_driver_initialize(struct platform_device *pdev)
++long vspm_lib_driver_initialize(struct vspm_drvdata *pdrv)
+ {
+ 	long ercd;
+ 
+-	ercd = vspm_ins_vsp_initialize(pdev);
++	ercd = vspm_ins_vsp_initialize(pdrv);
+ 	if (ercd) {
+ 		EPRINT("%s failed to vspm_ins_vsp_initialize %ld\n",
+ 			__func__, ercd);
+ 		goto exit;
+ 	}
+ 
+-	ercd = vspm_ins_2ddmac_initialize(pdev);
++	ercd = vspm_ins_2ddmac_initialize(pdrv);
+ 	if (ercd) {
+ 		EPRINT("%s failed to vspm_ins_2ddmac_initialize %ld\n",
+ 			__func__, ercd);
+diff --git a/vspm/drv/tddmac/tddmac_drv.c b/vspm/drv/tddmac/tddmac_drv.c
+index 2bdfcb6..f71ed8f 100755
+--- a/vspm/drv/tddmac/tddmac_drv.c
++++ b/vspm/drv/tddmac/tddmac_drv.c
+@@ -77,7 +77,7 @@ static TDDMAC_PRIVATE_DATA *g_tddmac_obj;
+  *
+  */
+ int tddmac_lib_init(
+-	struct platform_device *pdev, T_TDDMAC_INIT *param, long *sub_ercd)
++	struct vspm_drvdata *pdrv, T_TDDMAC_INIT *param, long *sub_ercd)
+ {
+ 	unsigned char lp_ch;
+ 
+@@ -87,7 +87,7 @@ int tddmac_lib_init(
+ 	DPRINT("called\n");
+ 
+ 	/* check parameter */
+-	if ((pdev == NULL) || (param == NULL)) {
++	if ((pdrv == NULL) || (param == NULL)) {
+ 		if (sub_ercd != NULL)
+ 			*sub_ercd = E_TDDMAC_PARA_PARAMS;
+ 		return -EINVAL;
+@@ -116,14 +116,14 @@ int tddmac_lib_init(
+ 	}
+ 
+ 	/* initialize register */
+-	ercd = tddmac_ins_init_reg(pdev, g_tddmac_obj);
++	ercd = tddmac_ins_init_reg(pdrv->tddmac_pdev, g_tddmac_obj);
+ 	if (ercd) {
+ 		drv_ercd = -EIO;
+ 		goto err_exit;
+ 	}
+ 
+ 	/* registory interrupt handler */
+-	ercd = tddmac_ins_reg_ih(pdev, g_tddmac_obj);
++	ercd = tddmac_ins_reg_ih(pdrv->tddmac_pdev, g_tddmac_obj);
+ 	if (ercd) {
+ 		drv_ercd = -EIO;
+ 		goto err_exit;
+diff --git a/vspm/drv/tddmac/tddmac_drv_table.c b/vspm/drv/tddmac/tddmac_drv_table.c
+index e2fbd96..b302294 100755
+--- a/vspm/drv/tddmac/tddmac_drv_table.c
++++ b/vspm/drv/tddmac/tddmac_drv_table.c
+@@ -237,7 +237,7 @@ long tddmac_ins_init_reg(
+ 	DPRINT("called\n");
+ 
+ 	/* get an I/O memory resource for device */
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, RESOURCE_TDDMAC);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (!res) {
+ 		APRINT("[%s] platform_get_resource() failed!!\n", __func__);
+ 		return E_TDDMAC_DEF_REG;
+@@ -341,7 +341,7 @@ long tddmac_ins_reg_ih(struct platform_device *pdev, TDDMAC_PRIVATE_DATA *prv)
+ 
+ 	DPRINT("called\n");
+ 
+-	prv->irq = platform_get_irq(pdev, RESOURCE_TDDMAC);
++	prv->irq = platform_get_irq(pdev, 0);
+ 	if (prv->irq < 0) {
+ 		APRINT("[%s] platform_get_irq failed!! ercd=%d\n",
+ 			__func__, prv->irq);
+diff --git a/vspm/drv/tddmac_drv_public.h b/vspm/drv/tddmac_drv_public.h
+index 688b660..aece68f 100755
+--- a/vspm/drv/tddmac_drv_public.h
++++ b/vspm/drv/tddmac_drv_public.h
+@@ -66,7 +66,7 @@
+ 
+ /* define public functions */
+ int tddmac_lib_init(
+-	struct platform_device *pdev, T_TDDMAC_INIT * param, long *sub_ercd);
++	struct vspm_drvdata *pdrv, T_TDDMAC_INIT * param, long *sub_ercd);
+ int tddmac_lib_quit(long *sub_ercd);
+ int tddmac_lib_open(unsigned char ch, T_TDDMAC_MODE *param, long *sub_ercd);
+ int tddmac_lib_close(unsigned char ch, long *sub_ercd);
+diff --git a/vspm/drv/vsp/vsp_drv.c b/vspm/drv/vsp/vsp_drv.c
+index f41caef..960fcaa 100755
+--- a/vspm/drv/vsp/vsp_drv.c
++++ b/vspm/drv/vsp/vsp_drv.c
+@@ -66,7 +66,7 @@
+ #include "vsp_drv_public.h"
+ #include "vsp_drv_local.h"
+ 
+-static VSP_PRIVATE_DATA *g_vsp_obj[VSP_IP_MAX] = {NULL};
++static VSP_PRIVATE_DATA *g_vsp_obj[VSPM_IP_MAX] = {NULL};
+ 
+ /*
+  * vsp_lib_init - Initialize VSP driver routine
+@@ -76,7 +76,7 @@ static VSP_PRIVATE_DATA *g_vsp_obj[VSP_IP_MAX] = {NULL};
+  *
+  */
+ int vsp_lib_init(
+-	struct platform_device *pdev, T_VSP_INIT *param, long *sub_ercd)
++	struct vspm_drvdata *pdrv, T_VSP_INIT *param, long *sub_ercd)
+ {
+ 	VSP_PRIVATE_DATA **prv;
+ 
+@@ -86,10 +86,10 @@ int vsp_lib_init(
+ 	long ercd = 0;
+ 	int drv_ercd = 0;
+ 
+-	DPRINT("called (%d IPs)\n", VSP_IP_MAX);
++	DPRINT("called (%d IPs)\n", VSPM_IP_MAX);
+ 
+ 	/* check parameter */
+-	if ((pdev == NULL) || (param == NULL)) {
++	if ((pdrv == NULL) || (param == NULL)) {
+ 		if (sub_ercd != NULL)
+ 			*sub_ercd = E_VSP_PARA_INPAR;
+ 		return -EINVAL;
+@@ -105,7 +105,7 @@ int vsp_lib_init(
+ 
+ 	/* check condition */
+ 	prv = &g_vsp_obj[0];
+-	for (vsp_ch = 0; vsp_ch < VSP_IP_MAX; vsp_ch++) {
++	for (vsp_ch = 0; vsp_ch < VSPM_IP_MAX; vsp_ch++) {
+ 		if (*prv != NULL) {
+ 			/* quit */
+ 			if (vsp_lib_quit(sub_ercd))
+@@ -115,35 +115,36 @@ int vsp_lib_init(
+ 	}
+ 
+ 	prv = &g_vsp_obj[0];
+-	for (vsp_ch = 0; vsp_ch < VSP_IP_MAX; vsp_ch++) {
+-		/* allocate private data */
+-		ercd = vsp_ins_allocate_memory(prv);
+-		if (ercd) {
+-			drv_ercd = -ENOMEM;
+-			goto err_exit;
+-		}
+-
+-		/* initialize register */
+-		ercd = vsp_ins_init_reg(pdev, *prv, vsp_ch);
+-		if (ercd) {
+-			drv_ercd = -EIO;
+-			goto err_exit;
+-		}
++	for (vsp_ch = 0; vsp_ch < VSPM_IP_MAX; vsp_ch++) {
++		if (pdrv->vsp_pdev[vsp_ch]){
++			/* allocate private data */
++			ercd = vsp_ins_allocate_memory(prv);
++			if (ercd) {
++				drv_ercd = -ENOMEM;
++				goto err_exit;
++			}
+ 
+-		/* registory interrupt handler */
+-		ercd = vsp_ins_reg_ih(pdev, *prv, vsp_ch);
+-		if (ercd) {
+-			drv_ercd = -EIO;
+-			goto err_exit;
+-		}
++			/* initialize register */
++			ercd = vsp_ins_init_reg(pdrv->vsp_pdev[vsp_ch], *prv, vsp_ch);
++			if (ercd) {
++				drv_ercd = -EIO;
++				goto err_exit;
++			}
+ 
+-		/* update status */
+-		for (ch = 0; ch < VSP_WPF_MAX; ch++)
+-			(*prv)->ch_info[ch].status = VSP_STAT_INIT;
++			/* registory interrupt handler */
++			ercd = vsp_ins_reg_ih(pdrv->vsp_pdev[vsp_ch], *prv, vsp_ch);
++			if (ercd) {
++				drv_ercd = -EIO;
++				goto err_exit;
++			}
+ 
++			/* update status */
++			for (ch = 0; ch < VSP_WPF_MAX; ch++)
++				(*prv)->ch_info[ch].status = VSP_STAT_INIT;
++	
++		}
+ 		prv++;
+ 	}
+-
+ 	if (sub_ercd != NULL)
+ 		*sub_ercd = 0;
+ 
+@@ -152,7 +153,7 @@ int vsp_lib_init(
+ 
+ err_exit:
+ 	prv = &g_vsp_obj[0];
+-	for (vsp_ch = 0; vsp_ch < VSP_IP_MAX; vsp_ch++) {
++	for (vsp_ch = 0; vsp_ch < VSPM_IP_MAX; vsp_ch++) {
+ 		if (*prv != NULL) {
+ 			/* unregistory interrupt handler */
+ 			(void)vsp_ins_unreg_ih(*prv);
+@@ -191,7 +192,7 @@ int vsp_lib_quit(long *sub_ercd)
+ 	DPRINT("called\n");
+ 
+ 	prv = &g_vsp_obj[0];
+-	for (vsp_ch = 0; vsp_ch < VSP_IP_MAX; vsp_ch++) {
++	for (vsp_ch = 0; vsp_ch < VSPM_IP_MAX; vsp_ch++) {
+ 		/* check condition */
+ 		if (*prv != NULL) {
+ 			for (ch = 0; ch < VSP_WPF_MAX; ch++) {
+diff --git a/vspm/drv/vsp/vsp_drv_local.h b/vspm/drv/vsp/vsp_drv_local.h
+index 7344ccb..9ba8dae 100755
+--- a/vspm/drv/vsp/vsp_drv_local.h
++++ b/vspm/drv/vsp/vsp_drv_local.h
+@@ -64,19 +64,14 @@
+ 
+ /* define IP number */
+ enum {
+-	VSP_IP_VSPS = 0,
+-#ifdef USE_VSPR
+-	VSP_IP_VSPR,
+-#endif /* USE_VSPR */
+-#ifdef USE_VSPD0
+-	VSP_IP_VSPD0,
+-#endif /* USE_VSPD0 */
+-#ifdef USE_VSPD1
+-	VSP_IP_VSPD1,
+-#endif /* USE_VSPD1 */
+-	VSP_IP_MAX
++	VSPM_IP_VSPS = 0,
++	VSPM_IP_VSPR,
++	VSPM_IP_VSPD0,
++	VSPM_IP_VSPD1,
++	VSPM_IP_MAX,
+ };
+ 
++
+ /* define status read counter */
+ #define VSP_STATUS_LOOP_CNT		(1000)
+ 
+diff --git a/vspm/drv/vsp/vsp_drv_par.c b/vspm/drv/vsp/vsp_drv_par.c
+index 90c885a..ae5de14 100755
+--- a/vspm/drv/vsp/vsp_drv_par.c
++++ b/vspm/drv/vsp/vsp_drv_par.c
+@@ -81,13 +81,13 @@ const unsigned long vsp_tbl_bru_route[VSP_BRU_CH_MAX] = {
+ };
+ 
+ /* VPS usable module bits */
+-extern const unsigned long vsp_tbl_usable_module[VSP_IP_MAX];
++extern const unsigned long vsp_tbl_usable_module[VSPM_IP_MAX];
+ 
+ /* VPS usable RPF bits */
+-extern const unsigned long vsp_tbl_usable_rpf[VSP_IP_MAX];
++extern const unsigned long vsp_tbl_usable_rpf[VSPM_IP_MAX];
+ 
+ /* VPS usable WPF bits */
+-extern const unsigned long vsp_tbl_usable_wpf[VSP_IP_MAX];
++extern const unsigned long vsp_tbl_usable_wpf[VSPM_IP_MAX];
+ 
+ /*
+  * vsp_ins_check_init_parameter - Check initialise parameter routine
+diff --git a/vspm/drv/vsp/vsp_drv_phy.c b/vspm/drv/vsp/vsp_drv_phy.c
+index a68bd3b..8c2d978 100755
+--- a/vspm/drv/vsp/vsp_drv_phy.c
++++ b/vspm/drv/vsp/vsp_drv_phy.c
+@@ -70,8 +70,9 @@
+ #include "vsp_drv_local.h"
+ 
+ 
++#if 0
+ /* VPS resource number */
+-const unsigned int vsp_tbl_resource_num[VSP_IP_MAX] = {
++const unsigned int vsp_tbl_resource_num[VSPM_IP_MAX] = {
+ 	RESOURCE_VSPS,
+ #ifdef USE_VSPR
+ 	RESOURCE_VSPR,
+@@ -85,7 +86,7 @@ const unsigned int vsp_tbl_resource_num[VSP_IP_MAX] = {
+ };
+ 
+ 
+-const char *vsp_tbl_resource_name[VSP_IP_MAX] = {
++const char *vsp_tbl_resource_name[VSPM_IP_MAX] = {
+ 	RESNAME "-vsps",
+ #ifdef USE_VSPR
+ 	RESNAME "-vspr",
+@@ -97,10 +98,10 @@ const char *vsp_tbl_resource_name[VSP_IP_MAX] = {
+ 	RESNAME "-vspd1",
+ #endif /* USE_VSPD1 */
+ };
+-
++#endif
+ 
+ /* VPS usable module bits */
+-const unsigned long vsp_tbl_usable_module[VSP_IP_MAX] = {
++const unsigned long vsp_tbl_usable_module[VSPM_IP_MAX] = {
+ 	/* VSPS */
+ 	VSP_SRU_USE|
+ 	VSP_UDS_USE|
+@@ -145,7 +146,7 @@ const unsigned long vsp_tbl_usable_module[VSP_IP_MAX] = {
+ 
+ 
+ /* VPS usable RPF bits */
+-const unsigned long vsp_tbl_usable_rpf[VSP_IP_MAX] = {
++const unsigned long vsp_tbl_usable_rpf[VSPM_IP_MAX] = {
+ 	/* VSPS */
+ 	VSP_RPF0_USE|
+ 	VSP_RPF1_USE|
+@@ -178,7 +179,7 @@ const unsigned long vsp_tbl_usable_rpf[VSP_IP_MAX] = {
+ 
+ 
+ /* VPS usable WPF bits */
+-const unsigned long vsp_tbl_usable_wpf[VSP_IP_MAX] = {
++const unsigned long vsp_tbl_usable_wpf[VSPM_IP_MAX] = {
+ 	/* VSPS */
+ 	VSP_WPF0_USE|
+ 	VSP_WPF1_USE|
+@@ -1672,9 +1673,9 @@ long vsp_ins_init_reg(
+ 
+ 	/* get an I/O memory resource for device */
+ 	res = platform_get_resource(
+-		pdev, IORESOURCE_MEM, vsp_tbl_resource_num[vsp_ch]);
++		pdev, IORESOURCE_MEM, 0);
+ 	if (!res) {
+-		APRINT("[%s] platform_get_resource() failed!!\n", __func__);
++		APRINT("[%s] platform_get_resource() dev = %s failed ch = %d!!\n", __func__, pdev->name, vsp_ch);
+ 		return E_VSP_DEF_REG;
+ 	}
+ 
+@@ -1849,22 +1850,27 @@ long vsp_ins_reg_ih(
+ 	unsigned char vsp_ch)
+ {
+ 	int ercd;
++	struct resource *irq;
+ 
+ 	DPRINT("called\n");
+ 
+-	prv->irq = platform_get_irq(pdev, vsp_tbl_resource_num[vsp_ch]);
+-	if (prv->irq < 0) {
+-		APRINT("[%s] platform_get_irq failed!! ercd=%d\n",
++	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!irq) {
++		APRINT("[%s] platform_get_resource irq failed!! ercd=%d\n",
+ 			__func__, prv->irq);
+ 		return E_VSP_DEF_INH;
+ 	}
++	prv->irq = irq->start;
++
++	DPRINT("IRQ num = %d\n", prv->irq);
+ 
+ 	/* registory interrupt handler */
+-	ercd = request_irq(
++	ercd = devm_request_irq(
++		&pdev->dev,
+ 		prv->irq,
+ 		vsp_ins_ih,
+ 		IRQF_SHARED,
+-		vsp_tbl_resource_name[vsp_ch], prv);
++		dev_name(&pdev->dev), prv);
+ 	if (ercd) {
+ 		APRINT("[%s] request_irq failed!! ercd=%d, irq=%d\n",
+ 			__func__, ercd, prv->irq
+@@ -1906,7 +1912,7 @@ long vsp_ins_get_vsp_ip_num(
+ 	unsigned long bit;
+ 	unsigned char vsp_ch, wpf_cnt;
+ 
+-	for (vsp_ch = 0; vsp_ch < VSP_IP_MAX; vsp_ch++) {
++	for (vsp_ch = 0; vsp_ch < VSPM_IP_MAX; vsp_ch++) {
+ 		wpf_cnt = vsp_ins_get_ch_cnt(vsp_tbl_usable_wpf[vsp_ch]);
+ 
+ 		if (wpf_cnt > ch) {
+diff --git a/vspm/drv/vsp_drv_public.h b/vspm/drv/vsp_drv_public.h
+index 8485b67..97980e8 100755
+--- a/vspm/drv/vsp_drv_public.h
++++ b/vspm/drv/vsp_drv_public.h
+@@ -64,9 +64,10 @@
+ 
+ #include <linux/platform_device.h>
+ 
++struct vspm_drvdata;
+ /* define public functions */
+ int vsp_lib_init(
+-	struct platform_device *pdev, T_VSP_INIT * param, long *sub_ercd);
++	struct vspm_drvdata *pdrv, T_VSP_INIT * param, long *sub_ercd);
+ int vsp_lib_quit(long *sub_ercd);
+ int vsp_lib_open(unsigned char ch, long *sub_ercd);
+ int vsp_lib_close(unsigned char ch, long *sub_ercd);
+diff --git a/vspm/drv/vspm_main.c b/vspm/drv/vspm_main.c
+index d282a76..f04210b 100755
+--- a/vspm/drv/vspm_main.c
++++ b/vspm/drv/vspm_main.c
+@@ -74,22 +74,15 @@
+ #include <linux/sched.h>
+ #include <linux/completion.h>
+ #include <linux/pm_runtime.h>
++#include <linux/of_address.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_private.h"
+ #include "vspm_main.h"
+ #include "vspm_log.h"
+ 
+-#define gic_spi(n)		((n)+32)
+ 
+-/* banner */
+-static char banner[] __initdata =
+-	 KERN_INFO DRVNAME " (" __DATE__ " " __TIME__ ")" " driver installed";
+-
+-/* major device number */
+-static int major;
+-module_param(major, int, 0);
+-MODULE_PARM_DESC(major, "Major device number");
++long debug_flg = 0xff;
+ 
+ struct vspm_drvdata *p_vspm_drvdata;
+ 
+@@ -273,108 +266,61 @@ static const struct file_operations vspm_fops = {
+ 	.release		= vspm_release,
+ };
+ 
++#define VSPM_TDDMAC 	VSPM_IP_MAX
++
++static const struct of_device_id vspm_ip_matches[] = {
++	{ .compatible = "renesas,vspm-vsps", .data = VSPM_IP_VSPS },
++	{ .compatible = "renesas,vspm-vspr", .data = VSPM_IP_VSPR },
++	{ .compatible = "renesas,vspm-vspd0", .data = VSPM_IP_VSPD0 },
++	{ .compatible = "renesas,vspm-vspd1", .data = VSPM_IP_VSPD1 },
++	{ .compatible = "renesas,vspm-tddmac", .data = VSPM_TDDMAC },
++	{ /* sentinel */ }
++};
++
++
++
+ 
+ /*
+  * vspm_probe - Probe the VSPM driver
+  * Returns: On success 0 is returned. On error, a nonzero error number is
+  * returned.
+  */
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+ static int vspm_probe(struct platform_device *pdev)
+-#else
+-static int __devinit vspm_probe(struct platform_device *pdev)
+-#endif
+ {
+-	dev_t dev = 0;
+-	struct vspm_drvdata *pdrv = 0;
+-	struct device *ret_dev;
+-	int ercd = 0;
+-
+-	DPRINT("called(id=%d)\n", pdev->id);
+-
+-	/* allocate vspm driver data area */
+-	pdrv = kzalloc(sizeof(*pdrv), GFP_KERNEL);
+-	if (!pdrv) {
+-		APRINT("could not allocate vspm driver data area (id=%d)\n",
+-			pdev->id);
+-		ercd = -ENOMEM;
+-		goto exit;
+-	}
+-
+-	/* register a range of char device numbers */
+-	if (major) {
+-		dev = MKDEV(major, 0);
+-		ercd = register_chrdev_region(dev, DEVNUM, DRVNAME);
+-		if (ercd) {
+-			APRINT("could not get major %d (dev=%x)\n", ercd, dev);
+-			dev = 0;
+-			goto exit;
+-		}
+-	} else {
+-		ercd = alloc_chrdev_region(&dev, 0, DEVNUM, DRVNAME);
+-		if (ercd) {
+-			APRINT("could not allocate major %d\n", ercd);
+-			goto exit;
+-		}
+-		major = MAJOR(dev);
+-	}
+-	DPRINT("major:%d\n", major);
+-
+-	/* initialize a cdev structure */
+-	cdev_init(&pdrv->cdev, &vspm_fops);
+-	pdrv->cdev.owner = THIS_MODULE;
+-
+-	/* add a char device to the system */
+-	ercd = cdev_add(&pdrv->cdev, dev, DEVNUM);
+-	if (ercd) {
+-		APRINT("could not add a char device %d (dev=%x)\n", ercd, dev);
+-		goto exit;
+-	}
++	struct vspm_drvdata *pdrv = p_vspm_drvdata;
++	const struct of_device_id *match;
++	struct platform_device **p_pdev;
++	struct device_node *np;
++	
++	int ch;
+ 
+-	/* create a struct class structure */
+-	pdrv->pcls = class_create(THIS_MODULE, CLSNAME);
+-	if (IS_ERR(pdrv->pcls)) {
+-		APRINT("could not create a class\n");
+-		ercd = PTR_ERR(pdrv->pcls);
+-		pdrv->pcls = 0;
+-		goto exit;
+-	}
+-	/*class->devnode = devnode;*/
+-
+-	/* creates a device and registers it with sysfs */
+-	ret_dev = device_create(pdrv->pcls, NULL, dev, NULL, DEVNAME);
+-	if (IS_ERR(ret_dev)) {
+-		APRINT("could not create a device\n");
+-		ercd = PTR_ERR(ret_dev);
+-		goto exit;
+-	}
++	DPRINT("called(id=%d name=%s)\n", pdev->id, pdev->name);
+ 
+-	/* initialize open counter */
+-	atomic_set(&pdrv->counter, 0);
++	match = of_match_node(vspm_ip_matches, pdev->dev.of_node);
++	if (!match)
++		return -ENODEV;
+ 
+ 	/* save platform_device pointer */
+-	pdrv->pdev = pdev;
++	ch = (int)match->data;
++	if (ch == VSPM_TDDMAC){
++		pdrv->tddmac_pdev = pdev;
++		p_pdev = &pdrv->tddmac_pdev;
++	}else{
++		pdrv->vsp_pdev[ch] = pdev;
++		p_pdev = &pdrv->vsp_pdev[ch];
++	}
+ 
+-	sema_init(&pdrv->init_sem, 1);/* unlock */
++	DPRINT("called(ch=%d)\n", ch);
+ 
+ 	/* save drvdata */
+-	p_vspm_drvdata = pdrv;
+-	platform_set_drvdata(pdev, pdrv);
++	platform_set_drvdata(pdev, p_pdev);
++
++	pm_suspend_ignore_children(&pdev->dev, true);
++	pm_runtime_enable(&pdev->dev);
++	pm_runtime_get_sync(&pdev->dev);
+ 
+ 	DPRINT("done(id=%d)\n", pdev->id);
+ 	return 0;
+-
+-exit:
+-	if (pdrv) {
+-		if (pdrv->cdev.dev)
+-			cdev_del(&pdrv->cdev);
+-		if (pdrv->pcls)
+-			class_destroy(pdrv->pcls);
+-		if (dev)
+-			unregister_chrdev_region(dev, DEVNUM);
+-		kfree(pdrv);
+-	}
+-	return ercd;
+ }
+ 
+ /*
+@@ -382,27 +328,14 @@ exit:
+  * Returns: On success 0 is returned. On error, a nonzero error number is
+  * returned.
+  */
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+ static int vspm_remove(struct platform_device *pdev)
+-#else
+-static int __devexit vspm_remove(struct platform_device *pdev)
+-#endif
+ {
+-	struct vspm_drvdata	*pdrv = platform_get_drvdata(pdev);
+-	dev_t dev = pdrv->cdev.dev;
++	struct vspm_drvdata **pdrv = platform_get_drvdata(pdev);
+ 
+ 	DPRINT("called(id=%d)\n", pdev->id);
+ 
+-	/* emoves a device that was created with device_create() */
+-	device_destroy(pdrv->pcls, dev);
+-
+-	/* destroys a struct class structure */
+-	class_destroy(pdrv->pcls);
+-
+-	/* remove a cdev from the system */
+-	cdev_del(&pdrv->cdev);
+-	unregister_chrdev_region(dev, DEVNUM);
+-	kfree(pdrv);
++	pm_runtime_disable(&pdev->dev);
++	*pdrv = NULL;
+ 	platform_set_drvdata(pdev, NULL);
+ 
+ 	DPRINT("done(id=%d)\n", pdev->id);
+@@ -428,84 +361,18 @@ static const struct dev_pm_ops vspm_pm_ops = {
+ 	.resume = vspm_runtime_nop,
+ };
+ 
+-/* vspm driver platform-data */
++
+ static struct platform_driver vspm_driver = {
+ 	.driver		= {
+ 		.name		= DRVNAME,
+ 		.owner		= THIS_MODULE,
+-		.pm			= &vspm_pm_ops,
++		.pm		= &vspm_pm_ops,
++		.of_match_table = vspm_ip_matches,
+ 	},
+ 	.probe		= vspm_probe,
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
+ 	.remove		= vspm_remove,
+-#else
+-	.remove		= __devexit_p(vspm_remove),
+-#endif
+ };
+ 
+-/* vspm device resources */
+-static struct resource vspm_resources[] = {
+-	/* 2D-DMAC */
+-	[0] = {
+-		.name	= RESNAME "-tddmac",
+-		.start	= 0xFEA00000,
+-		.end	= 0xFEA00200 - 1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[1] = {
+-		.name	= RESNAME "-tddmac",
+-		.start	= gic_spi(285),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-	/* VSPR */
+-	[2] = {
+-		.name	= RESNAME "-vspr",
+-		.start	= 0xFE920000,
+-		.end	= 0xFE927404 - 1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[3] = {
+-		.name	= RESNAME "-vspr",
+-		.start	= gic_spi(266),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-	/* VSPS */
+-	[4] = {
+-		.name	= RESNAME "-vsps",
+-		.start	= 0xFE928000,
+-		.end	= 0xFE92F404 - 1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[5] = {
+-		.name	= RESNAME "-vsps",
+-		.start	= gic_spi(267),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-	/* VSPD0 */
+-	[6] = {
+-		.name	= RESNAME "-vspd0",
+-		.start	= 0xFE930000,
+-		.end	= 0xFE937404 - 1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[7] = {
+-		.name	= RESNAME "-vspd0",
+-		.start	= gic_spi(246),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-	/* VSPD1 */
+-	[8] = {
+-		.name	= RESNAME "-vspd1",
+-		.start	= 0xFE938000,
+-		.end	= 0xFE93F404 - 1,
+-		.flags	= IORESOURCE_MEM,
+-	},
+-	[9] = {
+-		.name	= RESNAME "-vspd1",
+-		.start	= gic_spi(247),
+-		.flags	= IORESOURCE_IRQ,
+-	},
+-};
+ 
+ /* vspm device release function */
+ static void vspm_dev_release(struct device *dev)
+@@ -514,142 +381,53 @@ static void vspm_dev_release(struct device *dev)
+ 	return;
+ }
+ 
+-/* vspm device */
+-static struct platform_device vspm_device = {
+-	.name			= DEVNAME,
+-	.id				= -1,
+-	.resource		= vspm_resources,
+-	.num_resources	= ARRAY_SIZE(vspm_resources),
+-	.dev			= {
+-						.release = vspm_dev_release,
+-					},
+-};
+-
+-#ifdef DEBUG
+-#define PROCNAME_DEBUG	"debug"
+-long debug_flg;
+-static struct proc_dir_entry *proc_dir;
+-static struct proc_dir_entry *proc_debug_entry;
+-
+-static int vspm_proc_read_debug(
+-	char *page, char **start, off_t off, int count, int *eof, void *data)
+-{
+-	int len;
+-
+-	DPRINT("called\n");
+-
+-	if (off > 0)
+-		len = 0;
+-	else
+-		len = sprintf(page, "%ld\n", debug_flg);
+-
+-	DPRINT("done\n");
+-	return len;
+-}
+-
+-static int vspm_proc_write_debug(
+-	struct file *file, const char *buffer, unsigned long count, void *data)
+-{
+-	char buf[16];
+-	unsigned long len = count;
+-
+-	DPRINT("called\n");
+-
+-	if (len >= sizeof(buf))
+-		len = sizeof(buf) - 1;
+ 
+-	if (copy_from_user(buf, buffer, len))
+-		return -EFAULT;
+-	buf[len] = '\0';
+-
+-	if (strict_strtol(buf, 10, &debug_flg))
+-		return -EINVAL;
+-
+-	DPRINT("done\n");
+-	return len;
+-}
+-#endif	/* DEBUG */
+-
+-/*
+- * vspm_module_init - Initialize the VSPM driver module
+- * Returns: On success 0 is returned. On error, a nonzero error number is
+- * returned.
+- */
+ static int __init vspm_module_init(void)
+ {
++	struct vspm_drvdata *pdrv = 0;
+ 	int ercd = 0;
+ 
++
+ 	DPRINT("called\n");
+ 
+-	/* add a platform-level device */
+-	ercd = platform_device_register(&vspm_device);
+-	if (ercd) {
+-		APRINT("could not add a platform-level device %d\n", ercd);
+-		goto err_exit1;
++	/* allocate vspm driver data area */
++	pdrv = kzalloc(sizeof(*pdrv), GFP_KERNEL);
++	if (!pdrv) {
++		APRINT("could not allocate vspm driver data area\n");
++		return -ENOMEM;
+ 	}
++	p_vspm_drvdata = pdrv;
+ 
+ 	/* register a driver for platform-level devices */
+ 	ercd = platform_driver_register(&vspm_driver);
+ 	if (ercd) {
+-		APRINT("could not register a driver for ");
+-		APRINT("platform-level devices %d\n", ercd);
+-		goto err_exit2;
+-	}
+-
+-#ifdef DEBUG
+-	/* make a directory /proc/driver/vspm */
+-	proc_dir = proc_mkdir(PROCNAME, NULL);
+-	if (!proc_dir) {
+-		APRINT("could not make a proc dir\n");
+-		goto err_exit3;
++		kfree(pdrv);
++		p_vspm_drvdata = NULL;
++		return ercd;
+ 	}
+ 
+-	/* make a proc entry /proc/driver/vspm/debug */
+-	proc_debug_entry = create_proc_entry(PROCNAME_DEBUG, 0666, proc_dir);
+-	if (!proc_debug_entry) {
+-		APRINT("could not make a proc entry\n");
+-		goto err_exit4;
+-	}
+-	proc_debug_entry->read_proc = vspm_proc_read_debug;
+-	proc_debug_entry->write_proc = vspm_proc_write_debug;
+-#endif	/* DEBUG */
++	/* initialize open counter */
++	atomic_set(&pdrv->counter, 0);
+ 
+-	printk(banner);
+-	printk("\n");
++	/* initialize semaphore */
++	sema_init(&pdrv->init_sem, 1);/* unlock */
+ 
+ 	DPRINT("done\n");
+-	return 0;
+ 
+-#ifdef DEBUG
+-err_exit4:
+-	remove_proc_entry(PROCNAME, NULL);
+-err_exit3:
+-	platform_driver_unregister(&vspm_driver);
+-#endif	/* DEBUG */
+-err_exit2:
+-	platform_device_unregister(&vspm_device);
+-err_exit1:
+-	return ercd;
++	return 0;
+ }
+ 
+-/*
+- * vspm_module_exit - Exit the VSPM driver module
+- * Returns: On success 0 is returned. On error, a nonzero error number is
+- * returned.
+- */
++
+ static void __exit vspm_module_exit(void)
+ {
++	struct vspm_drvdata *pdrv = p_vspm_drvdata;
++
+ 	DPRINT("called\n");
+ 
+ 	platform_driver_unregister(&vspm_driver);
+-	platform_device_unregister(&vspm_device);
+ 
+-#ifdef DEBUG
+-	if (proc_debug_entry)
+-		remove_proc_entry(PROCNAME_DEBUG, proc_dir);
+-	if (proc_dir)
+-		remove_proc_entry(PROCNAME, NULL);
+-#endif	/* DEBUG */
++	kfree(pdrv);
++	p_vspm_drvdata = NULL;
+ 
+ 	DPRINT("done\n");
+ }
+@@ -657,6 +435,7 @@ static void __exit vspm_module_exit(void)
+ module_init(vspm_module_init);
+ module_exit(vspm_module_exit);
+ 
++
+ MODULE_AUTHOR("Renesas Electronics Corporation");
+ MODULE_LICENSE("Dual MIT/GPL");
+ 
+diff --git a/vspm/drv/vspm_main.h b/vspm/drv/vspm_main.h
+index 33e73ef..d4952e7 100755
+--- a/vspm/drv/vspm_main.h
++++ b/vspm/drv/vspm_main.h
+@@ -77,6 +77,7 @@
+ #include "vspm_public.h"
+ #include "vspm_private.h"
+ #include "vspm_if.h"
++#include "vsp/vsp_drv_local.h"
+ 
+ #define CLSNAME				"vspm"
+ #define DEVNAME				"vspm"
+@@ -86,6 +87,7 @@
+ #define DRVNAME				DEVNAME
+ #define RESNAME				DEVNAME
+ 
++#if 0
+ enum {
+ 	RESOURCE_TDDMAC,
+ 	RESOURCE_VSPR,
+@@ -93,10 +95,19 @@ enum {
+ 	RESOURCE_VSPD0,
+ 	RESOURCE_VSPD1
+ };
++#endif
+ 
+ /* vspm driver data structure */
+ struct vspm_drvdata {
+-	struct platform_device *pdev;
++	struct platform_device *vsp_pdev[VSPM_IP_MAX];	
++	struct clk *vsp_clk[VSPM_IP_MAX];
++	struct platform_device *tddmac_pdev;
++	struct clk *tddmac_clk;
++	atomic_t counter;
++	struct semaphore init_sem;
++	struct task_struct *task;
++
++#if 0
+ 	struct class *pcls;
+ 	struct cdev cdev;
+ 	struct clk *vsps_clk;
+@@ -110,7 +121,7 @@ struct vspm_drvdata {
+ 	struct clk *vspd1_clk;
+ #endif
+ 	struct clk *tddmac_clk;
+-	struct task_struct *task;
++	
+ 	struct {
+ 		void __iomem *mapbase;
+ 		int irq;
+@@ -121,8 +132,7 @@ struct vspm_drvdata {
+ 		int irq;
+ 		void *cb;
+ 	} vsp;
+-	atomic_t counter;
+-	struct semaphore init_sem;
++#endif
+ };
+ 
+ /* ip parameter structure */
+diff --git a/vspm/drv/vspm_private.h b/vspm/drv/vspm_private.h
+index 4b2d9fe..5deea39 100755
+--- a/vspm/drv/vspm_private.h
++++ b/vspm/drv/vspm_private.h
+@@ -64,6 +64,8 @@
+ 
+ #include <linux/platform_device.h>
+ 
++struct vspm_drvdata;
++
+ /* Type of the IP */
+ enum {
+ 	VSPM_TYPE_VSP_CH0 = 1,
+@@ -151,7 +153,7 @@ void vspm_task(void);
+  * Description: Initialize the driver of each IP (VSPS, 2DDAMC).
+  * Returns: On success R_VSPM_OK is returned. On error, R_VSPM_NG is returned.
+  */
+-long vspm_lib_driver_initialize(struct platform_device *pdev);
++long vspm_lib_driver_initialize(struct vspm_drvdata *pdrv);
+ 
+ /**
+  * vspm_lib_driver_quit - Exit the VSPM driver
+diff --git a/vspm/drv/vspm_sub.c b/vspm/drv/vspm_sub.c
+index 01aad20..0d92e3e 100755
+--- a/vspm/drv/vspm_sub.c
++++ b/vspm/drv/vspm_sub.c
+@@ -102,21 +102,17 @@ static int vspm_thread(void *num)
+ int vspm_init(struct vspm_privdata *priv)
+ {
+ 	struct vspm_drvdata *pdrv = priv->pdrv;
+-	struct platform_device *pdev = pdrv->pdev;
++	struct device_node *np;
+ 
+ 	long drv_ercd;
+ 	int ercd;
++	int i;
+ 
+ 	DPRINT("called\n");
+ 
+-	/* wake up device */
+-	pm_suspend_ignore_children(&pdev->dev, true);
+-	pm_runtime_enable(&pdev->dev);
+-
+-	pm_runtime_get_sync(&pdev->dev);
+-
+ 	/* enable clock */
+-	pdrv->tddmac_clk = clk_get(NULL, "2ddmac");
++	np = pdrv->tddmac_pdev->dev.of_node;
++	pdrv->tddmac_clk = of_clk_get(np, 0);
+ 	if (IS_ERR(pdrv->tddmac_clk)) {
+ 		APRINT("failed to get 2DDMAC clock\n");
+ 		ercd = -EFAULT;
+@@ -130,69 +126,31 @@ int vspm_init(struct vspm_privdata *priv)
+ 		goto err_exit2;
+ 	}
+ 
+-	pdrv->vsps_clk = clk_get(NULL, "vsp1-sy");
+-	if (IS_ERR(pdrv->vsps_clk)) {
+-		APRINT("failed to get VSPS clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit3;
+-	}
+-
+-	ercd = clk_prepare_enable(pdrv->vsps_clk);
+-	if (ercd < 0) {
+-		APRINT("failed to stating VSPS clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit4;
+-	}
+-
+-#ifdef USE_VSPR
+-	pdrv->vspr_clk = clk_get(NULL, "vspr");
+-	if (IS_ERR(pdrv->vspr_clk)) {
+-		APRINT("failed to get VSPR clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit5;
++	DPRINT("called 2\n");
++
++	for(i=0; i<VSPM_IP_MAX; i++){
++		if (pdrv->vsp_pdev[i]){
++			np = pdrv->vsp_pdev[i]->dev.of_node;
++			pdrv->vsp_clk[i] = of_clk_get(np, 0);
++			if (IS_ERR(pdrv->vsp_clk[i])) {
++				APRINT("failed to get 2DDMAC clock\n");
++				ercd = -EFAULT;
++				goto err_exit7;
++			}
++			ercd = clk_prepare_enable(pdrv->vsp_clk[i]);
++			if (ercd < 0) {
++				APRINT("failed to stating 2DDMAC clock\n");
++				ercd = -EFAULT;
++				clk_put(pdrv->vsp_clk[i]);
++				pdrv->vsp_clk[i] = NULL;
++				goto err_exit7;
++			}
++		}
+ 	}
+ 
+-	ercd = clk_prepare_enable(pdrv->vspr_clk);
+-	if (ercd < 0) {
+-		APRINT("failed to stating VSPR clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit6;
+-	}
+-#endif
++	DPRINT("called 3\n");
+ 
+-#ifdef USE_VSPD0
+-	pdrv->vspd0_clk = clk_get(NULL, "vsp1-du0");
+-	if (IS_ERR(pdrv->vspd0_clk)) {
+-		APRINT("failed to get VSPD0 clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit11;
+-	}
+-
+-	ercd = clk_prepare_enable(pdrv->vspd0_clk);
+-	if (ercd < 0) {
+-		APRINT("failed to stating VSPD0 clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit12;
+-	}
+-#endif
+-
+-#ifdef USE_VSPD1
+-	pdrv->vspd1_clk = clk_get(NULL, "vsp1-du1");
+-	if (IS_ERR(pdrv->vspd1_clk)) {
+-		APRINT("failed to get VSPD1 clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit13;
+-	}
+-
+-	ercd = clk_prepare_enable(pdrv->vspd1_clk);
+-	if (ercd < 0) {
+-		APRINT("failed to stating VSPD1 clock\n");
+-		ercd = -EFAULT;
+-		goto err_exit14;
+-	}
+-#endif
+-
+-	drv_ercd = vspm_lib_driver_initialize(pdev);
++	drv_ercd = vspm_lib_driver_initialize(pdrv);
+ 	if (drv_ercd != R_VSPM_OK) {
+ 		APRINT("failed to vspm_lib_driver_initialize %d\n",
+ 			(int)drv_ercd);
+@@ -239,35 +197,17 @@ err_exit9:
+ err_exit8:
+ 	vspm_lib_driver_quit();
+ err_exit7:
+-#ifdef USE_VSPD1
+-	clk_disable_unprepare(pdrv->vspd1_clk);
+-err_exit14:
+-	clk_put(pdrv->vspd1_clk);
+-err_exit13:
+-#endif
+-#ifdef USE_VSPD0
+-	clk_disable_unprepare(pdrv->vspd0_clk);
+-err_exit12:
+-	clk_put(pdrv->vspd0_clk);
+-err_exit11:
+-#endif
+-#ifdef USE_VSPR
+-	clk_disable_unprepare(pdrv->vspr_clk);
+-err_exit6:
+-	clk_put(pdrv->vspr_clk);
+-err_exit5:
+-#endif
+-	clk_disable_unprepare(pdrv->vsps_clk);
+-err_exit4:
+-	clk_put(pdrv->vsps_clk);
+-err_exit3:
++	for(i=0; i<VSPM_IP_MAX; i++){
++		if (pdrv->vsp_clk[i]){
++			clk_disable_unprepare(pdrv->vsp_clk[i]);
++			clk_put(pdrv->vsp_clk[i]);
++			pdrv->vsp_clk[i] = NULL;
++		}
++	}
+ 	clk_disable_unprepare(pdrv->tddmac_clk);
+ err_exit2:
+ 	clk_put(pdrv->tddmac_clk);
+ err_exit1:
+-	/* mark device as idle */
+-	pm_runtime_put_sync(&pdev->dev);
+-	pm_runtime_disable(&pdev->dev);
+ 
+ 	return ercd;
+ }
+@@ -280,10 +220,9 @@ err_exit1:
+ int vspm_quit(struct vspm_privdata *priv)
+ {
+ 	struct vspm_drvdata *pdrv = priv->pdrv;
+-	struct platform_device *pdev = pdrv->pdev;
+ 
+ 	long drv_ercd;
+-	int ercd;
++	int ercd, i;
+ 
+ 	DPRINT("called\n");
+ 
+@@ -306,31 +245,16 @@ int vspm_quit(struct vspm_privdata *priv)
+ 	}
+ 
+ 	/* disable clock */
+-#ifdef USE_VSPD1
+-	clk_disable_unprepare(pdrv->vspd1_clk);
+-	clk_put(pdrv->vspd1_clk);
+-#endif
+-
+-#ifdef USE_VSPD0
+-	clk_disable_unprepare(pdrv->vspd0_clk);
+-	clk_put(pdrv->vspd0_clk);
+-#endif
+-
+-#ifdef USE_VSPR
+-	clk_disable_unprepare(pdrv->vspr_clk);
+-	clk_put(pdrv->vspr_clk);
+-#endif
+-
+-	clk_disable_unprepare(pdrv->vsps_clk);
+-	clk_put(pdrv->vsps_clk);
+-
++	for(i=0; i<VSPM_IP_MAX; i++){
++		if (pdrv->vsp_clk[i]){
++			clk_disable_unprepare(pdrv->vsp_clk[i]);
++			clk_put(pdrv->vsp_clk[i]);
++			pdrv->vsp_clk[i] = NULL;
++		}
++	}
+ 	clk_disable_unprepare(pdrv->tddmac_clk);
+ 	clk_put(pdrv->tddmac_clk);
+ 
+-	/* mark device as idle */
+-	pm_runtime_put_sync(&pdev->dev);
+-	pm_runtime_disable(&pdev->dev);
+-
+ 	DPRINT("done\n");
+ 	return 0;
+ 
+-- 
+1.9.1
+

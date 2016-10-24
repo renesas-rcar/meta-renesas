@@ -1,0 +1,88 @@
+From 8ca5b637191cdbfc6e9d9445cdbf84d0fb1ca59f Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Fri, 21 Oct 2016 17:15:15 +0300
+Subject: [PATCH 2/2] V2H: remove unavailable channels.
+
+V2h has 4 rpf and 3 wpf blocks.
+---
+ vspm/drv/manager/vspm_control.c | 24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
+
+diff --git a/vspm/drv/manager/vspm_control.c b/vspm/drv/manager/vspm_control.c
+index bd71ac6..44b7870 100755
+--- a/vspm/drv/manager/vspm_control.c
++++ b/vspm/drv/manager/vspm_control.c
+@@ -93,10 +93,6 @@ long vspm_ins_ctrl_initialize(void)
+ 
+ 	/* assaigned usable channel */
+ 	usable->ch_bits =
+-		VSPM_IPCTRL_VSPS_WPF_CH0|
+-		VSPM_IPCTRL_VSPS_WPF_CH1|
+-		VSPM_IPCTRL_VSPS_WPF_CH2|
+-		VSPM_IPCTRL_VSPS_WPF_CH3|
+ #ifdef USE_VSPR
+ 		VSPM_IPCTRL_VSPR_WPF_CH0|
+ 		VSPM_IPCTRL_VSPR_WPF_CH1|
+@@ -109,6 +105,7 @@ long vspm_ins_ctrl_initialize(void)
+ #ifdef USE_VSPD1
+ 		VSPM_IPCTRL_VSPD1_WPF_CH0|
+ #endif
++#ifdef USE_TTDMAC
+ 		VSPM_IPCTRL_2DDMAC_CH0|
+ 		VSPM_IPCTRL_2DDMAC_CH1|
+ 		VSPM_IPCTRL_2DDMAC_CH2|
+@@ -116,7 +113,11 @@ long vspm_ins_ctrl_initialize(void)
+ 		VSPM_IPCTRL_2DDMAC_CH4|
+ 		VSPM_IPCTRL_2DDMAC_CH5|
+ 		VSPM_IPCTRL_2DDMAC_CH6|
+-		VSPM_IPCTRL_2DDMAC_CH7;
++		VSPM_IPCTRL_2DDMAC_CH7|
++#endif
++		VSPM_IPCTRL_VSPS_WPF_CH0|
++		VSPM_IPCTRL_VSPS_WPF_CH1|
++		VSPM_IPCTRL_VSPS_WPF_CH2;
+ 
+ 	usable->vsp_module_bits[VSPM_IP_VSPS] =
+ 		VSP_SRU_USE|
+@@ -129,16 +130,13 @@ long vspm_ins_ctrl_initialize(void)
+ 		VSP_CLU_USE|
+ 		VSP_HST_USE|
+ 		VSP_HSI_USE|
+-		VSP_BRU_USE|
+-		VSP_HGO_USE|
+-		VSP_HGT_USE;
++		VSP_BRU_USE;
+ 
+ 	usable->vsp_rpf_bits[VSPM_IP_VSPS] =
+ 		VSPM_IPCTRL_VSP_RPF_CH0|
+ 		VSPM_IPCTRL_VSP_RPF_CH1|
+ 		VSPM_IPCTRL_VSP_RPF_CH2|
+-		VSPM_IPCTRL_VSP_RPF_CH3|
+-		VSPM_IPCTRL_VSP_RPF_CH4;
++		VSPM_IPCTRL_VSP_RPF_CH3;
+ 
+ 	usable->vsp_rpf_clut_bits[VSPM_IP_VSPS] =
+ 		VSPM_IPCTRL_VSP_RPF_CH1|
+@@ -180,8 +178,7 @@ long vspm_ins_ctrl_initialize(void)
+ 		VSP_LUT_USE|
+ 		VSP_HST_USE|
+ 		VSP_HSI_USE|
+-		VSP_BRU_USE|
+-		VSP_HGO_USE;
++		VSP_BRU_USE;
+ 
+ 	usable->vsp_rpf_bits[VSPM_IP_VSPD0] =
+ 		VSPM_IPCTRL_VSP_RPF_CH0|
+@@ -202,8 +199,7 @@ long vspm_ins_ctrl_initialize(void)
+ 		VSP_LUT_USE|
+ 		VSP_HST_USE|
+ 		VSP_HSI_USE|
+-		VSP_BRU_USE|
+-		VSP_HGO_USE;
++		VSP_BRU_USE;
+ 
+ 	usable->vsp_rpf_bits[VSPM_IP_VSPD1] =
+ 		VSPM_IPCTRL_VSP_RPF_CH0|
+-- 
+2.7.4
+

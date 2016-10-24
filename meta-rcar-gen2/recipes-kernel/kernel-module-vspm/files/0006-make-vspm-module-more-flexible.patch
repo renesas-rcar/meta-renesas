@@ -1,0 +1,113 @@
+From 67967cfa3af63063d40046d473465e4e642e9c1e Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Fri, 21 Oct 2016 17:09:35 +0300
+Subject: [PATCH 1/2] make vspm module more flexible.
+
+Controling  2ddmac ip block is now optional.
+---
+ vspm/drv/manager/vspm_lib.c |  8 ++++----
+ vspm/drv/vspm_sub.c         |  3 ++-
+ vspm/include/vspm_public.h  | 13 +++++++------
+ 3 files changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/vspm/drv/manager/vspm_lib.c b/vspm/drv/manager/vspm_lib.c
+index 5ecc24d..00089d9 100755
+--- a/vspm/drv/manager/vspm_lib.c
++++ b/vspm/drv/manager/vspm_lib.c
+@@ -84,14 +84,14 @@ long vspm_lib_driver_initialize(struct vspm_drvdata *pdrv)
+ 			__func__, ercd);
+ 		goto exit;
+ 	}
+-
++#if USE_TTDMAC
+ 	ercd = vspm_ins_2ddmac_initialize(pdrv);
+ 	if (ercd) {
+ 		EPRINT("%s failed to vspm_ins_2ddmac_initialize %ld\n",
+ 			__func__, ercd);
+ 		goto exit;
+ 	}
+-
++#endif
+ 	NPRINT("%s\n", __func__);
+ 	ercd = R_VSPM_OK;
+ exit:
+@@ -113,14 +113,14 @@ long vspm_lib_driver_quit(void)
+ 		EPRINT("%s failed to vspm_ins_vsp_quit %ld\n", __func__, ercd);
+ 		goto exit;
+ 	}
+-
++#if USE_TTDMAC
+ 	ercd = vspm_ins_2ddmac_quit();
+ 	if (ercd) {
+ 		EPRINT("%s failed to vspm_ins_2ddmac_quit %ld\n",
+ 			__func__, ercd);
+ 		goto exit;
+ 	}
+-
++#endif
+ 	NPRINT("%s\n", __func__);
+ 	ercd = R_VSPM_OK;
+ exit:
+diff --git a/vspm/drv/vspm_sub.c b/vspm/drv/vspm_sub.c
+index 0d92e3e..d6cf2e9 100755
+--- a/vspm/drv/vspm_sub.c
++++ b/vspm/drv/vspm_sub.c
+@@ -111,6 +111,7 @@ int vspm_init(struct vspm_privdata *priv)
+ 	DPRINT("called\n");
+ 
+ 	/* enable clock */
++#if USE_TTDMAC
+ 	np = pdrv->tddmac_pdev->dev.of_node;
+ 	pdrv->tddmac_clk = of_clk_get(np, 0);
+ 	if (IS_ERR(pdrv->tddmac_clk)) {
+@@ -125,7 +126,7 @@ int vspm_init(struct vspm_privdata *priv)
+ 		ercd = -EFAULT;
+ 		goto err_exit2;
+ 	}
+-
++#endif
+ 	DPRINT("called 2\n");
+ 
+ 	for(i=0; i<VSPM_IP_MAX; i++){
+diff --git a/vspm/include/vspm_public.h b/vspm/include/vspm_public.h
+index 7447f9b..afb0f32 100755
+--- a/vspm/include/vspm_public.h
++++ b/vspm/include/vspm_public.h
+@@ -62,7 +62,7 @@
+ #ifndef __VSPM_PUBLIC_H__
+ #define __VSPM_PUBLIC_H__
+ 
+-#include "tddmac_drv.h"
++/*#include "tddmac_drv.h"*/
+ #include "vsp_drv.h"
+ 
+ /* VSPM driver APIs return codes */
+@@ -108,11 +108,12 @@ typedef void (*PFN_VSPM_COMPLETE_CALLBACK)(
+  * struct t_vspm_2ddmac_par - parameter to 2DDMAC processing
+  * @ptTdDmacMode:    request mode setting table pointer
+  * @ptTdDmacRequest: DMA transfer setting table pointer
++ *
++ *typedef struct t_vspm_2ddmac_par {
++ *	T_TDDMAC_MODE *ptTdDmacMode;
++ *	T_TDDMAC_REQUEST *ptTdDmacRequest;
++ *} VSPM_2DDMAC_PAR;
+  */
+-typedef struct t_vspm_2ddmac_par {
+-	T_TDDMAC_MODE *ptTdDmacMode;
+-	T_TDDMAC_REQUEST *ptTdDmacRequest;
+-} VSPM_2DDMAC_PAR;
+ 
+ /**
+  * struct t_vspm_ip_par - parameter to VSPM_lib_Entry()
+@@ -123,7 +124,7 @@ typedef struct t_vspm_ip_par {
+ 	unsigned short uhType;
+ 	union {
+ 		VSPM_VSP_PAR *ptVsp;
+-		VSPM_2DDMAC_PAR *pt2dDmac;
++/*		VSPM_2DDMAC_PAR *pt2dDmac;*/
+ 	} unionIpParam;
+ } VSPM_IP_PAR;
+ 
+-- 
+2.7.4
+

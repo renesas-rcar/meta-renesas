@@ -1,0 +1,72 @@
+From 6967eae370cb07b7f5c2194cd0049a4099bee02c Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Mon, 17 Oct 2016 17:10:09 +0300
+Subject: [PATCH 1/2] disable ttdmac support
+
+---
+ vspm/drv/manager/vspm_lib.c | 8 ++++----
+ vspm/drv/vspm_sub.c         | 3 ++-
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/vspm/drv/manager/vspm_lib.c b/vspm/drv/manager/vspm_lib.c
+index 5ecc24d..00089d9 100755
+--- a/vspm/drv/manager/vspm_lib.c
++++ b/vspm/drv/manager/vspm_lib.c
+@@ -84,14 +84,14 @@ long vspm_lib_driver_initialize(struct vspm_drvdata *pdrv)
+ 			__func__, ercd);
+ 		goto exit;
+ 	}
+-
++#if USE_TTDMAC
+ 	ercd = vspm_ins_2ddmac_initialize(pdrv);
+ 	if (ercd) {
+ 		EPRINT("%s failed to vspm_ins_2ddmac_initialize %ld\n",
+ 			__func__, ercd);
+ 		goto exit;
+ 	}
+-
++#endif
+ 	NPRINT("%s\n", __func__);
+ 	ercd = R_VSPM_OK;
+ exit:
+@@ -113,14 +113,14 @@ long vspm_lib_driver_quit(void)
+ 		EPRINT("%s failed to vspm_ins_vsp_quit %ld\n", __func__, ercd);
+ 		goto exit;
+ 	}
+-
++#if USE_TTDMAC
+ 	ercd = vspm_ins_2ddmac_quit();
+ 	if (ercd) {
+ 		EPRINT("%s failed to vspm_ins_2ddmac_quit %ld\n",
+ 			__func__, ercd);
+ 		goto exit;
+ 	}
+-
++#endif
+ 	NPRINT("%s\n", __func__);
+ 	ercd = R_VSPM_OK;
+ exit:
+diff --git a/vspm/drv/vspm_sub.c b/vspm/drv/vspm_sub.c
+index 0d92e3e..d6cf2e9 100755
+--- a/vspm/drv/vspm_sub.c
++++ b/vspm/drv/vspm_sub.c
+@@ -111,6 +111,7 @@ int vspm_init(struct vspm_privdata *priv)
+ 	DPRINT("called\n");
+ 
+ 	/* enable clock */
++#if USE_TTDMAC
+ 	np = pdrv->tddmac_pdev->dev.of_node;
+ 	pdrv->tddmac_clk = of_clk_get(np, 0);
+ 	if (IS_ERR(pdrv->tddmac_clk)) {
+@@ -125,7 +126,7 @@ int vspm_init(struct vspm_privdata *priv)
+ 		ercd = -EFAULT;
+ 		goto err_exit2;
+ 	}
+-
++#endif
+ 	DPRINT("called 2\n");
+ 
+ 	for(i=0; i<VSPM_IP_MAX; i++){
+-- 
+2.7.4
+

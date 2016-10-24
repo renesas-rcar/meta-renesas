@@ -1,0 +1,65 @@
+From be77b7f2f833e9face3712c0416c1a78521d8d75 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Sun, 18 Sep 2016 19:48:10 +0300
+Subject: [PATCH 1/2] VSPM add misc device register/unregister method
+
+This patch file add device register/unregister methods by using misc_register()/misc_deregister() function
+Device register mothod is created so that device file of VSPM (/dev/vspm) can be created
+(device file is only created after device register method is done).
+
+Also handle errors which can be in misc_register().
+---
+ vspm/drv/vspm_main.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/vspm/drv/vspm_main.c b/vspm/drv/vspm_main.c
+index f04210b..7d9aeaa 100755
+--- a/vspm/drv/vspm_main.c
++++ b/vspm/drv/vspm_main.c
+@@ -75,6 +75,7 @@
+ #include <linux/completion.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/of_address.h>
++#include <linux/miscdevice.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_private.h"
+@@ -266,6 +267,12 @@ static const struct file_operations vspm_fops = {
+ 	.release		= vspm_release,
+ };
+ 
++static struct miscdevice vspm_misc = {
++	.minor = MISC_DYNAMIC_MINOR,
++	.name  = DEVNAME,
++	.fops  = &vspm_fops
++};
++
+ #define VSPM_TDDMAC 	VSPM_IP_MAX
+ 
+ static const struct of_device_id vspm_ip_matches[] = {
+@@ -412,6 +419,14 @@ static int __init vspm_module_init(void)
+ 	/* initialize semaphore */
+ 	sema_init(&pdrv->init_sem, 1);/* unlock */
+ 
++	ercd = misc_register(&vspm_misc);
++	if (ercd) {
++		platform_driver_unregister(&vspm_driver);
++		kfree(pdrv);
++		p_vspm_drvdata = NULL;
++		APRINT("misc_register Fail\n");
++	}
++
+ 	DPRINT("done\n");
+ 
+ 	return 0;
+@@ -424,6 +439,7 @@ static void __exit vspm_module_exit(void)
+ 
+ 	DPRINT("called\n");
+ 
++	misc_deregister(&vspm_misc);
+ 	platform_driver_unregister(&vspm_driver);
+ 
+ 	kfree(pdrv);
+-- 
+2.7.4
+

@@ -1,0 +1,778 @@
+From 8171d38a78cbfa027e886382638dbcf8a2630430 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Tue, 25 Oct 2016 21:04:45 +0300
+Subject: [PATCH] vsp2: Update-from-kernel-4.4-to-kernel-4.6
+
+---
+ drv/vsp2_bru.c    |   1 +
+ drv/vsp2_bru.h    |   2 +-
+ drv/vsp2_drv.c    | 116 ++++++++++++++++++++++++++++++++++++-----------
+ drv/vsp2_entity.c |  26 ++++++-----
+ drv/vsp2_entity.h |   4 +-
+ drv/vsp2_regs.h   |   2 +-
+ drv/vsp2_rpf.c    |  10 +----
+ drv/vsp2_uds.c    |   1 +
+ drv/vsp2_video.c  | 132 +++++++++++++++++++++++++++++++++---------------------
+ drv/vsp2_wpf.c    |   9 +---
+ 10 files changed, 194 insertions(+), 109 deletions(-)
+
+diff --git a/drv/vsp2_bru.c b/drv/vsp2_bru.c
+index a17fcbb..34ff8e5 100755
+--- a/drv/vsp2_bru.c
++++ b/drv/vsp2_bru.c
+@@ -497,6 +497,7 @@ struct vsp2_bru *vsp2_bru_create(struct vsp2_device *vsp2)
+ 	v4l2_subdev_init(subdev, &bru_ops);
+ 
+ 	subdev->entity.ops = &vsp2_media_ops;
++	subdev->entity.function =  MEDIA_ENT_F_PROC_VIDEO_COMPOSER;
+ 	subdev->internal_ops = &vsp2_subdev_internal_ops;
+ 	snprintf(subdev->name, sizeof(subdev->name), "%s bru",
+ 		 dev_name(vsp2->dev));
+diff --git a/drv/vsp2_bru.h b/drv/vsp2_bru.h
+index 00be49b..95c2350 100755
+--- a/drv/vsp2_bru.h
++++ b/drv/vsp2_bru.h
+@@ -82,7 +82,7 @@ struct vsp2_bru {
+ 	struct {
+ 		struct vsp2_rwpf *rpf;
+ 		struct v4l2_rect compose;
+-	} inputs[4];
++	} inputs[BRU_PAD_SOURCE];
+ };
+ 
+ static inline struct vsp2_bru *to_bru(struct v4l2_subdev *subdev)
+diff --git a/drv/vsp2_drv.c b/drv/vsp2_drv.c
+index 533d87a..69f59d3 100755
+--- a/drv/vsp2_drv.c
++++ b/drv/vsp2_drv.c
+@@ -68,6 +68,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/videodev2.h>
+ 
++#include <media/v4l2-subdev.h>
++
+ #include "vsp2.h"
+ #include "vsp2_bru.h"
+ #include "vsp2_rwpf.h"
+@@ -77,10 +79,17 @@
+ #define VSP2_PRINT_ALERT(fmt, args...) \
+ 	pr_alert("vsp2:%d: " fmt, current->pid, ##args)
+ 
++
++/* -----------------------------------------------------------------------------
++ * frame end proccess
++ */
++
+ void vsp2_frame_end(struct vsp2_device *vsp2)
+ {
+ 	unsigned int i;
+ 
++	/* pipeline flame end */
++
+ 	for (i = 0; i < VSP2_COUNT_WPF; ++i) {
+ 		struct vsp2_rwpf *wpf = vsp2->wpf[i];
+ 		struct vsp2_pipeline *pipe;
+@@ -101,7 +110,7 @@ void vsp2_frame_end(struct vsp2_device *vsp2)
+  */
+ 
+ /*
+- * vsp2_create_links - Create links from all sources to the given sink
++ * vsp2_create_sink_links - Create links from all sources to the given sink
+  *
+  * This function creates media links from all valid sources to the given sink
+  * pad. Links that would be invalid according to the VSP2 hardware capabilities
+@@ -110,7 +119,8 @@ void vsp2_frame_end(struct vsp2_device *vsp2)
+  * - from a UDS to a UDS (UDS entities can't be chained)
+  * - from an entity to itself (no loops are allowed)
+  */
+-static int vsp2_create_links(struct vsp2_device *vsp2, struct vsp2_entity *sink)
++static int vsp2_create_sink_links(struct vsp2_device *vsp2,
++				  struct vsp2_entity *sink)
+ {
+ 	struct media_entity *entity = &sink->subdev.entity;
+ 	struct vsp2_entity *source;
+@@ -135,7 +145,7 @@ static int vsp2_create_links(struct vsp2_device *vsp2, struct vsp2_entity *sink)
+ 			if (!(entity->pads[pad].flags & MEDIA_PAD_FL_SINK))
+ 				continue;
+ 
+-			ret = media_entity_create_link(&source->subdev.entity,
++			ret = media_create_pad_link(&source->subdev.entity,
+ 						       source->source_pad,
+ 						       entity, pad, flags);
+ 			if (ret < 0)
+@@ -149,22 +159,66 @@ static int vsp2_create_links(struct vsp2_device *vsp2, struct vsp2_entity *sink)
+ 	return 0;
+ }
+ 
+-static void vsp2_destroy_entities(struct vsp2_device *vsp2)
++static int vsp2_create_links(struct vsp2_device *vsp2)
+ {
+ 	struct vsp2_entity *entity;
+-	struct vsp2_entity *next;
++	unsigned int i;
++	int ret;
+ 
+ 	list_for_each_entry(entity, &vsp2->entities, list_dev) {
+-                v4l2_device_unregister_subdev(&entity->subdev);
++		if (entity->type == VSP2_ENTITY_RPF)
++			continue;
++
++		ret = vsp2_create_sink_links(vsp2, entity);
++		if (ret < 0)
++			return ret;
+ 	}
+ 
++	for (i = 0; i < VSP2_COUNT_RPF; ++i) {
++		struct vsp2_rwpf *rpf = vsp2->rpf[i];
++
++		ret = media_create_pad_link(&rpf->video.video.entity, 0,
++					       &rpf->entity.subdev.entity,
++					       RWPF_PAD_SINK,
++					       MEDIA_LNK_FL_ENABLED |
++					       MEDIA_LNK_FL_IMMUTABLE);
++		if (ret < 0)
++			return ret;
++	}
++
++	for (i = 0; i < VSP2_COUNT_WPF; ++i) {
++		/* Connect the video device to the WPF. All connections are
++		 * immutable except for the WPF0 source link.
++		 */
++		struct vsp2_rwpf *wpf = vsp2->wpf[i];
++		unsigned int flags = MEDIA_LNK_FL_ENABLED;
++
++		flags |= MEDIA_LNK_FL_IMMUTABLE;
++
++		ret = media_create_pad_link(&wpf->entity.subdev.entity,
++					       RWPF_PAD_SOURCE,
++					       &wpf->video.video.entity,
++					       0, flags);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++
++static void vsp2_destroy_entities(struct vsp2_device *vsp2)
++{
++	struct vsp2_entity *entity;
++	struct vsp2_entity *next;
++
+ 	list_for_each_entry_safe(entity, next, &vsp2->entities, list_dev) {
+ 		list_del(&entity->list_dev);
+ 		vsp2_entity_destroy(entity);
+ 	}
+ 
+-	v4l2_device_unregister(&vsp2->v4l2_dev);
++
+ 	media_device_unregister(&vsp2->media_dev);
++	media_device_cleanup(&vsp2->media_dev);
+ }
+ 
+ static int vsp2_create_entities(struct vsp2_device *vsp2)
+@@ -179,12 +233,7 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 	strlcpy(mdev->model, "VSP2", sizeof(mdev->model));
+ 	snprintf(mdev->bus_info, sizeof(mdev->bus_info), "platform:%s",
+ 		 dev_name(mdev->dev));
+-	ret = media_device_register(mdev);
+-	if (ret < 0) {
+-		dev_err(vsp2->dev, "media device registration failed (%d)\n",
+-			ret);
+-		return ret;
+-	}
++	media_device_init(mdev);
+ 
+ 	vdev->mdev = mdev;
+ 	ret = v4l2_device_register(vsp2->dev, vdev);
+@@ -195,13 +244,17 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 	}
+ 
+ 	/* Instantiate all the entities. */
+-	vsp2->bru = vsp2_bru_create(vsp2);
+-	if (IS_ERR(vsp2->bru)) {
+-		ret = PTR_ERR(vsp2->bru);
+-		goto done;
+-	}
+ 
+-	list_add_tail(&vsp2->bru->entity.list_dev, &vsp2->entities);
++	/* - BRU */
++	{
++		/* Instantiate all the entities. */
++		vsp2->bru = vsp2_bru_create(vsp2);
++		if (IS_ERR(vsp2->bru)) {
++			ret = PTR_ERR(vsp2->bru);
++			goto done;
++		}
++		list_add_tail(&vsp2->bru->entity.list_dev, &vsp2->entities);
++	}
+ 
+ 	for (i = 0; i < VSP2_COUNT_RPF; ++i) {
+ 		struct vsp2_rwpf *rpf;
+@@ -216,6 +269,8 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 		list_add_tail(&rpf->entity.list_dev, &vsp2->entities);
+ 	}
+ 
++	/* - UDSs */
++
+ 	for (i = 0; i < VSP2_COUNT_UDS; ++i) {
+ 		struct vsp2_uds *uds;
+ 
+@@ -229,6 +284,8 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 		list_add_tail(&uds->entity.list_dev, &vsp2->entities);
+ 	}
+ 
++	/* - WPFs */
++
+ 	for (i = 0; i < VSP2_COUNT_WPF; ++i) {
+ 		struct vsp2_rwpf *wpf;
+ 
+@@ -242,15 +299,8 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 		list_add_tail(&wpf->entity.list_dev, &vsp2->entities);
+ 	}
+ 
+-	/* Create links. */
+-	list_for_each_entry(entity, &vsp2->entities, list_dev) {
+-		if (entity->type == VSP2_ENTITY_RPF)
+-			continue;
+ 
+-		ret = vsp2_create_links(vsp2, entity);
+-		if (ret < 0)
+-			goto done;
+-	}
++
+ 
+ 	/* Register all subdevs. */
+ 	list_for_each_entry(entity, &vsp2->entities, list_dev) {
+@@ -260,7 +310,16 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 			goto done;
+ 	}
+ 
++	/* Create links. */
++	ret = vsp2_create_links(vsp2);
++	if (ret < 0)
++		goto done;
++
+ 	ret = v4l2_device_register_subdev_nodes(&vsp2->v4l2_dev);
++	if (ret < 0)
++		goto done;
++
++	ret = media_device_register(mdev);
+ 
+ done:
+ 	if (ret < 0)
+@@ -323,6 +382,9 @@ void vsp2_device_put(struct vsp2_device *vsp2)
+ {
+ 	long vspm_ret = R_VSPM_OK;
+ 
++	if (vsp2->ref_count == 0)
++		return;
++
+ 	mutex_lock(&vsp2->lock);
+ 
+ 	if (--vsp2->ref_count == 0) {
+diff --git a/drv/vsp2_entity.c b/drv/vsp2_entity.c
+index 2beaea5..3b51380 100755
+--- a/drv/vsp2_entity.c
++++ b/drv/vsp2_entity.c
+@@ -73,10 +73,11 @@
+ bool vsp2_entity_is_streaming(struct vsp2_entity *entity)
+ {
+ 	bool streaming;
++	unsigned long flags;
+ 
+-	mutex_lock(&entity->lock);
++	spin_lock_irqsave(&entity->lock, flags);
+ 	streaming = entity->streaming;
+-	mutex_unlock(&entity->lock);
++	spin_unlock_irqrestore(&entity->lock, flags);
+ 
+ 	return streaming;
+ }
+@@ -84,10 +85,11 @@ bool vsp2_entity_is_streaming(struct vsp2_entity *entity)
+ int vsp2_entity_set_streaming(struct vsp2_entity *entity, bool streaming)
+ {
+ 	int ret;
++	unsigned long flags;
+ 
+-	mutex_lock(&entity->lock);
++	spin_lock_irqsave(&entity->lock, flags);
+ 	entity->streaming = streaming;
+-	mutex_unlock(&entity->lock);
++	spin_unlock_irqrestore(&entity->lock, flags);
+ 
+ 	if (!streaming)
+ 		return 0;
+@@ -97,9 +99,9 @@ int vsp2_entity_set_streaming(struct vsp2_entity *entity, bool streaming)
+ 
+ 	ret = v4l2_ctrl_handler_setup(entity->subdev.ctrl_handler);
+ 	if (ret < 0) {
+-		mutex_lock(&entity->lock);
++		spin_lock_irqsave(&entity->lock, flags);
+ 		entity->streaming = false;
+-		mutex_unlock(&entity->lock);
++		spin_unlock_irqrestore(&entity->lock, flags);
+ 	}
+ 
+ 	return ret;
+@@ -218,6 +220,7 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 		     unsigned int num_pads)
+ {
+ 	unsigned int i;
++	int res;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(vsp2_routes); ++i) {
+ 		if (vsp2_routes[i].type == entity->type &&
+@@ -230,7 +233,7 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 	if (i == ARRAY_SIZE(vsp2_routes))
+ 		return -EINVAL;
+ 
+-	mutex_init(&entity->lock);
++	spin_lock_init(&entity->lock);
+ 
+ 	entity->vsp2 = vsp2;
+ 	entity->source_pad = num_pads - 1;
+@@ -247,15 +250,15 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 	if (entity->pads == NULL)
+ 		return -ENOMEM;
+ 
+-	/* Initialize pads. */
+ 	for (i = 0; i < num_pads - 1; ++i)
+ 		entity->pads[i].flags = MEDIA_PAD_FL_SINK;
+ 
+ 	entity->pads[num_pads - 1].flags = MEDIA_PAD_FL_SOURCE;
+ 
+ 	/* Initialize the media entity. */
+-	return media_entity_init(&entity->subdev.entity, num_pads,
+-				 entity->pads, 0);
++	res = media_entity_pads_init(&entity->subdev.entity, num_pads,
++				     entity->pads);
++	return res;
+ }
+ 
+ void vsp2_entity_destroy(struct vsp2_entity *entity)
+@@ -264,7 +267,8 @@ void vsp2_entity_destroy(struct vsp2_entity *entity)
+ 		vsp2_video_cleanup(entity->video);
+ 	if (entity->subdev.ctrl_handler)
+ 		v4l2_ctrl_handler_free(entity->subdev.ctrl_handler);
++
++	media_device_unregister_entity(&entity->subdev.entity);
+ 	media_entity_cleanup(&entity->subdev.entity);
+ 
+-	mutex_destroy(&entity->lock);
+ }
+diff --git a/drv/vsp2_entity.h b/drv/vsp2_entity.h
+index 71f7c52..709523f 100755
+--- a/drv/vsp2_entity.h
++++ b/drv/vsp2_entity.h
+@@ -63,7 +63,7 @@
+ #define __VSP2_ENTITY_H__
+ 
+ #include <linux/list.h>
+-#include <linux/mutex.h>
++#include <linux/spinlock.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -117,7 +117,7 @@ struct vsp2_entity {
+ 
+ 	struct vsp2_video *video;
+ 
+-	struct mutex lock;		/* Protects the streaming field */
++	spinlock_t lock;		/* Protects the streaming field */
+ 	bool streaming;
+ };
+ 
+diff --git a/drv/vsp2_regs.h b/drv/vsp2_regs.h
+index f530d2e..5b6a1ba 100755
+--- a/drv/vsp2_regs.h
++++ b/drv/vsp2_regs.h
+@@ -353,7 +353,7 @@
+ #define VI6_DPR_HST_ROUTE		0x2044
+ #define VI6_DPR_HSI_ROUTE		0x2048
+ #define VI6_DPR_BRU_ROUTE		0x204c
+-#define VI6_DPR_ROUTE_FXA_MASK		(0xff << 8)
++#define VI6_DPR_ROUTE_FXA_MASK		(0xff << 16)
+ #define VI6_DPR_ROUTE_FXA_SHIFT		16
+ #define VI6_DPR_ROUTE_FP_MASK		(0xff << 8)
+ #define VI6_DPR_ROUTE_FP_SHIFT		8
+diff --git a/drv/vsp2_rpf.c b/drv/vsp2_rpf.c
+index 2875a6b..b076793 100755
+--- a/drv/vsp2_rpf.c
++++ b/drv/vsp2_rpf.c
+@@ -364,6 +364,7 @@ struct vsp2_rwpf *vsp2_rpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 	subdev = &rpf->entity.subdev;
+ 	v4l2_subdev_init(subdev, &rpf_ops);
+ 
++	subdev->entity.function = MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER;
+ 	subdev->entity.ops = &vsp2_media_ops;
+ 	subdev->internal_ops = &vsp2_subdev_internal_ops;
+ 	snprintf(subdev->name, sizeof(subdev->name), "%s rpf.%u",
+@@ -400,15 +401,6 @@ struct vsp2_rwpf *vsp2_rpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 
+ 	rpf->entity.video = video;
+ 
+-	/* Connect the video device to the RPF. */
+-	ret = media_entity_create_link(&rpf->video.video.entity, 0,
+-				       &rpf->entity.subdev.entity,
+-				       RWPF_PAD_SINK,
+-				       MEDIA_LNK_FL_ENABLED |
+-				       MEDIA_LNK_FL_IMMUTABLE);
+-	if (ret < 0)
+-		goto error;
+-
+ 	return rpf;
+ 
+ error:
+diff --git a/drv/vsp2_uds.c b/drv/vsp2_uds.c
+index 8370d04..b490af2 100755
+--- a/drv/vsp2_uds.c
++++ b/drv/vsp2_uds.c
+@@ -365,6 +365,7 @@ struct vsp2_uds *vsp2_uds_create(struct vsp2_device *vsp2, unsigned int index)
+ 	v4l2_subdev_init(subdev, &uds_ops);
+ 
+ 	subdev->entity.ops = &vsp2_media_ops;
++	subdev->entity.function = MEDIA_ENT_F_PROC_VIDEO_SCALER;
+ 	subdev->internal_ops = &vsp2_subdev_internal_ops;
+ 	snprintf(subdev->name, sizeof(subdev->name), "%s uds.%u",
+ 		 dev_name(vsp2->dev), index);
+diff --git a/drv/vsp2_video.c b/drv/vsp2_video.c
+index 9a35210..68dac2a 100755
+--- a/drv/vsp2_video.c
++++ b/drv/vsp2_video.c
+@@ -72,7 +72,7 @@
+ #include <media/v4l2-fh.h>
+ #include <media/v4l2-ioctl.h>
+ #include <media/v4l2-subdev.h>
+-#include <media/videobuf2-core.h>
++#include <media/videobuf2-v4l2.h>
+ #include <media/videobuf2-dma-contig.h>
+ 
+ #include "vsp2.h"
+@@ -83,6 +83,10 @@
+ #include "vsp2_video.h"
+ #include "vsp2_vspm.h"
+ 
++/* RGB formats for memory output */
++#define V4L2_PIX_FMT_RGB32S  v4l2_fourcc('R', 'G', '4', 'S') /* 32 RGB-8-8-8-8 */
++
++
+ #define VSP2_VIDEO_DEF_FORMAT		V4L2_PIX_FMT_YUYV
+ #define VSP2_VIDEO_DEF_WIDTH		1024
+ #define VSP2_VIDEO_DEF_HEIGHT		768
+@@ -212,8 +216,7 @@ vsp2_video_remote_subdev(struct media_pad *local, u32 *pad)
+ 	struct media_pad *remote;
+ 
+ 	remote = media_entity_remote_pad(local);
+-	if (remote == NULL ||
+-	    media_entity_type(remote->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
++	if (!remote || !is_media_entity_v4l2_subdev(remote->entity))
+ 		return NULL;
+ 
+ 	if (pad)
+@@ -293,7 +296,7 @@ static int __vsp2_video_try_format(struct vsp2_video *video,
+ 	pix->height = clamp(height, VSP2_VIDEO_MIN_HEIGHT,
+ 			    VSP2_VIDEO_MAX_HEIGHT);
+ 
+-	for (i = 0; i < max(info->planes, 2U); ++i) {
++	for (i = 0; i < min(info->planes, 2U); ++i) {
+ 		unsigned int hsub = i > 0 ? info->hsub : 1;
+ 		unsigned int vsub = i > 0 ? info->vsub : 1;
+ 		unsigned int bpl;
+@@ -357,10 +360,16 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 					 struct vsp2_rwpf *input,
+ 					 struct vsp2_rwpf *output)
+ {
++	struct media_entity_enum ent_enum;
+ 	struct vsp2_entity *entity;
+ 	unsigned int entities = 0;
+ 	struct media_pad *pad;
+ 	bool bru_found = false;
++	int ret;
++
++	ret = media_entity_enum_init(&ent_enum, &input->entity.vsp2->media_dev);
++	if (ret < 0)
++		return ret;
+ 
+ 	pad = media_entity_remote_pad(&input->entity.pads[RWPF_PAD_SOURCE]);
+ 
+@@ -368,15 +377,19 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 	input->location.top = 0;
+ 
+ 	while (1) {
+-		if (pad == NULL)
+-			return -EPIPE;
++		if (pad == NULL) {
++			ret = -EPIPE;
++			goto out;
++		}
+ 
+ 		/* We've reached a video node, that shouldn't have happened. */
+-		if (media_entity_type(pad->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
+-			return -EPIPE;
++		if (!is_media_entity_v4l2_subdev(pad->entity)) {
++			ret = -EPIPE;
++			goto out;
++		}
+ 
+-		entity =
+-		    to_vsp2_entity(media_entity_to_v4l2_subdev(pad->entity));
++		entity = to_vsp2_entity(
++			media_entity_to_v4l2_subdev(pad->entity));
+ 
+ 		/* A BRU is present in the pipeline, store the compose rectangle
+ 		 * location in the input RPF for use when configuring the RPF.
+@@ -399,15 +412,18 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 			break;
+ 
+ 		/* Ensure the branch has no loop. */
+-		if (entities & (1 << entity->subdev.entity.id))
+-			return -EPIPE;
+-
+-		entities |= 1 << entity->subdev.entity.id;
++		if (media_entity_enum_test_and_set(&ent_enum,
++						   &entity->subdev.entity)) {
++			ret = -EPIPE;
++			goto out;
++		}
+ 
+ 		/* UDS can't be chained. */
+ 		if (entity->type == VSP2_ENTITY_UDS) {
+-			if (pipe->uds)
+-				return -EPIPE;
++			if (pipe->uds) {
++				ret = -EPIPE;
++				goto out;
++			}
+ 
+ 			pipe->uds = entity;
+ 			pipe->uds_input = bru_found ? pipe->bru
+@@ -425,9 +441,10 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 
+ 	/* The last entity must be the output WPF. */
+ 	if (entity != &output->entity)
+-		return -EPIPE;
+-
+-	return 0;
++		ret = -EPIPE;
++out:
++	media_entity_enum_cleanup(&ent_enum);
++	return ret;
+ }
+ 
+ static void __vsp2_pipeline_cleanup(struct vsp2_pipeline *pipe)
+@@ -455,11 +472,14 @@ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ {
+ 	struct media_entity_graph graph;
+ 	struct media_entity *entity = &video->video.entity;
+-	struct media_device *mdev = entity->parent;
++	struct media_device *mdev = entity->graph_obj.mdev;
+ 	unsigned int i;
+ 	int ret;
+ 
+-	mutex_lock(&mdev->graph_mutex);
++	/* Walk the graph to locate the entities and video nodes. */
++	ret = media_entity_graph_walk_init(&graph, mdev);
++	if (ret)
++		return ret;
+ 
+ 	/* Walk the graph to locate the entities and video nodes. */
+ 	media_entity_graph_walk_start(&graph, entity);
+@@ -469,7 +489,7 @@ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ 		struct vsp2_rwpf *rwpf;
+ 		struct vsp2_entity *e;
+ 
+-		if (media_entity_type(entity) != MEDIA_ENT_T_V4L2_SUBDEV) {
++		if (!is_media_entity_v4l2_subdev(entity)) {
+ 			pipe->num_video++;
+ 			continue;
+ 		}
+@@ -491,7 +511,7 @@ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ 		}
+ 	}
+ 
+-	mutex_unlock(&mdev->graph_mutex);
++	media_entity_graph_walk_cleanup(&graph);
+ 
+ 	/* We need one output and at least one input. */
+ 	if (pipe->num_inputs == 0 || !pipe->output) {
+@@ -557,6 +577,19 @@ static void vsp2_pipeline_run(struct vsp2_pipeline *pipe)
+ 
+ 	pipe->state = VSP2_PIPELINE_RUNNING;
+ 	pipe->buffers_ready = 0;
++
++}
++
++static bool vsp2_pipeline_stopped(struct vsp2_pipeline *pipe)
++{
++	unsigned long flags;
++	bool stopped;
++
++	spin_lock_irqsave(&pipe->irqlock, flags);
++	stopped = pipe->state == VSP2_PIPELINE_STOPPED,
++	spin_unlock_irqrestore(&pipe->irqlock, flags);
++
++	return stopped;
+ }
+ 
+ static int vsp2_pipeline_stop(struct vsp2_pipeline *pipe)
+@@ -570,7 +603,7 @@ static int vsp2_pipeline_stop(struct vsp2_pipeline *pipe)
+ 		pipe->state = VSP2_PIPELINE_STOPPING;
+ 	spin_unlock_irqrestore(&pipe->irqlock, flags);
+ 
+-	ret = wait_event_timeout(pipe->wq, pipe->state == VSP2_PIPELINE_STOPPED,
++	ret = wait_event_timeout(pipe->wq, vsp2_pipeline_stopped(pipe),
+ 				 msecs_to_jiffies(500));
+ 	ret = ret == 0 ? -ETIMEDOUT : 0;
+ 
+@@ -632,7 +665,8 @@ vsp2_video_complete_buffer(struct vsp2_video *video)
+ 	spin_unlock_irqrestore(&video->irqlock, flags);
+ 
+ 	done->buf.sequence = video->sequence++;
+-	v4l2_get_timestamp(&done->buf.timestamp);
++	done->buf.vb2_buf.timestamp = ktime_get_ns();
++
+ 	for (i = 0; i < done->buf.vb2_buf.num_planes; ++i)
+ 		vb2_set_plane_payload(&done->buf.vb2_buf, i, done->length[i]);
+ 	vb2_buffer_done(&done->buf.vb2_buf, VB2_BUF_STATE_DONE);
+@@ -706,7 +740,7 @@ int vsp2_pipeline_suspend(struct vsp2_pipeline *pipe)
+ 		pipe->state = VSP2_PIPELINE_STOPPING;
+ 	spin_unlock_irqrestore(&pipe->irqlock, flags);
+ 
+-	ret = wait_event_timeout(pipe->wq, pipe->state == VSP2_PIPELINE_STOPPED,
++	ret = wait_event_timeout(pipe->wq, vsp2_pipeline_stopped(pipe),
+ 				 msecs_to_jiffies(500));
+ 	ret = ret == 0 ? -ETIMEDOUT : 0;
+ 
+@@ -740,7 +774,7 @@ void vsp2_pipeline_propagate_alpha(struct vsp2_pipeline *pipe,
+ 	pad = media_entity_remote_pad(&input->pads[RWPF_PAD_SOURCE]);
+ 
+ 	while (pad) {
+-		if (media_entity_type(pad->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
++		if (!is_media_entity_v4l2_subdev(pad->entity))
+ 			break;
+ 
+ 		entity =
+@@ -767,30 +801,16 @@ void vsp2_pipeline_propagate_alpha(struct vsp2_pipeline *pipe,
+ /* -----------------------------------------------------------------------------
+  * videobuf2 Queue Operations
+  */
+-
+ static int
+-vsp2_video_queue_setup(struct vb2_queue *vq, const void *parg,
++vsp2_video_queue_setup(struct vb2_queue *vq,
+ 		     unsigned int *nbuffers, unsigned int *nplanes,
+ 		     unsigned int sizes[], void *alloc_ctxs[])
+ {
+-	const struct v4l2_format *fmt = parg;
+ 	struct vsp2_video *video = vb2_get_drv_priv(vq);
+ 	const struct v4l2_pix_format_mplane *format;
+-	struct v4l2_pix_format_mplane pix_mp;
+ 	unsigned int i;
+ 
+-	if (fmt) {
+-		/* Make sure the format is valid and adjust the sizeimage field
+-		 * if needed.
+-		 */
+-		if (!vsp2_video_format_adjust(video, &fmt->fmt.pix_mp, &pix_mp))
+-			return -EINVAL;
+-
+-		format = &pix_mp;
+-	} else {
+-		format = &video->format;
+-	}
+-
++	format = &video->format;
+ 	*nplanes = format->num_planes;
+ 
+ 	for (i = 0; i < format->num_planes; ++i) {
+@@ -1108,6 +1128,7 @@ vsp2_video_streamon(struct file *file, void *fh, enum v4l2_buf_type type)
+ {
+ 	struct v4l2_fh *vfh = file->private_data;
+ 	struct vsp2_video *video = to_vsp2_video(vfh->vdev);
++	struct media_device *mdev = video->video.entity.graph_obj.mdev;
+ 	struct vsp2_pipeline *pipe;
+ 	int ret;
+ 
+@@ -1125,18 +1146,27 @@ vsp2_video_streamon(struct file *file, void *fh, enum v4l2_buf_type type)
+ 	pipe = video->video.entity.pipe
+ 	     ? to_vsp2_pipeline(&video->video.entity) : &video->pipe;
+ 
+-	ret = media_entity_pipeline_start(&video->video.entity, &pipe->pipe);
+-	if (ret < 0)
++	mutex_lock(&mdev->graph_mutex);
++
++	ret = __media_entity_pipeline_start(&video->video.entity, &pipe->pipe);
++	if (ret < 0){
++		mutex_unlock(&mdev->graph_mutex);
+ 		return ret;
++	}
++
++	ret = vsp2_pipeline_init(pipe, video);
++	if (ret < 0){
++		mutex_unlock(&mdev->graph_mutex);
++		goto err_stop;
++	}
++
++	mutex_unlock(&mdev->graph_mutex);
+ 
+ 	/* Verify that the configured format matches the output of the connected
+ 	 * subdev.
+ 	 */
+-	ret = vsp2_video_verify_format(video);
+-	if (ret < 0)
+-		goto err_stop;
+ 
+-	ret = vsp2_pipeline_init(pipe, video);
++	ret = vsp2_video_verify_format(video);
+ 	if (ret < 0)
+ 		goto err_stop;
+ 
+@@ -1243,6 +1273,7 @@ int vsp2_video_init(struct vsp2_video *video, struct vsp2_entity *rwpf)
+ 	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+ 		direction = "output";
+ 		video->pad.flags = MEDIA_PAD_FL_SINK;
++		video->video.vfl_dir = VFL_DIR_RX;
+ 		break;
+ 
+ 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+@@ -1268,7 +1299,8 @@ int vsp2_video_init(struct vsp2_video *video, struct vsp2_entity *rwpf)
+ 	video->pipe.state = VSP2_PIPELINE_STOPPED;
+ 
+ 	/* Initialize the media entity... */
+-	ret = media_entity_init(&video->video.entity, 1, &video->pad, 0);
++	ret = media_entity_pads_init(&video->video.entity, 1, &video->pad);
++
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drv/vsp2_wpf.c b/drv/vsp2_wpf.c
+index 664f60a..8d42ef3 100755
+--- a/drv/vsp2_wpf.c
++++ b/drv/vsp2_wpf.c
+@@ -265,6 +265,7 @@ struct vsp2_rwpf *vsp2_wpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 
+ 	subdev->entity.ops = &vsp2_media_ops;
+ 	subdev->internal_ops = &vsp2_subdev_internal_ops;
++	subdev->entity.function = MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER;
+ 	snprintf(subdev->name, sizeof(subdev->name), "%s wpf.%u",
+ 		 dev_name(vsp2->dev), index);
+ 	v4l2_set_subdevdata(subdev, wpf);
+@@ -301,14 +302,6 @@ struct vsp2_rwpf *vsp2_wpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 
+ 	/* Connect the video device to the WPF. All connections are immutable.
+ 	 */
+-	flags = MEDIA_LNK_FL_ENABLED;
+-	flags |= MEDIA_LNK_FL_IMMUTABLE;
+-
+-	ret = media_entity_create_link(&wpf->entity.subdev.entity,
+-				       RWPF_PAD_SOURCE,
+-				       &wpf->video.video.entity, 0, flags);
+-	if (ret < 0)
+-		goto error;
+ 
+ 	wpf->entity.sink = &wpf->video.video.entity;
+ 
+-- 
+2.7.4
+

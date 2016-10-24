@@ -1,0 +1,11 @@
+--- a/vspm/drv/Makefile	2016-02-01 17:59:00.000000000 +0300
++++ b/vspm/drv/Makefile	2016-04-07 15:30:25.609094000 +0300
+@@ -21,6 +21,8 @@
+ #EXTRA_CFLAGS += -DUSE_VSPD1
+ endif
+ 
++EXTRA_CFLAGS += -Wno-error=date-time 
++
+ all:
+ 	$(CP) ../include/vspm_public.h $(KERNELSRC)/include
+ 	$(CP) ../include/vsp_drv.h $(KERNELSRC)/include
