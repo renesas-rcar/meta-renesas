@@ -1141,7 +1141,7 @@ index 0000000..87f0f4a
 +&can0 {
 +	pinctrl-0 = <&can0_pins>;
 +	pinctrl-names = "default";
-+	status = "disabled";
++	status = "okay";
 +
 +	renesas,can-clock-select = <0x0>;
 +	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable - NC */
@@ -1152,7 +1152,7 @@ index 0000000..87f0f4a
 +&canfd {
 +	pinctrl-0 = <&canfd0_pins>;
 +	pinctrl-names = "default";
-+	status = "okay";
++	status = "disabled";
 +
 +	renesas,can-clock-select = <0x0>;
 +	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable - NC */
