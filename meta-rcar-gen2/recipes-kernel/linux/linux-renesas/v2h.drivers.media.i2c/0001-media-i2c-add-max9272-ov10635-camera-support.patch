@@ -9,11 +9,11 @@ Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
  drivers/media/i2c/Kconfig                          |    7 +
  drivers/media/i2c/Makefile                         |    1 +
- drivers/media/i2c/max9272_ov10635.c                |  643 +++++++++++
+ drivers/media/i2c/max9272_ov10635.c                |  616 +++++++++++
  drivers/media/i2c/max9272_ov10635.h                |  249 +++++
  drivers/media/i2c/max9272_ov10635_setup.c          |  179 +++
  .../media/i2c/max9272_ov10635_wizard_1280x800.h    | 1140 ++++++++++++++++++++
- 6 files changed, 2219 insertions(+)
+ 6 files changed, 2192 insertions(+)
  create mode 100644 drivers/media/i2c/max9272_ov10635.c
  create mode 100644 drivers/media/i2c/max9272_ov10635.h
  create mode 100644 drivers/media/i2c/max9272_ov10635_setup.c
@@ -51,10 +51,10 @@ index a39ee28..73d3456 100644
  obj-$(CONFIG_VIDEO_MT9T001) += mt9t001.o
 diff --git a/drivers/media/i2c/max9272_ov10635.c b/drivers/media/i2c/max9272_ov10635.c
 new file mode 100644
-index 0000000..ac1661d
+index 0000000..d48d622
 --- /dev/null
 +++ b/drivers/media/i2c/max9272_ov10635.c
-@@ -0,0 +1,643 @@
+@@ -0,0 +1,616 @@
 +/*
 + * MAXIM max9272-max9271 with OmniVision ov10635 sensor camera driver
 + *
@@ -131,34 +131,6 @@ index 0000000..ac1661d
 +
 +static int ov10635_s_stream(struct v4l2_subdev *sd, int enable)
 +{
-+	struct i2c_client *client = v4l2_get_subdevdata(sd);
-+	int cam_idx = 0;//client->addr - 0x31;
-+	int tmp_addr;
-+
-+	/* switch to GMSL conf_link to access sensor registers */
-+	tmp_addr = client->addr;
-+	client->addr = maxim_map[0][cam_idx];	/* MAX9272-CAMx */
-+	maxim_reg8_write(client, 0x04, 0x43);	/* enable reverse_control/conf_link */
-+	mdelay(5);				/* wait 5ms for conf_link to establish */
-+	client->addr = maxim_map[1][cam_idx];	/* MAX9271-CAMx */
-+	maxim_reg8_write(client, 0x04, 0x43);	/* enable reverse_control/conf_link */
-+	mdelay(5);				/* wait 5ms for conf_link to establish */
-+	client->addr = tmp_addr;
-+
-+	maxim_reg16_write(client, 0x0100, enable); /* stream on/off */
-+
-+	if (enable) {
-+		/* switch to GMSL serial_link for streaming video */
-+		tmp_addr = client->addr;
-+		client->addr = maxim_map[1][cam_idx];	/* MAX9271-CAMx */
-+		maxim_reg8_write(client, 0x04, 0x83);	/* enable reverse_control/serial_link */
-+		client->addr = maxim_map[0][cam_idx];	/* MAX9272-CAMx */
-+		/* Disable reverse_control is required for cascaded chips scheme */
-+		maxim_reg8_write(client, 0x04, 0x83);	/* enable reverse_control/serial_link */
-+		mdelay(5);				/* wait 2ms after changing reverse_control */
-+		client->addr = tmp_addr;
-+	}
-+
 +	return 0;
 +}
 +
@@ -559,14 +531,15 @@ index 0000000..ac1661d
 +	if (ret)
 +		return ret;
 +
-+#if 0
 +	/* switch to GMSL serial_link for streaming video */
 +	tmp_addr = client->addr;
 +	client->addr = maxim_map[1][cam_idx];	/* MAX9271-CAMx */
-+	maxim_reg8_write(client, 0x04, 0xc3);	/* enable reverse_control/serial_link */
++	maxim_reg8_write(client, 0x04, 0x83);	/* enable reverse_control/serial_link */
++	mdelay(2);				/* wait 2ms after changing reverse_control */
++	client->addr = maxim_map[0][cam_idx];	/* MAX9272-CAMx */
++	maxim_reg8_write(client, 0x04, 0x83);	/* enable reverse_control/serial_link */
 +	mdelay(2);				/* wait 2ms after changing reverse_control */
 +	client->addr = tmp_addr;
-+#endif
 +
 +	return 0;
 +}
