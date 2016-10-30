@@ -1,0 +1,29 @@
+From 91ceeae4a9a04db124ccd2a34a2efc884af52db8 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sun, 30 Oct 2016 10:44:52 +0300
+Subject: [PATCH] media: soc_camera: rcar_vin: fix gen2 scaling
+
+Horizontal scaling must not be applied for 0 value.
+This fixes gen2 scaling for old rcar_vin.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/media/platform/soc_camera/rcar_vin.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 19bc400..bf362ef 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -1604,7 +1604,7 @@ static int rcar_vin_set_rect(struct soc_camera_device *icd)
+ 			value = (4096 * cam_subrect->width) / cam->out_width;
+ 
+ 		/* Horizontal upscaling is up to double size */
+-		if (value < 2048)
++		if (value > 0 && value < 2048)
+ 			value = 2048;
+ 
+ 		dev_dbg(icd->parent, "XS Value: %x\n", value);
+-- 
+1.9.1
+
