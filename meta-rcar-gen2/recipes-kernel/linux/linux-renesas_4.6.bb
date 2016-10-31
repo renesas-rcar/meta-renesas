@@ -122,6 +122,7 @@ SRC_URI_append = " \
     file://v2h.mach-shmobile/0019-ARM-shmobile-apmu-Add-debug-resource-reset-for-secondary-CPU-boot.patch \
     file://v2h.mach-shmobile/0020-ARM-shmobile-apmu-Allow-booting-secondary-CPU-cores-in-debug-mode.patch \
     file://v2h.mach-shmobile/0021-ARM-shmobile-r8a7791-Allow-booting-secondary-CPU-cores-in-debug-mode.patch \
+    file://v2h.mach-shmobile/0022-ARM-shmobile-export-dma-buffer.patch \
     file://v2h.arm/0001-ARM-debug-ll-Add-support-for-r8a7992.patch \
     file://v2h.drivers.pinctrl/0000-pinctrl-sh-pfc-Fix-overly-long-lines.patch \
     file://v2h.drivers.pinctrl/0001-pinctrl-sh-pfc-Add-R8A7792-PFC-support.patch \

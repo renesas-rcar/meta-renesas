@@ -1,0 +1,35 @@
+From d830ec4dd198e93ea288c189db23d92fc6a8bc29 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Thu, 20 Oct 2016 16:14:14 +0300
+Subject: [PATCH] ARM: shmobile: export dma buffer
+
+---
+ arch/arm/mach-shmobile/setup-rcar-gen2.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-rcar-gen2.c b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+index afb9fdc..8850d8f 100644
+--- a/arch/arm/mach-shmobile/setup-rcar-gen2.c
++++ b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+@@ -185,6 +185,9 @@ static int __init rcar_gen2_scan_mem(unsigned long node, const char *uname,
+ 	return 0;
+ }
+ 
++static struct cma *rcar_gen2_dma_contiguous;
++EXPORT_SYMBOL(rcar_gen2_dma_contiguous);
++
+ void __init rcar_gen2_reserve(void)
+ {
+ 	struct memory_reserve_config mrc;
+@@ -196,8 +199,6 @@ void __init rcar_gen2_reserve(void)
+ 	of_scan_flat_dt(rcar_gen2_scan_mem, &mrc);
+ #ifdef CONFIG_DMA_CMA
+ 	if (mrc.size && memblock_is_region_memory(mrc.base, mrc.size)) {
+-		static struct cma *rcar_gen2_dma_contiguous;
+-
+ 		dma_contiguous_reserve_area(mrc.size, mrc.base, 0,
+ 					    &rcar_gen2_dma_contiguous, true);
+ 	}
+-- 
+2.7.4
+
