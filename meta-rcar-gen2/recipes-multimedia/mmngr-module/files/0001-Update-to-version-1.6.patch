@@ -1,0 +1,48 @@
+From fb0ba337e47c7d6387944fdef04b2f8914d4ff49 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.renesas.com>
+Date: Fri, 19 Aug 2016 03:32:40 +0700
+Subject: [PATCH] Update to version 1.6
+
+---
+ if/Makefile   | 6 +++---
+ if/mmngr_if.c | 4 ++++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/if/Makefile b/if/Makefile
+index 9a22895..82dd043 100755
+--- a/if/Makefile
++++ b/if/Makefile
+@@ -2,12 +2,12 @@ all:
+ 	$(CP) ../include/mmngr_user_public.h $(BUILDDIR)/include
+ 	$(CP) ../include/mmngr_user_private.h $(BUILDDIR)/include
+ 	${CC} -fPIC -c mmngr_if.c -I$(PWD)/../include -Wall
+-	${CC} -shared -Wl,-soname=libmmngr.so.1 -o libmmngr.so.1.5.0 mmngr_if.o
+-	ln -s ./libmmngr.so.1.5.0 libmmngr.so.1
++	${CC} -shared -Wl,-soname=libmmngr.so.1 -o libmmngr.so.1.6.0 mmngr_if.o
++	ln -s ./libmmngr.so.1.6.0 libmmngr.so.1
+ 	ln -s ./libmmngr.so.1 libmmngr.so
+ clean:
+ 	rm -f mmngr_if.o
+-	rm -f libmmngr.so.1.5.0
++	rm -f libmmngr.so.1.6.0
+ 	rm -f libmmngr.so.1
+ 	rm -f libmmngr.so
+ 
+diff --git a/if/mmngr_if.c b/if/mmngr_if.c
+index 400641e..71a6dfb 100755
+--- a/if/mmngr_if.c
++++ b/if/mmngr_if.c
+@@ -344,6 +344,10 @@ int mmngr_share_in_user(MMNGR_ID *pid,
+ 
+ 	return R_MM_OK;
+ exit:
++	if (fd != -1) {
++		if (close(fd))
++			perror("MMI close");
++	}
+ 	return ret;
+ }
+ 
+-- 
+1.9.1
+
