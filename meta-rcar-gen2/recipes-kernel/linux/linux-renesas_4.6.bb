@@ -149,6 +149,7 @@ SRC_URI_append = " \
     file://v2h.drivers.mmc/0005-Revert-mmc-sh_mobile_sdhi-Add-UHS-I-mode-support-for.patch \
     file://v2h.drivers.media.i2c/0001-media-i2c-add-max9272-ov10635-camera-support.patch \
     file://v2h.drivers.media.vsp1/0001-media-vsp1-add-R8A7792-VSP1V-support.patch \
+    file://v2h.drivers.media.vsp1/0002-media-vsp1-fix-description-of-v2h-devices.patch \
     file://v2h.drivers.media.soc_camera/0001-media-soc_camera-rcar_vin-fix-gen2-scaling.patch \
     file://v2h.drivers.media.imr/0001-V4l-imr-add-compatibles.patch \
     file://v2h.drivers.media.imr/0002-renesas-IMR-driver-new-API.patch \
