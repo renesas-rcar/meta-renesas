@@ -16,6 +16,8 @@ WAYLAND_GLES_PKGS = "libgbm-dev"
 GLES_PKGS = " \
     kernel-module-gles \
     gles-user-module \
+    libegl \
+    libegl-dev \
 "
 
 # Gstreamer Packages
