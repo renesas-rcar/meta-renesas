@@ -77,6 +77,8 @@ SRC_URI_append = " \
     file://v2h.dtsi/0031-ARM-dts-r8a7792-add-MSIOF-support.patch \
     file://v2h.dtsi/0032-ARM-dts-r8a7792-add-VSPM-support.patch \
     file://v2h.dtsi/0033-ARM-dts-r8a7792-add-SGX-support.patch \
+    file://v2h.dtsi/0034-ARM-dts-r8a7792-add-IMR-LX3-and-IMR-LSX3-clocks.patch \
+    file://v2h.dtsi/0035-ARM-dts-r8a7792-add-IMR-support.patch \
     file://v2h.dts/0001-ARM-dts-blanche-initial-device-tree.patch \
     file://v2h.dts/0002-ARM-dts-blanche-add-Ethernet-support.patch \
     file://v2h.dts/0003-ARM-dts-blanche-add-SCIF0-3-pins.patch \
@@ -148,4 +150,7 @@ SRC_URI_append = " \
     file://v2h.drivers.media.i2c/0001-media-i2c-add-max9272-ov10635-camera-support.patch \
     file://v2h.drivers.media.vsp1/0001-media-vsp1-add-R8A7792-VSP1V-support.patch \
     file://v2h.drivers.media.soc_camera/0001-media-soc_camera-rcar_vin-fix-gen2-scaling.patch \
+    file://v2h.drivers.media.imr/0001-V4l-imr-add-compatibles.patch \
+    file://v2h.drivers.media.imr/0002-renesas-IMR-driver-new-API.patch \
+    file://v2h.drivers.media.imr/0003-media-imr-temp-solution-on-V2H.patch \
 "

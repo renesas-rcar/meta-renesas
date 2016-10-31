@@ -1,0 +1,1798 @@
+From 0f9e1c1329d087d5f3d9a90f239b7210cd3f34e8 Mon Sep 17 00:00:00 2001
+From: Konstantin Kozhevnikov <Konstantin.Kozhevnikov@cogentembedded.com>
+Date: Wed, 5 Oct 2016 09:20:34 -0700
+Subject: [PATCH] renesas: IMR driver new API
+
+---
+ drivers/media/platform/rcar_imr.c | 1296 +++++++++++++++++++------------------
+ include/uapi/linux/rcar-imr.h     |   98 +++
+ 2 files changed, 759 insertions(+), 635 deletions(-)
+ create mode 100644 include/uapi/linux/rcar-imr.h
+
+diff --git a/drivers/media/platform/rcar_imr.c b/drivers/media/platform/rcar_imr.c
+index c587e88..3355f50 100644
+--- a/drivers/media/platform/rcar_imr.c
++++ b/drivers/media/platform/rcar_imr.c
+@@ -14,8 +14,9 @@
+ #include <linux/platform_device.h>
+ #include <linux/clk.h>
+ #include <linux/interrupt.h>
++#include <linux/pm_runtime.h>
+ #include <linux/delay.h>
+-#include <linux/videodev2.h>
++#include <linux/rcar-imr.h>
+ #include <media/v4l2-device.h>
+ #include <media/v4l2-ctrls.h>
+ #include <media/v4l2-fh.h>
+@@ -31,19 +32,44 @@
+ 
+ static int debug;
+ module_param(debug, int, 0644);
+-MODULE_PARM_DESC(debug, "Debug level (0-3)");
++MODULE_PARM_DESC(debug, "Debug level (0-4)");
+ 
+ /*******************************************************************************
+  * Local types definitions
+  ******************************************************************************/
+ 
++/* ...configuration data */
++struct imr_cfg {
++	/* ...display-list main program data */
++	void                   *dl_vaddr;
++	dma_addr_t              dl_dma_addr;
++	u32                     dl_size;
++	u32                     dl_start_offset;
++
++	/* ...pointers to the source/destination planes */
++	u32                    *src_pa_ptr[2];
++	u32                    *dst_pa_ptr[2];
++
++	/* ...subpixel destination coordinates space */
++	int                     dst_subpixel;
++
++	/* ...reference counter */
++	u32                     refcount;
++
++	/* ...identifier (for debug output) */
++	u32                     id;
++};
++
+ struct imr_buffer {
+-	/* ...anything besides that? */
++	/* ...standard M2M buffer descriptor */
+ 	struct v4l2_m2m_buffer      buf;
++
++	/* ...pointer to mesh configuration for processing */
++	struct imr_cfg             *cfg;
+ };
+ 
+ struct imr_q_data {
+-	/* ...anything we need to include into queue? */
++	/* ...latched pixel format */
+ 	struct v4l2_pix_format      fmt;
+ 
+ 	/* ...current format flags */
+@@ -70,32 +96,10 @@ struct imr_device {
+ 	struct v4l2_m2m_dev    *m2m_dev;
+ 	void                   *alloc_ctx;
+ 
+-	/* ...should we include media-dev? likely, yes - tbd */
+-
+ 	/* ...do we need that counter really? framework counts fh structures for us - tbd */
+ 	int                     refcount;
+-};
+-
+-/* ...configuration data */
+-struct imr_cfg {
+-	/* ...display-list main program data */
+-	void                   *dl_vaddr;
+-	dma_addr_t              dl_dma_addr;
+-	u32                     dl_size;
+-	u32                     dl_start_offset;
+-
+-	/* ...pointers to the source/destination planes */
+-	u32                    *src_pa_ptr[2];
+-	u32                    *dst_pa_ptr[2];
+-
+-	/* ...cropping parameters (in pixels) */
+-	u16                     crop[4];
+ 
+-	/* ...subpixel destination coordinates space */
+-	int                     dst_subpixel;
+-
+-	/* ...update flag */
+-	int                     apply;
++	/* ...should we include media-dev? likely, no - tbd */
+ };
+ 
+ /* ...per file-handle context */
+@@ -104,16 +108,18 @@ struct imr_ctx {
+ 	struct imr_device      *imr;
+ 	struct v4l2_m2m_ctx    *m2m_ctx;
+ 	struct imr_q_data       queue[2];
+-	int                     aborting;
+ 
+-	/* ...job configuration data (active and shadow copies) */
+-	struct imr_cfg          cfg[2];
++	/* ...current job configuration */
++	struct imr_cfg         *cfg;
+ 
+-	/* ...index of active configuration */
+-	int                     active_cfg;
++	/* ...frame sequence counter */
++	u32                     sequence;
+ 
+ 	/* ...cropping parameters (in pixels) */
+ 	u16                     crop[4];
++
++	/* ...number of active configurations (debugging) */
++	u32                     cfg_num;
+ };
+ 
+ /*******************************************************************************
+@@ -216,6 +222,13 @@ static inline struct imr_ctx * fh_to_ctx(struct v4l2_fh *fh)
+ 	return container_of(fh, struct imr_ctx, fh);
+ }
+ 
++static inline struct imr_buffer * to_imr_buffer(struct vb2_v4l2_buffer *vbuf)
++{
++	struct v4l2_m2m_buffer *b = container_of(vbuf, struct v4l2_m2m_buffer, vb);
++
++	return container_of(b, struct imr_buffer, buf);
++}
++
+ /*******************************************************************************
+  * Local constants definition
+  ******************************************************************************/
+@@ -291,356 +304,198 @@ static const struct imr_format_info imr_lx4_formats[] = {
+ 	},
+ };
+ 
+-/* ...test for a format supported */
+-static int __imr_try_fmt(struct imr_ctx *ctx, struct v4l2_format *f)
++/* ...mesh configuration constructor */
++static struct imr_cfg * imr_cfg_create(struct imr_ctx *ctx, u32 dl_size, u32 dl_start)
+ {
+-	struct v4l2_pix_format *pix = &f->fmt.pix;
+-	u32     fourcc = pix->pixelformat;
+-	int     i;
+-
+-	/* ...both output and capture interface have the same set of supported formats */
+-	for (i = 0; i < ARRAY_SIZE(imr_lx4_formats); i++) {
+-		if (fourcc == imr_lx4_formats[i].fourcc) {
+-			/* ...fix-up format specification as needed */
+-			pix->field = V4L2_FIELD_NONE;
+-
+-			v4l2_dbg(1, debug, &ctx->imr->v4l2_dev, "format request: '%c%c%c%c', %d*%d\n",
+-				(fourcc >> 0) & 0xff, (fourcc >> 8) & 0xff,
+-				(fourcc >> 16) & 0xff, (fourcc >> 24) & 0xff,
+-				pix->width, pix->height);
+-
+-			/* ...verify source/destination image dimensions */
+-			if (V4L2_TYPE_IS_OUTPUT(f->type))
+-				v4l_bound_align_image(&pix->width, 128, 2048, 7, &pix->height, 16, 2048, 1, 0);
+-			else
+-				v4l_bound_align_image(&pix->width, 64, 2048, 6, &pix->height, 16, 2048, 1, 0);
++	struct imr_device  *imr = ctx->imr;
++	struct imr_cfg     *cfg;
+ 
+-			return i;
+-		}
++	/* ...allocate configuration descriptor */
++	cfg = kmalloc(sizeof(*cfg), GFP_KERNEL);
++	if (!cfg) {
++		v4l2_err(&imr->v4l2_dev, "failed to allocate configuration descriptor\n");
++		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+-	v4l2_err(&ctx->imr->v4l2_dev, "unsupported format request: '%c%c%c%c'\n",
+-		(fourcc >> 0) & 0xff, (fourcc >> 8) & 0xff,
+-		(fourcc >> 16) & 0xff, (fourcc >> 24) & 0xff);
+-
+-	return -EINVAL;
+-}
+-
+-/*******************************************************************************
+- * V4L2 I/O controls
+- ******************************************************************************/
+-
+-/* ...capabilities query */
+-static int imr_querycap(struct file *file, void *priv, struct v4l2_capability *cap)
+-{
+-	strlcpy(cap->driver, DRV_NAME, sizeof(cap->driver));
+-	strlcpy(cap->card, DRV_NAME, sizeof(cap->card));
+-	strlcpy(cap->bus_info, DRV_NAME, sizeof(cap->bus_info));
++	/* ...allocate contiguous memory for a display list */
++	cfg->dl_vaddr = dma_alloc_writecombine(imr->dev, dl_size, &cfg->dl_dma_addr, GFP_KERNEL);
++	if (!cfg->dl_vaddr) {
++		v4l2_err(&imr->v4l2_dev, "failed to allocate %u bytes for a DL\n", dl_size);
++		kfree(cfg);
++		return ERR_PTR(-ENOMEM);
++	}
+ 
+-	cap->device_caps = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_OUTPUT |
+-		V4L2_CAP_VIDEO_M2M | V4L2_CAP_STREAMING;
++	cfg->dl_size = dl_size;
++	cfg->dl_start_offset = dl_start;
++	cfg->refcount = 1;
++	cfg->id = ctx->sequence;
+ 
+-	cap->capabilities = cap->device_caps | V4L2_CAP_DEVICE_CAPS;
++	/* ...for debugging purposes, advance number of active configurations */
++	ctx->cfg_num++;
+ 
+-	return 0;
++	return cfg;
+ }
+ 
+-/* ...enumerate supported formats */
+-static int imr_enum_fmt(struct file *file, void *priv, struct v4l2_fmtdesc *f)
++/* ...add reference to the current configuration */
++static inline struct imr_cfg * imr_cfg_ref(struct imr_ctx *ctx)
+ {
+-	struct imr_ctx *ctx = fh_to_ctx(priv);
++	struct imr_cfg  *cfg = ctx->cfg;
+ 
+-	/* ...report the "input" formats */
+-	return -EINVAL;
++	BUG_ON(!cfg);
++	cfg->refcount++;
++	return cfg;
+ }
+ 
+-/* ...retrieve current queue format; operation is locked ? */
+-static int imr_g_fmt(struct file *file, void *priv, struct v4l2_format *f)
++/* ...mesh configuration destructor */
++static void imr_cfg_unref(struct imr_ctx *ctx, struct imr_cfg *cfg)
+ {
+-	struct imr_ctx     *ctx = fh_to_ctx(priv);
+-	struct vb2_queue   *vq;
+-	struct imr_q_data  *q_data;
++	struct imr_device *imr = ctx->imr;
+ 
+-	vq = v4l2_m2m_get_vq(ctx->m2m_ctx, f->type);
+-	if (!vq)
+-		return -EINVAL;
++	/* ...no atomicity is required as operation is locked with device mutex */
++	if (!cfg || --cfg->refcount)
++		return;
+ 
+-	q_data = &ctx->queue[V4L2_TYPE_IS_OUTPUT(f->type) ? 0 : 1];
++	/* ...release memory allocated for a display list */
++	if (cfg->dl_vaddr)
++		dma_free_writecombine(imr->dev, cfg->dl_size, cfg->dl_vaddr, cfg->dl_dma_addr);
+ 
+-	/* ...processing is locked? tbd */
+-	f->fmt.pix = q_data->fmt;
++	/* ...destroy the configuration structure */
++	kfree(cfg);
+ 
+-	return 0;
++	/* ...decrement number of active configurations (debugging) */
++	WARN_ON(!ctx->cfg_num--);
+ }
+ 
+-/* ...test particular format; operation is not locked */
+-static int imr_try_fmt(struct file *file, void *priv, struct v4l2_format *f)
+-{
+-	struct imr_ctx     *ctx = fh_to_ctx(priv);
+-	struct vb2_queue   *vq;
+ 
+-	/* ...make sure we have a queue of particular type */
+-	vq = v4l2_m2m_get_vq(ctx->m2m_ctx, f->type);
+-	if (!vq)
+-		return -EINVAL;
+ 
+-	/* ...test if format is supported (adjust as appropriate) */
+-	return (__imr_try_fmt(ctx, f) >= 0 ? 0 : -EINVAL);
+-}
++/*******************************************************************************
++ * Context processing queue
++ ******************************************************************************/
+ 
+-/* ...apply queue format; operation is locked ? */
+-static int imr_s_fmt(struct file *file, void *priv, struct v4l2_format *f)
++static int imr_queue_setup(struct vb2_queue *vq,
++			unsigned int *nbuffers, unsigned int *nplanes,
++			unsigned int sizes[], void *alloc_ctxs[])
+ {
+-	struct imr_ctx     *ctx = fh_to_ctx(priv);
+-	struct vb2_queue   *vq;
+-	struct imr_q_data  *q_data;
+-	int                 i;
+-
+-	vq = v4l2_m2m_get_vq(ctx->m2m_ctx, f->type);
+-	if (!vq)
+-		return -EINVAL;
+-
+-	/* ...check if queue is busy */
+-	if (vb2_is_busy(vq))
+-		return -EBUSY;
++	struct imr_ctx     *ctx = vb2_get_drv_priv(vq);
++	struct imr_q_data  *q_data = &ctx->queue[V4L2_TYPE_IS_OUTPUT(vq->type) ? 0 : 1];
++	int                 w = q_data->fmt.width;
++	int                 h = q_data->fmt.height;
+ 
+-	/* ...test if format is supported (adjust as appropriate) */
+-	i = __imr_try_fmt(ctx, f);
+-	if (i < 0)
+-		return -EINVAL;
++	/* ...we use only single-plane formats */
++	*nplanes = 1;
+ 
+-	/* ...format is supported; save current format in a queue-specific data */
+-	q_data = &ctx->queue[V4L2_TYPE_IS_OUTPUT(f->type) ? 0 : 1];
++	/* ...specify plane size */
++	switch (q_data->fmt.pixelformat) {
++	case V4L2_PIX_FMT_UYVY:
++	case V4L2_PIX_FMT_YUYV:
++	case V4L2_PIX_FMT_VYUY:
++	case V4L2_PIX_FMT_YVYU:
++	case V4L2_PIX_FMT_NV16:
++	case V4L2_PIX_FMT_Y10:
++	case V4L2_PIX_FMT_Y16:
++		sizes[0] = w * h * 2;
++		break;
+ 
+-	/* ...processing is locked? tbd */
+-	q_data->fmt = f->fmt.pix;
+-	q_data->flags = imr_lx4_formats[i].flags;
++	case V4L2_PIX_FMT_UV8:
++	case V4L2_PIX_FMT_GREY:
++		sizes[0] = w * h;
++		break;
+ 
+-	/* ...set default crop factors */
+-	if (V4L2_TYPE_IS_OUTPUT(f->type) == 0) {
+-		ctx->crop[0] = 0;
+-		ctx->crop[1] = f->fmt.pix.width - 1;
+-		ctx->crop[2] = 0;
+-		ctx->crop[3] = f->fmt.pix.height - 1;
++	default:
++		return -EINVAL;
+ 	}
+ 
++	/* ...specify default allocator */
++	alloc_ctxs[0] = ctx->imr->alloc_ctx;
++
+ 	return 0;
+ }
+ 
+-static int imr_reqbufs(struct file *file, void *priv, struct v4l2_requestbuffers *reqbufs)
++static int imr_buf_prepare(struct vb2_buffer *vb)
+ {
+-	struct imr_ctx *ctx = fh_to_ctx(priv);
++	struct imr_ctx *ctx = vb2_get_drv_priv(vb->vb2_queue);
+ 
+-	return v4l2_m2m_reqbufs(file, ctx->m2m_ctx, reqbufs);
++	/* ...unclear yet if we want to prepare a buffer somehow (cache invalidation? - tbd) */
++	return 0;
+ }
+ 
+-static int imr_querybuf(struct file *file, void *priv, struct v4l2_buffer *buf)
++static void imr_buf_queue(struct vb2_buffer *vb)
+ {
+-	struct imr_ctx *ctx = fh_to_ctx(priv);
++	struct vb2_queue       *q = vb->vb2_queue;
++	struct imr_ctx         *ctx = vb2_get_drv_priv(q);
++	struct vb2_v4l2_buffer *vbuf = to_vb2_v4l2_buffer(vb);
+ 
+-	return v4l2_m2m_querybuf(file, ctx->m2m_ctx, buf);
+-}
++	WARN_ON_ONCE(!mutex_is_locked(&ctx->imr->mutex));
+ 
+-static int imr_qbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
+-{
+-	struct imr_ctx *ctx = fh_to_ctx(priv);
++	v4l2_dbg(3, debug, &ctx->imr->v4l2_dev, "%sput buffer <0x%08llx> submitted\n",
++			q->is_output ? "in" : "out",
++			vb2_dma_contig_plane_dma_addr(vb, 0));
+ 
+-	return v4l2_m2m_qbuf(file, ctx->m2m_ctx, buf);
++	/* ...for input buffer, put current configuration pointer (add reference) */
++	if (q->is_output)
++		to_imr_buffer(vbuf)->cfg = imr_cfg_ref(ctx);
++
++	v4l2_m2m_buf_queue(ctx->m2m_ctx, vbuf);
+ }
+ 
+-static int imr_dqbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
++static void imr_buf_finish(struct vb2_buffer *vb)
+ {
+-	struct imr_ctx *ctx = fh_to_ctx(priv);
++	struct vb2_queue       *q = vb->vb2_queue;
++	struct imr_ctx         *ctx = vb2_get_drv_priv(q);
++	struct vb2_v4l2_buffer *vbuf = to_vb2_v4l2_buffer(vb);
+ 
+-	return v4l2_m2m_dqbuf(file, ctx->m2m_ctx, buf);
+-}
++	WARN_ON(!mutex_is_locked(&ctx->imr->mutex));
+ 
+-static int imr_expbuf(struct file *file, void *priv, struct v4l2_exportbuffer *eb)
+-{
+-	struct imr_ctx *ctx = fh_to_ctx(priv);
++	/* ...any special processing of completed buffer? - tbd */
++	v4l2_dbg(3, debug, &ctx->imr->v4l2_dev, "%sput buffer <0x%08llx> done\n",
++			q->is_output ? "in" : "out",
++			vb2_dma_contig_plane_dma_addr(vb, 0));
+ 
+-	return v4l2_m2m_expbuf(file, ctx->m2m_ctx, eb);
++	/* ...unref configuration pointer as needed */
++	if (q->is_output)
++		imr_cfg_unref(ctx, to_imr_buffer(vbuf)->cfg);
+ }
+ 
+-static int imr_streamon(struct file *file, void *priv, enum v4l2_buf_type type)
++static int imr_start_streaming(struct vb2_queue *vq, unsigned int count)
+ {
+-	struct imr_ctx         *ctx = fh_to_ctx(priv);
++	struct imr_ctx     *ctx = vb2_get_drv_priv(vq);
++	int                 ret;
+ 
+-	/* ...verify the configuration is complete */
+-	if (!V4L2_TYPE_IS_OUTPUT(type) && !ctx->cfg[0].dl_vaddr && !ctx->cfg[1].dl_vaddr) {
+-		v4l2_err(&ctx->imr->v4l2_dev, "stream configuration is not complete\n");
+-		return -EINVAL;
++	ret = 0;//pm_runtime_get_sync(ctx->imr->dev);
++	if (ret < 0) {
++		v4l2_err(&ctx->imr->v4l2_dev, "failed to start %s streaming: %d\n",
++			(V4L2_TYPE_IS_OUTPUT(vq->type) ? "output" : "capture"), ret);
++		return ret;
++	} else {
++		v4l2_dbg(1, debug, &ctx->imr->v4l2_dev, "%s streaming started\n",
++			(V4L2_TYPE_IS_OUTPUT(vq->type) ? "output" : "capture"));
++		return 0;
+ 	}
+-
+-	/* ...context is prepared for a streaming */
+-	return v4l2_m2m_streamon(file, ctx->m2m_ctx, type);
+ }
+ 
+-static int imr_streamoff(struct file *file, void *priv, enum v4l2_buf_type type)
++static void imr_stop_streaming(struct vb2_queue *vq)
+ {
+-	struct imr_ctx  *ctx = fh_to_ctx(priv);
++	struct imr_ctx             *ctx = vb2_get_drv_priv(vq);
++	struct vb2_v4l2_buffer     *vb;
++	unsigned long               flags;
+ 
+-	return v4l2_m2m_streamoff(file, ctx->m2m_ctx, type);
+-}
++	spin_lock_irqsave(&ctx->imr->lock, flags);
+ 
+-static int imr_g_crop(struct file *file, void *priv, struct v4l2_crop *cr)
+-{
+-	struct imr_ctx  *ctx = fh_to_ctx(priv);
++	/* ...purge all buffers from a queue */
++	if (V4L2_TYPE_IS_OUTPUT(vq->type)) {
++		while ((vb = v4l2_m2m_src_buf_remove(ctx->m2m_ctx)) != NULL)
++			v4l2_m2m_buf_done(vb, VB2_BUF_STATE_ERROR);
++	} else {
++		while ((vb = v4l2_m2m_dst_buf_remove(ctx->m2m_ctx)) != NULL)
++			v4l2_m2m_buf_done(vb, VB2_BUF_STATE_ERROR);
++	}
+ 
+-	/* ...we do not count here for a subpixel resolution - tbd */
+-	cr->c.left = ctx->crop[0];
+-	cr->c.top = ctx->crop[2];
+-	cr->c.width = ctx->crop[1] - ctx->crop[0];
+-	cr->c.height = ctx->crop[3] - ctx->crop[2];
++	spin_unlock_irqrestore(&ctx->imr->lock, flags);
+ 
+-	return 0;
+-}
+-
+-static int imr_s_crop(struct file *file, void *priv, const struct v4l2_crop *cr)
+-{
+-	struct imr_ctx *ctx = fh_to_ctx(priv);
+-	int             x0 = cr->c.left;
+-	int             y0 = cr->c.top;
+-	int             x1 = x0 + cr->c.width;
+-	int             y1 = y0 + cr->c.height;
+-
+-	if (x0 < 0 || x1 >= 2048 || y0 < 0 || y1 >= 2048) {
+-		v4l2_err(&ctx->imr->v4l2_dev, "invalid cropping: %d/%d/%d/%d\n", x0, x1, y0, y1);
+-		return -EINVAL;
+-	}
+-
+-	/* ...subpixel resolution of output buffer is not counted here - tbd */
+-	ctx->crop[0] = x0;
+-	ctx->crop[1] = x1;
+-	ctx->crop[2] = y0;
+-	ctx->crop[3] = y1;
+-
+-	return 0;
+-}
+-
+-static const struct v4l2_ioctl_ops imr_ioctl_ops = {
+-	.vidioc_querycap            = imr_querycap,
+-
+-	.vidioc_enum_fmt_vid_cap    = imr_enum_fmt,
+-	.vidioc_enum_fmt_vid_out    = imr_enum_fmt,
+-	.vidioc_g_fmt_vid_cap       = imr_g_fmt,
+-	.vidioc_g_fmt_vid_out       = imr_g_fmt,
+-	.vidioc_try_fmt_vid_cap     = imr_try_fmt,
+-	.vidioc_try_fmt_vid_out     = imr_try_fmt,
+-	.vidioc_s_fmt_vid_cap       = imr_s_fmt,
+-	.vidioc_s_fmt_vid_out       = imr_s_fmt,
+-
+-	.vidioc_reqbufs             = imr_reqbufs,
+-	.vidioc_querybuf            = imr_querybuf,
+-	.vidioc_qbuf                = imr_qbuf,
+-	.vidioc_dqbuf               = imr_dqbuf,
+-	.vidioc_expbuf              = imr_expbuf,
+-	.vidioc_streamon            = imr_streamon,
+-	.vidioc_streamoff           = imr_streamoff,
+-
+-	.vidioc_g_crop              = imr_g_crop,
+-	.vidioc_s_crop              = imr_s_crop,
+-};
+-
+-/*******************************************************************************
+- * V4L2 control interface
+- ******************************************************************************/
+-
+-/* ...I guess we don't need that thing */
+-static inline int imr_controls_create(struct imr_ctx *ctx)
+-{
+-	return -EINVAL;
+-}
+-
+-/*******************************************************************************
+- * Context processing queue
+- ******************************************************************************/
+-
+-static int imr_queue_setup(struct vb2_queue *vq,
+-			unsigned int *nbuffers, unsigned int *nplanes,
+-			unsigned int sizes[], void *alloc_ctxs[])
+-{
+-	struct imr_ctx     *ctx = vb2_get_drv_priv(vq);
+-	struct imr_q_data  *q_data = &ctx->queue[V4L2_TYPE_IS_OUTPUT(vq->type) ? 0 : 1];
+-	int                 w = q_data->fmt.width;
+-	int                 h = q_data->fmt.height;
+-
+-	/* ...we use only single-plane formats */
+-	*nplanes = 1;
+-
+-	/* ...specify plane size */
+-	switch (q_data->fmt.pixelformat) {
+-	case V4L2_PIX_FMT_UYVY:
+-	case V4L2_PIX_FMT_YUYV:
+-	case V4L2_PIX_FMT_VYUY:
+-	case V4L2_PIX_FMT_YVYU:
+-	case V4L2_PIX_FMT_NV16:
+-	case V4L2_PIX_FMT_Y10:
+-	case V4L2_PIX_FMT_Y16:
+-		sizes[0] = w * h * 2;
+-		break;
+-
+-	case V4L2_PIX_FMT_UV8:
+-	case V4L2_PIX_FMT_GREY:
+-		sizes[0] = w * h;
+-		break;
+-
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	/* ...specify default allocator */
+-	alloc_ctxs[0] = ctx->imr->alloc_ctx;
+-
+-	return 0;
+-}
+-
+-static int imr_buf_prepare(struct vb2_buffer *vb)
+-{
+-	struct imr_ctx *ctx = vb2_get_drv_priv(vb->vb2_queue);
+-
+-	/* ...unclear yet if we want to prepare a buffer somehow (cache invalidation? - tbd) */
+-	return 0;
+-}
+-
+-static void imr_buf_queue(struct vb2_buffer *vb)
+-{
+-	struct imr_ctx     *ctx = vb2_get_drv_priv(vb->vb2_queue);
+-	struct vb2_v4l2_buffer *vbuf = to_vb2_v4l2_buffer(vb);
+-
+-	/* ...should we take a lock? - tbd */
+-	v4l2_m2m_buf_queue(ctx->m2m_ctx, vbuf);
+-}
+-
+-static void imr_buf_finish(struct vb2_buffer *vb)
+-{
+-	struct imr_ctx     *ctx = vb2_get_drv_priv(vb->vb2_queue);
+-
+-	/* ...any special processing of completed buffer? - tbd */
+-}
+-
+-static void imr_stop_streaming(struct vb2_queue *vq)
+-{
+-	struct imr_ctx             *ctx = vb2_get_drv_priv(vq);
+-	struct vb2_v4l2_buffer     *vb;
+-	unsigned long               flags;
+-
+-	/* ...protect against interrupt handler? - tbd */
+-	spin_lock_irqsave(&ctx->imr->lock, flags);
+-
+-	/* ...purge all buffers from a queue - tbd - shall be available from framework */
+-	for (;;) {
+-		if (V4L2_TYPE_IS_OUTPUT(vq->type))
+-			vb = v4l2_m2m_src_buf_remove(ctx->m2m_ctx);
+-		else
+-			vb = v4l2_m2m_dst_buf_remove(ctx->m2m_ctx);
+-		if (vb == NULL)
+-			break;
+-
+-		v4l2_m2m_buf_done(vb, VB2_BUF_STATE_ERROR);
+-	}
+-
+-	spin_unlock_irqrestore(&ctx->imr->lock, flags);
++	v4l2_dbg(1, debug, &ctx->imr->v4l2_dev, "%s streaming stopped\n",
++		(V4L2_TYPE_IS_OUTPUT(vq->type) ? "output" : "capture"));
++
++	//pm_runtime_put(ctx->imr->dev);
+ }
+ 
+ /* ...buffer queue operations */
+@@ -649,6 +504,7 @@ static struct vb2_ops imr_qops = {
+ 	.buf_prepare        = imr_buf_prepare,
+ 	.buf_queue          = imr_buf_queue,
+ 	.buf_finish         = imr_buf_finish,
++	.start_streaming    = imr_start_streaming,
+ 	.stop_streaming     = imr_stop_streaming,
+ 	.wait_prepare       = vb2_ops_wait_prepare,
+ 	.wait_finish        = vb2_ops_wait_finish,
+@@ -668,7 +524,7 @@ static int imr_queue_init(void *priv, struct vb2_queue *src_vq,
+ 	src_vq->buf_struct_size = sizeof(struct imr_buffer);
+ 	src_vq->ops = &imr_qops;
+ 	src_vq->mem_ops = &vb2_dma_contig_memops;
+-	src_vq->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
++	src_vq->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
+ 	src_vq->lock = &ctx->imr->mutex;
+ 	ret = vb2_queue_init(src_vq);
+ 	if (ret)
+@@ -678,10 +534,10 @@ static int imr_queue_init(void *priv, struct vb2_queue *src_vq,
+ 	dst_vq->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+ 	dst_vq->io_modes = VB2_MMAP | VB2_USERPTR | VB2_DMABUF;
+ 	dst_vq->drv_priv = ctx;
+-	dst_vq->buf_struct_size = sizeof(struct imr_buffer);
++	dst_vq->buf_struct_size = sizeof(struct v4l2_m2m_buffer);
+ 	dst_vq->ops = &imr_qops;
+ 	dst_vq->mem_ops = &vb2_dma_contig_memops;
+-	dst_vq->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
++	dst_vq->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
+ 	dst_vq->lock = &ctx->imr->mutex;
+ 	ret = vb2_queue_init(dst_vq);
+ 	if (ret)
+@@ -691,115 +547,6 @@ static int imr_queue_init(void *priv, struct vb2_queue *src_vq,
+ }
+ 
+ /*******************************************************************************
+- * Generic device file operations
+- ******************************************************************************/
+-
+-static int imr_open(struct file *file)
+-{
+-	struct imr_device      *imr = video_drvdata(file);
+-	struct video_device    *vfd = video_devdata(file);
+-	struct imr_ctx         *ctx;
+-	int                     ret;
+-
+-	/* ...allocate processing context associated with given instance */
+-	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
+-	if (!ctx)
+-		return -ENOMEM;
+-
+-	/* ...initialize per-file-handle structure */
+-	v4l2_fh_init(&ctx->fh, vfd);
+-	//ctx->fh.ctrl_handler = &ctx->ctrl_handler;
+-	file->private_data = &ctx->fh;
+-	v4l2_fh_add(&ctx->fh);
+-
+-	/* ...set default source / destination formats - need that? */
+-	ctx->imr = imr;
+-	ctx->queue[0].fmt.pixelformat = 0;
+-	ctx->queue[1].fmt.pixelformat = 0;
+-
+-	/* ...set default cropping parameters */
+-	ctx->crop[1] = ctx->crop[3] = 0x3FF;
+-
+-	/* ...initialize M2M processing context */
+-	ctx->m2m_ctx = v4l2_m2m_ctx_init(imr->m2m_dev, ctx, imr_queue_init);
+-	if (IS_ERR(ctx->m2m_ctx)) {
+-		ret = PTR_ERR(ctx->m2m_ctx);
+-		goto v4l_prepare_rollback;
+-	}
+-
+-#if 0
+-	/* ...initialize controls and stuff */
+-	ret = imr_controls_create(ctx);
+-	if (ret < 0)
+-		goto v4l_prepare_rollback;
+-#endif
+-
+-	/* ...lock access to global device data */
+-	if (mutex_lock_interruptible(&imr->mutex)) {
+-		ret = -ERESTARTSYS;
+-		goto v4l_prepare_rollback;
+-	}
+-
+-	/* ...bring-up device as needed */
+-	if (imr->refcount == 0) {
+-		ret = clk_prepare_enable(imr->clock);
+-		if (ret < 0)
+-			goto device_prepare_rollback;
+-	}
+-
+-	imr->refcount++;
+-
+-	mutex_unlock(&imr->mutex);
+-
+-	v4l2_dbg(1, debug, &imr->v4l2_dev, "IMR device opened (refcount=%u)\n", imr->refcount);
+-
+-	return 0;
+-
+-device_prepare_rollback:
+-	/* ...unlock global device data */
+-	mutex_unlock(&imr->mutex);
+-
+-v4l_prepare_rollback:
+-	/* ...destroy context */
+-	v4l2_fh_del(&ctx->fh);
+-	v4l2_fh_exit(&ctx->fh);
+-	kfree(ctx);
+-
+-	return ret;
+-}
+-
+-static int imr_release(struct file *file)
+-{
+-	struct imr_device  *imr = video_drvdata(file);
+-	struct imr_ctx     *ctx = fh_to_ctx(file->private_data);
+-
+-	/* ...destroy M2M device processing context */
+-	v4l2_m2m_ctx_release(ctx->m2m_ctx);
+-
+-	//v4l2_ctrl_handler_free(&ctx->ctrl_handler);
+-	v4l2_fh_del(&ctx->fh);
+-	v4l2_fh_exit(&ctx->fh);
+-
+-	/* ...destroy display-list if defined */
+-	if (ctx->cfg[0].dl_vaddr)
+-		dma_free_writecombine(imr->dev, ctx->cfg[0].dl_size, ctx->cfg[0].dl_vaddr, ctx->cfg[0].dl_dma_addr);
+-	if (ctx->cfg[1].dl_vaddr)
+-		dma_free_writecombine(imr->dev, ctx->cfg[1].dl_size, ctx->cfg[1].dl_vaddr, ctx->cfg[1].dl_dma_addr);
+-
+-	kfree(ctx);
+-
+-	/* ...disable hardware operation */
+-	mutex_lock(&imr->mutex);
+-	if (--imr->refcount == 0)
+-		clk_disable_unprepare(imr->clock);
+-	mutex_unlock(&imr->mutex);
+-
+-	v4l2_dbg(1, debug, &imr->v4l2_dev, "closed device instance\n");
+-
+-	return 0;
+-}
+-
+-/*******************************************************************************
+  * Display list commands
+  ******************************************************************************/
+ 
+@@ -816,74 +563,6 @@ static int imr_release(struct file *file)
+ #define IMR_OP_GOSUB                    ((0x8C << 24))
+ #define IMR_OP_RET                      ((0x8D << 24))
+ 
+-/* ...mapping specification descriptor */
+-struct imr_map_desc {
+-	/* ...mapping types */
+-	u32             type;
+-
+-	/* ...total size of the mesh structure */
+-	u32             size;
+-
+-}   __attribute__((packed));
+-
+-/* ...regular mesh specification */
+-#define IMR_MAP_MESH                    (1 << 0)
+-
+-/* ...auto-generated source coordinates */
+-#define IMR_MAP_AUTODG                  (1 << 1)
+-
+-/* ...auto-generated destination coordinates */
+-#define IMR_MAP_AUTOSG                  (1 << 2)
+-
+-/* ...luminance correction flag */
+-#define IMR_MAP_LUCE                    (1 << 3)
+-
+-/* ...chromacity correction flag */
+-#define IMR_MAP_CLCE                    (1 << 4)
+-
+-/* ...vertex clockwise-mode order */
+-#define IMR_MAP_TCM                     (1 << 5)
+-
+-/* ...source coordinate decimal point position bit index */
+-#define __IMR_MAP_UVDPOR_SHIFT          8
+-#define __IMR_MAP_UVDPOR(v)             (((v) >> __IMR_MAP_UVDPOR_SHIFT) & 0x7)
+-#define IMR_MAP_UVDPOR(n)               ((n & 0x7) << __IMR_MAP_UVDPOR_SHIFT)
+-
+-/* ...destination coordinate sub-pixel mode */
+-#define IMR_MAP_DDP                     (1 << 11)
+-
+-/* ...luminance correction offset decimal point position */
+-#define __IMR_MAP_YLDPO_SHIFT           12
+-#define __IMR_MAP_YLDPO(v)              (((v) >> __IMR_MAP_YLDPO_SHIFT) & 0x7)
+-#define IMR_MAP_YLDPO(n)                ((n & 0x7) << __IMR_MAP_YLDPO_SHIFT)
+-
+-/* ...chromacity (U) correction offset decimal point position */
+-#define __IMR_MAP_UBDPO_SHIFT           15
+-#define __IMR_MAP_UBDPO(v)              (((v) >> __IMR_MAP_UBDPO_SHIFT) & 0x7)
+-#define IMR_MAP_UBDPO(n)                ((n & 0x7) << __IMR_MAP_UBDPO_SHIFT)
+-
+-/* ...chromacity (V) correction offset decimal point position */
+-#define __IMR_MAP_VRDPO_SHIFT           18
+-#define __IMR_MAP_VRDPO(v)              (((v) >> __IMR_MAP_VRDPO_SHIFT) & 0x7)
+-#define IMR_MAP_VRDPO(n)                ((n & 0x7) << __IMR_MAP_VRDPO_SHIFT)
+-
+-/* ...regular mesh specification */
+-struct imr_mesh {
+-	/* ...rectangular mesh size */
+-	u16             rows, columns;
+-
+-	/* ...mesh parameters */
+-	u16             x0, y0, dx, dy;
+-
+-}   __attribute__((packed));
+-
+-/* ...VBO descriptor */
+-struct imr_vbo {
+-	/* ...number of triangles */
+-	u16             num;
+-
+-}   __attribute__((packed));
+-
+ /*******************************************************************************
+  * Operation type decoding helpers
+  ******************************************************************************/
+@@ -948,7 +627,7 @@ static inline u32 * imr_tri_set_type_a(u32 *dl, void *map, struct imr_mesh *mesh
+ }
+ 
+ /*******************************************************************************
+- * Type B mapping (automatically generated source or destination coordiantes)
++ * Type B mapping (automatically generated source or destination coordinates)
+  ******************************************************************************/
+ 
+ /* ...calculate length of a type "b" mapping */
+@@ -1173,38 +852,25 @@ static inline void imr_dl_program_setup(struct imr_ctx *ctx, struct imr_cfg *cfg
+  * Mapping specification processing
+  ******************************************************************************/
+ 
+-/* ...set mapping data */
+-static int imr_ioctl_map(struct imr_ctx *ctx, unsigned int cmd, unsigned long arg)
++/* ...set mapping data (function called with video device lock held) */
++static int imr_ioctl_map(struct imr_ctx *ctx, struct imr_map_desc *desc)
+ {
+ 	struct imr_device      *imr = ctx->imr;
+-	struct imr_map_desc     desc;
+ 	struct imr_mesh        *mesh;
+ 	struct imr_vbo         *vbo;
+ 	struct imr_cfg         *cfg;
+ 	void                   *buf, *map;
++	u32                     type;
+ 	u32                     length, item_size;
+ 	u32                     tri_length;
+ 	void                   *dl_vaddr;
+ 	u32                     dl_size;
+ 	u32                     dl_start_offset;
+ 	dma_addr_t              dl_dma_addr;
+-	unsigned long           flags;
+ 	int                     ret;
+ 
+-	/* ...we support only writing command */
+-	if (_IOC_DIR(cmd) != _IOC_WRITE)
+-		return -EINVAL;
+-
+-	/* ...verify command size is valid (contains a descriptor) */
+-	if (_IOC_SIZE(cmd) != sizeof(desc))
+-		return -EINVAL;
+-
+-	/* ...copy command descriptor */
+-	if (copy_from_user(&desc, (void __user *)arg, sizeof(desc)))
+-		return -EFAULT;
+-
+ 	/* ...read remainder of data into temporary buffer */
+-	length = desc.size;
++	length = desc->size;
+ 	buf = kmalloc(length, GFP_KERNEL);
+ 	if (!buf) {
+ 		v4l2_err(&imr->v4l2_dev, "failed to allocate %u bytes for mapping reading\n", length);
+@@ -1212,17 +878,19 @@ static int imr_ioctl_map(struct imr_ctx *ctx, unsigned int cmd, unsigned long ar
+ 	}
+ 
+ 	/* ...copy mesh data */
+-	if (copy_from_user(buf, (void __user *)(arg + sizeof(desc)), length)) {
++	if (copy_from_user(buf, (void __user *)desc->data, length)) {
+ 		v4l2_err(&imr->v4l2_dev, "failed to read %u bytes of mapping specification\n", length);
+ 		ret = -EFAULT;
+ 		goto out;
+ 	}
+ 
++	type = desc->type;
++
+ 	/* ...mesh item size calculation */
+-	item_size = (desc.type & IMR_MAP_LUCE ? 4 : 0) + (desc.type & IMR_MAP_CLCE ? 4 : 0);
++	item_size = (type & IMR_MAP_LUCE ? 4 : 0) + (type & IMR_MAP_CLCE ? 4 : 0);
+ 
+ 	/* ...calculate the length of a display list */
+-	if (desc.type & IMR_MAP_MESH) {
++	if (type & IMR_MAP_MESH) {
+ 		/* ...assure we have proper mesh descriptor */
+ 		if (length < sizeof(struct imr_mesh)) {
+ 			v4l2_err(&imr->v4l2_dev, "invalid mesh specification size: %u\n", length);
+@@ -1234,7 +902,7 @@ static int imr_ioctl_map(struct imr_ctx *ctx, unsigned int cmd, unsigned long ar
+ 		length -= sizeof(struct imr_mesh);
+ 		map = buf + sizeof(struct imr_mesh);
+ 
+-		if (desc.type & (IMR_MAP_AUTODG | IMR_MAP_AUTOSG)) {
++		if (type & (IMR_MAP_AUTODG | IMR_MAP_AUTOSG)) {
+ 			/* ...source / destination vertex size is 4 bytes */
+ 			item_size += 4;
+ 
+@@ -1270,8 +938,8 @@ static int imr_ioctl_map(struct imr_ctx *ctx, unsigned int cmd, unsigned long ar
+ 		}
+ 
+ 		/* ...make sure there is no automatic-generation flags */
+-		if (desc.type & (IMR_MAP_AUTODG | IMR_MAP_AUTOSG)) {
+-			v4l2_err(&imr->v4l2_dev, "invalid auto-dg/sg flags: 0x%x\n", desc.type);
++		if (type & (IMR_MAP_AUTODG | IMR_MAP_AUTOSG)) {
++			v4l2_err(&imr->v4l2_dev, "invalid auto-dg/sg flags: 0x%x\n", type);
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
+@@ -1305,19 +973,27 @@ static int imr_ioctl_map(struct imr_ctx *ctx, unsigned int cmd, unsigned long ar
+ 		goto out;
+ 	}
+ 
+-	/* ...for now we use a single display list, with TRI subroutine prepending MAIN */
++	/* ...we use a single display list, with TRI subroutine prepending MAIN */
+ 	dl_size += dl_start_offset;
+ 
+-	/* ...allocate DMA-mappable memory for a display list */
+-	dl_vaddr = dma_alloc_writecombine(imr->dev, dl_size, &dl_dma_addr, GFP_KERNEL);
+-	if (!dl_vaddr) {
+-		v4l2_err(&imr->v4l2_dev, "failed to allocate %u bytes for a display list\n", dl_size);
++	/* ...unref current configuration (will not be used by subsequent jobs) */
++	imr_cfg_unref(ctx, ctx->cfg);
++
++	/* ...create new configuration */
++	ctx->cfg = cfg = imr_cfg_create(ctx, dl_size, dl_start_offset);
++	if (IS_ERR(cfg)) {
++		ret = PTR_ERR(cfg);
++		v4l2_err(&imr->v4l2_dev, "failed to create configuration: %d\n", ret);
+ 		goto out;
+ 	}
+ 
++	/* ...get pointer to the new display list */
++	dl_vaddr = cfg->dl_vaddr;
++	dl_dma_addr = cfg->dl_dma_addr;
++
+ 	/* ...prepare a triangles drawing subroutine */
+-	if (desc.type & IMR_MAP_MESH) {
+-		if (desc.type & (IMR_MAP_AUTOSG | IMR_MAP_AUTODG)) {
++	if (type & IMR_MAP_MESH) {
++		if (type & (IMR_MAP_AUTOSG | IMR_MAP_AUTODG)) {
+ 			imr_tri_set_type_b(dl_vaddr, map, mesh, item_size);
+ 		} else {
+ 			imr_tri_set_type_a(dl_vaddr, map, mesh, item_size);
+@@ -1326,45 +1002,20 @@ static int imr_ioctl_map(struct imr_ctx *ctx, unsigned int cmd, unsigned long ar
+ 		imr_tri_set_type_c(dl_vaddr, map, vbo, item_size);
+ 	}
+ 
+-	/* ...input is verified; lock context data */
+-	spin_lock_irqsave(&imr->lock, flags);
+-
+-	/* ...configuration index will be toggled later when job is submitted */
+-	cfg = &ctx->cfg[ctx->active_cfg ^ 1];
+-
+-    /* ...clear "apply" bit to prevent switch to the bank we are going to configure */
+-    cfg->apply = 0;
+-
+-    /* ...release context lock */
+-    spin_unlock_irqrestore(&imr->lock, flags);
+-
+-	/* ...discard pending configuration if needed (cannot do that with IRQ disabled) */
+-	if (cfg->dl_vaddr)
+-		dma_free_writecombine(imr->dev, cfg->dl_size, cfg->dl_vaddr, cfg->dl_dma_addr);
+-
+-	cfg->dl_vaddr = dl_vaddr;
+-	cfg->dl_size = dl_size;
+-	cfg->dl_start_offset = dl_start_offset;
+-	cfg->dl_dma_addr = dl_dma_addr;
+-
+ 	/* ...prepare main DL-program */
+-	imr_dl_program_setup(ctx, cfg, desc.type, dl_vaddr + dl_start_offset, (u32)dl_dma_addr);
+-
+-	/* ...display list updated successfully */
+-	v4l2_dbg(2, debug, &ctx->imr->v4l2_dev, "display-list updated: %p[%08X]:%u[%u]\n",
+-		dl_vaddr, (u32)dl_dma_addr, dl_size, dl_start_offset);
++	imr_dl_program_setup(ctx, cfg, type, dl_vaddr + dl_start_offset, (u32)dl_dma_addr);
+ 
+ 	/* ...update cropping parameters */
+-	cfg->dst_subpixel = (desc.type & IMR_MAP_DDP ? 2 : 0);
++	cfg->dst_subpixel = (type & IMR_MAP_DDP ? 2 : 0);
++
++	/* ...display list updated successfully */
++	v4l2_dbg(2, debug, &ctx->imr->v4l2_dev, "display-list created: #%u[%08X]:%u[%u]\n",
++		cfg->id, (u32)dl_dma_addr, dl_size, dl_start_offset);
+ 
+ 	if (debug >= 4)
+ 		print_hex_dump_bytes("DL-", DUMP_PREFIX_OFFSET, dl_vaddr + dl_start_offset, dl_size - dl_start_offset);
+ 
+-    /* ...put "apply" bit in atomic fashion (overkill? - surely) */
+-	spin_lock_irqsave(&imr->lock, flags);
+-	cfg->apply = 1;
+-	spin_unlock_irqrestore(&imr->lock, flags);
+-
++	/* ...success */
+ 	ret = 0;
+ 
+ out:
+@@ -1374,22 +1025,392 @@ out:
+ 	return ret;
+ }
+ 
+-/* ...customized I/O control processing */
+-static long imr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
++/*******************************************************************************
++ * V4L2 I/O controls
++ ******************************************************************************/
++
++/* ...test for a format supported */
++static int __imr_try_fmt(struct imr_ctx *ctx, struct v4l2_format *f)
+ {
+-	/* ...intercept custom I/O control */
+-	if (_IOC_TYPE(cmd) == 'I') {
+-		switch (_IOC_NR(cmd)) {
+-		case 0:
+-			/* ...set mapping data */
+-			return imr_ioctl_map(file->private_data, cmd, arg);
+-
+-		default:
+-			return -ENOIOCTLCMD;
++	struct v4l2_pix_format *pix = &f->fmt.pix;
++	u32     fourcc = pix->pixelformat;
++	int     i;
++
++	/* ...both output and capture interface have the same set of supported formats */
++	for (i = 0; i < ARRAY_SIZE(imr_lx4_formats); i++) {
++		if (fourcc == imr_lx4_formats[i].fourcc) {
++			/* ...fix-up format specification as needed */
++			pix->field = V4L2_FIELD_NONE;
++
++			v4l2_dbg(1, debug, &ctx->imr->v4l2_dev, "format request: '%c%c%c%c', %d*%d\n",
++				(fourcc >> 0) & 0xff, (fourcc >> 8) & 0xff,
++				(fourcc >> 16) & 0xff, (fourcc >> 24) & 0xff,
++				pix->width, pix->height);
++
++			/* ...verify source/destination image dimensions */
++			if (V4L2_TYPE_IS_OUTPUT(f->type))
++				v4l_bound_align_image(&pix->width, 128, 2048, 7, &pix->height, 16, 2048, 1, 0);
++			else
++				v4l_bound_align_image(&pix->width, 64, 2048, 6, &pix->height, 16, 2048, 1, 0);
++
++			return i;
+ 		}
+ 	}
+ 
+-	return video_ioctl2(file, cmd, arg);
++	v4l2_err(&ctx->imr->v4l2_dev, "unsupported format request: '%c%c%c%c'\n",
++		(fourcc >> 0) & 0xff, (fourcc >> 8) & 0xff,
++		(fourcc >> 16) & 0xff, (fourcc >> 24) & 0xff);
++
++	return -EINVAL;
++}
++
++/* ...capabilities query */
++static int imr_querycap(struct file *file, void *priv, struct v4l2_capability *cap)
++{
++	strlcpy(cap->driver, DRV_NAME, sizeof(cap->driver));
++	strlcpy(cap->card, DRV_NAME, sizeof(cap->card));
++	strlcpy(cap->bus_info, DRV_NAME, sizeof(cap->bus_info));
++
++	cap->device_caps = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_OUTPUT |
++		V4L2_CAP_VIDEO_M2M | V4L2_CAP_STREAMING;
++
++	cap->capabilities = cap->device_caps | V4L2_CAP_DEVICE_CAPS;
++
++	return 0;
++}
++
++/* ...enumerate supported formats */
++static int imr_enum_fmt(struct file *file, void *priv, struct v4l2_fmtdesc *f)
++{
++	/* ...no distinction between output/capture formats */
++	if (f->index < ARRAY_SIZE(imr_lx4_formats)) {
++		const struct imr_format_info *fmt = &imr_lx4_formats[f->index];
++		strlcpy(f->description, fmt->name, sizeof(f->description));
++		f->pixelformat = fmt->fourcc;
++		return 0;
++	}
++
++	return -EINVAL;
++}
++
++/* ...retrieve current queue format; operation is locked ? */
++static int imr_g_fmt(struct file *file, void *priv, struct v4l2_format *f)
++{
++	struct imr_ctx     *ctx = fh_to_ctx(priv);
++	struct vb2_queue   *vq;
++	struct imr_q_data  *q_data;
++
++	vq = v4l2_m2m_get_vq(ctx->m2m_ctx, f->type);
++	if (!vq)
++		return -EINVAL;
++
++	q_data = &ctx->queue[V4L2_TYPE_IS_OUTPUT(f->type) ? 0 : 1];
++
++	/* ...processing is locked? tbd */
++	f->fmt.pix = q_data->fmt;
++
++	return 0;
++}
++
++/* ...test particular format; operation is not locked */
++static int imr_try_fmt(struct file *file, void *priv, struct v4l2_format *f)
++{
++	struct imr_ctx     *ctx = fh_to_ctx(priv);
++	struct vb2_queue   *vq;
++
++	/* ...make sure we have a queue of particular type */
++	vq = v4l2_m2m_get_vq(ctx->m2m_ctx, f->type);
++	if (!vq)
++		return -EINVAL;
++
++	/* ...test if format is supported (adjust as appropriate) */
++	return (__imr_try_fmt(ctx, f) >= 0 ? 0 : -EINVAL);
++}
++
++/* ...apply queue format; operation is locked ? */
++static int imr_s_fmt(struct file *file, void *priv, struct v4l2_format *f)
++{
++	struct imr_ctx     *ctx = fh_to_ctx(priv);
++	struct vb2_queue   *vq;
++	struct imr_q_data  *q_data;
++	int                 i;
++
++	vq = v4l2_m2m_get_vq(ctx->m2m_ctx, f->type);
++	if (!vq)
++		return -EINVAL;
++
++	/* ...check if queue is busy */
++	if (vb2_is_busy(vq))
++		return -EBUSY;
++
++	/* ...test if format is supported (adjust as appropriate) */
++	i = __imr_try_fmt(ctx, f);
++	if (i < 0)
++		return -EINVAL;
++
++	/* ...format is supported; save current format in a queue-specific data */
++	q_data = &ctx->queue[V4L2_TYPE_IS_OUTPUT(f->type) ? 0 : 1];
++
++	/* ...processing is locked? tbd */
++	q_data->fmt = f->fmt.pix;
++	q_data->flags = imr_lx4_formats[i].flags;
++
++	/* ...set default crop factors */
++	if (V4L2_TYPE_IS_OUTPUT(f->type) == 0) {
++		ctx->crop[0] = 0;
++		ctx->crop[1] = f->fmt.pix.width - 1;
++		ctx->crop[2] = 0;
++		ctx->crop[3] = f->fmt.pix.height - 1;
++	}
++
++	return 0;
++}
++
++static int imr_reqbufs(struct file *file, void *priv, struct v4l2_requestbuffers *reqbufs)
++{
++	struct imr_ctx *ctx = fh_to_ctx(priv);
++
++	return v4l2_m2m_reqbufs(file, ctx->m2m_ctx, reqbufs);
++}
++
++static int imr_querybuf(struct file *file, void *priv, struct v4l2_buffer *buf)
++{
++	struct imr_ctx *ctx = fh_to_ctx(priv);
++
++	return v4l2_m2m_querybuf(file, ctx->m2m_ctx, buf);
++}
++
++static int imr_qbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
++{
++	struct imr_ctx *ctx = fh_to_ctx(priv);
++
++	/* ...operation is protected with a queue lock */
++	WARN_ON(!mutex_is_locked(&ctx->imr->mutex));
++
++	/* ...verify the configuration is complete */
++	if (!V4L2_TYPE_IS_OUTPUT(buf->type) && !ctx->cfg) {
++		v4l2_err(&ctx->imr->v4l2_dev, "stream configuration is not complete\n");
++		return -EINVAL;
++	}
++
++	return v4l2_m2m_qbuf(file, ctx->m2m_ctx, buf);
++}
++
++static int imr_dqbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
++{
++	struct imr_ctx *ctx = fh_to_ctx(priv);
++
++	return v4l2_m2m_dqbuf(file, ctx->m2m_ctx, buf);
++}
++
++static int imr_expbuf(struct file *file, void *priv, struct v4l2_exportbuffer *eb)
++{
++	struct imr_ctx *ctx = fh_to_ctx(priv);
++
++	return v4l2_m2m_expbuf(file, ctx->m2m_ctx, eb);
++}
++
++static int imr_streamon(struct file *file, void *priv, enum v4l2_buf_type type)
++{
++	struct imr_ctx         *ctx = fh_to_ctx(priv);
++
++	/* ...context is prepared for a streaming */
++	return v4l2_m2m_streamon(file, ctx->m2m_ctx, type);
++}
++
++static int imr_streamoff(struct file *file, void *priv, enum v4l2_buf_type type)
++{
++	struct imr_ctx  *ctx = fh_to_ctx(priv);
++
++	return v4l2_m2m_streamoff(file, ctx->m2m_ctx, type);
++}
++
++static int imr_g_crop(struct file *file, void *priv, struct v4l2_crop *cr)
++{
++	struct imr_ctx  *ctx = fh_to_ctx(priv);
++
++	/* ...subpixel resolution of output buffer is not counted here */
++	cr->c.left = ctx->crop[0];
++	cr->c.top = ctx->crop[2];
++	cr->c.width = ctx->crop[1] - ctx->crop[0];
++	cr->c.height = ctx->crop[3] - ctx->crop[2];
++
++	return 0;
++}
++
++static int imr_s_crop(struct file *file, void *priv, const struct v4l2_crop *cr)
++{
++	struct imr_ctx *ctx = fh_to_ctx(priv);
++	int             x0 = cr->c.left;
++	int             y0 = cr->c.top;
++	int             x1 = x0 + cr->c.width;
++	int             y1 = y0 + cr->c.height;
++
++	if (x0 < 0 || x1 >= 2048 || y0 < 0 || y1 >= 2048) {
++		v4l2_err(&ctx->imr->v4l2_dev, "invalid cropping: %d/%d/%d/%d\n", x0, x1, y0, y1);
++		return -EINVAL;
++	}
++
++	/* ...subpixel resolution of output buffer is not counted here */
++	ctx->crop[0] = x0;
++	ctx->crop[1] = x1;
++	ctx->crop[2] = y0;
++	ctx->crop[3] = y1;
++
++	return 0;
++}
++
++/* ...customized I/O control processing */
++static long imr_default(struct file *file, void *fh, bool valid_prio, unsigned int cmd, void *arg)
++{
++	struct imr_ctx     *ctx = fh_to_ctx(fh);
++
++	switch (cmd) {
++	case VIDIOC_IMR_MESH:
++		/* ...set mesh data */
++		return imr_ioctl_map(ctx, (struct imr_map_desc *)arg);
++
++	default:
++		return -ENOIOCTLCMD;
++	}
++}
++
++static const struct v4l2_ioctl_ops imr_ioctl_ops = {
++	.vidioc_querycap            = imr_querycap,
++
++	.vidioc_enum_fmt_vid_cap    = imr_enum_fmt,
++	.vidioc_enum_fmt_vid_out    = imr_enum_fmt,
++	.vidioc_g_fmt_vid_cap       = imr_g_fmt,
++	.vidioc_g_fmt_vid_out       = imr_g_fmt,
++	.vidioc_try_fmt_vid_cap     = imr_try_fmt,
++	.vidioc_try_fmt_vid_out     = imr_try_fmt,
++	.vidioc_s_fmt_vid_cap       = imr_s_fmt,
++	.vidioc_s_fmt_vid_out       = imr_s_fmt,
++
++	.vidioc_reqbufs             = imr_reqbufs,
++	.vidioc_querybuf            = imr_querybuf,
++	.vidioc_qbuf                = imr_qbuf,
++	.vidioc_dqbuf               = imr_dqbuf,
++	.vidioc_expbuf              = imr_expbuf,
++	.vidioc_streamon            = imr_streamon,
++	.vidioc_streamoff           = imr_streamoff,
++
++	.vidioc_g_crop              = imr_g_crop,
++	.vidioc_s_crop              = imr_s_crop,
++
++	.vidioc_default             = imr_default,
++};
++
++/*******************************************************************************
++ * Generic device file operations
++ ******************************************************************************/
++
++static int imr_open(struct file *file)
++{
++	struct imr_device      *imr = video_drvdata(file);
++	struct video_device    *vfd = video_devdata(file);
++	struct imr_ctx         *ctx;
++	int                     ret;
++
++	/* ...allocate processing context associated with given instance */
++	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++
++	/* ...initialize per-file-handle structure */
++	v4l2_fh_init(&ctx->fh, vfd);
++	//ctx->fh.ctrl_handler = &ctx->ctrl_handler;
++	file->private_data = &ctx->fh;
++	v4l2_fh_add(&ctx->fh);
++
++	/* ...set default source / destination formats - need that? */
++	ctx->imr = imr;
++	ctx->queue[0].fmt.pixelformat = 0;
++	ctx->queue[1].fmt.pixelformat = 0;
++
++	/* ...set default cropping parameters */
++	ctx->crop[1] = ctx->crop[3] = 0x3FF;
++
++	/* ...initialize M2M processing context */
++	ctx->m2m_ctx = v4l2_m2m_ctx_init(imr->m2m_dev, ctx, imr_queue_init);
++	if (IS_ERR(ctx->m2m_ctx)) {
++		ret = PTR_ERR(ctx->m2m_ctx);
++		goto v4l_prepare_rollback;
++	}
++
++#if 0
++	/* ...initialize controls and stuff */
++	ret = imr_controls_create(ctx);
++	if (ret < 0)
++		goto v4l_prepare_rollback;
++#endif
++
++	/* ...lock access to global device data */
++	if (mutex_lock_interruptible(&imr->mutex)) {
++		ret = -ERESTARTSYS;
++		goto v4l_prepare_rollback;
++	}
++
++	/* ...bring-up device as needed */
++	if (imr->refcount == 0) {
++		ret = clk_prepare_enable(imr->clock);
++		if (ret < 0)
++			goto device_prepare_rollback;
++	}
++
++	imr->refcount++;
++
++	mutex_unlock(&imr->mutex);
++
++	v4l2_dbg(1, debug, &imr->v4l2_dev, "IMR device opened (refcount=%u)\n", imr->refcount);
++
++	return 0;
++
++device_prepare_rollback:
++	/* ...unlock global device data */
++	mutex_unlock(&imr->mutex);
++
++v4l_prepare_rollback:
++	/* ...destroy context */
++	v4l2_fh_del(&ctx->fh);
++	v4l2_fh_exit(&ctx->fh);
++	kfree(ctx);
++
++	return ret;
++}
++
++static int imr_release(struct file *file)
++{
++	struct imr_device  *imr = video_drvdata(file);
++	struct imr_ctx     *ctx = fh_to_ctx(file->private_data);
++
++	/* ...I don't need to get a device-scope lock here really - tbd */
++	mutex_lock(&imr->mutex);
++
++	/* ...destroy M2M device processing context */
++	v4l2_m2m_ctx_release(ctx->m2m_ctx);
++	//v4l2_ctrl_handler_free(&ctx->ctrl_handler);
++	v4l2_fh_del(&ctx->fh);
++	v4l2_fh_exit(&ctx->fh);
++
++	/* ...drop active configuration as needed */
++	imr_cfg_unref(ctx, ctx->cfg);
++
++	/* ...make sure there are no more active configs */
++	WARN_ON(ctx->cfg_num);
++
++	/* ...destroy context data */
++	kfree(ctx);
++
++	/* ...disable hardware operation */
++	if (--imr->refcount == 0)
++		clk_disable_unprepare(imr->clock);
++
++	mutex_unlock(&imr->mutex);
++
++	v4l2_dbg(1, debug, &imr->v4l2_dev, "closed device instance\n");
++
++	return 0;
+ }
+ 
+ static unsigned int imr_poll(struct file *file, struct poll_table_struct *wait)
+@@ -1428,9 +1449,9 @@ static const struct v4l2_file_operations imr_fops = {
+ 	.owner          = THIS_MODULE,
+ 	.open           = imr_open,
+ 	.release        = imr_release,
+-	.unlocked_ioctl	= imr_ioctl,
+ 	.poll           = imr_poll,
+ 	.mmap           = imr_mmap,
++	.unlocked_ioctl	= video_ioctl2,
+ };
+ 
+ /*******************************************************************************
+@@ -1447,21 +1468,14 @@ static void imr_cleanup(struct imr_ctx *ctx)
+ 	/* ...interlock buffer handling with interrupt */
+ 	spin_lock_irqsave(&imr->lock, flags);
+ 
+-	src_buf = v4l2_m2m_src_buf_remove(ctx->m2m_ctx);
+-	dst_buf = v4l2_m2m_dst_buf_remove(ctx->m2m_ctx);
+-
+-	if (src_buf)
++	while ((src_buf = v4l2_m2m_src_buf_remove(ctx->m2m_ctx)) != NULL)
+ 		v4l2_m2m_buf_done(src_buf, VB2_BUF_STATE_ERROR);
+-	if (dst_buf)
++
++	while ((dst_buf = v4l2_m2m_dst_buf_remove(ctx->m2m_ctx)) != NULL)
+ 		v4l2_m2m_buf_done(dst_buf, VB2_BUF_STATE_ERROR);
+ 
+ 	/* ...release lock before we mark current job as finished */
+ 	spin_unlock_irqrestore(&imr->lock, flags);
+-
+-	v4l2_m2m_job_finish(imr->m2m_dev, ctx->m2m_ctx);
+-
+-	/* ...clear abortion flag */
+-	ctx->aborting = 0;
+ }
+ 
+ /* ...job execution function */
+@@ -1469,9 +1483,9 @@ static void imr_device_run(void *priv)
+ {
+ 	struct imr_ctx     *ctx = priv;
+ 	struct imr_device  *imr = ctx->imr;
+-	struct imr_cfg     *cfg, *cfg_shadow;
++	struct imr_cfg     *cfg;
+ 	struct vb2_buffer  *src_buf, *dst_buf;
+-	unsigned long       src_addr, dst_addr;
++	u32                 src_addr, dst_addr;
+ 	unsigned long       flags;
+ 
+ 	v4l2_dbg(3, debug, &imr->v4l2_dev, "run next job...\n");
+@@ -1479,32 +1493,25 @@ static void imr_device_run(void *priv)
+ 	/* ...protect access to internal device state */
+ 	spin_lock_irqsave(&imr->lock, flags);
+ 
+-	/* ...select active configuration */
+-	cfg = &ctx->cfg[ctx->active_cfg];
+-	cfg_shadow = &ctx->cfg[ctx->active_cfg ^ 1];
+-
+-	/* ...toggle configuration if needed */
+-	if (cfg_shadow->apply) {
+-		/* ...switch to new configuration */
+-		cfg = cfg_shadow;
+-		cfg->apply = 0;
+-		ctx->active_cfg ^= 1;
+-		v4l2_dbg(2, debug, &imr->v4l2_dev, "display-list switched\n");
+-	}
+-
+ 	/* ...retrieve input/output buffers */
+ 	src_buf = v4l2_m2m_next_src_buf(ctx->m2m_ctx);
+ 	dst_buf = v4l2_m2m_next_dst_buf(ctx->m2m_ctx);
+ 
+-	/* ...set cropping data (respects destination sub-pixel mode? - tbd) */
++	/* ...take configuration pointer associated with input buffer */
++	cfg = to_imr_buffer(to_vb2_v4l2_buffer(src_buf))->cfg;
++
++	/* ...cancel software reset state as needed */
++	iowrite32(0, imr->mmio + IMR_CR);
++
++	/* ...set cropping data with respect to destination sub-pixel mode */
+ 	iowrite32(ctx->crop[0] << cfg->dst_subpixel, imr->mmio + IMR_XMINR);
+ 	iowrite32(ctx->crop[1] << cfg->dst_subpixel, imr->mmio + IMR_XMAXR);
+ 	iowrite32(ctx->crop[2] << cfg->dst_subpixel, imr->mmio + IMR_YMINR);
+ 	iowrite32(ctx->crop[3] << cfg->dst_subpixel, imr->mmio + IMR_YMAXR);
+ 
+ 	/* ...adjust source/destination parameters of the program (interleaved / semiplanar) */
+-	*cfg->src_pa_ptr[0] = src_addr = vb2_dma_contig_plane_dma_addr(src_buf, 0);
+-	*cfg->dst_pa_ptr[0] = dst_addr = vb2_dma_contig_plane_dma_addr(dst_buf, 0);
++	*cfg->src_pa_ptr[0] = src_addr = (u32)vb2_dma_contig_plane_dma_addr(src_buf, 0);
++	*cfg->dst_pa_ptr[0] = dst_addr = (u32)vb2_dma_contig_plane_dma_addr(dst_buf, 0);
+ 
+ 	/* ...adjust source/destination parameters of the UV-plane as needed */
+ 	if (cfg->src_pa_ptr[1] && cfg->dst_pa_ptr[1]) {
+@@ -1512,7 +1519,8 @@ static void imr_device_run(void *priv)
+ 		*cfg->dst_pa_ptr[1] = dst_addr + ctx->queue[1].fmt.width * ctx->queue[1].fmt.height;
+ 	}
+ 
+-	v4l2_dbg(3, debug, &imr->v4l2_dev, "process buffer-pair 0x%08x:0x%08x\n", *cfg->src_pa_ptr[0], *cfg->dst_pa_ptr[0]);
++	v4l2_dbg(3, debug, &imr->v4l2_dev, "process buffer-pair 0x%08x:0x%08x\n",
++		*cfg->src_pa_ptr[0], *cfg->dst_pa_ptr[0]);
+ 
+ 	/* ...force clearing of status register bits */
+ 	iowrite32(0x7, imr->mmio + IMR_SRCR);
+@@ -1530,33 +1538,49 @@ static void imr_device_run(void *priv)
+ 	/* ...start rendering operation */
+ 	iowrite32(IMR_CR_RS, imr->mmio + IMR_CR);
+ 
++	/* ...timestamp input buffer */
++	src_buf->timestamp = ktime_get_ns();
++
+ 	/* ...unlock device access */
+ 	spin_unlock_irqrestore(&imr->lock, flags);
++
++	v4l2_dbg(1, debug, &imr->v4l2_dev, "rendering started: status=%X, DLSAR=0x%08X, DLPR=0x%08X\n", ioread32(imr->mmio + IMR_SR), ioread32(imr->mmio + IMR_DLSAR), ioread32(imr->mmio + IMR_DLSR));
+ }
+ 
+ /* ...check whether a job is ready for execution */
+ static int imr_job_ready(void *priv)
+ {
+-	struct imr_ctx *ctx = priv;
+-
+-	if (v4l2_m2m_num_src_bufs_ready(ctx->m2m_ctx) > 0 &&
+-		v4l2_m2m_num_dst_bufs_ready(ctx->m2m_ctx) > 0 && !ctx->aborting) {
+-		return 1;
+-	}
+-
+-	return 0;
++	/* ...no specific requirements on the job readiness */
++	return 1;
+ }
+ 
+ /* ...abort currently processed job */
+ static void imr_job_abort(void *priv)
+ {
+-	struct imr_ctx *ctx = priv;
++	struct imr_ctx         *ctx = priv;
++	struct imr_device      *imr = ctx->imr;
++	unsigned long           flags;
++
++	/* ...protect access to internal device state */
++	spin_lock_irqsave(&imr->lock, flags);
++
++	/* ...make sure current job is still current (may get finished by interrupt already) */
++	if (v4l2_m2m_get_curr_priv(imr->m2m_dev) == ctx) {
++		v4l2_dbg(1, debug, &imr->v4l2_dev, "abort job: status=%X, DLSAR=0x%08X, DLPR=0x%08X\n",
++			ioread32(imr->mmio + IMR_SR), ioread32(imr->mmio + IMR_DLSAR), ioread32(imr->mmio + IMR_DLSR));
++
++		/* ...force device reset to stop processing of the buffers */
++		//iowrite32(IMR_CR_SWRST, imr->mmio + IMR_CR);
+ 
+-	/* ...put job abortion flag (is that a sticky thing? - tbd) */
+-	ctx->aborting = 1;
++		/* ...resetting the module while operation is active may lead to hw-stall */
++		spin_unlock_irqrestore(&imr->lock, flags);
+ 
+-	/* ...finish current job - no, wait for an interrupt to finish that */
+-	imr_cleanup(ctx);
++		/* ...finish current job as interrupt will probably not occur */
++		//v4l2_m2m_job_finish(imr->m2m_dev, ctx->m2m_ctx);
++	} else {
++		spin_unlock_irqrestore(&imr->lock, flags);
++		v4l2_dbg(1, debug, &imr->v4l2_dev, "job has completed already\n");
++	}
+ }
+ 
+ /* ...M2M interface definition */
+@@ -1580,14 +1604,12 @@ static irqreturn_t imr_irq_handler(int irq, void *data)
+ 
+ 	/* ...check and ack interrupt status */
+ 	status = ioread32(imr->mmio + IMR_SR);
++	iowrite32(status, imr->mmio + IMR_SRCR);
+ 	if (!(status & (IMR_SR_INT | IMR_SR_IER | IMR_SR_TRA))) {
+ 		v4l2_err(&imr->v4l2_dev, "spurious interrupt: %x\n", status);
+ 		return ret;
+ 	}
+ 
+-	/* ...acknowledge interrupt */
+-	iowrite32(status, imr->mmio + IMR_SRCR);
+-
+ 	/* ...protect access to current context */
+ 	spin_lock(&imr->lock);
+ 
+@@ -1608,28 +1630,32 @@ static irqreturn_t imr_irq_handler(int irq, void *data)
+ 
+ 	/* ...check for a TRAP interrupt indicating completion of current DL */
+ 	if (status & IMR_SR_TRA) {
+-		/* ...operation completed normally; data is written into destination buffer */
+-		dst_buf->vb2_buf.timestamp = src_buf->vb2_buf.timestamp;
+-        if (src_buf->flags & V4L2_BUF_FLAG_TIMECODE)
+-            dst_buf->timecode = src_buf->timecode;
+-        dst_buf->flags = src_buf->flags & (V4L2_BUF_FLAG_TIMECODE | V4L2_BUF_FLAG_KEYFRAME |
++		/* ...operation completed normally; timestamp output buffer */
++		dst_buf->vb2_buf.timestamp = ktime_get_ns();
++		if (src_buf->flags & V4L2_BUF_FLAG_TIMECODE)
++			dst_buf->timecode = src_buf->timecode;
++		dst_buf->flags = src_buf->flags & (V4L2_BUF_FLAG_TIMECODE | V4L2_BUF_FLAG_KEYFRAME |
+ 			 V4L2_BUF_FLAG_PFRAME | V4L2_BUF_FLAG_BFRAME | V4L2_BUF_FLAG_TSTAMP_SRC_MASK);
++		dst_buf->sequence = src_buf->sequence = ctx->sequence++;
+ 		v4l2_m2m_buf_done(src_buf, VB2_BUF_STATE_DONE);
+ 		v4l2_m2m_buf_done(dst_buf, VB2_BUF_STATE_DONE);
+ 
+-		v4l2_dbg(3, debug, &imr->v4l2_dev, "ctx:%p - buffers <%p,%p> done\n", ctx, src_buf, dst_buf);
++		v4l2_dbg(3, debug, &imr->v4l2_dev, "buffers <0x%08x,0x%08x> done\n",
++			(u32)vb2_dma_contig_plane_dma_addr(&src_buf->vb2_buf, 0),
++			(u32)vb2_dma_contig_plane_dma_addr(&dst_buf->vb2_buf, 0));
+ 	} else {
+ 		/* ...operation completed in error; no way to understand what exactly went wrong */
+ 		v4l2_m2m_buf_done(src_buf, VB2_BUF_STATE_ERROR);
+ 		v4l2_m2m_buf_done(dst_buf, VB2_BUF_STATE_ERROR);
+ 
+-		v4l2_dbg(3, debug, &imr->v4l2_dev, "ctx:%p - buffers <%p,%p> done in error\n", ctx, src_buf, dst_buf);
++		v4l2_dbg(3, debug, &imr->v4l2_dev, "buffers <0x%08x,0x%08x> done in error\n",
++			(u32)vb2_dma_contig_plane_dma_addr(&src_buf->vb2_buf, 0),
++			(u32)vb2_dma_contig_plane_dma_addr(&dst_buf->vb2_buf, 0));
+ 	}
+ 
+-	/* ...what exactly I am trying to protect here? - tbd */
+ 	spin_unlock(&imr->lock);
+ 
+-	/* ...finish current job (attempt to restart immediately) */
++	/* ...finish current job (and start any pending) */
+ 	v4l2_m2m_job_finish(imr->m2m_dev, ctx->m2m_ctx);
+ 
+ 	return IRQ_HANDLED;
+@@ -1645,8 +1671,6 @@ handled:
+  * Device probing / removal interface
+  ******************************************************************************/
+ 
+-#include <linux/clk-provider.h>
+-
+ static int imr_probe(struct platform_device *pdev)
+ {
+ 	struct imr_device *imr;
+@@ -1730,6 +1754,7 @@ static int imr_probe(struct platform_device *pdev)
+ 
+ 	video_set_drvdata(&imr->video_dev, imr);
+ 	platform_set_drvdata(pdev, imr);
++	//pm_runtime_enable(&pdev->dev);
+ 
+ 	v4l2_info(&imr->v4l2_dev, "IMR device (pdev: %d) registered as /dev/video%d\n", pdev->id, imr->video_dev.num);
+ 
+@@ -1751,6 +1776,7 @@ static int imr_remove(struct platform_device *pdev)
+ {
+ 	struct imr_device *imr = platform_get_drvdata(pdev);
+ 
++	//pm_runtime_disable(imr->v4l2_dev.dev);
+ 	video_unregister_device(&imr->video_dev);
+ 	vb2_dma_contig_cleanup_ctx(imr->alloc_ctx);
+ 	v4l2_m2m_release(imr->m2m_dev);
+diff --git a/include/uapi/linux/rcar-imr.h b/include/uapi/linux/rcar-imr.h
+new file mode 100644
+index 0000000..d02082f
+--- /dev/null
++++ b/include/uapi/linux/rcar-imr.h
+@@ -0,0 +1,98 @@
++/*
++ * imr.h  --  R-Car IMR-LX4 Driver UAPI
++ *
++ * Copyright (C) 2016  Cogent Embedded, Inc.  <source@cogentembedded.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef RCAR_IMR_USER_H
++#define RCAR_IMR_USER_H
++
++#include <linux/videodev2.h>
++
++/*******************************************************************************
++ * Mapping specification descriptor
++ ******************************************************************************/
++
++struct imr_map_desc {
++	/* ...mapping types */
++	u32             type;
++
++	/* ...total size of the mesh structure */
++	u32             size;
++
++    /* ...map-specific user-pointer */
++    void           *data;
++
++}   __attribute__((packed));
++
++/* ...regular mesh specification */
++#define IMR_MAP_MESH                    (1 << 0)
++
++/* ...auto-generated source coordinates */
++#define IMR_MAP_AUTODG                  (1 << 1)
++
++/* ...auto-generated destination coordinates */
++#define IMR_MAP_AUTOSG                  (1 << 2)
++
++/* ...luminance correction flag */
++#define IMR_MAP_LUCE                    (1 << 3)
++
++/* ...chromacity correction flag */
++#define IMR_MAP_CLCE                    (1 << 4)
++
++/* ...vertex clockwise-mode order */
++#define IMR_MAP_TCM                     (1 << 5)
++
++/* ...source coordinate decimal point position bit index */
++#define __IMR_MAP_UVDPOR_SHIFT          8
++#define __IMR_MAP_UVDPOR(v)             (((v) >> __IMR_MAP_UVDPOR_SHIFT) & 0x7)
++#define IMR_MAP_UVDPOR(n)               ((n & 0x7) << __IMR_MAP_UVDPOR_SHIFT)
++
++/* ...destination coordinate sub-pixel mode */
++#define IMR_MAP_DDP                     (1 << 11)
++
++/* ...luminance correction offset decimal point position */
++#define __IMR_MAP_YLDPO_SHIFT           12
++#define __IMR_MAP_YLDPO(v)              (((v) >> __IMR_MAP_YLDPO_SHIFT) & 0x7)
++#define IMR_MAP_YLDPO(n)                ((n & 0x7) << __IMR_MAP_YLDPO_SHIFT)
++
++/* ...chromacity (U) correction offset decimal point position */
++#define __IMR_MAP_UBDPO_SHIFT           15
++#define __IMR_MAP_UBDPO(v)              (((v) >> __IMR_MAP_UBDPO_SHIFT) & 0x7)
++#define IMR_MAP_UBDPO(n)                ((n & 0x7) << __IMR_MAP_UBDPO_SHIFT)
++
++/* ...chromacity (V) correction offset decimal point position */
++#define __IMR_MAP_VRDPO_SHIFT           18
++#define __IMR_MAP_VRDPO(v)              (((v) >> __IMR_MAP_VRDPO_SHIFT) & 0x7)
++#define IMR_MAP_VRDPO(n)                ((n & 0x7) << __IMR_MAP_VRDPO_SHIFT)
++
++/* ...regular mesh specification */
++struct imr_mesh {
++	/* ...rectangular mesh size */
++	u16             rows, columns;
++
++	/* ...mesh parameters */
++	u16             x0, y0, dx, dy;
++
++}   __attribute__((packed));
++
++/* ...VBO descriptor */
++struct imr_vbo {
++	/* ...number of triangles */
++	u16             num;
++
++}   __attribute__((packed));
++
++
++/*******************************************************************************
++ * Private IOCTL codes
++ ******************************************************************************/
++
++#define VIDIOC_IMR_MESH                 _IOW('V', BASE_VIDIOC_PRIVATE + 0, struct imr_map_desc)
++
++#endif  /* RCAR_IMR_USER_H */
+-- 
+1.7.9.5
+
