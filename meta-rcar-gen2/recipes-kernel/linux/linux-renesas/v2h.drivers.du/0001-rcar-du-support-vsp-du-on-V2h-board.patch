@@ -1,0 +1,34 @@
+From a5df34be34ebd955d7270d246083662de8758183 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Mon, 31 Oct 2016 11:33:46 +0300
+Subject: [PATCH 4/6] rcar-du: support vsp+du on V2h board
+
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 2f51093..d1dc263a 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -125,7 +125,8 @@ static const struct rcar_du_device_info rcar_du_r8a7791_info = {
+ static const struct rcar_du_device_info rcar_du_r8a7792_info = {
+ 	.gen = 2,
+ 	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
+-		  | RCAR_DU_FEATURE_EXT_CTRL_REGS,
++		  | RCAR_DU_FEATURE_EXT_CTRL_REGS
++		  | RCAR_DU_FEATURE_VSP1_SOURCE,
+ 	.num_crtcs = 2,
+ 	.routes = {
+ 		/* R8A7792 has two RGB outputs. */
+@@ -141,6 +142,7 @@ static const struct rcar_du_device_info rcar_du_r8a7792_info = {
+ 		},
+ 	},
+ 	.num_lvds = 0,
++	.vsp_num = 4,
+ };
+ 
+ static const struct rcar_du_device_info rcar_du_r8a7794_info = {
+-- 
+2.7.4
+

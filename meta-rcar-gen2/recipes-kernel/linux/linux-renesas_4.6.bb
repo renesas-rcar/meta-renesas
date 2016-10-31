@@ -79,6 +79,7 @@ SRC_URI_append = " \
     file://v2h.dtsi/0033-ARM-dts-r8a7792-add-SGX-support.patch \
     file://v2h.dtsi/0034-ARM-dts-r8a7792-add-IMR-LX3-and-IMR-LSX3-clocks.patch \
     file://v2h.dtsi/0035-ARM-dts-r8a7792-add-IMR-support.patch \
+    file://v2h.dtsi/0036-ARM-dts-r8a7792-add-VSP-du-instances.patch \
     file://v2h.dts/0001-ARM-dts-blanche-initial-device-tree.patch \
     file://v2h.dts/0002-ARM-dts-blanche-add-Ethernet-support.patch \
     file://v2h.dts/0003-ARM-dts-blanche-add-SCIF0-3-pins.patch \
@@ -154,4 +155,5 @@ SRC_URI_append = " \
     file://v2h.drivers.media.imr/0001-V4l-imr-add-compatibles.patch \
     file://v2h.drivers.media.imr/0002-renesas-IMR-driver-new-API.patch \
     file://v2h.drivers.media.imr/0003-media-imr-temp-solution-on-V2H.patch \
+    file://v2h.drivers.du/0001-rcar-du-support-vsp-du-on-V2h-board.patch \
 "
