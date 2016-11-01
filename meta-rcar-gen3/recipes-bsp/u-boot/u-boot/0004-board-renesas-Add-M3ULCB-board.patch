@@ -57,7 +57,7 @@ new file mode 100644
 index 0000000..32ada0f
 --- /dev/null
 +++ b/include/configs/m3ulcb.h
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,127 @@
 +/*
 + * include/configs/r8a7796_m3ulcb.h
 + *     This file is M3ULCB board configuration.
@@ -88,6 +88,13 @@ index 0000000..32ada0f
 +#define CONFIG_SH_SCIF_CLK_FREQ	CONFIG_S3D4_CLK_FREQ
 +
 +#define CONFIG_SYS_NO_FLASH
++
++/* MEMORY */
++/* M3ULCB has 2 banks each 1GB */
++#undef PHYS_SDRAM_1_SIZE
++#undef PHYS_SDRAM_2_SIZE
++#define PHYS_SDRAM_1_SIZE	((unsigned long)(0x40000000 - DRAM_RSV_SIZE))
++#define PHYS_SDRAM_2_SIZE	((unsigned long)0x40000000)
 +
 +/* Ethernet RAVB */
 +#define CONFIG_RAVB
