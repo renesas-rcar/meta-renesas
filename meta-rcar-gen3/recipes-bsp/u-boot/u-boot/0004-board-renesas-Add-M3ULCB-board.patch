@@ -3,7 +3,7 @@ From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 Date: Mon, 12 Sep 2016 18:34:00 +0300
 Subject: [PATCH] board: renesas: Add M3ULCB board
 
-M3ULCB is an entry level development board based on R-Car H3 SoC (R8A7796)
+M3ULCB is an entry level development board based on R-Car M3 SoC (R8A7796)
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
@@ -59,7 +59,7 @@ index 0000000..32ada0f
 +++ b/include/configs/m3ulcb.h
 @@ -0,0 +1,127 @@
 +/*
-+ * include/configs/r8a7796_m3ulcb.h
++ * include/configs/m3ulcb.h
 + *     This file is M3ULCB board configuration.
 + *     CPU r8a7796.
 + *
