@@ -39,7 +39,11 @@ SRC_URI_append_r8a7794 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
     file://EGL_headers_for_wayland.patch \
     ", "", d)}"
 
-SRC_URI_append = " file://egl.pc file://glesv2.pc "
+SRC_URI_append = " \
+		   file://egl.pc \
+		   file://glesv2.pc \
+		   file://rc.pvr.service \
+"
 
 do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
@@ -62,6 +66,10 @@ do_install() {
             ${D}/${sysconfdir}/powervr.ini
         fi
     fi
+    if [ ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ]; then
+        install -d ${D}/${systemd_unitdir}/system/
+        install -m 644 ${WORKDIR}/rc.pvr.service ${D}/${systemd_unitdir}/system/
+    fi
 }
 
 PACKAGES = "\
@@ -79,7 +87,7 @@ FILES_${PN}-dev = " \
     ${includedir}/* \
 "
 
-inherit update-rc.d
+inherit update-rc.d systemd
 
 PROVIDES = "virtual/libgles2"
 PROVIDES_append = "${@base_contains("DISTRO_FEATURES", "wayland", "", " virtual/egl", d)}"
@@ -90,8 +98,10 @@ INSANE_SKIP_${PN}-dev += "ldflags"
 INHIBIT_SYSROOT_STRIP = "1"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 PRIVATE_LIBS_${PN} = "libEGL.so.1"
+
 INITSCRIPT_NAME = "rc.pvr"
 INITSCRIPT_PARAMS = "start 7 5 2 . stop 62 0 1 6 ."
+SYSTEMD_SERVICE_${PN} = "rc.pvr.service"
 
 
 
