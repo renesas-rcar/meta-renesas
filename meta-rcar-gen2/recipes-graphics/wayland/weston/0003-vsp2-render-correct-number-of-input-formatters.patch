@@ -1,0 +1,97 @@
+From 708dcb3dac2224d62c7c11171902f4c7454b5a06 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Wed, 2 Nov 2016 23:58:31 +0300
+Subject: [PATCH] vsp2-render: correct number of input formatters.
+
+Accordingly documention v2h board has 4 rpf modules.
+---
+ src/vsp2-renderer.c | 27 ++++++++++-----------------
+ 1 file changed, 10 insertions(+), 17 deletions(-)
+
+diff --git a/src/vsp2-renderer.c b/src/vsp2-renderer.c
+index f0a1ece..bf1bab8 100644
+--- a/src/vsp2-renderer.c
++++ b/src/vsp2-renderer.c
+@@ -72,8 +72,8 @@ struct vsp_renderer_output {
+ 	struct vsp_surface_state surface_state;
+ };
+ 
+-#define VSP_INPUT_MAX		5
+-#define VSP_INPUT_DEFAULT	4
++#define VSP_INPUT_MAX		4
++#define VSP_INPUT_DEFAULT	3
+ #define VSP_SCALER_MAX	0
+ #define VSP_SCALER_MIN_PIXELS	4	// UDS can't take pixels smaller than this
+ 
+@@ -81,12 +81,11 @@ const char *vsp_input_links[] = {
+ 	"'%s rpf.0':1 -> '%s bru':0",
+ 	"'%s rpf.1':1 -> '%s bru':1",
+ 	"'%s rpf.2':1 -> '%s bru':2",
+-	"'%s rpf.3':1 -> '%s bru':3",
+-	"'%s rpf.4':1 -> '%s bru':4"
++	"'%s rpf.3':1 -> '%s bru':3"
+ };
+ 
+ const char *vsp_output_links[] = {
+-	"'%s bru':5 -> '%s wpf.0':0",
++	"'%s bru':4 -> '%s wpf.0':0",
+ 	"'%s wpf.0':1 -> '%s wpf.0 output':0"
+ };
+ 
+@@ -94,8 +93,7 @@ const char *vsp_inputs[] = {
+ 	"%s rpf.0 input",
+ 	"%s rpf.1 input",
+ 	"%s rpf.2 input",
+-	"%s rpf.3 input",
+-	"%s rpf.4 input"
++	"%s rpf.3 input"
+ };
+ 
+ const char *vsp_output = {
+@@ -106,38 +104,33 @@ const char *vsp_input_infmt[] = {
+ 	"'%s rpf.0':0",
+ 	"'%s rpf.1':0",
+ 	"'%s rpf.2':0",
+-	"'%s rpf.3':0",
+-	"'%s rpf.4':0"
++	"'%s rpf.3':0"
+ };
+ 
+ const char *vsp_input_outfmt[] = {
+ 	"'%s rpf.0':1",
+ 	"'%s rpf.1':1",
+ 	"'%s rpf.2':1",
+-	"'%s rpf.3':1",
+-	"'%s rpf.4':1"
++	"'%s rpf.3':1"
+ };
+ 
+ const char *vsp_input_composer[] = {
+ 	"'%s bru':0",
+ 	"'%s bru':1",
+ 	"'%s bru':2",
+-	"'%s bru':3",
+-	"'%s bru':4"
++	"'%s bru':3"
+ };
+ 
+ const char *vsp_input_subdev[] = {
+ 	"%s rpf.0",
+ 	"%s rpf.1",
+ 	"%s rpf.2",
+-	"%s rpf.3",
+-	"%s rpf.4"
++	"%s rpf.3"
+ };
+ 
+ const char *vsp_output_fmt[] = {
+-	"'%s bru':5",
++	"'%s bru':4",
+ 	"'%s wpf.0':0",
+-	"'%s wpf.0':1"
+ };
+ 
+ const char *vsp_scaler_links[] = {
+-- 
+2.7.4
+

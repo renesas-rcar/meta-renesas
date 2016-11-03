@@ -1,0 +1,57 @@
+From 885da11daaaae261b9c7c196aa5462ed26b0a5d8 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Mon, 17 Oct 2016 15:02:52 +0300
+Subject: [PATCH] remove unsupported extensions
+
+---
+ src/gl-renderer.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/gl-renderer.c b/src/gl-renderer.c
+index d7231f4..7320bcc 100644
+--- a/src/gl-renderer.c
++++ b/src/gl-renderer.c
+@@ -2194,7 +2194,7 @@ match_config_to_visual(EGLDisplay egl_display,
+ 				&id))
+ 			continue;
+ 
+-		if (id == visual_id)
++		if (id == visual_id || id == 0)
+ 			return i;
+ 	}
+ 
+@@ -2473,12 +2473,14 @@ gl_renderer_setup_egl_extensions(struct weston_compositor *ec)
+ 		gr->has_configless_context = 1;
+ #endif
+ 
++#if 0
+ #ifdef EGL_EXT_image_dma_buf_import
+ 	if (strstr(extensions, "EGL_EXT_image_dma_buf_import"))
+ 		gr->has_dmabuf_import = 1;
+ #endif
+ 
+ 	renderer_setup_egl_client_extensions(gr);
++#endif
+ 
+ 	return 0;
+ }
+@@ -2588,14 +2590,14 @@ gl_renderer_create(struct weston_compositor *ec, EGLenum platform,
+ 	struct gl_renderer *gr;
+ 	EGLint major, minor;
+ 	int supports = 0;
+-
++#if 0
+ 	if (platform) {
+ 		supports = gl_renderer_supports(
+ 			ec, platform_to_extension(platform));
+ 		if (supports < 0)
+ 			return -1;
+ 	}
+-
++#endif
+ 	gr = zalloc(sizeof *gr);
+ 	if (gr == NULL)
+ 		return -1;
+-- 
+2.7.4
+

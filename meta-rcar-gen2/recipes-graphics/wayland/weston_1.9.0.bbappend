@@ -9,6 +9,8 @@ SRC_URI_rcar-gen2 = " \
     file://0001-make-error-portable.patch \
     file://libsystemd.patch \
     file://explicit-enable-disable-systemd.patch \
+    file://0002-remove-unsupported-extensions.patch \
+    file://0003-vsp2-render-correct-number-of-input-formatters.patch \
 "
 
 GL_SRCREV = "02a9ef290df887a815b71a49e8521c7909d7acc1"
@@ -29,7 +31,7 @@ PACKAGECONFIG_append = " \
     ${@base_conditional('USE_MULTIMEDIA', '1', ' v4l2', '', d)} \
 "
 
-PACKAGECONFIG[v4l2] = " --enable-v4l2,,libmediactl-v4l2,kernel-module-vsp2driver"
+PACKAGECONFIG[v4l2] = " --enable-v4l2,,libmediactl-v4l2,kernel-module-vsp2"
 
 do_install_append_rcar-gen2() {
         # install xml for client applications
