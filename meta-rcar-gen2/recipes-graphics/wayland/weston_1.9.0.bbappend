@@ -10,7 +10,6 @@ SRC_URI_rcar-gen2 = " \
     file://libsystemd.patch \
     file://explicit-enable-disable-systemd.patch \
     file://0002-remove-unsupported-extensions.patch \
-    file://0003-vsp2-render-correct-number-of-input-formatters.patch \
 "
 
 GL_SRCREV = "02a9ef290df887a815b71a49e8521c7909d7acc1"
@@ -23,6 +22,7 @@ SRC_URI_append_rcar-gen2 = " \
     file://0001-configure-don-t-control-egl-version.patch \
     file://weston.ini \
     ${@base_conditional("USE_MULTIMEDIA", "1", " file://weston_v4l2.ini", "", d)} \
+    ${@base_conditional("USE_MULTIMEDIA", "1", " file://0003-vsp2-render-correct-number-of-input-formatters.patch", "", d)} \
 "
 
 S = "${WORKDIR}/git"
