@@ -67,6 +67,9 @@ do_install() {
         install -d ${D}/${systemd_unitdir}/system/
         install -m 644 ${WORKDIR}/rc.pvr.service ${D}/${systemd_unitdir}/system/
     fi
+
+    ln -s  ${D}/${libdir}/libEGL.so ${D}/${libdir}/libEGL.so.1
+    ln -s  ${D}/${libdir}/libGLESv2.so ${D}/${libdir}/libGLESv2.so.2
 }
 
 PACKAGES = "\
