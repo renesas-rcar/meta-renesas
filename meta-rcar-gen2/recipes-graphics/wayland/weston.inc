@@ -15,6 +15,10 @@ EXTRA_OECONF_append = " \
     ${@base_conditional('USE_GLES', '1', '', \
     ' WESTON_NATIVE_BACKEND="fbdev-backend.so"', d)}"
 
+EXTRA_OECONF_append = " \
+    ${@base_conditional('USE_MULTIMEDIA', '1', '', \
+    ' WESTON_NATIVE_BACKEND="fbdev-backend.so"', d)}"
+
 PACKAGES_prepend = "${PN}-bin "
 
 FILES_${PN}-bin = "${bindir}/weston \
