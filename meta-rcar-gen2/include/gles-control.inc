@@ -8,3 +8,6 @@ USE_GLES_TEST = "${@'1' if '${USE_GLES}' == '1' and 'gles-test' in '${DISTRO_FEA
 
 USE_MULTIMEDIA = "${@'1' if 'multimedia' in '${MACHINE_FEATURES}' else '0'}"
 USE_MULTIMEDIA_TEST = "${@'1' if 'mm-test' in '${DISTRO_FEATURES}' and '${USE_MULTIMEDIA}'  == '1' else '0'}"
+
+USE_V4L2_RENDERER = "${@'1' if 'v4l2-renderer' in '${DISTRO_FEATURES}' else '0'}"
+
