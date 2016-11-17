@@ -2,6 +2,7 @@ require include/gles-control.inc
 inherit systemd
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+SRC_URI_append = " file://weston-env.sh"
 SRC_URI_append_rcar-gen2 = " file://weston.service"
 
 do_install_append() {
@@ -23,6 +24,11 @@ do_install_append() {
                 -i ${D}${systemd_unitdir}/system/weston.service
         fi
     fi
+
+    install -d ${D}/etc/profile.d
+    install -m 0755 ${WORKDIR}/weston-env.sh ${D}/etc/profile.d
 }
+
+FILES_${PN} += " /etc/profile.d/weston-env.sh"
 
 SYSTEMD_SERVICE_${PN} = "weston.service"
