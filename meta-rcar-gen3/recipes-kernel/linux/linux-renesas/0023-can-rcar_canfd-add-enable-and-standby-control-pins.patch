@@ -7,9 +7,9 @@ Add enable and standby can transceiver control pins
 
 Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
- .../devicetree/bindings/net/can/rcar_canfd.txt     |  5 ++++
- drivers/net/can/rcar_canfd.c                       | 31 +++++++++++++++++++++-
- 2 files changed, 35 insertions(+), 1 deletion(-)
+ .../devicetree/bindings/net/can/rcar_canfd.txt     |  5 +++
+ drivers/net/can/rcar_canfd.c                       | 48 ++++++++++++++++++----
+ 2 files changed, 44 insertions(+), 9 deletions(-)
 
 diff --git a/Documentation/devicetree/bindings/net/can/rcar_canfd.txt b/Documentation/devicetree/bindings/net/can/rcar_canfd.txt
 index 4299bd8..eede77a 100644
@@ -35,7 +35,7 @@ index 4299bd8..eede77a 100644
  				status = "disabled";
  			};
 diff --git a/drivers/net/can/rcar_canfd.c b/drivers/net/can/rcar_canfd.c
-index 15a14c5..def17cd 100644
+index 15a14c5..4aa670d 100644
 --- a/drivers/net/can/rcar_canfd.c
 +++ b/drivers/net/can/rcar_canfd.c
 @@ -21,6 +21,7 @@
@@ -46,43 +46,89 @@ index 15a14c5..def17cd 100644
  #include <linux/bitmap.h>
  #include <linux/bitops.h>
  #include <linux/iopoll.h>
-@@ -1409,8 +1410,10 @@ static int rcar_canfd_probe(struct platform_device *pdev)
+@@ -386,6 +387,8 @@ struct rcar_canfd_global {
+ 	int clock_select;		/* CANFD or Ext clock */
+ 	unsigned long channels_mask;	/* Enabled channels mask */
+ 	u32 freq;			/* fCAN clock frequency in Hz */
++	unsigned int enable_pin;	/* transceiver enable */
++	unsigned int standby_pin;	/* transceiver standby */
+ };
+ 
+ /* CAN FD mode nominal rate constants */
+@@ -1063,6 +1066,10 @@ static int rcar_canfd_open(struct net_device *ndev)
+ 	struct rcar_canfd_global *gpriv = priv->gpriv;
+ 	int err;
+ 
++	/* transceiver normal mode */
++	if (gpio_is_valid(gpriv->standby_pin))
++		gpio_set_value(gpriv->standby_pin, 1);
++
+ 	/* Peripheral clock is already enabled in probe */
+ 	err = clk_prepare_enable(gpriv->can_clk);
+ 	if (err) {
+@@ -1131,6 +1138,9 @@ static int rcar_canfd_close(struct net_device *ndev)
+ 	clk_disable_unprepare(gpriv->can_clk);
+ 	close_candev(ndev);
+ 	can_led_event(ndev, CAN_LED_EVENT_STOP);
++	/* transceiver stanby mode */
++	if (gpio_is_valid(gpriv->standby_pin))
++		gpio_set_value(gpriv->standby_pin, 0);
+ 	return 0;
+ }
+ 
+@@ -1409,16 +1419,9 @@ static int rcar_canfd_probe(struct platform_device *pdev)
  	struct rcar_canfd_global *gpriv;
  	struct device_node *of_child;
  	unsigned long channels_mask = 0;
 -	int err, ch_irq, g_irq;
 +	int err, ret, ch_irq, g_irq;
  	u32 clock_select = RCANFD_CANFDCLK;
-+	unsigned int enable_pin, standby_pin;
+-
+-	of_property_read_u32(pdev->dev.of_node,
+-			     "renesas,can-clock-select", &clock_select);
+-	if (clock_select >= ARRAY_SIZE(clock_names)) {
+-		err = -EINVAL;
+-		dev_err(&pdev->dev, "invalid CAN clock selected\n");
+-		goto fail_dev;
+-	}
 +	enum of_gpio_flags enable_flags, standby_flags;
  
- 	of_property_read_u32(pdev->dev.of_node,
- 			     "renesas,can-clock-select", &clock_select);
-@@ -1419,6 +1422,24 @@ static int rcar_canfd_probe(struct platform_device *pdev)
- 		dev_err(&pdev->dev, "invalid CAN clock selected\n");
- 		goto fail_dev;
+ 	of_child = of_get_child_by_name(pdev->dev.of_node, "channel0");
+ 	if (of_child && of_device_is_available(of_child))
+@@ -1552,6 +1555,33 @@ static int rcar_canfd_probe(struct platform_device *pdev)
+ 			goto fail_channel;
  	}
-+	enable_pin = of_get_gpio_flags(pdev->dev.of_node, 0, &enable_flags);
-+	standby_pin = of_get_gpio_flags(pdev->dev.of_node, 1, &standby_flags);
+ 
++	of_property_read_u32(pdev->dev.of_node,
++			     "renesas,can-clock-select", &clock_select);
++	if (clock_select >= ARRAY_SIZE(clock_names)) {
++		err = -EINVAL;
++		dev_err(&pdev->dev, "invalid CAN clock selected\n");
++		goto fail_dev;
++	}
++	gpriv->enable_pin = of_get_gpio_flags(pdev->dev.of_node, 0, &enable_flags);
++	gpriv->standby_pin = of_get_gpio_flags(pdev->dev.of_node, 1, &standby_flags);
 +
-+	if (gpio_is_valid(enable_pin)) {
-+		int val = standby_flags & OF_GPIO_ACTIVE_LOW ?
++	if (gpio_is_valid(gpriv->enable_pin)) {
++		int val = enable_flags & OF_GPIO_ACTIVE_LOW ?
 +			  GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
-+		ret = devm_gpio_request_one(&pdev->dev, enable_pin, val, "enable");
++		ret = devm_gpio_request_one(&pdev->dev, gpriv->enable_pin, val, "enable");
 +		if (ret)
 +			dev_info(&pdev->dev, "Failed to request enable pin\n");
 +	}
 +
-+	if (gpio_is_valid(standby_pin)) {
++	if (gpio_is_valid(gpriv->standby_pin)) {
 +		int val = standby_flags & OF_GPIO_ACTIVE_LOW ?
-+			  GPIOF_OUT_INIT_HIGH : GPIOF_OUT_INIT_LOW;
-+		ret = devm_gpio_request_one(&pdev->dev, standby_pin, val, "standby");
++			  GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
++		/* transceiver standby mode */
++		ret = devm_gpio_request_one(&pdev->dev, gpriv->standby_pin, val, "standby");
 +		if (ret)
 +			dev_info(&pdev->dev, "Failed to request standby pin\n");
 +	}
- 
- 	of_child = of_get_child_by_name(pdev->dev.of_node, "channel0");
- 	if (of_child && of_device_is_available(of_child))
++
+ 	platform_set_drvdata(pdev, gpriv);
+ 	dev_info(&pdev->dev, "global operational state (clk %d)\n",
+ 		 gpriv->clock_select);
 -- 
 1.9.1
 

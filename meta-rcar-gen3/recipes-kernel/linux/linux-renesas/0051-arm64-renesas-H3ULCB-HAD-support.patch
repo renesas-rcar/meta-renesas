@@ -656,7 +656,7 @@ index 0000000..87f0f4a
 +	max9286-max9271@0 {
 +		compatible = "maxim,max9286-max9271";
 +		reg = <0x4c>;
-+		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
++		gpios = <&gpio2 6 GPIO_ACTIVE_HIGH>; /* shared with CAN0 transceiver */
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
 +		maxim,resetb-gpio = <1>;
@@ -668,7 +668,7 @@ index 0000000..87f0f4a
 +	max9286-max9271@1 {
 +		compatible = "maxim,max9286-max9271";
 +		reg = <0x6c>;
-+		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
++		gpios = <&gpio5 25 GPIO_ACTIVE_HIGH>;
 +		maxim,sensor_delay = <0>;
 +		maxim,links = <4>;
 +		maxim,resetb-gpio = <1>;
@@ -1144,7 +1144,7 @@ index 0000000..87f0f4a
 +	status = "disabled";
 +
 +	renesas,can-clock-select = <0x0>;
-+	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable - NC */
++	gpios = <&gpio2 6 GPIO_ACTIVE_HIGH /* enable - shared with camera board */
 +		 &gpio2 7 GPIO_ACTIVE_LOW /* standby */
 +		>;
 +};
@@ -1155,7 +1155,7 @@ index 0000000..87f0f4a
 +	status = "okay";
 +
 +	renesas,can-clock-select = <0x0>;
-+	gpios = <&gpio5 29 GPIO_ACTIVE_HIGH /* enable - NC */
++	gpios = <&gpio2 6 GPIO_ACTIVE_HIGH /* enable - shared with camera board */
 +		 &gpio2 7 GPIO_ACTIVE_LOW /* standby */
 +		>;
 +
