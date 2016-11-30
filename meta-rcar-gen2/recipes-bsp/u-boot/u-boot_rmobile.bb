@@ -18,9 +18,9 @@ PV = "rmobile+git${SRCPV}"
 
 EXTRA_OEMAKE_append = " KCFLAGS=-fgnu89-inline"
 
-UBOOT_SREC ?= "u-boot-elf.gsrec"
-UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.srec"
-UBOOT_SREC_SYMLINK ?= "u-boot-elf-${MACHINE}.srec"
+UBOOT_SREC ?= "u-boot.srec"
+UBOOT_SREC_IMAGE ?= "u-boot-${MACHINE}-${PV}-${PR}.srec"
+UBOOT_SREC_SYMLINK ?= "u-boot-${MACHINE}.srec"
 
 do_deploy_append_porter() {
     install -m 644 ${S}/${UBOOT_SREC} ${DEPLOYDIR}/${UBOOT_SREC_IMAGE}
