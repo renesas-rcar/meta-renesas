@@ -20,6 +20,7 @@ IMAGE_INSTALL_append_rcar-gen3 = " \
     iperf \
     bonnie++ \
     lmbench \
+    nfs-utils \
 "
 
 # Support secure environment
