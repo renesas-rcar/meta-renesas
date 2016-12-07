@@ -1,0 +1,28 @@
+From e8a8905ad1651fafbe6f85fd774b3c3e213907ef Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 7 Dec 2016 17:29:58 +0300
+Subject: [PATCH] gen2: set default baudrate 115200
+
+This sets default baudrate to 115200
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ include/configs/rcar-gen2-common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/configs/rcar-gen2-common.h b/include/configs/rcar-gen2-common.h
+index 80313fc..9ea2d71 100644
+--- a/include/configs/rcar-gen2-common.h
++++ b/include/configs/rcar-gen2-common.h
+@@ -30,7 +30,7 @@
+ #define CONFIG_INITRD_TAG
+ #define CONFIG_CMDLINE_EDITING
+ 
+-#define CONFIG_BAUDRATE		38400
++#define CONFIG_BAUDRATE		115200
+ #define CONFIG_BOOTARGS		""
+ 
+ #define CONFIG_VERSION_VARIABLE
+-- 
+1.9.1
+
