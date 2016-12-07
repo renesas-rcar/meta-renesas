@@ -32,9 +32,9 @@ index 42555a6..0987aab 100644
  		maxim,sensor_delay = <0>;
 -		maxim,links = <4>;
 +		maxim,links = <1>;
- 	};
- 
- 	clk_5p49v5923a: programmable_clk@6a {
+ 		maxim,resetb-gpio = <1>;
+ 		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
 @@ -1082,7 +1082,7 @@
  				csi,select = "csi41";
  				virtual,channel = <0>;
@@ -72,9 +72,9 @@ index 42555a6..0987aab 100644
  		maxim,sensor_delay = <0>;
 -		maxim,links = <4>;
 +		maxim,links = <1>;
- 	};
- };
- 
+ 		maxim,resetb-gpio = <1>;
+ 		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
 @@ -759,7 +759,7 @@
  				csi,select = "csi41";
  				virtual,channel = <0>;
@@ -108,13 +108,13 @@ index 42555a6..0987aab 100644
  					remote-endpoint = <&csi2_41_in_ep>;
 @@ -649,7 +649,7 @@
  		reg = <0x6c>;
- 		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+ 		gpios = <&gpio5 25 GPIO_ACTIVE_HIGH>;
  		maxim,sensor_delay = <0>;
 -		maxim,links = <4>;
 +		maxim,links = <1>;
- 	};
- };
- 
+ 		maxim,resetb-gpio = <1>;
+ 		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
 @@ -892,7 +892,7 @@
  				csi,select = "csi41";
  				virtual,channel = <0>;
