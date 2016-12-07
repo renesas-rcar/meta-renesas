@@ -1,13 +1,13 @@
 DESCRIPTION = "OP-TEE OS"
-
 LICENSE = "BSD-2-Clause & BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b \
                     file://lib/libpng/LICENSE;md5=06a1b6fde6d93170bb72201c8000bf3d \
 "
 
-PACKAGE_ARCH = "${MACHINE_ARCH}"
+DEPENDS = "python-pycrypto-native"
+inherit deploy pythonnative
 
-inherit deploy
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 S = "${WORKDIR}/git"
 
