@@ -1,4 +1,4 @@
-require ../../include/rcar-gen2-modules-common.inc
+require include/rcar-gen2-modules-common.inc
 
 LICENSE = "CLOSED"
 DEPENDS = "kernel-module-mmngr"
