@@ -29,7 +29,7 @@ new file mode 100644
 index 0000000..2b266cc
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
-@@ -0,0 +1,966 @@
+@@ -0,0 +1,968 @@
 +/*
 + * Device Tree Source for the H3ULCB.View board
 + *
@@ -909,6 +909,7 @@ index 0000000..2b266cc
 +	status = "okay";
 +
 +	adi,input-interface = "ycbcr422";
++	csi2,csi_rate = <700>;
 +
 +	virtual,channel {
 +		csi2_vc0 {
@@ -949,6 +950,7 @@ index 0000000..2b266cc
 +	status = "okay";
 +
 +	adi,input-interface = "ycbcr422";
++	csi2,csi_rate = <700>;
 +
 +	virtual,channel {
 +		csi2_vc0 {

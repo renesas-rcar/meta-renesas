@@ -28,7 +28,7 @@ new file mode 100644
 index 0000000..d9cb8e7
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
-@@ -0,0 +1,1404 @@
+@@ -0,0 +1,1406 @@
 +/*
 + * Device Tree Source for the Salvator-X.View board
 + *
@@ -1322,6 +1322,7 @@ index 0000000..d9cb8e7
 +	status = "okay";
 +
 +	adi,input-interface = "ycbcr422";
++	csi2,csi_rate = <700>;
 +
 +	virtual,channel {
 +		csi2_vc0 {
@@ -1362,6 +1363,7 @@ index 0000000..d9cb8e7
 +	status = "okay";
 +
 +	adi,input-interface = "ycbcr422";
++	csi2,csi_rate = <700>;
 +
 +	virtual,channel {
 +		csi2_vc0 {

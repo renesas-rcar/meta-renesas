@@ -9,18 +9,18 @@ Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 ---
  drivers/media/i2c/soc_camera/Kconfig               |   32 +
  drivers/media/i2c/soc_camera/Makefile              |    4 +
- drivers/media/i2c/soc_camera/max9286_max9271.c     |  354 ++++++
+ drivers/media/i2c/soc_camera/max9286_max9271.c     |  383 +++++++
  drivers/media/i2c/soc_camera/max9286_max9271.h     |  231 ++++
- .../media/i2c/soc_camera/max9286_max9271_ov10635.c |  598 ++++++++++
+ .../media/i2c/soc_camera/max9286_max9271_ov10635.c |  597 ++++++++++
  .../media/i2c/soc_camera/max9286_max9271_ov10635.h | 1149 ++++++++++++++++++++
  .../media/i2c/soc_camera/max9286_max9271_ov106xx.c |  106 ++
- .../i2c/soc_camera/max9286_max9271_ov490_ov10640.c |  456 ++++++++
+ .../i2c/soc_camera/max9286_max9271_ov490_ov10640.c |  455 ++++++++
  .../i2c/soc_camera/max9286_max9271_ov490_ov10640.h |   35 +
- drivers/media/platform/soc_camera/rcar_csi2.c      |   42 +-
+ drivers/media/platform/soc_camera/rcar_csi2.c      |  106 +-
  drivers/media/platform/soc_camera/rcar_vin.c       |    4 +
  drivers/media/platform/soc_camera/soc_mediabus.c   |   16 +
  include/media/drv-intf/soc_mediabus.h              |    3 +
- 13 files changed, 3027 insertions(+), 3 deletions(-)
+ 13 files changed, 3052 insertions(+), 69 deletions(-)
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.c
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.h
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
@@ -87,10 +87,10 @@ index d0421fe..05944d8 100644
  obj-$(CONFIG_SOC_CAMERA_MT9T031)	+= mt9t031.o
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271.c b/drivers/media/i2c/soc_camera/max9286_max9271.c
 new file mode 100644
-index 0000000..e09a1da
+index 0000000..c71e532
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271.c
-@@ -0,0 +1,354 @@
+@@ -0,0 +1,383 @@
 +/*
 + * MAXIM R-Car H3 Demo board setup driver
 + *
@@ -121,6 +121,7 @@ index 0000000..e09a1da
 +struct max9286_max9271_priv {
 +	int		des_addr;
 +	int		links;
++	int		lanes;
 +	int		offset;
 +	const char	*fsync_mode;
 +	int		fsync_period;
@@ -210,10 +211,22 @@ index 0000000..e09a1da
 +	/* Initial setup */
 +	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
 +	maxim_reg8_write(client, 0x15, 0x13);			/* disable CSI output, VC is set accordingly to Link number */
-+	if (priv->links == 1)
-+		maxim_reg8_write(client, 0x12, 0x33);		/* enable CSI-2 Lane D0 only, DBL mode, YUV422 8-bit*/
-+	else
-+		maxim_reg8_write(client, 0x12, 0xf3);		/* enable CSI-2 Lanes D[0:3], DBL mode, YUV422 8-bit*/
++	switch (priv->lanes) {
++	case 1:
++		maxim_reg8_write(client, 0x12, 0x33); /* enable CSI-2 Lane D0, DBL mode, YUV422 8-bit*/
++		break;
++	case 2:
++		maxim_reg8_write(client, 0x12, 0x73); /* enable CSI-2 Lanes D0,D1, DBL mode, YUV422 8-bit*/
++		break;
++	case 3:
++		maxim_reg8_write(client, 0x12, 0xd3); /* enable CSI-2 Lanes D0-D2, DBL mode, YUV422 8-bit*/
++		break;
++	case 4:
++		maxim_reg8_write(client, 0x12, 0xf3); /* enable CSI-2 Lanes D0-D3, DBL mode, YUV422 8-bit*/
++		break;
++	default:
++		dev_err(&client->dev, "CSI2 lanes number is invalid (%d)\n", priv->lanes);
++	}
 +
 +	if (strcmp(priv->fsync_mode, "manual") == 0) {
 +		maxim_reg8_write(client, 0x06, priv->fsync_period & 0xff);
@@ -285,14 +298,27 @@ index 0000000..e09a1da
 +	/* Reverse channel setup */
 +	client->addr = priv->des_addr;			/* MAX9286-CAMx I2C */
 +	maxim_reg8_write(client, 0x1b, 0x0f);		/* enable equalizer for all links */
-+	if (priv->links == 1) {
++	switch (priv->links) {
++	case 1:
 +		maxim_reg8_write(client, 0x00, 0xe1);	/* enable GMSL link 0, auto detect link used for CSI clock source */
 +		maxim_reg8_write(client, 0x0a, 0xf1);	/* enable reverse control only for link0 */
 +		maxim_reg8_write(client, 0x69, 0x0e);	/* mask Links 1 2 3, unmask link 0 */
-+	} else {
++		break;
++	case 2:
++		maxim_reg8_write(client, 0x00, 0xe3);	/* enable GMSL links [0:1], auto detect link used for CSI clock source */
++		maxim_reg8_write(client, 0x0a, 0xf3);	/* enable reverse control only for link0 */
++		maxim_reg8_write(client, 0x69, 0x0c);	/* mask Links 2 3, unmask links 0 1 */
++		break;
++	case 3:
++		maxim_reg8_write(client, 0x00, 0xe7);	/* enable GMSL links [0:2], auto detect link used for CSI clock source */
++		maxim_reg8_write(client, 0x0a, 0xf7);	/* enable reverse control only for link0 */
++		maxim_reg8_write(client, 0x69, 0x08);	/* mask Link 3, unmask links 0 1 2 */
++		break;
++	case 4:
 +		maxim_reg8_write(client, 0x00, 0xef);	/* enable GMSL links [0:3], auto detect link used for CSI clock source */
 +		maxim_reg8_write(client, 0x0a, 0xff);	/* enable reverse control for all links */
 +		maxim_reg8_write(client, 0x69, 0x00);	/* unmask all links */
++		break;
 +	}
 +	usleep_range(2000, 2500);			/* wait 2ms after any change of reverse channel settings */
 +}
@@ -329,6 +355,9 @@ index 0000000..e09a1da
 +
 +	if (of_property_read_u32(np, "maxim,links", &priv->links))
 +		priv->links = 4;
++
++	if (of_property_read_u32(np, "maxim,lanes", &priv->lanes))
++		priv->lanes = 4;
 +
 +	pwen = of_get_gpio(np, 0);
 +	if (pwen > 0) {
@@ -373,8 +402,8 @@ index 0000000..e09a1da
 +		if (of_property_read_u32(np, "maxim,timeout", &priv->timeout))
 +		priv->timeout = 100;
 +
-+	dev_info(&client->dev, "LINKs=%d, RESETB GPIO=%d, FSYNC mode=%s, FSYNC period=%d, PCLK edge=%s\n",
-+			       priv->links, priv->gpio_resetb, priv->fsync_mode, priv->fsync_period,
++	dev_info(&client->dev, "LINKs=%d, LANES=%d, RESETB GPIO=%d, FSYNC mode=%s, FSYNC period=%d, PCLK edge=%s\n",
++			       priv->links, priv->lanes, priv->gpio_resetb, priv->fsync_mode, priv->fsync_period,
 +			       priv->pclk_rising_edge ? "rising" : "falling");
 +
 +	return 0;
@@ -685,7 +714,7 @@ index 0000000..988a04f
 \ No newline at end of file
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
 new file mode 100644
-index 0000000..9123c0d
+index 0000000..b1f4ad6
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
 @@ -0,0 +1,597 @@
@@ -2555,7 +2584,7 @@ index 0000000..14e1a1f
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
 new file mode 100644
-index 0000000..5a38b32
+index 0000000..5444114
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
 @@ -0,0 +1,455 @@
@@ -3056,77 +3085,168 @@ index 0000000..000407f
 +{0x00bb, 0x1d},
 +};
 diff --git a/drivers/media/platform/soc_camera/rcar_csi2.c b/drivers/media/platform/soc_camera/rcar_csi2.c
-index 851a4ca..a4f5af3 100644
+index 851a4ca..fc0bc0b 100644
 --- a/drivers/media/platform/soc_camera/rcar_csi2.c
 +++ b/drivers/media/platform/soc_camera/rcar_csi2.c
-@@ -38,6 +38,9 @@
+@@ -37,7 +37,6 @@
+ #include <media/v4l2-of.h>
  
  #define DRV_NAME "rcar_csi2"
- #define CONNECT_SLAVE_NAME "adv7482"
-+#define CONNECT_SLAVE_NAME2 "ov10635"
-+#define CONNECT_SLAVE_NAME3 "ov490-ov10640"
-+#define CONNECT_SLAVE_NAME4 "ov106xx"
+-#define CONNECT_SLAVE_NAME "adv7482"
  #define VC_MAX_CHANNEL		4
  
  #define RCAR_CSI2_TREF		0x00
-@@ -275,6 +278,15 @@ static int rcar_csi2_set_phy_freq(struct rcar_csi2 *priv)
- 				(priv->mf->height == 1080))
- 				bps_per_lane = RCAR_CSI_900MBPS;
- 			else if ((priv->mf->width == 1280) &&
-+				 (priv->mf->height == 1080))
-+				bps_per_lane = RCAR_CSI_900MBPS;
-+			else if ((priv->mf->width == 1280) &&
-+				 (priv->mf->height == 966))
-+				bps_per_lane = RCAR_CSI_900MBPS;
-+			else if ((priv->mf->width == 1280) &&
-+				 (priv->mf->height == 800))
-+				bps_per_lane = RCAR_CSI_900MBPS;
-+			else if ((priv->mf->width == 1280) &&
- 				 (priv->mf->height == 720))
- 				bps_per_lane = RCAR_CSI_450MBPS;
- 			else if ((priv->mf->width == 720) &&
-@@ -285,7 +297,10 @@ static int rcar_csi2_set_phy_freq(struct rcar_csi2 *priv)
- 				bps_per_lane = RCAR_CSI_190MBPS;
- 			else if ((priv->mf->width == 640) &&
- 				 (priv->mf->height == 480))
--				bps_per_lane = RCAR_CSI_100MBPS;
-+				bps_per_lane = RCAR_CSI_450MBPS;
-+			else if ((priv->mf->width == 640) &&
-+				 (priv->mf->height == 400))
-+				bps_per_lane = RCAR_CSI_450MBPS;
- 			else
- 				goto error;
- 		} else {
-@@ -464,6 +479,27 @@ static int rcar_csi2_s_power(struct v4l2_subdev *sd, int on)
- 				if (ret < 0)
- 					return ret;
- 			}
-+			if (strncmp(tmp_sd->name, CONNECT_SLAVE_NAME2,
-+				sizeof(CONNECT_SLAVE_NAME2) - 1) == 0) {
-+				v4l2_subdev_call(tmp_sd, pad, get_fmt,
-+							 NULL, &fmt);
-+				if (ret < 0)
-+					return ret;
-+			}
-+			if (strncmp(tmp_sd->name, CONNECT_SLAVE_NAME3,
-+				sizeof(CONNECT_SLAVE_NAME3) - 1) == 0) {
-+				v4l2_subdev_call(tmp_sd, pad, get_fmt,
-+							 NULL, &fmt);
-+				if (ret < 0)
-+					return ret;
-+			}
-+			if (strncmp(tmp_sd->name, CONNECT_SLAVE_NAME4,
-+				sizeof(CONNECT_SLAVE_NAME4) - 1) == 0) {
-+				v4l2_subdev_call(tmp_sd, pad, get_fmt,
-+							 NULL, &fmt);
-+				if (ret < 0)
-+					return ret;
-+			}
- 		}
- 		priv->mf = mf;
- 		pm_runtime_get_sync(&priv->pdev->dev);
-@@ -529,8 +565,8 @@ static int rcar_csi2_parse_dt(struct device_node *np,
+@@ -173,6 +172,7 @@ struct rcar_csi2_link_config {
+ 	unsigned char lanes;
+ 	unsigned long vcdt;
+ 	unsigned long vcdt2;
++	unsigned int csi_rate;
+ };
  
+ #define INIT_RCAR_CSI2_LINK_CONFIG(m) \
+@@ -199,6 +199,7 @@ struct rcar_csi2 {
+ 	unsigned int			field;
+ 	unsigned int			code;
+ 	unsigned int			lanes;
++	unsigned int			csi_rate;
+ 	spinlock_t			lock;
+ };
+ 
+@@ -245,6 +246,7 @@ struct rcar_csi2 {
+ #define RCAR_CSI_1400MBPS	40
+ #define RCAR_CSI_1450MBPS	41
+ #define RCAR_CSI_1500MBPS	42
++#define RCAR_CSI_NUMRATES	43
+ 
+ static int rcar_csi2_set_phy_freq(struct rcar_csi2 *priv)
+ {
+@@ -259,47 +261,22 @@ static int rcar_csi2_set_phy_freq(struct rcar_csi2 *priv)
+ 		0x0B, 0x1B, 0x2B, 0x3B, 0x0C,  /* 35-39 */
+ 		0x1C, 0x2C, 0x3C               /* 40-42 */
+ 	};
++	const uint32_t const csi2_rate_range[43] = {
++		80, 90, 100, 110, 120,		/* 0-4   */
++		130, 140, 150, 160, 170,	/* 5-9   */
++		180, 190, 205, 220, 235,	/* 10-14 */
++		250, 275, 300, 325, 350,	/* 15-19 */
++		400, 450, 500, 550, 600,	/* 20-24 */
++		650, 700, 750, 800, 850,	/* 25-29 */
++		900, 950, 1000, 1050, 1100,	/* 30-34 */
++		1150, 1200, 1250, 1300, 1350,	/* 35-39 */
++		1400, 1450, 1500		/* 40-42 */
++	};
+ 	uint32_t bps_per_lane = RCAR_CSI_190MBPS;
+ 
+-	dev_dbg(&priv->pdev->dev, "Input size (%dx%d%c)\n",
+-			 priv->mf->width, priv->mf->height,
+-			 (priv->mf->field == V4L2_FIELD_NONE) ? 'p' : 'i');
+-
+-	switch (priv->lanes) {
+-	case 1:
+-		bps_per_lane = RCAR_CSI_400MBPS;
+-		break;
+-	case 4:
+-		if (priv->mf->field == V4L2_FIELD_NONE) {
+-			if ((priv->mf->width == 1920) &&
+-				(priv->mf->height == 1080))
+-				bps_per_lane = RCAR_CSI_900MBPS;
+-			else if ((priv->mf->width == 1280) &&
+-				 (priv->mf->height == 720))
+-				bps_per_lane = RCAR_CSI_450MBPS;
+-			else if ((priv->mf->width == 720) &&
+-				 (priv->mf->height == 480))
+-				bps_per_lane = RCAR_CSI_190MBPS;
+-			else if ((priv->mf->width == 720) &&
+-				 (priv->mf->height == 576))
+-				bps_per_lane = RCAR_CSI_190MBPS;
+-			else if ((priv->mf->width == 640) &&
+-				 (priv->mf->height == 480))
+-				bps_per_lane = RCAR_CSI_100MBPS;
+-			else
+-				goto error;
+-		} else {
+-			if ((priv->mf->width == 1920) &&
+-				(priv->mf->height == 1080))
+-				bps_per_lane = RCAR_CSI_450MBPS;
+-			else
+-				goto error;
+-		}
+-		break;
+-	default:
+-		dev_err(&priv->pdev->dev, "ERROR: lanes is invalid (%d)\n",
+-								 priv->lanes);
+-		return -EINVAL;
++	for (bps_per_lane = 0; bps_per_lane < RCAR_CSI_NUMRATES; bps_per_lane++) {
++		if (priv->csi_rate <= csi2_rate_range[bps_per_lane])
++			break;
+ 	}
+ 
+ 	dev_dbg(&priv->pdev->dev, "bps_per_lane (%d)\n", bps_per_lane);
+@@ -307,12 +284,6 @@ static int rcar_csi2_set_phy_freq(struct rcar_csi2 *priv)
+ 	iowrite32((hs_freq_range[bps_per_lane] << 16),
+ 				priv->base + RCAR_CSI2_PHYPLL);
+ 	return 0;
+-
+-error:
+-	dev_err(&priv->pdev->dev, "Not support resolution (%dx%d%c)\n",
+-		 priv->mf->width, priv->mf->height,
+-		 (priv->mf->field == V4L2_FIELD_NONE) ? 'p' : 'i');
+-	return -EINVAL;
+ }
+ 
+ static irqreturn_t rcar_csi2_irq(int irq, void *data)
+@@ -370,6 +341,16 @@ static int rcar_csi2_hwinit(struct rcar_csi2 *priv)
+ 			iowrite32(0x0001000f, priv->base + RCAR_CSI2_FLD);
+ 			tmp |= 0x1;
+ 			break;
++		case 2:
++			/* First field number setting */
++			iowrite32(0x0001000f, priv->base + RCAR_CSI2_FLD);
++			tmp |= 0x3;
++			break;
++		case 3:
++			/* First field number setting */
++			iowrite32(0x0001000f, priv->base + RCAR_CSI2_FLD);
++			tmp |= 0x7;
++			break;
+ 		case 4:
+ 			/* First field number setting */
+ 			iowrite32(0x0002000f, priv->base + RCAR_CSI2_FLD);
+@@ -448,24 +429,9 @@ static int rcar_csi2_hwinit(struct rcar_csi2 *priv)
+ static int rcar_csi2_s_power(struct v4l2_subdev *sd, int on)
+ {
+ 	struct rcar_csi2 *priv = container_of(sd, struct rcar_csi2, subdev);
+-	struct v4l2_subdev *tmp_sd;
+-	struct v4l2_subdev_format fmt = {
+-		.which = V4L2_SUBDEV_FORMAT_ACTIVE,
+-	};
+-	struct v4l2_mbus_framefmt *mf = &fmt.format;
+ 	int ret = 0;
+ 
+ 	if (on) {
+-		v4l2_device_for_each_subdev(tmp_sd, sd->v4l2_dev) {
+-			if (strncmp(tmp_sd->name, CONNECT_SLAVE_NAME,
+-				sizeof(CONNECT_SLAVE_NAME) - 1) == 0) {
+-				v4l2_subdev_call(tmp_sd, pad, get_fmt,
+-							 NULL, &fmt);
+-				if (ret < 0)
+-					return ret;
+-			}
+-		}
+-		priv->mf = mf;
+ 		pm_runtime_get_sync(&priv->pdev->dev);
+ 		ret = rcar_csi2_hwinit(priv);
+ 		if (ret < 0)
+@@ -527,10 +493,16 @@ static int rcar_csi2_parse_dt(struct device_node *np,
+ 	if (ret < 0)
+ 		return ret;
+ 
++	ret = of_property_read_u32(np, "csi2,csi_rate", &config->csi_rate);
++	if (ret < 0) {
++		printk("csi_rate not set\n");
++		return ret;
++	}
++
  	vc_np = of_get_child_by_name(np, "virtual,channel");
  
 -	config->vcdt = 0;
@@ -3135,6 +3255,28 @@ index 851a4ca..a4f5af3 100644
 +	config->vcdt2 = 0x83008200;
  	for (i = 0; i < VC_MAX_CHANNEL; i++) {
  		sprintf(csi_name, "csi2_vc%d", i);
+ 
+@@ -594,12 +566,7 @@ static int rcar_csi2_probe(struct platform_device *pdev)
+ 		if (ret)
+ 			return ret;
+ 
+-		if (link_config.lanes == 4)
+-			dev_info(&pdev->dev,
+-				"Detected rgb888 in rcar_csi2_parse_dt\n");
+-		else
+-			dev_info(&pdev->dev,
+-				"Detected YCbCr422 in rcar_csi2_parse_dt\n");
++		dev_info(&pdev->dev, "Data lanes %d\n", link_config.lanes);
+ 	} else {
+ 		pdata = pdev->dev.platform_data;
+ 		if (!pdata)
+@@ -636,6 +603,7 @@ static int rcar_csi2_probe(struct platform_device *pdev)
+ 	priv->lanes = link_config.lanes;
+ 	priv->vcdt = link_config.vcdt;
+ 	priv->vcdt2 = link_config.vcdt2;
++	priv->csi_rate = link_config.csi_rate;
+ 
+ 	platform_set_drvdata(pdev, &priv->subdev);
  
 diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
 index 0c0027e..19bc400 100644

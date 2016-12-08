@@ -30,7 +30,7 @@ new file mode 100644
 index 0000000..bdbecd6
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
-@@ -0,0 +1,834 @@
+@@ -0,0 +1,836 @@
 +/*
 + * Device Tree Source for the M3ULCB board
 + *
@@ -782,6 +782,7 @@ index 0000000..bdbecd6
 +	status = "okay";
 +
 +	adi,input-interface = "ycbcr422";
++	csi2,csi_rate = <700>;
 +
 +	virtual,channel {
 +		csi2_vc0 {
@@ -822,6 +823,7 @@ index 0000000..bdbecd6
 +	status = "okay";
 +
 +	adi,input-interface = "ycbcr422";
++	csi2,csi_rate = <700>;
 +
 +	virtual,channel {
 +		csi2_vc0 {
