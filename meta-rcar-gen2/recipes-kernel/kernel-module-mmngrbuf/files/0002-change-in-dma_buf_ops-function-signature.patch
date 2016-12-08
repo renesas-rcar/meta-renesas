@@ -1,0 +1,39 @@
+From eeb18c99b2a29b4793dcc0f30b3037263d06419f Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Wed, 7 Dec 2016 15:30:09 +0300
+Subject: [PATCH] change in dma_buf_ops function signature
+
+Accordingly to linux/dma_buf.h (commits 831e9da7 and 18b862dc)
+signature of functions dma_buf_start_cpu_access and dma_buf_end_cpu_access
+have been changed.
+---
+ drv/mmngr_buf_drv.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drv/mmngr_buf_drv.c b/drv/mmngr_buf_drv.c
+index 732e40c..41622e7 100755
+--- a/drv/mmngr_buf_drv.c
++++ b/drv/mmngr_buf_drv.c
+@@ -203,16 +203,14 @@ static void dmabuf_release(struct dma_buf *buf)
+ 
+ }
+ 
+-static int dmabuf_begin_cpu_access(struct dma_buf *buf, size_t size,
+-	size_t length, enum dma_data_direction direction)
++static int dmabuf_begin_cpu_access(struct dma_buf *buf, enum dma_data_direction direction)
+ {
+ 	return 0;
+ }
+ 
+-static void dmabuf_end_cpu_access(struct dma_buf *buf, size_t size,
+-	size_t length, enum dma_data_direction direction)
++static int dmabuf_end_cpu_access(struct dma_buf *buf,  enum dma_data_direction direction)
+ {
+-
++	return 0;
+ }
+ 
+ static void *dmabuf_kmap_atomic(struct dma_buf *buf, unsigned long page)
+-- 
+2.7.4
+
