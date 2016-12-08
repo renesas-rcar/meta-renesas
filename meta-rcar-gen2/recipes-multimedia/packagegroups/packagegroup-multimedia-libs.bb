@@ -1,7 +1,9 @@
 SUMMARY = "Multimedia user libraries modules package groups"
 LICENSE = "MIT"
 
-DEPENDS = "mmngr-user-module \
+DEPENDS = "\
+    mmngr-user-module \
+    mmngrbuf-user-module \
     vspm-user-module \
     libmediactl-v4l2 \
 "
@@ -16,6 +18,7 @@ PACKAGES = " \
 
 RDEPENDS_packagegroup-multimedia-libs = " \
     mmngr-user-module \
+    mmngrbuf-user-module \
     vspm-user-module \
     libmediactl-v4l2 \
 "
