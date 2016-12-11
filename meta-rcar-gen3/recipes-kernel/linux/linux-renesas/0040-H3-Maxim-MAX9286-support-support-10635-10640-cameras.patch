@@ -11,16 +11,16 @@ Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
  drivers/media/i2c/soc_camera/Makefile              |    4 +
  drivers/media/i2c/soc_camera/max9286_max9271.c     |  383 +++++++
  drivers/media/i2c/soc_camera/max9286_max9271.h     |  231 ++++
- .../media/i2c/soc_camera/max9286_max9271_ov10635.c |  597 ++++++++++
+ .../media/i2c/soc_camera/max9286_max9271_ov10635.c |  615 +++++++++++
  .../media/i2c/soc_camera/max9286_max9271_ov10635.h | 1149 ++++++++++++++++++++
  .../media/i2c/soc_camera/max9286_max9271_ov106xx.c |  106 ++
- .../i2c/soc_camera/max9286_max9271_ov490_ov10640.c |  455 ++++++++
+ .../i2c/soc_camera/max9286_max9271_ov490_ov10640.c |  712 ++++++++++++
  .../i2c/soc_camera/max9286_max9271_ov490_ov10640.h |   35 +
  drivers/media/platform/soc_camera/rcar_csi2.c      |  106 +-
  drivers/media/platform/soc_camera/rcar_vin.c       |    4 +
  drivers/media/platform/soc_camera/soc_mediabus.c   |   16 +
  include/media/drv-intf/soc_mediabus.h              |    3 +
- 13 files changed, 3052 insertions(+), 69 deletions(-)
+ 13 files changed, 3327 insertions(+), 69 deletions(-)
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.c
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.h
  create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
@@ -714,10 +714,10 @@ index 0000000..988a04f
 \ No newline at end of file
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
 new file mode 100644
-index 0000000..b1f4ad6
+index 0000000..7ca3f3f
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
-@@ -0,0 +1,597 @@
+@@ -0,0 +1,615 @@
 +/*
 + * MAXIM max9286-max9271 with OmniVision ov10635 sensor camera driver
 + *
@@ -762,6 +762,7 @@ index 0000000..b1f4ad6
 +	int				width;
 +	int				height;
 +	int				fps_denominator;
++	int				init_complete;
 +};
 +
 +static inline struct ov10635_priv *to_ov10635(const struct i2c_client *client)
@@ -1030,8 +1031,12 @@ index 0000000..b1f4ad6
 +{
 +	struct v4l2_subdev *sd = to_sd(ctrl);
 +	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov10635_priv *priv = to_ov10635(client);
 +	int ret = -EINVAL;
 +	u8 val = 0;
++
++	if (!priv->init_complete)
++		return 0;
 +
 +	switch (ctrl->id) {
 +	case V4L2_CID_BRIGHTNESS:
@@ -1039,6 +1044,7 @@ index 0000000..b1f4ad6
 +		ret = maxim_reg16_write(client, 0xc46a, ctrl->val);
 +		break;
 +	case V4L2_CID_CONTRAST:
++		udelay(100);
 +		ret = ov10635_set_regs(client, &ov10635_regs_contrast[ctrl->val][0], 18);
 +		break;
 +	case V4L2_CID_SATURATION:
@@ -1078,6 +1084,15 @@ index 0000000..b1f4ad6
 +		else
 +			val &= ~0x3;
 +		ret = maxim_reg16_write(client, 0x381d, val);
++		/* when mirror mode is on, register 0x6900[0] needs to be set to 0x01 in order to ensure correct color output */
++		ret = maxim_reg16_read(client, 0x6900, &val);
++		if (ret < 0)
++			return ret;
++		if (ctrl->val)
++			val |= 0x1;
++		else
++			val &= ~0x1;
++		ret = maxim_reg16_write(client, 0x6900, val);
 +		break;
 +	case V4L2_CID_VFLIP:
 +		ret = maxim_reg16_read(client, 0x381c, &val);
@@ -1213,7 +1228,7 @@ index 0000000..b1f4ad6
 +
 +	v4l2_ctrl_handler_init(&priv->hdl, 4);
 +	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
-+			  V4L2_CID_BRIGHTNESS, 0, 0xff, 1, 0x40);
++			  V4L2_CID_BRIGHTNESS, 0, 0xff, 1, 0x30);
 +	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
 +			  V4L2_CID_CONTRAST, 0, 4, 1, 2);
 +	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
@@ -1255,6 +1270,8 @@ index 0000000..b1f4ad6
 +		goto cleanup;
 +	}
 +
++	priv->init_complete = 1;
++
 +	return 0;
 +
 +cleanup:
@@ -1262,7 +1279,8 @@ index 0000000..b1f4ad6
 +	v4l2_ctrl_handler_free(&priv->hdl);
 +err_init:
 +	v4l2_device_unregister_subdev(&priv->sd);
-+	dev_dbg(&client->dev, "failed to probe ov10635 @ 0x%02x\n", OV10635_I2C_ADDR);
++	v4l_err(client, "failed to probe @ 0x%02x (%s)\n",
++		client->addr, client->adapter->name);
 +	return ret;
 +}
 +
@@ -1317,7 +1335,7 @@ index 0000000..b1f4ad6
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.h b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.h
 new file mode 100644
-index 0000000..74f9ef9
+index 0000000..6f0279d
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.h
 @@ -0,0 +1,1149 @@
@@ -1988,7 +2006,7 @@ index 0000000..74f9ef9
 +{0xC467, 0x00},
 +{0xC468, 0x86},
 +{0xC469, 0x00},
-+{0xC46A, 0x40},
++{0xC46A, 0x30},
 +{0xC46B, 0x50},
 +{0xC46C, 0x30},
 +{0xC46D, 0x28},
@@ -2584,10 +2602,10 @@ index 0000000..14e1a1f
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
 new file mode 100644
-index 0000000..5444114
+index 0000000..9f55ee8
 --- /dev/null
 +++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
-@@ -0,0 +1,455 @@
+@@ -0,0 +1,712 @@
 +/*
 + * MAXIM max9286-max9271 with OmniVision ov490-ov10640 sensor camera driver
 + *
@@ -2633,6 +2651,10 @@ index 0000000..5444114
 +	int				height;
 +	char				is_fixed_sensor;
 +	int				dvp_width;
++	int				init_complete;
++	int				exposure;
++	int				gain;
++	int				autogain;
 +};
 +
 +static inline struct ov490_priv *to_ov490(const struct i2c_client *client)
@@ -2779,17 +2801,250 @@ index 0000000..5444114
 +#endif
 +};
 +
++static int ov490_s_gamma(int a, int ref)
++{
++	if ((a + ref) > 0xff)
++		return 0xff;
++
++	if ((a + ref) < 0)
++		return 0;
++
++	return a + ref;
++}
++
 +static int ov490_s_ctrl(struct v4l2_ctrl *ctrl)
 +{
++	struct v4l2_subdev *sd = to_sd(ctrl);
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov490_priv *priv = to_ov490(client);
++	int ret = -EINVAL;
++	u8 val = 0;
++
++	if (!priv->init_complete)
++		return 0;
++
 +	switch (ctrl->id) {
 +	case V4L2_CID_BRIGHTNESS:
++		/* SDE (rough) brightness */
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x00);
++		ret |= maxim_reg16_write(client, 0x5001, ctrl->val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xf1);
++		break;
 +	case V4L2_CID_CONTRAST:
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, ctrl->val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xfd);
++		break;
 +	case V4L2_CID_SATURATION:
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, ctrl->val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xf3);
++		break;
 +	case V4L2_CID_HUE:
-+		return 0;
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, ctrl->val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xf5);
++		break;
++	case V4L2_CID_GAMMA:
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, ov490_s_gamma(ctrl->val, 0x12));
++		ret |= maxim_reg16_write(client, 0x5001, ov490_s_gamma(ctrl->val, 0x20));
++		ret |= maxim_reg16_write(client, 0x5002, ov490_s_gamma(ctrl->val, 0x3b));
++		ret |= maxim_reg16_write(client, 0x5003, ov490_s_gamma(ctrl->val, 0x5d));
++		ret |= maxim_reg16_write(client, 0x5004, ov490_s_gamma(ctrl->val, 0x6a));
++		ret |= maxim_reg16_write(client, 0x5005, ov490_s_gamma(ctrl->val, 0x76));
++		ret |= maxim_reg16_write(client, 0x5006, ov490_s_gamma(ctrl->val, 0x81));
++		ret |= maxim_reg16_write(client, 0x5007, ov490_s_gamma(ctrl->val, 0x8b));
++		ret |= maxim_reg16_write(client, 0x5008, ov490_s_gamma(ctrl->val, 0x96));
++		ret |= maxim_reg16_write(client, 0x5009, ov490_s_gamma(ctrl->val, 0x9e));
++		ret |= maxim_reg16_write(client, 0x500a, ov490_s_gamma(ctrl->val, 0xae));
++		ret |= maxim_reg16_write(client, 0x500b, ov490_s_gamma(ctrl->val, 0xbc));
++		ret |= maxim_reg16_write(client, 0x500c, ov490_s_gamma(ctrl->val, 0xcf));
++		ret |= maxim_reg16_write(client, 0x500d, ov490_s_gamma(ctrl->val, 0xde));
++		ret |= maxim_reg16_write(client, 0x500e, ov490_s_gamma(ctrl->val, 0xec));
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xf9);
++		break;
++	case V4L2_CID_SHARPNESS:
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, ctrl->val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xfb);
++		break;
++	case V4L2_CID_AUTOGAIN:
++	case V4L2_CID_GAIN:
++	case V4L2_CID_EXPOSURE:
++		if (ctrl->id == V4L2_CID_AUTOGAIN)
++			priv->autogain = ctrl->val;
++		if (ctrl->id == V4L2_CID_GAIN)
++			priv->gain = ctrl->val;
++		if (ctrl->id == V4L2_CID_EXPOSURE)
++			priv->exposure = ctrl->val;
++
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, !priv->autogain);
++		ret |= maxim_reg16_write(client, 0x5001, priv->exposure >> 8);
++		ret |= maxim_reg16_write(client, 0x5002, priv->exposure & 0xff);
++		ret |= maxim_reg16_write(client, 0x5003, priv->exposure >> 8);
++		ret |= maxim_reg16_write(client, 0x5004, priv->exposure & 0xff);
++		ret |= maxim_reg16_write(client, 0x5005, priv->exposure >> 8);
++		ret |= maxim_reg16_write(client, 0x5006, priv->exposure & 0xff);
++		ret |= maxim_reg16_write(client, 0x5007, priv->gain >> 8);
++		ret |= maxim_reg16_write(client, 0x5008, priv->gain & 0xff);
++		ret |= maxim_reg16_write(client, 0x5009, priv->gain >> 8);
++		ret |= maxim_reg16_write(client, 0x500a, priv->gain & 0xff);
++		ret |= maxim_reg16_write(client, 0x500b, priv->gain >> 8);
++		ret |= maxim_reg16_write(client, 0x500c, priv->gain & 0xff);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xea);
++		break;
++	case V4L2_CID_HFLIP:
++#if 1
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, ctrl->val);
++		ret |= maxim_reg16_write(client, 0x5001, 0x00);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xdc);
++#else
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x01); // read 0x3128
++		ret |= maxim_reg16_write(client, 0x5001, 0x31);
++		ret |= maxim_reg16_write(client, 0x5002, 0x28);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_read(client, 0x5000, &val);
++		val &= ~(0x1 << 0);
++		val |= (ctrl->val << 0);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x00); // write 0x3128
++		ret |= maxim_reg16_write(client, 0x5001, 0x31);
++		ret |= maxim_reg16_write(client, 0x5002, 0x28);
++		ret |= maxim_reg16_write(client, 0x5003, val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x01); // read 0x3291
++		ret |= maxim_reg16_write(client, 0x5001, 0x32);
++		ret |= maxim_reg16_write(client, 0x5002, 0x91);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_read(client, 0x5000, &val);
++		val &= ~(0x1 << 1);
++		val |= (ctrl->val << 1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x00); // write 0x3291
++		ret |= maxim_reg16_write(client, 0x5001, 0x32);
++		ret |= maxim_reg16_write(client, 0x5002, 0x91);
++		ret |= maxim_reg16_write(client, 0x5003, val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x01); // read 0x3090
++		ret |= maxim_reg16_write(client, 0x5001, 0x30);
++		ret |= maxim_reg16_write(client, 0x5002, 0x90);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_read(client, 0x5000, &val);
++		val &= ~(0x1 << 2);
++		val |= (ctrl->val << 2);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x00); // write 0x3090
++		ret |= maxim_reg16_write(client, 0x5001, 0x30);
++		ret |= maxim_reg16_write(client, 0x5002, 0x90);
++		ret |= maxim_reg16_write(client, 0x5003, val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++#endif
++		break;
++	case V4L2_CID_VFLIP:
++#if 1
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, ctrl->val);
++		ret |= maxim_reg16_write(client, 0x5001, 0x01);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xdc);
++#else
++		ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x01); // read 0x3128
++		ret |= maxim_reg16_write(client, 0x5001, 0x31);
++		ret |= maxim_reg16_write(client, 0x5002, 0x28);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_read(client, 0x5000, &val);
++		val &= ~(0x1 << 1);
++		val |= (ctrl->val << 1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x00); // write 0x3128
++		ret |= maxim_reg16_write(client, 0x5001, 0x31);
++		ret |= maxim_reg16_write(client, 0x5002, 0x28);
++		ret |= maxim_reg16_write(client, 0x5003, val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x01); // read 0x3291
++		ret |= maxim_reg16_write(client, 0x5001, 0x32);
++		ret |= maxim_reg16_write(client, 0x5002, 0x91);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_read(client, 0x5000, &val);
++		val &= ~(0x1 << 2);
++		val |= (ctrl->val << 2);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x00); // write 0x3291
++		ret |= maxim_reg16_write(client, 0x5001, 0x32);
++		ret |= maxim_reg16_write(client, 0x5002, 0x91);
++		ret |= maxim_reg16_write(client, 0x5003, val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x01); // read 0x3090
++		ret |= maxim_reg16_write(client, 0x5001, 0x30);
++		ret |= maxim_reg16_write(client, 0x5002, 0x90);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_read(client, 0x5000, &val);
++		val &= ~(0x1 << 3);
++		val |= (ctrl->val << 3);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x19);
++		ret |= maxim_reg16_write(client, 0x5000, 0x00); // write 0x3090
++		ret |= maxim_reg16_write(client, 0x5001, 0x30);
++		ret |= maxim_reg16_write(client, 0x5002, 0x90);
++		ret |= maxim_reg16_write(client, 0x5003, val);
++		ret |= maxim_reg16_write(client, 0xFFFE, 0x80);
++		ret |= maxim_reg16_write(client, 0x00C0, 0xc1);
++#endif
++		break;
 +	default:
 +		return -EINVAL;
 +	}
++
++	return ret;
 +}
 +
 +static const struct v4l2_ctrl_ops ov490_ctrl_ops = {
@@ -2950,15 +3205,32 @@ index 0000000..5444114
 +	v4l2_i2c_subdev_init(&priv->sd, client, &ov490_subdev_ops);
 +	priv->sd.flags = V4L2_SUBDEV_FL_HAS_DEVNODE;
 +
++	priv->exposure = 0x100;
++	priv->gain = 0x100;
++	priv->autogain = 1;
 +	v4l2_ctrl_handler_init(&priv->hdl, 4);
 +	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
-+			  V4L2_CID_BRIGHTNESS, 0, 255, 1, 0);
++			  V4L2_CID_BRIGHTNESS, 0, 16, 1, 7);
 +	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
-+			  V4L2_CID_CONTRAST, 0, 255, 1, 0);
++			  V4L2_CID_CONTRAST, 0, 16, 1, 7);
 +	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
-+			  V4L2_CID_SATURATION, 0, 255, 1, 0);
++			  V4L2_CID_SATURATION, 0, 7, 1, 2);
 +	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
-+			  V4L2_CID_HUE, 0, 255, 1, 0);
++			  V4L2_CID_HUE, 0, 23, 1, 12);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_GAMMA, -128, 128, 1, 0);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_SHARPNESS, 0, 10, 1, 3);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_AUTOGAIN, 0, 1, 1, priv->autogain);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_GAIN, 0, 0xffff, 1, priv->gain);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_EXPOSURE, 0, 0xffff, 1, priv->exposure);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_HFLIP, 0, 1, 1, 1);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_VFLIP, 0, 1, 1, 0);
 +	priv->sd.ctrl_handler = &priv->hdl;
 +
 +	ret = priv->hdl.error;
@@ -2985,13 +3257,16 @@ index 0000000..5444114
 +	if (ret)
 +		goto cleanup;
 +
++	priv->init_complete = 1;
++
 +	return 0;
 +
 +cleanup:
 +	media_entity_cleanup(&priv->sd.entity);
 +	v4l2_ctrl_handler_free(&priv->hdl);
 +	v4l2_device_unregister_subdev(&priv->sd);
-+	dev_dbg(&client->dev, "failed to probe ov490 @ 0x%02x\n", OV490_I2C_ADDR);
++	v4l_err(client, "failed to probe @ 0x%02x (%s)\n",
++		client->addr, client->adapter->name);
 +	return ret;
 +}
 +
