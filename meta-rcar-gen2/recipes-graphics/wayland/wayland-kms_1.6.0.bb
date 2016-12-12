@@ -11,7 +11,7 @@ SRC_URI = "git://github.com/renesas-rcar/wayland-kms.git;branch=rcar-gen3"
 
 COMPATIBLE_MACHINE = "(blanche|wheat)"
 S = "${WORKDIR}/git"
-DEPENDS = "libdrm wayland gles-user-module"
+DEPENDS = "libdrm wayland virtual/egl"
 
 inherit autotools pkgconfig
 
