@@ -50,7 +50,6 @@ FILES_${PN} = " \
 FILES_${PN}-dev = " \
     /usr/local/lib \
     /usr/local/lib/libvspm.so \
-    /usr/local/lib/* \
     /usr/local/include \
     /usr/local/include/*.h \
 "
