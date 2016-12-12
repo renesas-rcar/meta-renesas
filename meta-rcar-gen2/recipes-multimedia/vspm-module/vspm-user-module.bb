@@ -3,6 +3,9 @@ require ../../include/rcar-gen2-modules-common.inc
 LICENSE = "CLOSED"
 DEPENDS = "kernel-module-vspm"
 PN = "vspm-user-module"
+
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 PR = "r0"
 SRC_URI = "file://vspm-user.tar.bz2"
 

@@ -3,6 +3,8 @@ require include/rcar-gen2-modules-common.inc
 LICENSE = "CLOSED"
 DEPENDS = "kernel-module-mmngr"
 PN = "mmngr-user-module"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 S = "${WORKDIR}/mmngr"
 SRC_URI = "file://mmngr.tar.bz2 \
             file://0001-Update-to-version-1.6.patch \
