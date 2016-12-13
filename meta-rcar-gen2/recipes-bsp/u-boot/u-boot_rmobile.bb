@@ -28,7 +28,7 @@ UBOOT_SPL ?= "u-boot-spl.bin"
 UBOOT_SPL_IMAGE ?= "u-boot-spl-${MACHINE}-${PV}-${PR}.bin"
 UBOOT_SPL_SYMLINK ?= "u-boot-spl-${MACHINE}.bin"
 
-do_deploy_append_porter() {
+do_deploy_append_rcar-gen2() {
     install -m 644 ${S}/spl/${UBOOT_SPL} ${DEPLOYDIR}/${UBOOT_SPL_IMAGE}
     cd ${DEPLOYDIR}
     rm -f ${UBOOT_SPL} ${UBOOT_SPL_SYMLINK}
