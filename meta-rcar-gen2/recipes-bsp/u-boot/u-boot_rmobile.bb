@@ -14,6 +14,7 @@ SRC_URI_append = " \
     file://0002-mmc-fix-RMOBILE-ARCH.patch \
     file://0003-Wheat-add-SPL-and-QoS.patch \
     file://0004-gen2-set-default-baudrate-115200.patch \
+    file://0005-wheat-support-ftb-booting.patch \
 "
 
 PV = "rmobile+git${SRCPV}"
