@@ -23,6 +23,7 @@ SRC_URI_append_rcar-gen2 = " \
     file://weston.ini \
     ${@base_conditional("USE_MULTIMEDIA", "1", " file://weston_v4l2.ini", "", d)} \
     ${@base_conditional("USE_MULTIMEDIA", "1", " file://0003-vsp2-render-correct-number-of-input-formatters.patch", "", d)} \
+    ${@base_conditional("USE_MULTIMEDIA", "1", " file://0004-vsp2-render-add-scaler-option.patch", "",d)} \
 "
 
 S = "${WORKDIR}/git"

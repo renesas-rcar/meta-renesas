@@ -1,0 +1,58 @@
+From cce52a317c8cff3f807e647e68a21ccb1331e259 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Wed, 14 Dec 2016 16:54:45 +0300
+Subject: [PATCH] vsp2-render: add scaler option
+
+vsp2-render starts with 0 scalers by default.
+So add max_scaler weston config option in section vsp-render which sets
+number of vsp scalers.
+Ex:
+[vsp-renderer]
+max_scaler="1"
+---
+ src/vsp2-renderer.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/src/vsp2-renderer.c b/src/vsp2-renderer.c
+index bf1bab8..d8ff925 100644
+--- a/src/vsp2-renderer.c
++++ b/src/vsp2-renderer.c
+@@ -74,7 +74,10 @@ struct vsp_renderer_output {
+ 
+ #define VSP_INPUT_MAX		4
+ #define VSP_INPUT_DEFAULT	3
+-#define VSP_SCALER_MAX	0
++
++#define VSP_SCALER_MAX		1
++#define VSP_SCALER_DEFAULT 	1
++
+ #define VSP_SCALER_MIN_PIXELS	4	// UDS can't take pixels smaller than this
+ 
+ const char *vsp_input_links[] = {
+@@ -299,17 +302,22 @@ vsp2_init(struct media_device *media, struct weston_config *config)
+ 	vsp->base.media = media;
+ 	vsp->base.device_name = device_name;
+ 	vsp->state = VSP_STATE_IDLE;
+-	vsp->scaler_max = VSP_SCALER_MAX;
+ 
+ 	/* check configuration */
+ 	section = weston_config_get_section(config,
+ 					    "vsp-renderer", NULL, NULL);
+ 	weston_config_section_get_int(section, "max_inputs", &vsp->input_max, VSP_INPUT_DEFAULT);
++	weston_config_section_get_int(section, "max_scaler", &vsp->scaler_max, VSP_SCALER_DEFAULT);
+ 
+ 	if (vsp->input_max < 2)
+ 		vsp->input_max = 2;
+ 	if (vsp->input_max > VSP_INPUT_MAX)
+ 		vsp->input_max = VSP_INPUT_MAX;
++	if (vsp->scaler_max < 0)
++		vsp->input_max = 0;
++	if (vsp->scaler_max > VSP_SCALER_MAX)
++		vsp->scaler_max = VSP_SCALER_MAX;
++
+ 
+ 	/* Reset links */
+ 	if (media_reset_links(media)) {
+-- 
+2.7.4
+
