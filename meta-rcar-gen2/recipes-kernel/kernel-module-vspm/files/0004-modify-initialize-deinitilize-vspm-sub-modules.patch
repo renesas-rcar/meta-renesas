@@ -1,0 +1,256 @@
+From e52debdf24c9e5155bd47cc4bd0d4113134876e6 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Sun, 18 Sep 2016 21:26:00 +0300
+Subject: [PATCH 2/2] modify initialize/deinitilize vspm sub modules
+
+Should use devm_requst_irq/devm_free_irq with shared irqs.
+---
+ vspm/drv/tddmac/tddmac_drv.c       |  6 ++++--
+ vspm/drv/tddmac/tddmac_drv_local.h |  6 +++---
+ vspm/drv/tddmac/tddmac_drv_table.c | 19 +++++++++++--------
+ vspm/drv/vsp/vsp_drv.c             |  8 ++++----
+ vspm/drv/vsp/vsp_drv_local.h       |  3 +--
+ vspm/drv/vsp/vsp_drv_phy.c         | 14 ++++++--------
+ 6 files changed, 29 insertions(+), 27 deletions(-)
+
+diff --git a/vspm/drv/tddmac/tddmac_drv.c b/vspm/drv/tddmac/tddmac_drv.c
+index f71ed8f..e72e00a 100755
+--- a/vspm/drv/tddmac/tddmac_drv.c
++++ b/vspm/drv/tddmac/tddmac_drv.c
+@@ -115,15 +115,17 @@ int tddmac_lib_init(
+ 		goto err_exit;
+ 	}
+ 
++	g_tddmac_obj->pdev = pdrv->tddmac_pdev;
++
+ 	/* initialize register */
+-	ercd = tddmac_ins_init_reg(pdrv->tddmac_pdev, g_tddmac_obj);
++	ercd = tddmac_ins_init_reg(g_tddmac_obj);
+ 	if (ercd) {
+ 		drv_ercd = -EIO;
+ 		goto err_exit;
+ 	}
+ 
+ 	/* registory interrupt handler */
+-	ercd = tddmac_ins_reg_ih(pdrv->tddmac_pdev, g_tddmac_obj);
++	ercd = tddmac_ins_reg_ih(g_tddmac_obj);
+ 	if (ercd) {
+ 		drv_ercd = -EIO;
+ 		goto err_exit;
+diff --git a/vspm/drv/tddmac/tddmac_drv_local.h b/vspm/drv/tddmac/tddmac_drv_local.h
+index 1eb55dc..3b2b44d 100755
+--- a/vspm/drv/tddmac/tddmac_drv_local.h
++++ b/vspm/drv/tddmac/tddmac_drv_local.h
+@@ -122,6 +122,7 @@ struct tddmac_ch_info {
+ typedef struct TDDMAC_PRIVATE_DATA_T {
+ 	void __iomem *base_reg;
+ 	int irq;
++	struct platform_device *pdev;
+ 
+ 	struct tddmac_ch_info ch_info[TDDMAC_CH_MAX];
+ } TDDMAC_PRIVATE_DATA;
+@@ -130,11 +131,10 @@ typedef struct TDDMAC_PRIVATE_DATA_T {
+ long tddmac_ins_allocate_memory(TDDMAC_PRIVATE_DATA **prv);
+ long tddmac_ins_free_memory(TDDMAC_PRIVATE_DATA *prv);
+ 
+-long tddmac_ins_init_reg(
+-	struct platform_device *pdev, TDDMAC_PRIVATE_DATA *prv);
++long tddmac_ins_init_reg(TDDMAC_PRIVATE_DATA *prv);
+ long tddmac_ins_quit_reg(TDDMAC_PRIVATE_DATA *prv);
+ 
+-long tddmac_ins_reg_ih(struct platform_device *pdev, TDDMAC_PRIVATE_DATA *prv);
++long tddmac_ins_reg_ih(TDDMAC_PRIVATE_DATA *prv);
+ long tddmac_ins_unreg_ih(TDDMAC_PRIVATE_DATA *prv);
+ 
+ void tddmac_ins_cb_function(
+diff --git a/vspm/drv/tddmac/tddmac_drv_table.c b/vspm/drv/tddmac/tddmac_drv_table.c
+index b302294..6106efa 100755
+--- a/vspm/drv/tddmac/tddmac_drv_table.c
++++ b/vspm/drv/tddmac/tddmac_drv_table.c
+@@ -226,8 +226,7 @@ static long tddmac_ins_set_reg_table(TDDMAC_PRIVATE_DATA *prv)
+  * @prv:		private data
+  *
+  */
+-long tddmac_ins_init_reg(
+-	struct platform_device *pdev, TDDMAC_PRIVATE_DATA *prv)
++long tddmac_ins_init_reg(TDDMAC_PRIVATE_DATA *prv)
+ {
+ 	struct resource *res;
+ 	unsigned long tmp;
+@@ -237,7 +236,7 @@ long tddmac_ins_init_reg(
+ 	DPRINT("called\n");
+ 
+ 	/* get an I/O memory resource for device */
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	res = platform_get_resource(prv->pdev, IORESOURCE_MEM, 0);
+ 	if (!res) {
+ 		APRINT("[%s] platform_get_resource() failed!!\n", __func__);
+ 		return E_TDDMAC_DEF_REG;
+@@ -335,13 +334,13 @@ static irqreturn_t tddmac_ins_ih(int irq, void *dev)
+  * @prv:		private data
+  *
+  */
+-long tddmac_ins_reg_ih(struct platform_device *pdev, TDDMAC_PRIVATE_DATA *prv)
++long tddmac_ins_reg_ih(TDDMAC_PRIVATE_DATA *prv)
+ {
+ 	int ercd;
+ 
+ 	DPRINT("called\n");
+ 
+-	prv->irq = platform_get_irq(pdev, 0);
++	prv->irq = platform_get_irq(prv->pdev, 0);
+ 	if (prv->irq < 0) {
+ 		APRINT("[%s] platform_get_irq failed!! ercd=%d\n",
+ 			__func__, prv->irq);
+@@ -349,8 +348,12 @@ long tddmac_ins_reg_ih(struct platform_device *pdev, TDDMAC_PRIVATE_DATA *prv)
+ 	}
+ 
+ 	/* registory interrupt handler */
+-	ercd = request_irq(
+-		prv->irq, tddmac_ins_ih, IRQF_SHARED, RESNAME "-tddmac", prv);
++	ercd = devm_request_irq(&prv->pdev->dev,
++				prv->irq,
++				tddmac_ins_ih,
++				IRQF_SHARED,
++				RESNAME "-tddmac",
++				prv);
+ 	if (ercd) {
+ 		APRINT("[%s] request_irq failed!! ercd=%d, irq=%d\n",
+ 			__func__, ercd, prv->irq);
+@@ -372,7 +375,7 @@ long tddmac_ins_unreg_ih(TDDMAC_PRIVATE_DATA *prv)
+ 
+ 	/* release interrupt handler */
+ 	if (prv->irq) {
+-		free_irq(prv->irq, prv);
++		devm_free_irq(&prv->pdev->dev,prv->irq, prv);
+ 		prv->irq = 0;
+ 	}
+ 
+diff --git a/vspm/drv/vsp/vsp_drv.c b/vspm/drv/vsp/vsp_drv.c
+index 960fcaa..a99245b 100755
+--- a/vspm/drv/vsp/vsp_drv.c
++++ b/vspm/drv/vsp/vsp_drv.c
+@@ -123,16 +123,16 @@ int vsp_lib_init(
+ 				drv_ercd = -ENOMEM;
+ 				goto err_exit;
+ 			}
+-
++			(*prv)->pdev = pdrv->vsp_pdev[vsp_ch];
+ 			/* initialize register */
+-			ercd = vsp_ins_init_reg(pdrv->vsp_pdev[vsp_ch], *prv, vsp_ch);
++			ercd = vsp_ins_init_reg(*prv, vsp_ch);
+ 			if (ercd) {
+ 				drv_ercd = -EIO;
+ 				goto err_exit;
+ 			}
+ 
+ 			/* registory interrupt handler */
+-			ercd = vsp_ins_reg_ih(pdrv->vsp_pdev[vsp_ch], *prv, vsp_ch);
++			ercd = vsp_ins_reg_ih(*prv, vsp_ch);
+ 			if (ercd) {
+ 				drv_ercd = -EIO;
+ 				goto err_exit;
+@@ -141,7 +141,7 @@ int vsp_lib_init(
+ 			/* update status */
+ 			for (ch = 0; ch < VSP_WPF_MAX; ch++)
+ 				(*prv)->ch_info[ch].status = VSP_STAT_INIT;
+-	
++
+ 		}
+ 		prv++;
+ 	}
+diff --git a/vspm/drv/vsp/vsp_drv_local.h b/vspm/drv/vsp/vsp_drv_local.h
+index 9ba8dae..9842537 100755
+--- a/vspm/drv/vsp/vsp_drv_local.h
++++ b/vspm/drv/vsp/vsp_drv_local.h
+@@ -666,6 +666,7 @@ struct vsp_ch_info {
+ typedef struct VSP_PRIVATE_DATA_T {
+ 	void __iomem *base_reg;
+ 	int irq;
++	struct platform_device *pdev;
+ 
+ 	unsigned long use_rpf;
+ 	unsigned long use_module;
+@@ -702,7 +703,6 @@ long vsp_ins_allocate_memory(VSP_PRIVATE_DATA **prv);
+ long vsp_ins_free_memory(VSP_PRIVATE_DATA *prv);
+ 
+ long vsp_ins_init_reg(
+-	struct platform_device *pdev,
+ 	VSP_PRIVATE_DATA *prv,
+ 	unsigned char vsp_ch);
+ long vsp_ins_quit_reg(VSP_PRIVATE_DATA *prv);
+@@ -710,7 +710,6 @@ long vsp_ins_quit_reg(VSP_PRIVATE_DATA *prv);
+ void vsp_ins_cb_function(VSP_PRIVATE_DATA *prv, unsigned char ch, long ercd);
+ 
+ long vsp_ins_reg_ih(
+-	struct platform_device *pdev,
+ 	VSP_PRIVATE_DATA *prv,
+ 	unsigned char vsp_ch);
+ long vsp_ins_unreg_ih(VSP_PRIVATE_DATA *prv);
+diff --git a/vspm/drv/vsp/vsp_drv_phy.c b/vspm/drv/vsp/vsp_drv_phy.c
+index 8c2d978..9fa6b65 100755
+--- a/vspm/drv/vsp/vsp_drv_phy.c
++++ b/vspm/drv/vsp/vsp_drv_phy.c
+@@ -1663,7 +1663,6 @@ static void vsp_ins_set_module_reg_table(
+  *
+  */
+ long vsp_ins_init_reg(
+-	struct platform_device *pdev,
+ 	VSP_PRIVATE_DATA *prv,
+ 	unsigned char vsp_ch)
+ {
+@@ -1673,9 +1672,9 @@ long vsp_ins_init_reg(
+ 
+ 	/* get an I/O memory resource for device */
+ 	res = platform_get_resource(
+-		pdev, IORESOURCE_MEM, 0);
++		prv->pdev, IORESOURCE_MEM, 0);
+ 	if (!res) {
+-		APRINT("[%s] platform_get_resource() dev = %s failed ch = %d!!\n", __func__, pdev->name, vsp_ch);
++		APRINT("[%s] platform_get_resource() dev = %s failed ch = %d!!\n", __func__, prv->pdev->name, vsp_ch);
+ 		return E_VSP_DEF_REG;
+ 	}
+ 
+@@ -1845,7 +1844,6 @@ static irqreturn_t vsp_ins_ih(int irq, void *dev)
+  *
+  */
+ long vsp_ins_reg_ih(
+-	struct platform_device *pdev,
+ 	VSP_PRIVATE_DATA *prv,
+ 	unsigned char vsp_ch)
+ {
+@@ -1854,7 +1852,7 @@ long vsp_ins_reg_ih(
+ 
+ 	DPRINT("called\n");
+ 
+-	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	irq = platform_get_resource(prv->pdev, IORESOURCE_IRQ, 0);
+ 	if (!irq) {
+ 		APRINT("[%s] platform_get_resource irq failed!! ercd=%d\n",
+ 			__func__, prv->irq);
+@@ -1866,11 +1864,11 @@ long vsp_ins_reg_ih(
+ 
+ 	/* registory interrupt handler */
+ 	ercd = devm_request_irq(
+-		&pdev->dev,
++		&prv->pdev->dev,
+ 		prv->irq,
+ 		vsp_ins_ih,
+ 		IRQF_SHARED,
+-		dev_name(&pdev->dev), prv);
++		dev_name(&prv->pdev->dev), prv);
+ 	if (ercd) {
+ 		APRINT("[%s] request_irq failed!! ercd=%d, irq=%d\n",
+ 			__func__, ercd, prv->irq
+@@ -1893,7 +1891,7 @@ long vsp_ins_unreg_ih(VSP_PRIVATE_DATA *prv)
+ 
+ 	/* release interrupt handler */
+ 	if (prv->irq) {
+-		free_irq(prv->irq, prv);
++		devm_free_irq(&prv->pdev->dev,prv->irq, prv);
+ 		prv->irq = 0;
+ 	}
+ 
+-- 
+2.7.4
+

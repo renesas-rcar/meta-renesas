@@ -1,0 +1,865 @@
+From 8835039b43a69bb971a9e71e028d5e869cd91b11 Mon Sep 17 00:00:00 2001
+From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Date: Fri, 8 Apr 2016 13:34:58 +0300
+Subject: [PATCH] port vsp2 to kernel 4.4
+
+---
+ drv/vsp2_bru.c    | 54 +++++++++++++++++++++---------------------
+ drv/vsp2_entity.c | 12 +++++-----
+ drv/vsp2_entity.h |  4 ++--
+ drv/vsp2_rpf.c    |  4 ++--
+ drv/vsp2_rwpf.c   | 50 +++++++++++++++++++--------------------
+ drv/vsp2_rwpf.h   | 12 +++++-----
+ drv/vsp2_uds.c    | 36 ++++++++++++++--------------
+ drv/vsp2_video.c  | 71 ++++++++++++++++++++++++++++---------------------------
+ drv/vsp2_video.h  |  5 ++--
+ drv/vsp2_wpf.c    |  4 ++--
+ 10 files changed, 127 insertions(+), 125 deletions(-)
+
+diff --git a/drv/vsp2_bru.c b/drv/vsp2_bru.c
+index 49cc991..a17fcbb 100755
+--- a/drv/vsp2_bru.c
++++ b/drv/vsp2_bru.c
+@@ -254,12 +254,12 @@ static int bru_s_stream(struct v4l2_subdev *subdev, int enable)
+  */
+ 
+ static int bru_enum_mbus_code(struct v4l2_subdev *subdev,
+-			      struct v4l2_subdev_fh *fh,
++			      struct v4l2_subdev_pad_config *cfg,
+ 			      struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+-		V4L2_MBUS_FMT_ARGB8888_1X32,
+-		V4L2_MBUS_FMT_AYUV8_1X32,
++		MEDIA_BUS_FMT_ARGB8888_1X32,
++		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 	struct v4l2_mbus_framefmt *format;
+ 
+@@ -272,7 +272,7 @@ static int bru_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		if (code->index)
+ 			return -EINVAL;
+ 
+-		format = v4l2_subdev_get_try_format(fh, BRU_PAD_SINK(0));
++		format = v4l2_subdev_get_try_format(subdev, cfg, BRU_PAD_SINK(0));
+ 		code->code = format->code;
+ 	}
+ 
+@@ -280,14 +280,14 @@ static int bru_enum_mbus_code(struct v4l2_subdev *subdev,
+ }
+ 
+ static int bru_enum_frame_size(struct v4l2_subdev *subdev,
+-			       struct v4l2_subdev_fh *fh,
++			       struct v4l2_subdev_pad_config *cfg,
+ 			       struct v4l2_subdev_frame_size_enum *fse)
+ {
+ 	if (fse->index)
+ 		return -EINVAL;
+ 
+-	if (fse->code != V4L2_MBUS_FMT_ARGB8888_1X32 &&
+-	    fse->code != V4L2_MBUS_FMT_AYUV8_1X32)
++	if (fse->code != MEDIA_BUS_FMT_ARGB8888_1X32 &&
++	    fse->code != MEDIA_BUS_FMT_AYUV8_1X32)
+ 		return -EINVAL;
+ 
+ 	fse->min_width = BRU_MIN_SIZE;
+@@ -299,12 +299,12 @@ static int bru_enum_frame_size(struct v4l2_subdev *subdev,
+ }
+ 
+ static struct v4l2_rect *bru_get_compose(struct vsp2_bru *bru,
+-					 struct v4l2_subdev_fh *fh,
++					 struct v4l2_subdev_pad_config *cfg,
+ 					 unsigned int pad, u32 which)
+ {
+ 	switch (which) {
+ 	case V4L2_SUBDEV_FORMAT_TRY:
+-		return v4l2_subdev_get_try_crop(fh, pad);
++		return v4l2_subdev_get_try_crop(&bru->entity.subdev, cfg, pad);
+ 	case V4L2_SUBDEV_FORMAT_ACTIVE:
+ 		return &bru->inputs[pad].compose;
+ 	default:
+@@ -312,18 +312,18 @@ static struct v4l2_rect *bru_get_compose(struct vsp2_bru *bru,
+ 	}
+ }
+ 
+-static int bru_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++static int bru_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			  struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_bru *bru = to_bru(subdev);
+ 
+-	fmt->format = *vsp2_entity_get_pad_format(&bru->entity, fh, fmt->pad,
++	fmt->format = *vsp2_entity_get_pad_format(&bru->entity, cfg, fmt->pad,
+ 						  fmt->which);
+ 
+ 	return 0;
+ }
+ 
+-static void bru_try_format(struct vsp2_bru *bru, struct v4l2_subdev_fh *fh,
++static void bru_try_format(struct vsp2_bru *bru, struct v4l2_subdev_pad_config *cfg,
+ 			   unsigned int pad, struct v4l2_mbus_framefmt *fmt,
+ 			   enum v4l2_subdev_format_whence which)
+ {
+@@ -332,14 +332,14 @@ static void bru_try_format(struct vsp2_bru *bru, struct v4l2_subdev_fh *fh,
+ 	switch (pad) {
+ 	case BRU_PAD_SINK(0):
+ 		/* Default to YUV if the requested format is not supported. */
+-		if (fmt->code != V4L2_MBUS_FMT_ARGB8888_1X32 &&
+-		    fmt->code != V4L2_MBUS_FMT_AYUV8_1X32)
+-			fmt->code = V4L2_MBUS_FMT_AYUV8_1X32;
++		if (fmt->code != MEDIA_BUS_FMT_ARGB8888_1X32 &&
++		    fmt->code != MEDIA_BUS_FMT_AYUV8_1X32)
++			fmt->code = MEDIA_BUS_FMT_AYUV8_1X32;
+ 		break;
+ 
+ 	default:
+ 		/* The BRU can't perform format conversion. */
+-		format = vsp2_entity_get_pad_format(&bru->entity, fh,
++		format = vsp2_entity_get_pad_format(&bru->entity, cfg,
+ 						    BRU_PAD_SINK(0), which);
+ 		fmt->code = format->code;
+ 		break;
+@@ -351,15 +351,15 @@ static void bru_try_format(struct vsp2_bru *bru, struct v4l2_subdev_fh *fh,
+ 	fmt->colorspace = V4L2_COLORSPACE_SRGB;
+ }
+ 
+-static int bru_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++static int bru_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			  struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_bru *bru = to_bru(subdev);
+ 	struct v4l2_mbus_framefmt *format;
+ 
+-	bru_try_format(bru, fh, fmt->pad, &fmt->format, fmt->which);
++	bru_try_format(bru, cfg, fmt->pad, &fmt->format, fmt->which);
+ 
+-	format = vsp2_entity_get_pad_format(&bru->entity, fh, fmt->pad,
++	format = vsp2_entity_get_pad_format(&bru->entity, cfg, fmt->pad,
+ 					    fmt->which);
+ 	*format = fmt->format;
+ 
+@@ -367,7 +367,7 @@ static int bru_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
+ 	if (fmt->pad != BRU_PAD_SOURCE) {
+ 		struct v4l2_rect *compose;
+ 
+-		compose = bru_get_compose(bru, fh, fmt->pad, fmt->which);
++		compose = bru_get_compose(bru, cfg, fmt->pad, fmt->which);
+ 		compose->left = 0;
+ 		compose->top = 0;
+ 		compose->width = format->width;
+@@ -379,7 +379,7 @@ static int bru_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
+ 		unsigned int i;
+ 
+ 		for (i = 0; i <= BRU_PAD_SOURCE; ++i) {
+-			format = vsp2_entity_get_pad_format(&bru->entity, fh,
++			format = vsp2_entity_get_pad_format(&bru->entity, cfg,
+ 							    i, fmt->which);
+ 			format->code = fmt->format.code;
+ 		}
+@@ -389,7 +389,7 @@ static int bru_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
+ }
+ 
+ static int bru_get_selection(struct v4l2_subdev *subdev,
+-			     struct v4l2_subdev_fh *fh,
++			     struct v4l2_subdev_pad_config *cfg,
+ 			     struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_bru *bru = to_bru(subdev);
+@@ -406,7 +406,7 @@ static int bru_get_selection(struct v4l2_subdev *subdev,
+ 		return 0;
+ 
+ 	case V4L2_SEL_TGT_COMPOSE:
+-		sel->r = *bru_get_compose(bru, fh, sel->pad, sel->which);
++		sel->r = *bru_get_compose(bru, cfg, sel->pad, sel->which);
+ 		return 0;
+ 
+ 	default:
+@@ -415,7 +415,7 @@ static int bru_get_selection(struct v4l2_subdev *subdev,
+ }
+ 
+ static int bru_set_selection(struct v4l2_subdev *subdev,
+-			     struct v4l2_subdev_fh *fh,
++			     struct v4l2_subdev_pad_config *cfg,
+ 			     struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_bru *bru = to_bru(subdev);
+@@ -431,7 +431,7 @@ static int bru_set_selection(struct v4l2_subdev *subdev,
+ 	/* The compose rectangle top left corner must be inside the output
+ 	 * frame.
+ 	 */
+-	format = vsp2_entity_get_pad_format(&bru->entity, fh, BRU_PAD_SOURCE,
++	format = vsp2_entity_get_pad_format(&bru->entity, cfg, BRU_PAD_SOURCE,
+ 					    sel->which);
+ 	sel->r.left = clamp_t(unsigned int, sel->r.left, 0, format->width - 1);
+ 	sel->r.top = clamp_t(unsigned int, sel->r.top, 0, format->height - 1);
+@@ -439,12 +439,12 @@ static int bru_set_selection(struct v4l2_subdev *subdev,
+ 	/* Scaling isn't supported, the compose rectangle size must be identical
+ 	 * to the sink format size.
+ 	 */
+-	format = vsp2_entity_get_pad_format(&bru->entity, fh, sel->pad,
++	format = vsp2_entity_get_pad_format(&bru->entity, cfg, sel->pad,
+ 					    sel->which);
+ 	sel->r.width = format->width;
+ 	sel->r.height = format->height;
+ 
+-	compose = bru_get_compose(bru, fh, sel->pad, sel->which);
++	compose = bru_get_compose(bru, cfg, sel->pad, sel->which);
+ 	*compose = sel->r;
+ 
+ 	return 0;
+diff --git a/drv/vsp2_entity.c b/drv/vsp2_entity.c
+index 10e6637..2beaea5 100755
+--- a/drv/vsp2_entity.c
++++ b/drv/vsp2_entity.c
+@@ -111,12 +111,12 @@ int vsp2_entity_set_streaming(struct vsp2_entity *entity, bool streaming)
+ 
+ struct v4l2_mbus_framefmt *
+ vsp2_entity_get_pad_format(struct vsp2_entity *entity,
+-			   struct v4l2_subdev_fh *fh,
++			   struct v4l2_subdev_pad_config *cfg,
+ 			   unsigned int pad, u32 which)
+ {
+ 	switch (which) {
+ 	case V4L2_SUBDEV_FORMAT_TRY:
+-		return v4l2_subdev_get_try_format(fh, pad);
++		return v4l2_subdev_get_try_format(&entity->subdev, cfg, pad);
+ 	case V4L2_SUBDEV_FORMAT_ACTIVE:
+ 		return &entity->formats[pad];
+ 	default:
+@@ -134,7 +134,7 @@ vsp2_entity_get_pad_format(struct vsp2_entity *entity,
+  * initialized on the device.
+  */
+ void vsp2_entity_init_formats(struct v4l2_subdev *subdev,
+-			    struct v4l2_subdev_fh *fh)
++			    struct v4l2_subdev_pad_config *cfg)
+ {
+ 	struct v4l2_subdev_format format;
+ 	unsigned int pad;
+@@ -143,17 +143,17 @@ void vsp2_entity_init_formats(struct v4l2_subdev *subdev,
+ 		memset(&format, 0, sizeof(format));
+ 
+ 		format.pad = pad;
+-		format.which = fh ? V4L2_SUBDEV_FORMAT_TRY
++		format.which = cfg ? V4L2_SUBDEV_FORMAT_TRY
+ 			     : V4L2_SUBDEV_FORMAT_ACTIVE;
+ 
+-		v4l2_subdev_call(subdev, pad, set_fmt, fh, &format);
++		v4l2_subdev_call(subdev, pad, set_fmt, cfg, &format);
+ 	}
+ }
+ 
+ static int vsp2_entity_open(struct v4l2_subdev *subdev,
+ 			    struct v4l2_subdev_fh *fh)
+ {
+-	vsp2_entity_init_formats(subdev, fh);
++	vsp2_entity_init_formats(subdev, fh->pad);
+ 
+ 	return 0;
+ }
+diff --git a/drv/vsp2_entity.h b/drv/vsp2_entity.h
+index 5c6290f..71f7c52 100755
+--- a/drv/vsp2_entity.h
++++ b/drv/vsp2_entity.h
+@@ -135,10 +135,10 @@ extern const struct media_entity_operations vsp2_media_ops;
+ 
+ struct v4l2_mbus_framefmt *
+ vsp2_entity_get_pad_format(struct vsp2_entity *entity,
+-			   struct v4l2_subdev_fh *fh,
++			   struct v4l2_subdev_pad_config *cfg,
+ 			   unsigned int pad, u32 which);
+ void vsp2_entity_init_formats(struct v4l2_subdev *subdev,
+-			      struct v4l2_subdev_fh *fh);
++			     struct v4l2_subdev_pad_config *cfg);
+ 
+ bool vsp2_entity_is_streaming(struct vsp2_entity *entity);
+ int vsp2_entity_set_streaming(struct vsp2_entity *entity, bool streaming);
+diff --git a/drv/vsp2_rpf.c b/drv/vsp2_rpf.c
+index f1b06b4..2875a6b 100755
+--- a/drv/vsp2_rpf.c
++++ b/drv/vsp2_rpf.c
+@@ -321,11 +321,11 @@ static void rpf_vdev_queue(struct vsp2_video *video,
+ 		return;
+ 
+ 	vsp_in->addr = (void *)((unsigned long)buf->addr[0] + rpf->offsets[0]);
+-	if (buf->buf.num_planes > 1) {
++	if (buf->buf.vb2_buf.num_planes > 1) {
+ 		vsp_in->addr_c0 =
+ 			(void *)((unsigned long)buf->addr[1] + rpf->offsets[1]);
+ 	}
+-	if (buf->buf.num_planes > 2) {
++	if (buf->buf.vb2_buf.num_planes > 2) {
+ 		vsp_in->addr_c1 =
+ 			(void *)((unsigned long)buf->addr[2] + rpf->offsets[1]);
+ 	}
+diff --git a/drv/vsp2_rwpf.c b/drv/vsp2_rwpf.c
+index 5a3c924..405dcf5 100755
+--- a/drv/vsp2_rwpf.c
++++ b/drv/vsp2_rwpf.c
+@@ -73,12 +73,12 @@
+  */
+ 
+ int vsp2_rwpf_enum_mbus_code(struct v4l2_subdev *subdev,
+-			     struct v4l2_subdev_fh *fh,
++			     struct v4l2_subdev_pad_config *cfg,
+ 			     struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+-		V4L2_MBUS_FMT_ARGB8888_1X32,
+-		V4L2_MBUS_FMT_AYUV8_1X32,
++		MEDIA_BUS_FMT_ARGB8888_1X32,
++		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 
+ 	if (code->index >= ARRAY_SIZE(codes))
+@@ -90,13 +90,13 @@ int vsp2_rwpf_enum_mbus_code(struct v4l2_subdev *subdev,
+ }
+ 
+ int vsp2_rwpf_enum_frame_size(struct v4l2_subdev *subdev,
+-			      struct v4l2_subdev_fh *fh,
++			      struct v4l2_subdev_pad_config *cfg,
+ 			      struct v4l2_subdev_frame_size_enum *fse)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
+ 	struct v4l2_mbus_framefmt *format;
+ 
+-	format = v4l2_subdev_get_try_format(fh, fse->pad);
++	format = v4l2_subdev_get_try_format(subdev, cfg, fse->pad);
+ 
+ 	if (fse->index || fse->code != format->code)
+ 		return -EINVAL;
+@@ -120,11 +120,11 @@ int vsp2_rwpf_enum_frame_size(struct v4l2_subdev *subdev,
+ }
+ 
+ static struct v4l2_rect *
+-vsp2_rwpf_get_crop(struct vsp2_rwpf *rwpf, struct v4l2_subdev_fh *fh, u32 which)
++vsp2_rwpf_get_crop(struct vsp2_rwpf *rwpf, struct v4l2_subdev_pad_config *cfg, u32 which)
+ {
+ 	switch (which) {
+ 	case V4L2_SUBDEV_FORMAT_TRY:
+-		return v4l2_subdev_get_try_crop(fh, RWPF_PAD_SINK);
++		return v4l2_subdev_get_try_crop(&rwpf->entity.subdev, cfg, RWPF_PAD_SINK);
+ 	case V4L2_SUBDEV_FORMAT_ACTIVE:
+ 		return &rwpf->crop;
+ 	default:
+@@ -132,18 +132,18 @@ vsp2_rwpf_get_crop(struct vsp2_rwpf *rwpf, struct v4l2_subdev_fh *fh, u32 which)
+ 	}
+ }
+ 
+-int vsp2_rwpf_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++int vsp2_rwpf_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			 struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
+ 
+-	fmt->format = *vsp2_entity_get_pad_format(&rwpf->entity, fh, fmt->pad,
++	fmt->format = *vsp2_entity_get_pad_format(&rwpf->entity, cfg, fmt->pad,
+ 						  fmt->which);
+ 
+ 	return 0;
+ }
+ 
+-int vsp2_rwpf_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++int vsp2_rwpf_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			 struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
+@@ -151,11 +151,11 @@ int vsp2_rwpf_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
+ 	struct v4l2_rect *crop;
+ 
+ 	/* Default to YUV if the requested format is not supported. */
+-	if (fmt->format.code != V4L2_MBUS_FMT_ARGB8888_1X32 &&
+-	    fmt->format.code != V4L2_MBUS_FMT_AYUV8_1X32)
+-		fmt->format.code = V4L2_MBUS_FMT_AYUV8_1X32;
++	if (fmt->format.code != MEDIA_BUS_FMT_ARGB8888_1X32 &&
++	    fmt->format.code != MEDIA_BUS_FMT_AYUV8_1X32)
++		fmt->format.code = MEDIA_BUS_FMT_AYUV8_1X32;
+ 
+-	format = vsp2_entity_get_pad_format(&rwpf->entity, fh, fmt->pad,
++	format = vsp2_entity_get_pad_format(&rwpf->entity, cfg, fmt->pad,
+ 					    fmt->which);
+ 
+ 	if (fmt->pad == RWPF_PAD_SOURCE) {
+@@ -178,14 +178,14 @@ int vsp2_rwpf_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
+ 	fmt->format = *format;
+ 
+ 	/* Update the sink crop rectangle. */
+-	crop = vsp2_rwpf_get_crop(rwpf, fh, fmt->which);
++	crop = vsp2_rwpf_get_crop(rwpf, cfg, fmt->which);
+ 	crop->left = 0;
+ 	crop->top = 0;
+ 	crop->width = fmt->format.width;
+ 	crop->height = fmt->format.height;
+ 
+ 	/* Propagate the format to the source pad. */
+-	format = vsp2_entity_get_pad_format(&rwpf->entity, fh, RWPF_PAD_SOURCE,
++	format = vsp2_entity_get_pad_format(&rwpf->entity, cfg, RWPF_PAD_SOURCE,
+ 					    fmt->which);
+ 	*format = fmt->format;
+ 
+@@ -193,7 +193,7 @@ int vsp2_rwpf_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
+ }
+ 
+ int vsp2_rwpf_get_selection(struct v4l2_subdev *subdev,
+-			    struct v4l2_subdev_fh *fh,
++			    struct v4l2_subdev_pad_config *cfg,
+ 			    struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
+@@ -205,11 +205,11 @@ int vsp2_rwpf_get_selection(struct v4l2_subdev *subdev,
+ 
+ 	switch (sel->target) {
+ 	case V4L2_SEL_TGT_CROP:
+-		sel->r = *vsp2_rwpf_get_crop(rwpf, fh, sel->which);
++		sel->r = *vsp2_rwpf_get_crop(rwpf, cfg, sel->which);
+ 		break;
+ 
+ 	case V4L2_SEL_TGT_CROP_BOUNDS:
+-		format = vsp2_entity_get_pad_format(&rwpf->entity, fh,
++		format = vsp2_entity_get_pad_format(&rwpf->entity, cfg,
+ 						    RWPF_PAD_SINK, sel->which);
+ 		sel->r.left = 0;
+ 		sel->r.top = 0;
+@@ -225,7 +225,7 @@ int vsp2_rwpf_get_selection(struct v4l2_subdev *subdev,
+ }
+ 
+ int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+-			    struct v4l2_subdev_fh *fh,
++			    struct v4l2_subdev_pad_config *cfg,
+ 			    struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
+@@ -242,10 +242,10 @@ int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+ 	/* Make sure the crop rectangle is entirely contained in the image. The
+ 	 * WPF top and left offsets are limited to 255.
+ 	 */
+-	format = vsp2_entity_get_pad_format(&rwpf->entity, fh, RWPF_PAD_SINK,
++	format = vsp2_entity_get_pad_format(&rwpf->entity, cfg, RWPF_PAD_SINK,
+ 					    sel->which);
+ 
+-	if (format->code == V4L2_MBUS_FMT_AYUV8_1X32) {
++	if (format->code == MEDIA_BUS_FMT_AYUV8_1X32) {
+ 		sel->r.left = (sel->r.left + 1) & ~1;
+ 		sel->r.top = (sel->r.top + 1) & ~1;
+ 		sel->r.width = (sel->r.width) & ~1;
+@@ -256,7 +256,7 @@ int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+ 	sel->r.top = min_t(unsigned int, sel->r.top, format->height - 2);
+ 	if (rwpf->entity.type == VSP2_ENTITY_WPF) {
+ 		int maxcrop =
+-			format->code == V4L2_MBUS_FMT_AYUV8_1X32 ? 254 : 255;
++			format->code == MEDIA_BUS_FMT_AYUV8_1X32 ? 254 : 255;
+ 		sel->r.left = min_t(unsigned int, sel->r.left, maxcrop);
+ 		sel->r.top = min_t(unsigned int, sel->r.top, maxcrop);
+ 	}
+@@ -265,11 +265,11 @@ int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+ 	sel->r.height = min_t(unsigned int, sel->r.height,
+ 			      format->height - sel->r.top);
+ 
+-	crop = vsp2_rwpf_get_crop(rwpf, fh, sel->which);
++	crop = vsp2_rwpf_get_crop(rwpf, cfg, sel->which);
+ 	*crop = sel->r;
+ 
+ 	/* Propagate the format to the source pad. */
+-	format = vsp2_entity_get_pad_format(&rwpf->entity, fh, RWPF_PAD_SOURCE,
++	format = vsp2_entity_get_pad_format(&rwpf->entity, cfg, RWPF_PAD_SOURCE,
+ 					    sel->which);
+ 	format->width = crop->width;
+ 	format->height = crop->height;
+diff --git a/drv/vsp2_rwpf.h b/drv/vsp2_rwpf.h
+index a25667c..1abed29 100755
+--- a/drv/vsp2_rwpf.h
++++ b/drv/vsp2_rwpf.h
+@@ -100,20 +100,20 @@ struct vsp2_rwpf *vsp2_rpf_create(struct vsp2_device *vsp2, unsigned int index);
+ struct vsp2_rwpf *vsp2_wpf_create(struct vsp2_device *vsp2, unsigned int index);
+ 
+ int vsp2_rwpf_enum_mbus_code(struct v4l2_subdev *subdev,
+-			     struct v4l2_subdev_fh *fh,
++			     struct v4l2_subdev_pad_config *cfg,
+ 			     struct v4l2_subdev_mbus_code_enum *code);
+ int vsp2_rwpf_enum_frame_size(struct v4l2_subdev *subdev,
+-			      struct v4l2_subdev_fh *fh,
++			      struct v4l2_subdev_pad_config *cfg,
+ 			      struct v4l2_subdev_frame_size_enum *fse);
+-int vsp2_rwpf_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++int vsp2_rwpf_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			 struct v4l2_subdev_format *fmt);
+-int vsp2_rwpf_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++int vsp2_rwpf_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			 struct v4l2_subdev_format *fmt);
+ int vsp2_rwpf_get_selection(struct v4l2_subdev *subdev,
+-			    struct v4l2_subdev_fh *fh,
++			    struct v4l2_subdev_pad_config *cfg,
+ 			    struct v4l2_subdev_selection *sel);
+ int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+-			    struct v4l2_subdev_fh *fh,
++			    struct v4l2_subdev_pad_config *cfg,
+ 			    struct v4l2_subdev_selection *sel);
+ 
+ #endif /* __VSP2_RWPF_H__ */
+diff --git a/drv/vsp2_uds.c b/drv/vsp2_uds.c
+index 6022b7f..8370d04 100755
+--- a/drv/vsp2_uds.c
++++ b/drv/vsp2_uds.c
+@@ -191,12 +191,12 @@ static int uds_s_stream(struct v4l2_subdev *subdev, int enable)
+  */
+ 
+ static int uds_enum_mbus_code(struct v4l2_subdev *subdev,
+-			      struct v4l2_subdev_fh *fh,
++			      struct v4l2_subdev_pad_config *cfg,
+ 			      struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+-		V4L2_MBUS_FMT_ARGB8888_1X32,
+-		V4L2_MBUS_FMT_AYUV8_1X32,
++		MEDIA_BUS_FMT_ARGB8888_1X32,
++		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 
+ 	if (code->pad == UDS_PAD_SINK) {
+@@ -213,7 +213,7 @@ static int uds_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		if (code->index)
+ 			return -EINVAL;
+ 
+-		format = v4l2_subdev_get_try_format(fh, UDS_PAD_SINK);
++		format = v4l2_subdev_get_try_format(subdev, cfg, UDS_PAD_SINK);
+ 		code->code = format->code;
+ 	}
+ 
+@@ -221,12 +221,12 @@ static int uds_enum_mbus_code(struct v4l2_subdev *subdev,
+ }
+ 
+ static int uds_enum_frame_size(struct v4l2_subdev *subdev,
+-			       struct v4l2_subdev_fh *fh,
++			       struct v4l2_subdev_pad_config *cfg,
+ 			       struct v4l2_subdev_frame_size_enum *fse)
+ {
+ 	struct v4l2_mbus_framefmt *format;
+ 
+-	format = v4l2_subdev_get_try_format(fh, UDS_PAD_SINK);
++	format = v4l2_subdev_get_try_format(subdev, cfg, UDS_PAD_SINK);
+ 
+ 	if (fse->index || fse->code != format->code)
+ 		return -EINVAL;
+@@ -246,18 +246,18 @@ static int uds_enum_frame_size(struct v4l2_subdev *subdev,
+ 	return 0;
+ }
+ 
+-static int uds_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++static int uds_get_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			  struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_uds *uds = to_uds(subdev);
+ 
+-	fmt->format = *vsp2_entity_get_pad_format(&uds->entity, fh, fmt->pad,
++	fmt->format = *vsp2_entity_get_pad_format(&uds->entity, cfg, fmt->pad,
+ 						  fmt->which);
+ 
+ 	return 0;
+ }
+ 
+-static void uds_try_format(struct vsp2_uds *uds, struct v4l2_subdev_fh *fh,
++static void uds_try_format(struct vsp2_uds *uds, struct v4l2_subdev_pad_config *cfg,
+ 			   unsigned int pad, struct v4l2_mbus_framefmt *fmt,
+ 			   enum v4l2_subdev_format_whence which)
+ {
+@@ -268,9 +268,9 @@ static void uds_try_format(struct vsp2_uds *uds, struct v4l2_subdev_fh *fh,
+ 	switch (pad) {
+ 	case UDS_PAD_SINK:
+ 		/* Default to YUV if the requested format is not supported. */
+-		if (fmt->code != V4L2_MBUS_FMT_ARGB8888_1X32 &&
+-		    fmt->code != V4L2_MBUS_FMT_AYUV8_1X32)
+-			fmt->code = V4L2_MBUS_FMT_AYUV8_1X32;
++		if (fmt->code != MEDIA_BUS_FMT_ARGB8888_1X32 &&
++		    fmt->code != MEDIA_BUS_FMT_AYUV8_1X32)
++			fmt->code = MEDIA_BUS_FMT_AYUV8_1X32;
+ 
+ 		fmt->width = clamp(fmt->width, UDS_IN_MIN_SIZE,
+ 				   UDS_IN_MAX_SIZE);
+@@ -280,7 +280,7 @@ static void uds_try_format(struct vsp2_uds *uds, struct v4l2_subdev_fh *fh,
+ 
+ 	case UDS_PAD_SOURCE:
+ 		/* The UDS scales but can't perform format conversion. */
+-		format = vsp2_entity_get_pad_format(&uds->entity, fh,
++		format = vsp2_entity_get_pad_format(&uds->entity, cfg,
+ 						    UDS_PAD_SINK, which);
+ 		fmt->code = format->code;
+ 
+@@ -295,25 +295,25 @@ static void uds_try_format(struct vsp2_uds *uds, struct v4l2_subdev_fh *fh,
+ 	fmt->colorspace = V4L2_COLORSPACE_SRGB;
+ }
+ 
+-static int uds_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh,
++static int uds_set_format(struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
+ 			  struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_uds *uds = to_uds(subdev);
+ 	struct v4l2_mbus_framefmt *format;
+ 
+-	uds_try_format(uds, fh, fmt->pad, &fmt->format, fmt->which);
++	uds_try_format(uds, cfg, fmt->pad, &fmt->format, fmt->which);
+ 
+-	format = vsp2_entity_get_pad_format(&uds->entity, fh, fmt->pad,
++	format = vsp2_entity_get_pad_format(&uds->entity, cfg, fmt->pad,
+ 					    fmt->which);
+ 	*format = fmt->format;
+ 
+ 	if (fmt->pad == UDS_PAD_SINK) {
+ 		/* Propagate the format to the source pad. */
+-		format = vsp2_entity_get_pad_format(&uds->entity, fh,
++		format = vsp2_entity_get_pad_format(&uds->entity, cfg,
+ 						    UDS_PAD_SOURCE, fmt->which);
+ 		*format = fmt->format;
+ 
+-		uds_try_format(uds, fh, UDS_PAD_SOURCE, format, fmt->which);
++		uds_try_format(uds, cfg, UDS_PAD_SOURCE, format, fmt->which);
+ 	}
+ 
+ 	return 0;
+diff --git a/drv/vsp2_video.c b/drv/vsp2_video.c
+index 2946088..9a35210 100755
+--- a/drv/vsp2_video.c
++++ b/drv/vsp2_video.c
+@@ -97,89 +97,89 @@
+  */
+ 
+ static const struct vsp2_format_info vsp2_video_formats[] = {
+-	{ V4L2_PIX_FMT_RGB332, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_RGB332, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_RGB_332, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 8, 0, 0 }, false, false, 1, 1, false },
+-	{ V4L2_PIX_FMT_ARGB444, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_ARGB444, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_4444, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS,
+ 	  1, { 16, 0, 0 }, false, false, 1, 1, true },
+-	{ V4L2_PIX_FMT_XRGB444, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_XRGB444, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_XRGB_4444, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS,
+ 	  1, { 16, 0, 0 }, false, false, 1, 1, true },
+-	{ V4L2_PIX_FMT_ARGB555, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_ARGB555, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_1555, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS,
+ 	  1, { 16, 0, 0 }, false, false, 1, 1, true },
+-	{ V4L2_PIX_FMT_XRGB555, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_XRGB555, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_XRGB_1555, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS,
+ 	  1, { 16, 0, 0 }, false, false, 1, 1, false },
+-	{ V4L2_PIX_FMT_RGB565, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_RGB565, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_RGB_565, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS,
+ 	  1, { 16, 0, 0 }, false, false, 1, 1, false },
+-	{ V4L2_PIX_FMT_BGR24, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_BGR24, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_BGR_888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 24, 0, 0 }, false, false, 1, 1, false },
+-	{ V4L2_PIX_FMT_RGB24, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_RGB24, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_RGB_888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 24, 0, 0 }, false, false, 1, 1, false },
+-	{ V4L2_PIX_FMT_ABGR32, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_ABGR32, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_8888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS,
+ 	  1, { 32, 0, 0 }, false, false, 1, 1, true },
+-	{ V4L2_PIX_FMT_XBGR32, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_XBGR32, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_8888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS,
+ 	  1, { 32, 0, 0 }, false, false, 1, 1, false },
+-	{ V4L2_PIX_FMT_ARGB32, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_ARGB32, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_8888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 32, 0, 0 }, false, false, 1, 1, true },
+-	{ V4L2_PIX_FMT_XRGB32, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_XRGB32, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_8888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 32, 0, 0 }, false, false, 1, 1, false },
+-	{ V4L2_PIX_FMT_UYVY, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_UYVY, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_YUYV_422, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 16, 0, 0 }, false, false, 2, 1, false },
+-	{ V4L2_PIX_FMT_VYUY, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_VYUY, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_YUYV_422, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS,
+ 	  1, { 16, 0, 0 }, true, true, 2, 1, false },
+-	{ V4L2_PIX_FMT_YUYV, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_YUYV, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_YUYV_422, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 16, 0, 0 }, true, false, 2, 1, false },
+-	{ V4L2_PIX_FMT_YVYU, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_YVYU, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_YUYV_422, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  1, { 16, 0, 0 }, true, true, 2, 1, false },
+-	{ V4L2_PIX_FMT_NV12M, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_NV12M, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_Y_UV_420, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  2, { 8, 16, 0 }, false, false, 2, 2, false },
+-	{ V4L2_PIX_FMT_NV21M, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_NV21M, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_Y_UV_420, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  2, { 8, 16, 0 }, false, true, 2, 2, false },
+-	{ V4L2_PIX_FMT_NV16M, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_NV16M, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_Y_UV_422, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  2, { 8, 16, 0 }, false, false, 2, 1, false },
+-	{ V4L2_PIX_FMT_NV61M, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_NV61M, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_Y_UV_422, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  2, { 8, 16, 0 }, false, true, 2, 1, false },
+-	{ V4L2_PIX_FMT_YUV420M, V4L2_MBUS_FMT_AYUV8_1X32,
++	{ V4L2_PIX_FMT_YUV420M, MEDIA_BUS_FMT_AYUV8_1X32,
+ 	  VI6_FMT_Y_U_V_420, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  3, { 8, 8, 8 }, false, false, 2, 2, false },
+-	{ V4L2_PIX_FMT_RGB32S, V4L2_MBUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_RGB32S, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_8888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS,
+ 	  1, { 32, 0, 0 }, false, false, 1, 1, false },
+ };
+@@ -631,11 +631,11 @@ vsp2_video_complete_buffer(struct vsp2_video *video)
+ 
+ 	spin_unlock_irqrestore(&video->irqlock, flags);
+ 
+-	done->buf.v4l2_buf.sequence = video->sequence++;
+-	v4l2_get_timestamp(&done->buf.v4l2_buf.timestamp);
+-	for (i = 0; i < done->buf.num_planes; ++i)
+-		vb2_set_plane_payload(&done->buf, i, done->length[i]);
+-	vb2_buffer_done(&done->buf, VB2_BUF_STATE_DONE);
++	done->buf.sequence = video->sequence++;
++	v4l2_get_timestamp(&done->buf.timestamp);
++	for (i = 0; i < done->buf.vb2_buf.num_planes; ++i)
++		vb2_set_plane_payload(&done->buf.vb2_buf, i, done->length[i]);
++	vb2_buffer_done(&done->buf.vb2_buf, VB2_BUF_STATE_DONE);
+ 
+ 	return next;
+ }
+@@ -769,10 +769,11 @@ void vsp2_pipeline_propagate_alpha(struct vsp2_pipeline *pipe,
+  */
+ 
+ static int
+-vsp2_video_queue_setup(struct vb2_queue *vq, const struct v4l2_format *fmt,
++vsp2_video_queue_setup(struct vb2_queue *vq, const void *parg,
+ 		     unsigned int *nbuffers, unsigned int *nplanes,
+ 		     unsigned int sizes[], void *alloc_ctxs[])
+ {
++	const struct v4l2_format *fmt = parg;
+ 	struct vsp2_video *video = vb2_get_drv_priv(vq);
+ 	const struct v4l2_pix_format_mplane *format;
+ 	struct v4l2_pix_format_mplane pix_mp;
+@@ -802,8 +803,9 @@ vsp2_video_queue_setup(struct vb2_queue *vq, const struct v4l2_format *fmt,
+ 
+ static int vsp2_video_buffer_prepare(struct vb2_buffer *vb)
+ {
++	struct vb2_v4l2_buffer *vbuf = to_vb2_v4l2_buffer(vb);
+ 	struct vsp2_video *video = vb2_get_drv_priv(vb->vb2_queue);
+-	struct vsp2_video_buffer *buf = to_vsp2_video_buffer(vb);
++	struct vsp2_video_buffer *buf = to_vsp2_video_buffer(vbuf);
+ 	const struct v4l2_pix_format_mplane *format = &video->format;
+ 	unsigned int i;
+ 
+@@ -825,9 +827,10 @@ static int vsp2_video_buffer_prepare(struct vb2_buffer *vb)
+ 
+ static void vsp2_video_buffer_queue(struct vb2_buffer *vb)
+ {
++	struct vb2_v4l2_buffer *vbuf = to_vb2_v4l2_buffer(vb);	
+ 	struct vsp2_video *video = vb2_get_drv_priv(vb->vb2_queue);
+ 	struct vsp2_pipeline *pipe = to_vsp2_pipeline(&video->video.entity);
+-	struct vsp2_video_buffer *buf = to_vsp2_video_buffer(vb);
++	struct vsp2_video_buffer *buf = to_vsp2_video_buffer(vbuf);
+ 	unsigned long flags;
+ 	bool empty;
+ 
+@@ -972,7 +975,7 @@ static int vsp2_video_start_streaming(struct vb2_queue *vq, unsigned int count)
+ 	return 0;
+ }
+ 
+-static int vsp2_video_stop_streaming(struct vb2_queue *vq)
++static void vsp2_video_stop_streaming(struct vb2_queue *vq)
+ {
+ 	struct vsp2_video *video = vb2_get_drv_priv(vq);
+ 	struct vsp2_pipeline *pipe = to_vsp2_pipeline(&video->video.entity);
+@@ -998,11 +1001,9 @@ static int vsp2_video_stop_streaming(struct vb2_queue *vq)
+ 	/* Remove all buffers from the IRQ queue. */
+ 	spin_lock_irqsave(&video->irqlock, flags);
+ 	list_for_each_entry(buffer, &video->irqqueue, queue)
+-		vb2_buffer_done(&buffer->buf, VB2_BUF_STATE_ERROR);
++		vb2_buffer_done(&buffer->buf.vb2_buf, VB2_BUF_STATE_ERROR);
+ 	INIT_LIST_HEAD(&video->irqqueue);
+ 	spin_unlock_irqrestore(&video->irqlock, flags);
+-
+-	return 0;
+ }
+ 
+ static struct vb2_ops vsp2_video_queue_qops = {
+@@ -1309,7 +1310,7 @@ int vsp2_video_init(struct vsp2_video *video, struct vsp2_entity *rwpf)
+ 	video->queue.buf_struct_size = sizeof(struct vsp2_video_buffer);
+ 	video->queue.ops = &vsp2_video_queue_qops;
+ 	video->queue.mem_ops = &vb2_dma_contig_memops;
+-	video->queue.timestamp_type = V4L2_BUF_FLAG_TIMESTAMP_COPY;
++	video->queue.timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
+ 	ret = vb2_queue_init(&video->queue);
+ 	if (ret < 0) {
+ 		dev_err(video->vsp2->dev, "failed to initialize vb2 queue\n");
+diff --git a/drv/vsp2_video.h b/drv/vsp2_video.h
+index 90c3478..9578880 100755
+--- a/drv/vsp2_video.h
++++ b/drv/vsp2_video.h
+@@ -68,6 +68,7 @@
+ 
+ #include <media/media-entity.h>
+ #include <media/videobuf2-core.h>
++#include <media/videobuf2-v4l2.h>
+ 
+ struct vsp2_video;
+ 
+@@ -142,7 +143,7 @@ static inline struct vsp2_pipeline *to_vsp2_pipeline(struct media_entity *e)
+ }
+ 
+ struct vsp2_video_buffer {
+-	struct vb2_buffer buf;
++	struct vb2_v4l2_buffer buf;
+ 	struct list_head queue;
+ 	struct vsp2_video *video;
+ 
+@@ -152,7 +153,7 @@ struct vsp2_video_buffer {
+ };
+ 
+ static inline struct vsp2_video_buffer *
+-to_vsp2_video_buffer(struct vb2_buffer *vb)
++to_vsp2_video_buffer(struct vb2_v4l2_buffer *vb)
+ {
+ 	return container_of(vb, struct vsp2_video_buffer, buf);
+ }
+diff --git a/drv/vsp2_wpf.c b/drv/vsp2_wpf.c
+index 176723d..664f60a 100755
+--- a/drv/vsp2_wpf.c
++++ b/drv/vsp2_wpf.c
+@@ -223,9 +223,9 @@ static void wpf_vdev_queue(struct vsp2_video *video,
+ 	T_VSP_OUT *vsp_out = vsp_par->dst_par;
+ 
+ 	vsp_out->addr = (void *)((unsigned long)buf->addr[0]);
+-	if (buf->buf.num_planes > 1)
++	if (buf->buf.vb2_buf.num_planes > 1)
+ 		vsp_out->addr_c0 = (void *)((unsigned long)buf->addr[1]);
+-	if (buf->buf.num_planes > 2)
++	if (buf->buf.vb2_buf.num_planes > 2)
+ 		vsp_out->addr_c1 = (void *)((unsigned long)buf->addr[2]);
+ }
+ 
+-- 
+1.9.1
+

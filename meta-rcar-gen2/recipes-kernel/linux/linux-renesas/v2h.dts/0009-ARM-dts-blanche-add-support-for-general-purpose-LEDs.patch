@@ -1,0 +1,44 @@
+From 996453571b33ba2ae07211ff9e8a09b28e49aec5 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Wed, 24 Aug 2016 22:22:22 +0300
+Subject: [PATCH] ARM: dts: blanche: add support for general purpose LEDs
+
+Add support for the general purpose LEDs on the Blanche board.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7792-blanche.dts | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792-blanche.dts b/arch/arm/boot/dts/r8a7792-blanche.dts
+index 3c6f42b..f3ea43b 100644
+--- a/arch/arm/boot/dts/r8a7792-blanche.dts
++++ b/arch/arm/boot/dts/r8a7792-blanche.dts
+@@ -159,6 +159,23 @@
+ 		};
+ 	};
+ 
++	leds {
++		compatible = "gpio-leds";
++
++		led17 {
++			gpios = <&gpio10 10 GPIO_ACTIVE_HIGH>;
++		};
++		led18 {
++			gpios = <&gpio10 11 GPIO_ACTIVE_HIGH>;
++		};
++		led19 {
++			gpios = <&gpio10 12 GPIO_ACTIVE_HIGH>;
++		};
++		led20 {
++			gpios = <&gpio10 23 GPIO_ACTIVE_HIGH>;
++		};
++	};
++
+ 	vcc_sdhi0: regulator-vcc-sdhi0 {
+ 		compatible = "regulator-fixed";
+ 
+-- 
+1.9.1
+

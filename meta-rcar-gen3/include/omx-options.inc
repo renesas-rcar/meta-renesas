@@ -114,3 +114,5 @@ USE_AUDIO_OMX = "${@'1' if '1' in '${LIST_OMX_AUDIO_FLAG}' else '0'}"
 
 # USE_OMX_COMMON for OMX Common Libs
 USE_OMX_COMMON = "${@'1' if '1' in '${USE_VIDEO_OMX} ${USE_AUDIO_OMX}' else '0'}"
+
+USE_OMX_EVA_PKG = "${@'1' if 'use_eva_pkg' in '${DISTRO_FEATURES}' else '0'}"

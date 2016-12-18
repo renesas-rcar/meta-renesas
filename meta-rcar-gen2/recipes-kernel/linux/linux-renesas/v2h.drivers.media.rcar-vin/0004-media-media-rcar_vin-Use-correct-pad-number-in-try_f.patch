@@ -1,0 +1,63 @@
+From 181905e08d81b2ce5aceab7f0458a39773430e24 Mon Sep 17 00:00:00 2001
+From: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+Date: Wed, 11 May 2016 11:02:51 -0300
+Subject: [PATCH] [media] media: rcar_vin: Use correct pad number in try_fmt
+
+Fix rcar_vin_try_fmt's use of an inappropriate pad number when calling
+the subdev set_fmt function - for the ADV7612, IDs should be non-zero.
+
+Signed-off-by: William Towle <william.towle@codethink.co.uk>
+Reviewed-by: Rob Taylor <rob.taylor@codethink.co.uk>
+[ulrich.hecht+renesas@gmail.com: adapted to rcar-vin rewrite]
+Signed-off-by: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+---
+ drivers/media/platform/rcar-vin/rcar-v4l2.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/platform/rcar-vin/rcar-v4l2.c b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+index 929816b..3788f8a 100644
+--- a/drivers/media/platform/rcar-vin/rcar-v4l2.c
++++ b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+@@ -98,7 +98,7 @@ static int __rvin_try_format_source(struct rvin_dev *vin,
+ 					struct rvin_source_fmt *source)
+ {
+ 	struct v4l2_subdev *sd;
+-	struct v4l2_subdev_pad_config pad_cfg;
++	struct v4l2_subdev_pad_config *pad_cfg;
+ 	struct v4l2_subdev_format format = {
+ 		.which = which,
+ 	};
+@@ -108,10 +108,16 @@ static int __rvin_try_format_source(struct rvin_dev *vin,
+ 
+ 	v4l2_fill_mbus_format(&format.format, pix, vin->source.code);
+ 
++	pad_cfg = v4l2_subdev_alloc_pad_config(sd);
++	if (pad_cfg == NULL)
++		return -ENOMEM;
++
++	format.pad = vin->src_pad_idx;
++
+ 	ret = v4l2_device_call_until_err(sd->v4l2_dev, 0, pad, set_fmt,
+-					 &pad_cfg, &format);
++					 pad_cfg, &format);
+ 	if (ret < 0)
+-		return ret;
++		goto cleanup;
+ 
+ 	v4l2_fill_pix_format(pix, &format.format);
+ 
+@@ -121,6 +127,8 @@ static int __rvin_try_format_source(struct rvin_dev *vin,
+ 	vin_dbg(vin, "Source resolution: %ux%u\n", source->width,
+ 		source->height);
+ 
++cleanup:
++	v4l2_subdev_free_pad_config(pad_cfg);
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
+

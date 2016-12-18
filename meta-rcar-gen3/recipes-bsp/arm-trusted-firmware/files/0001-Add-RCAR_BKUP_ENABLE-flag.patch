@@ -1,0 +1,54 @@
+From 857b430f91fc26dbeff362c544713ab7a8a65506 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sat, 10 Sep 2016 23:48:31 +0300
+Subject: [PATCH] Add RCAR_BKUP_ENABLE flag
+
+This make possible to disable Suspend to RAM feature
+for hardware that has no BKUP_TRG signal populated to H3/M3 gpio
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ plat/renesas/rcar/bl2_rcar_setup.c | 2 ++
+ plat/renesas/rcar/platform.mk      | 6 ++++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/plat/renesas/rcar/bl2_rcar_setup.c b/plat/renesas/rcar/bl2_rcar_setup.c
+index 5f75901..ad2ec7d 100755
+--- a/plat/renesas/rcar/bl2_rcar_setup.c
++++ b/plat/renesas/rcar/bl2_rcar_setup.c
+@@ -236,6 +236,7 @@ struct entry_point_info *bl2_plat_get_bl31_ep_info(void)
+ 	bl31_ep_info->args.arg1 = RCAR_BL31_PLAT_PARAM_VAL;
+ #endif
+ #else
++#if RCAR_BKUP_ENABLE
+ 	if (isDdrBackupMode() != 0U) {
+ 
+ 		NOTICE("BL2: Skip loading images. (SuspendToRAM)\n");
+@@ -259,6 +260,7 @@ struct entry_point_info *bl2_plat_get_bl31_ep_info(void)
+ 
+ 		/* Jump to BL31 (Not come back here) */
+ 	}
++#endif /* RCAR_BKUP_ENABLE */
+ 
+ 	bl31_ep_info->args.arg1 = 0x00000000UL;	/* cold boot */
+ #endif
+diff --git a/plat/renesas/rcar/platform.mk b/plat/renesas/rcar/platform.mk
+index f617a2c..c5a4aab 100644
+--- a/plat/renesas/rcar/platform.mk
++++ b/plat/renesas/rcar/platform.mk
+@@ -184,6 +184,12 @@ LIFEC_DBSC_PROTECT_ENABLE := 1
+ endif
+ $(eval $(call add_define,LIFEC_DBSC_PROTECT_ENABLE))
+ 
++# Process RCAR_BKUP_ENABLE flag
++ifndef RCAR_BKUP_ENABLE
++RCAR_BKUP_ENABLE := 1
++endif
++$(eval $(call add_define,RCAR_BKUP_ENABLE))
++
+ include plat/renesas/rcar/ddr/ddr.mk
+ include plat/renesas/rcar/qos/qos.mk
+ include plat/renesas/rcar/pfc/pfc.mk
+-- 
+1.9.1
+

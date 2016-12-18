@@ -1,0 +1,138 @@
+From cb44ea5eeadb1a95de4b81e93788b75ecb239b29 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Fri, 22 Apr 2016 23:27:23 +0300
+Subject: [PATCH] arm64: dts: r8a7795 view boards: stream from 5 cam
+
+csi2 stream from 5 cameras on view boards:
+VIN[0-3] and VIN4
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts   | 12 ++++++++----------
+ arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts       | 12 ++++++++----------
+ arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts        | 12 ++++++++----------
+ 3 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
+index 42555a6..0987aab 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
+@@ -730,7 +730,7 @@
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 				remote-endpoint = <&vin4ep0>;
+ 				ov106xx_out4: endpoint@ {
+ 					remote-endpoint = <&csi2_41_in_ep>;
+@@ -791,7 +791,7 @@
+ 		compatible = "maxim,max9286-max9271";
+ 		reg = <0x6c>;
+ 		maxim,sensor_delay = <0>;
+-		maxim,links = <4>;
++		maxim,links = <1>;
+ 	};
+ 
+ 	clk_5p49v5923a: programmable_clk@6a {
+@@ -1082,7 +1082,7 @@
+ 				csi,select = "csi41";
+ 				virtual,channel = <0>;
+ 				remote-endpoint = <&ov106xx_in4>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 			};
+ 		};
+ 		port@1 {
+@@ -1270,7 +1270,7 @@
+ 		csi2_41_ep: endpoint@0 {
+ 			remote-endpoint = <&vin4ep0>;
+ 			clock-lanes = <0>;
+-			data-lanes = <1 2 3 4>;
++			data-lanes = <1>;
+ 		};
+ 
+ 		csi2_41_in_ep: endpoint@1 {
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+index 42555a6..0987aab 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+@@ -475,7 +475,7 @@
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 				remote-endpoint = <&vin4ep0>;
+ 				ov106xx_out4: endpoint@ {
+ 					remote-endpoint = <&csi2_41_in_ep>;
+@@ -536,7 +536,7 @@
+ 		reg = <0x6c>;
+ 		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+-		maxim,links = <4>;
++		maxim,links = <1>;
+ 	};
+ };
+ 
+@@ -759,7 +759,7 @@
+ 				csi,select = "csi41";
+ 				virtual,channel = <0>;
+ 				remote-endpoint = <&ov106xx_in4>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 			};
+ 		};
+ 		port@1 {
+@@ -933,7 +933,7 @@
+ 		csi2_41_ep: endpoint@0 {
+ 			remote-endpoint = <&vin4ep0>;
+ 			clock-lanes = <0>;
+-			data-lanes = <1 2 3 4>;
++			data-lanes = <1>;
+ 		};
+ 
+ 		csi2_41_in_ep: endpoint@1 {
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
+index 42555a6..0987aab 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
+@@ -588,7 +588,7 @@
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 				remote-endpoint = <&vin4ep0>;
+ 				ov106xx_out4: endpoint@ {
+ 					remote-endpoint = <&csi2_41_in_ep>;
+@@ -649,7 +649,7 @@
+ 		reg = <0x6c>;
+ 		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+-		maxim,links = <4>;
++		maxim,links = <1>;
+ 	};
+ };
+ 
+@@ -892,7 +892,7 @@
+ 				csi,select = "csi41";
+ 				virtual,channel = <0>;
+ 				remote-endpoint = <&ov106xx_in4>;
+-				data-lanes = <1 2 3 4>;
++				data-lanes = <1>;
+ 			};
+ 		};
+ 		port@1 {
+@@ -1066,7 +1066,7 @@
+ 		csi2_41_ep: endpoint@0 {
+ 			remote-endpoint = <&vin4ep0>;
+ 			clock-lanes = <0>;
+-			data-lanes = <1 2 3 4>;
++			data-lanes = <1>;
+ 		};
+ 
+ 		csi2_41_in_ep: endpoint@1 {
+-- 
+1.9.1
+

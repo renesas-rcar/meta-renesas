@@ -1,0 +1,55 @@
+From 38584104eafb6ed40ca06c8421dcc369c9015c1d Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Thu, 14 Jul 2016 23:21:15 +0300
+Subject: [PATCH] ARM: dts: blanche: add CAN0 support
+
+Define the Blanche board dependent part of the CAN0 device node along with
+the CAN_CLK crystal.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7792-blanche.dts | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792-blanche.dts b/arch/arm/boot/dts/r8a7792-blanche.dts
+index 4777a60..eeffba8 100644
+--- a/arch/arm/boot/dts/r8a7792-blanche.dts
++++ b/arch/arm/boot/dts/r8a7792-blanche.dts
+@@ -60,6 +60,10 @@
+ 	clock-frequency = <20000000>;
+ };
+ 
++&can_clk {
++	clock-frequency = <48000000>;
++};
++
+ &pfc {
+ 	scif0_pins: scif0 {
+ 		groups = "scif0_data";
+@@ -81,6 +85,11 @@
+ 			function = "lbsc";
+ 		};
+ 	};
++
++	can0_pins: can0 {
++		groups = "can0_data", "can_clk";
++		function = "can0";
++	};
+ };
+ 
+ &scif0 {
+@@ -96,3 +105,10 @@
+ 
+ 	status = "okay";
+ };
++
++&can0 {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
+-- 
+1.9.1
+

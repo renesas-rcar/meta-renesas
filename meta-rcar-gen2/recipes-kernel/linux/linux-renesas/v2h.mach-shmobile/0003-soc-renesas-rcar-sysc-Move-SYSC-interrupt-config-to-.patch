@@ -1,0 +1,102 @@
+From 053239987f89f9a6299e78610bad010764bccd71 Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 28 Jun 2016 16:10:33 +0200
+Subject: [PATCH] soc: renesas: rcar-sysc: Move SYSC interrupt config to
+ rcar-sysc driver
+
+On R-Car H1 and Gen2, the SYSC interrupt registers are always configured
+using hardcoded values in platform code. For R-Car Gen2, values are
+provided for H2 and M2-W only, other SoCs are not yet supported, and
+never will be.
+
+Move this configuration from SoC-specific platform code to the
+rcar_sysc_init() wrapper, so it can be skipped if the SYSC is configured
+from DT. This would be the case not only for H1, H2, and M2-W using a
+modern DTS, but also for other R-Car Gen2 SoCs not supported by the
+platform code, relying purely on DT.
+
+There is no longer a need to return the mapped register block, hence
+make the function return void.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/pm-r8a7779.c   |  6 +-----
+ arch/arm/mach-shmobile/pm-rcar-gen2.c |  6 +-----
+ drivers/soc/renesas/rcar-sysc.c       | 12 ++++++++----
+ include/linux/soc/renesas/rcar-sysc.h |  2 +-
+ 4 files changed, 11 insertions(+), 15 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/pm-r8a7779.c b/arch/arm/mach-shmobile/pm-r8a7779.c
+index 4174cbc..5c9a93f 100644
+--- a/arch/arm/mach-shmobile/pm-r8a7779.c
++++ b/arch/arm/mach-shmobile/pm-r8a7779.c
+@@ -23,11 +23,7 @@
+ 
+ static void __init r8a7779_sysc_init(void)
+ {
+-	void __iomem *base = rcar_sysc_init(0xffd85000);
+-
+-	/* enable all interrupt sources, but do not use interrupt handler */
+-	iowrite32(0x0131000e, base + SYSCIER);
+-	iowrite32(0, base + SYSCIMR);
++	rcar_sysc_init(0xffd85000, 0x0131000e);
+ }
+ 
+ #else /* CONFIG_PM || CONFIG_SMP */
+diff --git a/arch/arm/mach-shmobile/pm-rcar-gen2.c b/arch/arm/mach-shmobile/pm-rcar-gen2.c
+index 691ac16..7768fd1 100644
+--- a/arch/arm/mach-shmobile/pm-rcar-gen2.c
++++ b/arch/arm/mach-shmobile/pm-rcar-gen2.c
+@@ -37,11 +37,7 @@
+ 
+ static void __init rcar_gen2_sysc_init(u32 syscier)
+ {
+-	void __iomem *base = rcar_sysc_init(0xe6180000);
+-
+-	/* enable all interrupt sources, but do not use interrupt handler */
+-	iowrite32(syscier, base + SYSCIER);
+-	iowrite32(0, base + SYSCIMR);
++	rcar_sysc_init(0xe6180000, syscier);
+ }
+ 
+ #else /* CONFIG_SMP */
+diff --git a/drivers/soc/renesas/rcar-sysc.c b/drivers/soc/renesas/rcar-sysc.c
+index 68d6856..22f0d64 100644
+--- a/drivers/soc/renesas/rcar-sysc.c
++++ b/drivers/soc/renesas/rcar-sysc.c
+@@ -400,10 +400,14 @@ out_put:
+ }
+ early_initcall(rcar_sysc_pd_init);
+ 
+-void __iomem * __init rcar_sysc_init(phys_addr_t base)
++void __init rcar_sysc_init(phys_addr_t base, u32 syscier)
+ {
+-	if (rcar_sysc_pd_init())
+-		rcar_sysc_base = ioremap_nocache(base, PAGE_SIZE);
++	if (!rcar_sysc_pd_init())
++		return;
+ 
+-	return rcar_sysc_base;
++	rcar_sysc_base = ioremap_nocache(base, PAGE_SIZE);
++
++	/* enable all interrupt sources, but do not use interrupt handler */
++	iowrite32(syscier, rcar_sysc_base + SYSCIER);
++	iowrite32(0, rcar_sysc_base + SYSCIMR);
+ }
+diff --git a/include/linux/soc/renesas/rcar-sysc.h b/include/linux/soc/renesas/rcar-sysc.h
+index 92fc613..7b8b280 100644
+--- a/include/linux/soc/renesas/rcar-sysc.h
++++ b/include/linux/soc/renesas/rcar-sysc.h
+@@ -11,6 +11,6 @@ struct rcar_sysc_ch {
+ 
+ int rcar_sysc_power_down(const struct rcar_sysc_ch *sysc_ch);
+ int rcar_sysc_power_up(const struct rcar_sysc_ch *sysc_ch);
+-void __iomem *rcar_sysc_init(phys_addr_t base);
++void rcar_sysc_init(phys_addr_t base, u32 syscier);
+ 
+ #endif /* __LINUX_SOC_RENESAS_RCAR_SYSC_H__ */
+-- 
+1.9.1
+

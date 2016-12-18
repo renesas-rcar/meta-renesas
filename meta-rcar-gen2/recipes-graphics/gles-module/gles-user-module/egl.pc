@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: egl
+Description: EGL 1.4 Library
+Version: 1.2.1
+Libs: -L${libdir} -lEGL
+Cflags: -I${includedir}

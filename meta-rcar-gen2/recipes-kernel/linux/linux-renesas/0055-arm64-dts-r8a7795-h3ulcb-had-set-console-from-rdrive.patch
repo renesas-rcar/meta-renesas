@@ -1,0 +1,30 @@
+From 509019eb6a9ba5ffb6930f6f8b148ab63d99c3fd Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 18 May 2016 18:15:40 +0300
+Subject: [PATCH] arm64: dts: r8a7795-h3ulcb-had: Set console from rdrive
+
+Set console from R-Drive CN9 connector (i.e. scif1)
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
+index dbed953..b1811cb 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
+@@ -44,8 +44,8 @@
+ 	compatible = "renesas,h3ulcb", "renesas,r8a7795";
+ 
+ 	aliases {
+-		serial0 = &scif2;
+-		serial1 = &scif1;
++		serial1 = &scif2;
++		serial0 = &scif1;
+ 		ethernet0 = &avb;
+ 		spi1 = &spi0_gpio;
+ 		spi2 = &spi1_gpio;
+-- 
+1.9.1
+

@@ -1,0 +1,213 @@
+From 16fa81a3b0b09ccd08bf505867805baea54028aa Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Thu, 13 Oct 2016 19:19:44 +0300
+Subject: [PATCH] ARM: dts: wheat: add max9272/ov10635 cameras
+
+Add GMSL cameras max9272/ov10635
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm/boot/dts/r8a7792-wheat.dts | 173 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 173 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792-wheat.dts b/arch/arm/boot/dts/r8a7792-wheat.dts
+index 8fc3d97..d1ff7c3 100644
+--- a/arch/arm/boot/dts/r8a7792-wheat.dts
++++ b/arch/arm/boot/dts/r8a7792-wheat.dts
+@@ -157,6 +157,26 @@
+ 		function = "qspi";
+ 	};
+ 
++	vin0_pins: vin0 {
++		groups = "vin0_data10", "vin0_sync", "vin0_clk";
++		function = "vin0";
++	};
++
++	vin1_pins: vin1 {
++		groups = "vin1_data10", "vin1_sync", "vin1_clk";
++		function = "vin1";
++	};
++
++	vin4_pins: vin4 {
++		groups = "vin4_data10", "vin4_sync", "vin4_clk";
++		function = "vin4";
++	};
++
++	vin5_pins: vin5 {
++		groups = "vin5_data10", "vin5_sync", "vin5_clk";
++		function = "vin5";
++	};
++
+ 	du0_pins: du0 {
+ 		groups = "du0_rgb888", "du0_sync", "du0_disp";
+ 		function = "du0";
+@@ -236,6 +256,99 @@
+ 	};
+ };
+ 
++&i2c0 {
++	clock-frequency = <400000>;
++	status = "okay";
++
++	ov106xx@30 {
++		compatible = "maxim,max9272-max9271-ov10635";
++		reg = <0x30>;
++		remote = <&vin0>;
++
++		port {
++			ov106xx_in0: endpoint {
++				remote-endpoint = <&vin0ep0>;
++			};
++		};
++	};
++
++	max9272-max9271@0 {
++		compatible = "maxim,max9272-max9271";
++		reg = <0x48>;
++		gpios = <&gpio10 25 GPIO_ACTIVE_LOW>;
++		maxim,sensor_delay = <0>;
++	};
++};
++
++&i2c1 {
++	status = "okay";
++	clock-frequency = <400000>;
++
++	ov106xx@30 {
++		compatible = "maxim,max9272-max9271-ov10635";
++		reg = <0x30>;
++		remote = <&vin1>;
++
++		port {
++			ov106xx_in1: endpoint {
++				remote-endpoint = <&vin1ep0>;
++			};
++		};
++	};
++
++	max9272-max9271@0 {
++		compatible = "maxim,max9272-max9271";
++		reg = <0x48>;
++		maxim,sensor_delay = <0>;
++	};
++};
++
++&i2c2 {
++	status = "okay";
++	clock-frequency = <400000>;
++
++	ov106xx@30 {
++		compatible = "maxim,max9272-max9271-ov10635";
++		reg = <0x30>;
++		remote = <&vin4>;
++
++		port {
++			ov106xx_in2: endpoint {
++				remote-endpoint = <&vin4ep0>;
++			};
++		};
++	};
++
++	max9272-max9271@0 {
++		compatible = "maxim,max9272-max9271";
++		reg = <0x48>;
++		maxim,sensor_delay = <0>;
++	};
++};
++
++&i2c3 {
++	status = "okay";
++	clock-frequency = <400000>;
++
++	ov106xx@30 {
++		compatible = "maxim,max9272-max9271-ov10635";
++		reg = <0x30>;
++		remote = <&vin5>;
++
++		port {
++			ov106xx_in3: endpoint {
++				remote-endpoint = <&vin5ep0>;
++			};
++		};
++	};
++
++	max9272-max9271@0 {
++		compatible = "maxim,max9272-max9271";
++		reg = <0x48>;
++		maxim,sensor_delay = <0>;
++	};
++};
++
+ &i2c4 {
+ 	status = "okay";
+ 	clock-frequency = <400000>;
+@@ -301,6 +414,66 @@
+ 	};
+ };
+ 
++&vin0 {
++	pinctrl-0 = <&vin0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	port {
++		vin0ep0: endpoint {
++			remote-endpoint = <&ov106xx_in0>;
++			bus-width = <10>;
++			pclk-sample = <1>;
++			data-active = <1>;
++		};
++	};
++};
++
++&vin1 {
++	pinctrl-0 = <&vin1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	port {
++		vin1ep0: endpoint {
++			remote-endpoint = <&ov106xx_in1>;
++			bus-width = <10>;
++			pclk-sample = <1>;
++			data-active = <1>;
++		};
++	};
++};
++
++&vin4 {
++	pinctrl-0 = <&vin4_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	port {
++		vin4ep0: endpoint {
++			remote-endpoint = <&ov106xx_in2>;
++			bus-width = <10>;
++			pclk-sample = <1>;
++			data-active = <1>;
++		};
++	};
++};
++
++&vin5 {
++	pinctrl-0 = <&vin5_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	port {
++		vin5ep0: endpoint {
++			remote-endpoint = <&ov106xx_in3>;
++			bus-width = <10>;
++			pclk-sample = <1>;
++			data-active = <1>;
++		};
++	};
++};
++
+ &du {
+ 	pinctrl-0 = <&du0_pins &du1_pins>;
+ 	pinctrl-names = "default";
+-- 
+1.9.1
+

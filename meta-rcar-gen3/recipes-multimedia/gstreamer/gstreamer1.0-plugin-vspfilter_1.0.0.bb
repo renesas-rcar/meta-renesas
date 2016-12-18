@@ -13,11 +13,11 @@ VSPFILTER_CONF_r8a7795 = "gstvspfilter-${MACHINE}_r8a7795.conf"
 VSPFILTER_CONF_r8a7796 = "gstvspfilter-${MACHINE}_r8a7796.conf"
 
 SRC_URI = " \
-    git://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.0 \
+    git://github.com/CogentEmbedded/gst-plugin-vspfilter.git;nobranch=1 \
     file://${VSPFILTER_CONF} \
 "
 
-SRCREV = "bdba753a71df8879540a56783ff072e7688fc390"
+SRCREV = "e66072332dcb771b9a4687d713076465aee34e28"
 
 S = "${WORKDIR}/git"
 

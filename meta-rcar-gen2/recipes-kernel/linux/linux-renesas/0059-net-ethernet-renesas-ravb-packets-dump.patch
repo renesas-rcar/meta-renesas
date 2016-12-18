@@ -1,0 +1,117 @@
+From 098c5c2bca8b39d18de651f034c99465a1b93da8 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 7 Sep 2016 23:14:22 +0300
+Subject: [PATCH] net: ethernet: renesas: ravb packets dump
+
+Add bare ethernet packets dump for debugging RAVB interface
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/net/ethernet/renesas/ravb.h      | 60 ++++++++++++++++++++++++++++++++
+ drivers/net/ethernet/renesas/ravb_main.c | 12 +++++++
+ 2 files changed, 72 insertions(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index ed90a93..e79bd3f 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -1122,6 +1122,66 @@ struct ravb_private {
+ 	int num_tx_desc;	/* TX descriptors per packet */
+ };
+ 
++static inline void ravb_soft_dump(char *src, int len)
++{
++#if 1
++        u32 *p = (u32 *)src;
++        u32 *maxp;
++        maxp = p + ((len + sizeof(u32) - 1) / sizeof(u32));
++
++printk("<----  %s len=%d\n",__FUNCTION__,len);
++        for (; p < maxp; p++)
++//                *p = swab32(*p);
++printk("0x%x ", swab32(*p));
++
++printk("\n");
++#endif
++}
++
++static inline void ravb_soft_dumptx(char *src, int len)
++{
++//#ifdef __LITTLE_ENDIAN__
++#if 1
++        u32 *p = (u32 *)src;
++        u32 *maxp;
++        maxp = p + ((len + sizeof(u32) - 1) / sizeof(u32));
++const char pattern[100] = {0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++		     0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++		     0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++		     0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++		     0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++		     0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++		     0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++		     0xff, 0xff, 0xff, 0xff,
++		     0x00, 0x00, 0x00, 0x00,
++		     0xf0, 0xf0, 0xf0, 0xf0,
++};
++//memcpy((void *)src, (void *)pattern, len);
++
++printk(" ---->  %s len=%d\n",__FUNCTION__,len);
++        for (; p < maxp; p++) {
++//                *p = swab32(*p);
++printk("0x%x ", swab32(*p));
++}
++
++printk("\n");
++#endif
++}
++
+ static inline u32 ravb_read(struct net_device *ndev, enum ravb_reg reg)
+ {
+ 	struct ravb_private *priv = netdev_priv(ndev);
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index d25e6b8..885d066 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -567,6 +567,11 @@ static bool ravb_rx(struct net_device *ndev, int *quota, int q)
+ 			dma_unmap_single(ndev->dev.parent, le32_to_cpu(desc->dptr),
+ 					 PKT_BUF_SZ,
+ 					 DMA_FROM_DEVICE);
++#if 1
++                                ravb_soft_dump(
++                                        phys_to_virt(ALIGN(desc->dptr, 4)),
++                                        pkt_len + 2);
++#endif
+ 			get_ts &= (q == RAVB_NC) ?
+ 					RAVB_RXTSTAMP_TYPE_V2_L2_EVENT :
+ 					~RAVB_RXTSTAMP_TYPE_V2_L2_EVENT;
+@@ -1529,6 +1534,13 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	}
+ 	entry = priv->cur_tx[q] % (priv->num_tx_ring[q] * num_tx_desc);
+ 	priv->tx_skb[q][entry / num_tx_desc] = skb;
++#if 0
++ ravb_soft_dumptx(phys_to_virt(ALIGN(desc->dptr, 4)),
++                                 skb->len + 2);
++#endif
++#if 1
++ ravb_soft_dumptx(skb->data, skb->len);
++#endif
+ 
+ 	if (skb_put_padto(skb, ETH_ZLEN))
+ 		goto drop;
+-- 
+1.9.1
+

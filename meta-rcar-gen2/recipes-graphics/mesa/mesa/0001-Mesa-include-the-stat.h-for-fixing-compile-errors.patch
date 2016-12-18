@@ -1,0 +1,38 @@
+From f02b1b41aadebe34e1242830c00f5c32e1e38cf8 Mon Sep 17 00:00:00 2001
+From: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
+Date: Tue, 1 Dec 2015 17:19:24 +0700
+Subject: [PATCH] Mesa: include the stat.h for fixing compile errors
+
+currently, mesa build error with disable gbm configuration.
+
+src/egl/drivers/dri2/platform_wayland.c:847:8:
+error: implicit declaration of function 'fstat'
+[-Werror=implicit-function-declaration]
+|     if (fstat(fd, &render))
+|         ^
+|
+src/egl/drivers/dri2/platform_wayland.c:850:9:
+error: implicit declaration of function 'S_ISCHR'
+[-Werror=implicit-function-declaration]
+|     if (!S_ISCHR(render.st_mode))
+
+Signed-off-by: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
+---
+ src/egl/drivers/dri2/platform_wayland.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/egl/drivers/dri2/platform_wayland.c b/src/egl/drivers/dri2/platform_wayland.c
+index 9914b68..131e0ec 100644
+--- a/src/egl/drivers/dri2/platform_wayland.c
++++ b/src/egl/drivers/dri2/platform_wayland.c
+@@ -37,6 +37,7 @@
+ #include <fcntl.h>
+ #include <xf86drm.h>
+ #include <sys/mman.h>
++#include <sys/stat.h>
+ 
+ #include "egl_dri2.h"
+ #include "egl_dri2_fallbacks.h"
+-- 
+1.9.1
+

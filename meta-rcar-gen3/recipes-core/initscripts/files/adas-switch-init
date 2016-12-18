@@ -1,0 +1,43 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:             adas-switch-init
+# Required-Start:
+# Required-Stop:
+# Default-Start:        S
+# Default-Stop:
+### END INIT INFO
+
+# Marvell PHY Configuration
+# Delay until the Marvell PHY is initialized (see datasheet)
+# Then set RGMII Timing Control Register (bit 5) to 0:
+# Select page 2 (set register 0x16 to 0x2)
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800084 0x00160000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800080 0x00000002
+# Set bit 5 to 0 in register 0x15, page 2 (write 0x1056 to 0x15)
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800084 0x00150000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800080 0x00001056
+# Select page 0 (set register 0x16 to 0x0)
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800084 0x00160000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800080 0x00000000
+# Set 1Gbps, full duplex, auto neg. disabled (write 0x0140 to register 0, page 0)
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800084 0x00000000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800080 0x00000140
+# Reset the PHY (write 0x8140 to register 0, page 0)
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800084 0x00000000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x800080 0x00008140
+
+# BroadR-Reach PHY Configuration
+# Initialize the reset of PHY0-PHY4, set DOUT[2]-DOUT[6] to 1
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900008 0x00000001
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x90000C 0x00000001
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900010 0x00000001
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900014 0x00000001
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900018 0x00000001
+# Clear the resets
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900008 0x00000000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x90000C 0x00000000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900010 0x00000000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900014 0x00000000
+/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -s 0x900018 0x00000000
+# Read back the error bit of the last command
+#/usr/bin/spidev-dbg -d /dev/spidev1.0 -O -H -g 0x00000000

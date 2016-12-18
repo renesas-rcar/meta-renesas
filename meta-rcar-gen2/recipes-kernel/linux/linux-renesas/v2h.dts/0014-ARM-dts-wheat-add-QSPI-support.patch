@@ -1,0 +1,79 @@
+From e678114f86edc40f394a82231c239c8cdfb4191c Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Sat, 3 Sep 2016 01:09:26 +0300
+Subject: [PATCH] ARM: dts: wheat: add QSPI support
+
+Define the Wheat board dependent part of the QSPI device node.
+Add device nodes for Spansion S25FL512S SPI flash and MTD partitions on it.
+
+Based  on the original (and large) patch by Vladimir Barinov
+<vladimir.barinov@cogentembedded.com>.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7792-wheat.dts | 43 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792-wheat.dts b/arch/arm/boot/dts/r8a7792-wheat.dts
+index ff37de3..0ec4bc6 100644
+--- a/arch/arm/boot/dts/r8a7792-wheat.dts
++++ b/arch/arm/boot/dts/r8a7792-wheat.dts
+@@ -103,6 +103,11 @@
+ 		groups = "sdhi0_data4", "sdhi0_ctrl";
+ 		function = "sdhi0";
+ 	};
++
++	qspi_pins: qspi {
++		groups = "qspi_ctrl", "qspi_data4";
++		function = "qspi";
++	};
+ };
+ 
+ &scif0 {
+@@ -134,3 +139,41 @@
+ 	cd-gpios = <&gpio11 11 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
+ };
++
++&qspi {
++	pinctrl-0 = <&qspi_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	flash@0 {
++		compatible = "spansion,s25fl512s", "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <30000000>;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++		spi-cpol;
++		spi-cpha;
++		m25p,fast-read;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "loader";
++				reg = <0x00000000 0x00040000>;
++				read-only;
++			};
++			partition@40000 {
++				label = "user";
++				reg = <0x00040000 0x00400000>;
++				read-only;
++			};
++			partition@440000 {
++				label = "flash";
++				reg = <0x00440000 0x03bc0000>;
++			};
++		};
++	};
++};
+-- 
+1.9.1
+

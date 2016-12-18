@@ -1,0 +1,3218 @@
+From fe59e9663e07ead07ee7ab631a514c84e0d2f28d Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sun, 5 Jun 2016 23:14:11 +0300
+Subject: [PATCH] H3 Maxim MAX9286 support: support 10635/10640 cameras
+
+H3 Maxim MAX9286 support: support 10635/10640 cameras on YoctoV290
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/media/i2c/soc_camera/Kconfig               |   32 +
+ drivers/media/i2c/soc_camera/Makefile              |    4 +
+ drivers/media/i2c/soc_camera/max9286_max9271.c     |  354 ++++++
+ drivers/media/i2c/soc_camera/max9286_max9271.h     |  231 ++++
+ .../media/i2c/soc_camera/max9286_max9271_ov10635.c |  598 ++++++++++
+ .../media/i2c/soc_camera/max9286_max9271_ov10635.h | 1149 ++++++++++++++++++++
+ .../media/i2c/soc_camera/max9286_max9271_ov106xx.c |  106 ++
+ .../i2c/soc_camera/max9286_max9271_ov490_ov10640.c |  456 ++++++++
+ .../i2c/soc_camera/max9286_max9271_ov490_ov10640.h |   35 +
+ drivers/media/platform/soc_camera/rcar_csi2.c      |   42 +-
+ drivers/media/platform/soc_camera/rcar_vin.c       |    4 +
+ drivers/media/platform/soc_camera/soc_mediabus.c   |   16 +
+ include/media/drv-intf/soc_mediabus.h              |    3 +
+ 13 files changed, 3027 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.c
+ create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271.h
+ create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
+ create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov10635.h
+ create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov106xx.c
+ create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
+ create mode 100644 drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.h
+
+diff --git a/drivers/media/i2c/soc_camera/Kconfig b/drivers/media/i2c/soc_camera/Kconfig
+index 23d352f..0528ef7 100644
+--- a/drivers/media/i2c/soc_camera/Kconfig
++++ b/drivers/media/i2c/soc_camera/Kconfig
+@@ -6,6 +6,38 @@ config SOC_CAMERA_IMX074
+ 	help
+ 	  This driver supports IMX074 cameras from Sony
+ 
++config SOC_CAMERA_MAX9286_MAX9271
++	tristate "max9286-ov10635 camera support"
++	depends on SOC_CAMERA && I2C
++	help
++	  This is an MAXIM max9286-max9271 with OmniVision ov10635 sensor
++	  camera driver
++
++config SOC_CAMERA_MAX9286_MAX9271_OV106XX
++	tristate "max9286-max9271-ov106xx camera support"
++	depends on SOC_CAMERA && SOC_CAMERA_MAX9286_MAX9271 && I2C
++	help
++	  This is an MAXIM max9286-max9271 with runtime detected
++	  OmniVision ov10635 or ov490-ov10640 sensor camera driver
++
++if !SOC_CAMERA_MAX9286_MAX9271_OV106XX
++
++config SOC_CAMERA_MAX9286_MAX9271_OV10635
++	tristate "max9286-max9271-ov10635 camera support"
++	depends on SOC_CAMERA && SOC_CAMERA_MAX9286_MAX9271 && I2C
++	help
++	  This is an MAXIM max9286-max9271 with OmniVision ov10635 sensor
++	  camera driver
++
++config SOC_CAMERA_MAX9286_MAX9271_OV490_OV10640
++	tristate "max9286-max9271-ov490-ov10640 camera support"
++	depends on SOC_CAMERA && SOC_CAMERA_MAX9286_MAX9271 && I2C
++	help
++	  This is an MAXIM max9286-max9271 with OmniVision ov490-ov10640 sensor
++	  camera driver
++
++endif
++
+ config SOC_CAMERA_MT9M001
+ 	tristate "mt9m001 support"
+ 	depends on SOC_CAMERA && I2C
+diff --git a/drivers/media/i2c/soc_camera/Makefile b/drivers/media/i2c/soc_camera/Makefile
+index d0421fe..05944d8 100644
+--- a/drivers/media/i2c/soc_camera/Makefile
++++ b/drivers/media/i2c/soc_camera/Makefile
+@@ -1,4 +1,8 @@
+ obj-$(CONFIG_SOC_CAMERA_IMX074)		+= imx074.o
++obj-$(CONFIG_SOC_CAMERA_MAX9286_MAX9271)		+= max9286_max9271.o
++obj-$(CONFIG_SOC_CAMERA_MAX9286_MAX9271_OV10635)	+= max9286_max9271_ov10635.o
++obj-$(CONFIG_SOC_CAMERA_MAX9286_MAX9271_OV490_OV10640)	+= max9286_max9271_ov490_ov10640.o
++obj-$(CONFIG_SOC_CAMERA_MAX9286_MAX9271_OV106XX)	+= max9286_max9271_ov106xx.o
+ obj-$(CONFIG_SOC_CAMERA_MT9M001)	+= mt9m001.o
+ obj-$(CONFIG_SOC_CAMERA_MT9M111)	+= mt9m111.o
+ obj-$(CONFIG_SOC_CAMERA_MT9T031)	+= mt9t031.o
+diff --git a/drivers/media/i2c/soc_camera/max9286_max9271.c b/drivers/media/i2c/soc_camera/max9286_max9271.c
+new file mode 100644
+index 0000000..e09a1da
+--- /dev/null
++++ b/drivers/media/i2c/soc_camera/max9286_max9271.c
+@@ -0,0 +1,354 @@
++/*
++ * MAXIM R-Car H3 Demo board setup driver
++ *
++ * Copyright (C) 2015-2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++#include <linux/delay.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/of_gpio.h>
++
++#include "max9286_max9271.h"
++
++#define MAXIM_I2C_I2C_SPEED_837KHZ	(0x7 << 2) /* 837kbps */
++#define MAXIM_I2C_I2C_SPEED_533KHZ	(0x6 << 2) /* 533kbps */
++#define MAXIM_I2C_I2C_SPEED_339KHZ	(0x5 << 2) /* 339 kbps */
++#define MAXIM_I2C_I2C_SPEED_173KHZ	(0x4 << 2) /* 174kbps */
++#define MAXIM_I2C_I2C_SPEED_105KHZ	(0x3 << 2) /* 105 kbps */
++#define MAXIM_I2C_I2C_SPEED_085KHZ	(0x2 << 2) /* 84.7 kbps */
++#define MAXIM_I2C_I2C_SPEED_028KHZ	(0x1 << 2) /* 28.3 kbps */
++#define MAXIM_I2C_I2C_SPEED		MAXIM_I2C_I2C_SPEED_339KHZ
++
++struct max9286_max9271_priv {
++	int		des_addr;
++	int		links;
++	int		offset;
++	const char	*fsync_mode;
++	int		fsync_period;
++	char		pclk_rising_edge;
++	int		gpio_resetb;
++	int		active_low_resetb;
++	int		timeout;
++};
++
++static void max9286_max9271_preinit(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	switch (priv->des_addr) {
++	case DES0:
++		client->addr = DES0;			/* MAX9286-CAMx I2C */
++		maxim_reg8_write(client, 0x0a, 0x00);	/* disable reverse control for all cams */
++		maxim_reg8_write(client, 0x00, 0x00);	/* disable all GMSL links [0:3] */
++
++		client->addr = DES1;			/* MAX9286-CAMx I2C */
++		maxim_reg8_write(client, 0x0a, 0x00);	/* disable reverse control for all cams */
++		maxim_reg8_write(client, 0x00, 0x00);	/* disable all GMSL links [0:3] */
++		usleep_range(2000, 2500);		/* wait 2ms after any change of reverse channel settings */
++
++		priv->offset = 0;
++		break;
++	case DES1:
++		priv->offset = 4;
++		break;
++	default:
++		dev_err(&client->dev, "invalid deserializer address\n");
++	}
++}
++
++static void max9286_max9271_reverse_channel_setup(struct i2c_client *client, int idx)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++	u8 val = 0;
++	int timeout = priv->timeout;
++
++	/* Reverse channel setup */
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x3f, 0x4f);			/* enable custom reverse channel & first pulse length */
++	maxim_reg8_write(client, 0x34, 0xa2 | MAXIM_I2C_I2C_SPEED); /* enable artificial ACKs, I2C speed set */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++	maxim_reg8_write(client, 0x00, 0x1 << (idx - priv->offset)); /* enable GMSL link for CAMx */
++	maxim_reg8_write(client, 0x0a, 0x11 << (idx - priv->offset)); /* enable reverse control only for CAMx */
++	maxim_reg8_write(client, 0x69, (0x1 << (idx - priv->offset)) ^ 0x0f); /* unmask link only for CAMx */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++again:
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x3b, 0x1e);			/* first pulse length rise time changed from 300ns to 200ns, amplitude 100mV */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	i2c_smbus_read_byte(client);				/* ping to wake-up */
++	maxim_reg8_write(client, 0x04, 0x43);			/* wake-up, enable reverse_control/conf_link */
++//	usleep_range(5000, 5500);				/* wait 5ms for conf_link to establish */
++	maxim_reg8_write(client, 0x08, 0x1);			/* reverse channel receiver high threshold enable */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x3b, 0x19);			/* reverse channel increase amplitude 170mV to compensate high threshold enabled */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	i2c_smbus_read_byte(client);				/* ping to wake-up */
++	maxim_reg8_write(client, 0x04, 0x43);			/* wake-up, enable reverse_control/conf_link */
++//	usleep_range(5000, 5500);				/* wait 5ms for conf_link to establish */
++	maxim_reg8_write(client, 0x08, 0x1);			/* reverse channel receiver high threshold enable */
++	usleep_range(2000, 2500);				/* wait 2ms after any change of reverse channel settings */
++
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	maxim_reg8_read(client, 0x1e, &val);			/* read max9271 ID */
++	if (val != MAX9271_ID && --timeout > 0)
++		goto again;
++
++	if (!timeout)
++		dev_info(&client->dev, "timeout GMSL link establish, max9271 not found\n");
++}
++
++static void max9286_max9271_initial_setup(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* Initial setup */
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x15, 0x13);			/* disable CSI output, VC is set accordingly to Link number */
++	if (priv->links == 1)
++		maxim_reg8_write(client, 0x12, 0x33);		/* enable CSI-2 Lane D0 only, DBL mode, YUV422 8-bit*/
++	else
++		maxim_reg8_write(client, 0x12, 0xf3);		/* enable CSI-2 Lanes D[0:3], DBL mode, YUV422 8-bit*/
++
++	if (strcmp(priv->fsync_mode, "manual") == 0) {
++		maxim_reg8_write(client, 0x06, priv->fsync_period & 0xff);
++		maxim_reg8_write(client, 0x07, (priv->fsync_period >> 8) & 0xff);
++		maxim_reg8_write(client, 0x08, priv->fsync_period >> 16);
++		maxim_reg8_write(client, 0x01, 0x00);		/* manual: FRAMESYNC set manually via [0x06:0x08] regs */
++	} else if (strcmp(priv->fsync_mode, "automatic") == 0) {
++		maxim_reg8_write(client, 0x01, 0x02);		/* automatic: FRAMESYNC taken from the slowest Link */
++	} else if (strcmp(priv->fsync_mode, "semi-automatic") == 0) {
++		maxim_reg8_write(client, 0x01, 0x01);		/* semi-automatic: FRAMESYNC taken from the slowest Link */
++	} else if (strcmp(priv->fsync_mode, "external") == 0) {
++		maxim_reg8_write(client, 0x01, 0xc0);		/* ECU (aka MCU) based FrameSync using GPI-to-GPO */
++	}
++
++	maxim_reg8_write(client, 0x63, 0);			/* disable overlap window */
++	maxim_reg8_write(client, 0x64, 0);
++	maxim_reg8_write(client, 0x0c, 0x89);			/* enable HS/VS encoding, use D14/15 for HS/VS, invert VS */
++}
++
++static void max9286_max9271_gmsl_link_setup(struct i2c_client *client, int idx)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* GMSL setup */
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	maxim_reg8_write(client, 0x0d, 0x22 | MAXIM_I2C_I2C_SPEED); /* disable artificial ACK, I2C speed set */
++	maxim_reg8_write(client, 0x07, 0x84 | (priv->pclk_rising_edge ? 0x10 : 0)); /* RAW/YUV, PCLK edge, HS/VS encoding enabled */
++	usleep_range(2000, 2500);				/* wait 2ms */
++	maxim_reg8_write(client, 0x02, 0xff);			/* spread spectrum +-4%, pclk range automatic, Gbps automatic  */
++	usleep_range(2000, 2500);				/* wait 2ms */
++
++	client->addr = priv->des_addr;				/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x34, 0x22 | MAXIM_I2C_I2C_SPEED); /* disable artificial ACK, I2C speed set */
++	usleep_range(2000, 2500);				/* wait 2ms */
++
++	/* I2C translator setup */
++	client->addr = 0x40;					/* MAX9271-CAMx I2C */
++	maxim_reg8_write(client, 0x09, maxim_map[2][idx] << 1);	/* SENSOR I2C new */
++	maxim_reg8_write(client, 0x0A, 0x30 << 1);		/* SENSOR I2C address - must be set by sensor driver */
++	maxim_reg8_write(client, 0x0B, BROADCAST << 1);		/* broadcast I2C */
++	maxim_reg8_write(client, 0x0C, maxim_map[1][idx] << 1);	/* MAX9271-CAMx I2C new */
++	/* I2C addresse change */
++	maxim_reg8_write(client, 0x01, maxim_map[0][idx] << 1);	/* MAX9286-CAM0 I2C */
++	maxim_reg8_write(client, 0x00, maxim_map[1][idx] << 1);	/* MAX9271-CAM0 I2C new */
++	usleep_range(2000, 2500);				/* wait 2ms */
++#ifdef MAXIM_DUMP
++	client->addr = maxim_map[0][idx];			/* MAX9286-CAMx I2C */
++	maxim_max927x_dump_regs(client);
++	client->addr = maxim_map[1][idx];			/* MAX9271-CAMx I2C new */
++	maxim_max927x_dump_regs(client);
++	client->addr = maxim_map[2][idx];			/* SENSOR-CAMx I2C */
++	maxim_ovsensor_dump_regs(client);
++#endif
++	if (priv->gpio_resetb > 0) {
++		/* get out from sensor reset */
++		client->addr = maxim_map[1][idx];		/* MAX9271-CAMx I2C new */
++		maxim_reg8_write(client, 0x0f, (0xfe & ~BIT(priv->gpio_resetb)) |
++				 (priv->active_low_resetb ? BIT(priv->gpio_resetb) : 0)); /* set GPIOn value to un-reset */
++		usleep_range(2000, 2500);			/* wait 2ms */
++		maxim_reg8_write(client, 0x0e, 0x42 | BIT(priv->gpio_resetb)); /* set GPIOn direction output */
++		usleep_range(2000, 2500);			/* wait 2ms */
++	}
++}
++
++static void max9286_max9271_gmsl_enable(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* Reverse channel setup */
++	client->addr = priv->des_addr;			/* MAX9286-CAMx I2C */
++	maxim_reg8_write(client, 0x1b, 0x0f);		/* enable equalizer for all links */
++	if (priv->links == 1) {
++		maxim_reg8_write(client, 0x00, 0xe1);	/* enable GMSL link 0, auto detect link used for CSI clock source */
++		maxim_reg8_write(client, 0x0a, 0xf1);	/* enable reverse control only for link0 */
++		maxim_reg8_write(client, 0x69, 0x0e);	/* mask Links 1 2 3, unmask link 0 */
++	} else {
++		maxim_reg8_write(client, 0x00, 0xef);	/* enable GMSL links [0:3], auto detect link used for CSI clock source */
++		maxim_reg8_write(client, 0x0a, 0xff);	/* enable reverse control for all links */
++		maxim_reg8_write(client, 0x69, 0x00);	/* unmask all links */
++	}
++	usleep_range(2000, 2500);			/* wait 2ms after any change of reverse channel settings */
++}
++
++static int max9286_max9271_initialize(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++	int idx;
++
++	max9286_max9271_preinit(client);
++	max9286_max9271_initial_setup(client);
++
++	for (idx = priv->offset; idx < priv->links + priv->offset; idx++) {
++		/* SETUP CAMx (MAX9286/MAX9271/SENSOR) I2C */
++		dev_info(&client->dev, "link%d (MAX9286/MAX9271/SENSOR) i2c: 0x%x<->0x%x<->0x%x\n", idx,
++				       maxim_map[0][idx], maxim_map[1][idx], maxim_map[2][idx]);
++
++		max9286_max9271_reverse_channel_setup(client, idx);
++		max9286_max9271_gmsl_link_setup(client, idx);
++	}
++
++	max9286_max9271_gmsl_enable(client);
++
++	return 0;
++}
++
++static int max9286_max9271_parse_dt(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++	struct device_node *np = client->dev.of_node;
++	int err, pwen;
++	int sensor_delay;
++	char fsync_mode_default[20] = "manual"; /* manual, automatic, semi-automatic, external */
++
++	if (of_property_read_u32(np, "maxim,links", &priv->links))
++		priv->links = 4;
++
++	pwen = of_get_gpio(np, 0);
++	if (pwen > 0) {
++		err = gpio_request(pwen, dev_name(&client->dev));
++		if (err) {
++			dev_err(&client->dev, "cannot request PWEN gpio %d: %d\n", pwen, err);
++		} else {
++			gpio_direction_output(pwen, 1);
++			mdelay(250);
++		}
++		/*
++		 * Powered MCU IMI cameras need delay between power-on and R-Car access to avoid
++		 * i2c bus conflicts since linux kernel does not support i2c multi-mastering,
++		 * IMI MCU is master and R-Car is also master.
++		 * The i2c bus conflict results in R-Car i2c IP stall.
++		 */
++		if (!of_property_read_u32(np, "maxim,sensor_delay", &sensor_delay))
++			mdelay(sensor_delay);
++	}
++
++	if (of_property_read_u32(np, "maxim,resetb-gpio", &priv->gpio_resetb)) {
++		priv->gpio_resetb = -1;
++	} else {
++		if (priv->gpio_resetb > 5 || priv->gpio_resetb < 1) {
++			dev_err(&client->dev, "gpio_resetb=%d invalid, max9271 gpio range [1..5]\n", priv->gpio_resetb);
++			priv->gpio_resetb = -1;
++		}
++		if (of_property_read_bool(np, "maxim,resetb-active-high"))
++			priv->active_low_resetb = false;
++		else
++			priv->active_low_resetb = true;
++	}
++		err = of_property_read_string(np, "maxim,fsync-mode", &priv->fsync_mode);
++	if (err)
++		priv->fsync_mode = fsync_mode_default;
++
++	if (of_property_read_u32(np, "maxim,fsync-period", &priv->fsync_period))
++		priv->fsync_period = 3200000; /* 96MHz/30fps */
++		priv->pclk_rising_edge = true;
++	if (of_property_read_bool(np, "maxim,pclk-falling-edge"))
++		priv->pclk_rising_edge = false;
++		if (of_property_read_u32(np, "maxim,timeout", &priv->timeout))
++		priv->timeout = 100;
++
++	dev_info(&client->dev, "LINKs=%d, RESETB GPIO=%d, FSYNC mode=%s, FSYNC period=%d, PCLK edge=%s\n",
++			       priv->links, priv->gpio_resetb, priv->fsync_mode, priv->fsync_period,
++			       priv->pclk_rising_edge ? "rising" : "falling");
++
++	return 0;
++}
++
++static int max9286_max9271_probe(struct i2c_client *client,
++				 const struct i2c_device_id *did)
++{
++	struct max9286_max9271_priv *priv;
++	int err;
++
++	priv = devm_kzalloc(&client->dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	i2c_set_clientdata(client, priv);
++	priv->des_addr = client->addr;
++
++	err = max9286_max9271_parse_dt(client);
++	if (err)
++		goto out;
++
++	err = max9286_max9271_initialize(client);
++	if (err < 0)
++		goto out;
++
++	/* release des_addr to use it in sensor subdevice */
++	client->addr = priv->des_addr - 0x40;
++
++out:
++	return err;
++}
++
++static int max9286_max9271_remove(struct i2c_client *client)
++{
++	struct max9286_max9271_priv *priv = i2c_get_clientdata(client);
++
++	/* revert des_addr - needed when used as module */
++	client->addr = priv->des_addr;
++
++	return 0;
++}
++
++static const struct of_device_id max9286_max9271_dt_ids[] = {
++	{ .compatible = "maxim,max9286-max9271" },
++	{},
++};
++MODULE_DEVICE_TABLE(of, max9286_max9271_dt_ids);
++
++static const struct i2c_device_id max9286_max9271_id[] = {
++	{ "max9286_max9271", 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(i2c, max9286_max9271_id);
++
++static struct i2c_driver max9286_max9271_i2c_driver = {
++	.driver	= {
++		.name		= "max9286_max9271",
++		.of_match_table	= of_match_ptr(max9286_max9271_dt_ids),
++	},
++	.probe		= max9286_max9271_probe,
++	.remove		= max9286_max9271_remove,
++	.id_table	= max9286_max9271_id,
++};
++
++module_i2c_driver(max9286_max9271_i2c_driver);
++
++MODULE_DESCRIPTION("Setup driver for GMSL Cameras MAX9286<->MAX9271<->SENSOR");
++MODULE_AUTHOR("Vladimir Barinov");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/i2c/soc_camera/max9286_max9271.h b/drivers/media/i2c/soc_camera/max9286_max9271.h
+new file mode 100644
+index 0000000..988a04f
+--- /dev/null
++++ b/drivers/media/i2c/soc_camera/max9286_max9271.h
+@@ -0,0 +1,231 @@
++/*
++ * MAXIM R-Car H2/H3 Demo boards setup include file
++ *
++ * Copyright (C) 2015-2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++#ifndef _MAX9286_MAX9271_H
++#define _MAX9286_MAX9271_H
++
++//#define DEBUG
++#ifdef DEBUG
++//#define WRITE_VERIFY
++#define MAXIM_DUMP
++#undef dev_dbg
++#define dev_dbg dev_info
++#endif
++
++#define MAXIM_NUM_RETRIES	1 /* number of read/write retries */
++#define MAX9271_ID		0x9
++
++/*
++ * I2C MAP.
++ *
++ * 		CAM0	CAM1	CAM2	CAM3
++ * MAX9286	0x48+1	0x48+2	0x48+3	0x48+4 - deserializer
++ * MAX9271	0x40+1	0x40+2	0x40+3	0x40+4 - serializer
++ * OVXXXXX	0x60+1	0x60+2	0x60+3	0x60+4 - sensor
++ */
++
++#define DES0		0x4c
++#define DES1		0x6c
++#define SER		0x51
++#define CAM		0x60
++#define BROADCAST	0x6f
++
++static u8 maxim_map[][8] = {
++	{ DES0 + 0, DES0 + 0, DES0 + 0, DES0 + 0, DES1 + 0, DES1 + 0, DES1 + 0, DES1 + 0 },
++	{ SER  + 0, SER  + 1, SER  + 2, SER  + 3, SER  + 4, SER  + 5, SER  + 6, SER  + 7 },
++	{ CAM  + 0, CAM  + 1, CAM  + 2, CAM  + 3, CAM  + 4, CAM  + 5, CAM  + 6, CAM  + 7 },
++};
++
++static inline int maxim_reg8_read(struct i2c_client *client, u8 reg, u8 *val)
++{
++	int ret, retries;
++
++	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
++		ret = i2c_smbus_read_byte_data(client, reg);
++		if (!(ret < 0))
++			break;
++	}
++
++	if (ret < 0) {
++		dev_dbg(&client->dev,
++			"read fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
++	} else {
++		*val = ret;
++	}
++
++	return ret < 0 ? ret : 0;
++}
++
++static inline int maxim_reg8_write(struct i2c_client *client, u8 reg, u8 val)
++{
++	int ret, retries;
++
++	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
++		ret = i2c_smbus_write_byte_data(client, reg, val);
++		if (!(ret < 0))
++			break;
++	}
++
++	if (ret < 0) {
++		/* _dbg here for skipping error messaging on reset/reboot case */
++		dev_dbg(&client->dev,
++			"write fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
++	} else {
++#ifdef WRITE_VERIFY
++		u8 val2;
++		maxim_reg8_read(client, reg, &val2);
++		if (val != val2)
++			dev_err(&client->dev,
++				"write verify mismatch: chip 0x%x reg=0x%x "
++				"0x%x->0x%x\n", client->addr, reg, val, val2);
++#endif
++	}
++
++	return ret < 0 ? ret : 0;
++}
++
++static inline int maxim_reg16_read(struct i2c_client *client, u16 reg, u8 *val)
++{
++	int ret, retries;
++	u8 buf[2] = {reg >> 8, reg & 0xff};
++
++	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
++		ret = i2c_master_send(client, buf, 2);
++		if (ret == 2) {
++			ret = i2c_master_recv(client, buf, 1);
++			if (ret == 1)
++				break;
++		}
++	}
++
++	if (ret < 0) {
++		dev_err(&client->dev,
++			"read fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
++	} else {
++		*val = buf[0];
++	}
++
++	return ret < 0 ? ret : 0;
++}
++
++static inline int maxim_reg16_write(struct i2c_client *client, u16 reg, u8 val)
++{
++	int ret, retries;
++	u8 buf[3] = {reg >> 8, reg & 0xff, val};
++
++	for (retries = MAXIM_NUM_RETRIES; retries; retries--) {
++		ret = i2c_master_send(client, buf, 3);
++		if (ret == 3)
++			break;
++	}
++
++	if (ret < 0) {
++		dev_err(&client->dev,
++			"write fail: chip 0x%x register 0x%x: %d\n",
++			client->addr, reg, ret);
++	} else {
++#ifdef WRITE_VERIFY
++		u8 val2;
++		maxim_reg16_read(client, reg, &val2);
++		if (val != val2)
++			dev_err(&client->dev,
++				"write verify mismatch: chip 0x%x reg=0x%x "
++				"0x%x->0x%x\n", client->addr, reg, val, val2);
++#endif
++	}
++
++	return ret < 0 ? ret : 0;
++}
++
++static inline int maxim_reg16_write16(struct i2c_client *client, u16 reg, u16 val)
++{
++	int ret;
++
++	ret = maxim_reg16_write(client, reg, val >> 8);
++	if (ret)
++		return ret;
++
++	ret = maxim_reg16_write(client, reg + 1, val & 0xff);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++#ifdef MAXIM_DUMP
++static void maxim_ovsensor_dump_regs(struct i2c_client *client)
++{
++	int ret, i;
++	u8 val = 0;
++	u16 regs[] = {0x300a, 0x300b, 0x300c};
++
++	dev_dbg(&client->dev, "dump regs 0x%x\n", client->addr);
++
++	for (i = 0; i < sizeof(regs) / 2; i++) {
++		ret = maxim_reg16_read(client, regs[i], &val);
++		if (ret < 0)
++			dev_err(&client->dev,
++				"read fail: chip 0x%x register 0x%02x: %d\n",
++				client->addr, regs[i], ret);
++		printk("0x%02x -> 0x%x\n", regs[i], val);
++	}
++}
++
++static void maxim_ov10635_dump_format_regs(struct i2c_client *client)
++{
++	int ret, i;
++	u8 val;
++	u16 regs[] = {0x3003, 0x3004, 0x4300,
++		      0x4605, 0x3621, 0x3702, 0x3703, 0x3704,
++		      0x3802, 0x3803, 0x3806, 0x3807, 0x3808, 0x3809, 0x380a,
++		      0x380b, 0x380c, 0x380d, 0x380e, 0x380f,
++		      0x4606, 0x4607, 0x460a, 0x460b,
++		      0xc488, 0xc489, 0xc48a, 0xc48b,
++		      0xc4cc, 0xc4cd, 0xc4ce, 0xc4cf, 0xc512, 0xc513,
++		      0xc518, 0xc519, 0xc51a, 0xc51b,
++	};
++
++	dev_dbg(&client->dev, "dump regs 0x%x\n", client->addr);
++
++	for (i = 0; i < sizeof(regs) / 2; i++) {
++		ret = maxim_reg16_read(client, regs[i], &val);
++		if (ret < 0)
++			dev_err(&client->dev,
++				"read fail: chip 0x%x register 0x%02x: %d\n",
++				client->addr, regs[i], ret);
++		printk("0x%02x -> 0x%x\n", regs[i], val);
++	}
++}
++
++static void maxim_max927x_dump_regs(struct i2c_client *client)
++{
++	int ret;
++	u8 reg;
++
++	dev_dbg(&client->dev, "dump regs 0x%x\n", client->addr);
++
++	for (reg = 0; reg < 0x20; reg++) {
++		ret = i2c_smbus_read_byte_data(client, reg);
++		if (ret < 0)
++			dev_err(&client->dev,
++				"read fail: chip 0x%x register 0x%x: %d\n",
++				client->addr, reg, ret);
++		printk("0x%02x ", ret);
++		if (((reg + 1) % 0x10) == 0)
++			printk("\n");
++	}
++}
++#endif /* MAXIM_DUMP */
++
++#endif /* _MAX9286_MAX9271_H */
+\ No newline at end of file
+diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
+new file mode 100644
+index 0000000..9123c0d
+--- /dev/null
++++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.c
+@@ -0,0 +1,597 @@
++/*
++ * MAXIM max9286-max9271 with OmniVision ov10635 sensor camera driver
++ *
++ * Copyright (C) 2015-2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++#include <linux/delay.h>
++#include <linux/init.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/videodev2.h>
++
++#include <media/soc_camera.h>
++#include <media/v4l2-common.h>
++#include <media/v4l2-ctrls.h>
++
++#include "max9286_max9271.h"
++#include "max9286_max9271_ov10635.h"
++
++#define OV10635_I2C_ADDR		0x30
++
++#define OV10635_PID			0x300a
++#define OV10635_VER			0x300b
++#define OV10635_VERSION_REG		0xa635
++#define OV10635_VERSION(pid, ver)	(((pid) << 8) | ((ver) & 0xff))
++
++#define OV10635_SENSOR_WIDTH		1312
++#define OV10635_SENSOR_HEIGHT		814
++
++#define OV10635_MAX_WIDTH		1280
++#define OV10635_MAX_HEIGHT		800
++
++struct ov10635_priv {
++	struct v4l2_subdev		sd;
++	struct v4l2_ctrl_handler	hdl;
++	struct media_pad		pad;
++	int				width;
++	int				height;
++	int				fps_denominator;
++};
++
++static inline struct ov10635_priv *to_ov10635(const struct i2c_client *client)
++{
++	return container_of(i2c_get_clientdata(client), struct ov10635_priv, sd);
++}
++
++static inline struct v4l2_subdev *to_sd(struct v4l2_ctrl *ctrl)
++{
++	return &container_of(ctrl->handler, struct ov10635_priv, hdl)->sd;
++}
++
++static int ov10635_set_regs(struct i2c_client *client,
++			    const struct ov10635_reg *regs, int nr_regs)
++{
++	int i, ret;
++
++	for (i = 0; i < nr_regs; i++) {
++		ret = maxim_reg16_write(client, regs[i].reg, regs[i].val);
++#if 0 /* Do not stop on write fail .... */
++		if (ret)
++			return ret;
++#endif
++	}
++
++	return 0;
++}
++
++static int ov10635_s_stream(struct v4l2_subdev *sd, int enable)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	int cam_idx = client->addr - CAM;
++	int tmp_addr;
++
++	if (!(client->addr == (CAM + 0) || client->addr == (CAM + 4)))
++		return 0;
++
++	tmp_addr = client->addr;
++	client->addr = maxim_map[0][cam_idx];		/* MAX9286-CAMx */
++	maxim_reg8_write(client, 0x15, 0x13);		/* disable CSI output, VC is set accordingly to Link number */
++	if (enable)
++		maxim_reg8_write(client, 0x15, 0x9b);	/* enable CSI output, VC is set accordingly to Link number, BIT7 magic must be set */
++	client->addr = tmp_addr;
++
++	return 0;
++}
++
++static int ov10635_get_fmt(struct v4l2_subdev *sd,
++			   struct v4l2_subdev_pad_config *cfg,
++			   struct v4l2_subdev_format *format)
++{
++	struct v4l2_mbus_framefmt *mf = &format->format;
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov10635_priv *priv = to_ov10635(client);
++
++	if (format->pad)
++		return -EINVAL;
++
++	mf->width = priv->width;
++	mf->height = priv->height;
++	mf->code = MEDIA_BUS_FMT_YUYV8_2X8;
++	mf->colorspace = V4L2_COLORSPACE_SMPTE170M;
++	mf->field = V4L2_FIELD_NONE;
++
++	return 0;
++}
++
++static int ov10635_set_fmt(struct v4l2_subdev *sd,
++			   struct v4l2_subdev_pad_config *cfg,
++			   struct v4l2_subdev_format *format)
++{
++	struct v4l2_mbus_framefmt *mf = &format->format;
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov10635_priv *priv = to_ov10635(client);
++	int ret = 0;
++
++	mf->code = MEDIA_BUS_FMT_YUYV8_2X8;
++	mf->colorspace = V4L2_COLORSPACE_SMPTE170M;
++	mf->field = V4L2_FIELD_NONE;
++
++	if (format->which == V4L2_SUBDEV_FORMAT_TRY) {
++		cfg->try_fmt = *mf;
++		return 0;
++	}
++
++	if (!((mf->width == 1280 && mf->height == 800) ||
++	      (mf->width == 640 && mf->height == 400))) {
++		mf->width = 1280;
++		mf->height = 800;
++	}
++
++	if (priv->width != mf->width) {
++		priv->width = mf->width;
++		priv->height = mf->height;
++
++		switch(priv->width) {
++		case 1280:
++			ret = ov10635_set_regs(client, ov10635_regs_1280x800,
++					       ARRAY_SIZE(ov10635_regs_1280x800));
++			break;
++		case 640:
++			ret = ov10635_set_regs(client, ov10635_regs_640x400,
++					       ARRAY_SIZE(ov10635_regs_640x400));
++			break;
++		}
++	}
++
++	return ret;
++}
++
++static int ov10635_enum_mbus_code(struct v4l2_subdev *sd,
++				  struct v4l2_subdev_pad_config *cfg,
++				  struct v4l2_subdev_mbus_code_enum *code)
++{
++	if (code->pad || code->index > 0)
++		return -EINVAL;
++
++	code->code = MEDIA_BUS_FMT_YUYV8_2X8;
++
++	return 0;
++}
++
++static int ov10635_s_crop(struct v4l2_subdev *sd, const struct v4l2_crop *a)
++{
++	struct v4l2_crop a_writable = *a;
++	struct v4l2_rect *rect = &a_writable.c;
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov10635_priv *priv = to_ov10635(client);
++
++	rect->left = 0;
++	rect->top = 0;
++	rect->width = priv->width;
++	rect->height = priv->height;
++
++	return 0;
++}
++
++static int ov10635_g_crop(struct v4l2_subdev *sd, struct v4l2_crop *a)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov10635_priv *priv = to_ov10635(client);
++
++	a->c.left = 0;
++	a->c.top = 0;
++	a->c.width = priv->width;
++	a->c.height = priv->height;
++	a->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++
++	return 0;
++}
++
++static int ov10635_cropcap(struct v4l2_subdev *sd, struct v4l2_cropcap *a)
++{
++	a->bounds.left = 0;
++	a->bounds.top = 0;
++	a->bounds.width = OV10635_MAX_WIDTH;
++	a->bounds.height = OV10635_MAX_HEIGHT;
++	a->defrect = a->bounds;
++	a->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++
++	return 0;
++}
++
++static int ov10635_g_mbus_config(struct v4l2_subdev *sd,
++				 struct v4l2_mbus_config *cfg)
++{
++	cfg->flags = V4L2_MBUS_CSI2_1_LANE | V4L2_MBUS_CSI2_CHANNEL_0 |
++		     V4L2_MBUS_CSI2_CONTINUOUS_CLOCK;
++	cfg->type = V4L2_MBUS_CSI2;
++
++	return 0;
++}
++
++static int ov10635_g_parm(struct v4l2_subdev *sd, struct v4l2_streamparm *parms)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov10635_priv *priv = to_ov10635(client);
++	struct v4l2_captureparm *cp = &parms->parm.capture;
++
++	if (parms->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
++		return -EINVAL;
++
++	memset(cp, 0, sizeof(struct v4l2_captureparm));
++	cp->capability = V4L2_CAP_TIMEPERFRAME;
++	cp->timeperframe.numerator = 1;
++	cp->timeperframe.denominator = priv->fps_denominator;
++
++	return 0;
++}
++
++static int ov10635_s_parm(struct v4l2_subdev *sd, struct v4l2_streamparm *parms)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov10635_priv *priv = to_ov10635(client);
++	struct v4l2_captureparm *cp = &parms->parm.capture;
++	int ret = 0;
++
++	if (parms->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
++		return -EINVAL;
++	if (cp->extendedmode != 0)
++		return -EINVAL;
++
++	if (priv->fps_denominator != cp->timeperframe.denominator) {
++		switch (cp->timeperframe.denominator) {
++		case 5:
++			ret = ov10635_set_regs(client, ov10635_regs_5fps,
++					       ARRAY_SIZE(ov10635_regs_5fps));
++			break;
++		case 10:
++			ret = ov10635_set_regs(client, ov10635_regs_10fps,
++					       ARRAY_SIZE(ov10635_regs_10fps));
++			break;
++		case 15:
++			ret = ov10635_set_regs(client, ov10635_regs_15fps,
++					       ARRAY_SIZE(ov10635_regs_15fps));
++			break;
++		case 30:
++			ret = ov10635_set_regs(client, ov10635_regs_30fps,
++					       ARRAY_SIZE(ov10635_regs_30fps));
++			break;
++		default:
++			return -EINVAL;
++		}
++
++		priv->fps_denominator = cp->timeperframe.denominator;
++	}
++
++	return ret;
++}
++
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++static int ov10635_g_register(struct v4l2_subdev *sd,
++			      struct v4l2_dbg_register *reg)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	int ret;
++	u8 val;
++
++	ret = maxim_reg16_read(client, (u16)reg->reg, &val);
++	if (ret < 0)
++		return ret;
++
++	reg->val = val;
++	reg->size = sizeof(u16);
++
++	return 0;
++}
++
++static int ov10635_s_register(struct v4l2_subdev *sd,
++			      const struct v4l2_dbg_register *reg)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++
++	return maxim_reg16_write(client, (u16)reg->reg, (u8)reg->val);
++}
++#endif
++
++static struct v4l2_subdev_core_ops ov10635_core_ops = {
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++	.g_register = ov10635_g_register,
++	.s_register = ov10635_s_register,
++#endif
++};
++
++static int ov10635_s_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct v4l2_subdev *sd = to_sd(ctrl);
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	int ret = -EINVAL;
++	u8 val = 0;
++
++	switch (ctrl->id) {
++	case V4L2_CID_BRIGHTNESS:
++		/* AEC/AGC target */
++		ret = maxim_reg16_write(client, 0xc46a, ctrl->val);
++		break;
++	case V4L2_CID_CONTRAST:
++		ret = ov10635_set_regs(client, &ov10635_regs_contrast[ctrl->val][0], 18);
++		break;
++	case V4L2_CID_SATURATION:
++		ret = maxim_reg16_write(client, 0xc316, ctrl->val);
++		break;
++	case V4L2_CID_HUE:
++		/* CMX ? */
++		return 0;
++	case V4L2_CID_GAMMA:
++		ret = maxim_reg16_write(client, 0xc4be, ctrl->val >> 8);
++		ret |= maxim_reg16_write(client, 0xc4bf, ctrl->val & 0xff);
++		break;
++	case V4L2_CID_AUTOGAIN:
++		/* automatic gain/exposure */
++		ret = maxim_reg16_write(client, 0x56d0, !ctrl->val);
++		break;
++	case V4L2_CID_GAIN:
++		/* manual gain */
++		ret = maxim_reg16_write(client, 0x3504, 0);
++		ret |= maxim_reg16_write(client, 0x56d1, ctrl->val >> 8);
++		ret |= maxim_reg16_write(client, 0x56d2, ctrl->val & 0xff);
++		ret |= maxim_reg16_write(client, 0x3504, 1); /* validate gain */
++		break;
++	case V4L2_CID_EXPOSURE:
++		/* maual exposure */
++		ret = maxim_reg16_write(client, 0x3504, 0);
++		ret |= maxim_reg16_write(client, 0x56d5, ctrl->val >> 8);
++		ret |= maxim_reg16_write(client, 0x56d6, ctrl->val & 0xff);
++		ret |= maxim_reg16_write(client, 0x3504, 1); /* validate exposure */
++		break;
++	case V4L2_CID_HFLIP:
++		ret = maxim_reg16_read(client, 0x381d, &val);
++		if (ret < 0)
++			return ret;
++		if (ctrl->val)
++			val |= 0x3;
++		else
++			val &= ~0x3;
++		ret = maxim_reg16_write(client, 0x381d, val);
++		break;
++	case V4L2_CID_VFLIP:
++		ret = maxim_reg16_read(client, 0x381c, &val);
++		if (ret < 0)
++			return ret;
++		if (ctrl->val)
++			val |= 0xc0;
++		else
++			val &= ~0xc0;
++		ret = maxim_reg16_write(client, 0x381c, val);
++		break;
++	}
++
++	return ret;
++}
++
++static const struct v4l2_ctrl_ops ov10635_ctrl_ops = {
++	.s_ctrl = ov10635_s_ctrl,
++};
++
++static struct v4l2_subdev_video_ops ov10635_video_ops = {
++	.s_stream	= ov10635_s_stream,
++	.cropcap	= ov10635_cropcap,
++	.g_crop		= ov10635_g_crop,
++	.s_crop		= ov10635_s_crop,
++	.g_mbus_config	= ov10635_g_mbus_config,
++	.g_parm		= ov10635_g_parm,
++	.s_parm		= ov10635_s_parm,
++};
++
++static const struct v4l2_subdev_pad_ops ov10635_subdev_pad_ops = {
++	.enum_mbus_code	= ov10635_enum_mbus_code,
++	.get_fmt	= ov10635_get_fmt,
++	.set_fmt	= ov10635_set_fmt,
++};
++
++static struct v4l2_subdev_ops ov10635_subdev_ops = {
++	.core	= &ov10635_core_ops,
++	.video	= &ov10635_video_ops,
++	.pad	= &ov10635_subdev_pad_ops,
++};
++
++static ssize_t ov10635_otp_id_read(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct v4l2_subdev *sd = i2c_get_clientdata(to_i2c_client(dev));
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	u8 id[5];
++	int i;
++
++	/* read camera id from OTP memory */
++	maxim_reg16_write(client, 0x100, 1);
++	for (i = 0; i < 5; i++)
++		maxim_reg16_write(client, 0x3d00 + i, 0x00);
++	maxim_reg16_write(client, 0x3d10, 0);
++	maxim_reg16_write(client, 0x3d10, 1);
++	mdelay(15);
++	for (i = 0; i < 5; i++)
++		maxim_reg16_read(client, 0x3d00 + i, &id[i]);
++	return snprintf(buf, 32, "%02x:%02x:%02x:%02x:%02x\n",
++			id[0], id[1], id[2], id[3], id[4]);
++}
++
++static DEVICE_ATTR(otp_id, S_IRUGO, ov10635_otp_id_read, NULL);
++
++static int ov10635_initialize(struct i2c_client *client)
++{
++	u8 pid, ver;
++	int ret;
++	int tmp_addr, cam_idx = client->addr - CAM;
++
++	/* setup I2C translator address */
++	tmp_addr = client->addr;
++	client->addr = maxim_map[1][cam_idx];	/* MAX9271-CAMx */
++	maxim_reg8_write(client, 0x0A, OV10635_I2C_ADDR << 1); /* set sensor I2C address */
++	usleep_range(2000, 2500);		/* wait 2ms after changing reverse_control */
++	client->addr = tmp_addr;
++
++	/* check and show product ID and manufacturer ID */
++	ret = maxim_reg16_read(client, OV10635_PID, &pid);
++	if (ret)
++		return ret;
++	ret = maxim_reg16_read(client, OV10635_VER, &ver);
++	if (ret)
++		return ret;
++
++	if (OV10635_VERSION(pid, ver) != OV10635_VERSION_REG) {
++		dev_err(&client->dev, "Product ID error %x:%x\n", pid, ver);
++		return -ENODEV;
++	}
++
++	dev_info(&client->dev, "ov10635 Product ID %x Manufacturer ID %x\n",
++		 pid, ver);
++
++	/* s/w reset sensor */
++	maxim_reg16_write(client, 0x103, 0x1);
++	udelay(100);
++	/* Program wizard registers */
++	ret = ov10635_set_regs(client, ov10635_regs_wizard,
++			       ARRAY_SIZE(ov10635_regs_wizard));
++	if (ret)
++		return ret;
++
++	/* switch to GMSL serial_link for streaming video */
++	tmp_addr = client->addr;
++	client->addr = maxim_map[1][cam_idx];	/* MAX9271-CAMx */
++	maxim_reg8_write(client, 0x04, 0x83);	/* enable reverse_control/serial_link */
++	usleep_range(2000, 2500);		/* wait 2ms after changing reverse_control */
++	client->addr = tmp_addr;
++
++	return 0;
++}
++
++static int ov10635_probe(struct i2c_client *client,
++			 const struct i2c_device_id *did)
++{
++	struct ov10635_priv *priv;
++	int ret;
++
++	priv = devm_kzalloc(&client->dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	v4l2_i2c_subdev_init(&priv->sd, client, &ov10635_subdev_ops);
++	priv->sd.flags = V4L2_SUBDEV_FL_HAS_DEVNODE;
++	priv->width = OV10635_MAX_WIDTH;
++	priv->height = OV10635_MAX_HEIGHT;
++	priv->fps_denominator = 30;
++
++	ret = ov10635_initialize(client);
++	if (ret < 0)
++		goto err_init;
++
++	v4l2_ctrl_handler_init(&priv->hdl, 4);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_BRIGHTNESS, 0, 0xff, 1, 0x40);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_CONTRAST, 0, 4, 1, 2);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_SATURATION, 0, 0xff, 1, 0xff);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_HUE, 0, 255, 1, 0);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_GAMMA, 0, 0xffff, 1, 0x233);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_AUTOGAIN, 0, 1, 1, 1);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_GAIN, 0, 0x3ff, 1, 0x10);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_EXPOSURE, 0, 0xffff, 1, 0x80);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_HFLIP, 0, 1, 1, 0);
++	v4l2_ctrl_new_std(&priv->hdl, &ov10635_ctrl_ops,
++			  V4L2_CID_VFLIP, 0, 1, 1, 0);
++	priv->sd.ctrl_handler = &priv->hdl;
++
++	ret = priv->hdl.error;
++	if (ret)
++		goto cleanup;
++
++	v4l2_ctrl_handler_setup(&priv->hdl);
++
++	priv->pad.flags = MEDIA_PAD_FL_SOURCE;
++	priv->sd.entity.flags |= MEDIA_ENT_F_CAM_SENSOR;
++	ret = media_entity_pads_init(&priv->sd.entity, 1, &priv->pad);
++	if (ret < 0)
++		goto cleanup;
++
++	ret = v4l2_async_register_subdev(&priv->sd);
++	if (ret)
++		goto cleanup;
++
++	if (device_create_file(&client->dev, &dev_attr_otp_id) != 0) {
++		dev_err(&client->dev, "sysfs otp_id entry creation failed\n");
++		goto cleanup;
++	}
++
++	return 0;
++
++cleanup:
++	media_entity_cleanup(&priv->sd.entity);
++	v4l2_ctrl_handler_free(&priv->hdl);
++err_init:
++	v4l2_device_unregister_subdev(&priv->sd);
++	dev_dbg(&client->dev, "failed to probe ov10635 @ 0x%02x\n", OV10635_I2C_ADDR);
++	return ret;
++}
++
++static int ov10635_remove(struct i2c_client *client)
++{
++	struct ov10635_priv *priv = i2c_get_clientdata(client);
++
++	device_remove_file(&client->dev, &dev_attr_otp_id);
++	v4l2_async_unregister_subdev(&priv->sd);
++	media_entity_cleanup(&priv->sd.entity);
++	v4l2_ctrl_handler_free(&priv->hdl);
++	v4l2_device_unregister_subdev(&priv->sd);
++
++	return 0;
++}
++
++static void ov10635_shutdown(struct i2c_client *client)
++{
++	struct ov10635_priv *priv = i2c_get_clientdata(client);
++
++	/* make sure stream off during shutdown (reset/reboot) */
++	ov10635_s_stream(&priv->sd, 0);
++}
++
++static const struct i2c_device_id ov10635_id[] = {
++	{ "ov10635", 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(i2c, ov10635_id);
++
++static const struct of_device_id ov10635_of_ids[] = {
++	{ .compatible = "maxim,max9286-max9271-ov10635", },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, ov10635_of_ids);
++
++static struct i2c_driver ov10635_i2c_driver = {
++	.driver	= {
++		.name		= "ov10635",
++		.of_match_table	= ov10635_of_ids,
++	},
++	.probe		= ov10635_probe,
++	.remove		= ov10635_remove,
++	.shutdown	= ov10635_shutdown,
++	.id_table	= ov10635_id,
++};
++
++module_i2c_driver(ov10635_i2c_driver);
++
++MODULE_DESCRIPTION("SoC Camera driver for MAX9286<->MAX9271<->OV10635");
++MODULE_AUTHOR("Vladimir Barinov");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.h b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.h
+new file mode 100644
+index 0000000..74f9ef9
+--- /dev/null
++++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov10635.h
+@@ -0,0 +1,1149 @@
++/*
++ * OmniVision ov10635 sensor camera wizard 1280x800@30/UYVY/BT601/8bit
++ *
++ * Copyright (C) 2015-2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++//#define OV10635_DISPLAY_PATTERN
++
++struct ov10635_reg {
++	u16	reg;
++	u8	val;
++};
++
++static const struct ov10635_reg ov10635_regs_wizard[] = {
++//{0x0103, 0x01},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x300C, 0x61},
++{0x301B, 0xFF},
++{0x301C, 0xFF},
++{0x301A, 0xFF},
++{0x3011, 0x42},
++{0x6900, 0x0C},
++{0x6901, 0x19},
++{0x3503, 0x10},
++{0x3025, 0x03},
++{0x3003, 0x16},
++{0x3004, 0x30},
++{0x3005, 0x40},
++{0x3006, 0x91},
++{0x3600, 0x74},
++{0x3601, 0x2B},
++{0x3612, 0x00},
++{0x3611, 0x67},
++{0x3633, 0xCA},
++{0x3602, 0xAF},
++{0x3603, 0x04},
++{0x3630, 0x28},
++{0x3631, 0x16},
++{0x3714, 0x10},
++{0x371D, 0x01},
++{0x4300, 0x3A},
++{0x3007, 0x01},
++{0x3024, 0x03},
++{0x3020, 0x0A},
++{0x3702, 0x0D},
++{0x3703, 0x20},
++{0x3704, 0x15},
++{0x3709, 0xA8},
++{0x370C, 0xC7},
++{0x370D, 0x80},
++{0x3712, 0x00},
++{0x3713, 0x20},
++{0x3715, 0x04},
++{0x381D, 0x40},
++{0x381C, 0x00},
++{0x3822, 0x50},
++{0x3824, 0x10},
++{0x3815, 0x8C},
++{0x3804, 0x05},
++{0x3805, 0x1F},
++{0x3800, 0x00},
++{0x3801, 0x00},
++{0x3806, 0x03},
++{0x3807, 0x28},
++{0x3802, 0x00},
++{0x3803, 0x07},
++{0x3808, 0x05},
++{0x3809, 0x00},
++{0x380A, 0x03},
++{0x380B, 0x20},
++{0x380C, 0x06},
++{0x380D, 0xF6},
++{0x380E, 0x03},
++{0x380F, 0x3C},
++{0x3813, 0x02},
++{0x3811, 0x08},
++{0x381F, 0x0C},
++{0x3819, 0x04},
++{0x3804, 0x01},
++{0x3805, 0x00},
++{0x3828, 0x03},
++{0x3829, 0x10},
++{0x382A, 0x10},
++{0x3621, 0x63},
++{0x5005, 0x08},
++{0x56D5, 0x00},
++{0x56D6, 0x80},
++{0x56D7, 0x00},
++{0x56D8, 0x00},
++{0x56D9, 0x00},
++{0x56DA, 0x80},
++{0x56DB, 0x00},
++{0x56DC, 0x00},
++{0x56E8, 0x00},
++{0x56E9, 0x7F},
++{0x56EA, 0x00},
++{0x56EB, 0x7F},
++{0x5100, 0x00},
++{0x5101, 0x80},
++{0x5102, 0x00},
++{0x5103, 0x80},
++{0x5104, 0x00},
++{0x5105, 0x80},
++{0x5106, 0x00},
++{0x5107, 0x80},
++{0x5108, 0x00},
++{0x5109, 0x00},
++{0x510A, 0x00},
++{0x510B, 0x00},
++{0x510C, 0x00},
++{0x510D, 0x00},
++{0x510E, 0x00},
++{0x510F, 0x00},
++{0x5110, 0x00},
++{0x5111, 0x80},
++{0x5112, 0x00},
++{0x5113, 0x80},
++{0x5114, 0x00},
++{0x5115, 0x80},
++{0x5116, 0x00},
++{0x5117, 0x80},
++{0x5118, 0x00},
++{0x5119, 0x00},
++{0x511A, 0x00},
++{0x511B, 0x00},
++{0x511C, 0x00},
++{0x511D, 0x00},
++{0x511E, 0x00},
++{0x511F, 0x00},
++{0x56D0, 0x00},
++{0x5006, 0x04},
++{0x5608, 0x05},
++{0x52D7, 0x06},
++{0x528D, 0x08},
++{0x5293, 0x12},
++{0x52D3, 0x12},
++{0x5288, 0x06},
++{0x5289, 0x20},
++{0x52C8, 0x06},
++{0x52C9, 0x20},
++{0x52CD, 0x04},
++{0x5381, 0x00},
++{0x5382, 0xFF},
++{0x5589, 0x76},
++{0x558A, 0x47},
++{0x558B, 0xEF},
++{0x558C, 0xC9},
++{0x558D, 0x49},
++{0x558E, 0x30},
++{0x558F, 0x67},
++{0x5590, 0x3F},
++{0x5591, 0xF0},
++{0x5592, 0x10},
++{0x55A2, 0x6D},
++{0x55A3, 0x55},
++{0x55A4, 0xC3},
++{0x55A5, 0xB5},
++{0x55A6, 0x43},
++{0x55A7, 0x38},
++{0x55A8, 0x5F},
++{0x55A9, 0x4B},
++{0x55AA, 0xF0},
++{0x55AB, 0x10},
++{0x5581, 0x52},
++{0x5300, 0x01},
++{0x5301, 0x00},
++{0x5302, 0x00},
++{0x5303, 0x0E},
++{0x5304, 0x00},
++{0x5305, 0x0E},
++{0x5306, 0x00},
++{0x5307, 0x36},
++{0x5308, 0x00},
++{0x5309, 0xD9},
++{0x530A, 0x00},
++{0x530B, 0x0F},
++{0x530C, 0x00},
++{0x530D, 0x2C},
++{0x530E, 0x00},
++{0x530F, 0x59},
++{0x5310, 0x00},
++{0x5311, 0x7B},
++{0x5312, 0x00},
++{0x5313, 0x22},
++{0x5314, 0x00},
++{0x5315, 0xD5},
++{0x5316, 0x00},
++{0x5317, 0x13},
++{0x5318, 0x00},
++{0x5319, 0x18},
++{0x531A, 0x00},
++{0x531B, 0x26},
++{0x531C, 0x00},
++{0x531D, 0xDC},
++{0x531E, 0x00},
++{0x531F, 0x02},
++{0x5320, 0x00},
++{0x5321, 0x24},
++{0x5322, 0x00},
++{0x5323, 0x56},
++{0x5324, 0x00},
++{0x5325, 0x85},
++{0x5326, 0x00},
++{0x5327, 0x20},
++{0x5609, 0x01},
++{0x560A, 0x40},
++{0x560B, 0x01},
++{0x560C, 0x40},
++{0x560D, 0x00},
++{0x560E, 0xFA},
++{0x560F, 0x00},
++{0x5610, 0xFA},
++{0x5611, 0x02},
++{0x5612, 0x80},
++{0x5613, 0x02},
++{0x5614, 0x80},
++{0x5615, 0x01},
++{0x5616, 0x2C},
++{0x5617, 0x01},
++{0x5618, 0x2C},
++{0x563B, 0x01},
++{0x563C, 0x01},
++{0x563D, 0x01},
++{0x563E, 0x01},
++{0x563F, 0x03},
++{0x5640, 0x03},
++{0x5641, 0x03},
++{0x5642, 0x05},
++{0x5643, 0x09},
++{0x5644, 0x05},
++{0x5645, 0x05},
++{0x5646, 0x05},
++{0x5647, 0x05},
++{0x5651, 0x00},
++{0x5652, 0x80},
++{0x521A, 0x01},
++{0x521B, 0x03},
++{0x521C, 0x06},
++{0x521D, 0x0A},
++{0x521E, 0x0E},
++{0x521F, 0x12},
++{0x5220, 0x16},
++{0x5223, 0x02},
++{0x5225, 0x04},
++{0x5227, 0x08},
++{0x5229, 0x0C},
++{0x522B, 0x12},
++{0x522D, 0x18},
++{0x522F, 0x1E},
++{0x5241, 0x04},
++{0x5242, 0x01},
++{0x5243, 0x03},
++{0x5244, 0x06},
++{0x5245, 0x0A},
++{0x5246, 0x0E},
++{0x5247, 0x12},
++{0x5248, 0x16},
++{0x524A, 0x03},
++{0x524C, 0x04},
++{0x524E, 0x08},
++{0x5250, 0x0C},
++{0x5252, 0x12},
++{0x5254, 0x18},
++{0x5256, 0x1E},
++{0x4606, 0x0D},
++{0x4607, 0xEC},
++{0x460A, 0x03},
++{0x460B, 0xEC},
++{0x460C, 0x00},
++{0x4620, 0x0E},
++#if 0
++{0x4700, 0x02}, // BT656: mode is acceptable but artefact lines on left/bottom due to BT656 SAV/EAV are parsed as image data
++#else
++{0x4700, 0x04}, // BT601: 0x08 is also accaptable as HS/VS mode
++#endif
++{0x4701, 0x00},
++{0x4702, 0x01},
++{0x4004, 0x04},
++{0x4005, 0x18},
++{0x4001, 0x06},
++{0x4050, 0x22},
++{0x4051, 0x24},
++{0x4052, 0x02},
++{0x4057, 0x9C},
++{0x405A, 0x00},
++{0x4202, 0x02},
++{0x3023, 0x10},
++{0x0100, 0x01},
++{0x0100, 0x01},
++{0x6F10, 0x07},
++{0x6F11, 0x82},
++{0x6F12, 0x04},
++{0x6F13, 0x00},
++{0xD000, 0x19},
++{0xD001, 0xA0},
++{0xD002, 0x00},
++{0xD003, 0x01},
++{0xD004, 0xA9},
++{0xD005, 0xAD},
++{0xD006, 0x10},
++{0xD007, 0x40},
++{0xD008, 0x44},
++{0xD009, 0x00},
++{0xD00A, 0x68},
++{0xD00B, 0x00},
++{0xD00C, 0x15},
++{0xD00D, 0x00},
++{0xD00E, 0x00},
++{0xD00F, 0x00},
++{0xD040, 0x9C},
++{0xD041, 0x21},
++{0xD042, 0xFF},
++{0xD043, 0xF8},
++{0xD044, 0xD4},
++{0xD045, 0x01},
++{0xD046, 0x48},
++{0xD047, 0x00},
++{0xD048, 0xD4},
++{0xD049, 0x01},
++{0xD04A, 0x50},
++{0xD04B, 0x04},
++{0xD04C, 0x18},
++{0xD04D, 0x60},
++{0xD04E, 0x00},
++{0xD04F, 0x01},
++{0xD050, 0xA8},
++{0xD051, 0x63},
++{0xD052, 0x02},
++{0xD053, 0xA4},
++{0xD054, 0x85},
++{0xD055, 0x43},
++{0xD056, 0x00},
++{0xD057, 0x00},
++{0xD058, 0x18},
++{0xD059, 0x60},
++{0xD05A, 0x00},
++{0xD05B, 0x01},
++{0xD05C, 0xA8},
++{0xD05D, 0x63},
++{0xD05E, 0x03},
++{0xD05F, 0xF0},
++{0xD060, 0x98},
++{0xD061, 0xA3},
++{0xD062, 0x00},
++{0xD063, 0x00},
++{0xD064, 0x8C},
++{0xD065, 0x6A},
++{0xD066, 0x00},
++{0xD067, 0x6E},
++{0xD068, 0xE5},
++{0xD069, 0x85},
++{0xD06A, 0x18},
++{0xD06B, 0x00},
++{0xD06C, 0x10},
++{0xD06D, 0x00},
++{0xD06E, 0x00},
++{0xD06F, 0x10},
++{0xD070, 0x9C},
++{0xD071, 0x80},
++{0xD072, 0x00},
++{0xD073, 0x03},
++{0xD074, 0x18},
++{0xD075, 0x60},
++{0xD076, 0x00},
++{0xD077, 0x01},
++{0xD078, 0xA8},
++{0xD079, 0x63},
++{0xD07A, 0x07},
++{0xD07B, 0x80},
++{0xD07C, 0x07},
++{0xD07D, 0xFF},
++{0xD07E, 0xF9},
++{0xD07F, 0x03},
++{0xD080, 0x8C},
++{0xD081, 0x63},
++{0xD082, 0x00},
++{0xD083, 0x00},
++{0xD084, 0xA5},
++{0xD085, 0x6B},
++{0xD086, 0x00},
++{0xD087, 0xFF},
++{0xD088, 0x18},
++{0xD089, 0x80},
++{0xD08A, 0x00},
++{0xD08B, 0x01},
++{0xD08C, 0xA8},
++{0xD08D, 0x84},
++{0xD08E, 0x01},
++{0xD08F, 0x04},
++{0xD090, 0xE1},
++{0xD091, 0x6B},
++{0xD092, 0x58},
++{0xD093, 0x00},
++{0xD094, 0x94},
++{0xD095, 0x6A},
++{0xD096, 0x00},
++{0xD097, 0x70},
++{0xD098, 0xE1},
++{0xD099, 0x6B},
++{0xD09A, 0x20},
++{0xD09B, 0x00},
++{0xD09C, 0x95},
++{0xD09D, 0x6B},
++{0xD09E, 0x00},
++{0xD09F, 0x00},
++{0xD0A0, 0xE4},
++{0xD0A1, 0x8B},
++{0xD0A2, 0x18},
++{0xD0A3, 0x00},
++{0xD0A4, 0x0C},
++{0xD0A5, 0x00},
++{0xD0A6, 0x00},
++{0xD0A7, 0x23},
++{0xD0A8, 0x15},
++{0xD0A9, 0x00},
++{0xD0AA, 0x00},
++{0xD0AB, 0x00},
++{0xD0AC, 0x18},
++{0xD0AD, 0x60},
++{0xD0AE, 0x80},
++{0xD0AF, 0x06},
++{0xD0B0, 0xA8},
++{0xD0B1, 0x83},
++{0xD0B2, 0x40},
++{0xD0B3, 0x08},
++{0xD0B4, 0xA8},
++{0xD0B5, 0xE3},
++{0xD0B6, 0x38},
++{0xD0B7, 0x2A},
++{0xD0B8, 0xA8},
++{0xD0B9, 0xC3},
++{0xD0BA, 0x40},
++{0xD0BB, 0x09},
++{0xD0BC, 0xA8},
++{0xD0BD, 0xA3},
++{0xD0BE, 0x38},
++{0xD0BF, 0x29},
++{0xD0C0, 0x8C},
++{0xD0C1, 0x65},
++{0xD0C2, 0x00},
++{0xD0C3, 0x00},
++{0xD0C4, 0xD8},
++{0xD0C5, 0x04},
++{0xD0C6, 0x18},
++{0xD0C7, 0x00},
++{0xD0C8, 0x8C},
++{0xD0C9, 0x67},
++{0xD0CA, 0x00},
++{0xD0CB, 0x00},
++{0xD0CC, 0xD8},
++{0xD0CD, 0x06},
++{0xD0CE, 0x18},
++{0xD0CF, 0x00},
++{0xD0D0, 0x18},
++{0xD0D1, 0x60},
++{0xD0D2, 0x80},
++{0xD0D3, 0x06},
++{0xD0D4, 0xA8},
++{0xD0D5, 0xE3},
++{0xD0D6, 0x67},
++{0xD0D7, 0x02},
++{0xD0D8, 0xA9},
++{0xD0D9, 0x03},
++{0xD0DA, 0x67},
++{0xD0DB, 0x03},
++{0xD0DC, 0xA8},
++{0xD0DD, 0xC3},
++{0xD0DE, 0x3D},
++{0xD0DF, 0x05},
++{0xD0E0, 0x8C},
++{0xD0E1, 0x66},
++{0xD0E2, 0x00},
++{0xD0E3, 0x00},
++{0xD0E4, 0xB8},
++{0xD0E5, 0x63},
++{0xD0E6, 0x00},
++{0xD0E7, 0x18},
++{0xD0E8, 0xB8},
++{0xD0E9, 0x63},
++{0xD0EA, 0x00},
++{0xD0EB, 0x98},
++{0xD0EC, 0xBC},
++{0xD0ED, 0x03},
++{0xD0EE, 0x00},
++{0xD0EF, 0x00},
++{0xD0F0, 0x10},
++{0xD0F1, 0x00},
++{0xD0F2, 0x00},
++{0xD0F3, 0x16},
++{0xD0F4, 0xB8},
++{0xD0F5, 0x83},
++{0xD0F6, 0x00},
++{0xD0F7, 0x19},
++{0xD0F8, 0x8C},
++{0xD0F9, 0x67},
++{0xD0FA, 0x00},
++{0xD0FB, 0x00},
++{0xD0FC, 0xB8},
++{0xD0FD, 0xA4},
++{0xD0FE, 0x00},
++{0xD0FF, 0x98},
++{0xD100, 0xB8},
++{0xD101, 0x83},
++{0xD102, 0x00},
++{0xD103, 0x08},
++{0xD104, 0x8C},
++{0xD105, 0x68},
++{0xD106, 0x00},
++{0xD107, 0x00},
++{0xD108, 0xE0},
++{0xD109, 0x63},
++{0xD10A, 0x20},
++{0xD10B, 0x04},
++{0xD10C, 0xE0},
++{0xD10D, 0x65},
++{0xD10E, 0x18},
++{0xD10F, 0x00},
++{0xD110, 0xA4},
++{0xD111, 0x83},
++{0xD112, 0xFF},
++{0xD113, 0xFF},
++{0xD114, 0xB8},
++{0xD115, 0x64},
++{0xD116, 0x00},
++{0xD117, 0x48},
++{0xD118, 0xD8},
++{0xD119, 0x07},
++{0xD11A, 0x18},
++{0xD11B, 0x00},
++{0xD11C, 0xD8},
++{0xD11D, 0x08},
++{0xD11E, 0x20},
++{0xD11F, 0x00},
++{0xD120, 0x9C},
++{0xD121, 0x60},
++{0xD122, 0x00},
++{0xD123, 0x00},
++{0xD124, 0xD8},
++{0xD125, 0x06},
++{0xD126, 0x18},
++{0xD127, 0x00},
++{0xD128, 0x00},
++{0xD129, 0x00},
++{0xD12A, 0x00},
++{0xD12B, 0x08},
++{0xD12C, 0x15},
++{0xD12D, 0x00},
++{0xD12E, 0x00},
++{0xD12F, 0x00},
++{0xD130, 0x8C},
++{0xD131, 0x6A},
++{0xD132, 0x00},
++{0xD133, 0x76},
++{0xD134, 0xBC},
++{0xD135, 0x23},
++{0xD136, 0x00},
++{0xD137, 0x00},
++{0xD138, 0x13},
++{0xD139, 0xFF},
++{0xD13A, 0xFF},
++{0xD13B, 0xE6},
++{0xD13C, 0x18},
++{0xD13D, 0x60},
++{0xD13E, 0x80},
++{0xD13F, 0x06},
++{0xD140, 0x03},
++{0xD141, 0xFF},
++{0xD142, 0xFF},
++{0xD143, 0xDD},
++{0xD144, 0xA8},
++{0xD145, 0x83},
++{0xD146, 0x40},
++{0xD147, 0x08},
++{0xD148, 0x85},
++{0xD149, 0x21},
++{0xD14A, 0x00},
++{0xD14B, 0x00},
++{0xD14C, 0x85},
++{0xD14D, 0x41},
++{0xD14E, 0x00},
++{0xD14F, 0x04},
++{0xD150, 0x44},
++{0xD151, 0x00},
++{0xD152, 0x48},
++{0xD153, 0x00},
++{0xD154, 0x9C},
++{0xD155, 0x21},
++{0xD156, 0x00},
++{0xD157, 0x08},
++{0x6F0E, 0x03},
++{0x6F0F, 0x00},
++{0x460E, 0x08},
++{0x460F, 0x01},
++{0x4610, 0x00},
++{0x4611, 0x01},
++{0x4612, 0x00},
++{0x4613, 0x01},
++{0x4605, 0x08}, // 8bit
++{0x4709, 0x10}, // swap data bits order [9:0] -> [0:9]
++{0x4608, 0x00},
++{0x4609, 0x08},
++{0x6804, 0x00},
++{0x6805, 0x06},
++{0x6806, 0x00},
++{0x5120, 0x00},
++{0x3510, 0x00},
++{0x3504, 0x00},
++{0x6800, 0x00},
++{0x6F0D, 0x01},
++{0x4708, 0x00},
++{0x5000, 0xFF},
++{0x5001, 0xBF},
++{0x5002, 0x7E},
++#ifdef OV10635_DISPLAY_PATTERN
++{0x503d, 0x80},
++#else
++{0x503D, 0x00},
++#endif
++{0xC450, 0x01}, /* AA mode */
++{0xC452, 0x04},
++{0xC453, 0x00},
++{0xC454, 0x00},
++{0xC455, 0x01},
++{0xC456, 0x01},
++{0xC457, 0x00},
++{0xC458, 0x00},
++{0xC459, 0x00},
++{0xC45B, 0x00},
++{0xC45C, 0x01},
++{0xC45D, 0x00},
++{0xC45E, 0x00},
++{0xC45F, 0x00},
++{0xC460, 0x00},
++{0xC461, 0x01},
++{0xC462, 0x01},
++{0xC464, 0x03},
++{0xC465, 0x00},
++{0xC466, 0x8A},
++{0xC467, 0x00},
++{0xC468, 0x86},
++{0xC469, 0x00},
++{0xC46A, 0x40},
++{0xC46B, 0x50},
++{0xC46C, 0x30},
++{0xC46D, 0x28},
++{0xC46E, 0x60},
++{0xC46F, 0x40},
++{0xC47C, 0x01},
++{0xC47D, 0x38},
++{0xC47E, 0x00},
++{0xC47F, 0x00},
++{0xC480, 0x00},
++{0xC481, 0xFF},
++{0xC482, 0x00},
++{0xC483, 0x40},
++{0xC484, 0x00},
++{0xC485, 0x18},
++{0xC486, 0x00},
++{0xC487, 0x18},
++{0xC488, 0x33},
++{0xC489, 0x40},
++{0xC48A, 0x33},
++{0xC48B, 0x40},
++{0xC48C, 0x00},
++{0xC48D, 0x04},
++{0xC48E, 0x00},
++{0xC48F, 0x04},
++{0xC490, 0x03},
++{0xC492, 0x20},
++{0xC493, 0x08},
++{0xC498, 0x02},
++{0xC499, 0x00},
++{0xC49A, 0x02},
++{0xC49B, 0x00},
++{0xC49C, 0x02},
++{0xC49D, 0x00},
++{0xC49E, 0x02},
++{0xC49F, 0x60},
++{0xC4A0, 0x03},
++{0xC4A1, 0x00},
++{0xC4A2, 0x04},
++{0xC4A3, 0x00},
++{0xC4A4, 0x00},
++{0xC4A5, 0x10},
++{0xC4A6, 0x00},
++{0xC4A7, 0x40},
++{0xC4A8, 0x00},
++{0xC4A9, 0x80},
++{0xC4AA, 0x0D},
++{0xC4AB, 0x00},
++{0xC4AC, 0x0F},
++{0xC4AD, 0xC0},
++{0xC4B4, 0x01},
++{0xC4B5, 0x01},
++{0xC4B6, 0x00},
++{0xC4B7, 0x01},
++{0xC4B8, 0x00},
++{0xC4B9, 0x01},
++{0xC4BA, 0x01},
++{0xC4BB, 0x00},
++{0xC4BC, 0x01},
++{0xC4BD, 0x60},
++{0xC4BE, 0x02},
++{0xC4BF, 0x33},
++{0xC4C8, 0x03},
++{0xC4C9, 0xD0},
++{0xC4CA, 0x0E},
++{0xC4CB, 0x00},
++{0xC4CC, 0x0E},
++{0xC4CD, 0x51},
++{0xC4CE, 0x0E},
++{0xC4CF, 0x51},
++{0xC4D0, 0x04},
++{0xC4D1, 0x80},
++{0xC4E0, 0x04},
++{0xC4E1, 0x02},
++{0xC4E2, 0x01},
++{0xC4E4, 0x10},
++{0xC4E5, 0x20},
++{0xC4E6, 0x30},
++{0xC4E7, 0x40},
++{0xC4E8, 0x50},
++{0xC4E9, 0x60},
++{0xC4EA, 0x70},
++{0xC4EB, 0x80},
++{0xC4EC, 0x90},
++{0xC4ED, 0xA0},
++{0xC4EE, 0xB0},
++{0xC4EF, 0xC0},
++{0xC4F0, 0xD0},
++{0xC4F1, 0xE0},
++{0xC4F2, 0xF0},
++{0xC4F3, 0x80},
++{0xC4F4, 0x00},
++{0xC4F5, 0x20},
++{0xC4F6, 0x02},
++{0xC4F7, 0x00},
++{0xC4F8, 0x00},
++{0xC4F9, 0x00},
++{0xC4FA, 0x00},
++{0xC4FB, 0x01},
++{0xC4FC, 0x01},
++{0xC4FD, 0x00},
++{0xC4FE, 0x04},
++{0xC4FF, 0x02},
++{0xC500, 0x48},
++{0xC501, 0x74},
++{0xC502, 0x58},
++{0xC503, 0x80},
++{0xC504, 0x05},
++{0xC505, 0x80},
++{0xC506, 0x03},
++{0xC507, 0x80},
++{0xC508, 0x01},
++{0xC509, 0xC0},
++{0xC50A, 0x01},
++{0xC50B, 0xA0},
++{0xC50C, 0x01},
++{0xC50D, 0x2C},
++{0xC50E, 0x01},
++{0xC50F, 0x0A},
++{0xC510, 0x00},
++{0xC511, 0x00},
++{0xC512, 0xE5},
++{0xC513, 0x14},
++{0xC514, 0x04},
++{0xC515, 0x00},
++{0xC518, 0x03},
++{0xC519, 0x3C},
++{0xC51A, 0x06},
++{0xC51B, 0xF6},
++{0xC2E0, 0x00},
++{0xC2E1, 0x51},
++{0xC2E2, 0x00},
++{0xC2E3, 0xD6},
++{0xC2E4, 0x01},
++{0xC2E5, 0x5E},
++{0xC2E9, 0x01},
++{0xC2EA, 0x7A},
++{0xC2EB, 0x90},
++{0xC2ED, 0x00},
++{0xC2EE, 0x7A},
++{0xC2EF, 0x64},
++{0xC308, 0x00},
++{0xC309, 0x00},
++{0xC30A, 0x00},
++{0xC30C, 0x00},
++{0xC30D, 0x01},
++{0xC30E, 0x00},
++{0xC30F, 0x00},
++{0xC310, 0x01},
++{0xC311, 0x60},
++{0xC312, 0xFF},
++{0xC313, 0x08},
++{0xC314, 0x01},
++{0xC315, 0x00}, /* min saturation gain */
++{0xC316, 0xFF}, /* max saturation gain */
++{0xC317, 0x0B},
++{0xC318, 0x00},
++{0xC319, 0x0C},
++{0xC31A, 0x00},
++{0xC31B, 0xE0},
++{0xC31C, 0x00},
++{0xC31D, 0x14},
++{0xC31E, 0x00},
++{0xC31F, 0xC5},
++{0xC320, 0xFF},
++{0xC321, 0x4B},
++{0xC322, 0xFF},
++{0xC323, 0xF0},
++{0xC324, 0xFF},
++{0xC325, 0xE8},
++{0xC326, 0x00},
++{0xC327, 0x46},
++{0xC328, 0xFF},
++{0xC329, 0xD2},
++{0xC32A, 0xFF},
++{0xC32B, 0xE4},
++{0xC32C, 0xFF},
++{0xC32D, 0xBB},
++{0xC32E, 0x00},
++{0xC32F, 0x61},
++{0xC330, 0xFF},
++{0xC331, 0xF9},
++{0xC332, 0x00},
++{0xC333, 0xD9},
++{0xC334, 0x00},
++{0xC335, 0x2E},
++{0xC336, 0x00},
++{0xC337, 0xB1},
++{0xC338, 0xFF},
++{0xC339, 0x64},
++{0xC33A, 0xFF},
++{0xC33B, 0xEB},
++{0xC33C, 0xFF},
++{0xC33D, 0xE8},
++{0xC33E, 0x00},
++{0xC33F, 0x48},
++{0xC340, 0xFF},
++{0xC341, 0xD0},
++{0xC342, 0xFF},
++{0xC343, 0xED},
++{0xC344, 0xFF},
++{0xC345, 0xAD},
++{0xC346, 0x00},
++{0xC347, 0x66},
++{0xC348, 0x01},
++{0xC349, 0x00},
++{0x6700, 0x04},
++{0x6701, 0x7B},
++{0x6702, 0xFD},
++{0x6703, 0xF9},
++{0x6704, 0x3D},
++{0x6705, 0x71},
++{0x6706, 0x78},
++{0x6708, 0x05},
++{0x6F06, 0x6F},
++{0x6F07, 0x00},
++{0x6F0A, 0x6F},
++{0x6F0B, 0x00},
++{0x6F00, 0x03},
++{0xC34C, 0x01},
++{0xC34D, 0x00},
++{0xC34E, 0x46},
++{0xC34F, 0x55},
++{0xC350, 0x00},
++{0xC351, 0x40},
++{0xC352, 0x00},
++{0xC353, 0xFF},
++{0xC354, 0x04},
++{0xC355, 0x08},
++{0xC356, 0x01},
++{0xC357, 0xEF},
++{0xC358, 0x30},
++{0xC359, 0x01},
++{0xC35A, 0x64},
++{0xC35B, 0x46},
++{0xC35C, 0x00},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0x3042, 0xF0},
++{0xC261, 0x01},
++{0x301B, 0xF0},
++{0x301C, 0xF0},
++{0x301A, 0xF0},
++{0x6F00, 0xC3},
++{0xC46A, 0x30},
++{0xC46D, 0x20},
++{0xC464, 0x84},
++{0xC465, 0x00},
++{0x6F00, 0x03},
++{0x6F00, 0x43},
++{0x381C, 0x00},
++{0x381D, 0x40},
++{0xC454, 0x01},
++{0x6F00, 0xC3},
++{0xC454, 0x00},
++{0xC4B1, 0x02},
++{0xC4B2, 0x01},
++{0xC4B3, 0x03},
++{0x6F00, 0x03},
++{0x6F00, 0x43},
++/* enable FSIN (FRAMESYNC input) functionality */
++{0x3832, 0x01},
++{0x3833, 0x1A},
++{0x3834, 0x03},
++{0x3835, 0x48},
++{0x302E, 0x01},
++};
++
++static const struct ov10635_reg ov10635_regs_1280x800[] = {
++/* disable clocks */
++{0x301b, 0xff},
++{0x301c, 0xff},
++{0x301a, 0xff},
++/* setup resolution (subsampling off) */
++{0x3808, 1280 >> 8},
++{0x3809, 1280 & 0xff},
++{0x380a, 800 >> 8},
++{0x380b, 800 & 0xff},
++{0x3007, 0x01},
++{0x5005, 0x08},
++/* enable clocks */
++{0x301b, 0xf0},
++{0x301c, 0xf0},
++{0x301a, 0xf0},
++};
++
++static const struct ov10635_reg ov10635_regs_640x400[] = {
++/* disable clocks */
++{0x301b, 0xff},
++{0x301c, 0xff},
++{0x301a, 0xff},
++/* setup resolution (subsampling on) */
++{0x3808, 640 >> 8},
++{0x3809, 640 & 0xff},
++{0x380a, 400 >> 8},
++{0x380b, 400 & 0xff},
++{0x3007, 0x02},
++{0x5005, 0x89},
++/* enable clocks */
++{0x301b, 0xf0},
++{0x301c, 0xf0},
++{0x301a, 0xf0},
++};
++
++static const struct ov10635_reg ov10635_regs_30fps[] = {
++/* disable clocks */
++{0x301b, 0xff},
++{0x301c, 0xff},
++{0x301a, 0xff},
++/* clk = 24Mhz/3*22/2= 88Mhz , 30fps */
++{0x3003, 0x16},
++{0x3004, 0x30},
++/* enable clocks */
++{0x301b, 0xf0},
++{0x301c, 0xf0},
++{0x301a, 0xf0},
++};
++
++static const struct ov10635_reg ov10635_regs_15fps[] = {
++/* disable clocks */
++{0x301b, 0xff},
++{0x301c, 0xff},
++{0x301a, 0xff},
++/* clk = 24Mhz/3*22/2/2= 44Mhz, 15fps */
++{0x3003, 0x16},
++{0x3004, 0x31},
++/* enable clocks */
++{0x301b, 0xf0},
++{0x301c, 0xf0},
++{0x301a, 0xf0},
++};
++
++static const struct ov10635_reg ov10635_regs_10fps[] = {
++/* disable clocks */
++{0x301b, 0xff},
++{0x301c, 0xff},
++{0x301a, 0xff},
++/* clk = 24Mhz/3*22/2/3= 29,33Mhz, 10fps */
++{0x3003, 0x16},
++{0x3004, 0x32},
++/* enable clocks */
++{0x301b, 0xf0},
++{0x301c, 0xf0},
++{0x301a, 0xf0},
++};
++
++static const struct ov10635_reg ov10635_regs_5fps[] = {
++/* disable clocks */
++{0x301b, 0xff},
++{0x301c, 0xff},
++{0x301a, 0xff},
++/* clk = 24Mhz/3*22/2/6= 14,66Mhz, 5fps */
++{0x3003, 0x16},
++{0x3004, 0x35},
++/* enable clocks */
++{0x301b, 0xf0},
++{0x301c, 0xf0},
++{0x301a, 0xf0},
++};
++
++static const struct ov10635_reg ov10635_regs_contrast[5][18] = {
++{
++	{0x6f00, 0xc3},
++	{0xc4e4, 0x20},
++	{0xc4e5, 0x40},
++	{0xc4e6, 0x60},
++	{0xc4e7, 0x80},
++	{0xc4e8, 0xa0},
++	{0xc4e9, 0xb4},
++	{0xc4ea, 0xc0},
++	{0xc4eb, 0xcb},
++	{0xc4ec, 0xd5},
++	{0xc4ed, 0xde},
++	{0xc4ee, 0xe6},
++	{0xc4ef, 0xed},
++	{0xc4f0, 0xf3},
++	{0xc4f1, 0xf8},
++	{0xc4f2, 0xfc},
++	{0x6f00, 0x03},
++	{0x6f00, 0x43},
++}, {
++	{0x6f00, 0xc3},
++	{0xc4e4, 0x18},
++	{0xc4e5, 0x30},
++	{0xc4e6, 0x48},
++	{0xc4e7, 0x60},
++	{0xc4e8, 0x78},
++	{0xc4e9, 0x90},
++	{0xc4ea, 0xa4},
++	{0xc4eb, 0xb4},
++	{0xc4ec, 0xc2},
++	{0xc4ed, 0xcf},
++	{0xc4ee, 0xdb},
++	{0xc4ef, 0xe5},
++	{0xc4f0, 0xee},
++	{0xc4f1, 0xf6},
++	{0xc4f2, 0xfc},
++	{0x6f00, 0x03},
++	{0x6f00, 0x43},
++}, {
++	{0x6f00, 0xc3},
++	{0xc4e4, 0x10},
++	{0xc4e5, 0x20},
++	{0xc4e6, 0x30},
++	{0xc4e7, 0x40},
++	{0xc4e8, 0x50},
++	{0xc4e9, 0x60},
++	{0xc4ea, 0x70},
++	{0xc4eb, 0x80},
++	{0xc4ec, 0x90},
++	{0xc4ed, 0xa0},
++	{0xc4ee, 0xb0},
++	{0xc4ef, 0xc0},
++	{0xc4f0, 0xd0},
++	{0xc4f1, 0xe0},
++	{0xc4f2, 0xf0},
++	{0x6f00, 0x03},
++	{0x6f00, 0x43},
++}, {
++	{0x6f00, 0xc3},
++	{0xc4e4, 0x0c},
++	{0xc4e5, 0x18},
++	{0xc4e6, 0x24},
++	{0xc4e7, 0x30},
++	{0xc4e8, 0x3c},
++	{0xc4e9, 0x48},
++	{0xc4ea, 0x54},
++	{0xc4eb, 0x62},
++	{0xc4ec, 0x72},
++	{0xc4ed, 0x84},
++	{0xc4ee, 0x94},
++	{0xc4ef, 0xa6},
++	{0xc4f0, 0xb9},
++	{0xc4f1, 0xcd},
++	{0xc4f2, 0xe2},
++	{0x6f00, 0x03},
++	{0x6f00, 0x43},
++}, {
++	{0x6f00, 0xc3},
++	{0xc4e4, 0x06},
++	{0xc4e5, 0x0d},
++	{0xc4e6, 0x15},
++	{0xc4e7, 0x1e},
++	{0xc4e8, 0x28},
++	{0xc4e9, 0x32},
++	{0xc4ea, 0x3c},
++	{0xc4eb, 0x48},
++	{0xc4ec, 0x56},
++	{0xc4ed, 0x66},
++	{0xc4ee, 0x78},
++	{0xc4ef, 0x8c},
++	{0xc4f0, 0xa2},
++	{0xc4f1, 0xba},
++	{0xc4f2, 0xd4},
++	{0x6f00, 0x03},
++	{0x6f00, 0x43},
++}
++};
+diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov106xx.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov106xx.c
+new file mode 100644
+index 0000000..14e1a1f
+--- /dev/null
++++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov106xx.c
+@@ -0,0 +1,106 @@
++/*
++ * MAXIM max9286-max9271 with OmniVision ov10635/ov490-ov10640 sensor camera driver
++ *
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++#include "max9286_max9271_ov10635.c"
++#include "max9286_max9271_ov490_ov10640.c"
++
++static enum {
++	ID_OV10635,
++	ID_OV490_OV10640,
++} chip_id;
++
++static int ov106xx_probe(struct i2c_client *client,
++			 const struct i2c_device_id *did)
++{
++	int ret;
++	u8 reg = 0;
++	int tmp_addr, cam_idx = client->addr - CAM;
++	chip_id = -EINVAL;
++
++	tmp_addr = client->addr;
++	client->addr = maxim_map[1][cam_idx];	/* MAX9271-CAMx */
++	maxim_reg8_read(client, 0x1e, &reg);	/* MAX9271 ID */
++	client->addr = tmp_addr;
++
++	if (reg != MAX9271_ID) {
++		dev_err(&client->dev, "MAX9271 not found\n");
++		return -ENODEV;
++	}
++
++	ret = ov10635_probe(client, did);
++	if (!ret) {
++		chip_id = ID_OV10635;
++		goto out;
++	}
++
++	ret = ov490_probe(client, did);
++	if (!ret) {
++		chip_id = ID_OV490_OV10640;
++	}
++
++out:
++	return ret;
++}
++
++static int ov106xx_remove(struct i2c_client *client)
++{
++	switch (chip_id) {
++	case ID_OV10635:
++		ov10635_remove(client);
++		break;
++	case ID_OV490_OV10640:
++		ov490_remove(client);
++		break;
++	};
++
++	return 0;
++}
++
++static void ov106xx_shutdown(struct i2c_client *client)
++{
++	switch (chip_id) {
++	case ID_OV10635:
++		ov10635_shutdown(client);
++		break;
++	case ID_OV490_OV10640:
++		ov490_shutdown(client);
++		break;
++	};
++}
++
++static const struct i2c_device_id ov106xx_id[] = {
++	{ "ov106xx", 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(i2c, ov106xx_id);
++
++static const struct of_device_id ov106xx_of_ids[] = {
++	{ .compatible = "maxim,max9286-max9271-ov106xx", },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, ov106xx_of_ids);
++
++static struct i2c_driver ov106xx_i2c_driver = {
++	.driver	= {
++		.name		= "ov106xx",
++		.of_match_table	= ov106xx_of_ids,
++	},
++	.probe		= ov106xx_probe,
++	.remove		= ov106xx_remove,
++	.shutdown	= ov106xx_shutdown,
++	.id_table	= ov106xx_id,
++};
++
++module_i2c_driver(ov106xx_i2c_driver);
++
++MODULE_DESCRIPTION("SoC Camera driver for MAX9286<->MAX9271<->(OV10635 or OV490/OV10640)");
++MODULE_AUTHOR("Vladimir Barinov");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
+new file mode 100644
+index 0000000..5a38b32
+--- /dev/null
++++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.c
+@@ -0,0 +1,455 @@
++/*
++ * MAXIM max9286-max9271 with OmniVision ov490-ov10640 sensor camera driver
++ *
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++#include <linux/delay.h>
++#include <linux/init.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/videodev2.h>
++
++#include <media/soc_camera.h>
++#include <media/v4l2-common.h>
++#include <media/v4l2-ctrls.h>
++
++#include "max9286_max9271.h"
++#include "max9286_max9271_ov490_ov10640.h"
++
++#define OV490_I2C_ADDR		0x24
++
++#define OV490_PID		0x300a
++#define OV490_VER		0x300b
++#define OV490_VERSION_REG	0x0490
++#define OV490_VERSION(pid, ver)	(((pid) << 8) | ((ver) & 0xff))
++#define OV490_REV		0x0007
++
++#define OV490_ISP_HSIZE_LOW	0x60
++#define OV490_ISP_HSIZE_HIGH	0x61
++#define OV490_ISP_VSIZE_LOW	0x62
++#define OV490_ISP_VSIZE_HIGH	0x63
++
++struct ov490_priv {
++	struct v4l2_subdev		sd;
++	struct v4l2_ctrl_handler	hdl;
++	struct media_pad		pad;
++	int				width;
++	int				height;
++	char				is_fixed_sensor;
++	int				dvp_width;
++};
++
++static inline struct ov490_priv *to_ov490(const struct i2c_client *client)
++{
++	return container_of(i2c_get_clientdata(client), struct ov490_priv, sd);
++}
++
++static int ov490_set_regs(struct i2c_client *client,
++			  const struct ov490_reg *regs, int nr_regs)
++{
++	int i, ret;
++
++	for (i = 0; i < nr_regs; i++) {
++		ret = maxim_reg16_write(client, regs[i].reg, regs[i].val);
++#if 0 /* Do not stop on write fail .... */
++		if (ret)
++			return ret;
++#endif
++	}
++
++	return 0;
++}
++
++static int ov490_s_stream(struct v4l2_subdev *sd, int enable)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	int cam_idx = client->addr - CAM;
++	int tmp_addr;
++
++	if (!(client->addr == (CAM + 0) || client->addr == (CAM + 4)))
++		return 0;
++
++	tmp_addr = client->addr;
++	client->addr = maxim_map[0][cam_idx];		/* MAX9286-CAMx */
++	maxim_reg8_write(client, 0x15, 0x13);	/* disable CSI output, VC is set accordingly to Link number */
++	if (enable)
++		maxim_reg8_write(client, 0x15, 0x9b);	/* enable CSI output, VC is set accordingly to Link number, BIT7 magic must be set */
++	client->addr = tmp_addr;
++
++	return 0;
++}
++
++static int ov490_get_fmt(struct v4l2_subdev *sd,
++			 struct v4l2_subdev_pad_config *cfg,
++			 struct v4l2_subdev_format *format)
++{
++	struct v4l2_mbus_framefmt *mf = &format->format;
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov490_priv *priv = to_ov490(client);
++
++	if (format->pad)
++		return -EINVAL;
++
++	mf->width = priv->width;
++	mf->height = priv->height;
++	mf->code = MEDIA_BUS_FMT_YUYV8_2X8;
++	mf->colorspace = V4L2_COLORSPACE_SMPTE170M;
++	mf->field = V4L2_FIELD_NONE;
++
++	return 0;
++}
++
++static int ov490_set_fmt(struct v4l2_subdev *sd,
++			 struct v4l2_subdev_pad_config *cfg,
++			 struct v4l2_subdev_format *format)
++{
++	struct v4l2_mbus_framefmt *mf = &format->format;
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov490_priv *priv = to_ov490(client);
++
++	mf->code = MEDIA_BUS_FMT_YUYV8_2X8;
++	mf->colorspace = V4L2_COLORSPACE_SMPTE170M;
++	mf->field = V4L2_FIELD_NONE;
++
++	if (format->which == V4L2_SUBDEV_FORMAT_TRY) {
++		cfg->try_fmt = *mf;
++		return 0;
++	}
++
++	if (priv->width != mf->width || priv->height != mf->height) {
++		dev_info(&client->dev, "update firmware to use res %dx%d (current res %dx%d)\n",
++				       mf->width, mf->height, priv->width, priv->height);
++
++		mf->width = priv->width;
++		mf->height = priv->height;
++	}
++
++	return 0;
++}
++
++static int ov490_enum_mbus_code(struct v4l2_subdev *sd,
++				struct v4l2_subdev_pad_config *cfg,
++				struct v4l2_subdev_mbus_code_enum *code)
++{
++	if (code->pad || code->index > 0)
++		return -EINVAL;
++
++	code->code = MEDIA_BUS_FMT_YUYV8_2X8;
++
++	return 0;
++}
++
++static int ov490_g_mbus_config(struct v4l2_subdev *sd,
++			       struct v4l2_mbus_config *cfg)
++{
++	cfg->flags = V4L2_MBUS_CSI2_1_LANE | V4L2_MBUS_CSI2_CHANNEL_0 |
++		     V4L2_MBUS_CSI2_CONTINUOUS_CLOCK;
++	cfg->type = V4L2_MBUS_CSI2;
++
++	return 0;
++}
++
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++static int ov490_g_register(struct v4l2_subdev *sd,
++			    struct v4l2_dbg_register *reg)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	int ret;
++	u8 val;
++
++	ret = maxim_reg16_read(client, (u16)reg->reg, &val);
++	if (ret < 0)
++		return ret;
++
++	reg->val = val;
++	reg->size = sizeof(u16);
++
++	return 0;
++}
++
++static int ov490_s_register(struct v4l2_subdev *sd,
++			    const struct v4l2_dbg_register *reg)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++
++	return maxim_reg16_write(client, (u16)reg->reg, (u8)reg->val);
++}
++#endif
++
++static struct v4l2_subdev_core_ops ov490_core_ops = {
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++	.g_register = ov490_g_register,
++	.s_register = ov490_s_register,
++#endif
++};
++
++static int ov490_s_ctrl(struct v4l2_ctrl *ctrl)
++{
++	switch (ctrl->id) {
++	case V4L2_CID_BRIGHTNESS:
++	case V4L2_CID_CONTRAST:
++	case V4L2_CID_SATURATION:
++	case V4L2_CID_HUE:
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static const struct v4l2_ctrl_ops ov490_ctrl_ops = {
++	.s_ctrl = ov490_s_ctrl,
++};
++
++static struct v4l2_subdev_video_ops ov490_video_ops = {
++	.s_stream	= ov490_s_stream,
++	.g_mbus_config	= ov490_g_mbus_config,
++};
++
++static const struct v4l2_subdev_pad_ops ov490_subdev_pad_ops = {
++	.enum_mbus_code	= ov490_enum_mbus_code,
++	.get_fmt	= ov490_get_fmt,
++	.set_fmt	= ov490_set_fmt,
++};
++
++static struct v4l2_subdev_ops ov490_subdev_ops = {
++	.core	= &ov490_core_ops,
++	.video	= &ov490_video_ops,
++	.pad	= &ov490_subdev_pad_ops,
++};
++
++static int ov490_initialize(struct i2c_client *client)
++{
++	struct ov490_priv *priv = to_ov490(client);
++	u8 val = 0;
++	u8 pid = 0, ver = 0, rev = 0;
++	int ret;
++	int tmp_addr, cam_idx = client->addr - CAM;
++
++	if (priv->is_fixed_sensor) {
++		dev_info(&client->dev, "ov490/ov10640 fixed-sensor res %dx%d\n", priv->width, priv->height);
++		goto streamon;
++	}
++
++	/* setup I2C translator address */
++	tmp_addr = client->addr;
++	client->addr = maxim_map[1][cam_idx];		/* MAX9271-CAMx */
++	ret = maxim_reg8_write(client, 0x0A, OV490_I2C_ADDR << 1); /* Set sensor I2C address */
++	usleep_range(2000, 2500);			/* wait 2ms after changing reverse_control */
++	client->addr = tmp_addr;
++
++	/* check and show product ID and manufacturer ID */
++	ret = maxim_reg16_write(client, 0xFFFD, 0x80);
++	if (ret)
++		return ret;
++	ret = maxim_reg16_write(client, 0xFFFE, 0x80);
++	if (ret)
++		return ret;
++	ret = maxim_reg16_read(client, OV490_PID, &pid);
++	if (ret)
++		return ret;
++	ret = maxim_reg16_read(client, OV490_VER, &ver);
++	if (ret)
++		return ret;
++	ret = maxim_reg16_read(client, OV490_REV, &rev);
++	if (ret)
++		return ret;
++
++	if (OV490_VERSION(pid, ver) != OV490_VERSION_REG) {
++		dev_dbg(&client->dev, "Product ID error %x:%x\n", pid, ver);
++		return -ENODEV;
++	}
++
++	/* read resolution used by current firmware */
++	maxim_reg16_write(client, 0xFFFD, 0x80);
++	maxim_reg16_write(client, 0xFFFE, 0x82);
++	maxim_reg16_read(client, OV490_ISP_HSIZE_HIGH, &val);
++	priv->width = val;
++	maxim_reg16_read(client, OV490_ISP_HSIZE_LOW, &val);
++	priv->width = (priv->width << 8) | val;
++
++	maxim_reg16_read(client, OV490_ISP_VSIZE_HIGH, &val);
++	priv->height = val;
++	maxim_reg16_read(client, OV490_ISP_VSIZE_LOW, &val);
++	priv->height = (priv->height << 8) | val;
++
++	maxim_reg16_write(client, 0xFFFD, 0x80);
++	maxim_reg16_write(client, 0xFFFE, 0x28);
++	switch (priv->dvp_width) {
++	case 12:
++		maxim_reg16_write(client, 0x6009, 0x10);
++		break;
++	case 10:
++		maxim_reg16_write(client, 0x6009, 0x20);
++		break;
++	case 8:
++		maxim_reg16_write(client, 0x6009, 0x30);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	dev_info(&client->dev, "ov490/ov10640 Product ID %x Manufacturer ID %x, rev 1%x, res %dx%d, dvp %dbit\n",
++		 pid, ver, 0xa + rev, priv->width, priv->height, priv->dvp_width);
++
++	ret = ov490_set_regs(client, ov490_regs_wizard,
++			     ARRAY_SIZE(ov490_regs_wizard));
++	if (ret)
++		return ret;
++
++streamon:
++	/* switch to GMSL serial_link for streaming video */
++	tmp_addr = client->addr;
++	client->addr = maxim_map[1][cam_idx];	/* MAX9271-CAMx */
++	maxim_reg8_write(client, 0x04, 0x83);	/* enable reverse_control/serial_link */
++	usleep_range(2000, 2500);		/* wait 2ms after changing reverse_control */
++	client->addr = tmp_addr;
++
++	return 0;
++}
++
++
++static int ov490_parse_dt(struct device_node *np, struct ov490_priv *priv)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(&priv->sd);
++	int err;
++	const char *fixed_sensor;
++
++	if (of_property_read_u32(np, "maxim,dvp-width", &priv->dvp_width))
++		priv->dvp_width = 12;
++
++	err = of_property_read_string(np, "maxim,fixed-sensor", &fixed_sensor);
++	if (err)
++		return 0;
++
++	if (strcmp(fixed_sensor, "ov490") == 0) {
++		err = of_property_read_u32(np, "maxim,width", &priv->width);
++		if (err) {
++			dev_err(&client->dev, "maxim,width must be set for fixed-sensor\n");
++			goto out;
++		}
++
++		err = of_property_read_u32(np, "maxim,height", &priv->height);
++		if (err) {
++			dev_err(&client->dev, "maxim,height must be set for fixed-sensor\n");
++			goto out;
++		}
++
++		priv->is_fixed_sensor = true;
++	}
++
++out:
++	return err;
++}
++
++static int ov490_probe(struct i2c_client *client,
++		       const struct i2c_device_id *did)
++{
++	struct ov490_priv *priv;
++	int ret;
++
++	priv = devm_kzalloc(&client->dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	v4l2_i2c_subdev_init(&priv->sd, client, &ov490_subdev_ops);
++	priv->sd.flags = V4L2_SUBDEV_FL_HAS_DEVNODE;
++
++	v4l2_ctrl_handler_init(&priv->hdl, 4);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_BRIGHTNESS, 0, 255, 1, 0);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_CONTRAST, 0, 255, 1, 0);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_SATURATION, 0, 255, 1, 0);
++	v4l2_ctrl_new_std(&priv->hdl, &ov490_ctrl_ops,
++			  V4L2_CID_HUE, 0, 255, 1, 0);
++	priv->sd.ctrl_handler = &priv->hdl;
++
++	ret = priv->hdl.error;
++	if (ret)
++		goto cleanup;
++
++	v4l2_ctrl_handler_setup(&priv->hdl);
++
++	priv->pad.flags = MEDIA_PAD_FL_SOURCE;
++	priv->sd.entity.flags |= MEDIA_ENT_F_CAM_SENSOR;
++	ret = media_entity_pads_init(&priv->sd.entity, 1, &priv->pad);
++	if (ret < 0)
++		goto cleanup;
++
++	ret = ov490_parse_dt(client->dev.of_node, priv);
++	if (ret)
++		goto cleanup;
++
++	ret = ov490_initialize(client);
++	if (ret < 0)
++		goto cleanup;
++
++	ret = v4l2_async_register_subdev(&priv->sd);
++	if (ret)
++		goto cleanup;
++
++	return 0;
++
++cleanup:
++	media_entity_cleanup(&priv->sd.entity);
++	v4l2_ctrl_handler_free(&priv->hdl);
++	v4l2_device_unregister_subdev(&priv->sd);
++	dev_dbg(&client->dev, "failed to probe ov490 @ 0x%02x\n", OV490_I2C_ADDR);
++	return ret;
++}
++
++static int ov490_remove(struct i2c_client *client)
++{
++	struct ov490_priv *priv = i2c_get_clientdata(client);
++
++	v4l2_async_unregister_subdev(&priv->sd);
++	media_entity_cleanup(&priv->sd.entity);
++	v4l2_ctrl_handler_free(&priv->hdl);
++	v4l2_device_unregister_subdev(&priv->sd);
++
++	return 0;
++}
++
++static void ov490_shutdown(struct i2c_client *client)
++{
++	struct ov490_priv *priv = i2c_get_clientdata(client);
++
++	/* make sure stream off during shutdown (reset/reboot) */
++	ov490_s_stream(&priv->sd, 0);
++}
++
++static const struct i2c_device_id ov490_id[] = {
++	{ "ov490-ov10640", 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(i2c, ov490_id);
++
++static const struct of_device_id ov490_of_ids[] = {
++	{ .compatible = "maxim,max9286-max9271-ov490-ov10640", },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, ov490_of_ids);
++
++static struct i2c_driver ov490_i2c_driver = {
++	.driver	= {
++		.name		= "ov490-ov10640",
++		.of_match_table	= ov490_of_ids,
++	},
++	.probe		= ov490_probe,
++	.remove		= ov490_remove,
++	.shutdown	= ov490_shutdown,
++	.id_table	= ov490_id,
++};
++
++module_i2c_driver(ov490_i2c_driver);
++
++MODULE_DESCRIPTION("SoC Camera driver for MAX9286<->MAX9271<->OV490<->OV10640");
++MODULE_AUTHOR("Vladimir Barinov");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.h b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.h
+new file mode 100644
+index 0000000..000407f
+--- /dev/null
++++ b/drivers/media/i2c/soc_camera/max9286_max9271_ov490_ov10640.h
+@@ -0,0 +1,35 @@
++/*
++ * OmniVision ov490-ov10640 sensor camera wizard 1280x1080@30/UYVY/BT601/8bit
++ *
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++struct ov490_reg {
++	u16	reg;
++	u8	val;
++};
++
++static const struct ov490_reg ov490_regs_wizard[] = {
++{0xfffd, 0x80},
++{0xfffe, 0x82},
++{0x0071, 0x11},
++{0x0075, 0x11},
++{0xfffd, 0x80},
++{0xfffe, 0x29},
++{0x6010, 0x01},
++{0x4017, 0x00},
++{0xfffd, 0x80},
++{0xfffe, 0x28},
++{0x6000, 0x04},
++{0x6004, 0x00},
++{0x6008, 0x01},
++{0xfffd, 0x80},
++{0xfffe, 0x80},
++{0x0091, 0x00},
++{0x00bb, 0x1d},
++};
+diff --git a/drivers/media/platform/soc_camera/rcar_csi2.c b/drivers/media/platform/soc_camera/rcar_csi2.c
+index 851a4ca..a4f5af3 100644
+--- a/drivers/media/platform/soc_camera/rcar_csi2.c
++++ b/drivers/media/platform/soc_camera/rcar_csi2.c
+@@ -38,6 +38,9 @@
+ 
+ #define DRV_NAME "rcar_csi2"
+ #define CONNECT_SLAVE_NAME "adv7482"
++#define CONNECT_SLAVE_NAME2 "ov10635"
++#define CONNECT_SLAVE_NAME3 "ov490-ov10640"
++#define CONNECT_SLAVE_NAME4 "ov106xx"
+ #define VC_MAX_CHANNEL		4
+ 
+ #define RCAR_CSI2_TREF		0x00
+@@ -275,6 +278,15 @@ static int rcar_csi2_set_phy_freq(struct rcar_csi2 *priv)
+ 				(priv->mf->height == 1080))
+ 				bps_per_lane = RCAR_CSI_900MBPS;
+ 			else if ((priv->mf->width == 1280) &&
++				 (priv->mf->height == 1080))
++				bps_per_lane = RCAR_CSI_900MBPS;
++			else if ((priv->mf->width == 1280) &&
++				 (priv->mf->height == 966))
++				bps_per_lane = RCAR_CSI_900MBPS;
++			else if ((priv->mf->width == 1280) &&
++				 (priv->mf->height == 800))
++				bps_per_lane = RCAR_CSI_900MBPS;
++			else if ((priv->mf->width == 1280) &&
+ 				 (priv->mf->height == 720))
+ 				bps_per_lane = RCAR_CSI_450MBPS;
+ 			else if ((priv->mf->width == 720) &&
+@@ -285,7 +297,10 @@ static int rcar_csi2_set_phy_freq(struct rcar_csi2 *priv)
+ 				bps_per_lane = RCAR_CSI_190MBPS;
+ 			else if ((priv->mf->width == 640) &&
+ 				 (priv->mf->height == 480))
+-				bps_per_lane = RCAR_CSI_100MBPS;
++				bps_per_lane = RCAR_CSI_450MBPS;
++			else if ((priv->mf->width == 640) &&
++				 (priv->mf->height == 400))
++				bps_per_lane = RCAR_CSI_450MBPS;
+ 			else
+ 				goto error;
+ 		} else {
+@@ -464,6 +479,27 @@ static int rcar_csi2_s_power(struct v4l2_subdev *sd, int on)
+ 				if (ret < 0)
+ 					return ret;
+ 			}
++			if (strncmp(tmp_sd->name, CONNECT_SLAVE_NAME2,
++				sizeof(CONNECT_SLAVE_NAME2) - 1) == 0) {
++				v4l2_subdev_call(tmp_sd, pad, get_fmt,
++							 NULL, &fmt);
++				if (ret < 0)
++					return ret;
++			}
++			if (strncmp(tmp_sd->name, CONNECT_SLAVE_NAME3,
++				sizeof(CONNECT_SLAVE_NAME3) - 1) == 0) {
++				v4l2_subdev_call(tmp_sd, pad, get_fmt,
++							 NULL, &fmt);
++				if (ret < 0)
++					return ret;
++			}
++			if (strncmp(tmp_sd->name, CONNECT_SLAVE_NAME4,
++				sizeof(CONNECT_SLAVE_NAME4) - 1) == 0) {
++				v4l2_subdev_call(tmp_sd, pad, get_fmt,
++							 NULL, &fmt);
++				if (ret < 0)
++					return ret;
++			}
+ 		}
+ 		priv->mf = mf;
+ 		pm_runtime_get_sync(&priv->pdev->dev);
+@@ -529,8 +565,8 @@ static int rcar_csi2_parse_dt(struct device_node *np,
+ 
+ 	vc_np = of_get_child_by_name(np, "virtual,channel");
+ 
+-	config->vcdt = 0;
+-	config->vcdt2 = 0;
++	config->vcdt = 0x81008000;
++	config->vcdt2 = 0x83008200;
+ 	for (i = 0; i < VC_MAX_CHANNEL; i++) {
+ 		sprintf(csi_name, "csi2_vc%d", i);
+ 
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 0c0027e..19bc400 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -1165,6 +1165,10 @@ error:
+  */
+ static void rcar_vin_wait_stop_streaming(struct rcar_vin_priv *priv)
+ {
++	/* update the status if hardware is not stopped */
++	if (ioread32(priv->base + VNMS_REG) & VNMS_CA)
++		priv->state = RUNNING;
++
+ 	while (priv->state != STOPPED) {
+ 		/* issue stop if running */
+ 		if (priv->state == RUNNING)
+diff --git a/drivers/media/platform/soc_camera/soc_mediabus.c b/drivers/media/platform/soc_camera/soc_mediabus.c
+index e3e665e..84754a4 100644
+--- a/drivers/media/platform/soc_camera/soc_mediabus.c
++++ b/drivers/media/platform/soc_camera/soc_mediabus.c
+@@ -57,6 +57,16 @@ static const struct soc_mbus_lookup mbus_fmt[] = {
+ 		.layout			= SOC_MBUS_LAYOUT_PACKED,
+ 	},
+ }, {
++	.code = MEDIA_BUS_FMT_YUYV10_2X10,
++	.fmt = {
++		.fourcc			= V4L2_PIX_FMT_YUYV,
++		.name			= "YUYV",
++		.bits_per_sample	= 10,
++		.packing		= SOC_MBUS_PACKING_2X10_PADHI,
++		.order			= SOC_MBUS_ORDER_LE,
++		.layout			= SOC_MBUS_LAYOUT_PACKED,
++	},
++}, {
+ 	.code = MEDIA_BUS_FMT_RGB555_2X8_PADHI_LE,
+ 	.fmt = {
+ 		.fourcc			= V4L2_PIX_FMT_RGB555,
+@@ -403,6 +413,10 @@ int soc_mbus_samples_per_pixel(const struct soc_mbus_pixelfmt *mf,
+ 		*numerator = 2;
+ 		*denominator = 1;
+ 		return 0;
++	case SOC_MBUS_PACKING_2X10_PADHI:
++		*numerator = 3;
++		*denominator = 1;
++		return 0;
+ 	case SOC_MBUS_PACKING_1_5X8:
+ 		*numerator = 3;
+ 		*denominator = 2;
+@@ -428,6 +442,8 @@ s32 soc_mbus_bytes_per_line(u32 width, const struct soc_mbus_pixelfmt *mf)
+ 	case SOC_MBUS_PACKING_2X8_PADLO:
+ 	case SOC_MBUS_PACKING_EXTEND16:
+ 		return width * 2;
++	case SOC_MBUS_PACKING_2X10_PADHI:
++		return width * 3;
+ 	case SOC_MBUS_PACKING_1_5X8:
+ 		return width * 3 / 2;
+ 	case SOC_MBUS_PACKING_VARIABLE:
+diff --git a/include/media/drv-intf/soc_mediabus.h b/include/media/drv-intf/soc_mediabus.h
+index 2ff7737..e5f3f53 100644
+--- a/include/media/drv-intf/soc_mediabus.h
++++ b/include/media/drv-intf/soc_mediabus.h
+@@ -21,6 +21,8 @@
+  * @SOC_MBUS_PACKING_2X8_PADHI:	16 bits transferred in 2 8-bit samples, in the
+  *				possibly incomplete byte high bits are padding
+  * @SOC_MBUS_PACKING_2X8_PADLO:	as above, but low bits are padding
++ * @SOC_MBUS_PACKING_2X10_PADHI:20 bits transferred in 2 10-bit samples. The
++ *                              high bits are padding
+  * @SOC_MBUS_PACKING_EXTEND16:	sample width (e.g., 10 bits) has to be extended
+  *				to 16 bits
+  * @SOC_MBUS_PACKING_VARIABLE:	compressed formats with variable packing
+@@ -33,6 +35,7 @@ enum soc_mbus_packing {
+ 	SOC_MBUS_PACKING_NONE,
+ 	SOC_MBUS_PACKING_2X8_PADHI,
+ 	SOC_MBUS_PACKING_2X8_PADLO,
++	SOC_MBUS_PACKING_2X10_PADHI,
+ 	SOC_MBUS_PACKING_EXTEND16,
+ 	SOC_MBUS_PACKING_VARIABLE,
+ 	SOC_MBUS_PACKING_1_5X8,
+-- 
+1.9.1
+

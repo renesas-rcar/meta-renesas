@@ -1,0 +1,74 @@
+From c757e671491c98347a4924fb491b02b151f7140d Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Sun, 18 Dec 2016 13:40:41 +0300
+Subject: [PATCH] wheat: support ftb booting.
+
+1. add  CONFIG_OF_LIBFDT and CONFIG_OF_BOARD_SETUP options.
+2. set dafault extra enviroment
+---
+ board/renesas/wheat/wheat.c | 9 +++++++++
+ configs/wheat_defconfig     | 2 ++
+ configs/wheat_nor_defconfig | 2 ++
+ include/configs/wheat.h     | 4 ++++
+ 4 files changed, 17 insertions(+)
+
+diff --git a/board/renesas/wheat/wheat.c b/board/renesas/wheat/wheat.c
+index c14aff4..23fa3fb 100644
+--- a/board/renesas/wheat/wheat.c
++++ b/board/renesas/wheat/wheat.c
+@@ -461,6 +461,8 @@ U_BOOT_DEVICE(wheat_serials) = {
+ 	.platdata = &serial_platdata,
+ };
+ 
++
++
+ #ifdef CONFIG_SPL_BUILD
+ void board_init_f(ulong unused)
+ {
+@@ -548,3 +550,10 @@ void *calloc(size_t nmemb, size_t elem_size)
+ }
+ #endif	/* CONFIG_SPL_LIBCOMMON_SUPPORT */
+ #endif	/* CONFIG_SPL_BUILD */
++
++#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
++int ft_board_setup(void *blob, bd_t *bd)
++{
++        return 0;
++}
++#endif
+diff --git a/configs/wheat_defconfig b/configs/wheat_defconfig
+index 1aab904..72d3f9e 100644
+--- a/configs/wheat_defconfig
++++ b/configs/wheat_defconfig
+@@ -25,3 +25,5 @@ CONFIG_SPI_FLASH_BAR=y
+ CONFIG_SPI_FLASH_SPANSION=y
+ # CONFIG_EFI_LOADER is not set
+ CONFIG_SH_SDHI=y
++CONFIG_OF_LIBFDT=y
++CONFIG_OF_BOARD_SETUP=y
+diff --git a/configs/wheat_nor_defconfig b/configs/wheat_nor_defconfig
+index 175a65e..bd6308f 100644
+--- a/configs/wheat_nor_defconfig
++++ b/configs/wheat_nor_defconfig
+@@ -21,3 +21,5 @@ CONFIG_CMD_EXT4_WRITE=y
+ CONFIG_CMD_FAT=y
+ # CONFIG_EFI_LOADER is not set
+ CONFIG_SH_SDHI=y
++CONFIG_OF_LIBFDT=y
++CONFIG_OF_BOARD_SETUP=y
+diff --git a/include/configs/wheat.h b/include/configs/wheat.h
+index 0282c92..9836ac4 100644
+--- a/include/configs/wheat.h
++++ b/include/configs/wheat.h
+@@ -129,4 +129,8 @@
+ /* SYS-DMAC0 */
+ #define CONFIG_RMSTP2_ENA	0x00080000
+ 
++#define CONFIG_EXTRA_ENV_SETTINGS \
++       "bootm_low=0x40e00000\0" \
++       "bootm_size=0x1000000\0" \
++
+ #endif /* __WHEAT_H */
+-- 
+2.7.4
+

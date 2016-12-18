@@ -1,0 +1,47 @@
+From e235aefb0f8c58cb8714e8954cd0b4a723c30094 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Tue, 16 Aug 2016 17:41:24 +0300
+Subject: [PATCH] drm/bridge: adv7511: add support for the 2nd chip
+
+The Renesas Wheat board has 2 ADV7513 chips on the same I2C bus, however
+the ADV751x driver only supports 1 chip as  it tries to assign the packet/
+EDID/CEC  memory I2C devices  to the fixed I2C addresses. Assign these I2C
+addresses at the fixed offsets (derived from the programming guide) from
+the  main register map address  instead...
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+
+ drivers/gpu/drm/bridge/adv7511/adv7511_drv.c |   12 ++++++------
+ 2 files changed, 8 insertions(+), 9 deletions(-)
+
+Index: a/drivers/gpu/drm/i2c/adv7511.c
+===================================================================
+--- a/drivers/gpu/drm/i2c/adv7511.c
++++ b/drivers/gpu/drm/i2c/adv7511.c
+@@ -922,9 +922,9 @@ static int adv7511_parse_dt(struct device_node *np,
+ 	return 0;
+ }
+ 
+-static const int edid_i2c_addr = 0x7e;
+-static const int packet_i2c_addr = 0x70;
+-static const int cec_i2c_addr = 0x78;
++static int edid_i2c_addr = 0x7e;
++static int packet_i2c_addr = 0x70;
++static int cec_i2c_addr = 0x78;
+ 
+ static int adv7511_probe(struct i2c_client *i2c, const struct i2c_device_id *id)
+ {
+@@ -989,6 +989,13 @@ static int adv7511_probe(struct i2c_client *i2c, const struct i2c_device_id *id)
+ 	if (ret)
+ 		return ret;
+ 
++	/* possible i2c main addresses are 0x39 and 0x3d,
++	 * to avoid conflicts add offset for subchips
++	 */
++	edid_i2c_addr += 4;
++	packet_i2c_addr += 4;
++	cec_i2c_addr += 4;
++
+ 	regmap_write(adv7511->regmap, ADV7511_REG_EDID_I2C_ADDR, edid_i2c_addr);
+ 	regmap_write(adv7511->regmap, ADV7511_REG_PACKET_I2C_ADDR,
+ 		     packet_i2c_addr);

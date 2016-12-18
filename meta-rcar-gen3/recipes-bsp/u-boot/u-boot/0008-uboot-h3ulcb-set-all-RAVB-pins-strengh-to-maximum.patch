@@ -1,0 +1,33 @@
+From b247dea7b49d7e66e1848da71e28ff5fe9acf5e1 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Thu, 16 Jun 2016 11:41:43 +0300
+Subject: [PATCH] uboot: ulcb: set all RAVB pins strengh to maximum
+
+This is only for H3ULCB.HAD with custom TTTeck ethernet switch
+parameters
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ board/renesas/ulcb/ulcb.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/board/renesas/ulcb/ulcb.c b/board/renesas/ulcb/ulcb.c
+index 7e83b60..69d936a 100644
+--- a/board/renesas/ulcb/ulcb.c
++++ b/board/renesas/ulcb/ulcb.c
+@@ -153,9 +153,9 @@ int board_init(void)
+ 	gpio_request(GPIO_FN_AVB_AVTP_CAPTURE_B, NULL);
+ 
+ 	/* EtherAVB */
+-	write_drvctrl(0x00000004, 0x00000007, (void *)PFC_DRVCTRL1);
+-	write_drvctrl(0x44444414, 0x77777777, (void *)PFC_DRVCTRL2);
+-	write_drvctrl(0x44400000, 0x77700000, (void *)PFC_DRVCTRL3);
++	write_drvctrl(0x00000007, 0x00000007, (void *)PFC_DRVCTRL1);
++	write_drvctrl(0x77777777, 0x77777777, (void *)PFC_DRVCTRL2);
++	write_drvctrl(0x77700000, 0x77700000, (void *)PFC_DRVCTRL3);
+ 
+ 	/* AVB_PHY_RST */
+ 	gpio_request(GPIO_GP_2_10, NULL);
+-- 
+1.9.1
+

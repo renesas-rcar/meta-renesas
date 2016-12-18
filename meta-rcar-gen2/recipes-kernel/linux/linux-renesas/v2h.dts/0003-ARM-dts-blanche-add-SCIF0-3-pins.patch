@@ -1,0 +1,51 @@
+From 2cd452d19e6e79ea58c8022c43248b64d579db60 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Fri, 15 Jul 2016 00:00:56 +0300
+Subject: [PATCH] ARM: dts: blanche: add SCIF0/3 pins
+
+Add the (previously omitted) SCIF0/3 pin data to the Blanche board's
+device tree.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7792-blanche.dts | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792-blanche.dts b/arch/arm/boot/dts/r8a7792-blanche.dts
+index e7b40f0..9b550bd 100644
+--- a/arch/arm/boot/dts/r8a7792-blanche.dts
++++ b/arch/arm/boot/dts/r8a7792-blanche.dts
+@@ -57,10 +57,28 @@
+ 	clock-frequency = <20000000>;
+ };
+ 
++&pfc {
++	scif0_pins: scif0 {
++		groups = "scif0_data";
++		function = "scif0";
++	};
++
++	scif3_pins: scif3 {
++		groups = "scif3_data";
++		function = "scif3";
++	};
++};
++
+ &scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++
+ 	status = "okay";
+ };
+ 
+ &scif3 {
++	pinctrl-0 = <&scif3_pins>;
++	pinctrl-names = "default";
++
+ 	status = "okay";
+ };
+-- 
+1.9.1
+

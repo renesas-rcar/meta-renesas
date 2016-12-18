@@ -1,0 +1,157 @@
+From ab558ef95b3082b021d1ead9624826016d5c944c Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Thu, 18 Aug 2016 11:38:16 +0300
+Subject: [PATCH] ARM: dtsi: r8a7792: add SGX support
+
+This adds r8a7792 SGX support
+
+Signed-off-by: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+---
+ arch/arm/boot/dts/r8a7792.dtsi            | 81 ++++++++++++++++++++++++++++---
+ include/dt-bindings/clock/r8a7792-clock.h |  2 +
+ 3 files changed, 78 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7792.dtsi b/arch/arm/boot/dts/r8a7792.dtsi
+index ff47755..da436d5 100644
+--- a/arch/arm/boot/dts/r8a7792.dtsi
++++ b/arch/arm/boot/dts/r8a7792.dtsi
+@@ -128,6 +128,17 @@
+ 			reg = <0 0xe6060000 0 0x144>;
+ 		};
+ 
++		sgx@fd800000 {
++			compatible = "renesas,sgx";
++			reg = <0 0xfd800000 0 0x10000>;
++			interrupts = <0 119 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "irq_sgx";
++			clocks = <&mstp1_clks R8A7792_CLK_3DG>,
++				 <&mstp8_clks R8A7792_CLK_IPMMU_SGX>;
++			clock-names = "sgx_clk", "ipmmu_clk";
++			power-domains = <&sysc R8A7792_PD_SGX>;
++		};
++
+ 		gpio0: gpio@e6050000 {
+ 			compatible = "renesas,gpio-r8a7792",
+ 				     "renesas,gpio-rcar";
+@@ -584,6 +596,60 @@
+ 			};
+ 		};
+ 
++		ipmmu_sy0: mmu@e6280000 {
++			compatible = "renesas,ipmmu-vmsa";
++			reg = <0 0xe6280000 0 0x1000>;
++			interrupts = <0 223 IRQ_TYPE_LEVEL_HIGH>,
++				     <0 224 IRQ_TYPE_LEVEL_HIGH>;
++			#iommu-cells = <1>;
++			status = "disabled";
++		};
++
++		ipmmu_sy1: mmu@e6290000 {
++			compatible = "renesas,ipmmu-vmsa";
++			reg = <0 0xe6290000 0 0x1000>;
++			interrupts = <0 225 IRQ_TYPE_LEVEL_HIGH>;
++			#iommu-cells = <1>;
++			status = "disabled";
++		};
++
++		ipmmu_ds: mmu@e6740000 {
++			compatible = "renesas,ipmmu-vmsa";
++			reg = <0 0xe6740000 0 0x1000>;
++			interrupts = <0 198 IRQ_TYPE_LEVEL_HIGH>,
++				     <0 199 IRQ_TYPE_LEVEL_HIGH>;
++			#iommu-cells = <1>;
++			status = "disabled";
++		};
++
++/*
++		ipmmu_mp: mmu@ec680000 {
++		compatible = "renesas,ipmmu-vmsa";
++			reg = <0 0xec680000 0 0x1000>;
++			interrupts = <0 226 IRQ_TYPE_LEVEL_HIGH>;
++			#iommu-cells = <1>;
++			status = "disabled";
++		};
++*/
++
++		ipmmu_mx: mmu@fe951000 {
++			compatible = "renesas,ipmmu-vmsa";
++			reg = <0 0xfe951000 0 0x1000>;
++			interrupts = <0 222 IRQ_TYPE_LEVEL_HIGH>,
++				     <0 221 IRQ_TYPE_LEVEL_HIGH>;
++			#iommu-cells = <1>;
++			status = "disabled";
++		};
++
++		ipmmu_gp: mmu@e62a0000 {
++			compatible = "renesas,ipmmu-r8a7792", "renesas,ipmmu-vmsa";
++			reg = <0 0xe62a0000 0 0x1000>;
++			interrupts = <GIC_SPI 260 IRQ_TYPE_LEVEL_HIGH>,
++                             <GIC_SPI 261 IRQ_TYPE_LEVEL_HIGH>;
++			#iommu-cells = <1>;
++			status = "disabled";
++		};
++
+ 		can0: can@e6e80000 {
+ 			compatible = "renesas,can-r8a7792",
+ 				     "renesas,rcar-gen2-can";
+@@ -781,14 +850,14 @@
+ 			compatible = "renesas,r8a7792-mstp-clocks",
+ 				     "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe6150134 0 4>, <0 0xe6150038 0 4>;
+-			clocks = <&m2_clk>, <&zs_clk>, <&zs_clk>, <&zs_clk>;
++			clocks = <&m2_clk>, <&zg_clk> , <&zs_clk>, <&zs_clk>, <&zs_clk>;
+ 			#clock-cells = <1>;
+ 			clock-indices = <
+-				R8A7792_CLK_JPU
++				R8A7792_CLK_JPU R8A7792_CLK_3DG
+ 				R8A7792_CLK_VSP1DU1 R8A7792_CLK_VSP1DU0
+ 				R8A7792_CLK_VSP1_SY
+ 			>;
+-			clock-output-names = "jpu", "vsp1du1", "vsp1du0",
++			clock-output-names = "jpu", "3dg" ,"vsp1du1", "vsp1du0",
+ 					     "vsp1-sy";
+ 		};
+ 		mstp2_clks: mstp2_clks@e6150138 {
+@@ -841,16 +910,16 @@
+ 			compatible = "renesas,r8a7792-mstp-clocks",
+ 				     "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe6150990 0 4>, <0 0xe61509a0 0 4>;
+-			clocks = <&zg_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>,
++			clocks = <&zx_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>,
+ 			         <&zg_clk>, <&zg_clk>, <&hp_clk>;
+ 			#clock-cells = <1>;
+ 			clock-indices = <
+-				R8A7792_CLK_VIN5 R8A7792_CLK_VIN4
++				R8A7792_CLK_IPMMU_SGX R8A7792_CLK_VIN5 R8A7792_CLK_VIN4
+ 				R8A7792_CLK_VIN3 R8A7792_CLK_VIN2
+ 				R8A7792_CLK_VIN1 R8A7792_CLK_VIN0
+ 				R8A7792_CLK_ETHERAVB
+ 			>;
+-			clock-output-names = "vin5", "vin4", "vin3", "vin2",
++			clock-output-names = "ipmmu_sgx", "vin5", "vin4", "vin3", "vin2",
+ 					     "vin1", "vin0", "etheravb";
+ 		};
+ 		mstp9_clks: mstp9_clks@e6150994 {
+diff --git a/include/dt-bindings/clock/r8a7792-clock.h b/include/dt-bindings/clock/r8a7792-clock.h
+index 9a8b392..94c7705 100644
+--- a/include/dt-bindings/clock/r8a7792-clock.h
++++ b/include/dt-bindings/clock/r8a7792-clock.h
+@@ -24,6 +24,7 @@
+ 
+ /* MSTP1 */
+ #define R8A7792_CLK_JPU			6
++#define R8A7792_CLK_3DG			12
+ #define R8A7792_CLK_TMU1		11
+ #define R8A7792_CLK_TMU3		21
+ #define R8A7792_CLK_TMU2		22
+@@ -62,6 +63,7 @@
+ #define R8A7792_CLK_DU0			24
+ 
+ /* MSTP8 */
++#define R8A7792_CLK_IPMMU_SGX		0
+ #define R8A7792_CLK_VIN5		4
+ #define R8A7792_CLK_VIN4		5
+ #define R8A7792_CLK_VIN3		8
+-- 
+2.7.4
+

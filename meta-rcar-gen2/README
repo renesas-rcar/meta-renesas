@@ -1,0 +1,96 @@
+meta-rcar-gen2
+==============
+
+This layer provides that evaluation board is mounted ARM SoCs of Renesas
+Electronics, called the R-Car Generation 2. Currently, this supports
+board and the SoCs of the following:
+     - Board: Blanche   / SoC: R8A7792 (R-Car V2H)
+     - Board: Wheat   / SoC: R8A7792 (R-Car V2H)
+
+Patches
+=======
+
+Please submit any patches for this layer to: vladimir.barinov@cogentembedded.com
+Please see the MAINTAINERS file for more details.
+
+Dependencies
+============
+
+This layer depends on:
+
+    URI: git://git.yoctoproject.org/poky
+    layers: meta, meta-yocto, meta-yocto-bsp
+    revision: 40376446904ae3529be41737fed9a0b650ed167d
+
+    URI: git://git.linaro.org/openembedded/meta-linaro.git
+    layers: meta-linaro-toolchain
+    revision: 9b1fd178309544dff1f7453e796a9437125bc0d9
+
+    URI: git://git.openembedded.org/meta-openembedded
+    layers: meta-oe
+    revision: 8ab04afbffb4bc5184cfe0655049de6f44269990
+
+Because Renesas proprietary software is using linaro-GCC, it needs to apply. Please perform patch command.
+    $ cd meta-renesas
+    $ export PATCH_DIR=meta-rcar-gen3/docs/sample/patch/patch-for-linaro-gcc
+    $ patch -p1 < \
+    $ {PATCH_DIR}/0001-r
+
+Build Instructions
+==================
+
+The following instructions require a Poky installation (or equivalent).
+
+Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
+
+    $ source poky/oe-init-build-env
+
+After that, initialized configure bblayers.conf by adding meta-rcar-gen3 layer. e.g.:
+
+    BBLAYERS ?= " \
+        <path to layer>/poky/meta \
+        <path to layer>/poky/meta-yocto \
+        <path to layer>/poky/meta-yocto-bsp \
+        <path to layer>/meta-renesas/meta-rcar-gen2 \
+        <path to layer>/meta-openembedded/meta-oe \
+    "
+
+To build a specific target BSP, configure the associated machine in local.conf:
+
+    MACHINE ??= "<supported board name>"
+
+Must change the package class to ipk files in local.conf:
+
+    PACKAGE_CLASSES ?= "package_ipk"
+
+Configure for systemd init in local.conf:
+
+    DISTRO_FEATURES_append = " systemd"
+    VIRTUAL-RUNTIME_init_manager = "systemd"
+
+Build the target file system image using bitbake:
+
+    $ bitbake core-image-minimal
+
+After completing the images for the target machine will be available in the output
+directory 'tmp/deploy/images/<supported board name>'.
+
+Images generated:
+    * Image (generic Linux Kernel binary image file)
+    * Image-<machine name>.dtb (DTB for target machine)
+    * core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
+    * core-image-minimal-<machine name>.ext4  (rootfs ext4 format)
+    * core-image-minimal-<machine name>.cpio.gz (rootfs cpio+gz format)
+
+Build Instructions for SDK
+==========================
+This may be changed in the near feature. These instructions are tentative.
+
+Should define the staticdev in SDK image feature for installing the static libs
+to SDK in local.conf.
+
+    SDKIMAGE_FEATURES_append = " staticdev-pkgs"
+
+Use bitbake -c populate_sdk for generating the toolchain SDK:
+
+    $ bitbake core-image-minimal -c populate_sdk

@@ -1,0 +1,431 @@
+From 25b9539fc4b4518911c622d83a25ee4af73e86c3 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Tue, 4 Oct 2016 12:19:38 +0300
+Subject: [PATCH] arm64: dts: Gen3 view boards: FICOSA cameras
+
+This set FICOSA cameras in DT
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts      | 16 ++++++++++------
+ arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts     | 16 ++++++++++------
+ arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts | 16 ++++++++++------
+ arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts     | 13 +++++++------
+ arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts | 13 +++++++------
+ 5 files changed, 44 insertions(+), 30 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
+index ab72884..af12937 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-had.dts
+@@ -516,6 +516,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x60>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in0: endpoint {
+ 				clock-lanes = <0>;
+@@ -532,6 +533,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x61>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in1: endpoint {
+ 				clock-lanes = <0>;
+@@ -545,6 +547,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x62>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in2: endpoint {
+ 				clock-lanes = <0>;
+@@ -558,6 +561,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x63>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in3: endpoint {
+ 				clock-lanes = <0>;
+@@ -571,6 +575,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x64>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+@@ -587,6 +592,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x65>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in5: endpoint {
+ 				clock-lanes = <0>;
+@@ -600,6 +606,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x66>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in6: endpoint {
+ 				clock-lanes = <0>;
+@@ -613,6 +620,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x67>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in7: endpoint {
+ 				clock-lanes = <0>;
+@@ -628,10 +636,8 @@
+ 		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ 
+ 	max9286-max9271@1 {
+@@ -640,10 +646,8 @@
+ 		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ };
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+index 7fcadeb0..26e2a64 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-h3ulcb-view.dts
+@@ -401,6 +401,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x60>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in0: endpoint {
+ 				clock-lanes = <0>;
+@@ -417,6 +418,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x61>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in1: endpoint {
+ 				clock-lanes = <0>;
+@@ -430,6 +432,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x62>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in2: endpoint {
+ 				clock-lanes = <0>;
+@@ -443,6 +446,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x63>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in3: endpoint {
+ 				clock-lanes = <0>;
+@@ -456,6 +460,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x64>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+@@ -472,6 +477,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x65>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in5: endpoint {
+ 				clock-lanes = <0>;
+@@ -485,6 +491,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x66>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in6: endpoint {
+ 				clock-lanes = <0>;
+@@ -498,6 +505,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x67>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in7: endpoint {
+ 				clock-lanes = <0>;
+@@ -513,10 +521,8 @@
+ 		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ 
+ 	max9286-max9271@1 {
+@@ -525,10 +531,8 @@
+ 		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ };
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
+index e10af46..a26b200 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x-view.dts
+@@ -684,6 +684,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x60>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in0: endpoint {
+ 				clock-lanes = <0>;
+@@ -700,6 +701,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x61>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in1: endpoint {
+ 				clock-lanes = <0>;
+@@ -713,6 +715,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x62>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in2: endpoint {
+ 				clock-lanes = <0>;
+@@ -726,6 +729,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x63>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in3: endpoint {
+ 				clock-lanes = <0>;
+@@ -739,6 +743,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x64>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+@@ -755,6 +760,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x65>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in5: endpoint {
+ 				clock-lanes = <0>;
+@@ -768,6 +774,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x66>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in6: endpoint {
+ 				clock-lanes = <0>;
+@@ -781,6 +788,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x67>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in7: endpoint {
+ 				clock-lanes = <0>;
+@@ -796,10 +804,8 @@
+ 		gpios = <&gpio6 30 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ 
+ 	max9286-max9271@1 {
+@@ -807,10 +813,8 @@
+ 		reg = <0x6c>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ 
+ 	clk_5p49v5923a: programmable_clk@6a {
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
+index 7c939b1..1a5ea85 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb-view.dts
+@@ -382,6 +382,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x60>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in0: endpoint {
+ 				clock-lanes = <0>;
+@@ -398,6 +399,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x61>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in1: endpoint {
+ 				clock-lanes = <0>;
+@@ -411,6 +413,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x62>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in2: endpoint {
+ 				clock-lanes = <0>;
+@@ -424,6 +427,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x63>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in3: endpoint {
+ 				clock-lanes = <0>;
+@@ -437,6 +441,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x64>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+@@ -455,10 +460,8 @@
+ 		gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ 
+ 	max9286-max9271@1 {
+@@ -467,10 +470,8 @@
+ 		gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <1>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ };
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
+index 1607d18..4ef108a 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x-view.dts
+@@ -586,6 +586,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x60>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in0: endpoint {
+ 				clock-lanes = <0>;
+@@ -602,6 +603,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x61>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in1: endpoint {
+ 				clock-lanes = <0>;
+@@ -615,6 +617,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x62>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in2: endpoint {
+ 				clock-lanes = <0>;
+@@ -628,6 +631,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x63>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in3: endpoint {
+ 				clock-lanes = <0>;
+@@ -641,6 +645,7 @@
+ 		compatible = "maxim,max9286-max9271-ov106xx";
+ 		reg = <0x64>;
+ 
++		maxim,dvp-width = <10>;
+ 		port {
+ 			ov106xx_in4: endpoint {
+ 				clock-lanes = <0>;
+@@ -659,10 +664,8 @@
+ 		gpios = <&gpio6 30 GPIO_ACTIVE_LOW>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <4>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ 
+ 	max9286-max9271@1 {
+@@ -670,10 +673,8 @@
+ 		reg = <0x6c>;
+ 		maxim,sensor_delay = <0>;
+ 		maxim,links = <1>;
+-		maxim,resetb-gpio = <1>;
+-		maxim,resetb-active-low;
+ 		maxim,fsync-mode = "automatic";
+-		maxim,timeout = <10>;
++		maxim,timeout = <100>;
+ 	};
+ 
+ 	clk_5p49v5923a: programmable_clk@6a {
+-- 
+1.9.1
+

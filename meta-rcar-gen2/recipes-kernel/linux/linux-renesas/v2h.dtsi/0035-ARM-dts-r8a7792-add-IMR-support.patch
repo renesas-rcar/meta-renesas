@@ -1,0 +1,77 @@
+From ef8519cf5ce35bcd18ba8325b2553fa35c726f36 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Sun, 23 Oct 2016 21:02:13 +0300
+Subject: [PATCH 3/3] ARM: dts: r8a7792: add IMR support
+
+Describe  7 instances (IMR-LX3, IMR-LSX3-ch0..ch5) in the R8A7792
+device tree.
+---
+ arch/arm/boot/dts/r8a7792.dtsi | 52 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792.dtsi b/arch/arm/boot/dts/r8a7792.dtsi
+index e726b8c..cba4749 100644
+--- a/arch/arm/boot/dts/r8a7792.dtsi
++++ b/arch/arm/boot/dts/r8a7792.dtsi
+@@ -641,6 +641,58 @@
+ 			};
+ 		};
+ 
++		imrlx3: imr-lx3@fead0000 {
++			compatible = "renesas,imr-lx3";
++			reg = <0 0xfead0000 0 0x2000>;
++			interrupts = <GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7792_CLK_IMR_LX3>;
++			power-domains = <&sysc R8A7792_PD_ALWAYS_ON>;
++		};
++
++		imrlsx3_ch0: imr-lsx3@fe840000 {
++			compatible = "renesas,imr-lsx3";
++			reg = <0 0xfe840000 0 0x2000>;
++			interrupts = <GIC_SPI 194 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7792_CLK_IMR_LSX3_CH0>;
++			power-domains = <&sysc R8A7792_PD_ALWAYS_ON>;
++		};
++
++		imrlsx3_ch1: imr-lsx3@fe850000 {
++			compatible = "renesas,imr-lsx3";
++			reg = <0 0xfe850000 0 0x2000>;
++			interrupts = <GIC_SPI 195 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7792_CLK_IMR_LSX3_CH1>;
++			power-domains = <&sysc R8A7792_PD_ALWAYS_ON>;
++		};
++		imrlsx3_ch2: imr-lsx3@fe860000 {
++			compatible = "renesas,imr-lsx3";
++			reg = <0 0xfe860000 0 0x2000>;
++			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7792_CLK_IMR_LSX3_CH2>;
++			power-domains = <&sysc R8A7792_PD_ALWAYS_ON>;
++		};
++		imrlsx3_ch3: imr-lsx3@fe870000 {
++			compatible = "renesas,imr-lsx3";
++			reg = <0 0xfe870000 0 0x2000>;
++			interrupts = <GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7792_CLK_IMR_LSX3_CH3>;
++			power-domains = <&sysc R8A7792_PD_ALWAYS_ON>;
++		};
++		imrlsx3_ch4: imr-lsx3@fe880000 {
++			compatible = "renesas,imr-lsx3";
++			reg = <0 0xfe880000 0 0x2000>;
++			interrupts = <GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7792_CLK_IMR_LSX3_CH4>;
++			power-domains = <&sysc R8A7792_PD_ALWAYS_ON>;
++		};
++		imrlsx3_ch5: imr-lsx3@fe890000 {
++			compatible = "renesas,imr-lsx3";
++			reg = <0 0xfe890000 0 0x2000>;
++			interrupts = <GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A7792_CLK_IMR_LSX3_CH5>;
++			power-domains = <&sysc R8A7792_PD_ALWAYS_ON>;
++		};
++
+ 		ipmmu_sy0: mmu@e6280000 {
+ 			compatible = "renesas,ipmmu-vmsa";
+ 			reg = <0 0xe6280000 0 0x1000>;
+-- 
+2.7.4
+

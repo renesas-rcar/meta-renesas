@@ -1,0 +1,526 @@
+From e3b88488ef8f23239ac712aa3222d24bbe504af9 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Wed, 7 Dec 2016 17:13:14 +0300
+Subject: [PATCH] Wheat: add SPL and QoS
+
+This adds SPL and QoS support
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ arch/arm/mach-rmobile/Kconfig.32 |   1 +
+ board/renesas/wheat/qos.c        |  23 ++++--
+ board/renesas/wheat/wheat.c      | 173 ++++++++++++++++++++++++++++++---------
+ configs/wheat_defconfig          |   2 +
+ configs/wheat_nor_defconfig      |  23 ++++++
+ include/configs/wheat.h          |  47 ++++++++---
+ 6 files changed, 210 insertions(+), 59 deletions(-)
+ create mode 100644 configs/wheat_nor_defconfig
+
+diff --git a/arch/arm/mach-rmobile/Kconfig.32 b/arch/arm/mach-rmobile/Kconfig.32
+index 0ec21aa..6cb132e 100644
+--- a/arch/arm/mach-rmobile/Kconfig.32
++++ b/arch/arm/mach-rmobile/Kconfig.32
+@@ -54,6 +54,7 @@ config TARGET_WHEAT
+         bool "Wheat board"
+         select DM
+         select DM_SERIAL
++        select SUPPORT_SPL
+ 
+ endchoice
+ 
+diff --git a/board/renesas/wheat/qos.c b/board/renesas/wheat/qos.c
+index d09c96d..e2bfcbb 100644
+--- a/board/renesas/wheat/qos.c
++++ b/board/renesas/wheat/qos.c
+@@ -13,7 +13,7 @@
+ #include <asm/io.h>
+ #include <asm/arch/rmobile.h>
+ 
+-#if defined(CONFIG_ARCH_RMOBILE_EXTRAM_BOOT)
++#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_ARCH_RMOBILE_EXTRAM_BOOT)
+ enum {
+ 	DBSC3_00, DBSC3_01, DBSC3_02, DBSC3_03, DBSC3_04,
+ 	DBSC3_05, DBSC3_06, DBSC3_07, DBSC3_08, DBSC3_09,
+@@ -350,12 +350,14 @@ void qos_init(void)
+ 	writel(0x00000001, &axi_qos->qosqon);
+ 	writel(0x00000005, &axi_qos->qosin);
+ 
++#if 0
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI_CCSW_BASE;
+ 	writel(0x00000100, &axi_qos->qosconf);
+ 	writel(0x00002053, &axi_qos->qosctset0);
+ 	writel(0x00000001, &axi_qos->qosreqctr);
+ 	writel(0x00000001, &axi_qos->qosqon);
+ 	writel(0x00000005, &axi_qos->qosin);
++#endif
+ 
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI_G2DW_BASE;
+ 	writel(0x00000100, &axi_qos->qosconf);
+@@ -389,11 +391,13 @@ void qos_init(void)
+ 	writel(0x00000001, &axi_qos->qosqon);
+ 	writel(0x00000005, &axi_qos->qosin);
+ 
++#if 0
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI_RTXBW_BASE;
+ 	writel(0x00000102, &axi_qos->qosconf);
+ 	writel(0x0000205F, &axi_qos->qosctset0);
+ 	writel(0x00000001, &axi_qos->qosreqctr);
+ 	writel(0x00000001, &axi_qos->qosqon);
++#endif
+ 
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI_SDM0W_BASE;
+ 	writel(0x00000000, &axi_qos->qosconf);
+@@ -459,11 +463,13 @@ void qos_init(void)
+ 	writel(0x00000001, &axi_qos->qosreqctr);
+ 	writel(0x00000001, &axi_qos->qosqon);
+ 
++#if 0
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI256_AXI_BASE;
+ 	writel(0x00000102, &axi_qos->qosconf);
+ 	writel(0x0000205F, &axi_qos->qosctset0);
+ 	writel(0x00000001, &axi_qos->qosreqctr);
+ 	writel(0x00000001, &axi_qos->qosqon);
++#endif
+ 
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI256_MXI_BASE;
+ 	writel(0x00000102, &axi_qos->qosconf);
+@@ -486,11 +492,13 @@ void qos_init(void)
+ 	writel(0x00002032, &axi_qos->qosthres1);
+ 	writel(0x00002014, &axi_qos->qosthres2);
+ 
++#if 0
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI256W_AXI128TO256_BASE;
+ 	writel(0x00000102, &axi_qos->qosconf);
+ 	writel(0x0000205F, &axi_qos->qosctset0);
+ 	writel(0x00000001, &axi_qos->qosreqctr);
+ 	writel(0x00000001, &axi_qos->qosqon);
++#endif
+ 
+ 	axi_qos = (struct rcar_axi_qos *)SYS_AXI256_AXMW_BASE;
+ 	writel(0x00000102, &axi_qos->qosconf);
+@@ -1123,17 +1131,17 @@ void qos_init(void)
+ 	writel(0x00000000, SYS_AXI_CSDMSCR);
+ 	writel(0x00000000, SYS_AXI_G2DDMSCR);
+ 	writel(0x00000000, SYS_AXI_IMP1DMSCR);
+-	writel(0x00000000, SYS_AXI_LBSMDMSCR);
++//	writel(0x00000000, SYS_AXI_LBSMDMSCR);
+ 	writel(0x00000000, SYS_AXI_MMUDSDMSCR);
+ 	writel(0x00000000, SYS_AXI_MMUMXDMSCR);
+ 	writel(0x00000000, SYS_AXI_MMUS0DMSCR);
+ 	writel(0x00000000, SYS_AXI_MMUS1DMSCR);
+-	writel(0x00000000, SYS_AXI_RTMXDMSCR);
++//	writel(0x00000000, SYS_AXI_RTMXDMSCR);
+ 	writel(0x00000000, SYS_AXI_SDM0DMSCR);
+ 	writel(0x00000000, SYS_AXI_SDM1DMSCR);
+ 	writel(0x00000000, SYS_AXI_SDS0DMSCR);
+ 	writel(0x00000000, SYS_AXI_SDS1DMSCR);
+-	writel(0x00000000, SYS_AXI_TRABDMSCR);
++//	writel(0x00000000, SYS_AXI_TRABDMSCR);
+ 	writel(0x00000000, SYS_AXI_X128TO64SLVDMSCR);
+ 	writel(0x00000000, SYS_AXI_X64TO128SLVDMSCR);
+ 	writel(0x00000000, SYS_AXI_AVBSLVDMSCR);
+@@ -1281,7 +1289,7 @@ void qos_init(void)
+ 	writel(0x00000000, MXT_SYXDMSCR);
+ 	writel(0x00000000, MXT_IMRSLVDMSCR);
+ 	writel(0x00000000, MXT_VINSLVDMSCR);
+-	writel(0x00000000, MXT_VPC1SLVDMSCR);
++//	writel(0x00000000, MXT_VPC1SLVDMSCR);
+ 	writel(0x00000000, MXT_VSPD0SLVDMSCR);
+ 	writel(0x00000000, MXT_VSPD1SLVDMSCR);
+ 	writel(0x00000000, MXT_MAP1SLVDMSCR);
+@@ -1357,10 +1365,9 @@ void qos_init(void)
+ 	writel(0x00000011, CCI_AXI_IPMMUMPDVMCR);
+ 	writel(0x00000011, CCI_AXI_IPMMUDSDVMCR);
+ 	writel(0x0000F700, CCI_AXI_AX2ADDRMASK);
+-
+ }
+-#else /* CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
++#else /* CONFIG_SPL_BUILD || CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
+ void qos_init(void)
+ {
+ }
+-#endif /* CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
++#endif /* CONFIG_SPL_BUILD || CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
+diff --git a/board/renesas/wheat/wheat.c b/board/renesas/wheat/wheat.c
+index a8bc49a..c14aff4 100644
+--- a/board/renesas/wheat/wheat.c
++++ b/board/renesas/wheat/wheat.c
+@@ -1,6 +1,6 @@
+ /*
+  * board/renesas/wheat/wheat.c
+- *     This file is wheat board support.
++ *     This file is Wheat board support.
+  *
+  * Copyright (C) 2016 Renesas Electronics Corporation
+  * Copyright (C) 2016 Cogent Embedded, Inc.
+@@ -25,10 +25,12 @@
+ #include <asm/arch/sh_sdhi.h>
+ #include <miiphy.h>
+ #include <mmc.h>
++#include <spl.h>
+ #include "qos.h"
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
++#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_ARCH_RMOBILE_EXTRAM_BOOT)
+ struct pin_db {
+ 	u32 addr;	/* register address */
+ 	u32 mask;	/* mask value */
+@@ -56,9 +58,6 @@ struct pin_db {
+ #define PUPR10		0xE6060128
+ #define PUPR11		0xE606012C
+ 
+-#define CPG_PLL1CR	0xE6150028
+-#define CPG_PLL3CR	0xE61500DC
+-
+ #define SetREG(x) \
+ 	writel((readl((x)->addr) & ~((x)->mask)) | ((x)->val), (x)->addr)
+ 
+@@ -70,7 +69,7 @@ struct pin_db {
+ 	writel(val, (x)->addr); \
+ }
+ 
+-struct pin_db pin_guard[] = {
++static struct pin_db pin_guard[] = {
+ 	{ GPSR0, 0xFFFFFFFF, 0x0BFFFFFF },
+ 	{ GPSR1, 0xFFFFFFFF, 0x002FFFFF },
+ 	{ GPSR4, 0xFFFFFFFF, 0x00000FFF },
+@@ -84,7 +83,7 @@ struct pin_db pin_guard[] = {
+ 	{ IPSR6, 0xFFFFFFFF, 0x0002000E },
+ };
+ 
+-struct pin_db pin_tbl[] = {
++static struct pin_db pin_tbl[] = {
+ 	{ PUPR2, 0xFFFFFFFF, 0x00000000 },
+ 	{ PUPR3, 0xFFFFFFFF, 0x0803FF40 },
+ 	{ PUPR4, 0xFFFFFFFF, 0x0000FFFF },
+@@ -95,7 +94,7 @@ struct pin_db pin_tbl[] = {
+ 	{ PUPR11, 0xFFFFFFFF, 0x0FC00007 },
+ };
+ 
+-void pin_init(void)
++static inline void pfc_init(void)
+ {
+ 	struct pin_db *db;
+ 
+@@ -106,29 +105,8 @@ void pin_init(void)
+ 		SetREG(db);
+ }
+ 
+-void s_init(void)
++static inline void dbsc3_init(void)
+ {
+-	struct rcar_rwdt *rwdt = (struct rcar_rwdt *)RWDT_BASE;
+-	struct rcar_swdt *swdt = (struct rcar_swdt *)SWDT_BASE;
+-	u32 cpu_type;
+-
+-	cpu_type = rmobile_get_cpu_type();
+-	if (cpu_type == 0x4A) {
+-		writel(0x4D000000, CPG_PLL1CR);
+-		writel(0x4F000000, CPG_PLL3CR);
+-	}
+-
+-	/* Watchdog init */
+-	writel(0xA5A5A500, &rwdt->rwtcsra);
+-	writel(0xA5A5A500, &swdt->swtcsra);
+-
+-	/* QoS(Quality-of-Service) Init */
+-	qos_init();
+-
+-	/* SCIF Init */
+-	pin_init();
+-
+-#if !defined(CONFIG_SYS_NO_FLASH)
+ 	struct rcar_lbsc *lbsc = (struct rcar_lbsc *)LBSC_BASE;
+ 	struct rcar_dbsc3 *dbsc3_0 = (struct rcar_dbsc3 *)DBSC3_0_BASE;
+ 	int i;
+@@ -294,7 +272,36 @@ void s_init(void)
+ 
+ 	/* This locks the access to the PHY unit registers */
+ 	writel(0x00000000, &dbsc3_0->dbpdlck);
+-#endif /* CONFIG_SYS_NO_FLASH */
++}
++#else	/* CONFIG_SPL_BUILD || CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
++static inline void dbsc3_init(void) { }
++static inline void pfc_init(void) { }
++#endif	/* CONFIG_SPL_BUILD || CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
++
++#define CPG_PLL1CR	0xE6150028
++#define CPG_PLL3CR	0xE61500DC
++
++void s_init(void)
++{
++	struct rcar_rwdt *rwdt = (struct rcar_rwdt *)RWDT_BASE;
++	struct rcar_swdt *swdt = (struct rcar_swdt *)SWDT_BASE;
++	u32 cpu_type;
++
++	cpu_type = rmobile_get_cpu_type();
++	if (cpu_type == 0x4A) {
++		writel(0x4D000000, CPG_PLL1CR);
++		writel(0x4F000000, CPG_PLL3CR);
++	}
++
++	/* Watchdog init */
++	writel(0xA5A5A500, &rwdt->rwtcsra);
++	writel(0xA5A5A500, &swdt->swtcsra);
++
++	pfc_init();
++	dbsc3_init();
++
++	/* QoS */
++	qos_init();
+ }
+ 
+ #define TMU0_MSTP125	(1 << 25)
+@@ -360,21 +367,21 @@ int board_init(void)
+ 	gpio_request(GPIO_FN_A17, NULL);
+ 	gpio_request(GPIO_FN_A18, NULL);
+ 	gpio_request(GPIO_FN_A19, NULL);
+-#if defined(CONFIG_SYS_NO_FLASH)
+-	gpio_request(GPIO_FN_MOSI_IO0, NULL);
+-	gpio_request(GPIO_FN_MISO_IO1, NULL);
+-	gpio_request(GPIO_FN_IO2, NULL);
+-	gpio_request(GPIO_FN_IO3, NULL);
+-	gpio_request(GPIO_FN_SPCLK, NULL);
+-	gpio_request(GPIO_FN_SSL, NULL);
+-#else /* CONFIG_SYS_NO_FLASH */
++#ifdef CONFIG_ARCH_RMOBILE_EXTRAM_BOOT
+ 	gpio_request(GPIO_FN_A20, NULL);
+ 	gpio_request(GPIO_FN_A21, NULL);
+ 	gpio_request(GPIO_FN_A22, NULL);
+ 	gpio_request(GPIO_FN_A23, NULL);
+ 	gpio_request(GPIO_FN_A24, NULL);
+ 	gpio_request(GPIO_FN_A25, NULL);
+-#endif /* CONFIG_SYS_NO_FLASH */
++#else	/* CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
++	gpio_request(GPIO_FN_MOSI_IO0, NULL);
++	gpio_request(GPIO_FN_MISO_IO1, NULL);
++	gpio_request(GPIO_FN_IO2, NULL);
++	gpio_request(GPIO_FN_IO3, NULL);
++	gpio_request(GPIO_FN_SPCLK, NULL);
++	gpio_request(GPIO_FN_SSL, NULL);
++#endif	/* CONFIG_ARCH_RMOBILE_EXTRAM_BOOT */
+ 	gpio_request(GPIO_FN_CS1_A26, NULL);
+ 	gpio_request(GPIO_FN_EX_CS0, NULL);
+ 	gpio_request(GPIO_FN_EX_CS1, NULL);
+@@ -453,3 +460,91 @@ U_BOOT_DEVICE(wheat_serials) = {
+ 	.name = "serial_sh",
+ 	.platdata = &serial_platdata,
+ };
++
++#ifdef CONFIG_SPL_BUILD
++void board_init_f(ulong unused)
++{
++	/* Clear the BSS. */
++	memset(__bss_start, 0, __bss_end - __bss_start);
++
++	board_early_init_f();
++
++	board_init_r(NULL, 0);
++}
++
++u32 spl_boot_device(void)
++{
++#ifdef CONFIG_SPL_SPI_SUPPORT
++	return BOOT_DEVICE_SPI;
++#else
++#error "No SPL boot device is set"
++#endif
++}
++
++void spl_board_init(void)
++{
++#ifdef CONFIG_SPL_SERIAL_SUPPORT
++	preloader_console_init();
++#endif
++}
++
++#ifndef CONFIG_SPL_LIBCOMMON_SUPPORT
++static ulong malloc_start;
++static ulong malloc_end;
++
++#define MALLOC_ALIGN		sizeof(long long)
++#define MALLOC_ALIGN_MASK	(MALLOC_ALIGN - 1)
++
++#define MALLOC_ALIGN_ADDR(a)	((a) & ~MALLOC_ALIGN_MASK)
++#define MALLOC_ALIGN_SIZE(s)	MALLOC_ALIGN_ADDR((s) + MALLOC_ALIGN_MASK)
++
++void mem_malloc_init(ulong start, ulong size)
++{
++	malloc_start = MALLOC_ALIGN_ADDR(start);
++	malloc_end = MALLOC_ALIGN_ADDR(start + size);
++
++	memset((void *)start, 0, size);
++}
++
++void *malloc(u32 size)
++{
++	ulong start;
++	void *retval;
++
++	start = malloc_start + MALLOC_ALIGN_SIZE(size);
++	if (start > malloc_end)
++		return NULL;
++
++	retval = (void *)malloc_start;
++	malloc_start = start;
++	return retval;
++}
++
++void free(void *p)
++{
++}
++
++int ctrlc(void)
++{
++	return 0;
++}
++
++#ifdef CONFIG_SPL_SERIAL_SUPPORT
++void puts(const char *str)
++{
++	serial_puts(str);
++}
++#endif
++
++void *calloc(size_t nmemb, size_t elem_size)
++{
++	size_t size = nmemb * elem_size;
++	void *ptr;
++
++	ptr = malloc(size);
++	memset(ptr, '\0', size);
++
++	return ptr;
++}
++#endif	/* CONFIG_SPL_LIBCOMMON_SUPPORT */
++#endif	/* CONFIG_SPL_BUILD */
+diff --git a/configs/wheat_defconfig b/configs/wheat_defconfig
+index d296f9a..1aab904 100644
+--- a/configs/wheat_defconfig
++++ b/configs/wheat_defconfig
+@@ -2,6 +2,8 @@ CONFIG_ARM=y
+ CONFIG_ARCH_RMOBILE=y
+ CONFIG_SYS_MALLOC_F_LEN=0x2000
+ CONFIG_TARGET_WHEAT=y
++CONFIG_SPL=y
++# CONFIG_SPL_DM is not set
+ CONFIG_BOOTDELAY=3
+ CONFIG_BOOTSTAGE_USER_COUNT=0x20
+ CONFIG_BOOTSTAGE_STASH_ADDR=0x0
+diff --git a/configs/wheat_nor_defconfig b/configs/wheat_nor_defconfig
+new file mode 100644
+index 0000000..175a65e
+--- /dev/null
++++ b/configs/wheat_nor_defconfig
+@@ -0,0 +1,23 @@
++CONFIG_ARM=y
++CONFIG_ARCH_RMOBILE=y
++CONFIG_SYS_MALLOC_F_LEN=0x2000
++CONFIG_TARGET_WHEAT=y
++CONFIG_SYS_EXTRA_OPTIONS="ARCH_RMOBILE_EXTRAM_BOOT"
++CONFIG_BOOTDELAY=3
++CONFIG_BOOTSTAGE_USER_COUNT=0x20
++CONFIG_BOOTSTAGE_STASH_ADDR=0x0
++CONFIG_BOOTSTAGE_STASH_SIZE=0x4096
++CONFIG_CMD_BOOTZ=y
++# CONFIG_CMD_IMI is not set
++# CONFIG_CMD_IMLS is not set
++# CONFIG_CMD_XIMG is not set
++CONFIG_CMD_MMC=y
++CONFIG_CMD_DHCP=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++# CONFIG_EFI_LOADER is not set
++CONFIG_SH_SDHI=y
+diff --git a/include/configs/wheat.h b/include/configs/wheat.h
+index 330374b..0282c92 100755
+--- a/include/configs/wheat.h
++++ b/include/configs/wheat.h
+@@ -17,7 +17,33 @@
+ 
+ #include "rcar-gen2-common.h"
+ 
++#if defined(CONFIG_SPL)
++#define CONFIG_SPL_FRAMEWORK
++#define CONFIG_SPL_LIBGENERIC_SUPPORT
++#define CONFIG_SPL_TEXT_BASE		0xE6300000 /* SRAM: 256K */
++#define CONFIG_SPL_MAX_SIZE		(16 * 1024)
++#define CONFIG_SPL_STACK		0xE633FFFC
++#define CONFIG_SYS_SPL_MALLOC_START	0xE6308000
++#define CONFIG_SYS_SPL_MALLOC_SIZE	0x8000
++#define CONFIG_SPL_BOARD_INIT
++#define CONFIG_SPL_SERIAL_SUPPORT
++#define CONFIG_SPL_SPI_SUPPORT
++#define CONFIG_SPL_SPI_FLASH_SUPPORT
++#define CONFIG_SPL_SPI_LOAD
++#define CONFIG_SPL_SPI_BUS		0
++#define CONFIG_SPL_SPI_CS		0
++#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x80000
++#define CONFIG_SF_DEFAULT_SPEED		1000000
++#define CONFIG_SPL_FLASH_SUPPORT
++#define CONFIG_CONS_SCIF0
++#define CONFIG_SH_SCIF_CLK_FREQ		CONFIG_P_CLK_FREQ
++#endif
++
++#if defined(CONFIG_SPL_BUILD)
+ #define CONFIG_SYS_INIT_SP_ADDR		0xE633fffC
++#else
++#define CONFIG_SYS_INIT_SP_ADDR		0xE817FFFC
++#endif
+ #define STACK_AREA_SIZE			0xC000
+ #define LOW_LEVEL_MERAM_STACK \
+ 		(CONFIG_SYS_INIT_SP_ADDR + STACK_AREA_SIZE - 4)
+@@ -31,13 +57,7 @@
+ #define CONFIG_SCIF_CONSOLE
+ 
+ /* FLASH */
+-/* #define CONFIG_SYS_NO_FLASH */	/* uncomment if use QSPI-FLASH */
+-#if defined(CONFIG_SYS_NO_FLASH)
+-#define CONFIG_SYS_TEXT_BASE		0xE6304000
+-#define CONFIG_SPI
+-#define CONFIG_SH_QSPI
+-#define CONFIG_SPI_FLASH_QUAD
+-#else
++#if defined(CONFIG_ARCH_RMOBILE_EXTRAM_BOOT)
+ #define CONFIG_SYS_TEXT_BASE		0x00000000
+ #define CONFIG_SYS_FLASH_CFI
+ #define CONFIG_SYS_FLASH_CFI_WIDTH	FLASH_CFI_16BIT
+@@ -50,13 +70,17 @@
+ #define CONFIG_SYS_MAX_FLASH_BANKS	1
+ #define CONFIG_SYS_FLASH_BANKS_LIST	{ (CONFIG_SYS_FLASH_BASE) }
+ #define CONFIG_SYS_FLASH_BANKS_SIZES	{ (CONFIG_SYS_FLASH_SIZE) }
+-
+ #define CONFIG_SYS_FLASH_ERASE_TOUT	3000
+ #define CONFIG_SYS_FLASH_WRITE_TOUT	3000
+ #define CONFIG_SYS_FLASH_LOCK_TOUT	3000
+ #define CONFIG_SYS_FLASH_UNLOCK_TOUT	3000
+-#undef CONFIG_CMD_SF
+-#undef CONFIG_CMD_SPI
++#else
++#define CONFIG_SYS_TEXT_BASE		0xE8080000 /* MERAM: 1024K */
++#define CONFIG_SPI
++#define CONFIG_SH_QSPI
++#define CONFIG_SPI_FLASH_QUAD
++#define CONFIG_SYS_NO_FLASH
++#define CONFIG_CMD_SF
+ #endif
+ 
+ /* WHEAT on board LANC: SMC89218 (ExCS0) */
+@@ -75,8 +99,7 @@
+ #define CONFIG_SYS_TMU_CLK_DIV	4
+ 
+ /* ENV setting */
+-#if defined(CONFIG_SYS_NO_FLASH)
+-#else
++#if !defined(CONFIG_SYS_NO_FLASH)
+ #undef CONFIG_ENV_IS_IN_SPI_FLASH
+ #undef CONFIG_ENV_ADDR
+ #define CONFIG_ENV_IS_IN_FLASH
+-- 
+1.9.1
+

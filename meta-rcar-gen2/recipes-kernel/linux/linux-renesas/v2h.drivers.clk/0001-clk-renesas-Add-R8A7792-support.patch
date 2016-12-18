@@ -1,0 +1,41 @@
+From a233bffb6b5ad90a7e01a9c9b14b036d156eb0dd Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Thu, 26 May 2016 00:40:44 +0300
+Subject: [PATCH] clk: renesas: Add R8A7792 support
+
+Renesas R-Car V2H (R8A7792) clocks are handled by R-Car gen2 clock driver.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/clk/renesas/Kconfig  | 1 +
+ drivers/clk/renesas/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/clk/renesas/Kconfig b/drivers/clk/renesas/Kconfig
+index fcad9ff..41a12d3 100644
+--- a/drivers/clk/renesas/Kconfig
++++ b/drivers/clk/renesas/Kconfig
+@@ -12,6 +12,7 @@ config CLK_RENESAS_CPG_MSTP
+ 	default y if ARCH_R8A7779
+ 	default y if ARCH_R8A7790
+ 	default y if ARCH_R8A7791
++	default y if ARCH_R8A7792
+ 	default y if ARCH_R8A7793
+ 	default y if ARCH_R8A7794
+ 	default y if ARCH_SH73A0
+diff --git a/drivers/clk/renesas/Makefile b/drivers/clk/renesas/Makefile
+index 0b8d31b..90dd0db 100644
+--- a/drivers/clk/renesas/Makefile
++++ b/drivers/clk/renesas/Makefile
+@@ -6,6 +6,7 @@ obj-$(CONFIG_ARCH_R8A7778)		+= clk-r8a7778.o
+ obj-$(CONFIG_ARCH_R8A7779)		+= clk-r8a7779.o
+ obj-$(CONFIG_ARCH_R8A7790)		+= clk-rcar-gen2.o clk-div6.o
+ obj-$(CONFIG_ARCH_R8A7791)		+= clk-rcar-gen2.o clk-div6.o
++obj-$(CONFIG_ARCH_R8A7792)		+= clk-rcar-gen2.o clk-div6.o
+ obj-$(CONFIG_ARCH_R8A7793)		+= clk-rcar-gen2.o clk-div6.o
+ obj-$(CONFIG_ARCH_R8A7794)		+= clk-rcar-gen2.o clk-div6.o
+ obj-$(CONFIG_ARCH_R8A7795)		+= r8a7795-cpg-mssr.o rcar-gen3-cpg.o
+-- 
+1.9.1
+

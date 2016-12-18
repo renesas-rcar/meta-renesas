@@ -1,0 +1,64 @@
+From 1358bd5a7477b346dfb6b502051d61f29b11a200 Mon Sep 17 00:00:00 2001
+From: Jeremy Linton <jeremy.linton@arm.com>
+Date: Thu, 1 Sep 2016 15:15:06 -0500
+Subject: [PATCH] net: smsc911x: Remove multiple exit points from smsc911x_open
+
+Rework the error handling in smsc911x open in preparation
+for the mdio startup being moved here.
+
+Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/ethernet/smsc/smsc911x.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/smsc/smsc911x.c b/drivers/net/ethernet/smsc/smsc911x.c
+index ca31345..c9b0e05 100644
+--- a/drivers/net/ethernet/smsc/smsc911x.c
++++ b/drivers/net/ethernet/smsc/smsc911x.c
+@@ -1520,17 +1520,20 @@ static int smsc911x_open(struct net_device *dev)
+ 	unsigned int timeout;
+ 	unsigned int temp;
+ 	unsigned int intcfg;
++	int retval;
+ 
+ 	/* if the phy is not yet registered, retry later*/
+ 	if (!dev->phydev) {
+ 		SMSC_WARN(pdata, hw, "phy_dev is NULL");
+-		return -EAGAIN;
++		retval = -EAGAIN;
++		goto out;
+ 	}
+ 
+ 	/* Reset the LAN911x */
+-	if (smsc911x_soft_reset(pdata)) {
++	retval = smsc911x_soft_reset(pdata);
++	if (retval) {
+ 		SMSC_WARN(pdata, hw, "soft reset failed");
+-		return -EIO;
++		goto out;
+ 	}
+ 
+ 	smsc911x_reg_write(pdata, HW_CFG, 0x00050000);
+@@ -1600,7 +1603,8 @@ static int smsc911x_open(struct net_device *dev)
+ 	if (!pdata->software_irq_signal) {
+ 		netdev_warn(dev, "ISR failed signaling test (IRQ %d)\n",
+ 			    dev->irq);
+-		return -ENODEV;
++		retval = -ENODEV;
++		goto out;
+ 	}
+ 	SMSC_TRACE(pdata, ifup, "IRQ handler passed test using IRQ %d",
+ 		   dev->irq);
+@@ -1646,6 +1650,8 @@ static int smsc911x_open(struct net_device *dev)
+ 
+ 	netif_start_queue(dev);
+ 	return 0;
++out:
++	return retval;
+ }
+ 
+ /* Entry point for stopping the interface */
+-- 
+1.9.1
+

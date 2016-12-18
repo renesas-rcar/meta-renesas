@@ -1,0 +1,43 @@
+From f0c394f4eaef48a89f81ed72dca7fc63ce182182 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Thu, 13 Oct 2016 18:33:36 +0300
+Subject: [PATCH 4/5] Revert "mmc: sh_mobile_sdhi: Add eMMC support for
+ r8a7795"
+
+This reverts commit 9bfd99478977a53c60b53e364ea358b670ef6bdc.
+---
+ drivers/mmc/host/sh_mobile_sdhi.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index 950c112..2127818 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -131,7 +131,6 @@ static const struct of_device_id sh_mobile_sdhi_of_match[] = {
+ 	{ .compatible = "renesas,sdhi-r8a7793", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7794", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7795", .data = &of_rcar_gen3_compatible, },
+-	{ .compatible = "renesas,mmc-r8a7795", .data = &of_rcar_gen3_compatible, },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, sh_mobile_sdhi_of_match);
+@@ -439,12 +438,11 @@ static inline void sd_scc_write32(struct tmio_mmc_host *host, int addr,
+ 
+ static bool sh_mobile_sdhi_inquiry_tuning(struct tmio_mmc_host *host)
+ {
+-	/* SDHI should be tuning only SDR104 and HS200 */
+-	if (host->mmc->ios.timing == MMC_TIMING_UHS_SDR104 ||
+-	    host->mmc->ios.timing == MMC_TIMING_MMC_HS200)
++	/* SDHI should be tuning only SDR104 */
++	if (host->mmc->ios.timing == MMC_TIMING_UHS_SDR104)
+ 		return true;
+-
+-	return false;
++	else
++		return false;
+ }
+ 
+ static void sh_mobile_sdhi_init_tuning(struct tmio_mmc_host *host,
+-- 
+1.9.1
+

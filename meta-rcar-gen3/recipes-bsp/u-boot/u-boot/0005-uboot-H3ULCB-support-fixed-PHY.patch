@@ -1,0 +1,155 @@
+From 8f65b4710c1f51d01032db201543d0a8269a715f Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Fri, 20 May 2016 01:18:44 +0300
+Subject: [PATCH] uboot: H3ULCB support fixed-PHY
+
+Add support for fixed-PHY on H3ULCB
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ board/renesas/ulcb/ulcb.c     |  5 +++++
+ drivers/net/phy/Makefile      |  1 +
+ drivers/net/phy/fixed.c       | 43 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/phy/phy.c         |  5 ++++-
+ include/configs/h3ulcb.h      |  3 +++
+ include/phy.h                 |  1 +
+ 6 files changed, 57 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/phy/fixed.c
+
+diff --git a/board/renesas/ulcb/ulcb.c b/board/renesas/ulcb/ulcb.c
+index 32a63c9..dcca4f8 100644
+--- a/board/renesas/ulcb/ulcb.c
++++ b/board/renesas/ulcb/ulcb.c
+@@ -26,6 +26,7 @@
+ #include <asm/arch/sh_sdhi.h>
+ #include <i2c.h>
+ #include <mmc.h>
++#include <phy.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+@@ -193,6 +193,10 @@ int board_eth_init(bd_t *bis)
+ /* ULCB has KSZ9031RNX */
+ int board_phy_config(struct phy_device *phydev)
+ {
++#ifdef CONFIG_PHY_FIXED
++	if (!strncmp(phydev->drv->name, "fixed-PHY", 9) && phydev->drv->config)
++		return phydev->drv->config(phydev);
++#endif
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/phy/Makefile b/drivers/net/phy/Makefile
+index d096db8..497785e 100644
+--- a/drivers/net/phy/Makefile
++++ b/drivers/net/phy/Makefile
+@@ -17,6 +17,7 @@ obj-$(CONFIG_PHY_BROADCOM) += broadcom.o
+ obj-$(CONFIG_PHY_CORTINA) += cortina.o
+ obj-$(CONFIG_PHY_DAVICOM) += davicom.o
+ obj-$(CONFIG_PHY_ET1011C) += et1011c.o
++obj-$(CONFIG_PHY_FIXED) += fixed.o
+ obj-$(CONFIG_PHY_LXT) += lxt.o
+ obj-$(CONFIG_PHY_MARVELL) += marvell.o
+ obj-$(CONFIG_PHY_MICREL) += micrel.o
+diff --git a/drivers/net/phy/fixed.c b/drivers/net/phy/fixed.c
+new file mode 100644
+index 0000000..4d44aad
+--- /dev/null
++++ b/drivers/net/phy/fixed.c
+@@ -0,0 +1,43 @@
++/*
++ * Fixed PHY driver
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * SPDX-License-Identifier: GPL-2.0+
++ */
++
++#include <config.h>
++#include <common.h>
++#include <phy.h>
++
++int fixed_config(struct phy_device *phydev)
++{
++	phydev->speed = CONFIG_PHY_FIXED_SPEED;
++	phydev->duplex = CONFIG_PHY_FIXED_DUPLEX;
++	phydev->link = 1;
++
++	return 0;
++}
++
++static int fixed_startup(struct phy_device *phydev)
++{
++	return 0;
++}
++
++static struct phy_driver fixed_driver = {
++	.uid		= 0x0,
++	.mask		= 0x0,
++	.name		= "fixed-PHY",
++	.features	= PHY_10G_FEATURES,
++	.config		= &fixed_config,
++	.startup	= &fixed_startup,
++	.shutdown	= &genphy_shutdown,
++};
++
++int phy_fixed_init(void)
++{
++	phy_register(&fixed_driver);
++
++	return 0;
++}
+diff --git a/drivers/net/phy/phy.c b/drivers/net/phy/phy.c
+index df7e945..3ee6402 100644
+--- a/drivers/net/phy/phy.c
++++ b/drivers/net/phy/phy.c
+@@ -484,6 +484,9 @@ int phy_init(void)
+ #ifdef CONFIG_PHY_VITESSE
+ 	phy_vitesse_init();
+ #endif
++#ifdef CONFIG_PHY_FIXED
++	phy_fixed_init();
++#endif
+ 
+ 	return 0;
+ }
+@@ -764,7 +767,7 @@ void phy_connect_dev(struct phy_device *phydev, struct eth_device *dev)
+ 				phydev->dev->name, dev->name);
+ 	}
+ 	phydev->dev = dev;
+-	debug("%s connected to %s\n", dev->name, phydev->drv->name);
++	printf("%s connected to %s\n", dev->name, phydev->drv->name);
+ }
+ 
+ struct phy_device *phy_connect(struct mii_dev *bus, int addr,
+diff --git a/include/configs/h3ulcb.h b/include/configs/h3ulcb.h
+index 8582b64..b9be845 100644
+--- a/include/configs/h3ulcb.h
++++ b/include/configs/h3ulcb.h
+@@ -40,7 +40,9 @@
+ #define CONFIG_RAVB_PHY_MODE	PHY_INTERFACE_MODE_RGMII_ID
+ #define CONFIG_NET_MULTI
+ #define CONFIG_PHYLIB
+-#define CONFIG_PHY_MICREL
++#define CONFIG_PHY_FIXED
++#define CONFIG_PHY_FIXED_SPEED	SPEED_1000
++#define CONFIG_PHY_FIXED_DUPLEX	DUPLEX_FULL
+ #define CONFIG_BITBANGMII
+ #define CONFIG_BITBANGMII_MULTI
+ #define CONFIG_SH_ETHER_BITBANG
+diff --git a/include/phy.h b/include/phy.h
+index d117fc1..c2f2cbc 100644
+--- a/include/phy.h
++++ b/include/phy.h
+@@ -239,6 +239,7 @@ int phy_realtek_init(void);
+ int phy_smsc_init(void);
+ int phy_teranetics_init(void);
+ int phy_vitesse_init(void);
++int phy_fixed_init(void);
+ 
+ int board_phy_config(struct phy_device *phydev);
+ 
+-- 
+1.9.1
+

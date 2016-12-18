@@ -1,0 +1,62 @@
+From 991c414dcdfd7241317e4e992d7938813be4af58 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Sun, 23 Oct 2016 21:01:04 +0300
+Subject: [PATCH 2/3] ARM: dts: r8a7792: add IMR-LX3 and IMR-LSX3 clocks.
+
+---
+ arch/arm/boot/dts/r8a7792.dtsi            | 11 +++++++++--
+ include/dt-bindings/clock/r8a7792-clock.h |  8 ++++++++
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7792.dtsi b/arch/arm/boot/dts/r8a7792.dtsi
+index 154bcf1be..e726b8c 100644
+--- a/arch/arm/boot/dts/r8a7792.dtsi
++++ b/arch/arm/boot/dts/r8a7792.dtsi
+@@ -997,16 +997,23 @@
+ 				     "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe6150990 0 4>, <0 0xe61509a0 0 4>;
+ 			clocks = <&zx_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>,
+-			         <&zg_clk>, <&zg_clk>, <&hp_clk>;
++			         <&zg_clk>, <&zg_clk>, <&hp_clk>, <&zg_clk>, <&zg_clk>,
++				 <&zg_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>;
+ 			#clock-cells = <1>;
+ 			clock-indices = <
+ 				R8A7792_CLK_IPMMU_SGX R8A7792_CLK_VIN5 R8A7792_CLK_VIN4
+ 				R8A7792_CLK_VIN3 R8A7792_CLK_VIN2
+ 				R8A7792_CLK_VIN1 R8A7792_CLK_VIN0
+ 				R8A7792_CLK_ETHERAVB
++				R8A7792_CLK_IMR_LSX3_CH2 R8A7792_CLK_IMR_LSX3_CH3
++				R8A7792_CLK_IMR_LSX3_CH4 R8A7792_CLK_IMR_LSX3_CH5
++				R8A7792_CLK_IMR_LSX3_CH0 R8A7792_CLK_IMR_LSX3_CH1
++				R8A7792_CLK_IMR_LX3
+ 			>;
+ 			clock-output-names = "ipmmu_sgx", "vin5", "vin4", "vin3", "vin2",
+-					     "vin1", "vin0", "etheravb";
++					     "vin1", "vin0", "etheravb", "imr-lsx3-ch2",
++					     "imr-lsx3-ch3", "imr-lsx3-ch4", "imr-lsx3-ch5",
++					     "imr-lsx3-ch0", "imr-lsx3-ch1", "imr-lx3";
+ 		};
+ 		mstp9_clks: mstp9_clks@e6150994 {
+ 			compatible = "renesas,r8a7792-mstp-clocks",
+diff --git a/include/dt-bindings/clock/r8a7792-clock.h b/include/dt-bindings/clock/r8a7792-clock.h
+index fbe6030..ee8ec88 100644
+--- a/include/dt-bindings/clock/r8a7792-clock.h
++++ b/include/dt-bindings/clock/r8a7792-clock.h
+@@ -71,6 +71,14 @@
+ #define R8A7792_CLK_VIN1		10
+ #define R8A7792_CLK_VIN0		11
+ #define R8A7792_CLK_ETHERAVB		12
++#define R8A7792_CLK_IMR_LX3		21
++#define R8A7792_CLK_IMR_LSX3_CH0        23
++#define R8A7792_CLK_IMR_LSX3_CH1        22
++#define R8A7792_CLK_IMR_LSX3_CH2        28
++#define R8A7792_CLK_IMR_LSX3_CH3        27
++#define R8A7792_CLK_IMR_LSX3_CH4        26
++#define R8A7792_CLK_IMR_LSX3_CH5        25
++
+ 
+ /* MSTP9 */
+ #define R8A7792_CLK_GPIO7		4
+-- 
+2.7.4
+

@@ -1,0 +1,778 @@
+From 051ac2327b32fd3f055c0da8916cfbaa57a3a19f Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Sun, 23 Oct 2016 19:20:21 +0300
+Subject: [PATCH] solution
+
+---
+ .gitignore        |  11 -----
+ drv/vsp2.h        |   2 +
+ drv/vsp2_bru.h    |   2 +-
+ drv/vsp2_drv.c    | 122 +++++++++++++++++++++++++-----------------------------
+ drv/vsp2_entity.c |  12 +-----
+ drv/vsp2_regs.h   |   2 +-
+ drv/vsp2_rpf.c    |  30 +-------------
+ drv/vsp2_video.c  | 100 ++++++++++++++++++++------------------------
+ drv/vsp2_wpf.c    |  21 +++-------
+ 9 files changed, 112 insertions(+), 190 deletions(-)
+ delete mode 100644 .gitignore
+
+diff --git a/.gitignore b/.gitignore
+deleted file mode 100644
+index bcc33fb..0000000
+--- a/.gitignore
++++ /dev/null
+@@ -1,11 +0,0 @@
+-Module.symvers
+-modules.order
+-.*.cmd
+-*.o
+-*.mod
+-
+-*~
+-*.bak
+-*.swp
+-*.orig
+-*.rej
+diff --git a/drv/vsp2.h b/drv/vsp2.h
+index 8a9c648..4af8010 100755
+--- a/drv/vsp2.h
++++ b/drv/vsp2.h
+@@ -106,6 +106,8 @@ struct vsp2_device {
+ 	struct v4l2_device v4l2_dev;
+ 	struct media_device media_dev;
+ 
++	struct media_entity_operations media_ops;
++
+ 	struct vsp2_vspm *vspm;
+ };
+ 
+diff --git a/drv/vsp2_bru.h b/drv/vsp2_bru.h
+index 00be49b..95c2350 100755
+--- a/drv/vsp2_bru.h
++++ b/drv/vsp2_bru.h
+@@ -82,7 +82,7 @@ struct vsp2_bru {
+ 	struct {
+ 		struct vsp2_rwpf *rpf;
+ 		struct v4l2_rect compose;
+-	} inputs[4];
++	} inputs[BRU_PAD_SOURCE];
+ };
+ 
+ static inline struct vsp2_bru *to_bru(struct v4l2_subdev *subdev)
+diff --git a/drv/vsp2_drv.c b/drv/vsp2_drv.c
+index 27c7ba8..cd9abf4 100755
+--- a/drv/vsp2_drv.c
++++ b/drv/vsp2_drv.c
+@@ -68,6 +68,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/videodev2.h>
+ 
++#include <media/v4l2-subdev.h>
++
+ #include "vsp2.h"
+ #include "vsp2_bru.h"
+ #include "vsp2_rwpf.h"
+@@ -80,10 +82,16 @@
+ 
+ #define DBG() printk("Called: %s:%d\n",__func__, __LINE__)
+ 
++/* -----------------------------------------------------------------------------
++ * frame end proccess
++ */
++
+ void vsp2_frame_end(struct vsp2_device *vsp2)
+ {
+ 	unsigned int i;
+ 
++	/* pipeline flame end */
++
+ 	for (i = 0; i < VSP2_COUNT_WPF; ++i) {
+ 		struct vsp2_rwpf *wpf = vsp2->wpf[i];
+ 		struct vsp2_pipeline *pipe;
+@@ -95,8 +103,6 @@ void vsp2_frame_end(struct vsp2_device *vsp2)
+ 
+ 		vsp2_pipeline_frame_end(pipe);
+ 	}
+-
+-	return;
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -104,7 +110,7 @@ void vsp2_frame_end(struct vsp2_device *vsp2)
+  */
+ 
+ /*
+- * vsp2_create_links - Create links from all sources to the given sink
++ * vsp2_create_sink_links - Create links from all sources to the given sink
+  *
+  * This function creates media links from all valid sources to the given sink
+  * pad. Links that would be invalid according to the VSP2 hardware capabilities
+@@ -113,14 +119,13 @@ void vsp2_frame_end(struct vsp2_device *vsp2)
+  * - from a UDS to a UDS (UDS entities can't be chained)
+  * - from an entity to itself (no loops are allowed)
+  */
+-static int vsp2_create_links(struct vsp2_device *vsp2, struct vsp2_entity *sink)
++static int vsp2_create_sink_links(struct vsp2_device *vsp2,
++				  struct vsp2_entity *sink)
+ {
+ 	struct media_entity *entity = &sink->subdev.entity;
+ 	struct vsp2_entity *source;
+ 	unsigned int pad;
+ 	int ret;
+-	unsigned int i;
+-
+ 	DBG();
+ 
+ 	list_for_each_entry(source, &vsp2->entities, list_dev) {
+@@ -140,17 +145,10 @@ static int vsp2_create_links(struct vsp2_device *vsp2, struct vsp2_entity *sink)
+ 		for (pad = 0; pad < entity->num_pads; ++pad) {
+ 			if (!(entity->pads[pad].flags & MEDIA_PAD_FL_SINK))
+ 				continue;
+-			DBG();
+ 
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+ 			ret = media_create_pad_link(&source->subdev.entity,
+-                                                       source->source_pad,
+-                                                       entity, pad, flags);
+-#else
+-			ret = media_entity_create_link(&source->subdev.entity,
+ 						       source->source_pad,
+ 						       entity, pad, flags);
+-#endif
+ 			if (ret < 0)
+ 				return ret;
+ 
+@@ -159,7 +157,23 @@ static int vsp2_create_links(struct vsp2_device *vsp2, struct vsp2_entity *sink)
+ 		}
+ 	}
+ 
+-	DBG();
++	return 0;
++}
++
++static int vsp2_create_links(struct vsp2_device *vsp2)
++{
++	struct vsp2_entity *entity;
++	unsigned int i;
++	int ret;
++
++	list_for_each_entry(entity, &vsp2->entities, list_dev) {
++		if (entity->type == VSP2_ENTITY_RPF)
++			continue;
++
++		ret = vsp2_create_sink_links(vsp2, entity);
++		if (ret < 0)
++			return ret;
++	}
+ 
+ 	for (i = 0; i < VSP2_COUNT_RPF; ++i) {
+ 		struct vsp2_rwpf *rpf = vsp2->rpf[i];
+@@ -198,15 +212,13 @@ static void vsp2_destroy_entities(struct vsp2_device *vsp2)
+ 	struct vsp2_entity *entity;
+ 	struct vsp2_entity *next;
+ 
+-	DBG();
+ 	
+ 	list_for_each_entry_safe(entity, next, &vsp2->entities, list_dev) {
+ 		list_del(&entity->list_dev);
+ 		vsp2_entity_destroy(entity);
+ 	}
+ 
+-/*	v4l2_device_unregister(&vsp2->v4l2_dev);
+-	media_device_unregister(&vsp2->media_dev);*/
++
+ 	media_device_unregister(&vsp2->media_dev);
+ 	media_device_cleanup(&vsp2->media_dev);
+ }
+@@ -219,20 +231,19 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 	unsigned int i;
+ 	int ret;
+ 
+-	DBG();
+-
+ 	mdev->dev = vsp2->dev;
+ 	strlcpy(mdev->model, "VSP2", sizeof(mdev->model));
+ 	snprintf(mdev->bus_info, sizeof(mdev->bus_info), "platform:%s",
+ 		 dev_name(mdev->dev));
+-
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+ 	media_device_init(mdev);
++#if 0
++	vsp2->media_ops.link_setup = vsp2_entity_link_setup;
++	/* Don't perform link validation when the userspace API is disabled as
++	 * the pipeline is configured internally by the driver in that case, and
++	 * its configuration can thus be trusted.
++	 */
++	vsp2->media_ops.link_validate = v4l2_subdev_link_validate;
+ #endif
+-
+-
+-	DBG();
+-
+ 	vdev->mdev = mdev;
+ 	ret = v4l2_device_register(vsp2->dev, vdev);
+ 	if (ret < 0) {
+@@ -241,18 +252,21 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 		goto done;
+ 	}
+ 
+-	DBG();
+-
+ 	/* Instantiate all the entities. */
+-	vsp2->bru = vsp2_bru_create(vsp2);
+-	if (IS_ERR(vsp2->bru)) {
+-		ret = PTR_ERR(vsp2->bru);
+-		goto done;
++
++	/* - BRU */
++	{
++		/* Instantiate all the entities. */
++		vsp2->bru = vsp2_bru_create(vsp2);
++		if (IS_ERR(vsp2->bru)) {
++			ret = PTR_ERR(vsp2->bru);
++			goto done;
++		}
++		list_add_tail(&vsp2->bru->entity.list_dev, &vsp2->entities);
+ 	}
+ 
+ 	DBG();
+ 
+-	list_add_tail(&vsp2->bru->entity.list_dev, &vsp2->entities);
+ 
+ 	for (i = 0; i < VSP2_COUNT_RPF; ++i) {
+ 		struct vsp2_rwpf *rpf;
+@@ -267,38 +281,38 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 		list_add_tail(&rpf->entity.list_dev, &vsp2->entities);
+ 	}
+ 
+-	DBG();
++	/* - UDSs */
+ 
+ 	for (i = 0; i < VSP2_COUNT_UDS; ++i) {
+ 		struct vsp2_uds *uds;
+-	DBG();
++
+ 		uds = vsp2_uds_create(vsp2, i);
+ 		if (IS_ERR(uds)) {
+ 			ret = PTR_ERR(uds);
+ 			goto done;
+ 		}
+-	DBG();
++
+ 		vsp2->uds[i] = uds;
+ 		list_add_tail(&uds->entity.list_dev, &vsp2->entities);
+ 	}
+ 
+-	DBG();
++	/* - WPFs */
+ 
+ 	for (i = 0; i < VSP2_COUNT_WPF; ++i) {
+ 		struct vsp2_rwpf *wpf;
+-	DBG();
++
+ 		wpf = vsp2_wpf_create(vsp2, i);
+ 		if (IS_ERR(wpf)) {
+ 			ret = PTR_ERR(wpf);
+ 			goto done;
+ 		}
+-	DBG();
++
+ 		vsp2->wpf[i] = wpf;
+ 		list_add_tail(&wpf->entity.list_dev, &vsp2->entities);
+ 	}
+ 
+ 
+-	DBG();
++
+ 
+ 	/* Register all subdevs. */
+ 	list_for_each_entry(entity, &vsp2->entities, list_dev) {
+@@ -308,35 +322,21 @@ static int vsp2_create_entities(struct vsp2_device *vsp2)
+ 			goto done;
+ 	}
+ 
+-	DBG();
+-
+ 	/* Create links. */
+-	list_for_each_entry(entity, &vsp2->entities, list_dev) {
+-		if (entity->type == VSP2_ENTITY_RPF)
+-			continue;
+-
+-		ret = vsp2_create_links(vsp2, entity);
+-		if (ret < 0)
+-			goto done;
+-	}
+-
+-	DBG();
++	ret = vsp2_create_links(vsp2);
++	if (ret < 0)
++		goto done;
+ 
+ 	ret = v4l2_device_register_subdev_nodes(&vsp2->v4l2_dev);
+ 	if (ret < 0)
+ 		goto done;
+ 
+ 	ret = media_device_register(mdev);
+-	if (ret < 0) {
+-		goto done;
+-	}
+ 
+ done:
+ 	if (ret < 0)
+ 		vsp2_destroy_entities(vsp2);
+ 
+-	DBG();
+-
+ 	return ret;
+ }
+ 
+@@ -344,13 +344,8 @@ static int vsp2_device_init(struct vsp2_device *vsp2)
+ {
+ 	long vspm_ret = R_VSPM_OK;
+ 
+-	DBG();
+-
+ 	/* Initialize the VSPM driver */
+ 	vspm_ret = vsp2_vspm_drv_init(vsp2);
+-	
+-	DBG();
+-
+ 	if (vspm_ret != R_VSPM_OK) {
+ 		dev_err(vsp2->dev,
+ 			"failed to initialize the VSPM driver : %ld\n",
+@@ -402,23 +397,18 @@ void vsp2_device_put(struct vsp2_device *vsp2)
+ {
+ 	long vspm_ret = R_VSPM_OK;
+ 
+-	DBG();
+-
+ 	if (vsp2->ref_count == 0)
+ 		return;
+ 
+ 	mutex_lock(&vsp2->lock);
+ 
+ 	if (--vsp2->ref_count == 0) {
+-		DBG();
+ 		vspm_ret = vsp2_vspm_drv_quit(vsp2);
+ 		if (vspm_ret != R_VSPM_OK)
+ 			dev_err(vsp2->dev,
+ 				"failed to exit the VSPM driver : %ld\n",
+ 				vspm_ret);
+ 	}
+-	
+-	DBG();
+ 
+ 	mutex_unlock(&vsp2->lock);
+ }
+diff --git a/drv/vsp2_entity.c b/drv/vsp2_entity.c
+index 8e20bde..74e6a22 100755
+--- a/drv/vsp2_entity.c
++++ b/drv/vsp2_entity.c
+@@ -211,7 +211,6 @@ static const struct vsp2_route vsp2_routes[] = {
+ 	{ VSP2_ENTITY_RPF, 0, VI6_DPR_RPF_ROUTE(0), { VI6_DPR_NODE_RPF(0), } },
+ 	{ VSP2_ENTITY_RPF, 1, VI6_DPR_RPF_ROUTE(1), { VI6_DPR_NODE_RPF(1), } },
+ 	{ VSP2_ENTITY_RPF, 2, VI6_DPR_RPF_ROUTE(2), { VI6_DPR_NODE_RPF(2), } },
+-	{ VSP2_ENTITY_RPF, 3, VI6_DPR_RPF_ROUTE(3), { VI6_DPR_NODE_RPF(3), } },
+ 	{ VSP2_ENTITY_UDS, 0, VI6_DPR_UDS_ROUTE(0), { VI6_DPR_NODE_UDS(0), } },
+ 	{ VSP2_ENTITY_WPF, 0, 0, { VI6_DPR_NODE_WPF(0), } },
+ };
+@@ -250,24 +249,15 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 	if (entity->pads == NULL)
+ 		return -ENOMEM;
+ 
+-	/* Initialize pads. */
+ 	for (i = 0; i < num_pads - 1; ++i)
+ 		entity->pads[i].flags = MEDIA_PAD_FL_SINK;
+ 
+ 	entity->pads[num_pads - 1].flags = MEDIA_PAD_FL_SOURCE;
+ 
+ 	/* Initialize the media entity. */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+ 	res = media_entity_pads_init(&entity->subdev.entity, num_pads,
+-                                 entity->pads);
+-	/*if (!res)
+-		res = media_device_register_entity(&vsp2->media_dev, &entity->subdev.entity);*/
+-
++				     entity->pads);
+ 	return res;
+-#else
+-	return media_entity_init(&entity->subdev.entity, num_pads,
+-				 entity->pads, 0);
+-#endif
+ }
+ 
+ void vsp2_entity_destroy(struct vsp2_entity *entity)
+diff --git a/drv/vsp2_regs.h b/drv/vsp2_regs.h
+index f530d2e..5b6a1ba 100755
+--- a/drv/vsp2_regs.h
++++ b/drv/vsp2_regs.h
+@@ -353,7 +353,7 @@
+ #define VI6_DPR_HST_ROUTE		0x2044
+ #define VI6_DPR_HSI_ROUTE		0x2048
+ #define VI6_DPR_BRU_ROUTE		0x204c
+-#define VI6_DPR_ROUTE_FXA_MASK		(0xff << 8)
++#define VI6_DPR_ROUTE_FXA_MASK		(0xff << 16)
+ #define VI6_DPR_ROUTE_FXA_SHIFT		16
+ #define VI6_DPR_ROUTE_FP_MASK		(0xff << 8)
+ #define VI6_DPR_ROUTE_FP_SHIFT		8
+diff --git a/drv/vsp2_rpf.c b/drv/vsp2_rpf.c
+index c550442..9a13fdd 100755
+--- a/drv/vsp2_rpf.c
++++ b/drv/vsp2_rpf.c
+@@ -364,8 +364,6 @@ struct vsp2_rwpf *vsp2_rpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 	if (ret < 0)
+ 		return ERR_PTR(ret);
+ 
+-	DBG();
+-
+ 	/* Initialize the V4L2 subdev. */
+ 	subdev = &rpf->entity.subdev;
+ 	v4l2_subdev_init(subdev, &rpf_ops);
+@@ -385,8 +383,6 @@ struct vsp2_rwpf *vsp2_rpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 	v4l2_ctrl_new_std(&rpf->ctrls, &rpf_ctrl_ops, V4L2_CID_ALPHA_COMPONENT,
+ 			  0, 255, 1, 255);
+ 
+-	DBG();
+-
+ 	rpf->entity.subdev.ctrl_handler = &rpf->ctrls;
+ 
+ 	if (rpf->ctrls.error) {
+@@ -411,31 +407,7 @@ struct vsp2_rwpf *vsp2_rpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 
+ 	rpf->entity.video = video;
+ 
+-	DBG();
+-
+-	/* Connect the video device to the RPF. */
+-	printk("Links: %d %d\n",(int)rpf->video.video.entity.links.next, (int)rpf->video.video.entity.links.prev);
+-	printk("Links: %d %d\n",(int)rpf->entity.subdev.entity.links.next, (int)rpf->entity.subdev.entity.links.prev);
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+-	ret = 0;/*media_create_pad_link(&rpf->video.video.entity, 0,
+-                                       &rpf->entity.subdev.entity,
+-                                       RWPF_PAD_SINK,
+-                                       MEDIA_LNK_FL_ENABLED |
+-                                       MEDIA_LNK_FL_IMMUTABLE);*/
+-#else
+-	ret = media_entity_create_link(&rpf->video.video.entity, 0,
+-				       &rpf->entity.subdev.entity,
+-				       RWPF_PAD_SINK,
+-				       MEDIA_LNK_FL_ENABLED |
+-				       MEDIA_LNK_FL_IMMUTABLE);
+-#endif
+-	if (ret < 0){
+-		dev_err(vsp2->dev, "rpf%u: failed to create link\n",
+-			index);
+-		goto error;
+-	}
+-
+-	DBG();
++	
+ 
+ 	return rpf;
+ 
+diff --git a/drv/vsp2_video.c b/drv/vsp2_video.c
+index 0e84cb4..23e8e2c 100755
+--- a/drv/vsp2_video.c
++++ b/drv/vsp2_video.c
+@@ -72,7 +72,7 @@
+ #include <media/v4l2-fh.h>
+ #include <media/v4l2-ioctl.h>
+ #include <media/v4l2-subdev.h>
+-#include <media/videobuf2-core.h>
++#include <media/videobuf2-v4l2.h>
+ #include <media/videobuf2-dma-contig.h>
+ 
+ #include "vsp2.h"
+@@ -217,20 +217,14 @@ static struct v4l2_subdev *
+ vsp2_video_remote_subdev(struct media_pad *local, u32 *pad)
+ {
+ 	struct media_pad *remote;
+-	DBG();
++
+ 	remote = media_entity_remote_pad(local);
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+-	if (!is_media_entity_v4l2_subdev(remote->entity))
+-#else
+-	if (remote == NULL ||
+-	    media_entity_type(remote->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
+-#endif
++	if (!remote || !is_media_entity_v4l2_subdev(remote->entity))
+ 		return NULL;
+ 
+ 	if (pad)
+ 		*pad = remote->index;
+ 
+-	DBG_DONE();
+ 	return media_entity_to_v4l2_subdev(remote->entity);
+ }
+ 
+@@ -274,8 +268,6 @@ static int __vsp2_video_try_format(struct vsp2_video *video,
+ 	unsigned int height = pix->height;
+ 	unsigned int i;
+ 
+-	DBG();
+-
+ 	/* Backward compatibility: replace deprecated RGB formats by their XRGB
+ 	 * equivalent. This selects the format older userspace applications want
+ 	 * while still exposing the new format.
+@@ -308,7 +300,7 @@ static int __vsp2_video_try_format(struct vsp2_video *video,
+ 	pix->height = clamp(height, VSP2_VIDEO_MIN_HEIGHT,
+ 			    VSP2_VIDEO_MAX_HEIGHT);
+ 
+-	for (i = 0; i < max(info->planes, 2U); ++i) {
++	for (i = 0; i < min(info->planes, 2U); ++i) {
+ 		unsigned int hsub = i > 0 ? info->hsub : 1;
+ 		unsigned int vsub = i > 0 ? info->vsub : 1;
+ 		unsigned int bpl;
+@@ -332,7 +324,6 @@ static int __vsp2_video_try_format(struct vsp2_video *video,
+ 	if (fmtinfo)
+ 		*fmtinfo = info;
+ 
+-	DBG_DONE();
+ 	return 0;
+ }
+ 
+@@ -377,12 +368,16 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 					 struct vsp2_rwpf *input,
+ 					 struct vsp2_rwpf *output)
+ {
++	struct media_entity_enum ent_enum;
+ 	struct vsp2_entity *entity;
+ 	unsigned int entities = 0;
+ 	struct media_pad *pad;
+ 	bool bru_found = false;
+-
++	int ret;
+ 	DBG();
++	ret = media_entity_enum_init(&ent_enum, &input->entity.vsp2->media_dev);
++	if (ret < 0)
++		return ret;
+ 
+ 	pad = media_entity_remote_pad(&input->entity.pads[RWPF_PAD_SOURCE]);
+ 
+@@ -390,19 +385,19 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 	input->location.top = 0;
+ 
+ 	while (1) {
+-		if (pad == NULL)
+-			return -EPIPE;
++		if (pad == NULL) {
++			ret = -EPIPE;
++			goto out;
++		}
+ 
+ 		/* We've reached a video node, that shouldn't have happened. */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+-		if (!is_media_entity_v4l2_subdev(pad->entity))
+-#else
+-		if (media_entity_type(pad->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
+-#endif
+-			return -EPIPE;
++		if (!is_media_entity_v4l2_subdev(pad->entity)) {
++			ret = -EPIPE;
++			goto out;
++		}
+ 
+-		entity =
+-		    to_vsp2_entity(media_entity_to_v4l2_subdev(pad->entity));
++		entity = to_vsp2_entity(
++			media_entity_to_v4l2_subdev(pad->entity));
+ 
+ 		/* A BRU is present in the pipeline, store the compose rectangle
+ 		 * location in the input RPF for use when configuring the RPF.
+@@ -425,21 +420,18 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 			break;
+ 
+ 		/* Ensure the branch has no loop. */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+-		if (entities & (1 << media_entity_id(&entity->subdev.entity)))
+-			return -EPIPE;
+-
+-		entities |= 1 << media_entity_id(&entity->subdev.entity);
+-#else
+-		if (entities & (1 << entity->subdev.entity.id))
+-			return -EPIPE;
++		if (media_entity_enum_test_and_set(&ent_enum,
++						   &entity->subdev.entity)) {
++			ret = -EPIPE;
++			goto out;
++		}
+ 
+-		entities |= 1 << entity->subdev.entity.id;
+-#endif
+ 		/* UDS can't be chained. */
+ 		if (entity->type == VSP2_ENTITY_UDS) {
+-			if (pipe->uds)
+-				return -EPIPE;
++			if (pipe->uds) {
++				ret = -EPIPE;
++				goto out;
++			}
+ 
+ 			pipe->uds = entity;
+ 			pipe->uds_input = bru_found ? pipe->bru
+@@ -457,9 +449,11 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 
+ 	/* The last entity must be the output WPF. */
+ 	if (entity != &output->entity)
+-		return -EPIPE;
++		ret = -EPIPE;
++out:
++	media_entity_enum_cleanup(&ent_enum);
+ 	DBG_DONE();
+-	return 0;
++	return ret;
+ }
+ 
+ static void __vsp2_pipeline_cleanup(struct vsp2_pipeline *pipe)
+@@ -489,11 +483,7 @@ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ {
+ 	struct media_entity_graph graph;
+ 	struct media_entity *entity = &video->video.entity;
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+ 	struct media_device *mdev = entity->graph_obj.mdev;
+-#else
+-	struct media_device *mdev = entity->parent;
+-#endif
+ 	unsigned int i;
+ 	int ret;
+ 	
+@@ -515,12 +505,9 @@ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ 		struct vsp2_rwpf *rwpf;
+ 		struct vsp2_entity *e;
+ 	DBG();
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+-		if (!is_media_entity_v4l2_subdev(entity))
+-#else
+-		if (media_entity_type(entity) != MEDIA_ENT_T_V4L2_SUBDEV)
+-#endif
+-		{
++
++		if (!is_media_entity_v4l2_subdev(entity)) {
++			printk("INVALID entity !!! pointer = %p  \n", entity);
+ 			pipe->num_video++;
+ 			continue;
+ 		}
+@@ -530,14 +517,17 @@ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ 		list_add_tail(&e->list_pipe, &pipe->entities);
+ 
+ 		if (e->type == VSP2_ENTITY_RPF) {
++			printk("VSP2_ENTITY_RPF found \n");
+ 			rwpf = to_rwpf(subdev);
+ 			pipe->inputs[pipe->num_inputs++] = rwpf;
+ 			rwpf->video.pipe_index = pipe->num_inputs;
+ 		} else if (e->type == VSP2_ENTITY_WPF) {
++			printk("VSP2_ENTITY_WPF found \n");
+ 			rwpf = to_rwpf(subdev);
+ 			pipe->output = to_rwpf(subdev);
+ 			rwpf->video.pipe_index = 0;
+ 		} else if (e->type == VSP2_ENTITY_BRU) {
++			printk("VSP2_ENTITY_BRU found \n");
+ 			pipe->bru = e;
+ 		}
+ 	DBG();
+@@ -551,6 +541,7 @@ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ 	/* We need one output and at least one input. */
+ 	if (pipe->num_inputs == 0 || !pipe->output) {
+ 		ret = -EPIPE;
++		DBG();
+ 		goto error;
+ 	}
+ 	DBG();
+@@ -1352,6 +1343,7 @@ DBG();
+ 	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+ 		direction = "output";
+ 		video->pad.flags = MEDIA_PAD_FL_SINK;
++		video->video.vfl_dir = VFL_DIR_RX;
+ 		break;
+ 
+ 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+@@ -1377,11 +1369,9 @@ DBG();
+ 	video->pipe.state = VSP2_PIPELINE_STOPPED;
+ 
+ 	/* Initialize the media entity... */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
++
+ 	ret = media_entity_pads_init(&video->video.entity, 1, &video->pad);
+-#else
+-	ret = media_entity_init(&video->video.entity, 1, &video->pad, 0);
+-#endif
++
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1410,15 +1400,12 @@ DBG();
+ 	video_set_drvdata(&video->video, video);
+ 
+ 	/* ... and the buffers queue... */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0)
+-	video->queue.dev = video->vsp2->dev;
+-#else
+ 	video->alloc_ctx = vb2_dma_contig_init_ctx(video->vsp2->dev);
+ 	if (IS_ERR(video->alloc_ctx)) {
+ 		ret = PTR_ERR(video->alloc_ctx);
+ 		goto error;
+ 	}
+-#endif
++
+ 	video->queue.type = video->type;
+ 	video->queue.io_modes = VB2_MMAP | VB2_USERPTR | VB2_DMABUF;
+ 	video->queue.lock = &video->lock;
+@@ -1454,6 +1441,7 @@ void vsp2_video_cleanup(struct vsp2_video *video)
+ DBG();
+ 	if (video_is_registered(&video->video))
+ 		video_unregister_device(&video->video);
++
+ 	vb2_dma_contig_cleanup_ctx(video->alloc_ctx);
+ 	media_entity_cleanup(&video->video.entity);
+ DBG_DONE();
+diff --git a/drv/vsp2_wpf.c b/drv/vsp2_wpf.c
+index 705d36d..c037796 100755
+--- a/drv/vsp2_wpf.c
++++ b/drv/vsp2_wpf.c
+@@ -75,6 +75,9 @@
+  * Controls
+  */
+ 
++
++#define DBG() printk("Called: %s:%d\n",__func__, __LINE__)
++
+ static int wpf_s_ctrl(struct v4l2_ctrl *ctrl)
+ {
+ 	struct vsp2_rwpf *wpf =
+@@ -256,8 +259,10 @@ struct vsp2_rwpf *vsp2_wpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 	wpf->entity.index = index;
+ 
+ 	ret = vsp2_entity_init(vsp2, &wpf->entity, 2);
+-	if (ret < 0)
++	if (ret < 0){
++		DBG();
+ 		return ERR_PTR(ret);
++	}
+ 
+ 	/* Initialize the V4L2 subdev. */
+ 	subdev = &wpf->entity.subdev;
+@@ -302,20 +307,6 @@ struct vsp2_rwpf *vsp2_wpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 
+ 	/* Connect the video device to the WPF. All connections are immutable.
+ 	 */
+-	flags = MEDIA_LNK_FL_ENABLED;
+-	flags |= MEDIA_LNK_FL_IMMUTABLE;
+-
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+-	ret = 0; /*media_create_pad_link(&wpf->entity.subdev.entity,
+-                                       RWPF_PAD_SOURCE,
+-                                       &wpf->video.video.entity, 0, flags);*/
+-#else
+-	ret = media_entity_create_link(&wpf->entity.subdev.entity,
+-				       RWPF_PAD_SOURCE,
+-				       &wpf->video.video.entity, 0, flags);
+-#endif
+-	if (ret < 0)
+-		goto error;
+ 
+ 	wpf->entity.sink = &wpf->video.video.entity;
+ 
+-- 
+2.7.4
+

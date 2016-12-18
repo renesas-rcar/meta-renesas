@@ -1,0 +1,1028 @@
+From cc3bccbe6c479d8ad76a09b62fb63126403d0bab Mon Sep 17 00:00:00 2001
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Date: Fri, 3 Jun 2016 23:04:20 +0300
+Subject: [PATCH] mtd: Add RPC HyperFlash driver
+
+This adds RPC HyperFlash driver.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ drivers/mtd/Kconfig          |   5 +
+ drivers/mtd/Makefile         |   1 +
+ drivers/mtd/rpc_hyperflash.c | 976 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 982 insertions(+)
+ create mode 100644 drivers/mtd/rpc_hyperflash.c
+
+diff --git a/drivers/mtd/Kconfig b/drivers/mtd/Kconfig
+index 42cc953..0c58a89 100644
+--- a/drivers/mtd/Kconfig
++++ b/drivers/mtd/Kconfig
+@@ -11,6 +11,11 @@ menuconfig MTD
+ 	  particular hardware and users of MTD devices. If unsure, say N.
+ 
+ if MTD
++config MTD_RPC_HYPERFLASH
++	tristate "MTD Renesas R-Car Gen3 RPC HyperFlash"
++	depends on ARCH_R8A7795
++	---help---
++	  This option includes Renesas R-Car Gen3 RPC HyperFlash support.
+ 
+ config MTD_TESTS
+ 	tristate "MTD tests support (DANGEROUS)"
+diff --git a/drivers/mtd/Makefile b/drivers/mtd/Makefile
+index 99bb9a1..3b81efb 100644
+--- a/drivers/mtd/Makefile
++++ b/drivers/mtd/Makefile
+@@ -13,6 +13,7 @@ obj-$(CONFIG_MTD_AFS_PARTS)	+= afs.o
+ obj-$(CONFIG_MTD_AR7_PARTS)	+= ar7part.o
+ obj-$(CONFIG_MTD_BCM63XX_PARTS)	+= bcm63xxpart.o
+ obj-$(CONFIG_MTD_BCM47XX_PARTS)	+= bcm47xxpart.o
++obj-$(CONFIG_MTD_RPC_HYPERFLASH) += rpc_hyperflash.o
+ 
+ # 'Users' - code which presents functionality to userspace.
+ obj-$(CONFIG_MTD_BLKDEVS)	+= mtd_blkdevs.o
+diff --git a/drivers/mtd/rpc_hyperflash.c b/drivers/mtd/rpc_hyperflash.c
+new file mode 100644
+index 0000000..f8a2c90
+--- /dev/null
++++ b/drivers/mtd/rpc_hyperflash.c
+@@ -0,0 +1,976 @@
++/*
++ * Linux driver for R-Car Gen3 RPC HyperFlash
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ * Copyright (C) 2016 Cogent Embedded, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/mtd/mtd.h>
++#include <linux/mtd/partitions.h>
++#include <linux/of.h>
++#include <linux/rwsem.h>
++#include <linux/slab.h>
++
++/* RPC */
++#define RPC_BASE		0xEE200000
++#define RPC_SIZE		0x8100
++#define RPC_FLASH_BASE		0x08000000
++#define RPC_FLASH_SIZE		0x04000000
++
++#define RPC_CMNCR		0x0000	/* R/W */
++#define RPC_CMNCR_MD		(0x1 << 31)
++#define RPC_CMNCR_MOIIO0(val)	(((val) & 0x3) << 16)
++#define RPC_CMNCR_MOIIO1(val)	(((val) & 0x3) << 18)
++#define RPC_CMNCR_MOIIO2(val)	(((val) & 0x3) << 20)
++#define RPC_CMNCR_MOIIO3(val)	(((val) & 0x3) << 22)
++#define RPC_CMNCR_MOIIO_HIZ	(RPC_CMNCR_MOIIO0(3) | RPC_CMNCR_MOIIO1(3) | \
++				 RPC_CMNCR_MOIIO2(3) | RPC_CMNCR_MOIIO3(3))
++#define RPC_CMNCR_IO0FV(val)	(((val) & 0x3) << 8)
++#define RPC_CMNCR_IO2FV(val)	(((val) & 0x3) << 12)
++#define RPC_CMNCR_IO3FV(val)	(((val) & 0x3) << 14)
++#define RPC_CMNCR_IOFV_HIZ	(RPC_CMNCR_IO0FV(3) | RPC_CMNCR_IO2FV(3) | \
++				 RPC_CMNCR_IO3FV(3))
++#define RPC_CMNCR_BSZ(val)	(((val) & 0x3) << 0)
++
++#define RPC_SSLDR		0x0004	/* R/W */
++#define RPC_SSLDR_SPNDL(d)	(((d) & 0x7) << 16)
++#define RPC_SSLDR_SLNDL(d)	(((d) & 0x7) << 8)
++#define RPC_SSLDR_SCKDL(d)	(((d) & 0x7) << 0)
++
++#define RPC_DRCR		0x000C	/* R/W */
++#define RPC_DRCR_SSLN		(0x1 << 24)
++#define RPC_DRCR_RBURST(v)	(((v) & 0x1F) << 16)
++#define RPC_DRCR_RCF		(0x1 << 9)
++#define RPC_DRCR_RBE		(0x1 << 8)
++#define RPC_DRCR_SSLE		(0x1 << 0)
++
++#define RPC_DRCMR		0x0010	/* R/W */
++#define RPC_DRCMR_CMD(c)	(((c) & 0xFF) << 16)
++#define RPC_DRCMR_OCMD(c)	(((c) & 0xFF) << 0)
++
++#define RPC_DREAR		0x0014	/* R/W */
++#define RPC_DREAR_EAV(v)	(((v) & 0xFF) << 16)
++#define RPC_DREAR_EAC(v)	(((v) & 0x7) << 0)
++
++#define RPC_DROPR		0x0018	/* R/W */
++#define RPC_DROPR_OPD3(o)	(((o) & 0xFF) << 24)
++#define RPC_DROPR_OPD2(o)	(((o) & 0xFF) << 16)
++#define RPC_DROPR_OPD1(o)	(((o) & 0xFF) << 8)
++#define RPC_DROPR_OPD0(o)	(((o) & 0xFF) << 0)
++
++#define RPC_DRENR		0x001C	/* R/W */
++#define RPC_DRENR_CDB(o)	(((o) & 0x3) << 30)
++#define RPC_DRENR_OCDB(o)	(((o) & 0x3) << 28)
++#define RPC_DRENR_ADB(o)	(((o) & 0x3) << 24)
++#define RPC_DRENR_OPDB(o)	(((o) & 0x3) << 20)
++#define RPC_DRENR_SPIDB(o)	(((o) & 0x3) << 16)
++#define RPC_DRENR_DME		(0x1 << 15)
++#define RPC_DRENR_CDE		(0x1 << 14)
++#define RPC_DRENR_OCDE		(0x1 << 12)
++#define RPC_DRENR_ADE(v)	(((v) & 0xF) << 8)
++#define RPC_DRENR_OPDE(v)	(((v) & 0xF) << 4)
++
++#define RPC_SMCR		0x0020	/* R/W */
++#define RPC_SMCR_SSLKP		(0x1 << 8)
++#define RPC_SMCR_SPIRE		(0x1 << 2)
++#define RPC_SMCR_SPIWE		(0x1 << 1)
++#define RPC_SMCR_SPIE		(0x1 << 0)
++
++#define RPC_SMCMR		0x0024	/* R/W */
++#define RPC_SMCMR_CMD(c)	(((c) & 0xFF) << 16)
++#define RPC_SMCMR_OCMD(c)	(((c) & 0xFF) << 0)
++
++#define RPC_SMADR		0x0028	/* R/W */
++#define RPC_SMOPR		0x002C	/* R/W */
++#define RPC_SMOPR_OPD0(o)	(((o) & 0xFF) << 0)
++#define RPC_SMOPR_OPD1(o)	(((o) & 0xFF) << 8)
++#define RPC_SMOPR_OPD2(o)	(((o) & 0xFF) << 16)
++#define RPC_SMOPR_OPD3(o)	(((o) & 0xFF) << 24)
++
++#define RPC_SMENR		0x0030	/* R/W */
++#define RPC_SMENR_CDB(o)	(((o) & 0x3) << 30)
++#define RPC_SMENR_OCDB(o)	(((o) & 0x3) << 28)
++#define RPC_SMENR_ADB(o)	(((o) & 0x3) << 24)
++#define RPC_SMENR_OPDB(o)	(((o) & 0x3) << 20)
++#define RPC_SMENR_SPIDB(o)	(((o) & 0x3) << 16)
++#define RPC_SMENR_DME		(0x1 << 15)
++#define RPC_SMENR_CDE		(0x1 << 14)
++#define RPC_SMENR_OCDE		(0x1 << 12)
++#define RPC_SMENR_ADE(v)	(((v) & 0xF) << 8)
++#define RPC_SMENR_OPDE(v)	(((v) & 0xF) << 4)
++#define RPC_SMENR_SPIDE(v)	(((v) & 0xF) << 0)
++
++#define RPC_SMRDR0		0x0038	/* R */
++#define RPC_SMRDR1		0x003C	/* R */
++#define RPC_SMWDR0		0x0040	/* R/W */
++#define RPC_SMWDR1		0x0044	/* R/W */
++#define RPC_CMNSR		0x0048	/* R */
++#define RPC_CMNSR_SSLF		(0x1 << 1)
++#define	RPC_CMNSR_TEND		(0x1 << 0)
++
++#define RPC_DRDMCR		0x0058	/* R/W */
++#define RPC_DRDMCR_DMCYC(v)	(((v) & 0xF) << 0)
++
++#define RPC_DRDRENR		0x005C	/* R/W */
++#define RPC_DRDRENR_HYPE	(0x5 << 12)
++#define RPC_DRDRENR_ADDRE	(0x1 << 0x8)
++#define RPC_DRDRENR_OPDRE	(0x1 << 0x4)
++#define RPC_DRDRENR_DRDRE	(0x1 << 0x0)
++
++#define RPC_SMDMCR		0x0060	/* R/W */
++#define RPC_SMDMCR_DMCYC(v)	(((v) & 0xF) << 0)
++
++#define RPC_SMDRENR		0x0064	/* R/W */
++#define RPC_SMDRENR_HYPE	(0x5 << 12)
++#define RPC_SMDRENR_ADDRE	(0x1 << 0x8)
++#define RPC_SMDRENR_OPDRE	(0x1 << 0x4)
++#define RPC_SMDRENR_SPIDRE	(0x1 << 0x0)
++
++#define RPC_PHYCNT		0x007C	/* R/W */
++#define RPC_PHYCNT_CAL		(0x1 << 31)
++#define PRC_PHYCNT_OCTA_AA	(0x1 << 22)
++#define PRC_PHYCNT_OCTA_SA	(0x2 << 22)
++#define PRC_PHYCNT_EXDS		(0x1 << 21)
++#define RPC_PHYCNT_OCT		(0x1 << 20)
++#define RPC_PHYCNT_WBUF2	(0x1 << 4)
++#define RPC_PHYCNT_WBUF		(0x1 << 2)
++#define RPC_PHYCNT_MEM(v)	(((v) & 0x3) << 0)
++
++#define RPC_PHYINT		0x0088	/* R/W */
++#define RPC_PHYINT_RSTEN	(0x1 << 18)
++#define RPC_PHYINT_WPEN		(0x1 << 17)
++#define RPC_PHYINT_INTEN	(0x1 << 16)
++#define RPC_PHYINT_RST		(0x1 << 2)
++#define RPC_PHYINT_WP		(0x1 << 1)
++#define RPC_PHYINT_INT		(0x1 << 0)
++
++#define RPC_WBUF		0x8000	/* R/W size=4/8/16/32/64Bytes */
++#define RPC_WBUF_SIZE		0x100
++
++struct rpc_info {
++	struct rw_semaphore lock;
++	void __iomem *rpc_base;
++	void __iomem *flash_base;
++	struct resource *rpc_res;
++	struct resource *flash_res;
++	u32 flash_id;
++	struct mtd_info mtd;
++};
++
++static inline void __iomem *rpc_addr(struct rpc_info *info, u32 offset)
++{
++	return info->rpc_base + offset;
++}
++
++static inline u32 rpc_readl(struct rpc_info *info, u32 offset)
++{
++	u32 val;
++
++	val = readl(rpc_addr(info, offset));
++	return val;
++}
++
++static inline void rpc_writel(struct rpc_info *info, u32 offset, u32 val)
++{
++	writel(val, rpc_addr(info, offset));
++}
++
++static inline void rpc_setl(struct rpc_info *info, u32 offset, u32 mask, u32 set)
++{
++	void __iomem *addr;
++	u32 val;
++
++	addr = rpc_addr(info, offset);
++	val = readl(addr);
++	val &= mask;
++	val |= set;
++	writel(val, addr);
++}
++
++static void rpc_wait_tend(struct rpc_info *info)
++{
++	while (!(rpc_readl(info, RPC_CMNSR) & RPC_CMNSR_TEND))
++		cpu_relax();
++}
++
++/* RPC HyperFlash */
++#define RPC_HF_CMD_CA47		(0x1 << 7)	/* Read */
++#define RPC_HF_CMD_CA46		(0x1 << 6)	/* Register space */
++#define RPC_HF_CMD_CA45		(0x1 << 5)	/* Liner burst */
++
++#define RPC_HF_CMD_READ_REG	(RPC_HF_CMD_CA47 | RPC_HF_CMD_CA46)
++#define RPC_HF_CMD_READ_MEM	RPC_HF_CMD_CA47
++#define RPC_HF_CMD_WRITE_REG	RPC_HF_CMD_CA46
++#define RPC_HF_CMD_WRITE_MEM	0x0
++
++#define RPC_HF_ERASE_SIZE	0x40000
++
++#define RPC_CFI_STATUS_DRB	(0x1 << 7)
++#define RPC_CFI_STATUS_ESSB	(0x1 << 6)
++#define RPC_CFI_STATUS_ESB	(0x1 << 5)
++#define RPC_CFI_STATUS_PSB	(0x1 << 4)
++#define RPC_CFI_STATUS_WBASB	(0x1 << 3)
++#define RPC_CFI_STATUS_PSSB	(0x1 << 2)
++#define RPC_CFI_STATUS_SLSB	(0x1 << 1)
++#define RPC_CFI_STATUS_ESTAT	(0x1 << 0)
++
++#define RPC_CFI_UNLOCK1		(0x555 << 1)
++#define RPC_CFI_UNLOCK2		(0x2AA << 1)
++
++#define RPC_CFI_CMD_UNLOCK_START	0xAA
++#define RPC_CFI_CMD_UNLOCK_ACK		0x55
++#define	RPC_CFI_CMD_RESET		0xF0
++#define	RPC_CFI_CMD_READ_STATUS		0x70
++#define	RPC_CFI_CMD_READ_ID		0x90
++#define	RPC_CFI_CMD_WRITE		0xA0
++#define	RPC_CFI_CMD_ERASE_START		0x80
++#define	RPC_CFI_CMD_ERASE_SECTOR	0x30
++
++#define RPC_CFI_ID_MASK			0x000F
++#define RPC_CFI_ID_MAN_SPANSION		0x0001
++#define RPC_CFI_ID_TYPE_HYPERFLASH	0x000E
++
++enum rpc_hf_size {
++	RPC_HF_SIZE_16BIT = RPC_SMENR_SPIDE(0x8),
++	RPC_HF_SIZE_32BIT = RPC_SMENR_SPIDE(0xC),
++	RPC_HF_SIZE_64BIT = RPC_SMENR_SPIDE(0xF),
++};
++
++struct rpc_info *rpc_info;
++
++static void rpc_hf_mode_man(struct rpc_info *info)
++{
++	rpc_wait_tend(info);
++
++	/*
++	 * RPC_PHYCNT         = 0x80000263
++	 * bit31  CAL         =  1 : PHY calibration
++	 * bit1-0 PHYMEM[1:0] = 11 : HyperFlash
++	 */
++	rpc_setl(info, RPC_PHYCNT,
++		 ~(RPC_PHYCNT_WBUF | RPC_PHYCNT_WBUF2 |
++		 RPC_PHYCNT_CAL | RPC_PHYCNT_MEM(3)),
++		 RPC_PHYCNT_CAL | RPC_PHYCNT_MEM(3));
++
++	/*
++	 * RPC_CMNCR       = 0x81FFF301
++	 * bit31  MD       =  1 : Manual mode
++	 * bit1-0 BSZ[1:0] = 01 : QSPI Flash x 2 or HyperFlash
++	 */
++	rpc_setl(info, RPC_CMNCR,
++		 ~(RPC_CMNCR_MD | RPC_CMNCR_BSZ(3)),
++		 RPC_CMNCR_MOIIO_HIZ | RPC_CMNCR_IOFV_HIZ |
++		 RPC_CMNCR_MD | RPC_CMNCR_BSZ(1));
++}
++
++static void rpc_hf_mode_ext(struct rpc_info *info)
++{
++	rpc_wait_tend(info);
++
++	/*
++	 * RPC_PHYCNT         = 0x80000263
++	 * bit31  CAL         =  1 : PHY calibration
++	 * bit1-0 PHYMEM[1:0] = 11 : HyperFlash
++	 */
++	rpc_setl(info, RPC_PHYCNT,
++		 ~(RPC_PHYCNT_WBUF | RPC_PHYCNT_WBUF2 |
++		 RPC_PHYCNT_CAL | RPC_PHYCNT_MEM(3)),
++		 RPC_PHYCNT_CAL | RPC_PHYCNT_MEM(3));
++
++	/*
++	 * RPC_CMNCR       = 0x81FFF301
++	 * bit31  MD       =  1 : Manual mode
++	 * bit1-0 BSZ[1:0] = 01 : QSPI Flash x 2 or HyperFlash
++	 */
++	rpc_setl(info, RPC_CMNCR,
++		 ~(RPC_CMNCR_MD | RPC_CMNCR_BSZ(3)),
++		 RPC_CMNCR_MOIIO_HIZ | RPC_CMNCR_IOFV_HIZ |
++		 RPC_CMNCR_BSZ(1));
++
++	/*
++	 * RPC_DRCR             = 0x001F0100
++	 * bit21-16 RBURST[4:0] = 11111 : Read burst 32 64-bit data units
++	 * bit9 RCF             = 1     : Clear cache
++	 * bit8 RBE             = 1     : Read burst enable
++	 */
++	rpc_writel(info, RPC_DRCR,
++		   RPC_DRCR_RBURST(0x1F) | RPC_DRCR_RCF | RPC_DRCR_RBE);
++
++	rpc_writel(info, RPC_DRCMR, RPC_DRCMR_CMD(0xA0));
++	rpc_writel(info, RPC_DRENR,
++		   RPC_DRENR_CDB(2) | RPC_DRENR_OCDB(2) |
++		   RPC_DRENR_ADB(2) | RPC_DRENR_SPIDB(2) |
++		   RPC_DRENR_CDE | RPC_DRENR_OCDE | RPC_DRENR_ADE(4));
++	rpc_writel(info, RPC_DRDMCR, RPC_DRDMCR_DMCYC(0xE));
++	rpc_writel(info, RPC_DRDRENR,
++		   RPC_DRDRENR_HYPE | RPC_DRDRENR_ADDRE | RPC_DRDRENR_DRDRE);
++
++	/* Dummy read */
++	rpc_readl(info, RPC_DRCR);
++}
++
++static void rpc_hf_xfer(struct rpc_info *info, u32 addr, u16 *data,
++			enum rpc_hf_size size, u8 cmd)
++{
++	u32 val;
++
++	rpc_hf_mode_man(info);
++
++	/*
++	 * bit23-21 CMD[7:5] : CA47-45
++	 * CA47 = 0/1 : Write/Read
++	 * CA46 = 0/1 : Memory Space/Register Space
++	 * CA45 = 0/1 : Wrapped Burst/Linear Burst
++	 */
++	rpc_writel(info, RPC_SMCMR, RPC_SMCMR_CMD(cmd));
++
++	rpc_writel(info, RPC_SMADR, addr >> 1);
++
++	rpc_writel(info, RPC_SMOPR, 0x0);
++
++	/*
++	 * RPC_SMDRENR     = 0x00005101
++	 * bit14-12 HYPE   = 101: Hyperflash mode
++	 * bit8     ADDRE  = 1 : Address DDR transfer
++	 * bit0     SPIDRE = 1 : DATA DDR transfer
++	 */
++	rpc_writel(info, RPC_SMDRENR,
++		   RPC_SMDRENR_HYPE | RPC_SMDRENR_ADDRE | RPC_SMDRENR_SPIDRE);
++
++	val = RPC_SMENR_CDB(2) | RPC_SMENR_OCDB(2) |
++		RPC_SMENR_ADB(2) | RPC_SMENR_SPIDB(2) |
++		RPC_SMENR_CDE | RPC_SMENR_OCDE | RPC_SMENR_ADE(4) | size;
++
++	if (cmd & RPC_HF_CMD_CA47)
++		goto read_transfer;
++
++	/*
++	 * RPC_SMENR           = 0xA222540x
++	 * bit31-30 CDB[1:0]   =   10 : 4bit width command
++	 * bit25-24 ADB[1:0]   =   10 : 4bit width address
++	 * bit17-16 SPIDB[1:0] =   10 : 4bit width transfer data
++	 * bit15    DME        =    0 : dummy cycle disable
++	 * bit14    CDE        =    1 : Command enable
++	 * bit12    OCDE       =    1 : Option Command enable
++	 * bit11-8  ADE[3:0]   = 0100 : ADR[23:0] output
++	 * bit7-4   OPDE[3:0]  = 0000 : Option data disable
++	 * bit3-0   SPIDE[3:0] = xxxx : Transfer size
++	 */
++	rpc_writel(info, RPC_SMENR, val);
++
++	switch (size) {
++	case RPC_HF_SIZE_64BIT:
++		val = cmd & RPC_HF_CMD_CA46 ?
++			cpu_to_be16(data[0]) | cpu_to_be16(data[1]) << 16 :
++			data[0] | data[1] << 16;
++		rpc_writel(info, RPC_SMWDR1, val);
++		val = cmd & RPC_HF_CMD_CA46 ?
++			cpu_to_be16(data[2]) | cpu_to_be16(data[3]) << 16 :
++			data[2] | data[3] << 16;
++		break;
++	case RPC_HF_SIZE_32BIT:
++		val = cmd & RPC_HF_CMD_CA46 ?
++			cpu_to_be16(data[0]) | cpu_to_be16(data[1]) << 16 :
++			data[0] | data[1] << 16;
++		break;
++	default:
++		val = cmd & RPC_HF_CMD_CA46 ?
++			cpu_to_be16(data[0]) << 16 :
++			data[0] << 16;
++		break;
++	}
++
++	rpc_writel(info, RPC_SMWDR0, val);
++	/*
++	 * RPC_SMCR       = 0x00000003
++	 * bit1     SPIWE = 1 : Data write enable
++	 * bit0     SPIE  = 1 : SPI transfer start
++	 */
++	rpc_writel(info, RPC_SMCR, RPC_SMCR_SPIWE | RPC_SMCR_SPIE);
++	return;
++
++read_transfer:
++	rpc_writel(info, RPC_SMDMCR, RPC_SMDMCR_DMCYC(0xE));
++	val |= RPC_SMENR_DME;
++
++	/*
++	 * RPC_SMENR           = 0xA222D40x
++	 * bit31-30 CDB[1:0]   =   10 : 4bit width command
++	 * bit25-24 ADB[1:0]   =   10 : 4bit width address
++	 * bit17-16 SPIDB[1:0] =   10 : 4bit width transfer data
++	 * bit15    DME        =    1 : dummy cycle disable
++	 * bit14    CDE        =    1 : Command enable
++	 * bit12    OCDE       =    1 : Option Command enable
++	 * bit11-8  ADE[3:0]   = 0100 : ADR[23:0] output (24 Bit Address)
++	 * bit7-4   OPDE[3:0]  = 0000 : Option data disable
++	 * bit3-0   SPIDE[3:0] = xxxx : Transfer size
++	 */
++	rpc_writel(info, RPC_SMENR, val);
++
++	/*
++	 * RPC_SMCR   = 0x00000005
++	 * bit2 SPIRE = 1 : Data read disable
++	 * bit0 SPIE  = 1 : SPI transfer start
++	 */
++	rpc_writel(info, RPC_SMCR, RPC_SMCR_SPIRE | RPC_SMCR_SPIE);
++
++	rpc_wait_tend(info);
++	val = rpc_readl(info, RPC_SMRDR0);
++
++	/*
++	 * Read data from either register or memory space.
++	 * Register space is always big-endian.
++	 */
++	switch (size) {
++	case RPC_HF_SIZE_64BIT:
++		if (cmd & RPC_HF_CMD_CA46) {
++			data[3] = be16_to_cpu((val >> 16) & 0xFFFF);
++			data[2] = be16_to_cpu(val & 0xFFFF);
++		} else {
++			data[3] = (val >> 16) & 0xFFFF;
++			data[2] = val & 0xFFFF;
++		}
++		val = rpc_readl(info, RPC_SMRDR1);
++		if (cmd & RPC_HF_CMD_CA46) {
++			data[1] = be16_to_cpu((val >> 16) & 0xFFFF);
++			data[0] = be16_to_cpu(val & 0xFFFF);
++		} else {
++			data[1] = (val >> 16) & 0xFFFF;
++			data[0] = val & 0xFFFF;
++		}
++		break;
++	case RPC_HF_SIZE_32BIT:
++		if (cmd & RPC_HF_CMD_CA46) {
++			data[1] = be16_to_cpu((val >> 16) & 0xFFFF);
++			data[0] = be16_to_cpu(val & 0xFFFF);
++		} else {
++			data[1] = (val >> 16) & 0xFFFF;
++			data[0] = val & 0xFFFF;
++		}
++		break;
++	default:
++		data[0] = cmd & RPC_HF_CMD_CA46 ?
++			be16_to_cpu((val >> 16) & 0xFFFF) :
++			(val >> 16) & 0xFFFF;
++		break;
++	}
++}
++
++static void rpc_hf_wbuf_enable(struct rpc_info *info)
++{
++	rpc_wait_tend(info);
++
++	/*
++	 * RPC_PHYCNT         = 0x80000277
++	 * bit31  CAL         =  1 : PHY calibration
++	 * bit4 WBUF2         =  1 : Write buffer enable 2
++	 * bit2 WBUF          =  1 : Write buffer enable
++	 * bit1-0 PHYMEM[1:0] = 11 : HyperFlash
++	 */
++	rpc_setl(info, RPC_PHYCNT,
++		 ~(RPC_PHYCNT_WBUF2 | RPC_PHYCNT_WBUF |
++		 RPC_PHYCNT_CAL | RPC_PHYCNT_MEM(3)),
++		 RPC_PHYCNT_WBUF2 | RPC_PHYCNT_WBUF |
++		 RPC_PHYCNT_CAL | RPC_PHYCNT_MEM(3));
++
++	/*
++	 * RPC_DRCR             = 0x001F0100
++	 * bit21-16 RBURST[4:0] = 11111 : Read burst 32 64-bit data units
++	 * bit9 RCF             = 1     : Clear cache
++	 * bit8 RBE             = 1     : Read burst enable
++	 */
++	rpc_writel(info, RPC_DRCR,
++		   RPC_DRCR_RBURST(0x1F) | RPC_DRCR_RCF | RPC_DRCR_RBE);
++
++	rpc_writel(info, RPC_SMCMR, RPC_SMCMR_CMD(RPC_HF_CMD_WRITE_MEM));
++
++	rpc_writel(info, RPC_SMOPR, 0x0);
++
++	/*
++	 * RPC_SMDRENR   = 0x00005101
++	 * bit14-12 HYPE = 101:Hyperflash mode
++	 * bit8 ADDRE    = 1 : Address DDR transfer
++	 * bit0 SPIDRE   = 1 : DATA DDR transfer
++	 */
++	rpc_writel(info, RPC_SMDRENR,
++		   RPC_SMDRENR_HYPE | RPC_SMDRENR_ADDRE | RPC_SMDRENR_SPIDRE);
++
++	/*
++	 * RPC_SMENR           = 0xA222540F
++	 * bit31-30 CDB[1:0]   =   10 : 4bit width command
++	 * bit25-24 ADB[1:0]   =   10 : 4bit width address
++	 * bit17-16 SPIDB[1:0] =   10 : 4bit width transfer data
++	 * bit15    DME        =    0 : dummy cycle disable
++	 * bit14    CDE        =    1 : Command enable
++	 * bit12    OCDE       =    1 : Option Command enable
++	 * bit11-8  ADE[3:0]   = 0100 : ADR[23:0] output (24 Bit Address)
++	 * bit7-4   OPDE[3:0]  = 0000 : Option data disable
++	 * bit3-0   SPIDE[3:0] = 1111 : 64-bit transfer size
++	 */
++	rpc_writel(info, RPC_SMENR,
++		   RPC_SMENR_CDB(2) | RPC_SMENR_OCDB(2) |
++		   RPC_SMENR_ADB(2) | RPC_SMENR_SPIDB(2) |
++		   RPC_SMENR_CDE | RPC_SMENR_OCDE |
++		   RPC_SMENR_ADE(4) | RPC_HF_SIZE_64BIT);
++
++	/* Dummy read */
++	rpc_readl(info, RPC_DRCR);
++}
++
++static inline void rpc_hf_write_cmd(struct rpc_info *info, u32 addr, u16 cmd)
++{
++	rpc_hf_xfer(info, addr, &cmd, RPC_HF_SIZE_16BIT, RPC_HF_CMD_WRITE_REG);
++}
++
++static inline void rpc_hf_read_reg(struct rpc_info *info, u32 addr, u16 *data,
++				   enum rpc_hf_size size)
++{
++	rpc_hf_xfer(info, addr, data, size, RPC_HF_CMD_READ_REG);
++}
++
++static inline void rpc_hf_write_reg(struct rpc_info *info, u32 addr, u16 *data,
++				    enum rpc_hf_size size)
++{
++	rpc_hf_xfer(info, addr, data, size, RPC_HF_CMD_WRITE_REG);
++}
++
++static inline void rpc_hf_read_mem(struct rpc_info *info, u32 addr, u16 *data,
++				   enum rpc_hf_size size)
++{
++	rpc_hf_xfer(info, addr, data, size, RPC_HF_CMD_READ_MEM);
++}
++
++static inline void rpc_hf_write_mem(struct rpc_info *info, u32 addr, u16 *data,
++				    enum rpc_hf_size size)
++{
++	rpc_hf_xfer(info, addr, data, size, RPC_HF_CMD_WRITE_MEM);
++}
++
++static void rpc_hf_wp(struct rpc_info *info, int enable)
++{
++	rpc_setl(info, RPC_PHYINT, ~RPC_PHYINT_WP, enable ? RPC_PHYINT_WP : 0);
++}
++
++static void rpc_hf_unlock(struct rpc_info *info, u32 addr)
++{
++	rpc_hf_write_cmd(info, addr + RPC_CFI_UNLOCK1,
++			 RPC_CFI_CMD_UNLOCK_START);
++	rpc_hf_write_cmd(info, addr + RPC_CFI_UNLOCK2,
++			 RPC_CFI_CMD_UNLOCK_ACK);
++}
++
++static inline int rpc_hf_status(struct rpc_info *info, u32 addr,
++				int iterations, int delay)
++{
++	int retval;
++	u16 status = 0;
++
++	while (iterations-- > 0) {
++		rpc_hf_write_cmd(info, addr + RPC_CFI_UNLOCK1, RPC_CFI_CMD_READ_STATUS);
++		rpc_hf_read_reg(info, addr, &status, RPC_HF_SIZE_16BIT);
++
++		if (status & RPC_CFI_STATUS_DRB)
++			break;
++
++		if (delay < 10000)
++			usleep_range(delay, delay * 2);
++		else
++			msleep(delay / 1000);
++	}
++
++	if (!(status & RPC_CFI_STATUS_DRB)) {
++		retval = -ETIMEDOUT;
++		goto out;
++	}
++
++	if (status & (RPC_CFI_STATUS_PSB | RPC_CFI_STATUS_ESB)) {
++		retval = -EIO;
++		goto out;
++	}
++
++	return 0;
++
++out:
++	/* Reset the flash */
++	rpc_hf_write_cmd(info, 0, RPC_CFI_CMD_RESET);
++	return retval;
++}
++
++static int rpc_hf_sector_erase(struct rpc_info *info, u32 addr)
++{
++	rpc_hf_unlock(info, addr);
++	rpc_hf_write_cmd(info, addr + RPC_CFI_UNLOCK1, RPC_CFI_CMD_ERASE_START);
++	rpc_hf_unlock(info, addr);
++	rpc_hf_write_cmd(info, addr, RPC_CFI_CMD_ERASE_SECTOR);
++
++	return rpc_hf_status(info, addr, 1000, 10000);
++}
++
++/* Flash read */
++static int rpc_hf_mtd_read(struct mtd_info *mtd, loff_t from, size_t len,
++			   size_t *retlen, u_char *buf)
++{
++	struct rpc_info *info = mtd->priv;
++
++	down_read(&info->lock);
++	memcpy_fromio(buf, info->flash_base + from, len);
++	up_read(&info->lock);
++
++	*retlen = len;
++	return 0;
++}
++
++/* Flash erase */
++static int rpc_hf_mtd_erase(struct mtd_info *mtd, struct erase_info *instr)
++{
++	struct rpc_info *info = mtd->priv;
++	u32 addr, end;
++	int retval = 0;
++
++	if (mtd_mod_by_eb(instr->addr, mtd)) {
++		pr_debug("%s: unaligned address\n", __func__);
++		return -EINVAL;
++	}
++
++	if (mtd_mod_by_eb(instr->len, mtd)) {
++		pr_debug("%s: unaligned length\n", __func__);
++		return -EINVAL;
++	}
++
++	end = instr->addr + instr->len;
++
++	down_write(&info->lock);
++	for (addr = instr->addr; addr < end; addr += mtd->erasesize) {
++		retval = rpc_hf_sector_erase(info, addr);
++
++		if (retval)
++			break;
++	}
++
++	rpc_hf_mode_ext(info);
++	up_write(&info->lock);
++
++	instr->state = retval ? MTD_ERASE_FAILED : MTD_ERASE_DONE;
++	mtd_erase_callback(instr);
++
++	return retval;
++}
++
++/* Copy memory to flash */
++static int rpc_hf_mtd_write(struct mtd_info *mtd, loff_t offset, size_t len,
++			    size_t *retlen, const u_char *src)
++{
++	struct rpc_info *info = mtd->priv;
++	union {
++		u8 b[4];
++		u16 w[2];
++		u32 d;
++	} data;
++	loff_t addr;
++	size_t size, cnt;
++	int retval, idx;
++	u8 last;
++
++	retval = 0;
++	*retlen = 0;
++	cnt = len;
++	idx = 0;
++
++	down_write(&info->lock);
++
++	/* Handle unaligned start */
++	if (offset & 0x1) {
++		offset--;
++		data.b[idx] = readb(info->flash_base + offset);
++		idx++;
++	}
++
++	/* Handle unaligned end */
++	addr = offset + idx + len;
++	last = addr & 0x1 ? readb(info->flash_base + addr) : 0xFF;
++
++	addr = offset - mtd_mod_by_eb(offset, mtd);
++	size = mtd->erasesize - (offset - addr);
++
++	while (cnt) {
++		if (size > cnt)
++			size = cnt;
++
++		cnt -= size;
++		while (size) {
++			rpc_hf_unlock(info, addr);
++			rpc_hf_write_cmd(info,
++					 addr + RPC_CFI_UNLOCK1,
++					 RPC_CFI_CMD_WRITE);
++
++			if (size > 0x7) {
++				u32 wbuf = RPC_WBUF;
++				int block = size >= RPC_WBUF_SIZE ?
++					RPC_WBUF_SIZE : size & ~0x7;
++
++				rpc_hf_wbuf_enable(info);
++
++				rpc_writel(info, RPC_SMADR, offset >> 1);
++				offset += block;
++
++				block >>= 3;
++				while (block--) {
++					while (idx < 4) {
++						data.b[idx++] = *src++;
++						size--;
++					}
++					rpc_writel(info, wbuf, data.d);
++					wbuf += 4;
++
++					idx = 0;
++					while (idx < 4) {
++						data.b[idx++] = *src++;
++						size--;
++					}
++					rpc_writel(info, wbuf, data.d);
++					wbuf += 4;
++
++					idx = 0;
++				}
++
++				rpc_writel(info, RPC_SMCR,
++					   RPC_SMCR_SPIWE | RPC_SMCR_SPIE);
++			} else {
++				enum rpc_hf_size bits;
++
++				while (idx < 4) {
++					data.b[idx++] = *src++;
++					size--;
++
++					if (!size)
++						break;
++				}
++
++				if (idx & 0x1)
++					data.b[idx++] = last;
++
++				switch (idx) {
++				case 2:
++					bits = RPC_HF_SIZE_16BIT;
++					break;
++				default:
++					bits = RPC_HF_SIZE_32BIT;
++					break;
++				}
++
++				rpc_hf_write_mem(info, offset, data.w, bits);
++				offset += idx;
++				idx = 0;
++			}
++
++			retval = rpc_hf_status(info, addr, 1000000, 10);
++			if (retval)
++				goto out;
++		}
++
++		size = mtd->erasesize;
++		addr += size;
++		offset = addr;
++		*retlen = len - cnt;
++	}
++
++out:
++	rpc_hf_mode_ext(info);
++	up_write(&info->lock);
++	return retval;
++}
++
++static struct mtd_partition partition_info[]={
++	{
++		.name = "bootparam",
++		.offset = 0,
++		.size = 0x40000,
++	}, {
++		.name = "bl2",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x140000
++	}, {
++		.name = "cert_header",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x40000,
++	}, {
++		.name = "bl31",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x40000,
++	}, {
++		.name = "optee",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x440000,
++	}, {
++		.name = "u-boot",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x80000,
++	}, {
++		.name = "reserved",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x80000,
++	}, {
++		.name = "u-boot-env",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x40000,
++	}, {
++		.name = "dtb",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x80000,
++	}, {
++		.name = "kernel",
++		.offset = MTDPART_OFS_APPEND,
++		.size = 0x1000000,
++	}, {
++		.name = "user",
++		.offset = MTDPART_OFS_APPEND,
++		.size = MTDPART_SIZ_FULL,
++	},
++};
++
++static int rpc_hf_init_mtd(struct rpc_info *info)
++{
++	struct mtd_info *mtd = &info->mtd;
++	u16 data[2] = { 0, 0 };
++	u32 id, size;
++	int retval;
++
++	rpc_hf_mode_ext(info);
++
++	rpc_hf_wp(info, 0);
++
++	rpc_hf_unlock(info, 0);
++	rpc_hf_write_cmd(info, RPC_CFI_UNLOCK1, RPC_CFI_CMD_READ_ID);
++
++	rpc_hf_read_reg(info, 0x0, data, RPC_HF_SIZE_32BIT);
++	if  ((data[0] & RPC_CFI_ID_MASK) != RPC_CFI_ID_MAN_SPANSION ||
++	     (data[1] & RPC_CFI_ID_MASK) != RPC_CFI_ID_TYPE_HYPERFLASH) {
++		retval = -ENODEV;
++		goto out;
++	}
++
++	id = data[0] | data[1] << 16;
++
++	rpc_hf_read_reg(info, 0x27 << 1, data, RPC_HF_SIZE_16BIT);
++	size = 1 << data[0];
++
++	if (size > resource_size(info->flash_res))
++		size = resource_size(info->flash_res);
++
++	if (size & (RPC_HF_ERASE_SIZE - 1)) {
++		retval = -EINVAL;
++		goto out;
++	}
++
++	init_rwsem(&info->lock);
++	info->flash_id = id;
++	mtd->name = "HyperFlash";
++	mtd->type = MTD_NORFLASH;
++	mtd->flags = MTD_CAP_NORFLASH;
++	mtd->size = size;
++	mtd->writesize = 1;
++	mtd->writebufsize = RPC_WBUF_SIZE;
++	mtd->erasesize = RPC_HF_ERASE_SIZE;
++	mtd->owner = THIS_MODULE;
++	mtd->priv = info;
++	mtd->_erase = rpc_hf_mtd_erase;
++	mtd->_write = rpc_hf_mtd_write;
++	mtd->_read = rpc_hf_mtd_read;
++	retval = mtd_device_register(mtd, partition_info,
++				     ARRAY_SIZE(partition_info));
++out:
++	rpc_hf_write_cmd(info, 0, RPC_CFI_CMD_RESET);
++	rpc_hf_mode_ext(info);
++	return retval;
++}
++
++static int rpc_flash_init(void)
++{
++	struct rpc_info *info;
++	struct resource *res;
++	void __iomem *base;
++	int retval = -ENODEV;
++
++	if (!of_machine_is_compatible("renesas,r8a7795"))
++		return -ENODEV;
++
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	res = request_mem_region(RPC_BASE, RPC_SIZE, "RPC");
++	if (!res)
++		goto out_info;
++
++	info->rpc_res = res;
++	base = ioremap(res->start, resource_size(res));
++	if (!base)
++		goto out_rpc_res;
++
++	info->rpc_base = base;
++	res = request_mem_region(RPC_FLASH_BASE, RPC_FLASH_SIZE, "RPC-ext");
++	if (!res)
++		goto out_rpc_base;
++
++	info->flash_res = res;
++	base = ioremap(res->start, resource_size(res));
++	if (!base)
++		goto out_flash_res;
++
++	info->flash_base = base;
++	retval = rpc_hf_init_mtd(info);
++	if (retval)
++		goto out_flash_base;
++
++	pr_info("HyperFlash Id: %x\n", info->flash_id);
++
++	rpc_info = info;
++	return 0;
++
++out_flash_base:
++	iounmap(info->flash_base);
++out_flash_res:
++	release_mem_region(info->flash_res->start,
++			   resource_size(info->flash_res));
++out_rpc_base:
++	iounmap(info->rpc_base);
++out_rpc_res:
++	release_mem_region(info->rpc_res->start,
++			   resource_size(info->rpc_res));
++out_info:
++	kfree(info);
++	return retval;
++}
++
++static void rpc_flash_exit(void)
++{
++	struct rpc_info *info = rpc_info;
++
++	if (!info)
++		return;
++
++	rpc_info = NULL;
++
++	mtd_device_unregister(&info->mtd);
++
++	iounmap(info->flash_base);
++	release_mem_region(info->flash_res->start,
++			   resource_size(info->flash_res));
++	iounmap(info->rpc_base);
++	release_mem_region(info->rpc_res->start,
++			   resource_size(info->rpc_res));
++	kfree(info);
++}
++
++module_init(rpc_flash_init);
++module_exit(rpc_flash_exit);
++
++MODULE_LICENSE("GPL v2");
++MODULE_DESCRIPTION("Renesas RPC HyperFlash MTD driver");
+-- 
+2.7.4
+

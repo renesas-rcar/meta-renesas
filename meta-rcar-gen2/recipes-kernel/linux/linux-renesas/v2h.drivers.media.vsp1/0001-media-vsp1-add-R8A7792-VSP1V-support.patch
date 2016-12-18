@@ -1,0 +1,57 @@
+From e935aefb0f8c58cb7714e8954cd0b4a723c30094 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Tue, 16 Aug 2016 17:41:24 +0300
+Subject: [PATCH] media: vsp1: add R8A7792 VSP1V support
+
+This adds V2H support
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+---
+ drivers/media/platform/vsp1/vsp1_drv.c  |   20 ++++++++++++++++++++
+ drivers/media/platform/vsp1/vsp1_regs.h |    2 ++
+ 2 files changed, 22 insertions(+)
+
+Index: renesas/drivers/media/platform/vsp1/vsp1_drv.c
+===================================================================
+--- renesas.orig/drivers/media/platform/vsp1/vsp1_drv.c
++++ renesas/drivers/media/platform/vsp1/vsp1_drv.c
+@@ -596,6 +596,26 @@ static const struct vsp1_device_info vsp
+ 		.num_bru_inputs = 4,
+ 		.uapi = true,
+ 	}, {
++		.version = VI6_IP_VERSION_MODEL_VSPS_V2H,
++		.gen = 2,
++		.features = VSP1_HAS_BRU | VSP1_HAS_HGO | VSP1_HAS_LUT |
++			    VSP1_HAS_SRU,
++		.rpf_count = 4,
++		.uds_count = 1,
++		.wpf_count = 4,
++		.num_bru_inputs = 4,
++		.uapi = true,
++	}, {
++		.version = VI6_IP_VERSION_MODEL_VSPD_V2H,
++		.gen = 2,
++		.features = VSP1_HAS_BRU | VSP1_HAS_HGO | VSP1_HAS_LUT |
++			    VSP1_HAS_LIF,
++		.rpf_count = 4,
++		.uds_count = 1,
++		.wpf_count = 1,
++		.num_bru_inputs = 4,
++		.uapi = true,
++	}, {
+ 		.version = VI6_IP_VERSION_MODEL_VSPI_GEN3,
+ 		.gen = 3,
+ 		.features = VSP1_HAS_HGO | VSP1_HAS_LUT | VSP1_HAS_SRU,
+Index: renesas/drivers/media/platform/vsp1/vsp1_regs.h
+===================================================================
+--- renesas.orig/drivers/media/platform/vsp1/vsp1_regs.h
++++ renesas/drivers/media/platform/vsp1/vsp1_regs.h
+@@ -660,6 +660,8 @@
+ #define VI6_IP_VERSION_MODEL_VSPR_H2	(0x0a << 8)
+ #define VI6_IP_VERSION_MODEL_VSPD_GEN2	(0x0b << 8)
+ #define VI6_IP_VERSION_MODEL_VSPS_M2	(0x0c << 8)
++#define VI6_IP_VERSION_MODEL_VSPS_V2H	(0x12 << 8)
++#define VI6_IP_VERSION_MODEL_VSPD_V2H	(0x13 << 8)
+ #define VI6_IP_VERSION_MODEL_VSPI_GEN3	(0x14 << 8)
+ #define VI6_IP_VERSION_MODEL_VSPBD_GEN3	(0x15 << 8)
+ #define VI6_IP_VERSION_MODEL_VSPBC_GEN3	(0x16 << 8)

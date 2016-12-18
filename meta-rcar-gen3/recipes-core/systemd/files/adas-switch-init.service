@@ -1,0 +1,8 @@
+[Unit]
+Description=ADAS Ethernet Switch Init Service
+DefaultDependencies=no
+Before=sysinit.target
+
+[Service]
+Type=oneshot
+ExecStart=/etc/init.d/adas-switch-init

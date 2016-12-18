@@ -1,0 +1,372 @@
+From bf327f4476815fe6e8bf4a3c68e419f39775f9e5 Mon Sep 17 00:00:00 2001
+From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Date: Mon, 6 Jun 2016 11:35:52 +0300
+Subject: [PATCH] make driver renesas compatible
+
+---
+ services4/srvkm/env/linux/module.c       | 14 ++++++++
+ services4/srvkm/env/linux/osfunc.c       | 10 +++---
+ services4/srvkm/include/osfunc.h         |  2 ++
+ services4/system/renesas/ipmmu.c         | 57 ++++++++++++++++++++++++++++++--
+ services4/system/renesas/ipmmu.h         |  2 +-
+ services4/system/renesas/ipmmu_r8a779x.h |  4 +--
+ services4/system/renesas/sysconfig.c     | 15 ++++++---
+ services4/system/renesas/sysutils.c      |  9 +++--
+ 8 files changed, 96 insertions(+), 17 deletions(-)
+
+diff --git a/services4/srvkm/env/linux/module.c b/services4/srvkm/env/linux/module.c
+index f3f22b0..1f18e81 100644
+--- a/services4/srvkm/env/linux/module.c
++++ b/services4/srvkm/env/linux/module.c
+@@ -289,11 +289,17 @@ static struct dev_pm_ops powervr_dev_pm_ops = {
+ 	.resume		= PVRSRVDriverResume,
+ };
+ 
++static const struct of_device_id powervr_of_match[] = {
++	{ .compatible = "renesas,sgx" },
++	{}
++};
++
+ static LDM_DRV powervr_driver = {
+ #if defined(PVR_LDM_PLATFORM_MODULE)
+ 	.driver = {
+ 		.name		= DRVNAME,
+ 		.pm		= &powervr_dev_pm_ops,
++		.of_match_table = powervr_of_match,
+ 	},
+ #endif
+ #if defined(PVR_LDM_PCI_MODULE)
+@@ -901,6 +907,14 @@ err_unlock:
+  @Return none
+ 
+ *****************************************************************************/
++
++
++
++struct device *getDev(IMG_VOID){
++	return (&gpsPVRLDMDev->dev);
++}
++
++
+ #if defined(SUPPORT_DRI_DRM)
+ int PVRCore_Init(void)
+ #else
+diff --git a/services4/srvkm/env/linux/osfunc.c b/services4/srvkm/env/linux/osfunc.c
+index 82c4c15..0f71945 100644
+--- a/services4/srvkm/env/linux/osfunc.c
++++ b/services4/srvkm/env/linux/osfunc.c
+@@ -154,7 +154,6 @@ PVRSRV_ERROR OSAllocMem_Impl(IMG_UINT32 ui32Flags, IMG_SIZE_T uiSize, IMG_PVOID
+     {
+         return PVRSRV_ERROR_OUT_OF_MEMORY;
+     }
+-
+     return PVRSRV_OK;
+ }
+ 
+@@ -238,7 +237,6 @@ OSAllocPages_Impl(IMG_UINT32 ui32AllocFlags,
+         {
+             /* Currently PVRSRV_HAP_SINGLE_PROCESS implies that we dont need a
+              * kernel virtual mapping, but will need a user space virtual mapping */
+-
+ #if !defined(ENABLE_REL_STD_0001)
+             psLinuxMemArea = NewAllocPagesLinuxMemArea(uiSize, ui32AllocFlags);
+ #else /* !defined(ENABLE_REL_STD_0001) */
+@@ -4474,8 +4472,9 @@ static inline size_t pvr_dma_range_len(const void *pvStart, const void *pvEnd)
+ static void pvr_dma_cache_wback_inv(const void *pvStart, const void *pvEnd)
+ {
+ 	size_t uLength = pvr_dma_range_len(pvStart, pvEnd);
++
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)
+-	dma_cache_sync(NULL, (void *)pvStart, uLength, DMA_BIDIRECTIONAL);
++	dma_cache_sync(getDev(), (void *)pvStart, uLength, DMA_BIDIRECTIONAL);
+ #else
+ 	dma_cache_wback_inv((unsigned long)pvStart, uLength);
+ #endif
+@@ -4485,7 +4484,7 @@ static void pvr_dma_cache_wback(const void *pvStart, const void *pvEnd)
+ {
+ 	size_t uLength = pvr_dma_range_len(pvStart, pvEnd);
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)
+-	dma_cache_sync(NULL, (void *)pvStart, uLength, DMA_TO_DEVICE);
++	dma_cache_sync(getDev(), (void *)pvStart, uLength, DMA_TO_DEVICE);
+ #else
+ 	dma_cache_wback((unsigned long)pvStart, uLength);
+ #endif
+@@ -4494,8 +4493,9 @@ static void pvr_dma_cache_wback(const void *pvStart, const void *pvEnd)
+ static void pvr_dma_cache_inv(const void *pvStart, const void *pvEnd)
+ {
+ 	size_t uLength = pvr_dma_range_len(pvStart, pvEnd);
++
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)
+-	dma_cache_sync(NULL, (void *)pvStart, uLength, DMA_FROM_DEVICE);
++	dma_cache_sync(getDev(), (void *)pvStart, uLength, DMA_FROM_DEVICE);
+ #else
+ 	dma_cache_inv((unsigned long)pvStart, uLength);
+ #endif
+diff --git a/services4/srvkm/include/osfunc.h b/services4/srvkm/include/osfunc.h
+index 4468fe3..71692ea 100644
+--- a/services4/srvkm/include/osfunc.h
++++ b/services4/srvkm/include/osfunc.h
+@@ -113,6 +113,8 @@ PVRSRV_ERROR OSUnReservePhys(IMG_VOID *pvCpuVAddr, IMG_SIZE_T uBytes, IMG_UINT32
+ 
+ #if defined(__linux__) && defined(__KERNEL__)
+ 
++struct device *getDev(IMG_VOID);
++
+ IMG_VOID OSFlushCPUCacheKM(IMG_VOID);
+ 
+ IMG_VOID OSCleanCPUCacheKM(IMG_VOID);
+diff --git a/services4/system/renesas/ipmmu.c b/services4/system/renesas/ipmmu.c
+index 6f0d311..60a3065 100644
+--- a/services4/system/renesas/ipmmu.c
++++ b/services4/system/renesas/ipmmu.c
+@@ -45,10 +45,55 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ 
+ #include "ipmmu_common.h"
+ #include "ipmmu_r8a779x.h"
+-
++#include <linux/clk.h>
+ 
+ static IPMMU_DATA *IpmmuData;
+ 
++struct clk	*psIPMMU_FCK = NULL;
++
++
++IMG_VOID DisableIPMMUClocks(IMG_VOID)
++{
++	PVR_DPF((PVR_DBG_MESSAGE, "DisableIPMMUClocks: Disabling IPMMU Clocks"));
++
++	if (psIPMMU_FCK)
++	{
++		clk_disable(psIPMMU_FCK);
++	}
++}
++
++
++PVRSRV_ERROR EnableIPMMUClocks(struct device *dev)
++{
++	PVRSRV_ERROR eError = PVRSRV_OK;
++	struct clk	*psIPPMMUClk;
++	IMG_UINT32 i32Result;
++
++	PVR_TRACE(("EnableIPMMUClocks: Enabling System Clocks"));
++
++
++	psIPPMMUClk = clk_get(dev, "ipmmu_clk");
++	if (IS_ERR(psIPPMMUClk))
++	{
++		PVR_DPF((PVR_DBG_ERROR, "EnableSsystemClocks: Couldn't get IPMMU Clock"));
++		return PVRSRV_ERROR_UNABLE_TO_ENABLE_CLOCK;
++	}
++
++	i32Result = clk_prepare_enable(psIPPMMUClk);
++	if (i32Result < 0)
++	{
++		PVR_DPF((PVR_DBG_ERROR, "EnableSGXClocks: Couldn't enable IPMMU clock (%d)", i32Result));
++		return PVRSRV_ERROR_UNABLE_TO_ENABLE_CLOCK;
++	}
++
++	psIPMMU_FCK = psIPPMMUClk;
++
++	return(eError);
++}
++
++
++
++
+ 
+ /*!
+ ******************************************************************************
+@@ -157,6 +202,8 @@ IMG_VOID r8a779x_ipmmu_deinitialize(IMG_VOID)
+ 
+ 	DeinitializeIpmmu();
+ 	IpmmuData = NULL;
++
++	DisableIPMMUClocks();
+ }
+ 
+ /*!
+@@ -169,10 +216,16 @@ IMG_VOID r8a779x_ipmmu_deinitialize(IMG_VOID)
+  @Return	IMG_BOOL
+ 
+ ******************************************************************************/
+-IMG_BOOL r8a779x_ipmmu_initialize(IMG_VOID)
++IMG_BOOL r8a779x_ipmmu_initialize(IMG_PVOID psDev)
+ {
++	struct device *dev = (struct device *)psDev;
+ 	PVR_TRACE(("ipmmu initalize"));
+ 
++	if (EnableIPMMUClocks(dev) != PVRSRV_OK){
++		PVR_DPF((PVR_DBG_ERROR, "ipmmu clock initialize failed"));
++		return IMG_FALSE;
++	}
++
+ 	IpmmuData = (IPMMU_DATA *)InitializeIpmmu();
+ 	if (NULL == IpmmuData) {
+ 		PVR_DPF((PVR_DBG_ERROR, "ipmmu initialize failed"));
+diff --git a/services4/system/renesas/ipmmu.h b/services4/system/renesas/ipmmu.h
+index f2f4882..e4bd50f 100644
+--- a/services4/system/renesas/ipmmu.h
++++ b/services4/system/renesas/ipmmu.h
+@@ -47,6 +47,6 @@ extern IMG_UINT64 r8a779x_ipmmu_virt_to_phys(IMG_UINT32 uiVAddr);
+ extern IMG_UINT32 r8a779x_ipmmu_phys_to_virt(IMG_UINT64 uiPAddr);
+ extern IMG_BOOL   r8a779x_ipmmu_setup_ipmmugp(IMG_VOID);
+ extern IMG_VOID   r8a779x_ipmmu_deinitialize(IMG_VOID);
+-extern IMG_BOOL   r8a779x_ipmmu_initialize(IMG_VOID);
++extern IMG_BOOL   r8a779x_ipmmu_initialize(struct device *dev);
+ 
+ #endif /* __IPMMU_H__ */
+diff --git a/services4/system/renesas/ipmmu_r8a779x.h b/services4/system/renesas/ipmmu_r8a779x.h
+index e207029..3004f01 100644
+--- a/services4/system/renesas/ipmmu_r8a779x.h
++++ b/services4/system/renesas/ipmmu_r8a779x.h
+@@ -130,7 +130,7 @@ static IMG_VOID DeinitializeIpmmu(IMG_VOID)
+ {
+ 	/* pgd table */
+ 	if (r8a779x_IpmuData.PgdTable)
+-		dma_free_coherent(0,
++		dma_free_coherent(getDev(),
+ 				  sizeof(pgdval_t) * r8a779x_IpmuData.TableNum,
+ 				  (pgdval_t *)&r8a779x_IpmuData.PgdTable,
+ 				  (dma_addr_t)r8a779x_IpmuData.PgdTablePAddr);
+@@ -160,7 +160,7 @@ static IMG_VOID *InitializeIpmmu(IMG_VOID)
+ 	}
+ 
+ 	/* PGD table */
+-	r8a779x_IpmuData.PgdTable = (pgdval_t *)dma_alloc_coherent(0,
++	r8a779x_IpmuData.PgdTable = (pgdval_t *)dma_alloc_coherent(getDev(),
+ 								   sizeof(pgdval_t) * r8a779x_IpmuData.TableNum,
+ 								   &r8a779x_IpmuData.PgdTablePAddr,
+ 								   GFP_KERNEL);
+diff --git a/services4/system/renesas/sysconfig.c b/services4/system/renesas/sysconfig.c
+index c41b61f..537f4f1 100644
+--- a/services4/system/renesas/sysconfig.c
++++ b/services4/system/renesas/sysconfig.c
+@@ -128,7 +128,6 @@ static INLINE PVRSRV_ERROR EnableSystemClocksWrap(SYS_DATA *psSysData)
+ 		}
+ 	}
+ #endif
+-
+ 	return eError;
+ }
+ 
+@@ -221,6 +220,7 @@ static PVRSRV_ERROR SysLocateDevices(SYS_DATA *psSysData)
+ 	}
+ 
+ 	ui32SGXRegBaseAddr = dev_res->start;
++
+ 	PVR_TRACE(("SGX register base: 0x%lx", (unsigned long)ui32SGXRegBaseAddr));
+ 
+ 	ui32SGXRegSize = (unsigned int)(dev_res->end - dev_res->start);
+@@ -268,7 +268,7 @@ static PVRSRV_ERROR SysLocateDevices(SYS_DATA *psSysData)
+ 		dma_addr_t dma;
+ 		IMG_VOID *pvLinAddr;
+ 
+-		pvLinAddr = dma_alloc_coherent(NULL, SGXDeviceMemorySize, &dma, GFP_KERNEL);
++		pvLinAddr = dma_alloc_coherent(getDev(), SGXDeviceMemorySize, &dma, GFP_KERNEL);
+ 		if (pvLinAddr == IMG_NULL)
+ 		{
+ 			return PVRSRV_ERROR_OUT_OF_MEMORY;
+@@ -343,9 +343,10 @@ PVRSRV_ERROR SysInitialise(IMG_VOID)
+ 	gpsSysData = &gsSysData;
+ 	OSMemSet(gpsSysData, 0, sizeof(SYS_DATA));
+ 
++
+ #if defined(CONFIG_ARM_LPAE) && defined(SUPPORT_RCAR_IPMMU)
+ 	/* init IPMMU */
+-	if (IMG_FALSE == r8a779x_ipmmu_initialize())
++	if (IMG_FALSE == r8a779x_ipmmu_initialize(getDev()))
+ 	{
+ 		eError = PVRSRV_ERROR_BUILD_MISMATCH;
+ 		PVR_DPF((PVR_DBG_ERROR, "SysInitialise: Failed in r8a779x_ipmmu_init"));
+@@ -486,6 +487,7 @@ PVRSRV_ERROR SysInitialise(IMG_VOID)
+ 	}
+ #endif /* defined(SUPPORT_FIXED_DEVICE_MEMORY) */
+ 
++
+ 	/*
+ 		Once all devices are registered, specify the backing store
+ 		and, if required, customise the memory heap config
+@@ -576,7 +578,6 @@ PVRSRV_ERROR SysInitialise(IMG_VOID)
+ 		return eError;
+ 	}
+ #endif
+-
+ 	/*
+ 		Initialise all devices 'managed' by services:
+ 	*/
+@@ -590,10 +591,12 @@ PVRSRV_ERROR SysInitialise(IMG_VOID)
+ 	}
+ 	SYS_SPECIFIC_DATA_SET(&gsSysSpecificData, SYS_SPECIFIC_DATA_ENABLE_INITDEV);
+ 
++
+ #if defined(SUPPORT_ACTIVE_POWER_MANAGEMENT)
+ 	DisableSGXClocksWrap(gpsSysData);
+ #endif
+ 
++
+ 	return PVRSRV_OK;
+ }
+ 
+@@ -642,7 +645,9 @@ PVRSRV_ERROR SysFinalise(IMG_VOID)
+ 
+ #if defined(__linux__)
+ 	/* Create a human readable version string for this system */
++	
+ 	gpsSysData->pszVersionString = SysCreateVersionString(gsSGXDeviceMap.sRegsCpuPBase);
++
+ 	if (!gpsSysData->pszVersionString)
+ 	{
+ 		PVR_DPF((PVR_DBG_ERROR,"SysFinalise: Failed to create a system version string"));
+@@ -767,7 +772,7 @@ PVRSRV_ERROR SysDeinitialise (SYS_DATA *psSysData)
+ #if defined(CONFIG_CMA)
+ 	if (SYS_SPECIFIC_DATA_TEST(psSysSpecData, SYS_SPECIFIC_DATA_ENABLE_CMA_MEMMAP))
+ 	{
+-		dma_free_coherent(NULL, psSysSpecData->ui32Size, psSysSpecData->pvLinAddr, psSysSpecData->dma);
++		dma_free_coherent(getDev(), psSysSpecData->ui32Size, psSysSpecData->pvLinAddr, psSysSpecData->dma);
+ 
+ 	}
+ #endif
+diff --git a/services4/system/renesas/sysutils.c b/services4/system/renesas/sysutils.c
+index f87a236..1874c5c 100644
+--- a/services4/system/renesas/sysutils.c
++++ b/services4/system/renesas/sysutils.c
+@@ -191,6 +191,7 @@ IMG_VOID SysGetSGXTimingInformation(SGX_TIMING_INFORMATION *psTimingInfo)
+ PVRSRV_ERROR EnableSGXClocks(SYS_DATA *psSysData)
+ {
+ #if !defined(NO_HARDWARE)
++
+ 	SYS_SPECIFIC_DATA *psSysSpecData = (SYS_SPECIFIC_DATA *) psSysData->pvSysSpecificData;
+ 
+ #if defined(USE_LINUX_CLK_FRAMEWORK)
+@@ -213,13 +214,12 @@ PVRSRV_ERROR EnableSGXClocks(SYS_DATA *psSysData)
+ 	}
+ #endif
+ 
+-
+ #if defined(LDM_PLATFORM) && !defined(SUPPORT_DRI_DRM)
+ 	pm_runtime_get_sync(&gpsPVRLDMDev->dev);
+ #endif
+ 
+ #if defined(USE_LINUX_CLK_FRAMEWORK)
+-	i32Result = clk_enable(psSysSpecData->psSGX_FCK);
++	i32Result = clk_prepare_enable(psSysSpecData->psSGX_FCK);
+ 	if (i32Result < 0)
+ 	{
+ 		PVR_DPF((PVR_DBG_ERROR, "EnableSGXClocks: Couldn't enable SGX functional clock (%d)", i32Result));
+@@ -311,8 +311,13 @@ PVRSRV_ERROR EnableSystemClocks(SYS_DATA *psSysData)
+ 
+ #if defined(USE_LINUX_CLK_FRAMEWORK)
+ #if defined(PVR_LDM_PLATFORM_PRE_REGISTERED)
++#if !defined(SUPPORT_RCAR_IPMMU)
+ 		psCLK = clk_get(&gpsPVRLDMDev->dev, NULL);	/* for R-Car Gen2 BSP */
+ #else
++		psCLK = clk_get(&gpsPVRLDMDev->dev, "sgx_clk");	/* for R-Car Gen2 BSP with IPMMU */
++#endif /* SUPPORT_RCAR_IPMMU */
++
++#else
+ 		psCLK = clk_get(NULL, "sgx");			/* for R-Car Gen1 BSP */
+ #endif
+ 		if (IS_ERR(psCLK))
+-- 
+1.9.1
+

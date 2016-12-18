@@ -1,0 +1,71 @@
+From 079231d41075cc3b7970946d37d5742961355d8e Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Thu, 16 Jun 2016 03:01:11 +0300
+Subject: [PATCH] uboot: ravb: r8a7795: remove PHY skews
+
+1) This patch makes Micrel PHY skews to default values
+after RAVB pins strength correction.
+
+This is very useful for connection that do not use PHY.
+
+2) Remove 2ns delay interoduces by DMAC APSR. This is
+not used in linux kernel, hence it is important to skips this
+in uboot.
+Again this affects the PHY-less connections.
+
+3) The RAVB pin strength set to default values, except the
+TXC that makes the trick for eliminating fight using skews and
+DMAC delays.
+
+This was verified with Salvator-X/H3ULCB ws1.0 (100MB) and WS1.1 (1G)
+in both uboot and kernel.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ board/renesas/ulcb/ulcb.c             | 6 ++++--
+ drivers/net/ravb.c                    | 3 ---
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/board/renesas/ulcb/ulcb.c b/board/renesas/ulcb/ulcb.c
+index 3808d3e..7e83b60 100644
+--- a/board/renesas/ulcb/ulcb.c
++++ b/board/renesas/ulcb/ulcb.c
+@@ -73,6 +73,7 @@ int board_early_init_f(void)
+ 
+ /* PFC */
+ #define PFC_PMMR	0xE6060000
++#define PFC_DRVCTRL1	0xE6060304
+ #define PFC_DRVCTRL2	0xE6060308
+ #define PFC_DRVCTRL3	0xE606030C
+ #define PFC_DRVCTRL5	0xE6060314
+@@ -152,8 +153,9 @@ int board_init(void)
+ 	gpio_request(GPIO_FN_AVB_AVTP_CAPTURE_B, NULL);
+ 
+ 	/* EtherAVB */
+-	write_drvctrl(0x00000333, 0x00000777, (void *)PFC_DRVCTRL2);
+-	write_drvctrl(0x33300000, 0x77700000, (void *)PFC_DRVCTRL3);
++	write_drvctrl(0x00000004, 0x00000007, (void *)PFC_DRVCTRL1);
++	write_drvctrl(0x44444414, 0x77777777, (void *)PFC_DRVCTRL2);
++	write_drvctrl(0x44400000, 0x77700000, (void *)PFC_DRVCTRL3);
+ 
+ 	/* AVB_PHY_RST */
+ 	gpio_request(GPIO_GP_2_10, NULL);
+diff --git a/drivers/net/ravb.c b/drivers/net/ravb.c
+index efd6fba..3983f08 100644
+--- a/drivers/net/ravb.c
++++ b/drivers/net/ravb.c
+@@ -429,11 +429,6 @@ static int ravb_dmac_init(struct ravb_dev *eth)
+ 	/* FIFO size set */
+ 	ravb_write(eth, 0x00222210, TGC);
+ 
+-	if (CONFIG_RAVB_PHY_MODE == PHY_INTERFACE_MODE_RGMII_ID) {
+-		/* delay CLK: 2ns */
+-		ravb_write(eth, 0x1ul << 14, APSR);
+-	}
+-
+ 	return ret;
+ }
+ 
+-- 
+1.9.1
+

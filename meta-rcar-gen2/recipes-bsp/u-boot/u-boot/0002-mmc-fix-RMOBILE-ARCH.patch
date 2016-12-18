@@ -1,0 +1,28 @@
+From 7f9ee4642abced2aa150e02c84c5bc7a97a2ec37 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Mon, 21 Nov 2016 00:47:12 +0300
+Subject: [PATCH] mmc: fix RMOBILE ARCH
+
+This fixes MOBILE ARCH
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/mmc/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/Kconfig b/drivers/mmc/Kconfig
+index c80efc3..ef4b6d6 100644
+--- a/drivers/mmc/Kconfig
++++ b/drivers/mmc/Kconfig
+@@ -36,7 +36,7 @@ config ROCKCHIP_DWMMC
+ 
+ config SH_SDHI
+ 	bool "SuperH/Renesas ARM SoCs on-chip SDHI host controller support"
+-	depends on RMOBILE
++	depends on ARCH_RMOBILE
+ 	help
+ 	  Support for the on-chip SDHI host controller on SuperH/Renesas ARM SoCs platform
+ 
+-- 
+1.9.1
+

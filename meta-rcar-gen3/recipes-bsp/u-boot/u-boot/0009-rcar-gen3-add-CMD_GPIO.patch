@@ -1,0 +1,27 @@
+From 3e733c036e8f50cf073b598074ce9fd6796ec89f Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sun, 31 Jul 2016 03:59:13 +0300
+Subject: [PATCH] rcar-gen3: add CMD_GPIO
+
+Enable CONFIG_CMD_GPIO
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ include/configs/rcar-gen3-common.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/configs/rcar-gen3-common.h b/include/configs/rcar-gen3-common.h
+index 63b80a4..50cfa8a 100644
+--- a/include/configs/rcar-gen3-common.h
++++ b/include/configs/rcar-gen3-common.h
+@@ -31,6 +31,7 @@
+ #define CONFIG_CMD_EXT2
+ #define CONFIG_CMD_EXT4
+ #define CONFIG_CMD_EXT4_WRITE
++#define CONFIG_CMD_GPIO
+ 
+ #define CONFIG_SYS_THUMB_BUILD
+ #define CONFIG_SYS_GENERIC_BOARD
+-- 
+1.9.1
+

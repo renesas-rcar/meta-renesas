@@ -1,0 +1,54 @@
+From 1896481e11810a69cef95b2158151eca21d34111 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Tue, 5 Jul 2016 22:36:25 +0300
+Subject: [PATCH] mmc: add Micron eMMC fixup
+
+The following eMMC needs delay between switching to HS mode and
+sending new cmd:
+{name = "R1J57L", manfid = 0x13, oemid = 0x14e}
+{name = "R1J55A", manfid = 0x13, oemid = 0x14e}
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/mmc/mmc.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/mmc/mmc.c b/drivers/mmc/mmc.c
+index a13769e..b724590 100644
+--- a/drivers/mmc/mmc.c
++++ b/drivers/mmc/mmc.c
+@@ -457,6 +457,21 @@ static int mmc_send_ext_csd(struct mmc *mmc, u8 *ext_csd)
+ 	return err;
+ }
+ 
++static void mmc_switch_fixup(struct mmc *mmc)
++{
++	u8 manfid = mmc->cid[0] >> 24;
++	u16 oemid = (mmc->cid[0] >> 8) & 0xffff;
++	char name[6];
++
++	sprintf(name, "%c%c%c%c%c%c", mmc->cid[0] & 0xff,
++		(mmc->cid[1] >> 24), (mmc->cid[1] >> 16) & 0xff,
++		(mmc->cid[1] >> 8) & 0xff, mmc->cid[1] & 0xff,
++		(mmc->cid[2] >> 24) & 0xff);
++
++	/* This Micron eMMC needs delay after switch to HS mode */
++	if (manfid == 0x13 && oemid == 0x14e && !strncmp(name, "R1J5", 4))
++		udelay(100);
++}
+ 
+ static int mmc_switch(struct mmc *mmc, u8 set, u8 index, u8 value)
+ {
+@@ -472,6 +487,9 @@ static int mmc_switch(struct mmc *mmc, u8 set, u8 index, u8 value)
+ 
+ 	ret = mmc_send_cmd(mmc, &cmd, NULL);
+ 
++	if (index == EXT_CSD_HS_TIMING)
++		mmc_switch_fixup(mmc);
++
+ 	/* Waiting for the ready status */
+ 	if (!ret)
+ 		ret = mmc_send_status(mmc, timeout);
+-- 
+1.9.1
+

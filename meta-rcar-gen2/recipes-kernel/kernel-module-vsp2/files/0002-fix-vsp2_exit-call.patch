@@ -1,0 +1,28 @@
+From 330173b252d1c84ac55c5a7e66358c14d68b51bb Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Sun, 18 Sep 2016 19:33:42 +0300
+Subject: [PATCH] fix vsp2_exit call.
+
+Add v4l2_device_unregister_subdev for each v4l subdev.
+---
+ drv/vsp2_drv.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drv/vsp2_drv.c b/drv/vsp2_drv.c
+index d15aefb..533d87a 100755
+--- a/drv/vsp2_drv.c
++++ b/drv/vsp2_drv.c
+@@ -154,6 +154,10 @@ static void vsp2_destroy_entities(struct vsp2_device *vsp2)
+ 	struct vsp2_entity *entity;
+ 	struct vsp2_entity *next;
+ 
++	list_for_each_entry(entity, &vsp2->entities, list_dev) {
++                v4l2_device_unregister_subdev(&entity->subdev);
++	}
++
+ 	list_for_each_entry_safe(entity, next, &vsp2->entities, list_dev) {
+ 		list_del(&entity->list_dev);
+ 		vsp2_entity_destroy(entity);
+-- 
+2.7.4
+

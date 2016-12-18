@@ -1,0 +1,85 @@
+From 37d0d275bd36db1eae1fb2b08762ae6f95066d78 Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Thu, 14 Jul 2016 22:51:40 +0300
+Subject: [PATCH] pinctrl: sh-pfc: r8a7792: Add CAN pin groups
+
+Add CAN0/1 data/clock pin groups to R8A7792 PFC driver.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7792.c | 37 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7792.c b/drivers/pinctrl/sh-pfc/pfc-r8a7792.c
+index 4e52323..791f98d 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7792.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7792.c
+@@ -812,6 +812,28 @@ static const unsigned int avb_avtp_match_pins[] = {
+ static const unsigned int avb_avtp_match_mux[] = {
+ 	AVB_AVTP_MATCH_MARK,
+ };
++/* - CAN -------------------------------------------------------------------- */
++static const unsigned int can0_data_pins[] = {
++	/* TX, RX */
++	RCAR_GP_PIN(10, 27), RCAR_GP_PIN(10, 28),
++};
++static const unsigned int can0_data_mux[] = {
++	CAN0_TX_MARK, CAN0_RX_MARK,
++};
++static const unsigned int can1_data_pins[] = {
++	/* TX, RX */
++	RCAR_GP_PIN(10, 30), RCAR_GP_PIN(10, 31),
++};
++static const unsigned int can1_data_mux[] = {
++	CAN1_TX_MARK, CAN1_RX_MARK,
++};
++static const unsigned int can_clk_pins[] = {
++	/* CAN_CLK */
++	RCAR_GP_PIN(10, 29),
++};
++static const unsigned int can_clk_mux[] = {
++	CAN_CLK_MARK,
++};
+ /* - INTC ------------------------------------------------------------------- */
+ static const unsigned int intc_irq0_pins[] = {
+ 	/* IRQ0 */
+@@ -981,6 +1003,9 @@ static const struct sh_pfc_pin_group pinmux_groups[] = {
+ 	SH_PFC_PIN_GROUP(avb_mii),
+ 	SH_PFC_PIN_GROUP(avb_gmii),
+ 	SH_PFC_PIN_GROUP(avb_avtp_match),
++	SH_PFC_PIN_GROUP(can0_data),
++	SH_PFC_PIN_GROUP(can1_data),
++	SH_PFC_PIN_GROUP(can_clk),
+ 	SH_PFC_PIN_GROUP(intc_irq0),
+ 	SH_PFC_PIN_GROUP(intc_irq1),
+ 	SH_PFC_PIN_GROUP(intc_irq2),
+@@ -1015,6 +1040,16 @@ static const char * const avb_groups[] = {
+ 	"avb_avtp_match",
+ };
+ 
++static const char * const can0_groups[] = {
++	"can0_data",
++	"can_clk",
++};
++
++static const char * const can1_groups[] = {
++	"can1_data",
++	"can_clk",
++};
++
+ static const char * const intc_groups[] = {
+ 	"intc_irq0",
+ 	"intc_irq1",
+@@ -1054,6 +1089,8 @@ static const char * const sdhi0_groups[] = {
+ 
+ static const struct sh_pfc_function pinmux_functions[] = {
+ 	SH_PFC_FUNCTION(avb),
++	SH_PFC_FUNCTION(can0),
++	SH_PFC_FUNCTION(can1),
+ 	SH_PFC_FUNCTION(intc),
+ 	SH_PFC_FUNCTION(lbsc),
+ 	SH_PFC_FUNCTION(scif0),
+-- 
+1.9.1
+

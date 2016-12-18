@@ -1,0 +1,38 @@
+From aedc53a9590b82860cde67e5460a171dadf362bb Mon Sep 17 00:00:00 2001
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Date: Tue, 16 Aug 2016 15:42:20 +0200
+Subject: [PATCH] ARM: debug-ll: Add support for r8a7992
+
+Enable low-level debugging support for R-Car V2H (r8a7792).
+V2H uses SCIF0 for the debug console, like most other R-Car Gen2 SoCs.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/Kconfig.debug | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/Kconfig.debug b/arch/arm/Kconfig.debug
+index a9693b6..88440f6 100644
+--- a/arch/arm/Kconfig.debug
++++ b/arch/arm/Kconfig.debug
+@@ -861,12 +861,12 @@ choice
+ 		  via SCIF2 on Renesas R-Car H1 (R8A7779).
+ 
+ 	config DEBUG_RCAR_GEN2_SCIF0
+-		bool "Kernel low-level debugging messages via SCIF0 on R8A7790/R8A7791/R8A7793"
+-		depends on ARCH_R8A7790 || ARCH_R8A7791 || ARCH_R8A7793
++		bool "Kernel low-level debugging messages via SCIF0 on R8A7790/R8A7791/R8A7792/R8A7793"
++		depends on ARCH_R8A7790 || ARCH_R8A7791 || ARCH_R8A7792 || ARCH_R8A7793
+ 		help
+ 		  Say Y here if you want kernel low-level debugging support
+-		  via SCIF0 on Renesas R-Car H2 (R8A7790), M2-W (R8A7791), or
+-		  M2-N (R8A7793).
++		  via SCIF0 on Renesas R-Car H2 (R8A7790), M2-W (R8A7791), V2H
++		  (R8A7792), or M2-N (R8A7793).
+ 
+ 	config DEBUG_RCAR_GEN2_SCIF2
+ 		bool "Kernel low-level debugging messages via SCIF2 on R8A7794"
+-- 
+1.9.1
+

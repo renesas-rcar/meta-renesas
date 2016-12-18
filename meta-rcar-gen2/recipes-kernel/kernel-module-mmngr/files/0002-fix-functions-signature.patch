@@ -1,0 +1,36 @@
+From 8deeebe2ca1a808825914cc2fd2259656411352e Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Mon, 24 Oct 2016 12:55:45 +0300
+Subject: [PATCH] fix functions signature
+
+---
+ drv/mmngr_buf_drv.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drv/mmngr_buf_drv.c b/drv/mmngr_buf_drv.c
+index 732e40c..41622e7 100755
+--- a/drv/mmngr_buf_drv.c
++++ b/drv/mmngr_buf_drv.c
+@@ -203,16 +203,14 @@ static void dmabuf_release(struct dma_buf *buf)
+ 
+ }
+ 
+-static int dmabuf_begin_cpu_access(struct dma_buf *buf, size_t size,
+-	size_t length, enum dma_data_direction direction)
++static int dmabuf_begin_cpu_access(struct dma_buf *buf, enum dma_data_direction direction)
+ {
+ 	return 0;
+ }
+ 
+-static void dmabuf_end_cpu_access(struct dma_buf *buf, size_t size,
+-	size_t length, enum dma_data_direction direction)
++static int dmabuf_end_cpu_access(struct dma_buf *buf,  enum dma_data_direction direction)
+ {
+-
++	return 0;
+ }
+ 
+ static void *dmabuf_kmap_atomic(struct dma_buf *buf, unsigned long page)
+-- 
+2.7.4
+

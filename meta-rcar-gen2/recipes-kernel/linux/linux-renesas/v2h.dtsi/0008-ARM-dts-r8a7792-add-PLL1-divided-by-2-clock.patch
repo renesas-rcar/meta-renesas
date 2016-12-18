@@ -1,0 +1,37 @@
+From 4b9b7b3a2c91e1ebf8be9c7efd4839b91d66e87e Mon Sep 17 00:00:00 2001
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Tue, 12 Jul 2016 00:51:58 +0300
+Subject: [PATCH] ARM: dts: r8a7792: add PLL1 divided by 2 clock
+
+Despite the fact that QSPI clock has PLL1/VCOx1/4 clock as a parent, the
+latter hasn't been added to the R8A7792 device tree. This patch corrects
+that oversight.
+
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/boot/dts/r8a7792.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7792.dtsi b/arch/arm/boot/dts/r8a7792.dtsi
+index 75256ef..d5fd076 100644
+--- a/arch/arm/boot/dts/r8a7792.dtsi
++++ b/arch/arm/boot/dts/r8a7792.dtsi
+@@ -284,6 +284,13 @@
+ 		};
+ 
+ 		/* Fixed factor clocks */
++		pll1_div2_clk: pll1_div2 {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7792_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <2>;
++			clock-mult = <1>;
++		};
+ 		zs_clk: zs {
+ 			compatible = "fixed-factor-clock";
+ 			clocks = <&cpg_clocks R8A7792_CLK_PLL1>;
+-- 
+1.9.1
+

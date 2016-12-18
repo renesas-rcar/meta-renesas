@@ -1,0 +1,30 @@
+From f89a51700d7ae0ef58956a8c8f0e2c68767bcdae Mon Sep 17 00:00:00 2001
+From: Magnus Damm <damm+renesas@opensource.se>
+Date: Tue, 28 Jun 2016 16:10:39 +0200
+Subject: [PATCH] ARM: shmobile: r8a7791: Prioritize DT APMU support
+
+Adjust the r8a7791 SoC support code to not configure any non-DT SMP code
+in case the DT-based enable-method has been installed already.
+
+Signed-off-by: Magnus Damm <damm+renesas@opensource.se>
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ arch/arm/mach-shmobile/setup-r8a7791.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index 3b8dbaf..110e8b5 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -29,6 +29,7 @@ static const char *const r8a7791_boards_compat_dt[] __initconst = {
+ };
+ 
+ DT_MACHINE_START(R8A7791_DT, "Generic R8A7791 (Flattened Device Tree)")
++	.smp_init	= shmobile_smp_init_fallback_ops,
+ 	.smp		= smp_ops(r8a7791_smp_ops),
+ 	.init_early	= shmobile_init_delay,
+ 	.init_time	= rcar_gen2_timer_init,
+-- 
+1.9.1
+

@@ -1,0 +1,49 @@
+From ffdc1370686caa18fd6e44952d7293dc1a19e897 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Sun, 11 Sep 2016 00:50:06 +0300
+Subject: [PATCH] plat: rcar: bl2_secure_setting: Enable access to RPC
+
+This enables access to RPC flash from non-secure mode.
+This is needed to access flash from U-Boot and Linux kernel.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ plat/renesas/rcar/bl2_secure_setting.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/plat/renesas/rcar/bl2_secure_setting.c b/plat/renesas/rcar/bl2_secure_setting.c
+index b83c8ce..7240b3e 100644
+--- a/plat/renesas/rcar/bl2_secure_setting.c
++++ b/plat/renesas/rcar/bl2_secure_setting.c
+@@ -105,10 +105,12 @@ static const struct {
+ 	/** Security attribute setting for slave ports 12 */
+ 	/*	{SEC_SEL12,		0xFFFFFFFFU},*/
+ 
++#if 0
+ 	/** Security attribute setting for slave ports 13 */
+ 	/* Bit22: RPC slave ports. */
+ 	/*        0: registers can be accessed from secure resource only. */
+ 	{SEC_SEL13,		0xFFBFFFFFU},
++#endif
+ 
+ 	/** Security attribute setting for slave ports 14 */
+ 	/* Bit27: System Timer (SCMT) slave ports. */
+@@ -228,12 +230,14 @@ static const struct {
+ 	/*	{SEC_GRP0COND12,	0x00000000U},*/
+ 	/*	{SEC_GRP1COND12,	0x00000000U},*/
+ 
++#if 0
+ 	/** Security group 0 attribute setting for slave ports 13 */
+ 	/** Security group 1 attribute setting for slave ports 13 */
+ 	/* Bit22: RPC slave ports. */
+ 	/*        SecurityGroup3 */
+ 	{SEC_GRP0COND13,	0x00400000U},
+ 	{SEC_GRP1COND13,	0x00400000U},
++#endif
+ 
+ 	/** Security group 0 attribute setting for slave ports 14 */
+ 	/** Security group 1 attribute setting for slave ports 14 */
+-- 
+1.9.1
+
