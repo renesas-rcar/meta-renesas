@@ -1,0 +1,11 @@
+[Unit]
+Description=Weston Wayland compositor
+After=dbus.service rc.pvr.service
+
+[Service]
+ExecStart=/usr/bin/weston-launch -u root -- $OPTARGS
+ExecStop=/usr/bin/killall -s KILL weston
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

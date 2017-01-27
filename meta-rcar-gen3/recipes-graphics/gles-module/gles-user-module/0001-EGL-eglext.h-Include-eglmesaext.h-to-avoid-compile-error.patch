@@ -1,0 +1,25 @@
+From b1e6a6ea447e01af0a31dfba44510aea23f2ffa8 Mon Sep 17 00:00:00 2001
+From: Tomohiro Komagata <tomohiro.komagata.aj@renesas.com>
+Date: Thu, 17 Nov 2016 14:41:05 +0900
+Subject: [PATCH] EGL: eglext.h: Include eglmesaext.h to avoid compile error
+
+---
+ usr/include/EGL/eglext.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/usr/include/EGL/eglext.h b/usr/include/EGL/eglext.h
+index de119f6..243da4a 100644
+--- a/usr/include/EGL/eglext.h
++++ b/usr/include/EGL/eglext.h
+@@ -645,6 +645,8 @@ EGLAPI EGLuint64NV EGLAPIENTRY eglGetSystemTimeNV (void);
+ #endif /* KHRONOS_SUPPORT_INT64 */
+ #endif /* EGL_NV_system_time */
+ 
++#include <EGL/eglmesaext.h>
++
+ #ifdef __cplusplus
+ }
+ #endif
+-- 
+1.9.1
+

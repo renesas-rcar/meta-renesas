@@ -1,0 +1,11 @@
+[Unit]
+Description=PowerVR consumer services
+
+[Service]
+ExecStart=/etc/init.d/rc.pvr start
+ExecStop=/etc/init.d/rc.pvr stop
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

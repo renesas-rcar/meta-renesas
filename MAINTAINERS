@@ -1,0 +1,28 @@
+This file contains a list of BSP maintainers for the BSPs contained in
+the meta-renesas repository.
+
+Descriptions of section entries:
+
+	M: Mail patches to: FullName <address@domain>
+	F: Files and directories with wildcard patterns.
+	   A trailing slash includes all files and subdirectory files.
+	   F:	meta-XXXXX/	all files in and below meta-XXXXX
+	   F:	meta-XXXXX/*	all files in meta-XXXXX, but not below
+	   One pattern per line.  Multiple F: lines acceptable.
+
+Please keep this list in alphabetical order.
+
+Maintainers List (try to look for most precise areas first)
+
+		-----------------------------------
+Renesas ARM SoCs R-Car Generation 3
+M:	Takamitsu Honda <takamitsu.honda.pv@renesas.com>
+F:	meta-rcar-gen3
+
+Renesas ARM SoCs R-Car Generation 2
+M:	Takamitsu Honda <takamitsu.honda.pv@renesas.com>
+F:	meta-rcar-gen2
+
+COMMON
+M:	Takamitsu Honda <takamitsu.honda.pv@renesas.com>
+F:	common

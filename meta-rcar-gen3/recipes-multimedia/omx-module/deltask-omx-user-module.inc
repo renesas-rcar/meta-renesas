@@ -1,0 +1,2 @@
+deltask do_configure
+deltask do_compile

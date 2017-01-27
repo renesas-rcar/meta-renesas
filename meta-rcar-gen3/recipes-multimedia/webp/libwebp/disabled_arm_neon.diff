@@ -1,0 +1,12 @@
+diff --git a/src/dsp/dsp.h b/src/dsp/dsp.h
+index 95f1ce0..fc20ffe 100644
+--- a/src/dsp/dsp.h
++++ b/src/dsp/dsp.h
+@@ -73,7 +73,6 @@ extern "C" {
+ // inline assembly would need to be modified for use with Native Client.
+ #if (defined(__ARM_NEON__) || defined(WEBP_ANDROID_NEON) || \
+      defined(__aarch64__)) && !defined(__native_client__)
+-#define WEBP_USE_NEON
+ #endif
+ 
+ #if defined(_MSC_VER) && _MSC_VER >= 1700 && defined(_M_ARM)
