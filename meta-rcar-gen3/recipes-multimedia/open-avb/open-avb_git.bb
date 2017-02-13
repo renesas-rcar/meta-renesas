@@ -16,7 +16,7 @@ DEPENDS = "libpcap"
 
 PV = "1.1+git${SRCPV}"
 
-SRCREV = "20731bd82d2b2e59387f7b3a61fc0370c93ec568"
+SRCREV = "bfa7f9d0c5c8ffe1c0248c6415b3f94e8b7f10c5"
 SRC_URI = "git://github.com/AVnu/Open-AVB.git;branch=open-avb-next"
 
 S = "${WORKDIR}/git"
