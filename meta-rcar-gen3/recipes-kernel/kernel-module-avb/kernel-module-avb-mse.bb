@@ -6,17 +6,17 @@ require include/rcar-gen3-modules-common.inc
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
-    file://MIT-COPYING;md5=192063521ce782a445a3c9f99a8ad560 \
+    file://MIT-COPYING;md5=98449101c5d5452a9429b88d6ead1ba4 \
 "
 
 inherit module distro_features_check
 
-DEPENDS = "linux-renesas kernel-module-avb-streaming"
+DEPENDS = "linux-renesas kernel-module-avb-streaming kernel-module-avb-mch"
 
 REQUIRED_DISTRO_FEATURES = "avb"
 
 SRC_URI = "git://github.com/renesas-rcar/avb-mse.git;branch=rcar-gen3"
-SRCREV = "50f3b60c6323788280f2b1e366e994d195a2ef1d"
+SRCREV = "8ca6e9506f4a4c897d9c5e1c6cad9582d8726741"
 
 S = "${WORKDIR}/git"
 
