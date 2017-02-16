@@ -2,7 +2,7 @@ SRC_URI = "git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.2.0"
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
-SRCREV = "39061698da1b8e29b1cfc8648210837cbdc11295"
+SRCREV = "2534795f6e9b17e3699de18207c75e868630b446"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
     file://omx/gstomx.h;beginline=1;endline=22;md5=9281ffe981001da5a13db0303fa7c4ab \

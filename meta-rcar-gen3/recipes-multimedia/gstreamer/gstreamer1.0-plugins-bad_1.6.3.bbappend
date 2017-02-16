@@ -4,7 +4,7 @@ SRC_URI += " \
     file://0001-glimagesink-Downrank-to-marginal.patch \
     file://0002-glplugin-glwindow-fix-memory-leak-of-navigation-thre.patch \
 "
-SRCREV = "3143b25ca69f1f6bacdac0a33248007c979ba4a5"
+SRCREV = "9b7c647fb89c137439c2edae5e96c44c8fe6337f"
 
 DEPENDS += "weston"
 
