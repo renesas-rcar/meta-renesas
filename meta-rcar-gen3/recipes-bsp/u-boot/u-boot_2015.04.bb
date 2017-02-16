@@ -3,12 +3,12 @@ require recipes-bsp/u-boot/u-boot.inc
 DEPENDS += "dtc-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
-BRANCH = "v2015.04/rcar-3.5.0"
+BRANCH = "v2015.04/rcar-3.5.2"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=c7383a594871c03da76b3707929d2919"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
-SRCREV = "1852a50412be4cd8b4f668d78003293e437e7ac2"
+SRCREV = "8fb308f7050caa47c3071582738e9af8f3cd9db3"
 
 PV = "v2015.04+git${SRCPV}"
 
