@@ -7,7 +7,7 @@ require include/rcar-gen3-modules-common.inc
 
 QOSIF_LIB_URL = "git://github.com/renesas-rcar/qos_lib.git"
 BRANCH = "rcar-gen3"
-SRCREV = "ae3bfdb6d8bcf99c73b30f82bb9a1418cc998d00"
+SRCREV = "84ea8d562a55d1fbd7b6acf08a498d33a92dc392"
 
 SRC_URI = "${QOSIF_LIB_URL};branch=${BRANCH}"
 
