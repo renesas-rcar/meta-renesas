@@ -3,12 +3,12 @@ DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 require include/avb-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/${MACHINE}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb"
 
 RENESAS_BSP_URL = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
-BRANCH = "v4.9/rcar-3.5.1"
-SRCREV = "13e7680774d9103bb2685635238bcf577a52ff96"
+BRANCH = "v4.9/rcar-3.5.2"
+SRCREV = "d4f12792cd97457e13ea4a77b4aa9fb3c28875fe"
 
 SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 
