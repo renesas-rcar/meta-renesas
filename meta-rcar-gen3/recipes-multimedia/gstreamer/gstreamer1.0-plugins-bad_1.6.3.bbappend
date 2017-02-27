@@ -1,9 +1,6 @@
-SRC_URI = "git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.6.3"
-SRC_URI += " \
-    file://configure-allow-to-disable-libssh2.patch \
-    file://0001-glimagesink-Downrank-to-marginal.patch \
-    file://0002-glplugin-glwindow-fix-memory-leak-of-navigation-thre.patch \
-"
+SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
+SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.6.3"
+
 SRCREV = "9b7c647fb89c137439c2edae5e96c44c8fe6337f"
 
 DEPENDS += "weston"
