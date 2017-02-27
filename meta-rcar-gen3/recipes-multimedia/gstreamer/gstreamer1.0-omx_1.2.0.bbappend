@@ -1,4 +1,5 @@
-SRC_URI = "git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.2.0"
+SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
+SRC_URI_append = " git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.2.0"
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
