@@ -26,11 +26,11 @@ do_install() {
 
     if [ "X${USE_CMSBCM}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/bcm
-        install -m 755 ${S}/bcm/${baselib}/libcmsbcm.so.0.5.2 ${D}/${libdir}
+        install -m 755 ${S}/bcm/${baselib}/libcmsbcm.so.0.6.0 ${D}/${libdir}
         install -m 644 ${S}/bcm/include/*.h ${D}/${includedir}/cms/bcm
 
         cd ${D}/${libdir}
-        ln -s libcmsbcm.so.0.5.2 libcmsbcm.so.0
+        ln -s libcmsbcm.so.0.6.0 libcmsbcm.so.0
         ln -s libcmsbcm.so.0 libcmsbcm.so
     fi
 
@@ -46,11 +46,11 @@ do_install() {
 
     if [ "X${USE_CMSDGC}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/dgc
-        install -m 755 ${S}/dgc/${baselib}/libcmsdgc.so.0.5.1 ${D}/${libdir}
+        install -m 755 ${S}/dgc/${baselib}/libcmsdgc.so.0.6.0 ${D}/${libdir}
         install -m 644 ${S}/dgc/include/*.h ${D}/${includedir}/cms/dgc
 
         cd ${D}/${libdir}
-        ln -s libcmsdgc.so.0.5.1 libcmsdgc.so.0
+        ln -s libcmsdgc.so.0.6.0 libcmsdgc.so.0
         ln -s libcmsdgc.so.0 libcmsdgc.so
     fi
 }
