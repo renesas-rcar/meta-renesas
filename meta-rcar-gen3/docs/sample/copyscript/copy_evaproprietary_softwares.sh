@@ -1281,16 +1281,19 @@ while [ $# -gt 0 ] ; do
 done
 
 #### 3) Checking ClickThrough present
-if [ ! -f ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.tar.gz ]; then
-    echo "R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.tar.gz not found!"
+if [ ! -f ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip ]; then
+    echo "R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip not found!"
     usage
     exit 1
 fi
-if [ ! -f ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.tar.gz ]; then
-    echo "R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.tar.gz not found!"
+if [ ! -f ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip ]; then
+    echo "R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip not found!"
     usage
     exit 1
 fi
+
+unzip -d ${_src_full} -oq ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip
+unzip -d ${_src_full} -oq ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip
 
 tar -C ${_src_full} -zxf ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.tar.gz --strip-components 2
 tar -C ${_src_full} -zxf ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.tar.gz --strip-components 2
