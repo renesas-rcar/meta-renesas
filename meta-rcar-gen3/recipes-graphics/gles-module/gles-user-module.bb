@@ -53,7 +53,7 @@ do_install() {
     install -d ${D}/${exec_prefix}/local/bin
     install -m 755 ${S}/${exec_prefix}/local/bin/dlcsrv_REL ${D}/${exec_prefix}/local/bin/dlcsrv_REL
     install -d ${D}/lib/firmware
-    install -m 644 ${S}/lib/firmware/rgx.fw ${D}/lib/firmware/
+    install -m 644 ${S}/lib/firmware/* ${D}/lib/firmware/
 
     # Install pkgconfig
     install -d ${D}/${libdir}/pkgconfig
@@ -87,7 +87,7 @@ PACKAGES = "\
 FILES_${PN} = " \
     ${sysconfdir}/* \
     ${libdir}/* \
-    /lib/firmware/rgx.fw \
+    /lib/firmware/rgx.fw* \
     /usr/local/bin/* \
 "
 
