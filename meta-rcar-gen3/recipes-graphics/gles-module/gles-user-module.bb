@@ -32,6 +32,9 @@ SYSTEMD_SERVICE_${PN} = "rc.pvr.service"
 do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
 
+#The headers of gles-user-module need headers from virtual/mesa.
+do_populate_sysroot[depends] += "virtual/mesa:do_populate_sysroot"
+
 do_install() {
     # Install configuration files
     install -d ${D}/${sysconfdir}/init.d
