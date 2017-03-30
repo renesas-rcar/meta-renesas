@@ -4,7 +4,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 BRANCH = "rcar-gen3/1.11.0/gl-fallback"
 
-SRCREV = "1a8e5cd9e2e100d100e076dba3d937a5dc60093d"
+SRCREV = "a9df84304f6fcf8025beae998adcc4b02d8b968e"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/weston.git;branch=${BRANCH} \
