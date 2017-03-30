@@ -22,7 +22,7 @@ SRC_URI_append = " \
 
 inherit update-rc.d systemd
 
-INITSCRIPT_NAME = "rc.pvr"
+INITSCRIPT_NAME = "pvrinit"
 INITSCRIPT_PARAMS = "start 7 5 2 . stop 62 0 1 6 ."
 SYSTEMD_SERVICE_${PN} = "rc.pvr.service"
 
@@ -77,7 +77,7 @@ do_install() {
         install -d ${D}/${systemd_system_unitdir}/
         install -m 644 ${WORKDIR}/rc.pvr.service ${D}/${systemd_system_unitdir}/
         install -d ${D}/${exec_prefix}/bin
-        install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${exec_prefix}/bin/
+        install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${exec_prefix}/bin/pvrinit
     fi
 }
 
