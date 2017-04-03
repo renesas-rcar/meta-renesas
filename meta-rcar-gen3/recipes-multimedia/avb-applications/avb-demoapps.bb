@@ -20,6 +20,10 @@ includedir = "/usr/local/include"
 addtask do_init_submodule after do_unpack before do_patch
 
 do_init_submodule() {
+    export http_proxy=${http_proxy}
+    export https_proxy=${https_proxy}
+    export HTTP_PROXY=${HTTP_PROXY}
+    export HTTPS_PROXY=${HTTPS_PROXY}
     cd ${S}
     git submodule init
     git submodule update
