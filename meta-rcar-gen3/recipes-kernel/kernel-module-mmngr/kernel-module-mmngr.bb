@@ -14,7 +14,7 @@ MMNGR_CFG_salvator-x = "MMNGR_SALVATORX"
 MMNGR_CFG_h3ulcb = "MMNGR_SALVATORX"
 MMNGR_CFG_m3ulcb = "MMNGR_SALVATORX"
 
-includedir="/usr/local/include"
+includedir="${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
 
 do_compile() {

@@ -18,7 +18,8 @@ DEPENDS += '${@base_conditional("USE_VIDEO_OMX", "1", "kernel-module-uvcs-drv", 
 
 inherit autotools
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
+CFLAGS += " -I${STAGING_DIR_HOST}${RENESAS_DATADIR}/include"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 OMX_EVA_PREFIX = '${@base_conditional("USE_OMX_EVA_PKG", "1", "EVA", "", d )}'

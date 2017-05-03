@@ -11,7 +11,7 @@ QOSIF_LIB_DIR = "qos_if-module/files/qos_if"
 
 EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_compile() {
     # Build shared library

@@ -20,15 +20,15 @@ do_compile() {
 
 do_install() {
     # Create destination folder
-    install -d ${D}/usr/local/bin/
+    install -d ${D}${RENESAS_DATADIR}/bin/
 
     # Copy user test program
     if [ X${WS} = "X32" ]; then
-        install -m 755 ${S}/${VSPMIF_TP_DIR}/vspm_tp ${D}/usr/local/bin/vspm_tp32
-        install -m 755 ${S}/${VSPMIF_TP_DIR}/fdpm_tp ${D}/usr/local/bin/fdpm_tp32
+        install -m 755 ${S}/${VSPMIF_TP_DIR}/vspm_tp ${D}${RENESAS_DATADIR}/bin/vspm_tp32
+        install -m 755 ${S}/${VSPMIF_TP_DIR}/fdpm_tp ${D}${RENESAS_DATADIR}/bin/fdpm_tp32
     else
-        install -m 755 ${S}/${VSPMIF_TP_DIR}/vspm_tp ${D}/usr/local/bin/
-        install -m 755 ${S}/${VSPMIF_TP_DIR}/fdpm_tp ${D}/usr/local/bin/
+        install -m 755 ${S}/${VSPMIF_TP_DIR}/vspm_tp ${D}${RENESAS_DATADIR}/bin/
+        install -m 755 ${S}/${VSPMIF_TP_DIR}/fdpm_tp ${D}${RENESAS_DATADIR}/bin/
     fi
 }
 
@@ -37,10 +37,10 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 FILES_${PN} = " \
-    ${@base_conditional('WS', '32', '/usr/local/bin/vspm_tp32 /usr/local/bin/fdpm_tp32', \
-    '/usr/local/bin/vspm_tp /usr/local/bin/fdpm_tp', d)}"
+    ${@base_conditional('WS', '32', '${RENESAS_DATADIR}/bin/vspm_tp32 ${RENESAS_DATADIR}/bin/fdpm_tp32', \
+    '${RENESAS_DATADIR}/bin/vspm_tp ${RENESAS_DATADIR}/bin/fdpm_tp', d)}"
 
 FILES_${PN}-dbg = " \
-    /usr/local/bin/.debug/*"
+    ${RENESAS_DATADIR}/bin/.debug/*"
 
 RPROVIDES_${PN} += "vspmif-tp-user-module"
