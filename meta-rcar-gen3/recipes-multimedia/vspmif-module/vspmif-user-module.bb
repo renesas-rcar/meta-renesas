@@ -11,7 +11,7 @@ VSPMIF_LIB_DIR = "vspm_if-module/files/vspm_if"
 
 EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_compile() {
     export VSPM_LEGACY_IF="1"

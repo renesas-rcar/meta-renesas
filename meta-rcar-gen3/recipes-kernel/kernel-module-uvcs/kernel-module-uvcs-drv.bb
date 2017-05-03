@@ -11,6 +11,8 @@ LIC_FILES_CHKSUM = " \
     file://src/cmn/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 require include/omx-control.inc
+require include/rcar-gen3-path-common.inc
+
 inherit module
 PR = "r0"
 
@@ -23,7 +25,7 @@ EXTRA_OEMAKE += "CROSS_COMPILE=${CROSS_COMPILE}"
 
 B="${S}/src/makefile"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_compile_prepend() {
     export UVCS_SRC="${S}/src"

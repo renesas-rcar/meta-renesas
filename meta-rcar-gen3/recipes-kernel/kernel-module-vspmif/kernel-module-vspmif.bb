@@ -24,7 +24,7 @@ SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH}"
 S = "${WORKDIR}/git"
 VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_compile() {
     cd ${S}/${VSPMIF_DRV_DIR}/drv

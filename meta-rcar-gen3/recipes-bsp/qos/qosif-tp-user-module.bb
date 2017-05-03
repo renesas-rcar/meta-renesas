@@ -9,7 +9,7 @@ PR = "r0"
 S = "${WORKDIR}/git"
 QOSIF_TP_DIR = "qos_if-tp-user/files/qos_if"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_compile() {
     cd ${S}/${QOSIF_TP_DIR}
@@ -18,10 +18,10 @@ do_compile() {
 
 do_install() {
     # Create destination directory
-    install -d ${D}/usr/local/bin/
+    install -d ${D}${RENESAS_DATADIR}/bin/
 
     # Copy user test program
-    install -m 755 ${S}/${QOSIF_TP_DIR}/qos_tp ${D}/usr/local/bin/
+    install -m 755 ${S}/${QOSIF_TP_DIR}/qos_tp ${D}${RENESAS_DATADIR}/bin/
 }
 
 PACKAGES = " \
@@ -29,8 +29,8 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-FILES_${PN} = "/usr/local/bin/qos_tp"
+FILES_${PN} = "${RENESAS_DATADIR}/bin/qos_tp"
 
 FILES_${PN}-dbg = " \
-    /usr/local/bin/.debug/* \
+    ${RENESAS_DATADIR}/bin/.debug/* \
 "

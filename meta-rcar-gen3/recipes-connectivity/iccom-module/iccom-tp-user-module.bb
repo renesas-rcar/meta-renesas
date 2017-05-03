@@ -2,6 +2,7 @@ DESCRIPTION = "Linux ICCOM library test applications for Renesas R-Car Gen3"
 
 require iccom-user-module.inc
 require include/multimedia-control.inc
+require include/rcar-gen3-path-common.inc
 
 DEPENDS = " \
     kernel-module-iccom-mfis \
@@ -32,20 +33,20 @@ do_compile() {
 
 do_install() {
     # Create destination directory
-    install -d ${D}/usr/local/bin
+    install -d ${D}${RENESAS_DATADIR}/bin
 
     # Install test applications
-    install -m 755 ${S}/sample_test/sample_test ${D}/usr/local/bin/
-    install -m 755 ${S}/sample_test_fatal/sample_test_fatal ${D}/usr/local/bin/
-    install -m 755 ${S}/sample_sharedmem/sample_sharedmem ${D}/usr/local/bin/
-    install -m 755 ${S}/sample_lock/sample_lock ${D}/usr/local/bin/
+    install -m 755 ${S}/sample_test/sample_test ${D}${RENESAS_DATADIR}/bin/
+    install -m 755 ${S}/sample_test_fatal/sample_test_fatal ${D}${RENESAS_DATADIR}/bin/
+    install -m 755 ${S}/sample_sharedmem/sample_sharedmem ${D}${RENESAS_DATADIR}/bin/
+    install -m 755 ${S}/sample_lock/sample_lock ${D}${RENESAS_DATADIR}/bin/
 }
 
 FILES_${PN} = " \
-    /usr/local/bin/sample_test \
-    /usr/local/bin/sample_test_fatal \
-    /usr/local/bin/sample_sharedmem \
-    /usr/local/bin/sample_lock \
+    ${RENESAS_DATADIR}/bin/sample_test \
+    ${RENESAS_DATADIR}/bin/sample_test_fatal \
+    ${RENESAS_DATADIR}/bin/sample_sharedmem \
+    ${RENESAS_DATADIR}/bin/sample_lock \
 "
 
 # Skip debug split

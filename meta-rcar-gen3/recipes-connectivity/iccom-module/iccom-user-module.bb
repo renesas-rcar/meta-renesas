@@ -1,6 +1,7 @@
 DESCRIPTION = "Linux ICCOM library for Renesas R-Car Gen3"
 
 require iccom-user-module.inc
+require include/rcar-gen3-path-common.inc
 
 DEPENDS = " \
     kernel-module-iccom-mfis \
@@ -19,13 +20,13 @@ B = "${S}/source"
 do_install() {
     # Create destination directories
     install -d ${D}/${libdir}
-    install -d ${D}/usr/local/include
+    install -d ${D}${RENESAS_DATADIR}/include
 
     # Install library
     install -m 755 ${B}/libiccom.so ${D}/${libdir}/
 
     # Install shared header file
-    install -m 644 ${S}/include/iccom_if_app.h ${D}/usr/local/include/
+    install -m 644 ${S}/include/iccom_if_app.h ${D}${RENESAS_DATADIR}/include/
 }
 
 FILES_${PN} = " \
@@ -33,7 +34,7 @@ FILES_${PN} = " \
 "
 
 FILES_${PN}-dev = " \
-    /usr/local/include/iccom_if_app.h \
+    ${RENESAS_DATADIR}/include/iccom_if_app.h \
 "
 
 # Skip debug split

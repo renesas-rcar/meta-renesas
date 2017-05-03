@@ -9,7 +9,7 @@ PR = "r0"
 S = "${WORKDIR}/git"
 MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 
-includedir="/usr/local/include"
+includedir="${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
 
 do_compile() {

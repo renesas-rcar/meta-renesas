@@ -35,13 +35,13 @@ do_compile[noexec] = "1"
 do_install() {
     # Create destination folders
     install -d ${D}/${libdir}
-    install -d ${D}/usr/local/include
+    install -d ${D}${RENESAS_DATADIR}/include
 
     # Copy library
     install -m 644 ${S}/${baselib}/*.a ${D}/${libdir}
 
     # Copy shared header files
-    install -m 644 ${S}/include/*.h ${D}/usr/local/include
+    install -m 644 ${S}/include/*.h ${D}${RENESAS_DATADIR}/include
 }
 
 PACKAGES = " \
@@ -54,7 +54,7 @@ FILES_${PN} = ""
 ALLOW_EMPTY_${PN} = "1"
 
 FILES_${PN}-dev = " \
-    /usr/local/include/*.h \
+    ${RENESAS_DATADIR}/include/*.h \
 "
 FILES_${PN}-staticdev = " \
     ${libdir}/*.a \

@@ -23,7 +23,7 @@ SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
 S = "${WORKDIR}/git"
 QOS_DRV_DIR = "qos-module/files/qos/drv"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_compile() {
     cd ${S}/${QOS_DRV_DIR}/

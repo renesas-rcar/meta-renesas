@@ -22,7 +22,7 @@ SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH}"
 
 S = "${WORKDIR}/git"
 VSPM_DRV_DIR = "vspm-module/files/vspm"
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_compile() {
     cd ${S}/${VSPM_DRV_DIR}/drv

@@ -14,7 +14,7 @@ DEPENDS = "kernel-module-avb-streaming libyaml"
 
 S = "${WORKDIR}/git/avb-demoapps"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 # submodule is extracted before do_populate_lic
 addtask do_init_submodule after do_unpack before do_patch

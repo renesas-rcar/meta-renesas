@@ -39,18 +39,18 @@ do_compile[noexec] = "1"
 do_install() {
     # Create destination folders
     install -d ${D}/${libdir}
-    install -d ${D}/usr/local/include
-    install -d ${D}/usr/local/src/dtv/reference
+    install -d ${D}${RENESAS_DATADIR}/include
+    install -d ${D}${RENESAS_DATADIR}/src/dtv/reference
 
     # Copy library
     install -m 644 ${S}/${baselib}/*.a ${D}/${libdir}/
 
     # Copy shared header files
-    install -m 644 ${S}/include/*.h ${D}/usr/local/include
+    install -m 644 ${S}/include/*.h ${D}${RENESAS_DATADIR}/include
 
     # Copy reference files
-    install -m 644 ${S}/userfunc/*.h ${D}/usr/local/src/dtv/reference
-    install -m 644 ${S}/userfunc/*.c ${D}/usr/local/src/dtv/reference
+    install -m 644 ${S}/userfunc/*.h ${D}${RENESAS_DATADIR}/src/dtv/reference
+    install -m 644 ${S}/userfunc/*.c ${D}${RENESAS_DATADIR}/src/dtv/reference
 }
 
 PACKAGES = " \
@@ -63,8 +63,8 @@ FILES_${PN} = ""
 ALLOW_EMPTY_${PN} = "1"
 
 FILES_${PN}-dev = " \
-    /usr/local/include/*.h \
-    /usr/local/src/dtv/reference/* \
+    ${RENESAS_DATADIR}/include/*.h \
+    ${RENESAS_DATADIR}/src/dtv/reference/* \
 "
 FILES_${PN}-staticdev = " \
     ${libdir}/*.a \

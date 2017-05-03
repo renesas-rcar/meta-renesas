@@ -20,7 +20,7 @@ SRCREV = "283ef1ed8f17167be4ec6906c0a45b206caf9f7a"
 
 S = "${WORKDIR}/git"
 
-includedir = "/usr/local/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 do_install_append() {
     # Create destination directories
