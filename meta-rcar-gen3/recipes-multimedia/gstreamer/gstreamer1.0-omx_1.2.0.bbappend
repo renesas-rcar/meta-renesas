@@ -16,6 +16,10 @@ EXTRA_OECONF_append = " --enable-experimental"
 EXTRA_OECONF_append = " --with-omx-header-path=${S}/omx/openmax"
 
 do_configure_prepend() {
+    export http_proxy=${http_proxy}
+    export https_proxy=${https_proxy}
+    export HTTP_PROXY=${HTTP_PROXY}
+    export HTTPS_PROXY=${HTTPS_PROXY}
     cd ${S}
     ./autogen.sh --noconfigure
     cd ${B}
