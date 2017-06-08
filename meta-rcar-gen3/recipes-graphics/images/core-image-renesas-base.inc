@@ -8,10 +8,15 @@ IMAGE_INSTALL_append = " \
 "
 
 # Support secure environment
-IMAGE_INSTALL_append = " \
+OPTEE_PKGS = " \
     optee-linuxdriver \
     optee-linuxdriver-armtz \
     optee-client \
+"
+
+# Installation for QoS packages
+IMAGE_INSTALL_append = " \
+    ${@base_conditional("MACHINE", "draak", "", "${OPTEE_PKGS}", d)} \
 "
 
 # Add overrides for selection 32 bit or 64 bit target
