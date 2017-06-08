@@ -23,11 +23,14 @@ QOS_USER_PKGS_aarch64-poky-linux = " \
     qosif-user-module \
     qosif-tp-user-module \
 "
+QOS_PKGS = " \
+    kernel-module-qos \
+    ${QOS_USER_PKGS} \
+"
 
 # Installation for QoS packages
 IMAGE_INSTALL_append = " \
-    kernel-module-qos \
-    ${QOS_USER_PKGS} \
+    ${@base_conditional("MACHINE", "draak", "", "${QOS_PKGS}", d)} \
 "
 
 # Renesas Basic packages for 32bit
