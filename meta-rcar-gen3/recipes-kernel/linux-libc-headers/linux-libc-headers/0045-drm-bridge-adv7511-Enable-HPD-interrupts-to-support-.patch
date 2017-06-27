@@ -1,0 +1,62 @@
+From d95c400f02b61bf453c09e5f2c3723c910b0176d Mon Sep 17 00:00:00 2001
+From: Archit Taneja <architt@codeaurora.org>
+Date: Mon, 16 Jan 2017 16:52:49 -0800
+Subject: drm/bridge: adv7511: Enable HPD interrupts to support hotplug and
+ improve monitor detection
+
+On some adv7511 implementations, we can get some spurious
+disconnect signals which can cause monitor probing to fail.
+
+This patch enables HPD (hot plug detect) interrupt support
+which allows the monitor to be properly re-initialized when
+the spurious disconnect signal goes away.
+
+This also enables proper hotplug support.
+
+Cc: David Airlie <airlied@linux.ie>
+Cc: Archit Taneja <architt@codeaurora.org>
+Cc: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Cc: Lars-Peter Clausen <lars@metafoo.de>
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: dri-devel@lists.freedesktop.org
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Tested-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Originally-by: Archit Taneja <architt@codeaurora.org>
+[jstultz: Added proper commit message]
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Archit Taneja <architt@codeaurora.org>
+Link: http://patchwork.freedesktop.org/patch/msgid/1484614372-15342-4-git-send-email-john.stultz@linaro.org
+
+(cherry picked from commit 40d86d2d22b04c2b2e48e2fe7054b85cf5021f25)
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/bridge/adv7511/adv7511_drv.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+index 809b169..8272ecd 100644
+--- a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
++++ b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+@@ -340,7 +340,7 @@ static void adv7511_power_on(struct adv7511 *adv7511)
+ 		 * Still, let's be safe and stick to the documentation.
+ 		 */
+ 		regmap_write(adv7511->regmap, ADV7511_REG_INT_ENABLE(0),
+-			     ADV7511_INT0_EDID_READY);
++			     ADV7511_INT0_EDID_READY | ADV7511_INT0_HPD);
+ 		regmap_write(adv7511->regmap, ADV7511_REG_INT_ENABLE(1),
+ 			     ADV7511_INT1_DDC_ERROR);
+ 	}
+@@ -837,6 +837,10 @@ static int adv7511_bridge_attach(struct drm_bridge *bridge)
+ 	if (adv->type == ADV7533)
+ 		ret = adv7533_attach_dsi(adv);
+ 
++	if (adv->i2c_main->irq)
++		regmap_write(adv->regmap, ADV7511_REG_INT_ENABLE(0),
++			     ADV7511_INT0_HPD);
++
+ 	return ret;
+ }
+ 
+-- 
+1.9.1
+

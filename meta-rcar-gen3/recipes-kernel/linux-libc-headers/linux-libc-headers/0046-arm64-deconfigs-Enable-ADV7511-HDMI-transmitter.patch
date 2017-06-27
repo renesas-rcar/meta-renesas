@@ -1,0 +1,26 @@
+From 9335469851510246d36face65f091b288f1a27fc Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 31 May 2017 12:51:42 +0900
+Subject: arm64: deconfigs: Enable ADV7511 HDMI transmitter
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/configs/defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index dce174e0..5900b9e 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -330,7 +330,7 @@ CONFIG_DRM_RCAR_LVDS=y
+ CONFIG_DRM_RCAR_VSP=y
+ CONFIG_DRM_TEGRA=m
+ CONFIG_DRM_PANEL_SIMPLE=m
+-CONFIG_DRM_I2C_ADV7511=m
++CONFIG_DRM_I2C_ADV7511=y
+ CONFIG_DRM_HISI_KIRIN=m
+ CONFIG_FB=y
+ CONFIG_FB_ARMCLCD=y
+-- 
+1.9.1
+

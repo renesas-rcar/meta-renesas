@@ -1,0 +1,102 @@
+From 5f9ae9fdc503579b6b514cbf548c0c16d12cf916 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 14 Jun 2017 09:46:04 +0900
+Subject: drm: rcar-du: Add lower limit refresh rate check
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c |  7 ++++++-
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c | 13 +++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h |  6 ++++++
+ 3 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
+index f0a1122..b973181 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdscon.c
+@@ -33,6 +33,7 @@ struct rcar_du_lvds_connector {
+ 		unsigned int width_mm;		/* Panel width in mm */
+ 		unsigned int height_mm;		/* Panel height in mm */
+ 		unsigned int freq_limit;	/* limit frequency */
++		unsigned int lower_ref;		/* lower limit of refresh */
+ 		struct videomode mode;
+ 	} panel;
+ 
+@@ -108,7 +109,11 @@ int rcar_du_lvds_connector_init(struct rcar_du_device *rcdu,
+ 	if (lvdscon->panel.freq_limit)
+ 		rcar_du_lvdsenc_set_limit_freq(renc->lvds,
+ 					      lvdscon->panel.freq_limit);
+-
++	of_property_read_u32(np, "lower-refresh",
++			     &lvdscon->panel.lower_ref);
++	if (lvdscon->panel.lower_ref)
++		rcar_du_lvdsenc_set_lower_refresh(renc->lvds,
++						  lvdscon->panel.lower_ref);
+ 	if (of_device_is_compatible(np, "panel-lvds")) {
+ 		enum rcar_lvds_mode mode = 0;
+ 		const char *mapping = NULL;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+index fb8d7fd..f8d5721 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+@@ -44,6 +44,7 @@ struct rcar_du_lvdsenc {
+ 	enum rcar_lvds_mode mode;
+ 	int gpio_pd;
+ 	int freq_limit;
++	int lower_ref;
+ };
+ 
+ static void rcar_lvds_write(struct rcar_du_lvdsenc *lvds, u32 reg, u32 data)
+@@ -486,6 +487,17 @@ void rcar_du_lvdsenc_atomic_check(struct rcar_du_lvdsenc *lvds,
+ 	if (lvds->freq_limit)
+ 		mode->clock = clamp(mode->clock, 25175,
+ 				    lvds->freq_limit / 1000);
++
++	if (lvds->lower_ref) {
++		if (drm_mode_vrefresh(mode) < lvds->lower_ref)
++			mode->status = MODE_BAD;
++	}
++}
++
++void rcar_du_lvdsenc_set_lower_refresh(struct rcar_du_lvdsenc *lvds,
++				       unsigned int lower_ref)
++{
++	lvds->lower_ref = lower_ref;
+ }
+ 
+ void rcar_du_lvdsenc_set_limit_freq(struct rcar_du_lvdsenc *lvds,
+@@ -540,6 +552,7 @@ int rcar_du_lvdsenc_init(struct rcar_du_device *rcdu)
+ 		lvds->input = i ? RCAR_LVDS_INPUT_DU1 : RCAR_LVDS_INPUT_DU0;
+ 		lvds->enabled = false;
+ 		lvds->freq_limit = 0;
++		lvds->lower_ref = 0;
+ 
+ 		/* Get optional backlight GPIO */
+ 		if (rcdu->info->num_lvds > 1)
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h
+index 692f58a..aeb8cff 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.h
+@@ -35,6 +35,8 @@ enum rcar_lvds_mode {
+ 
+ #if IS_ENABLED(CONFIG_DRM_RCAR_LVDS)
+ int rcar_du_lvdsenc_init(struct rcar_du_device *rcdu);
++void rcar_du_lvdsenc_set_lower_refresh(struct rcar_du_lvdsenc *lvds,
++				       unsigned int lower_ref);
+ void rcar_du_lvdsenc_set_mode(struct rcar_du_lvdsenc *lvds,
+ 			      enum rcar_lvds_mode mode);
+ void rcar_du_lvdsenc_set_limit_freq(struct rcar_du_lvdsenc *lvds,
+@@ -53,6 +55,10 @@ static inline int rcar_du_lvdsenc_init(struct rcar_du_device *rcdu)
+ {
+ 	return 0;
+ }
++static inline void rcar_du_lvdsenc_set_lower_refresh(struct rcar_du_lvdsenc *lvds,
++						     unsigned int lower_ref)
++{
++}
+ static inline void rcar_du_lvdsenc_set_mode(struct rcar_du_lvdsenc *lvds,
+ 					    enum rcar_lvds_mode mode)
+ {
+-- 
+1.9.1
+

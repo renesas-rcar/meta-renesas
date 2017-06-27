@@ -1,0 +1,134 @@
+From aabd44b0686cebc961c18eaf19ea0120863d10ec Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 2 Jun 2017 20:12:44 +0900
+Subject: media: rcar-vin: Add r8a77995 device support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/media/platform/rcar-vin/rcar-core.c | 10 ++++++++++
+ drivers/media/platform/rcar-vin/rcar-dma.c  | 12 ++++++------
+ drivers/media/platform/rcar-vin/rcar-v4l2.c |  4 ++--
+ drivers/media/platform/rcar-vin/rcar-vin.h  |  1 +
+ 4 files changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/media/platform/rcar-vin/rcar-core.c b/drivers/media/platform/rcar-vin/rcar-core.c
+index 712e2de..1ecd695 100644
+--- a/drivers/media/platform/rcar-vin/rcar-core.c
++++ b/drivers/media/platform/rcar-vin/rcar-core.c
+@@ -1354,6 +1354,12 @@ static int rvin_group_graph_init(struct rvin_dev *vin)
+ 	},
+ };
+ 
++static const struct rvin_info rcar_info_r8a77995 = {
++	.chip = RCAR_D3,
++	.max_width = 4096,
++	.max_height = 4096,
++};
++
+ static const struct rvin_info rcar_info_gen2 = {
+ 	.chip = RCAR_GEN2,
+ 	.max_width = 2048,
+@@ -1362,6 +1368,10 @@ static int rvin_group_graph_init(struct rvin_dev *vin)
+ 
+ static const struct of_device_id rvin_of_id_table[] = {
+ 	{
++		.compatible = "renesas,vin-r8a77995",
++		.data = &rcar_info_r8a77995,
++	},
++	{
+ 		.compatible = "renesas,vin-r8a7795",
+ 		.data = &rcar_info_r8a7795,
+ 	},
+diff --git a/drivers/media/platform/rcar-vin/rcar-dma.c b/drivers/media/platform/rcar-vin/rcar-dma.c
+index c34c541..6d966b9 100644
+--- a/drivers/media/platform/rcar-vin/rcar-dma.c
++++ b/drivers/media/platform/rcar-vin/rcar-dma.c
+@@ -197,7 +197,7 @@ static u32 rvin_read(struct rvin_dev *vin, u32 offset)
+ 
+ int rvin_is_scaling(struct rvin_dev *vin)
+ {
+-	if (vin->info->chip == RCAR_GEN3) {
++	if ((vin->info->chip == RCAR_GEN3) || (vin->info->chip == RCAR_D3)) {
+ 		if ((vin->crop.width != vin->format.width) ||
+ 			(vin->crop.height != vin->format.height))
+ 			return 1;
+@@ -282,7 +282,7 @@ static int rvin_setup(struct rvin_dev *vin)
+ 	}
+ 
+ 	/* Enable VSYNC Field Toogle mode after one VSYNC input */
+-	if (vin->info->chip == RCAR_GEN3)
++	if ((vin->info->chip == RCAR_GEN3) || (vin->info->chip == RCAR_D3))
+ 		dmr2 = VNDMR2_FTEV;
+ 	else
+ 		dmr2 = VNDMR2_FTEV | VNDMR2_VLV(1);
+@@ -347,7 +347,7 @@ static int rvin_setup(struct rvin_dev *vin)
+ 	if (input_is_yuv == output_is_yuv)
+ 		vnmc |= VNMC_BPS;
+ 
+-	if (vin->info->chip == RCAR_GEN3) {
++	if ((vin->info->chip == RCAR_GEN3) || (vin->info->chip == RCAR_D3)) {
+ 		/* Select between CSI-2 and Digital input */
+ 		if (rent->mbus_cfg.type == V4L2_MBUS_CSI2)
+ 			vnmc &= ~VNMC_DPINE;
+@@ -420,7 +420,7 @@ static void rvin_capture_stop(struct rvin_dev *vin)
+ {
+ 	rvin_capture_off(vin);
+ 
+-	if (vin->info->chip == RCAR_GEN3) {
++	if ((vin->info->chip == RCAR_GEN3) || (vin->info->chip == RCAR_D3)) {
+ 		u32 vnmc;
+ 
+ 		vnmc = rvin_read(vin, VNMC_REG);
+@@ -1007,7 +1007,7 @@ void rvin_crop_scale_comp(struct rvin_dev *vin)
+ 		break;
+ 	}
+ 
+-	if (vin->info->chip != RCAR_GEN3)
++	if ((vin->info->chip != RCAR_GEN3) && (vin->info->chip != RCAR_D3))
+ 		rvin_crop_scale_comp_gen2(vin);
+ 	else
+ 		rvin_crop_scale_comp_gen3(vin);
+@@ -1022,7 +1022,7 @@ void rvin_crop_scale_comp(struct rvin_dev *vin)
+ void rvin_scale_try(struct rvin_dev *vin, struct v4l2_pix_format *pix,
+ 		    u32 width, u32 height)
+ {
+-	if (vin->info->chip == RCAR_GEN3) {
++	if ((vin->info->chip == RCAR_GEN3) || (vin->info->chip == RCAR_D3)) {
+ 		/* Scaling width check */
+ 		if (pix->width % 32)
+ 			vin_dbg(vin, "Scaling width is not multiple of 32\n");
+diff --git a/drivers/media/platform/rcar-vin/rcar-v4l2.c b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+index 1a4ca90..48aef50 100644
+--- a/drivers/media/platform/rcar-vin/rcar-v4l2.c
++++ b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+@@ -326,13 +326,13 @@ static int __rvin_try_format(struct rvin_dev *vin,
+ 		return -EINVAL;
+ 	}
+ 
+-	if ((vin->info->chip != RCAR_GEN3) &&
++	if (((vin->info->chip != RCAR_GEN3) && (vin->info->chip != RCAR_D3)) &&
+ 		(pix->pixelformat == V4L2_PIX_FMT_NV12)) {
+ 		vin_err(vin, "pixel format NV12 is supported from GEN3\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	if ((vin->info->chip != RCAR_GEN3) &&
++	if (((vin->info->chip != RCAR_GEN3) && (vin->info->chip != RCAR_D3)) &&
+ 		(pix->pixelformat == V4L2_PIX_FMT_ABGR32)) {
+ 		vin_err(vin, "pixel format ARGB8888 is supported from GEN2\n");
+ 		return -EINVAL;
+diff --git a/drivers/media/platform/rcar-vin/rcar-vin.h b/drivers/media/platform/rcar-vin/rcar-vin.h
+index b66b20a..37d3fd7 100644
+--- a/drivers/media/platform/rcar-vin/rcar-vin.h
++++ b/drivers/media/platform/rcar-vin/rcar-vin.h
+@@ -47,6 +47,7 @@ enum chip_id {
+ 	RCAR_H1,
+ 	RCAR_M1,
+ 	RCAR_GEN2,
++	RCAR_D3,
+ 	RCAR_GEN3,
+ };
+ 
+-- 
+1.9.1
+

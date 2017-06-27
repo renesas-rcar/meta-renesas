@@ -1,0 +1,33 @@
+From 71e7004923bb30bbcc6b19a0bce7bd065c4219d1 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:52:35 +0900
+Subject: clk: renesas: r8a77995: Add ZG clock
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 0f16e93..0831d82 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -101,6 +101,7 @@ enum r8a77995_clk_types {
+ 	/* Core Clock Outputs */
+ 	DEF_BASE("z2",   R8A77995_CLK_Z2,   CLK_TYPE_GEN3_Z2,   CLK_PLL0_DIV3),
+ 
++	DEF_FIXED("zg",         R8A77995_CLK_ZG,    CLK_PLL0_DIV5,  1, 1),
+ 	DEF_FIXED("ztr",        R8A77995_CLK_ZTR,   CLK_PLL1,       6, 1),
+ 	DEF_FIXED("zt",         R8A77995_CLK_ZT,    CLK_PLL1,       4, 1),
+ 	DEF_FIXED("zx",         R8A77995_CLK_ZX,    CLK_PLL1,       3, 1),
+@@ -138,6 +139,7 @@ enum r8a77995_clk_types {
+ };
+ 
+ static const struct mssr_mod_clk r8a77995_mod_clks[] __initconst = {
++	DEF_MOD("3dge",			 112,	R8A77995_CLK_ZG),
+ 	DEF_MOD("scif5",		 202,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("scif4",		 203,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("scif3",		 204,	R8A77995_CLK_S3D4C),
+-- 
+1.9.1
+

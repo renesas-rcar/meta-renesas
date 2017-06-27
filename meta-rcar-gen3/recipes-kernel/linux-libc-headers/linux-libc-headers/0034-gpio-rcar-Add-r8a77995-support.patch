@@ -1,0 +1,28 @@
+From 0d65a9bec98517eea2ed1a01542cab02236d61a4 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 19 Jun 2017 21:57:11 +0900
+Subject: gpio: rcar: Add r8a77995 support
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/gpio/gpio-rcar.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index 7685d31..bfced70 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -363,6 +363,10 @@ struct gpio_rcar_info {
+ 		/* Gen3 GPIO is identical to Gen2. */
+ 		.data = &gpio_rcar_info_gen2,
+ 	}, {
++		.compatible = "renesas,gpio-r8a77995",
++		/* Gen3 GPIO is identical to Gen2. */
++		.data = &gpio_rcar_info_gen2,
++	}, {
+ 		.compatible = "renesas,gpio-rcar",
+ 		.data = &gpio_rcar_info_gen1,
+ 	}, {
+-- 
+1.9.1
+

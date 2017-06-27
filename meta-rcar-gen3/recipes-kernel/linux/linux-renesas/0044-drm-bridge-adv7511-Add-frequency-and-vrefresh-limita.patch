@@ -1,0 +1,93 @@
+From 050fe798a33276448a34e04985340b63b652a76d Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Tue, 13 Jun 2017 20:45:37 +0900
+Subject: drm/bridge: adv7511: Add frequency and vrefresh limitation option
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/bridge/adv7511/adv7511.h     |  7 +++++++
+ drivers/gpu/drm/bridge/adv7511/adv7511_drv.c | 22 ++++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
+
+diff --git a/drivers/gpu/drm/bridge/adv7511/adv7511.h b/drivers/gpu/drm/bridge/adv7511/adv7511.h
+index 161c923..f875305 100644
+--- a/drivers/gpu/drm/bridge/adv7511/adv7511.h
++++ b/drivers/gpu/drm/bridge/adv7511/adv7511.h
+@@ -246,6 +246,8 @@ enum adv7511_sync_polarity {
+  * @sync_pulse:			Select the sync pulse
+  * @vsync_polarity:		vsync input signal configuration
+  * @hsync_polarity:		hsync input signal configuration
++ * @limit_vrefresh_option:	limit vrefresh option
++ * @limit_freq_option:		limit frequency option
+  */
+ struct adv7511_link_config {
+ 	unsigned int input_color_depth;
+@@ -260,6 +262,9 @@ struct adv7511_link_config {
+ 	enum adv7511_input_sync_pulse sync_pulse;
+ 	enum adv7511_sync_polarity vsync_polarity;
+ 	enum adv7511_sync_polarity hsync_polarity;
++
++	unsigned int limit_vrefresh_option;
++	unsigned int limit_freq_option;
+ };
+ 
+ /**
+@@ -322,6 +327,8 @@ struct adv7511 {
+ 	enum adv7511_sync_polarity vsync_polarity;
+ 	enum adv7511_sync_polarity hsync_polarity;
+ 	bool rgb;
++	unsigned int limit_vref;
++	unsigned int limit_freq;
+ 
+ 	struct edid *edid;
+ 
+diff --git a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+index 8ed3906..809b169 100644
+--- a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
++++ b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+@@ -323,6 +323,8 @@ static void adv7511_set_link_config(struct adv7511 *adv7511,
+ 	adv7511->hsync_polarity = config->hsync_polarity;
+ 	adv7511->vsync_polarity = config->vsync_polarity;
+ 	adv7511->rgb = config->input_colorspace == HDMI_COLORSPACE_RGB;
++	adv7511->limit_vref = config->limit_freq_option;
++	adv7511->limit_freq = config->limit_vrefresh_option;
+ }
+ 
+ static void adv7511_power_on(struct adv7511 *adv7511)
+@@ -623,6 +625,16 @@ static int adv7511_mode_valid(struct adv7511 *adv7511,
+ 	if (mode->clock > 165000)
+ 		return MODE_CLOCK_HIGH;
+ 
++	if (adv7511->limit_freq) {
++		if (mode->clock > (adv7511->limit_freq / 1000))
++			return MODE_CLOCK_HIGH;
++	}
++
++	if (adv7511->limit_vref) {
++		if (drm_mode_vrefresh(mode) < adv7511->limit_vref)
++			return MODE_BAD;
++	}
++
+ 	return MODE_OK;
+ }
+ 
+@@ -919,6 +931,16 @@ static int adv7511_parse_dt(struct device_node *np,
+ 	config->vsync_polarity = ADV7511_SYNC_POLARITY_PASSTHROUGH;
+ 	config->hsync_polarity = ADV7511_SYNC_POLARITY_PASSTHROUGH;
+ 
++	ret = of_property_read_u32(np, "limit-frequency",
++				   &config->limit_vrefresh_option);
++	if (ret < 0)
++		config->limit_vrefresh_option = 0;
++
++	ret = of_property_read_u32(np, "lower-refresh",
++				   &config->limit_freq_option);
++	if (ret < 0)
++		config->limit_freq_option = 0;
++
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
+

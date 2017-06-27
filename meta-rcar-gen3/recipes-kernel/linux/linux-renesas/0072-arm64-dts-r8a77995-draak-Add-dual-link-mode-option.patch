@@ -1,0 +1,26 @@
+From 1a214cfcbd8e8df9889855aea2442d901877cf7e Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Thu, 15 Jun 2017 11:45:05 +0900
+Subject: arm64: dts: r8a77995-draak: Add dual link mode option
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 2f3d171..06a13e7 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -331,6 +331,8 @@
+ 	backlight0-gpios = <&gpio2 31 GPIO_ACTIVE_HIGH>;/* LVDS0 */
+ 	backlight1-gpios = <&gpio4 0 GPIO_ACTIVE_HIGH>;	/* LVDS1 */
+ 
++	mode = "dual-link";
++
+ 	ports {
+ 		port@0 {
+ 			endpoint {
+-- 
+1.9.1
+

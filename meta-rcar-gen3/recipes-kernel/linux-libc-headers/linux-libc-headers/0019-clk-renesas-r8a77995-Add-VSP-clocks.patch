@@ -1,0 +1,27 @@
+From 44de90f42761cc9c36cebd0e6f9b930ad1c1a607 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:39:59 +0900
+Subject: clk: renesas: r8a77995: Add VSP clocks
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 2a9970c..29d19cf 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -131,6 +131,9 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("fcpvd1",		 602,	R8A77995_CLK_S1D2),
+ 	DEF_MOD("fcpvd0",		 603,	R8A77995_CLK_S1D2),
+ 	DEF_MOD("fcpvbs",		 607,	R8A77995_CLK_S1D2),
++	DEF_MOD("vspd1",		 622,	R8A77995_CLK_S1D2),
++	DEF_MOD("vspd0",		 623,	R8A77995_CLK_S1D2),
++	DEF_MOD("vspbs",		 627,	R8A77995_CLK_S1D2),
+ 	DEF_MOD("etheravb",		 812,	R8A77995_CLK_S3D2),
+ 	DEF_MOD("gpio6",		 906,	R8A77995_CLK_S3D4),
+ 	DEF_MOD("gpio5",		 907,	R8A77995_CLK_S3D4),
+-- 
+1.9.1
+

@@ -1,0 +1,37 @@
+From 6f03723653d7bdd5ea1eee7094d10d3829ec3c53 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 19 Jun 2017 21:04:33 +0900
+Subject: clk: renesas: r8a77995: Add MSIOF controller clocks
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 5cde07b..0f16e93 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -129,6 +129,8 @@ enum r8a77995_clk_types {
+ 
+ 	DEF_GEN3_SD("sd0",      R8A77995_CLK_SD0,   CLK_SDSRC,     0x0074),
+ 
++	DEF_DIV6P1("mso",       R8A77995_CLK_MSO,   CLK_PLL1,      0x0014),
++
+ 	DEF_R8A77995_LV("lv0",  R8A77995_CLK_LV0,   CLK_PLL1,      0x04cc),
+ 	DEF_R8A77995_LV("lv1",  R8A77995_CLK_LV1,   CLK_PLL1,      0x04d0),
+ 
+@@ -141,6 +143,10 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("scif3",		 204,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("scif1",		 206,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("scif0",		 207,	R8A77995_CLK_S3D4C),
++	DEF_MOD("msiof3",		 208,	R8A77995_CLK_MSO),
++	DEF_MOD("msiof2",		 209,	R8A77995_CLK_MSO),
++	DEF_MOD("msiof1",		 210,	R8A77995_CLK_MSO),
++	DEF_MOD("msiof0",		 211,	R8A77995_CLK_MSO),
+ 	DEF_MOD("scif2",		 310,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("emmc0",		 312,	R8A77995_CLK_SD0),
+ 	DEF_MOD("intc-ex",		 407,	R8A77995_CLK_CP),
+-- 
+1.9.1
+

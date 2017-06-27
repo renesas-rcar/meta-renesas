@@ -8,3 +8,8 @@ SRCREV = "58e9b7349e1a28f2ef830f9164112fb17ba31426"
 SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
 S = "${WORKDIR}/git"
+
+# D3 patches for kernel
+SRC_URI_append = " \
+    file://D3_BSP_patches.scc \
+"

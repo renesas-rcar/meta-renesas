@@ -1,0 +1,163 @@
+From fd3f48be257942256516ba4303915b49e5711574 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Fri, 19 May 2017 12:16:20 +0900
+Subject: arm64: dts: r8a77995: Add Renesas R8A77995 SoC support
+
+This patch adds basic device support for the R8A77995 SoC.
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ Documentation/devicetree/bindings/arm/shmobile.txt |   2 +
+ arch/arm64/boot/dts/renesas/r8a77995.dtsi          | 127 +++++++++++++++++++++
+ 2 files changed, 129 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a77995.dtsi
+
+diff --git a/Documentation/devicetree/bindings/arm/shmobile.txt b/Documentation/devicetree/bindings/arm/shmobile.txt
+index c950263..4a31463 100644
+--- a/Documentation/devicetree/bindings/arm/shmobile.txt
++++ b/Documentation/devicetree/bindings/arm/shmobile.txt
+@@ -35,6 +35,8 @@ SoCs:
+     compatible = "renesas,r8a7795"
+   - R-Car M3-W (R8A77960)
+     compatible = "renesas,r8a7796"
++  - R-Car D3 (R8A77995)
++    compatible = "renesas,r8a77995"
+ 
+ 
+ Boards:
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995.dtsi b/arch/arm64/boot/dts/renesas/r8a77995.dtsi
+new file mode 100644
+index 0000000..30d0ccc
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r8a77995.dtsi
+@@ -0,0 +1,127 @@
++/*
++ * Device Tree Source for the r8a77995 SoC
++ *
++ * Copyright (C) 2017 Renesas Electronics Corp.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++#include <dt-bindings/clock/r8a77995-cpg-mssr.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++
++/ {
++	compatible = "renesas,r8a77995";
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	aliases {
++	};
++
++	psci {
++		compatible = "arm,psci-1.0";
++		method = "smc";
++	};
++
++	cpus {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		a53_0: cpu@0 {
++			compatible = "arm,cortex-a53", "arm,armv8";
++			reg = <0x100>;
++			device_type = "cpu";
++		};
++
++		L2_CA53: cache-controller@0 {
++			compatible = "cache";
++			reg = <0x100>;
++			cache-unified;
++			cache-level = <2>;
++		};
++	};
++
++	extal_clk: extal {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by the board */
++		clock-frequency = <0>;
++	};
++
++	extalr_clk: extalr {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by the board */
++		clock-frequency = <0>;
++	};
++
++	soc {
++		compatible = "simple-bus";
++		interrupt-parent = <&gic>;
++
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		gic: interrupt-controller@f1010000 {
++			compatible = "arm,gic-400";
++			#interrupt-cells = <3>;
++			#address-cells = <0>;
++			interrupt-controller;
++			reg = <0x0 0xf1010000 0 0x1000>,
++			      <0x0 0xf1020000 0 0x20000>,
++			      <0x0 0xf1040000 0 0x20000>,
++			      <0x0 0xf1060000 0 0x20000>;
++			interrupts = <GIC_PPI 9
++					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_HIGH)>;
++		};
++
++		timer {
++			compatible = "arm,armv8-timer";
++			interrupts = <GIC_PPI 13
++					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
++				     <GIC_PPI 14
++					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
++				     <GIC_PPI 11
++					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
++				     <GIC_PPI 10
++					(GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>;
++		};
++
++		cpg: clock-controller@e6150000 {
++			compatible = "renesas,r8a77995-cpg-mssr";
++			reg = <0 0xe6150000 0 0x1000>;
++			clocks = <&extal_clk>, <&extalr_clk>;
++			clock-names = "extal", "extalr";
++			#clock-cells = <2>;
++			#power-domain-cells = <0>;
++		};
++
++		prr: chipid@fff00044 {
++			compatible = "renesas,prr";
++			reg = <0 0xfff00044 0 4>;
++		};
++
++		rst: reset-controller@e6160000 {
++			compatible = "renesas,r8a77995-rst";
++			reg = <0 0xe6160000 0 0x0200>;
++		};
++
++		pfc: pfc@e6060000 {
++			compatible = "renesas,pfc-r8a77995";
++			reg = <0 0xe6060000 0 0x508>;
++		};
++
++		scif2: serial@e6e88000 {
++			compatible = "renesas,scif-r8a77995",
++				     "renesas,rcar-gen3-scif", "renesas,scif";
++			reg = <0 0xe6e88000 0 64>;
++			interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 310>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++	};
++};
+-- 
+1.9.1
+

@@ -1,0 +1,28 @@
+From 3b42da29a6490e4a10c48d686bb7403e5d542e06 Mon Sep 17 00:00:00 2001
+From: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Date: Fri, 16 Jun 2017 16:01:39 +0900
+Subject: clk: renesas: r8a77995: Add SYS-DMAC clock
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 0831d82..3f50be0 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -147,6 +147,9 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("scif0",		 207,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("msiof3",		 208,	R8A77995_CLK_MSO),
+ 	DEF_MOD("msiof2",		 209,	R8A77995_CLK_MSO),
++	DEF_MOD("sys-dmac2",		 217,	R8A77995_CLK_S1D4),
++	DEF_MOD("sys-dmac1",		 218,	R8A77995_CLK_S1D4),
++	DEF_MOD("sys-dmac0",		 219,	R8A77995_CLK_S1D4),
+ 	DEF_MOD("msiof1",		 210,	R8A77995_CLK_MSO),
+ 	DEF_MOD("msiof0",		 211,	R8A77995_CLK_MSO),
+ 	DEF_MOD("scif2",		 310,	R8A77995_CLK_S3D4C),
+-- 
+1.9.1
+

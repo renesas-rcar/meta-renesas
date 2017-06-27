@@ -1,0 +1,26 @@
+From 21ed1b8a228ae4a1c4a2ad1ce35439327e7c9139 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 5 Jul 2017 14:29:13 +0900
+Subject: arm64: dts: r8a77995-draak: Remove dual-link mode in du node
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 4f7fc52..956a1a43 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -396,8 +396,6 @@
+ 	backlight0-gpios = <&gpio2 31 GPIO_ACTIVE_HIGH>;/* LVDS0 */
+ 	backlight1-gpios = <&gpio4 0 GPIO_ACTIVE_HIGH>;	/* LVDS1 */
+ 
+-	mode = "dual-link";
+-
+ 	ports {
+ 		port@0 {
+ 			endpoint {
+-- 
+1.9.1
+

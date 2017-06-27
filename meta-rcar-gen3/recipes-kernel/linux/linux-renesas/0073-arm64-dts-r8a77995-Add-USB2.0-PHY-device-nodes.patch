@@ -1,0 +1,34 @@
+From e07117122406658facf0cd573701d55b538fdb38 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Thu, 25 May 2017 14:24:00 +0900
+Subject: arm64: dts: r8a77995: Add USB2.0 PHY device nodes
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995.dtsi b/arch/arm64/boot/dts/renesas/r8a77995.dtsi
+index 01d8ece..c93ba40 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77995.dtsi
+@@ -389,6 +389,16 @@
+ 			status = "disabled";
+ 		};
+ 
++		usb2_phy0: usb-phy@ee080200 {
++			compatible = "renesas,usb2-phy-r8a77995";
++			reg = <0 0xee080200 0 0x700>;
++			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD 703>;
++			power-domains = <&cpg>;
++			#phy-cells = <0>;
++			status = "disabled";
++		};
++
+ 		vspd0: vsp@fea20000 {
+ 			compatible = "renesas,vsp2";
+ 			reg = <0 0xfea20000 0 0x4000>;
+-- 
+1.9.1
+

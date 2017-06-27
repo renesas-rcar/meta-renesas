@@ -1,0 +1,65 @@
+From 55fa9d4bdc82aac85ec2565c018fcba2f7fb031e Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 5 Jun 2017 11:44:46 +0900
+Subject: media: rcar-vin: Fix signal polarity select
+
+When the type of mbus is V4L2_MBUS_BT656, the signal polarity select
+register is set active high to polarity of VSYNC and HSYNC automatically.
+so this patch corrects it.
+In addtion, since the CHS bit in VnDMR2 register should be set when
+ITU-R BT 656 mode. This patch adds its settig.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/media/platform/rcar-vin/rcar-dma.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/platform/rcar-vin/rcar-dma.c b/drivers/media/platform/rcar-vin/rcar-dma.c
+index 6d966b9..0910cee 100644
+--- a/drivers/media/platform/rcar-vin/rcar-dma.c
++++ b/drivers/media/platform/rcar-vin/rcar-dma.c
+@@ -101,6 +101,7 @@
+ #define VNMC_INF_YUV10_BT601	(3 << 16)
+ #define VNMC_INF_YUV16		(5 << 16)
+ #define VNMC_INF_RGB888		(6 << 16)
++#define VNMC_INF_MASK		(7 << 16)
+ #define VNMC_VUP		(1 << 10)
+ #define VNMC_IM_ODD		(0 << 3)
+ #define VNMC_IM_ODD_EVEN	(1 << 3)
+@@ -140,6 +141,7 @@
+ /* Video n Data Mode Register 2 bits */
+ #define VNDMR2_VPS		(1 << 30)
+ #define VNDMR2_HPS		(1 << 29)
++#define VNDMR2_CHS		(1 << 23)
+ #define VNDMR2_FTEV		(1 << 17)
+ #define VNDMR2_VLV(n)		((n & 0xf) << 12)
+ 
+@@ -287,13 +289,19 @@ static int rvin_setup(struct rvin_dev *vin)
+ 	else
+ 		dmr2 = VNDMR2_FTEV | VNDMR2_VLV(1);
+ 
+-	/* Hsync Signal Polarity Select */
+-	if (!(rent->mbus_cfg.flags & V4L2_MBUS_HSYNC_ACTIVE_LOW))
+-		dmr2 |= VNDMR2_HPS;
++	if (rent->mbus_cfg.type != V4L2_MBUS_BT656) {
++		/* Hsync Signal Polarity Select */
++		if (!(rent->mbus_cfg.flags & V4L2_MBUS_HSYNC_ACTIVE_LOW))
++			dmr2 |= VNDMR2_HPS;
+ 
+-	/* Vsync Signal Polarity Select */
+-	if (!(rent->mbus_cfg.flags & V4L2_MBUS_VSYNC_ACTIVE_LOW))
+-		dmr2 |= VNDMR2_VPS;
++		/* Vsync Signal Polarity Select */
++		if (!(rent->mbus_cfg.flags & V4L2_MBUS_VSYNC_ACTIVE_LOW))
++			dmr2 |= VNDMR2_VPS;
++	}
++
++	if (((vnmc & VNMC_INF_MASK) == VNMC_INF_YUV8_BT656) ||
++		((vnmc & VNMC_INF_MASK) == VNMC_INF_YUV10_BT656))
++		dmr2 |= VNDMR2_CHS;
+ 
+ 	/*
+ 	 * Output format
+-- 
+1.9.1
+

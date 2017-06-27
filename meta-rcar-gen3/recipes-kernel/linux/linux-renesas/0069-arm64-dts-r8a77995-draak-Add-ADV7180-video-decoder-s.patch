@@ -1,0 +1,37 @@
+From 3ec277bbe0c17b6d6bbc55cd339d140578b1f36b Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 2 Jun 2017 21:01:26 +0900
+Subject: arm64: dts: r8a77995-draak: Add ADV7180 video decoder support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 0ecc67d..a4bde09 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -232,6 +232,19 @@
+ 		};
+ 	};
+ 
++	adv7180: adv7180@20 {
++		compatible = "adi,adv7180";
++		reg = <0x20>;
++		remote = <&vin4>;
++
++		port {
++			cvbs_in: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin4ep0>;
++			};
++		};
++	};
++
+ 	adv7612: adv7612@4c {
+ 		compatible = "adi,adv7612";
+ 		reg = <0x4c>;
+-- 
+1.9.1
+

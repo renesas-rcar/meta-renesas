@@ -1,0 +1,25 @@
+From 446b73603541f4fc0bbcbc09dca6b1475758c92a Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Fri, 16 Jun 2017 15:15:36 +0900
+Subject: ravb: Add compatible string for R8A77995
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 6c65426..61a1386 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1922,6 +1922,7 @@ static int ravb_mdio_release(struct ravb_private *priv)
+ 	{ .compatible = "renesas,etheravb-rcar-gen2", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7795", .data = (void *)RCAR_GEN3 },
+ 	{ .compatible = "renesas,etheravb-r8a7796", .data = (void *)RCAR_GEN3 },
++	{ .compatible = "renesas,etheravb-r8a77995", .data = (void *)RCAR_GEN3 },
+ 	{ .compatible = "renesas,etheravb-rcar-gen3", .data = (void *)RCAR_GEN3 },
+ 	{ }
+ };
+-- 
+1.9.1
+

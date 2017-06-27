@@ -1,0 +1,45 @@
+From 7b06e7bf7777ad06610979ca5f6a5246c707c971 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Fri, 30 Jun 2017 18:08:56 +0900
+Subject: arm64: dts: r8a77995: Add DEVFREQ support for GSX
+
+This patch adds opp table for GSX to use devfreq.
+
+NOTE: Frequency scaling is not supported.
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995.dtsi b/arch/arm64/boot/dts/renesas/r8a77995.dtsi
+index 31816da..af0b6d3 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77995.dtsi
+@@ -47,6 +47,15 @@
+ 		};
+ 	};
+ 
++	gsx_opp_table: gsx_opp_table {
++		compatible = "operating-points-v2";
++
++		opp@600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <1030000>;
++		};
++	};
++
+ 	extal_clk: extal {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+@@ -505,6 +514,7 @@
+ 			reg = <0 0xfd000000 0 0x3ffff>;
+ 			interrupts = <GIC_SPI 119 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&cpg CPG_MOD 112>;
++			operating-points-v2 = <&gsx_opp_table>;
+ 			power-domains = <&cpg>;
+ 		};
+ 
+-- 
+1.9.1
+

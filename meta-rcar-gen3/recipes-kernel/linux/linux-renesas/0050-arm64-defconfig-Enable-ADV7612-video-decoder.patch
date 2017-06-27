@@ -1,0 +1,25 @@
+From 62e6a25e9801a20cdbb409ef22ce3ee64727405b Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 2 Jun 2017 20:29:02 +0900
+Subject: arm64: defconfig: Enable ADV7612 video decoder
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 5900b9e..edc61e6 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -318,6 +318,7 @@ CONFIG_VIDEO_RCAR_VIN=y
+ CONFIG_VIDEO_RCAR_CSI2=y
+ # CONFIG_MEDIA_SUBDRV_AUTOSELECT is not set
+ CONFIG_VIDEO_ADV7482=y
++CONFIG_VIDEO_ADV7604=y
+ # CONFIG_DVB_NET is not set
+ CONFIG_V4L_MEM2MEM_DRIVERS=y
+ CONFIG_VIDEO_RENESAS_FCP=y
+-- 
+1.9.1
+

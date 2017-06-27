@@ -1,0 +1,28 @@
+From ccaee64178bffd5544ffde11a1d0bb7468f69948 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 2 Jun 2017 20:07:55 +0900
+Subject: arm64: dts: r8a77995-draak: Enable VIN4 driver
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 4150816..ed1df01 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -265,6 +265,10 @@
+ 	status = "okay";
+ };
+ 
++&vin4 {
++	status = "okay";
++};
++
+ &du {
+ 	status = "okay";
+ 
+-- 
+1.9.1
+

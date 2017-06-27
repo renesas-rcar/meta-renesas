@@ -1,0 +1,28 @@
+From bd9eeb4a954cd40591aa9e8fcdd3fd4a54c67e83 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:43:08 +0900
+Subject: clk: renesas: r8a77995: Add I2C clocks
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 073dde3..235b777 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -135,6 +135,10 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("gpio2",		 910,	R8A77995_CLK_S3D4),
+ 	DEF_MOD("gpio1",		 911,	R8A77995_CLK_S3D4),
+ 	DEF_MOD("gpio0",		 912,	R8A77995_CLK_S3D4),
++	DEF_MOD("i2c3",			 928,	R8A77995_CLK_S3D2),
++	DEF_MOD("i2c2",			 929,	R8A77995_CLK_S3D2),
++	DEF_MOD("i2c1",			 930,	R8A77995_CLK_S3D2),
++	DEF_MOD("i2c0",			 931,	R8A77995_CLK_S3D2),
+ };
+ 
+ static const unsigned int r8a77995_crit_mod_clks[] __initconst = {
+-- 
+1.9.1
+

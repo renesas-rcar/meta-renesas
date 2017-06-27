@@ -1,0 +1,39 @@
+From 8e918a1da0b0c9223d6667ed2ffe66c7916dc303 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Fri, 19 May 2017 22:15:39 +0900
+Subject: soc: renesas: Add PRR register support for R8A77995
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/soc/renesas/renesas-soc.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/soc/renesas/renesas-soc.c b/drivers/soc/renesas/renesas-soc.c
+index 5cab1b5..041b803 100644
+--- a/drivers/soc/renesas/renesas-soc.c
++++ b/drivers/soc/renesas/renesas-soc.c
+@@ -134,6 +134,11 @@ struct renesas_soc {
+ 	.id	= 0x52,
+ };
+ 
++static const struct renesas_soc soc_rcar_d3 __initconst __maybe_unused = {
++	.family	= &fam_rcar_gen3,
++	.id	= 0x58,
++};
++
+ static const struct renesas_soc soc_shmobile_ag5 __initconst __maybe_unused = {
+ 	.family	= &fam_shmobile,
+ 	.id	= 0x37,
+@@ -183,6 +188,9 @@ struct renesas_soc {
+ #ifdef CONFIG_ARCH_R8A7796
+ 	{ .compatible = "renesas,r8a7796",	.data = &soc_rcar_m3_w },
+ #endif
++#ifdef CONFIG_ARCH_R8A77995
++	{ .compatible = "renesas,r8a77995",	.data = &soc_rcar_d3 },
++#endif
+ #ifdef CONFIG_ARCH_SH73A0
+ 	{ .compatible = "renesas,sh73a0",	.data = &soc_shmobile_ag5 },
+ #endif
+-- 
+1.9.1
+

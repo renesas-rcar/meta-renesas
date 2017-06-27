@@ -1,0 +1,94 @@
+From a927712f9e1811fc9b6b435fea05c0303a5e1cba Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Wed, 31 May 2017 14:01:35 +0900
+Subject: arm64: dts: r8a77995-draak: Add ADV7511 HDMI driver
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 56 +++++++++++++++++++++++---
+ 1 file changed, 50 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 9352928..9d43fa1 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -161,6 +161,17 @@
+ 			};
+ 		};
+ 	};
++
++	hdmi0-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi0_connector_in: endpoint {
++				remote-endpoint = <&adv7511_out>;
++			};
++		};
++	};
+ };
+ 
+ &pfc {
+@@ -180,6 +191,44 @@
+ 	clock-frequency = <74250000>;
+ };
+ 
++&i2c0 {
++	status = "okay";
++
++	clock-frequency = <400000>;
++
++	adv7511w: hdmi@39 {
++		compatible = "adi,adv7511w";
++		reg = <0x39>;
++		interrupt-parent = <&gpio1>;
++		interrupts = <28 IRQ_TYPE_EDGE_FALLING>;
++
++		adi,input-depth = <8>;
++		adi,input-colorspace = "rgb";
++		adi,input-clock = "1x";
++		adi,input-style = <1>;
++		adi,input-justification = "evenly";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7511w_in: endpoint {
++					remote-endpoint = <&du_out_lvds0>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				adv7511_out: endpoint {
++					remote-endpoint = <&hdmi0_connector_in>;
++				};
++			};
++		};
++	};
++};
++
+ &avb {
+ 	pinctrl-0 = <&avb_pins>;
+ 	pinctrl-names = "default";
+@@ -233,12 +282,7 @@
+ 		};
+ 		port@1 {
+ 			endpoint {
+-				remote-endpoint = <&lvds0_enc_in>;
+-			};
+-		};
+-		port@2 {
+-			endpoint {
+-				remote-endpoint = <&lvds1_enc_in>;
++				remote-endpoint = <&adv7511w_in>;
+ 			};
+ 		};
+ 	};
+-- 
+1.9.1
+

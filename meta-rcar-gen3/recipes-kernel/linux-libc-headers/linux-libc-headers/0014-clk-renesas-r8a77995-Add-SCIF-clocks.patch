@@ -1,0 +1,30 @@
+From 66f45fd0d6e6e6181b5d9b67ec6693ab12308429 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:34:40 +0900
+Subject: clk: renesas: r8a77995: Add SCIF clocks
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 6e4b982..a0f29302 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -120,6 +120,12 @@ enum r8a77995_clk_types {
+ };
+ 
+ static const struct mssr_mod_clk r8a77995_mod_clks[] __initconst = {
++	DEF_MOD("scif5",		 202,	R8A77995_CLK_S3D4C),
++	DEF_MOD("scif4",		 203,	R8A77995_CLK_S3D4C),
++	DEF_MOD("scif3",		 204,	R8A77995_CLK_S3D4C),
++	DEF_MOD("scif1",		 206,	R8A77995_CLK_S3D4C),
++	DEF_MOD("scif0",		 207,	R8A77995_CLK_S3D4C),
++	DEF_MOD("scif2",		 310,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("intc-ex",		 407,	R8A77995_CLK_CP),
+ 	DEF_MOD("intc-ap",		 408,	R8A77995_CLK_S1D2),
+ };
+-- 
+1.9.1
+

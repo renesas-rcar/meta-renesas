@@ -1,0 +1,25 @@
+From a37c68a19b80cb5ef220bf6141bb93e76f14b853 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 2 Jun 2017 20:30:13 +0900
+Subject: arm64: defconfig: Enable ADV7180 video decoder
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index edc61e6..ac36d31 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -317,6 +317,7 @@ CONFIG_V4L_PLATFORM_DRIVERS=y
+ CONFIG_VIDEO_RCAR_VIN=y
+ CONFIG_VIDEO_RCAR_CSI2=y
+ # CONFIG_MEDIA_SUBDRV_AUTOSELECT is not set
++CONFIG_VIDEO_ADV7180=y
+ CONFIG_VIDEO_ADV7482=y
+ CONFIG_VIDEO_ADV7604=y
+ # CONFIG_DVB_NET is not set
+-- 
+1.9.1
+

@@ -1,0 +1,35 @@
+From 576fcf8dd12d3065a2c5edc0afaabb27134f2dc7 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Fri, 2 Jun 2017 11:32:48 +0900
+Subject: arm64: dts: r8a77995-draak: Add limit frequency option
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 9d43fa1..4150816 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -91,6 +91,8 @@
+ 		width-mm = <210>;
+ 		height-mm = <158>;
+ 
++		limit-frequency = <135000000>;
++
+ 		data-mapping = "jeida-24";
+ 
+ 		panel-timing {
+@@ -140,6 +142,8 @@
+ 		width-mm = <210>;
+ 		height-mm = <158>;
+ 
++		limit-frequency = <135000000>;
++
+ 		data-mapping = "jeida-24";
+ 
+ 		panel-timing {
+-- 
+1.9.1
+

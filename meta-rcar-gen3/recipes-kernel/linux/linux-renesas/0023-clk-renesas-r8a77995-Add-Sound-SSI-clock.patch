@@ -1,0 +1,27 @@
+From 61eefb05119171841eb940c1e2821996e9e5c598 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:49:13 +0900
+Subject: clk: renesas: r8a77995: Add Sound SSI clock
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 79443f4..210270a 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -163,6 +163,9 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("i2c2",			 929,	R8A77995_CLK_S3D2),
+ 	DEF_MOD("i2c1",			 930,	R8A77995_CLK_S3D2),
+ 	DEF_MOD("i2c0",			 931,	R8A77995_CLK_S3D2),
++	DEF_MOD("ssi-all",		1005,	R8A77995_CLK_S1D4),
++	DEF_MOD("ssi4",			1011,	MOD_CLK_ID(1005)),
++	DEF_MOD("ssi3",			1012,	MOD_CLK_ID(1005)),
+ };
+ 
+ static const unsigned int r8a77995_crit_mod_clks[] __initconst = {
+-- 
+1.9.1
+

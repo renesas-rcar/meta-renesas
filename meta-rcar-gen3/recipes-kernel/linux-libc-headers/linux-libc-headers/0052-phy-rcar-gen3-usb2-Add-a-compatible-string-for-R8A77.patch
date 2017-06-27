@@ -1,0 +1,39 @@
+From b6d82f03661484413e31e5341ad30c5aa7fe39d2 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Thu, 25 May 2017 14:16:58 +0900
+Subject: phy: rcar-gen3-usb2: Add a compatible string for R8A77995
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ Documentation/devicetree/bindings/phy/rcar-gen3-phy-usb2.txt | 2 ++
+ drivers/phy/phy-rcar-gen3-usb2.c                             | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/rcar-gen3-phy-usb2.txt b/Documentation/devicetree/bindings/phy/rcar-gen3-phy-usb2.txt
+index ace9cce..45c53f6 100644
+--- a/Documentation/devicetree/bindings/phy/rcar-gen3-phy-usb2.txt
++++ b/Documentation/devicetree/bindings/phy/rcar-gen3-phy-usb2.txt
+@@ -8,6 +8,8 @@ Required properties:
+ 	      SoC.
+ 	      "renesas,usb2-phy-r8a7796" if the device is a part of an R8A7796
+ 	      SoC.
++	      "renesas,usb2-phy-r8a77995" if the device is a part of an R8A77995
++	      SoC.
+ 	      "renesas,rcar-gen3-usb2-phy" for a generic R-Car Gen3 compatible device.
+ 
+ 	      When compatible with the generic version, nodes must list the
+diff --git a/drivers/phy/phy-rcar-gen3-usb2.c b/drivers/phy/phy-rcar-gen3-usb2.c
+index 34aaf7a..70f421b 100644
+--- a/drivers/phy/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/phy-rcar-gen3-usb2.c
+@@ -379,6 +379,7 @@ static irqreturn_t rcar_gen3_phy_usb2_irq(int irq, void *_ch)
+ static const struct of_device_id rcar_gen3_phy_usb2_match_table[] = {
+ 	{ .compatible = "renesas,usb2-phy-r8a7795" },
+ 	{ .compatible = "renesas,usb2-phy-r8a7796" },
++	{ .compatible = "renesas,usb2-phy-r8a77995" },
+ 	{ .compatible = "renesas,rcar-gen3-usb2-phy" },
+ 	{ }
+ };
+-- 
+1.9.1
+

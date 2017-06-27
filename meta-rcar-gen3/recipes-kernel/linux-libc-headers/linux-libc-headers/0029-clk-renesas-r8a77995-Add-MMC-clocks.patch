@@ -1,0 +1,50 @@
+From 8c2a4816607a2afef1104fcf83a5c007857c7588 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 19 Jun 2017 21:03:59 +0900
+Subject: clk: renesas: r8a77995: Add MMC clocks
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 334b919..2c77b40 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -56,6 +56,7 @@ enum clk_ids {
+ 	CLK_S1,
+ 	CLK_S2,
+ 	CLK_S3,
++	CLK_SDSRC,
+ 
+ 	CLK_PE,
+ 	CLK_LV0,
+@@ -95,6 +96,7 @@ enum r8a77995_clk_types {
+ 	DEF_FIXED(".s1",        CLK_S1,        CLK_PLL1,  3, 1),
+ 	DEF_FIXED(".s2",        CLK_S2,        CLK_PLL1,  4, 1),
+ 	DEF_FIXED(".s3",        CLK_S3,        CLK_PLL1,  6, 1),
++	DEF_FIXED(".sdsrc",     CLK_SDSRC,     CLK_PLL1,  2, 1),
+ 
+ 	/* Core Clock Outputs */
+ 	DEF_BASE("z2",   R8A77995_CLK_Z2,   CLK_TYPE_GEN3_Z2,   CLK_PLL0_DIV3),
+@@ -125,6 +127,8 @@ enum r8a77995_clk_types {
+ 
+ 	DEF_FIXED("cl",         R8A77995_CLK_CL,    CLK_PLL1,      48, 1),
+ 
++	DEF_GEN3_SD("sd0",      R8A77995_CLK_SD0,   CLK_SDSRC,     0x0074),
++
+ 	DEF_R8A77995_LV("lv0",  R8A77995_CLK_LV0,   CLK_PLL1,      0x04cc),
+ 	DEF_R8A77995_LV("lv1",  R8A77995_CLK_LV1,   CLK_PLL1,      0x04d0),
+ 
+@@ -138,6 +142,7 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("scif1",		 206,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("scif0",		 207,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("scif2",		 310,	R8A77995_CLK_S3D4C),
++	DEF_MOD("emmc0",		 312,	R8A77995_CLK_SD0),
+ 	DEF_MOD("intc-ex",		 407,	R8A77995_CLK_CP),
+ 	DEF_MOD("intc-ap",		 408,	R8A77995_CLK_S1D2),
+ 	DEF_MOD("hscif3",		 517,	R8A77995_CLK_S3D1C),
+-- 
+1.9.1
+

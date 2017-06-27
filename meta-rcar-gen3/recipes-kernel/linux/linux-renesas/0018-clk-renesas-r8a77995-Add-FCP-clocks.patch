@@ -1,0 +1,27 @@
+From c15ac35c1a22c6609b92fef4b2ffd9646090c5a0 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:39:28 +0900
+Subject: clk: renesas: r8a77995: Add FCP clocks
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 4d7075e..2a9970c 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -128,6 +128,9 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("scif2",		 310,	R8A77995_CLK_S3D4C),
+ 	DEF_MOD("intc-ex",		 407,	R8A77995_CLK_CP),
+ 	DEF_MOD("intc-ap",		 408,	R8A77995_CLK_S1D2),
++	DEF_MOD("fcpvd1",		 602,	R8A77995_CLK_S1D2),
++	DEF_MOD("fcpvd0",		 603,	R8A77995_CLK_S1D2),
++	DEF_MOD("fcpvbs",		 607,	R8A77995_CLK_S1D2),
+ 	DEF_MOD("etheravb",		 812,	R8A77995_CLK_S3D2),
+ 	DEF_MOD("gpio6",		 906,	R8A77995_CLK_S3D4),
+ 	DEF_MOD("gpio5",		 907,	R8A77995_CLK_S3D4),
+-- 
+1.9.1
+

@@ -1,0 +1,42 @@
+From 3f2d04fb6d33861a0e1e65928c0db4132950dd6a Mon Sep 17 00:00:00 2001
+From: Thao Nguyen <thao.nguyen.yb@renesas.com>
+Date: Fri, 21 Jul 2017 13:52:08 +0700
+Subject: [PATCH] arm64: dts: r8a77995-draak: Add reserved memory region
+
+This patch adds reserved memory region:
+  - Default CMA area
+      128 MiB: 0x0058000000 -> 0x00005fffffff
+
+Signed-off-by: Thao Nguyen <thao.nguyen.yb@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 956a1a43..1314614 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -32,6 +32,20 @@
+ 		reg = <0x0 0x48000000 0x0 0x18000000>;
+ 	};
+ 
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		/* global autoconfigured region for contiguous allocations */
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			reg = <0x00000000 0x58000000 0x0 0x8000000>;
++			linux,cma-default;
++		};
++	};
++
+ 	vga-encoder {
+ 		compatible = "adi,adv7123";
+ 
+-- 
+1.9.1
+

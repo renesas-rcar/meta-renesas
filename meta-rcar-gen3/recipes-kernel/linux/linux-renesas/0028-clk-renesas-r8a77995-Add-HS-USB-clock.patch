@@ -1,0 +1,25 @@
+From 07921a1a4d7aca11ec3695f91ccc765740297fc6 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:46:40 +0900
+Subject: clk: renesas: r8a77995: Add HS-USB clock
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 63c873f..334b919 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -149,6 +149,7 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("vspd0",		 623,	R8A77995_CLK_S1D2),
+ 	DEF_MOD("vspbs",		 627,	R8A77995_CLK_S1D2),
+ 	DEF_MOD("ehci0",		 703,	R8A77995_CLK_USB),
++	DEF_MOD("hsusb",		 704,	R8A77995_CLK_USB),
+ 	DEF_MOD("du1",			 723,	R8A77995_CLK_S1D1),
+ 	DEF_MOD("du0",			 724,	R8A77995_CLK_S1D1),
+ 	DEF_MOD("lvds",			 727,	R8A77995_CLK_LV0),
+-- 
+1.9.1
+

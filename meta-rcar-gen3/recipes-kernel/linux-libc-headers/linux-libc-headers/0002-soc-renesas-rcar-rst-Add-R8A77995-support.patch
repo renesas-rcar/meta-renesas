@@ -1,0 +1,38 @@
+From 8cc812284cdf5b50edd6963d83bf81a5d891398b Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Fri, 19 May 2017 22:11:29 +0900
+Subject: soc: renesas: rcar-rst: Add R8A77995 support
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/soc/renesas/Makefile   | 1 +
+ drivers/soc/renesas/rcar-rst.c | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/soc/renesas/Makefile b/drivers/soc/renesas/Makefile
+index 504fb05..00ec8af 100644
+--- a/drivers/soc/renesas/Makefile
++++ b/drivers/soc/renesas/Makefile
+@@ -4,6 +4,7 @@ obj-$(CONFIG_ARCH_RCAR_GEN1)	+= rcar-rst.o
+ obj-$(CONFIG_ARCH_RCAR_GEN2)	+= rcar-rst.o
+ obj-$(CONFIG_ARCH_R8A7795)	+= rcar-rst.o
+ obj-$(CONFIG_ARCH_R8A7796)	+= rcar-rst.o
++obj-$(CONFIG_ARCH_R8A77995)	+= rcar-rst.o
+ 
+ obj-$(CONFIG_ARCH_R8A7743)	+= rcar-sysc.o r8a7743-sysc.o
+ obj-$(CONFIG_ARCH_R8A7745)	+= rcar-sysc.o r8a7745-sysc.o
+diff --git a/drivers/soc/renesas/rcar-rst.c b/drivers/soc/renesas/rcar-rst.c
+index a6d1c26..d27d0ab 100644
+--- a/drivers/soc/renesas/rcar-rst.c
++++ b/drivers/soc/renesas/rcar-rst.c
+@@ -41,6 +41,7 @@ struct rst_config {
+ 	/* R-Car Gen3 is handled like R-Car Gen2 */
+ 	{ .compatible = "renesas,r8a7795-rst", .data = &rcar_rst_gen2 },
+ 	{ .compatible = "renesas,r8a7796-rst", .data = &rcar_rst_gen2 },
++	{ .compatible = "renesas,r8a77995-rst", .data = &rcar_rst_gen2 },
+ 	{ /* sentinel */ }
+ };
+ 
+-- 
+1.9.1
+

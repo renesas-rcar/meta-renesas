@@ -1,0 +1,81 @@
+From 178ac639476a5200092b1f2b22c07632bbd97cbd Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Wed, 24 May 2017 14:10:31 +0900
+Subject: arm64: dts: r8a77995-draak: Enable EthernetAVB
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 39 ++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index d502a20..357ad8b 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -10,6 +10,7 @@
+ 
+ /dts-v1/;
+ #include "r8a77995.dtsi"
++#include <dt-bindings/gpio/gpio.h>
+ 
+ / {
+ 	model = "Renesas Draak board based on r8a77995";
+@@ -17,6 +18,7 @@
+ 
+ 	aliases {
+ 		serial0 = &scif2;
++		ethernet0 = &avb;
+ 	};
+ 
+ 	chosen {
+@@ -31,10 +33,47 @@
+ 	};
+ };
+ 
++&pfc {
++	avb_pins: avb {
++		groups = "avb0_td", "avb0_tx_ctl", "avb0_txc",
++			 "avb0_rd", "avb0_rx_ctl", "avb0_rxc",
++			 "avb0_txcrefclk", "avb0_mdc", "avb0_mdio";
++		function = "avb0";
++	};
++};
++
+ &extal_clk {
+ 	clock-frequency = <48000000>;
+ };
+ 
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++	renesas,no-ether-link;
++	phy-handle = <&phy0>;
++	status = "okay";
++	phy-gpios = <&gpio5 19 GPIO_ACTIVE_LOW>;
++	phy-reset-gpios = <&gpio5 18 GPIO_ACTIVE_LOW>;
++
++	phy0: ethernet-phy@0 {
++		rxc-skew-ps = <1500>;
++		rxdv-skew-ps = <420>; /* default */
++		rxd0-skew-ps = <420>; /* default */
++		rxd1-skew-ps = <420>; /* default */
++		rxd2-skew-ps = <420>; /* default */
++		rxd3-skew-ps = <420>; /* default */
++		txc-skew-ps = <900>; /* default */
++		txen-skew-ps = <420>; /* default */
++		txd0-skew-ps = <420>; /* default */
++		txd1-skew-ps = <420>; /* default */
++		txd2-skew-ps = <420>; /* default */
++		txd3-skew-ps = <420>; /* default */
++		reg = <0>;
++		interrupt-parent = <&gpio5>;
++		interrupts = <20 IRQ_TYPE_LEVEL_LOW>;
++	};
++};
++
+ &scif2 {
+ 	status = "okay";
+ };
+-- 
+1.9.1
+

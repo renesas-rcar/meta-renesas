@@ -1,0 +1,61 @@
+From 4a330de0430f7336249eb15436565741652a39b6 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Thu, 25 May 2017 20:41:55 +0900
+Subject: drm: rcar-du: Add r8a77995 device support
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 6295c73..ba7dba2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -276,6 +276,35 @@
+ 	.dpll_ch =  BIT(1),
+ };
+ 
++static const struct rcar_du_device_info rcar_du_r8a77995_info = {
++	.gen = 3,
++	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
++		  | RCAR_DU_FEATURE_EXT_CTRL_REGS
++		  | RCAR_DU_FEATURE_VSP1_SOURCE
++		  | RCAR_DU_FEATURE_GEN3_REGS,
++	.num_crtcs = 2,
++	.routes = {
++		/* R8A77995 has two LVDS output and one RGB output.
++		 */
++		[RCAR_DU_OUTPUT_DPAD0] = {
++			.possible_crtcs = BIT(0) | BIT(1),
++			.encoder_type = DRM_MODE_ENCODER_NONE,
++			.port = 0,
++		},
++		[RCAR_DU_OUTPUT_LVDS0] = {
++			.possible_crtcs = BIT(0),
++			.encoder_type = DRM_MODE_ENCODER_LVDS,
++			.port = 1,
++		},
++		[RCAR_DU_OUTPUT_LVDS1] = {
++			.possible_crtcs = BIT(1),
++			.encoder_type = DRM_MODE_ENCODER_LVDS,
++			.port = 2,
++		},
++	},
++	.num_lvds = 2,
++};
++
+ static const struct soc_device_attribute ths_quirks_match[]  = {
+ 	{ .soc_id = "r8a7795", .revision = "ES1.*",
+ 	  .data = (void *)(RCAR_DU_DPLL_DUTY_RATE_WA
+@@ -298,6 +327,7 @@
+ 	{ .compatible = "renesas,du-r8a7794", .data = &rcar_du_r8a7794_info },
+ 	{ .compatible = "renesas,du-r8a7795", .data = &rcar_du_r8a7795_info },
+ 	{ .compatible = "renesas,du-r8a7796", .data = &rcar_du_r8a7796_info },
++	{ .compatible = "renesas,du-r8a77995", .data = &rcar_du_r8a77995_info },
+ 	{ }
+ };
+ 
+-- 
+1.9.1
+

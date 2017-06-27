@@ -1,0 +1,67 @@
+From e2418ca5f01f03d0277d7405b6de6747e2ca7717 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 5 Jun 2017 19:34:19 +0900
+Subject: media: rcar-vin: Fix input resolution getting from video decoder
+
+When input resolution is changed automatically, VIN driver could
+not recognize input resolution from video decoder. So cropcap
+was not updated. This patch corrects it.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ drivers/media/platform/rcar-vin/rcar-v4l2.c | 25 ++++++++++++++++++++++++-
+ drivers/media/platform/rcar-vin/rcar-vin.h  |  1 +
+ 2 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/rcar-vin/rcar-v4l2.c b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+index 48aef50..3c889fe 100644
+--- a/drivers/media/platform/rcar-vin/rcar-v4l2.c
++++ b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+@@ -217,8 +217,31 @@ static int __rvin_try_format_source(struct rvin_dev *vin,
+ 		ret = v4l2_subdev_call(bridge, pad, set_fmt, pad_cfg, &format);
+ 		if (ret < 0 && ret != -ENOIOCTLCMD)
+ 			goto done;
+-	}
++	} else {
++		/* If we are part of a digital pin update source */
++		struct v4l2_dv_timings timings;
++		struct v4l2_subdev *source = vin_to_source(vin);
++
++		if (!source) {
++			return -EINVAL;
++			goto done;
++		}
++		ret = v4l2_subdev_call(source, video, query_dv_timings,
++				       &timings);
++		if (ret < 0)
++			goto none;
+ 
++		vin->timings = &timings;
++		ret = v4l2_subdev_call(source, video, s_dv_timings,
++				       vin->timings);
++		if (ret < 0)
++			goto none;
++
++		ret = v4l2_subdev_call(source, pad, set_fmt, pad_cfg, &format);
++		if (ret < 0 && ret != -ENOIOCTLCMD)
++			goto done;
++	}
++none:
+ 	v4l2_fill_pix_format(pix, &format.format);
+ 
+ 	pix->field = field;
+diff --git a/drivers/media/platform/rcar-vin/rcar-vin.h b/drivers/media/platform/rcar-vin/rcar-vin.h
+index 37d3fd7..54133c7 100644
+--- a/drivers/media/platform/rcar-vin/rcar-vin.h
++++ b/drivers/media/platform/rcar-vin/rcar-vin.h
+@@ -203,6 +203,7 @@ struct rvin_dev {
+ 	struct v4l2_device v4l2_dev;
+ 	struct v4l2_ctrl_handler ctrl_handler;
+ 	struct v4l2_async_notifier notifier;
++	struct v4l2_dv_timings *timings;
+ 	struct rvin_graph_entity digital;
+ 
+ 	struct rvin_group *group;
+-- 
+1.9.1
+

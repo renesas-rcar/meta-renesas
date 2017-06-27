@@ -1,0 +1,29 @@
+From 563ddb10aa6c14e8c86386e09cee7635c9796ba1 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Mon, 22 May 2017 21:49:30 +0900
+Subject: clk: renesas: r8a77995: Add Sound SRC clock
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ drivers/clk/renesas/r8a77995-cpg-mssr.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/clk/renesas/r8a77995-cpg-mssr.c b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+index 210270a..2315875 100644
+--- a/drivers/clk/renesas/r8a77995-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a77995-cpg-mssr.c
+@@ -166,6 +166,11 @@ enum r8a77995_clk_types {
+ 	DEF_MOD("ssi-all",		1005,	R8A77995_CLK_S1D4),
+ 	DEF_MOD("ssi4",			1011,	MOD_CLK_ID(1005)),
+ 	DEF_MOD("ssi3",			1012,	MOD_CLK_ID(1005)),
++	DEF_MOD("scu-all",		1017,	R8A77995_CLK_S1D4),
++	DEF_MOD("scu-ctu1-mix1",	1020,	MOD_CLK_ID(1017)),
++	DEF_MOD("scu-ctu0-mix0",	1021,	MOD_CLK_ID(1017)),
++	DEF_MOD("scu-src6",		1025,	MOD_CLK_ID(1017)),
++	DEF_MOD("scu-src5",		1026,	MOD_CLK_ID(1017)),
+ };
+ 
+ static const unsigned int r8a77995_crit_mod_clks[] __initconst = {
+-- 
+1.9.1
+

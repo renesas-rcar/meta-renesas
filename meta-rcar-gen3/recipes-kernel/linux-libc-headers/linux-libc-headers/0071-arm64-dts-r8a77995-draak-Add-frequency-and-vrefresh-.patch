@@ -1,0 +1,29 @@
+From f023da60efaaa8174cf0fc861465f5b13190f705 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Tue, 13 Jun 2017 20:46:18 +0900
+Subject: arm64: dts: r8a77995-draak: Add frequency and vrefresh limitation
+ option
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77995-draak.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+index 3ee3d2c..2f3d171 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77995-draak.dts
+@@ -208,6 +208,10 @@
+ 		interrupt-parent = <&gpio1>;
+ 		interrupts = <28 IRQ_TYPE_EDGE_FALLING>;
+ 
++		/* Depends on LVDS */
++		limit-frequency = <135000000>;
++		lower-refresh = <50>;
++
+ 		adi,input-depth = <8>;
+ 		adi,input-colorspace = "rgb";
+ 		adi,input-clock = "1x";
+-- 
+1.9.1
+
