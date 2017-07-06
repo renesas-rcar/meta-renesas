@@ -9,7 +9,7 @@ PV_append = "+git${SRCREV}"
 SRCREV = "a1539fe24125d581c53a18e1e6b6d4958f672a77"
 SRC_URI = "git://github.com/renesas-rcar/wayland-kms.git;branch=rcar-gen3"
 
-COMPATIBLE_MACHINE = "(r8a7795|r8a7796)"
+COMPATIBLE_MACHINE = "(r8a7795|r8a7796|r8a77995)"
 S = "${WORKDIR}/git"
 DEPENDS = "libdrm wayland gles-user-module"
 
