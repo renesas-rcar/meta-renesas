@@ -10,7 +10,7 @@ SRC_URI = "git://github.com/renesas-rcar/libgbm;branch=rcar-gen3"
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(r8a7795|r8a7796)"
+COMPATIBLE_MACHINE = "(r8a7795|r8a7796|r8a77995)"
 DEPENDS = "wayland-kms"
 
 inherit autotools pkgconfig
