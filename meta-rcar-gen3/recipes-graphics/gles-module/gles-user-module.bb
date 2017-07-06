@@ -6,7 +6,7 @@ LICENSE = "CLOSED"
 PN = "gles-user-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "(r8a7795|r8a7796)"
+COMPATIBLE_MACHINE = "(r8a7795|r8a7796|r8a77995)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 S = "${WORKDIR}/rogue"
@@ -14,6 +14,8 @@ GLES = "gsx"
 
 SRC_URI_r8a7795 = "file://r8a7795_linux_gsx_binaries_gles3.tar.bz2"
 SRC_URI_r8a7796 = "file://r8a7796_linux_gsx_binaries_gles3.tar.bz2"
+SRC_URI_r8a77995 = "file://r8a77995_linux_gsx_binaries_gles.tar.bz2"
+
 SRC_URI_append = " \
     file://change-shell.patch \
     file://0001-EGL-eglext.h-Include-eglmesaext.h-to-avoid-compile-error.patch \
