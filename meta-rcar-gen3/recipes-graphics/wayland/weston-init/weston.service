@@ -1,6 +1,6 @@
 [Unit]
 Description=Weston Wayland compositor
-After=dbus.service rc.pvr.service
+After=dbus.service rc.pvr.service multi-user.target
 
 [Service]
 ExecStart=/usr/bin/weston-launch -u root -- $OPTARGS
