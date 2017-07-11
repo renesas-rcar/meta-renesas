@@ -57,3 +57,6 @@ module_clean_symbol() {
 }
 
 RPROVIDES_${PN} += "kernel-module-pvrsrvkm kernel-module-dc-linuxfb"
+
+#Make kernel module pvrsrvkm load automatically at boot
+KERNEL_MODULE_AUTOLOAD = "pvrsrvkm"
