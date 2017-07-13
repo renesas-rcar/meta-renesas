@@ -1,7 +1,7 @@
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
 SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.6.3"
 
-SRCREV = "9b7c647fb89c137439c2edae5e96c44c8fe6337f"
+SRCREV = "e336b2dacf29a155dc8f6896ee0f3a89d87d805e"
 
 DEPENDS += "weston"
 
