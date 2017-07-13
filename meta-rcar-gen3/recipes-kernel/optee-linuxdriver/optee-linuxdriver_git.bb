@@ -11,9 +11,9 @@ BRANCH = "rcar_gen3"
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_linuxdriver.git;branch=${BRANCH} \
 "
-SRCREV = "602d533175ce4ac3383f827c3157b1a6a78fe296"
+SRCREV = "3fd77f0dd8a070945f869ec706ebe48fc0d27c20"
 
-PV = "1.0.0+renesas+git${SRCPV}"
+PV = "1.1.0+renesas+git${SRCPV}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
