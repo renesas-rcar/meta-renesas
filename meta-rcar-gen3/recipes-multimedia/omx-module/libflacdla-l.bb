@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://COPYING.Xiph;md5=a2c4b71c0198682376d483eb5bcc9197"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://github.com/renesas-rcar/flac_decoder.git;branch=master"
-SRCREV = "75791faa549e60fdad34228e6e13a2560962e9ae"
+SRCREV = "70c0a7ae7dc8cac2056adf5eb175e3c54f892c27"
 
 S = "${WORKDIR}/git"
 B = "${S}/build/linux_armyocto/lib"
