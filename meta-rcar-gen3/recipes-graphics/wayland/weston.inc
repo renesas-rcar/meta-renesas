@@ -7,7 +7,6 @@ DEPENDS_append = " \
 
 RDEPENDS_${PN}_append = " \
     ${@base_conditional('USE_GLES', '1', ' libgbm', '', d)} \
-    ${@base_conditional('USE_MULTIMEDIA', '1', ' media-ctl', '', d)} \
 "
 RDEPENDS_${PN}-examples_append = " \
     ${@base_conditional('USE_GLES', '1', ' libgbm', '', d)}"
