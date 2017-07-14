@@ -22,9 +22,6 @@ do_install_append() {
     rm -rf ${D}/${includedir}/EGL
     rm -rf ${D}/${includedir}/KHR
 
-    # For Qt environment
-    install -Dm 644 ${S}/include/EGL/eglmesaext.h ${D}/${includedir}/EGL/eglmesaext.h
-
     # install required header for wayland
     install -d ${D}/usr/include
     install -m 644 ${S}/${INSTALLED_HEADER} ${D}/usr/include/
