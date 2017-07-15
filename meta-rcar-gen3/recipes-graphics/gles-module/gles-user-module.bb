@@ -105,8 +105,6 @@ RPROVIDES_${PN} += " \
     libgles2-mesa-dev \
     libgles2 \
     libgles2-dev \
-    libegl \
-    libegl1 \
 "
 
 RDEPENDS_${PN} = " \

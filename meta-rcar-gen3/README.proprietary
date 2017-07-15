@@ -53,7 +53,7 @@ II/ Build with GLES
                 DISTRO_FEATURES_append = " pam"
                 PREFERRED_PROVIDER_virtual/libgles1 = ""
                 PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
-                PREFERRED_PROVIDER_virtual/egl = "gles-user-module"
+                PREFERRED_PROVIDER_virtual/egl = "libegl"
                 PREFERRED_PROVIDER_virtual/libgl = ""
                 PREFERRED_PROVIDER_virtual/mesa = ""
                 PREFERRED_PROVIDER_libgbm = "libgbm"
