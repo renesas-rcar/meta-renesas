@@ -3,7 +3,7 @@ SECTION = "multimedia"
 LICENSE = "GPLv2+"
 DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base pkgconfig"
 LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=4fbd65380cdd255951079008b364516c"
-inherit autotools
+inherit autotools pkgconfig
 
 PN = "gstreamer1.0-plugin-vspfilter"
 
