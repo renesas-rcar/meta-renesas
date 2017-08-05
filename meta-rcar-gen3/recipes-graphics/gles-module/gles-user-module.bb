@@ -19,6 +19,7 @@ SRC_URI_r8a77965 = "file://r8a77965_linux_gsx_binaries_gles.tar.bz2"
 SRC_URI_append = " \
     file://change-shell.patch \
     file://rc.pvr.service \
+    file://0001-WORKAROUND-using-GLES3-gl3ext.h-from-mesa-to-prevent.patch \
 "
 
 inherit update-rc.d systemd
