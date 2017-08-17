@@ -26,32 +26,32 @@ do_install() {
 
     if [ "X${USE_CMSBCM}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/bcm
-        install -m 755 ${S}/bcm/${baselib}/libcmsbcm.so.0.6.1 ${D}/${libdir}
+        install -m 755 ${S}/bcm/${baselib}/libcmsbcm.so.1.0.0 ${D}/${libdir}
         install -m 644 ${S}/bcm/include/*.h ${D}/${includedir}/cms/bcm
 
         cd ${D}/${libdir}
-        ln -s libcmsbcm.so.0.6.1 libcmsbcm.so.0
-        ln -s libcmsbcm.so.0 libcmsbcm.so
+        ln -s libcmsbcm.so.1.0.0 libcmsbcm.so.1
+        ln -s libcmsbcm.so.1 libcmsbcm.so
     fi
 
     if [ "X${USE_CMSBLC}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/blc
-        install -m 755 ${S}/blc/${baselib}/libcmsblc.so.0.6.0 ${D}/${libdir}
+        install -m 755 ${S}/blc/${baselib}/libcmsblc.so.1.0.0 ${D}/${libdir}
         install -m 644 ${S}/blc/include/*.h ${D}/${includedir}/cms/blc
 
         cd ${D}/${libdir}
-        ln -s libcmsblc.so.0.6.0 libcmsblc.so.0
-        ln -s libcmsblc.so.0 libcmsblc.so
+        ln -s libcmsblc.so.1.0.0 libcmsblc.so.1
+        ln -s libcmsblc.so.1 libcmsblc.so
     fi
 
     if [ "X${USE_CMSDGC}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/dgc
-        install -m 755 ${S}/dgc/${baselib}/libcmsdgc.so.0.6.1 ${D}/${libdir}
+        install -m 755 ${S}/dgc/${baselib}/libcmsdgc.so.1.0.0 ${D}/${libdir}
         install -m 644 ${S}/dgc/include/*.h ${D}/${includedir}/cms/dgc
 
         cd ${D}/${libdir}
-        ln -s libcmsdgc.so.0.6.1 libcmsdgc.so.0
-        ln -s libcmsdgc.so.0 libcmsdgc.so
+        ln -s libcmsdgc.so.1.0.0 libcmsdgc.so.1
+        ln -s libcmsdgc.so.1 libcmsdgc.so
     fi
 }
 
