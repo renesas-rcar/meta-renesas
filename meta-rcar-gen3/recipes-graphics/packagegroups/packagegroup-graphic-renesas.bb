@@ -15,7 +15,7 @@ PR = "r0"
 RDEPENDS_packagegroup-wayland-community = " \
     wayland \
     weston \
-    weston-bin \
+    weston-examples \
     alsa-utils \
     alsa-tools \
     libdrm-tests \

@@ -14,22 +14,3 @@ RDEPENDS_${PN}-examples_append = " \
 EXTRA_OECONF_append = " \
     ${@base_conditional('USE_GLES', '1', '', \
         ' WESTON_NATIVE_BACKEND="fbdev-backend.so"', d)}"
-
-PACKAGES_prepend = "${PN}-bin "
-
-FILES_${PN}-bin = " \
-    ${bindir}/weston \
-    ${bindir}/weston-terminal \
-    ${bindir}/weston-info \
-    ${bindir}/weston-launch \
-    ${bindir}/wcap-decode \
-"
-
-FILES_${PN} = " \
-    ${libdir}/weston \
-    ${datadir} \
-    ${libexecdir} \
-"
-
-USERADD_PACKAGES = "${PN}-bin"
-GROUPADD_PARAM_${PN}-bin = "--system weston-launch"
