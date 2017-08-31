@@ -4,7 +4,7 @@ meta-rcar-gen3
 This layer provides that evaluation board is mounted ARM SoCs of Renesas
 Electronics, called the R-Car Generation 3. Currently, this supports
 board and the SoCs of the following:
-     - Board: Salvator-X   / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3)
+     - Board: Salvator-X / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
      - Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A7795 (R-Car H3)
      - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796 (R-Car M3)
 
@@ -21,19 +21,19 @@ This layer depends on:
 
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-yocto, meta-yocto-bsp
-    branch: krogoth
+    branch: rocko
 
     URI: git://github.com/renesas-rcar/meta-renesas
     layers: meta-rcar-gen3
-    branch: krogoth
+    branch: rocko
 
     URI: git://git.linaro.org/openembedded/meta-linaro.git
     layers: meta-optee
-    branch: krogoth
+    branch: rocko
 
     URI: git://git.openembedded.org/meta-openembedded
-    layers: meta-oe
-    branch: krogoth
+    layers: meta-oe, meta-python, meta-networking
+    branch: rocko
 
 Build Instructions
 ==================
@@ -53,6 +53,8 @@ After that, initialized configure bblayers.conf by adding meta-rcar-gen3 layer. 
         <path to layer>/meta-renesas/meta-rcar-gen3 \
         <path to layer>/meta-linaro/meta-optee \
         <path to layer>/meta-openembedded/meta-oe \
+        <path to layer>/meta-openembedded/meta-python \
+        <path to layer>/meta-openembedded/meta-networking \
     "
 
 To build a specific target BSP, configure the associated machine in local.conf:
@@ -67,14 +69,25 @@ Select the SOC
     For M3: r8a7796
     SOC_FAMILY = "r8a7796"
 
-Must change the package class to ipk files in local.conf:
-
-    PACKAGE_CLASSES ?= "package_ipk"
+    For M3N: r8a77965
+    SOC_FAMILY = "r8a77965"
 
 Configure for systemd init in local.conf:
 
     DISTRO_FEATURES_append = " systemd"
     VIRTUAL-RUNTIME_init_manager = "systemd"
+
+Configure for ivi-shell and ivi-extension
+
+    DISTRO_FEATURES_append = " ivi-shell"
+
+Configure for USB 3.0
+
+    MACHINE_FEATURES_append = " usb3"
+
+Enable Capacity Aware migration Strategy (CAS)
+
+    MACHINE_FEATURES_append = " cas"
 
 Build the target file system image using bitbake:
 

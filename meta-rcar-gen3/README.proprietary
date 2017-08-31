@@ -52,6 +52,7 @@ II/ Build with GLES
                 MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
 
                 # for Wayland/Weston
+                DISTRO_FEATURES_NATIVESDK_append = " wayland"
                 DISTRO_FEATURES_append = " pam"
                 PREFERRED_PROVIDER_virtual/libgles1 = ""
                 PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
@@ -104,6 +105,9 @@ III/ Build with Renesas multimedia libraries
                 " dddec_lib"         - for OMX Media Component Dolby(R) Digital Decoder Library
                 " dddec_mdw"         - for Dolby(R) Digital Decoder Middleware for Linux
                 " aaclcenc_lib"      - for OMX Media Component AAC-LC Encoder Library
+                " vp8dec_lib"        - for OMX Media Component VP8 Decoder Library for Linux
+                " vp8enc_lib"        - for OMX Media Component VP8 Encoder Library for Linux
+                " vp9dec_lib"        - for OMX Media Component VP9 Decoder Library for Linux
                 " aaclcenc_mdw"      - for AAC-LC Encoder Middleware for Linux
                 " cmsbcm"            - for CMS Basic Color Management Middleware for Linux
                 " cmsblc"            - for CMS CMM3 Backlight Control Middleware for Linux
