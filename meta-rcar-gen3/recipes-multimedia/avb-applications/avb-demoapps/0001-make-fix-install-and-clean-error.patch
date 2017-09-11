@@ -1,0 +1,99 @@
+From 183adcb314c960b45db2f35718988020e8ba79fe Mon Sep 17 00:00:00 2001
+From: Masaru Nagai <masaru.nagai.vx@renesas.com>
+Date: Fri, 22 Dec 2017 22:28:04 +0900
+Subject: [PATCH] make: fix install and clean error
+
+install error
+
+| make[1]: Entering directory `/home/masaru.nagai/proj/git/avb-applications/avb-demoapps/lib'
+| make[2]: Entering directory `/home/masaru.nagai/proj/git/avb-applications/avb-demoapps/lib/avtp'
+| make[2]: *** No rule to make target `install'.  Stop.
+| make[2]: Leaving directory `/home/masaru.nagai/proj/git/avb-applications/avb-demoapps/lib/avtp'
+| make[1]: *** [install.subdirs] Error 2
+| make[1]: Leaving directory `/home/masaru.nagai/proj/git/avb-applications/avb-demoapps/lib'
+| make: *** [install.subdirs] Error 2
+
+clean error if no generate makefile of jdksavdecc-c
+
+| % make clean
+| rm -f libavdecc.a libjdksavdecc-c.a avdecc.o common.o avdecc_entity.o
+| adp.o aecp.o acmp.o
+| cd jdksavdecc-c; make clean
+| make[1]: Entering directory
+| `/home/masaru.nagai/proj/git/avb-applications/avb-demoapps/lib/avdecc/jdksavdecc-c'
+| make[1]: *** No rule to make target `clean'.  Stop.
+| make[1]: Leaving directory
+| `/home/masaru.nagai/proj/git/avb-applications/avb-demoapps/lib/avdecc/jdksavdecc-c'
+| make: *** [clean] Error 2
+
+Signed-off-by: Masaru Nagai <masaru.nagai.vx@ienesas.com>
+---
+ avb-demoapps/lib/avdecc/Makefile | 15 +++++++++++----
+ avb-demoapps/lib/avtp/Makefile   |  3 +++
+ avb-demoapps/lib/eavb/Makefile   |  3 +++
+ avb-demoapps/lib/msrp/Makefile   |  3 +++
+ 4 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/avb-demoapps/lib/avdecc/Makefile b/avb-demoapps/lib/avdecc/Makefile
+index cb68fe0..7006c36 100644
+--- a/avb-demoapps/lib/avdecc/Makefile
++++ b/avb-demoapps/lib/avdecc/Makefile
+@@ -41,11 +41,18 @@ libavdecc.a: $(OBJS)
+ libjdksavdecc-c:
+ 	git submodule init
+ 	git submodule update
++
++libjdksavdecc-c/Makefile:
+ 	cd jdksavdecc-c; cmake -G "Unix Makefiles"
+ 
+-libjdksavdecc-c.a: libjdksavdecc-c
+-	cd jdksavdecc-c; make
++libjdksavdecc-c.a: libjdksavdecc-c/Makefile
++	$(MAKE) -C jdksavdecc-c
+ 
+-clean:
++libjdksavdecc-c.clean: libjdksavdecc-c/Makefile
++	$(MAKE) -C jdksavdecc-c clean
++
++clean: libjdksavdecc-c.clean
+ 	$(RM) $(TARGET) $(OBJS)
+-	cd jdksavdecc-c; make clean
++
++install:
++	# no operation
+diff --git a/avb-demoapps/lib/avtp/Makefile b/avb-demoapps/lib/avtp/Makefile
+index 373ed29..34557e3 100644
+--- a/avb-demoapps/lib/avtp/Makefile
++++ b/avb-demoapps/lib/avtp/Makefile
+@@ -34,3 +34,6 @@ $(TARGET): $(OBJS)
+ 
+ clean:
+ 	$(RM) $(TARGET) $(OBJS)
++
++install:
++	# no operation
+diff --git a/avb-demoapps/lib/eavb/Makefile b/avb-demoapps/lib/eavb/Makefile
+index 223c1fb..5887665 100644
+--- a/avb-demoapps/lib/eavb/Makefile
++++ b/avb-demoapps/lib/eavb/Makefile
+@@ -36,3 +36,6 @@ $(TARGET): $(OBJS)
+ 
+ clean:
+ 	$(RM) $(TARGET) $(OBJS)
++
++install:
++	# no operation
+diff --git a/avb-demoapps/lib/msrp/Makefile b/avb-demoapps/lib/msrp/Makefile
+index a8b7300..d00f71a 100644
+--- a/avb-demoapps/lib/msrp/Makefile
++++ b/avb-demoapps/lib/msrp/Makefile
+@@ -34,3 +34,6 @@ $(TARGET): $(OBJS)
+ 
+ clean:
+ 	$(RM) $(TARGET) $(OBJS)
++
++install:
++	# no operation
+-- 
+1.9.1
+
