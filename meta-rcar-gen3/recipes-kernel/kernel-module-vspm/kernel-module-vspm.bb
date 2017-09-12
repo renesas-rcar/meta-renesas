@@ -71,6 +71,10 @@ vspm_sstate_check_func() {
     fi
 }
 
+# Should also clean deploy/licenses directory
+# for module when do_clean.
+do_clean[cleandirs] += "${LICENSE_DIRECTORY}/${PN}"
+
 PACKAGES = " \
     ${PN} \
     ${PN}-dev \
