@@ -1130,24 +1130,9 @@ func_dtv_dvd()
     echo ""
     echo "Copying for DTV/DVD Packages"
 
-    # DTV/DVD requires OMX Video Decoder
-    if [ ${_video_decoder_common_install} -eq 0 ]; then
-        echo "Video Decoder Library not found!"
-        echo "Skip DTV/DVD Package"
-        echo ""
-        return
-    fi
-
-    # DTV requires Audio Decoder
-    if [ ${_audio_common_install} -eq 0 ]; then
-        echo "Audio Common Library not found!"
-        echo "Skip DTV Package"
-        echo ""
-    else
-        # DTV package
-        func_dtv_kern
-        func_dtv_lib
-    fi
+    # DTV package
+    func_dtv_kern
+    func_dtv_lib
 
     # DVD package
     func_dvd_lib
