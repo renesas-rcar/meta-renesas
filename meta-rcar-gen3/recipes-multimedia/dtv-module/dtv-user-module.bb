@@ -8,7 +8,7 @@ inherit distro_features_check
 
 DEPENDS = " \
     kernel-module-vspmif mmngr-user-module \
-    vspmif-user-module kernel-module-vspmif kernel-module-vspm \
+    vspmif-user-module kernel-module-vspm \
     omx-user-module kernel-module-uvcs-drv \
     kernel-module-scu-src kernel-module-ssp \
     kernel-module-tddmac kernel-module-tsif \
