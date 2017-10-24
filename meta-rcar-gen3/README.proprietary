@@ -37,6 +37,8 @@ I/ Board configuration
    SOC_FAMILY = "r8a7795"
    For M3: r8a7796
    SOC_FAMILY = "r8a7796"
+   For M3N: r8a77965
+   SOC_FAMILY = "r8a77965"
 
 II/ Build with GLES
 ==================
