@@ -1,0 +1,60 @@
+From 7368ecd2aa50c064c3cd0da6b751d1cbed0c4c41 Mon Sep 17 00:00:00 2001
+From: Katsumasa Matsunaga <katsumasa.matsunaga.xj@renesas.com>
+Date: Fri, 6 Oct 2017 13:26:01 +0900
+Subject: soc: renesas: Add support M3N for UVCS driver
+
+Support new device R-Car M3N for UVCS driver.
+
+Signed-off-by: Katsumasa Matsunaga <katsumasa.matsunaga.xj@renesas.com>
+
+diff --git a/src/lkm/uvcs_lkm_internal.h b/src/lkm/uvcs_lkm_internal.h
+index 9e1f53c..b249d68 100644
+--- a/src/lkm/uvcs_lkm_internal.h
++++ b/src/lkm/uvcs_lkm_internal.h
+@@ -89,6 +89,7 @@
+ #define UVCS_REG_SRSTCLR        (0xE6150944u)
+ #define UVCS_LSITYPE_H3         (0x4Fu)
+ #define UVCS_LSITYPE_M3W        (0x52u)
++#define UVCS_LSITYPE_M3N        (0x55u)
+ #define UVCS_IPOPT_DEFAULT      (0x000000Au)
+ 
+ /* register size */
+diff --git a/src/lkm/uvcs_lkm_uf_io.c b/src/lkm/uvcs_lkm_uf_io.c
+index c94277f..50dc97b 100644
+--- a/src/lkm/uvcs_lkm_uf_io.c
++++ b/src/lkm/uvcs_lkm_uf_io.c
+@@ -124,6 +124,11 @@ static const struct soc_device_attribute r8a7796[] = {
+ 	{ },
+ };
+ 
++static const struct soc_device_attribute r8a77965[] = {
++	{ .soc_id = "r8a77965" },
++	{ },
++};
++
+ static const struct soc_device_attribute device_es1x[] = {
+ 	{ .revision = "ES1.*" },
+ 	{ },
+@@ -526,6 +531,10 @@ int uvcs_io_init(
+ 		}
+ 		break;
+ 
++	case UVCS_LSITYPE_M3N:
++		iparam->ip_group_id[0][UVCS_CMN_BASE_ADDR_VLC] = 1u;
++		break;
++
+ 	default:
+ 		break;
+ 	}
+@@ -647,6 +656,8 @@ static void uvcs_get_lsi_info(
+ 			drv->lsi_info.product_id = UVCS_LSITYPE_H3;
+ 		} else if (soc_device_match(r8a7796)) {
+ 			drv->lsi_info.product_id = UVCS_LSITYPE_M3W;
++		} else if (soc_device_match(r8a77965)) {
++			drv->lsi_info.product_id = UVCS_LSITYPE_M3N;
+ 		} else {
+ 			drv->lsi_info.product_id = 0;
+ 			pr_err("unknown soc device\n");
+-- 
+1.9.1
+
