@@ -1,7 +1,7 @@
-From 019d1f04b83db8cd4d5a9381d5ef0c90e946cd05 Mon Sep 17 00:00:00 2001
-From: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
-Date: Mon, 6 Jul 2015 14:48:50 +0700
-Subject: [PATCH] rcar-gen3: add readme for building with Linaro Gcc
+From a217313adcfb331634c99be786b93516d38d943a Mon Sep 17 00:00:00 2001
+From: Thuy Tran <thuy.tran.xh@rvc.renesas.com>
+Date: Tue, 24 Oct 2017 14:39:24 +0700
+Subject: [PATCH] rcar-gen3: Add readme for building with Linaro Gcc
 
 This patch add the dependent layer information, build instructions
 for using Linaro Gcc.
@@ -11,27 +11,35 @@ Updated on Dec, 2016:
 - Change supported branch from jethro to krogoth
 - Change Maintainer information.
 
+Updated on Oct, 2017:
+- Add M3N
+- Add M3ULCB
+- Add meta-optee layer
+
 Signed-off-by: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
 Signed-off-by: Thao Nguyen <thao.nguyen.yb@rvc.renesas.com>
+Signed-off-by: Thuy Tran <thuy.tran.xh@rvc.renesas.com>
+Signed-off-by: Takamitsu Honda <takamitsu.honda.pv@renesas.com>
 ---
- meta-rcar-gen3/README.linaro | 122 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 122 insertions(+)
+ meta-rcar-gen3/README.linaro | 127 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 127 insertions(+)
  create mode 100644 meta-rcar-gen3/README.linaro
 
 diff --git a/meta-rcar-gen3/README.linaro b/meta-rcar-gen3/README.linaro
 new file mode 100644
-index 0000000..6542d43
+index 0000000..e1fe40a
 --- /dev/null
 +++ b/meta-rcar-gen3/README.linaro
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,127 @@
 +meta-rcar-gen3
 +==============
 +
 +This layer provides that evaluation board is mounted ARM SoCs of Renesas
 +Electronics, called the R-Car Generation 3. Currently, this supports
 +board and the SoCs of the following:
-+    - Board: Salvator-X   / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3)
++    - Board: Salvator-X   / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
 +    - Board: R-Car Starter Kit premier(H3ULCB)   / SoC: R8A7795
++    - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796
 +
 +Patches
 +=======
@@ -53,7 +61,7 @@ index 0000000..6542d43
 +    branch: krogoth
 +
 +    URI: https://git.linaro.org/openembedded/meta-linaro.git
-+    layers: meta-linaro-toolchain
++    layers: meta-linaro-toolchain, meta-optee
 +    branch: krogoth
 +
 +    URI: git://git.openembedded.org/meta-openembedded
@@ -77,6 +85,7 @@ index 0000000..6542d43
 +        <path to layer>/poky/meta-yocto-bsp \
 +        <path to layer>/meta-renesas/meta-rcar-gen3 \
 +        <path to layer>/meta-linaro/meta-linaro-toolchain \
++        <path to layer>/meta-linaro/meta-optee \
 +        <path to layer>/meta-openembedded/meta-oe \
 +    "
 +
@@ -91,6 +100,9 @@ index 0000000..6542d43
 +
 +    For M3: r8a7796
 +    SOC_FAMILY = "r8a7796"
++
++    For M3N: r8a77965
++    SOC_FAMILY = "r8a77965"
 +
 +Must change the package class to ipk files in local.conf:
 +
