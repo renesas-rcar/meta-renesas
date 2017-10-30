@@ -66,8 +66,12 @@ vspm_sstate_check_func() {
     # This module installs shared header files in ${KERNELSRC}/include by
     # sstate cache.
     # Those files will be deleted by unpack task of kernel.
-    if [ ! -d "${KERNELSRC}/include" ]; then
-        exit 1
+    if [ ${WITHIN_EXT_SDK} -eq 1 ]; then
+        :
+    else
+        if [ ! -d "${KERNELSRC}/include" ]; then
+            exit 1
+        fi
     fi
 }
 
