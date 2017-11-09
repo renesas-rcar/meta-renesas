@@ -1,12 +1,17 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
+
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
-SRC_URI_append = " git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.2.0"
+SRC_URI_append = " \
+    git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.12.2 \
+    file://gstomx.conf \
+"
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
-SRCREV = "50b1a326521f909f6baa4708ce42e671013b8dab"
+SRCREV = "7761a2d37dd351f00a6166c80d3cdc7eb94466f4"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
-    file://omx/gstomx.h;beginline=1;endline=22;md5=9281ffe981001da5a13db0303fa7c4ab \
+    file://omx/gstomx.h;beginline=1;endline=22;md5=41f577b291a84518889deaaaf2bcbc95 \
 "
 
 S = "${WORKDIR}/git"
@@ -14,7 +19,6 @@ S = "${WORKDIR}/git"
 GSTREAMER_1_0_OMX_TARGET = "rcar"
 GSTREAMER_1_0_OMX_CORE_NAME = "${libdir}/libomxr_core.so"
 EXTRA_OECONF_append = " --enable-experimental"
-EXTRA_OECONF_append = " --with-omx-header-path=${S}/omx/openmax"
 
 do_configure_prepend() {
     export http_proxy=${http_proxy}
@@ -22,6 +26,7 @@ do_configure_prepend() {
     export HTTP_PROXY=${HTTP_PROXY}
     export HTTPS_PROXY=${HTTPS_PROXY}
     cd ${S}
+    install -m 0644 ${WORKDIR}/gstomx.conf ${S}/config/rcar/
     ./autogen.sh --noconfigure
     cd ${B}
 }

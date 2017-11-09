@@ -18,7 +18,7 @@ SRC_URI = " \
     file://${VSPFILTER_CONF} \
 "
 
-SRCREV = "50eefe877d2198092ba41316456d73e02dba0def"
+SRCREV = "7f156a6064c11b4e623347fd7d0141ecee75eb36"
 
 S = "${WORKDIR}/git"
 
