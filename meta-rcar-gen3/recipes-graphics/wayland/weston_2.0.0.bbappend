@@ -2,20 +2,17 @@ require weston.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-BRANCH = "rcar-gen3/1.11.0/gl-fallback"
+BRANCH = "rcar-gen3/2.0.0/gl-fallback"
 
-SRCREV = "68d84325d3b7ef0612f79e8280b91c4a1a6dfebc"
+SRCREV = "ad2aea3f8aba60cb1affaf544bd236d6ba2bdb62"
 
-SRC_URI = " \
+SRC_URI_remove = "https://wayland.freedesktop.org/releases/${BPN}-${PV}.tar.xz"
+
+SRC_URI_append = " \
     git://github.com/renesas-rcar/weston.git;branch=${BRANCH} \
     file://weston.png \
     file://weston.desktop \
-    file://0001-make-error-portable.patch \
-    file://0001-configure.ac-Fix-wayland-protocols-path.patch \
-    file://0001-shared-include-stdint.h-for-int32_t.patch \
     file://xwayland.weston-start \
-    file://make-weston-launch-exit-for-unrecognized-option.patch \
-    file://0001-weston-launch-Provide-a-default-version-that-doesn-t.patch \
     file://weston.ini \
     file://weston_v4l2.ini \
 "
