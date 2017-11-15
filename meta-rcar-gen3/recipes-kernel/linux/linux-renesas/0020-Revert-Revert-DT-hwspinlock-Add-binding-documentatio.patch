@@ -1,0 +1,42 @@
+From fcae5c3fa62507857cdfc3ff7f41ae68088a350a Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 12:02:03 +0900
+Subject: [PATCH 20/23] Revert "Revert "DT: hwspinlock: Add binding
+ documentation for R-Car Gen3 hwspinlock""
+
+This reverts commit 58493d26331f ("Revert "DT: hwspinlock: Add
+binding documentation for R-Car Gen3 hwspinlock"")
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ .../devicetree/bindings/hwlock/rcar-hwspinlock.txt     | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
+
+diff --git a/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt b/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
+new file mode 100644
+index 0000000..e342ae4
+--- /dev/null
++++ b/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
+@@ -0,0 +1,18 @@
++DT bindings for the Renesas R-Car Hardware spinlock driver
++----------------------------------------------------------
++
++Required properties :
++- compatible : shall contain only one of the following:
++	- "renesas,mfis-lock-r8a7795", "renesas,mfis-lock";
++	- "renesas,mfis-lock-r8a7796", "renesas,mfis-lock";
++
++- reg : start address and length for MFIS lock registers.
++
++
++Examples:
++
++mfis_lock: mfis-lock {
++	compatible =    "renesas,mfis-lock-r8a7795",
++			"renesas,mfis-lock";
++	reg = <0 0xe62600c0 0 0x0020>;
++};
+-- 
+1.9.1
+

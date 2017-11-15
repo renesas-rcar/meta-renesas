@@ -1,0 +1,34 @@
+From 8aacad27fd689c933150bcabdc2cba3353892803 Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 12:09:11 +0900
+Subject: [PATCH 21/23] arm64: dts: r8a77965: Add MFIS device node
+
+This patch adds the MFIS device node.
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77965.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77965.dtsi b/arch/arm64/boot/dts/renesas/r8a77965.dtsi
+index 24bb42a..0977119 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77965.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77965.dtsi
+@@ -696,6 +696,14 @@
+ 			power-domains = <&sysc R8A77965_PD_ALWAYS_ON>;
+ 		};
+ 
++		mfis: mfis@e6260000 {
++			compatible = "renesas,mfis-r8a77965", "renesas,mfis";
++			reg = <0 0xe6260000 0 0x0200>;
++			interrupts = <GIC_SPI 180 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eicr0";
++			status = "okay";
++		};
++
+ 		pfc: pin-controller@e6060000 {
+ 			compatible = "renesas,pfc-r8a77965";
+ 			reg = <0 0xe6060000 0 0x50c>;
+-- 
+1.9.1
+

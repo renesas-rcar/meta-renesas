@@ -1,6 +1,7 @@
 DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 
 require include/avb-control.inc
+require include/iccom-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
@@ -15,6 +16,11 @@ SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 LINUX_VERSION ?= "4.9.0"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
+
+# Add some patches to support ICCOM module
+SRC_URI_append = " \
+    ${@base_conditional("USE_ICCOM", "1", " file://iccom_feature.scc", "", d)} \
+"
 
 SRC_URI_append = " \
     file://defconfig \

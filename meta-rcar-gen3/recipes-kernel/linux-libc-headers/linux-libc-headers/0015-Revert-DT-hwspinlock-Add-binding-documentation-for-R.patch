@@ -1,0 +1,49 @@
+From 25a07114b0b094582ed18f0e536c78c651c0d5e1 Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 11:56:16 +0900
+Subject: [PATCH 15/23] Revert "DT: hwspinlock: Add binding documentation for
+ R-Car Gen3 hwspinlock"
+
+This reverts commit bddba251a4ab ("DT: hwspinlock: Add binding
+documentation for R-Car Gen3 hwspinlock")
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ .../devicetree/bindings/hwlock/rcar-hwspinlock.txt | 25 ----------------------
+ 1 file changed, 25 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
+
+diff --git a/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt b/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
+deleted file mode 100644
+index e5bab0e..0000000
+--- a/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
++++ /dev/null
+@@ -1,25 +0,0 @@
+-DT bindings for the Renesas R-Car Hardware spinlock driver
+-----------------------------------------------------------
+-
+-Required properties :
+-- compatible : shall contain only one of the following:
+-	- "renesas,mfis-lock-r8a7795", "renesas,mfis-lock";
+-	- "renesas,mfis-lock-r8a7796", "renesas,mfis-lock";
+-	- "renesas,mfis-lock-r8a77965", "renesas,mfis-lock";
+-
+-- reg : start address and length for MFIS registers.
+-
+-- #hwlock-cells : should be 1. hwspinlock users specify the hwspinlock id
+-	to request a specific hwspinlock.
+-
+-Please look at the generic hwlock binding for usage information for consumers,
+-"Documentation/devicetree/bindings/hwlock/hwlock.txt"
+-
+-Examples:
+-
+-mfis: mfis@e6260000 {
+-	compatible = "renesas,mfis-lock-r8a7795",
+-		     "renesas,mfis-lock";
+-	reg = <0 0xe6260000 0 0x1000>;
+-	#hwlock-cells = <1>;
+-};
+-- 
+1.9.1
+

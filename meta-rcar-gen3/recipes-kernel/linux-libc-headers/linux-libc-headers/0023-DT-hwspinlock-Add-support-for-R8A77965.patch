@@ -1,0 +1,25 @@
+From 55275fe86ebc492a0b45c6ad1f39767f8efcda3f Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 12:14:51 +0900
+Subject: [PATCH 23/23] DT: hwspinlock: Add support for R8A77965
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt b/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
+index e342ae4..fb4127b 100644
+--- a/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
++++ b/Documentation/devicetree/bindings/hwlock/rcar-hwspinlock.txt
+@@ -5,6 +5,7 @@ Required properties :
+ - compatible : shall contain only one of the following:
+ 	- "renesas,mfis-lock-r8a7795", "renesas,mfis-lock";
+ 	- "renesas,mfis-lock-r8a7796", "renesas,mfis-lock";
++	- "renesas,mfis-lock-r8a77965", "renesas,mfis-lock";
+ 
+ - reg : start address and length for MFIS lock registers.
+ 
+-- 
+1.9.1
+

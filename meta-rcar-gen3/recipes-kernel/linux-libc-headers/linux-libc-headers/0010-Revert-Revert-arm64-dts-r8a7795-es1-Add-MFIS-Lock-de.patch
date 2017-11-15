@@ -1,0 +1,35 @@
+From 2889aa588138b79e66d0124f25fc07adf962b360 Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 11:47:34 +0900
+Subject: [PATCH 10/23] Revert "Revert "arm64: dts: r8a7795-es1: Add MFIS Lock
+ device node""
+
+This reverts commit a663e40c8d59 ("Revert "arm64: dts: r8a7795-es1:
+Add MFIS Lock device node"")
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-es1.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-es1.dtsi b/arch/arm64/boot/dts/renesas/r8a7795-es1.dtsi
+index 0a6bab8..97db2d0 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-es1.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795-es1.dtsi
+@@ -885,6 +885,13 @@
+ 			status = "okay";
+ 		};
+ 
++		mfis_lock: mfis-lock@e62600c0 {
++			compatible =    "renesas,mfis-lock-r8a7795",
++					"renesas,mfis-lock";
++			reg = <0 0xe62600c0 0 0x0020>;
++			status = "okay";
++		};
++
+ 		pfc: pfc@e6060000 {
+ 			compatible = "renesas,pfc-r8a7795";
+ 			reg = <0 0xe6060000 0 0x50c>;
+-- 
+1.9.1
+

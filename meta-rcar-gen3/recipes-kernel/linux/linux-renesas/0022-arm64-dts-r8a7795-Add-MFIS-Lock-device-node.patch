@@ -1,0 +1,33 @@
+From 57b4d4e9052790f6ee47d9f36cd2763fe8388bdd Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 12:12:53 +0900
+Subject: [PATCH 22/23] arm64: dts: r8a7795: Add MFIS Lock device node
+
+Add MFIS Lock device node for R-Car Gen3 Hardware Spinlock driver.
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77965.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77965.dtsi b/arch/arm64/boot/dts/renesas/r8a77965.dtsi
+index 0977119..fa09093 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77965.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77965.dtsi
+@@ -704,6 +704,13 @@
+ 			status = "okay";
+ 		};
+ 
++		mfis_lock: mfis-lock {
++			compatible = "renesas,mfis-lock-r8a77965",
++				     "renesas,mfis-lock";
++			reg = <0 0xe62600c0 0 0x0020>;
++			status = "okay";
++		};
++
+ 		pfc: pin-controller@e6060000 {
+ 			compatible = "renesas,pfc-r8a77965";
+ 			reg = <0 0xe6060000 0 0x50c>;
+-- 
+1.9.1
+

@@ -1,0 +1,214 @@
+From d10a3b0e5170ebe5350342c3e36902ff3624f2b1 Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 11:58:51 +0900
+Subject: [PATCH 17/23] Revert "Revert "hwspinlock: rcar: Add support for R-Car
+ Gen3 Hardware Spinlock""
+
+This reverts commit b960f2c58f30 ("Revert "hwspinlock: rcar: Add
+support for R-Car Gen3 Hardware Spinlock"")
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ drivers/hwspinlock/Kconfig           |  13 +++
+ drivers/hwspinlock/Makefile          |   1 +
+ drivers/hwspinlock/rcar_hwspinlock.c | 156 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 170 insertions(+)
+ create mode 100644 drivers/hwspinlock/rcar_hwspinlock.c
+
+diff --git a/drivers/hwspinlock/Kconfig b/drivers/hwspinlock/Kconfig
+index 73a4016..f0c0a35 100644
+--- a/drivers/hwspinlock/Kconfig
++++ b/drivers/hwspinlock/Kconfig
+@@ -53,4 +53,17 @@ config HSEM_U8500
+ 
+ 	  If unsure, say N.
+ 
++config HWSPINLOCK_RCAR
++	bool "R-Car Hardware Spinlock functionality"
++	depends on ARCH_RENESAS
++	select HWSPINLOCK
++	default y
++	help
++	  Say y here to support the R-Car Hardware Spinlock functionality, which
++	  provides a synchronisation mechanism for the various processor on the
++	  SoC.
++	  This function is implemented with MFIS device.
++
++	  If unsure, say N.
++
+ endmenu
+diff --git a/drivers/hwspinlock/Makefile b/drivers/hwspinlock/Makefile
+index 6b59cb5a..4ee4001 100644
+--- a/drivers/hwspinlock/Makefile
++++ b/drivers/hwspinlock/Makefile
+@@ -6,4 +6,5 @@ obj-$(CONFIG_HWSPINLOCK)		+= hwspinlock_core.o
+ obj-$(CONFIG_HWSPINLOCK_OMAP)		+= omap_hwspinlock.o
+ obj-$(CONFIG_HWSPINLOCK_QCOM)		+= qcom_hwspinlock.o
+ obj-$(CONFIG_HWSPINLOCK_SIRF)		+= sirf_hwspinlock.o
++obj-$(CONFIG_HWSPINLOCK_RCAR)		+= rcar_hwspinlock.o
+ obj-$(CONFIG_HSEM_U8500)		+= u8500_hsem.o
+diff --git a/drivers/hwspinlock/rcar_hwspinlock.c b/drivers/hwspinlock/rcar_hwspinlock.c
+new file mode 100644
+index 0000000..35ba8c1
+--- /dev/null
++++ b/drivers/hwspinlock/rcar_hwspinlock.c
+@@ -0,0 +1,156 @@
++/*
++ * rcar_hwspinlock.c
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ */
++#include <linux/hwspinlock.h>
++#include <linux/clk.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pm_runtime.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/of_address.h>
++#include <linux/platform_device.h>
++#include <linux/io.h>
++
++#include "hwspinlock_internal.h"
++
++#define RCAR_HWSPINLOCK_NUM	(8)
++
++static int rcar_hwspinlock_trylock(struct hwspinlock *lock)
++{
++	void __iomem *addr = lock->priv;
++
++	return !ioread32(addr);
++}
++
++static void rcar_hwspinlock_unlock(struct hwspinlock *lock)
++{
++	void __iomem *addr = lock->priv;
++
++	iowrite32(0, addr);
++}
++
++static const struct hwspinlock_ops rcar_hwspinlock_ops = {
++	.trylock	= rcar_hwspinlock_trylock,
++	.unlock		= rcar_hwspinlock_unlock,
++};
++
++static const struct of_device_id rcar_hwspinlock_of_match[] = {
++	{ .compatible = "renesas,mfis-lock" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, rcar_hwspinlock_of_match);
++
++static int rcar_hwspinlock_probe(struct platform_device *pdev)
++{
++	int				idx;
++	int				ret = 0;
++	u32 __iomem			*addr;
++	struct hwspinlock_device	*bank;
++	struct hwspinlock		*lock;
++	struct resource			*res = NULL;
++	struct clk			*clock;
++
++	/* enable MFIS clock */
++	clock = of_clk_get(pdev->dev.of_node, 0);
++	if (!clock) {
++		dev_err(&pdev->dev, "Failed to get clock.\n");
++		ret = PTR_ERR(clock);
++		goto out;
++	}
++	clk_prepare_enable(clock);
++
++	pm_runtime_enable(&pdev->dev);
++
++	/* map MFIS register */
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	addr = (u32 __iomem *)devm_ioremap_nocache(&pdev->dev,
++					res->start, resource_size(res));
++	if (IS_ERR(addr)) {
++		dev_err(&pdev->dev, "Failed to remap MFIS Lock register.\n");
++		ret = PTR_ERR(addr);
++		goto clk_disable;
++	}
++
++	/* create hwspinlock control info */
++	bank = devm_kzalloc(&pdev->dev,
++			sizeof(*bank) + sizeof(*lock) * RCAR_HWSPINLOCK_NUM,
++			GFP_KERNEL);
++	if (!bank) {
++		dev_err(&pdev->dev, "Failed to allocate memory.\n");
++		ret = PTR_ERR(bank);
++		goto clk_disable;
++	}
++
++	for (idx = 0; idx < RCAR_HWSPINLOCK_NUM; idx++) {
++		lock = &bank->lock[idx];
++		lock->priv = &addr[idx];
++	}
++	platform_set_drvdata(pdev, bank);
++
++	/* register hwspinlock */
++	ret = hwspin_lock_register(bank, &pdev->dev, &rcar_hwspinlock_ops,
++				   0, RCAR_HWSPINLOCK_NUM);
++	if (!ret)
++		goto out;
++
++clk_disable:
++	if (clock)
++		clk_disable_unprepare(clock);
++
++out:
++	return ret;
++}
++
++static int rcar_hwspinlock_remove(struct platform_device *pdev)
++{
++	int		ret;
++	struct clk	*clock = NULL;
++
++	ret = hwspin_lock_unregister(platform_get_drvdata(pdev));
++	if (ret) {
++		dev_err(&pdev->dev, "%s failed: %d\n", __func__, ret);
++		return ret;
++	}
++
++	pm_runtime_disable(&pdev->dev);
++	clock = of_clk_get(pdev->dev.of_node, 0);
++	if (clock)
++		clk_disable_unprepare(clock);
++
++	return 0;
++}
++
++static struct platform_driver rcar_hwspinlock_driver = {
++	.probe		= rcar_hwspinlock_probe,
++	.remove		= rcar_hwspinlock_remove,
++	.driver		= {
++		.name	= "rcar_hwspinlock",
++		.of_match_table = rcar_hwspinlock_of_match,
++	},
++};
++
++static int __init rcar_hwspinlock_init(void)
++{
++	return platform_driver_register(&rcar_hwspinlock_driver);
++}
++core_initcall(rcar_hwspinlock_init);
++
++static void __exit rcar_hwspinlock_exit(void)
++{
++	platform_driver_unregister(&rcar_hwspinlock_driver);
++}
++module_exit(rcar_hwspinlock_exit);
++
++MODULE_LICENSE("GPL v2");
+-- 
+1.9.1
+

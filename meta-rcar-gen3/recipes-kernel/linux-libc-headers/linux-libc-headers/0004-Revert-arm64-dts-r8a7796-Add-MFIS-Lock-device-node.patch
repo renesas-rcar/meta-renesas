@@ -1,0 +1,43 @@
+From 9274cd15e1b16496cd160c70c86a65fe7b61b451 Mon Sep 17 00:00:00 2001
+From: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+Date: Mon, 13 Nov 2017 11:37:41 +0900
+Subject: [PATCH 04/23] Revert "arm64: dts: r8a7796: Add MFIS Lock device node"
+
+This reverts commit 8878a2390883 ("arm64: dts: r8a7796: Add MFIS
+Lock device node")
+
+Signed-off-by: Hiroki Negishi <hiroki.negishi.bx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7796.dtsi | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796.dtsi b/arch/arm64/boot/dts/renesas/r8a7796.dtsi
+index 539bd38..2da6f29 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7796.dtsi
+@@ -1,7 +1,7 @@
+ /*
+  * Device Tree Source for the r8a7796 SoC
+  *
+- * Copyright (C) 2016-2017 Renesas Electronics Corp.
++ * Copyright (C) 2016 Renesas Electronics Corp.
+  *
+  * This file is licensed under the terms of the GNU General Public License
+  * version 2.  This program is licensed "as is" without any warranty of any
+@@ -753,13 +753,6 @@
+ 			power-domains = <&sysc R8A7796_PD_ALWAYS_ON>;
+ 		};
+ 
+-		mfis: mfis@e6260000 {
+-			compatible = "renesas,mfis-lock-r8a7796",
+-				     "renesas,mfis-lock";
+-			reg = <0 0xe6260000 0 0x1000>;
+-			#hwlock-cells = <1>;
+-		};
+-
+ 		pfc: pin-controller@e6060000 {
+ 			compatible = "renesas,pfc-r8a7796";
+ 			reg = <0 0xe6060000 0 0x50c>;
+-- 
+1.9.1
+
