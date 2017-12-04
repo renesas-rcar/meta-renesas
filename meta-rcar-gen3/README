@@ -101,7 +101,6 @@ Images generated:
     * Image-<machine name>.dtb (DTB for target machine)
     * core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
     * core-image-minimal-<machine name>.ext4  (rootfs ext4 format)
-    * core-image-minimal-<machine name>.cpio.gz (rootfs cpio+gz format)
 
 Build Instructions for SDK
 ==========================
