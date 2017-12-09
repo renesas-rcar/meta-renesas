@@ -26,4 +26,4 @@ do_configure_prepend() {
     cd ${B}
 }
 
-RDEPENDS_${PN}_append = " libwayland-egl"
+RDEPENDS_gstreamer1.0-plugins-bad += "libwayland-egl"
