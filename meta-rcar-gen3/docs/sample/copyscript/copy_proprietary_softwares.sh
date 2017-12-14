@@ -24,14 +24,14 @@ EOF
 # audio_list="<software_name>,<package_name>,<copy_file_name> \
 #             <software_name>,<package_name>,<copy_file_name> \
 #             <software_name>,<package_name>,<copy_file_name>"
-_audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL40C,RTM0AC0000XAAACD30SL40C.tar.gz \
-             aacPlusV2_decoder_lib,RTM0AC0000XAAAPD30SL40C,RTM0AC0000XAAAPD30SL40C.tar.gz \
-             MP3_decoder_lib,RTM0AC0000XAMP3D30SL40C,RTM0AC0000XAMP3D30SL40C.tar.gz \
-             WMA_decoder_lib,RTM0AC0000XAWMAD30SL40C,RTM0AC0000XAWMAD30SL40C.tar.gz \
-             AAC-LC_encoder_lib,RTM0AC0000XAAACE30SL40C,RTM0AC0000XAAACE30SL40C.tar.gz \
-             ALAC_decoder_lib,RTM0AC0000XAALAD30SL40C,RTM0AC0000XAALAD30SL40C.tar.gz \
-             FLAC_decoder_lib,RTM0AC0000XAFLAD30SL40C,RTM0AC0000XAFLAD30SL40C.tar.gz \
-             Dolby_decoder_lib,RTM0AC0000XADD5D30SL40C,RTM0AC0000XADD5D30SL40C.tar.gz"
+_audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL41C,RTM0AC0000XAAACD30SL41C.tar.gz \
+             aacPlusV2_decoder_lib,RTM0AC0000XAAAPD30SL41C,RTM0AC0000XAAAPD30SL41C.tar.gz \
+             MP3_decoder_lib,RTM0AC0000XAMP3D30SL41C,RTM0AC0000XAMP3D30SL41C.tar.gz \
+             WMA_decoder_lib,RTM0AC0000XAWMAD30SL41C,RTM0AC0000XAWMAD30SL41C.tar.gz \
+             AAC-LC_encoder_lib,RTM0AC0000XAAACE30SL41C,RTM0AC0000XAAACE30SL41C.tar.gz \
+             ALAC_decoder_lib,RTM0AC0000XAALAD30SL41C,RTM0AC0000XAALAD30SL41C.tar.gz \
+             FLAC_decoder_lib,RTM0AC0000XAFLAD30SL41C,RTM0AC0000XAFLAD30SL41C.tar.gz \
+             Dolby_decoder_lib,RTM0AC0000XADD5D30SL41C,RTM0AC0000XADD5D30SL41C.tar.gz"
 
 # Audio M/W Library
 # Please add omx audio library to "_audio_mw_list"
@@ -39,12 +39,12 @@ _audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL40C,RTM0AC0000XAAACD30SL40C.
 # audio_mw_list="<software_name>,<package_name>,<copy_file_name> \
 #                <software_name>,<package_name>,<copy_file_name> \
 #                <software_name>,<package_name>,<copy_file_name>"
-_audio_mw_list="AAC-LC_decoder_M/W,RTM0AC0000ADAACMZ1SL40C,RTM0AC0000ADAACMZ1SL40C.tar.gz \
-                aacPlusV2_decoder_M/W,RTM0AC0000ADAAPMZ1SL40C,RTM0AC0000ADAAPMZ1SL40C.tar.gz \
-                MP3_decoder_M/W,RTM0AC0000ADMP3MZ1SL40C,RTM0AC0000ADMP3MZ1SL40C.tar.gz \
-                WMA_decoder_M/W,RTM0AC0000ADWMAMZ1SL40C,RTM0AC0000ADWMAMZ1SL40C.tar.gz \
-                AAC-LC_encoder_M/W,RTM0AC0000AEAACMZ1SL40C,RTM0AC0000AEAACMZ1SL40C.tar.gz \
-                DDD_decoder_M/W,RTM0AC0000ADDD5MZ1SL40C,RTM0AC0000ADDD5MZ1SL40C.tar.gz"
+_audio_mw_list="AAC-LC_decoder_M/W,RTM0AC0000ADAACMZ1SL41C,RTM0AC0000ADAACMZ1SL41C.tar.gz \
+                aacPlusV2_decoder_M/W,RTM0AC0000ADAAPMZ1SL41C,RTM0AC0000ADAAPMZ1SL41C.tar.gz \
+                MP3_decoder_M/W,RTM0AC0000ADMP3MZ1SL41C,RTM0AC0000ADMP3MZ1SL41C.tar.gz \
+                WMA_decoder_M/W,RTM0AC0000ADWMAMZ1SL41C,RTM0AC0000ADWMAMZ1SL41C.tar.gz \
+                AAC-LC_encoder_M/W,RTM0AC0000AEAACMZ1SL41C,RTM0AC0000AEAACMZ1SL41C.tar.gz \
+                DDD_decoder_M/W,RTM0AC0000ADDD5MZ1SL41C,RTM0AC0000ADDD5MZ1SL41C.tar.gz"
 
 # Video Decoder Library
 # Please add omx video decoder library to "_video_dec_list"
@@ -52,14 +52,16 @@ _audio_mw_list="AAC-LC_decoder_M/W,RTM0AC0000ADAACMZ1SL40C,RTM0AC0000ADAACMZ1SL4
 # video_dec_list="<software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name>"
-_video_dec_list="H263_decoder,RTM0AC0000XV263D30SL40C,RTM0AC0000XV263D30SL40C.tar.bz2 \
-                 H264_decoder,RTM0AC0000XV264D30SL40C,RTM0AC0000XV264D30SL40C.tar.bz2 \
-                 H265_decoder,RTM0AC0000XV265D30SL40C,RTM0AC0000XV265D30SL40C.tar.bz2 \
-                 MPEG2_decoder,RTM0AC0000XVM2VD30SL40C,RTM0AC0000XVM2VD30SL40C.tar.bz2 \
-                 MPEG4_decoder,RTM0AC0000XVM4VD30SL40C,RTM0AC0000XVM4VD30SL40C.tar.bz2 \
-                 VC1_decoder,RTM0AC0000XVVC1D30SL40C,RTM0AC0000XVVC1D30SL40C.tar.bz2 \
-                 DivX_decoder,RTM0AC0000XVDVXD30SL40C,RTM0AC0000XVDVXD30SL40C.tar.bz2 \
-                 RealVideo_decoder,RTM0AC0000XVRLVD30SL40C,RTM0AC0000XVRLVD30SL40C.tar.bz2"
+_video_dec_list="H263_decoder,RTM0AC0000XV263D30SL41C,RTM0AC0000XV263D30SL41C.tar.bz2 \
+                 H264_decoder,RTM0AC0000XV264D30SL41C,RTM0AC0000XV264D30SL41C.tar.bz2 \
+                 H265_decoder,RTM0AC0000XV265D30SL41C,RTM0AC0000XV265D30SL41C.tar.bz2 \
+                 MPEG2_decoder,RTM0AC0000XVM2VD30SL41C,RTM0AC0000XVM2VD30SL41C.tar.bz2 \
+                 MPEG4_decoder,RTM0AC0000XVM4VD30SL41C,RTM0AC0000XVM4VD30SL41C.tar.bz2 \
+                 VC1_decoder,RTM0AC0000XVVC1D30SL41C,RTM0AC0000XVVC1D30SL41C.tar.bz2 \
+                 DivX_decoder,RTM0AC0000XVDVXD30SL41C,RTM0AC0000XVDVXD30SL41C.tar.bz2 \
+                 RealVideo_decoder,RTM0AC0000XVRLVD30SL41C,RTM0AC0000XVRLVD30SL41C.tar.bz2 \
+                 VP8_decoder,RTM0AC0000XVVP8D30SL41C,RTM0AC0000XVVP8D30SL41C.tar.bz2 \
+                 VP9_decoder,RTM0AC0000XVVP9D30SL41C,RTM0AC0000XVVP9D30SL41C.tar.bz2"
 
 # Video Encoder Library
 # Please add omx video encoder library to "_video_enc_list"
@@ -67,18 +69,19 @@ _video_dec_list="H263_decoder,RTM0AC0000XV263D30SL40C,RTM0AC0000XV263D30SL40C.ta
 # video_enc_list="<software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name>"
-_video_enc_list="H264_encoder,RTM0AC0000XV264E30SL40C,RTM0AC0000XV264E30SL40C.tar.bz2"
+_video_enc_list="H264_encoder,RTM0AC0000XV264E30SL41C,RTM0AC0000XV264E30SL41C.tar.bz2 \
+                 VP8_encoder,RTM0AC0000XVVP8E30SL41C,RTM0AC0000XVVP8E30SL41C.tar.bz2"
 
 # Common library packages
 # Don't use space in xxx_name.
 # XXX_list="<software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name>"
-_omx_common_list="omx_common_lib,RTM0AC0000XCMCTL30SL40C,RTM0AC0000XCMCTL30SL40C.tar.bz2"
-_uvcs_list="uvcs_lib,RCG3VUDRL4001ZDO,RCG3VUDRL4001ZDO.tar.bz2"
-_video_enc_common_list="video_enc_common,RTM0AC0000XVCMNE30SL40C,RTM0AC0000XVCMNE30SL40C.tar.bz2"
-_video_dec_common_list="video_dec_common,RTM0AC0000XVCMND30SL40C,RTM0AC0000XVCMND30SL40C.tar.bz2"
-_audio_common_list="audio_common,RTM0AC0000XACMND30SL40C,RTM0AC0000XACMND30SL40C.tar.gz"
+_omx_common_list="omx_common_lib,RTM0AC0000XCMCTL30SL41C,RTM0AC0000XCMCTL30SL41C.tar.bz2"
+_uvcs_list="uvcs_lib,RCG3VUDRL4101ZDO,RCG3VUDRL4101ZDO.tar.bz2"
+_video_enc_common_list="video_enc_common,RTM0AC0000XVCMNE30SL41C,RTM0AC0000XVCMNE30SL41C.tar.bz2"
+_video_dec_common_list="video_dec_common,RTM0AC0000XVCMND30SL41C,RTM0AC0000XVCMND30SL41C.tar.bz2"
+_audio_common_list="audio_common,RTM0AC0000XACMND30SL41C,RTM0AC0000XACMND30SL41C.tar.gz"
 
 
 # DTV Library
