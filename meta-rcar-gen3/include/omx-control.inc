@@ -68,6 +68,15 @@ USE_DD_MDW =  "${@'1' if 'dddec_mdw' in '${DISTRO_FEATURES}' else '0'}"
 # USE_AACLCE_OMX for AAC-LC encoder middleware Library
 USE_AACLCE_MDW = "${@'1' if 'aaclcenc_mdw' in '${DISTRO_FEATURES}' else '0'}"
 
+# USE_VP8D_OMX for OMX Media Component VP8 Decoder Library
+USE_VP8D_OMX = "${@'1' if 'vp8dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_VP8E_OMX for OMX Media Component VP8 Encoder Library
+USE_VP8E_OMX = "${@'1' if 'vp8enc_lib' in '${DISTRO_FEATURES}' else '0'}"
+
+# USE_VP9D_OMX for OMX Media Component VP9 Decoder Library
+USE_VP9D_OMX = "${@'1' if 'vp9dec_lib' in '${DISTRO_FEATURES}' else '0'}"
+
 # OMX Video Decoder Flag list
 LIST_OMX_VIDEO_DEC_FLAG = " \
     ${USE_H263D_OMX} \
@@ -78,11 +87,14 @@ LIST_OMX_VIDEO_DEC_FLAG = " \
     ${USE_VC1D_OMX} \
     ${USE_DIVXD_OMX} \
     ${USE_RVD_OMX} \
+    ${USE_VP8D_OMX} \
+    ${USE_VP9D_OMX} \
 "
 
 # OMX Video Encoder Flag list
 LIST_OMX_VIDEO_ENC_FLAG = " \
     ${USE_H264E_OMX} \
+    ${USE_VP8E_OMX} \
 "
 
 # OMX Audio Flag list (except MDW)
