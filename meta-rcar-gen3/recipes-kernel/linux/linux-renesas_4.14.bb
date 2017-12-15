@@ -21,3 +21,9 @@ SRC_URI_append = " \
     file://touch.cfg \
     ${@base_conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
+
+# Add SCHED_DEBUG config fragment to support CAS
+SRC_URI_append = " \
+    ${@bb.utils.contains('MACHINE_FEATURES','cas','file://capacity_aware_migration_strategy.cfg','',d)} \
+"
+
