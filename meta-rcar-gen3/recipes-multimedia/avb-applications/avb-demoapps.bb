@@ -41,7 +41,6 @@ do_install_append() {
 
     # Install
     install -m 644 ${S}/etc/linuxptp/avb-demoapps.cfg ${D}/${sysconfdir}/linuxptp
-    install -m 644 ${S}/etc/daemon_cl/gptp_cfg_100mb.ini ${D}/${sysconfdir}/daemon_cl
     install -m 644 ${S}/etc/daemon_cl/gptp_cfg.ini ${D}/${sysconfdir}/daemon_cl
     install -m 755 ${S}/etc/avblauncher/mse_aaf_pcm.sh ${D}/${sysconfdir}/avblauncher
     install -m 644 ${S}/etc/avblauncher/mse_aaf_pcm_listener.ini ${D}/${sysconfdir}/avblauncher
@@ -80,7 +79,6 @@ FILES_${PN}-mrpdummy = " \
 "
 
 FILES_${PN}-avblauncher = " \
-    ${sysconfdir}/daemon_cl/gptp_cfg_100mb.ini \
     ${sysconfdir}/daemon_cl/gptp_cfg.ini \
     ${sysconfdir}/avblauncher/mse_aaf_pcm.sh \
     ${sysconfdir}/avblauncher/mse_aaf_pcm_listener.ini \
