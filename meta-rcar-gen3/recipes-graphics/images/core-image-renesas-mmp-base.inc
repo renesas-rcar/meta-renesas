@@ -64,9 +64,9 @@ AVB_PKGS = " \
     ${AVB_KERNEL_PKGS} \
     avbtool \
     linuxptp \
-    open-avb-mrpd \
-    open-avb-gptp \
-    open-avb-maap \
+    openavnu-mrpd \
+    openavnu-gptp \
+    openavnu-maap \
     avb-demoapps-avblauncher \
     avb-demoapps-mrpdummy \
     avb-demoapps-simple \
