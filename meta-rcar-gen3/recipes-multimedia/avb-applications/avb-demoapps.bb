@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = " \
     file://avblauncher/inih/LICENSE.txt;md5=a7a95d2af90376e85a05318794e6f202 \
 "
 
-DEPENDS = "kernel-module-avb-streaming libyaml"
+DEPENDS = "kernel-module-avb-streaming libyaml cmake-native"
 
 S = "${WORKDIR}/git/avb-demoapps"
 
