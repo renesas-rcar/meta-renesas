@@ -138,9 +138,9 @@ _gfx_list="EVARTM0RC7795GLTG0001SL40C,EVA_r8a7795_linux_gsx_binaries_gles3.tar.b
 # iccom_xx_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #                <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #                <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_iccom_km_list="iccom_mfis,RCG3ZLIDL4001ZNO,iccom-mfis.tar.bz2,RCG3ZLIDL4001ZNO1 \
-             iccom_sample,RCG3ZLIDL4001ZNO,iccom-hwspinlock-sample.tar.bz2,RCG3ZLIDL4001ZNO2"
-_iccom_um_list="iccom_lib,RCG3ZLILL4001ZNO,libiccom.tar.bz2,RCG3ZLILL4001ZNO"
+_iccom_km_list="iccom_mfis,RCG3ZLIDL4101ZNO,iccom-mfis.tar.bz2,RCG3ZLIDL4101ZNO1 \
+             iccom_sample,RCG3ZLIDL4101ZNO,iccom-hwspinlock-sample.tar.bz2,RCG3ZLIDL4101ZNO2"
+_iccom_um_list="iccom_lib,RCG3ZLILL4101ZNO,libiccom.tar.bz2,RCG3ZLILL4101ZNO"
 
 # Crypto Packgae list
 # Please add crypto (zip) package name to "_crypto_pkg_list"
