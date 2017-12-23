@@ -89,9 +89,9 @@ _audio_common_list="audio_common,EVARTM0AC0000XACMND30SL41C,RTM0AC0000XACMND30SL
 # dtv_xx_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #           <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #           <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_dtv_km_list="dtv_km,RCG3T001L4001ZDO,Software.tar.gz"
-_dtv_um_list="dtv_lib,RTM0RC0000TE020000SL40C,Software.tar.gz,RTM0RC0000TE020000SL40C1 \
-              dtv_userfunc,RTM0RC0000TE020000SL40C,../Reference/Reference.tar.gz,RTM0RC0000TE020000SL40C2"
+_dtv_km_list="dtv_km,RCG3T001L4101ZDO,Software.tar.gz"
+_dtv_um_list="dtv_lib,RTM0RC0000TE020000SL41C,Software.tar.gz,RTM0RC0000TE020000SL41C1 \
+              dtv_userfunc,RTM0RC0000TE020000SL41C,../Reference/Reference.tar.gz,RTM0RC0000TE020000SL41C2"
 
 # DVD Library
 # Please add DVD library to "_dvd_list"
@@ -99,7 +99,7 @@ _dtv_um_list="dtv_lib,RTM0RC0000TE020000SL40C,Software.tar.gz,RTM0RC0000TE020000
 # dvd_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #           <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #           <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_dvd_list="dvd_lib,RTM0RC0000XDVDC301SL40C,Software.tar.gz"
+_dvd_list="dvd_lib,RTM0RC0000XDVDC301SL41C,Software.tar.gz"
 
 # CMS Library
 # Please add CMS library to "_cms_list"
