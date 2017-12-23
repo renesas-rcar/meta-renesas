@@ -9,8 +9,6 @@ IMAGE_INSTALL_append = " \
 
 # Support secure environment
 IMAGE_INSTALL_append = " \
-    optee-linuxdriver \
-    optee-linuxdriver-armtz \
     optee-client \
 "
 

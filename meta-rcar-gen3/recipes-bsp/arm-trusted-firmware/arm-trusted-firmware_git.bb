@@ -1,7 +1,7 @@
 DESCRIPTION = "ARM Trusted Firmware"
 
 LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://license.md;md5=829bdeb34c1d9044f393d5a16c068371"
+LIC_FILES_CHKSUM = "file://license.rst;md5=33065335ea03d977d0569f270b39603e"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -12,9 +12,9 @@ S = "${WORKDIR}/git"
 
 BRANCH = "rcar_gen3"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
-SRCREV = "b15fefa8c485cb955170cb9b4c44386f82df14a9"
+SRCREV = "b01e6aa3f22eaf4a769dc0be29ef69eb89911b60"
 
-PV = "v1.3+renesas+git${SRCPV}"
+PV = "v1.4+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb)"
 PLATFORM = "rcar"

@@ -3,20 +3,18 @@ DESCRIPTION = "OP-TEE OS"
 LICENSE = "BSD-2-Clause & BSD-3-Clause"
 LIC_FILES_CHKSUM = " \
     file://LICENSE;md5=69663ab153298557a59c67a60a743e5b \
-    file://lib/libpng/LICENSE;md5=06a1b6fde6d93170bb72201c8000bf3d \
     file://${WORKDIR}/git_official/LICENSE;md5=69663ab153298557a59c67a60a743e5b \
-    file://${WORKDIR}/git_official/lib/libpng/LICENSE;md5=06a1b6fde6d93170bb72201c8000bf3d \
 "
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit deploy pythonnative
 
-PV = "2.2.0+renesas+git${SRCPV}"
+PV = "2.6.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3"
-SRCREV_renesas = "9f55b367da9f5ba6966eb75383d2f6ff472a473f"
-SRCREV_officialgit = "c0c5d399d81a0669f5c8e3bcb20039d65649a78d"
+SRCREV_renesas = "d1e9802d537b9fe8d1b7cace09254049b3dfca3f"
+SRCREV_officialgit = "6d57389f9eec0c213da917e35861a8eca4b205b3"
 SRCREV_FORMAT = "renesas_officialgit"
 
 SRC_URI = " \
