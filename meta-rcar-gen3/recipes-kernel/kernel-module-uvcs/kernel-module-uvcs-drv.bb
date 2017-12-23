@@ -16,13 +16,10 @@ require include/rcar-gen3-path-common.inc
 inherit module
 PR = "r0"
 
-UVCS_SRC = "${@base_conditional('USE_VIDEO_OMX', '1', 'file://RCG3VUDRL4001ZDO.tar.bz2', '', d)}"
+UVCS_SRC = "${@base_conditional('USE_VIDEO_OMX', '1', 'file://RCG3VUDRL4101ZDO.tar.bz2', '', d)}"
 SRC_URI = "${UVCS_SRC}"
 
-# Add a patch file to support M3N board
-SRC_URI_append = " file://0001-update-uvcs-driver-for-M3N-support.patch"
-
-S = "${WORKDIR}/RCG3VUDRL4001ZDO"
+S = "${WORKDIR}/RCG3VUDRL4101ZDO"
 
 EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR}"
 EXTRA_OEMAKE += "CROSS_COMPILE=${CROSS_COMPILE}"
