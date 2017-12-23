@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) Renesas Electronics Corporation 2015 All rights reserved.
+# Copyright (C) Renesas Electronics Corporation 2016-2018 All rights reserved.
 
 usage()
 {
