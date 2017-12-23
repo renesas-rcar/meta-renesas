@@ -115,9 +115,9 @@ _cms_list="bcm,RTM0AC0000JRCMBCV0SL40C,RTM0AC0000JRCMBCV0SL40C.tar.gz \
 # adsp_xx_list="<software_name>,<package_name>,<copy_file_name> \
 #               <software_name>,<package_name>,<copy_file_name> \
 #               <software_name>,<package_name>,<copy_file_name>"
-_adsp_um_list="adsp_fw,RCG3AHFWN0101ZDP,RCG3AHFWN0101ZDP.tar.gz \
-               adsp_if,RCG3AHIFL4001ZDP,RCG3AHIFL4001ZDP.tar.gz"
-_adsp_km_list="adsp_driver,RCG3AHPDL4001ZDO,RCG3AHPDL4001ZDO.tar.gz"
+_adsp_um_list="adsp_fw,RCG3AHFWN0201ZDP,RCG3AHFWN0201ZDP.tar.gz \
+               adsp_if,RCG3AHIFL4101ZDP,RCG3AHIFL4101ZDP.tar.gz"
+_adsp_km_list="adsp_driver,RCG3AHPDL4101ZDO,RCG3AHPDL4101ZDO.tar.gz"
 
 # GFX
 # Please add GFX to "_gfx_list"
