@@ -145,11 +145,11 @@ _iccom_km_list="iccom_mfis,RCG3ZLIDL4101ZNO,iccom-mfis.tar.bz2,RCG3ZLIDL4101ZNO1
              iccom_sample,RCG3ZLIDL4101ZNO,iccom-hwspinlock-sample.tar.bz2,RCG3ZLIDL4101ZNO2"
 _iccom_um_list="iccom_lib,RCG3ZLILL4101ZNO,libiccom.tar.bz2,RCG3ZLILL4101ZNO"
 
-# Crypto Packgae list
+# Crypto Package list
 # Please add crypto (zip) package name to "_crypto_pkg_list"
 # Don't use space in xxx_name.
 # crypto_pkg_list="<packgae name> <packgae name> <packgae name>"
-_crypto_pkg_list="RTM0AC0000ADDD5MZ1SL40C"
+_crypto_pkg_list="RTM0AC0000ADDD5MZ1SL41C"
 
 ##### static value
 _MODE_ZIP=1
