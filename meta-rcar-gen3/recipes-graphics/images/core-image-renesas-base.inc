@@ -6,6 +6,7 @@ IMAGE_INSTALL_append = " \
     v4l-utils \
     i2c-tools \
     libx11-locale \
+    coreutils \
 "
 
 # Support secure environment
