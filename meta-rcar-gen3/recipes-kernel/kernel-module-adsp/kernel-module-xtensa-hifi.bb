@@ -11,9 +11,9 @@ inherit module
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/xtensa-hifi:"
 
-SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHPDL4001ZDO.tar.gz', '', d)}"
+SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHPDL4101ZDO.tar.gz', '', d)}"
 
-S = "${WORKDIR}/RCG3AHPDL4001ZDO"
+S = "${WORKDIR}/RCG3AHPDL4101ZDO"
 
 # Define the extra config for using module.bbclass to build ADSP driver
 EXTRA_OEMAKE_append = " KDIR=${STAGING_KERNEL_DIR}"
