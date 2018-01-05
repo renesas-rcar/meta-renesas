@@ -35,4 +35,4 @@ FILES_${PN} = " \
 "
 
 # Autoload ICCOM MFIS Driver
-KERNEL_MODULE_AUTOLOAD = "iccom_mfis"
+KERNEL_MODULE_AUTOLOAD_append = " iccom_mfis"

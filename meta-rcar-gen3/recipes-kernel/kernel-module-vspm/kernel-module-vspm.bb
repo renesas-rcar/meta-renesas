@@ -94,4 +94,4 @@ FILES_${PN} = " \
 RPROVIDES_${PN} += "kernel-module-vspm"
 
 # Autoload VSPM
-KERNEL_MODULE_AUTOLOAD = "vspm"
+KERNEL_MODULE_AUTOLOAD_append = " vspm"

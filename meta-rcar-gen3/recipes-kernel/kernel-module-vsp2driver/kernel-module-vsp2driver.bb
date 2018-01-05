@@ -60,4 +60,4 @@ FILES_${PN} = " \
 RPROVIDES_${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
 
 # Autoload VSP2Driver
-KERNEL_MODULE_AUTOLOAD = "vsp2"
+KERNEL_MODULE_AUTOLOAD_append = " vsp2"
