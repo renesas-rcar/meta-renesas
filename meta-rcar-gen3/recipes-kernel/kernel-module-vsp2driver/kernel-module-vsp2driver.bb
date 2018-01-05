@@ -23,6 +23,9 @@ SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH}"
 
 S = "${WORKDIR}/git"
 
+# Build VSP2 driver kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_compile() {
     cd ${S}/vsp2driver
     make all

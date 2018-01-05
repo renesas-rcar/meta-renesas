@@ -19,6 +19,9 @@ SRC_URI = "file://iccom-mfis.tar.bz2"
 S = "${WORKDIR}/iccom-mfis"
 B = "${S}/iccom-mfis/drv"
 
+# Build ICCOM MFIS kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_install () {
     # Create destination directory
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/

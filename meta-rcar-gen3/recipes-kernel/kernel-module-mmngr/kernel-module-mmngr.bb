@@ -17,6 +17,9 @@ MMNGR_CFG_m3ulcb = "MMNGR_SALVATORX"
 includedir="${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
 
+# Build Memory Manger kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
 

@@ -24,6 +24,9 @@ S = "${WORKDIR}/git"
 VSPM_DRV_DIR = "vspm-module/files/vspm"
 includedir = "${RENESAS_DATADIR}/include"
 
+# Build VSP Manager kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_compile() {
     cd ${S}/${VSPM_DRV_DIR}/drv
     make all

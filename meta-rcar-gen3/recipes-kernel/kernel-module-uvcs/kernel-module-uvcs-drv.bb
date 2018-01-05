@@ -34,6 +34,9 @@ do_compile_prepend() {
     export VCP4_SRC="${S}/src"
 }
 
+# Build UVCS kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_install() {
     # Create destination directory
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/

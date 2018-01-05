@@ -25,6 +25,9 @@ EXTRA_OEMAKE_r8a7795 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_H3"
 EXTRA_OEMAKE_r8a7796 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_M3"
 EXTRA_OEMAKE_r8a77965 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_M3N"
 
+# Build DTV kernel modules without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_compile() {
     cd ${S}/scu_src_drv/drv
     oe_runmake

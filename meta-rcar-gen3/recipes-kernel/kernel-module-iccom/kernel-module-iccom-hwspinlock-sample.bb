@@ -19,6 +19,9 @@ SRC_URI = "file://iccom-hwspinlock-sample.tar.bz2"
 S = "${WORKDIR}/iccom-hwspinlock-sample"
 B = "${S}/iccom-hwspinlock-sample"
 
+# Build ICCOM kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_install () {
     # Create destination directory
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/

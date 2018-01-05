@@ -12,6 +12,9 @@ MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 includedir="${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
 
+# Build Memory Manager Buffer kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_compile() {
     cd ${S}/${MMNGRBUF_DRV_DIR}/drv
     install -d ${INCSHARED}

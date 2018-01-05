@@ -18,6 +18,9 @@ S = "${WORKDIR}/RCG3AHPDL4101ZDO"
 # Define the extra config for using module.bbclass to build ADSP driver
 EXTRA_OEMAKE_append = " KDIR=${STAGING_KERNEL_DIR}"
 
+# Build ADSP kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_install_append(){
     # Create install directories
     install -d ${D}/${includedir}

@@ -22,6 +22,9 @@ S = "${WORKDIR}/git"
 
 includedir = "${RENESAS_DATADIR}/include"
 
+# Build AVB MCH kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_install_append() {
     # Create destination directories
     install -d ${KERNELSRC}/include

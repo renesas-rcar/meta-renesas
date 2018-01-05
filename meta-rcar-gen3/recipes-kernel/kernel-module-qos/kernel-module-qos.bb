@@ -25,6 +25,9 @@ QOS_DRV_DIR = "qos-module/files/qos/drv"
 
 includedir = "${RENESAS_DATADIR}/include"
 
+# Build Qos kernel module without suffix
+KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
 do_compile() {
     cd ${S}/${QOS_DRV_DIR}/
     oe_runmake
