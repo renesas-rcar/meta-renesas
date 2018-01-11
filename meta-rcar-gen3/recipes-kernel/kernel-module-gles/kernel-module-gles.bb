@@ -59,4 +59,8 @@ module_clean_symbol() {
     rm -f ${STAGING_KERNEL_BUILDDIR}/GLES.symvers
 }
 
+FILES_${PN} = " \
+    /lib/modules/${KERNEL_VERSION}/extra/pvrsrvkm.ko \
+"
+
 RPROVIDES_${PN} += "kernel-module-pvrsrvkm kernel-module-dc-linuxfb"
