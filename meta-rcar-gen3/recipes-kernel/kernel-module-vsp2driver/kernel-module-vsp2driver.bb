@@ -54,6 +54,7 @@ PACKAGES = "\
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
+    ${sysconfdir}/modules-load.d \
 "
 
 RPROVIDES_${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
