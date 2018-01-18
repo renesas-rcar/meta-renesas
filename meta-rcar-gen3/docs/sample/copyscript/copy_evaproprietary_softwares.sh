@@ -107,9 +107,9 @@ _dvd_list="dvd_lib,RTM0RC0000XDVDC301SL40C,Software.tar.gz"
 # cms_list="<software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name>"
-_cms_list="bcm,RTM0AC0000JRCMBCV0SL40C,RTM0AC0000JRCMBCV0SL40C.tar.gz \
-           blc,RTM0AC0000JRCMBLC0SL40C,RTM0AC0000JRCMBLC0SL40C.tar.gz \
-           dgc,RTM0AC0000JRCMDGV0SL40C,RTM0AC0000JRCMDGV0SL40C.tar.gz"
+_cms_list="bcm,RTM0AC0000JRCMBCV0SL41C,RTM0AC0000JRCMBCV0SL41C.tar.gz \
+           blc,RTM0AC0000JRCMBLC0SL41C,RTM0AC0000JRCMBLC0SL41C.tar.gz \
+           dgc,RTM0AC0000JRCMDGV0SL41C,RTM0AC0000JRCMDGV0SL41C.tar.gz"
 
 # ADSP
 # Please add ADSP to "_adsp_list"
