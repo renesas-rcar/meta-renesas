@@ -1,0 +1,58 @@
+From 97359593cdd25e46e63b46d86d1a0ea742cf6ae8 Mon Sep 17 00:00:00 2001
+From: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+Date: Fri, 19 Jan 2018 18:24:25 +0900
+Subject: [PATCH] arm64: dts: r8a7796-m3ulcb: Disable CPUIdle support for CA53
+
+The revision of M3ULCB board on the R8A7796 SoC is ES1.0. This revision
+can not use CPUIdle for CA53 cores.
+
+Therefore, this patch disables CPUIdle support for CA53.
+
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts
+index 10d6f24e60fb..0ac6a1024d96 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-m3ulcb.dts
+@@ -17,6 +17,12 @@
+ 	model = "Renesas M3ULCB board based on r8a7796";
+ 	compatible = "renesas,m3ulcb", "renesas,r8a7796";
+ 
++	cpus {
++		idle-states {
++			/delete-node/ cpu-sleep-1;
++		};
++	};
++
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+@@ -69,6 +75,22 @@
+ 	};
+ };
+ 
++&a53_0 {
++	/delete-property/ cpu-idle-states;
++};
++
++&a53_1 {
++	/delete-property/ cpu-idle-states;
++};
++
++&a53_2 {
++	/delete-property/ cpu-idle-states;
++};
++
++&a53_3 {
++	/delete-property/ cpu-idle-states;
++};
++
+ &du {
+ 	clocks = <&cpg CPG_MOD 724>,
+ 		 <&cpg CPG_MOD 723>,
+-- 
+2.15.1
+
