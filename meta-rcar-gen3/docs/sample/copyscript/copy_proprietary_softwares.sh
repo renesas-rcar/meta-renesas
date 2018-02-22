@@ -131,9 +131,11 @@ _adsp_km_list="adsp_driver,RCG3AHPDL4101ZDO,RCG3AHPDL4101ZDO.tar.gz"
 _gfx_list="RTM0RC7795GLPG0001SL41C,r8a7795_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
            RTM0RC7796GLPG0001SL41C,r8a7796_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2 \
            RTM0RC7796GLPGB001SL41C,r8a77965_linux_gsx_binaries_gles.tar.bz2,RCN3G001L4101ZDO,GSX_KM_M3N.tar.bz2 \
+           RTM0RC7799GLPG0001SL41C,r8a7799_linux_gsx_binaries_gles.tar.bz2,RCE3G001L4101ZDO,GSX_KM_E3.tar.bz2 \
            INFRTM0RC7795GLPG0001SL41C,INF_r8a7795_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
            INFRTM0RC7796GLPG0001SL41C,INF_r8a7796_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2 \
-           INFRTM0RC7796GLPGB001SL41C,INF_r8a77965_linux_gsx_binaries_gles.tar.bz2,RCN3G001L4101ZDO,GSX_KM_M3N.tar.bz2"
+           INFRTM0RC7796GLPGB001SL41C,INF_r8a77965_linux_gsx_binaries_gles.tar.bz2,RCN3G001L4101ZDO,GSX_KM_M3N.tar.bz2 \
+           INFRTM0RC7799GLPG0001SL41C,INF_r8a7799_linux_gsx_binaries_gles.tar.bz2,RCE3G001L4101ZDO,GSX_KM_E3.tar.bz2"
 
 # ICCOM
 # Please add ICCOM to "_iccom_list"
