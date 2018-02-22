@@ -8,7 +8,7 @@ SRC_URI_append = " \
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
-SRCREV = "7761a2d37dd351f00a6166c80d3cdc7eb94466f4"
+SRCREV = "56401099d1f8acbd279e1258f9385be44d4bf973"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
     file://omx/gstomx.h;beginline=1;endline=22;md5=41f577b291a84518889deaaaf2bcbc95 \

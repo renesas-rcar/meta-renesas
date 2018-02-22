@@ -12,6 +12,7 @@ EXTRA_AUTORECONF_append = " -I ${STAGING_DATADIR}/aclocal"
 VSPFILTER_CONF_r8a7795 = "gstvspfilter-${MACHINE}_r8a7795.conf"
 VSPFILTER_CONF_r8a7796 = "gstvspfilter-${MACHINE}_r8a7796.conf"
 VSPFILTER_CONF_r8a77965 = "gstvspfilter-${MACHINE}_r8a77965.conf"
+VSPFILTER_CONF_r8a77990 = "gstvspfilter-${MACHINE}_r8a77990.conf"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.0 \
