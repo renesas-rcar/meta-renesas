@@ -16,7 +16,7 @@ SRC_URI += " \
 inherit systemd
 SYSTEMD_SERVICE_${PN} = "optee.service"
 
-COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb"
+COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|ebisu"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 

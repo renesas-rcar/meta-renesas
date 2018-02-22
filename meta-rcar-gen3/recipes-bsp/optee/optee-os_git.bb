@@ -13,7 +13,7 @@ inherit deploy pythonnative
 PV = "2.6.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3"
-SRCREV_renesas = "d1e9802d537b9fe8d1b7cace09254049b3dfca3f"
+SRCREV_renesas = "58147841a05b8a09aa92a8fae60b3207e4fe72bc"
 SRCREV_officialgit = "6d57389f9eec0c213da917e35861a8eca4b205b3"
 SRCREV_FORMAT = "renesas_officialgit"
 
@@ -22,7 +22,7 @@ SRC_URI = " \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
 "
 
-COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb)"
+COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|ebisu)"
 PLATFORM = "rcar"
 
 DEPENDS = "python-wand-native python-pycrypto-native"

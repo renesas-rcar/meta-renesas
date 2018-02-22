@@ -12,16 +12,17 @@ S = "${WORKDIR}/git"
 
 BRANCH = "rcar_gen3"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
-SRCREV = "b01e6aa3f22eaf4a769dc0be29ef69eb89911b60"
+SRCREV = "505f0c0a970e532c072aa523b514386e3796b82a"
 
 PV = "v1.4+renesas+git${SRCPV}"
 
-COMPATIBLE_MACHINE = "(salvator-x|ulcb)"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PLATFORM = "rcar"
 ATFW_OPT_LOSSY = "${@base_conditional("USE_MULTIMEDIA", "1", "RCAR_LOSSY_ENABLE=1", "", d)}"
 ATFW_OPT_r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 ${ATFW_OPT_LOSSY}"
 ATFW_OPT_r8a7796 = "LSI=M3 RCAR_DRAM_SPLIT=2 ${ATFW_OPT_LOSSY}"
 ATFW_OPT_r8a77965 = "LSI=M3N ${ATFW_OPT_LOSSY}"
+ATFW_OPT_r8a77990 = "LSI=E3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0 ${ATFW_OPT_LOSSY}"
 ATFW_OPT_append_ulcb = " RCAR_GEN3_ULCB=1 PMIC_LEVEL_MODE=0"
 
 # requires CROSS_COMPILE set by hand as there is no configure script
