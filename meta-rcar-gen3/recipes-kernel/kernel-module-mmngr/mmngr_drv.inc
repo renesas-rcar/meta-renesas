@@ -10,4 +10,4 @@ inherit module
 MMNGR_DRV_URI = "git://github.com/renesas-rcar/mmngr_drv.git"
 
 SRC_URI = "${MMNGR_DRV_URI};branch=rcar_gen3"
-SRCREV = "a32a6e0c4be0db2cc53e67bbd92b18c176007e12"
+SRCREV = "d9878fe15fee10d7df23caae4a25b6b7c4fb31c9"
