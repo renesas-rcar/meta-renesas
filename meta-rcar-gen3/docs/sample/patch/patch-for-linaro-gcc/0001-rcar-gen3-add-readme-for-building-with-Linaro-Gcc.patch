@@ -16,6 +16,10 @@ Updated on Oct, 2017:
 - Add M3ULCB
 - Add meta-optee layer
 
+Updated on Feb, 2018:
+- Add E3
+- Add elinux.org reference
+
 Signed-off-by: Phong Man Tran <phong.tran.wh@rvc.renesas.com>
 Signed-off-by: Thao Nguyen <thao.nguyen.yb@rvc.renesas.com>
 Signed-off-by: Thuy Tran <thuy.tran.xh@rvc.renesas.com>
@@ -40,6 +44,7 @@ index 0000000..e1fe40a
 +    - Board: Salvator-X   / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
 +    - Board: R-Car Starter Kit premier(H3ULCB)   / SoC: R8A7795
 +    - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796
++    - Board: Ebisu / SoC: R8A77990 (R-Car E3)
 +
 +Patches
 +=======
@@ -54,19 +59,19 @@ index 0000000..e1fe40a
 +
 +    URI: git://git.yoctoproject.org/poky
 +    layers: meta, meta-yocto, meta-yocto-bsp
-+    branch: krogoth
++    branch: rocko
 +
 +    URI: git://git.yoctoproject.org/meta-renesas
 +    layers: meta-rcar-gen3
-+    branch: krogoth
++    branch: rocko
 +
 +    URI: https://git.linaro.org/openembedded/meta-linaro.git
 +    layers: meta-linaro-toolchain, meta-optee
-+    branch: krogoth
++    branch: rocko
 +
 +    URI: git://git.openembedded.org/meta-openembedded
 +    layers: meta-oe
-+    branch: krogoth
++    branch: rocko
 +
 +Build Instructions
 +==================
@@ -87,6 +92,8 @@ index 0000000..e1fe40a
 +        <path to layer>/meta-linaro/meta-linaro-toolchain \
 +        <path to layer>/meta-linaro/meta-optee \
 +        <path to layer>/meta-openembedded/meta-oe \
++        <path to layer>/meta-openembedded/meta-python \
++        <path to layer>/meta-openembedded/meta-networking \
 +    "
 +
 +To build a specific target BSP, configure the associated machine in local.conf:
@@ -104,18 +111,29 @@ index 0000000..e1fe40a
 +    For M3N: r8a77965
 +    SOC_FAMILY = "r8a77965"
 +
-+Must change the package class to ipk files in local.conf:
-+
-+    PACKAGE_CLASSES ?= "package_ipk"
++    For E3: r8a77990
++    SOC_FAMILY = "r8a77990"
++    Already added in machine config: ebisu.conf
 +
 +Must Change the Gcc version in local.conf.
 +
-+    GCCVERSION="linaro-5.2"
++    GCCVERSION="linaro-7.1"
 +
 +Configure for systemd init in local.conf:
 +
 +    DISTRO_FEATURES_append = " systemd"
 +    VIRTUAL-RUNTIME_init_manager = "systemd"
++Configure for ivi-shell and ivi-extension
++
++   DISTRO_FEATURES_append = " ivi-shell"
++
++Configure for USB 3.0
++
++   MACHINE_FEATURES_append = " usb3"
++
++Enable tuning support for Capacity Aware migration Strategy (CAS)
++
++   MACHINE_FEATURES_append = " cas"
 +
 +Build the target file system image using bitbake:
 +
@@ -129,7 +147,6 @@ index 0000000..e1fe40a
 +    * Image-<machine name>.dtb (DTB for target machine)
 +    * core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
 +    * core-image-minimal-<machine name>.ext4  (rootfs ext4 format)
-+    * core-image-minimal-<machine name>.cpio.gz (rootfs cpio+gz format)
 +
 +Build Instructions for SDK
 +==========================
@@ -158,6 +175,18 @@ index 0000000..e1fe40a
 +For 64-bit application use environment script in /opt/poky/x.x
 +
 +    $ source /opt/poky/x.x/environment-setup-aarch64-poky-linux
++
++ULCB Information
++================
++Refer to the following for more information of ULCB:
++
++    http://elinux.org/R-Car
++
++The information on building and running Yocto on R-Car Generation 3
++=========================
++Refer to the following for more information:
++
++    https://elinux.org/R-Car/Boards/Yocto-Gen3
 -- 
 1.9.1
 
