@@ -7,6 +7,7 @@ board and the SoCs of the following:
      - Board: Salvator-X / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
      - Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A7795 (R-Car H3)
      - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796 (R-Car M3)
+     - Board: Ebisu / SoC: R8A77990 (R-Car E3)
 
 Patches
 =======
@@ -72,6 +73,10 @@ Select the SOC
     For M3N: r8a77965
     SOC_FAMILY = "r8a77965"
 
+    For E3: r8a77990
+    SOC_FAMILY = "r8a77990"
+    Already added in machine config: ebisu.conf
+
 Configure for systemd init in local.conf:
 
     DISTRO_FEATURES_append = " systemd"
@@ -85,7 +90,7 @@ Configure for USB 3.0
 
     MACHINE_FEATURES_append = " usb3"
 
-Enable Capacity Aware migration Strategy (CAS)
+Enable tuning support for Capacity Aware migration Strategy (CAS)
 
     MACHINE_FEATURES_append = " cas"
 
@@ -134,3 +139,9 @@ ULCB Information
 Refer to the following for more information of ULCB:
 
     http://elinux.org/R-Car
+
+The information on building and running Yocto on R-Car Generation 3
+=========================
+Refer to the following for more information:
+
+    https://elinux.org/R-Car/Boards/Yocto-Gen3
