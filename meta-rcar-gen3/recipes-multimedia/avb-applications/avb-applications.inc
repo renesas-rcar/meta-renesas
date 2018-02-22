@@ -6,4 +6,4 @@ inherit distro_features_check
 REQUIRED_DISTRO_FEATURES = "avb"
 
 SRC_URI = "git://github.com/renesas-rcar/avb-applications.git;branch=rcar-gen3"
-SRCREV = "4c4408e12c0cb7bfecdc73ada7639d4bace9273e"
+SRCREV = "3cb8c818f89ae0b3e8aa18e64fe8b068327cd3e7"

@@ -12,10 +12,6 @@ LIC_FILES_CHKSUM = " \
 
 DEPENDS = "kernel-module-avb-streaming libyaml cmake-native"
 
-# Fix install and clean error
-SRC_URI_append = " \
-    file://0001-make-fix-install-and-clean-error.patch;patchdir=${WORKDIR}/git \
-"
 S = "${WORKDIR}/git/avb-demoapps"
 
 includedir = "${RENESAS_DATADIR}/include"
