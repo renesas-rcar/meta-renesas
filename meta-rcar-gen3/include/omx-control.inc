@@ -77,14 +77,14 @@ USE_VP8E_OMX = "${@'1' if 'vp8enc_lib' in '${DISTRO_FEATURES}' else '0'}"
 # USE_VP9D_OMX for OMX Media Component VP9 Decoder Library
 USE_VP9D_OMX = "${@'1' if 'vp9dec_lib' in '${DISTRO_FEATURES}' else '0'}"
 
-# This function is to make sure vp9dec_lib only build with M3N
+# This function is to make sure vp9dec_lib only build with M3N or E3
 python do_vp9_checking() {
     soc = d.getVar('SOC_FAMILY')
     soc = soc.split(':')[1]
     use_vp9d = d.getVar('USE_VP9D_OMX')
     if use_vp9d == "1":
-        if soc != 'r8a77965':
-            bb.fatal("vp9dec_lib only supports M3N (SoC: r8a77965), please disable this feature in your local configuration")
+        if soc != 'r8a77965' and soc != 'r8a77990':
+            bb.fatal("vp9dec_lib only supports M3N (SoC: r8a77965), E3 (SoC: r8a77990), please disable this feature in your local configuration")
 }
 
 addtask vp9_checking before do_configure after do_patch
