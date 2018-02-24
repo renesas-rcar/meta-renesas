@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) Renesas Electronics Corporation 2016-2018 All rights reserved.
+# Copyright (C) Renesas Electronics Corporation 2015-2018 All rights reserved.
 
 usage()
 {
@@ -408,7 +408,7 @@ func_search_and_md5check()
 # _find_file_name
 # _extract_top_dir_name
 #
-# NOTE) This function support level1 packaging. "grp pkg in grp pkg" dose note support.
+# NOTE) This function supports level1 packaging. Do not support "grp pkg in grp pkg".
 func_search_and_md5check_grp()
 {
     # search group package @SRCDIR
