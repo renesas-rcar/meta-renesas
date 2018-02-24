@@ -48,7 +48,7 @@ module_do_install() {
     oe_runmake DISCIMAGE="${D}" install
 }
 
-# Ship the module symbol file to kerenel build dir
+# Ship the module symbol file to kernel build dir
 SYSROOT_PREPROCESS_FUNCS = "module_sysroot_symbol"
 
 module_sysroot_symbol() {

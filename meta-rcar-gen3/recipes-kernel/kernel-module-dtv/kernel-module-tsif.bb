@@ -24,7 +24,7 @@ EXTRA_OEMAKE_r8a7795 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_H3"
 EXTRA_OEMAKE_r8a7796 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_M3"
 EXTRA_OEMAKE_r8a77965 += "DTV_MAKE_HW_SWITCH=HW_SUPPORT_M3N"
 
-# Build DTV tsif kernel module withou suffix
+# Build DTV tsif kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
 do_compile() {
