@@ -1,6 +1,7 @@
 DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 
 require include/avb-control.inc
+require include/iccom-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
@@ -20,6 +21,16 @@ SRC_URI_append = " \
     file://defconfig \
     file://touch.cfg \
     ${@base_conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
+"
+
+# Enable RPMSG_VIRTIO depend on ICCOM
+SUPPORT_ICCOM = " \
+    file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch \
+    file://iccom.cfg \
+"
+
+SRC_URI_append = " \
+    ${@base_conditional("USE_ICCOM", "1", "${SUPPORT_ICCOM}", "", d)} \
 "
 
 # Add SCHED_DEBUG config fragment to support CAS
