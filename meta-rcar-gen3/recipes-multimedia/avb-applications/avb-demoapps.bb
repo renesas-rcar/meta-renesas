@@ -34,7 +34,7 @@ EXTRA_OEMAKE = "'CC=${CC}' 'AR=${AR}'"
 do_install_append() {
     oe_runmake install INSTALL_DIR=${D}/${bindir}
 
-    # Create intall directories
+    # Create install directories
     install -d ${D}/${sysconfdir}/linuxptp
     install -d ${D}/${sysconfdir}/daemon_cl
     install -d ${D}/${sysconfdir}/avblauncher
