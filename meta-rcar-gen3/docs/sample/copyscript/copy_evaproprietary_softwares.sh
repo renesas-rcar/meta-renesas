@@ -25,13 +25,7 @@ EOF
 #             <software_name>,<package_name>,<copy_file_name> \
 #             <software_name>,<package_name>,<copy_file_name>"
 _audio_list="AAC-LC_decoder_lib,EVARTM0AC0000XAAACD30SL41C,RTM0AC0000XAAACD30SL41C.tar.gz \
-             aacPlusV2_decoder_lib,EVARTM0AC0000XAAAPD30SL41C,RTM0AC0000XAAAPD30SL41C.tar.gz \
-             MP3_decoder_lib,EVARTM0AC0000XAMP3D30SL41C,RTM0AC0000XAMP3D30SL41C.tar.gz \
-             WMA_decoder_lib,EVARTM0AC0000XAWMAD30SL41C,RTM0AC0000XAWMAD30SL41C.tar.gz \
-             AAC-LC_encoder_lib,EVARTM0AC0000XAAACE30SL41C,RTM0AC0000XAAACE30SL41C.tar.gz \
-             ALAC_decoder_lib,EVARTM0AC0000XAALAD30SL41C,RTM0AC0000XAALAD30SL41C.tar.gz \
-             FLAC_decoder_lib,EVARTM0AC0000XAFLAD30SL41C,RTM0AC0000XAFLAD30SL41C.tar.gz \
-             Dolby_decoder_lib,EVARTM0AC0000XADD5D30SL41C,RTM0AC0000XADD5D30SL41C.tar.gz"
+             AAC-LC_encoder_lib,EVARTM0AC0000XAAACE30SL41C,RTM0AC0000XAAACE30SL41C.tar.gz"
 
 # Audio M/W Library
 # Please add omx audio library to "_audio_mw_list"
@@ -40,11 +34,7 @@ _audio_list="AAC-LC_decoder_lib,EVARTM0AC0000XAAACD30SL41C,RTM0AC0000XAAACD30SL4
 #                <software_name>,<package_name>,<copy_file_name> \
 #                <software_name>,<package_name>,<copy_file_name>"
 _audio_mw_list="AAC-LC_decoder_M/W,EVARTM0AC0000ADAACMZ1SL41C,RTM0AC0000ADAACMZ1SL41C.tar.gz \
-                aacPlusV2_decoder_M/W,EVARTM0AC0000ADAAPMZ1SL41C,RTM0AC0000ADAAPMZ1SL41C.tar.gz \
-                MP3_decoder_M/W,EVARTM0AC0000ADMP3MZ1SL41C,RTM0AC0000ADMP3MZ1SL41C.tar.gz \
-                WMA_decoder_M/W,EVARTM0AC0000ADWMAMZ1SL41C,RTM0AC0000ADWMAMZ1SL41C.tar.gz \
-                AAC-LC_encoder_M/W,EVARTM0AC0000AEAACMZ1SL41C,RTM0AC0000AEAACMZ1SL41C.tar.gz \
-                DDD_decoder_M/W,EVARTM0AC0000ADDD5MZ1SL41C,RTM0AC0000ADDD5MZ1SL41C.tar.gz"
+                AAC-LC_encoder_M/W,EVARTM0AC0000AEAACMZ1SL41C,RTM0AC0000AEAACMZ1SL41C.tar.gz"
 
 # Video Decoder Library
 # Please add omx video decoder library to "_video_dec_list"
@@ -52,16 +42,7 @@ _audio_mw_list="AAC-LC_decoder_M/W,EVARTM0AC0000ADAACMZ1SL41C,RTM0AC0000ADAACMZ1
 # video_dec_list="<software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name>"
-_video_dec_list="H263_decoder,EVARTM0AC0000XV263D30SL41C,EVARTM0AC0000XV263D30SL41C.tar.bz2 \
-                 H264_decoder,EVARTM0AC0000XV264D30SL41C,EVARTM0AC0000XV264D30SL41C.tar.bz2 \
-                 H265_decoder,EVARTM0AC0000XV265D30SL41C,EVARTM0AC0000XV265D30SL41C.tar.bz2 \
-                 MPEG2_decoder,EVARTM0AC0000XVM2VD30SL41C,EVARTM0AC0000XVM2VD30SL41C.tar.bz2 \
-                 MPEG4_decoder,EVARTM0AC0000XVM4VD30SL41C,EVARTM0AC0000XVM4VD30SL41C.tar.bz2 \
-                 VC1_decoder,EVARTM0AC0000XVVC1D30SL41C,EVARTM0AC0000XVVC1D30SL41C.tar.bz2 \
-                 DivX_decoder,EVARTM0AC0000XVDVXD30SL41C,EVARTM0AC0000XVDVXD30SL41C.tar.bz2 \
-                 RealVideo_decoder,EVARTM0AC0000XVRLVD30SL41C,EVARTM0AC0000XVRLVD30SL41C.tar.bz2 \
-                 VP8_decoder,EVARTM0AC0000XVVP8D30SL41C,EVARTM0AC0000XVVP8D30SL41C.tar.bz2 \
-                 VP9_decoder,EVARTM0AC0000XVVP9D30SL41C,EVARTM0AC0000XVVP9D30SL41C.tar.bz2"
+_video_dec_list="H264_decoder,EVARTM0AC0000XV264D30SL41C,EVARTM0AC0000XV264D30SL41C.tar.bz2"
 
 # Video Encoder Library
 # Please add omx video encoder library to "_video_enc_list"
@@ -69,8 +50,7 @@ _video_dec_list="H263_decoder,EVARTM0AC0000XV263D30SL41C,EVARTM0AC0000XV263D30SL
 # video_enc_list="<software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name>"
-_video_enc_list="H264_encoder,EVARTM0AC0000XV264E30SL41C,EVARTM0AC0000XV264E30SL41C.tar.bz2 \
-                 VP8_encoder,EVARTM0AC0000XVVP8E30SL41C,EVARTM0AC0000XVVP8E30SL41C.tar.bz2"
+_video_enc_list="H264_encoder,EVARTM0AC0000XV264E30SL41C,EVARTM0AC0000XV264E30SL41C.tar.bz2"
 
 # Common library packages
 # Don't use space in xxx_name.
@@ -83,44 +63,6 @@ _video_enc_common_list="video_enc_common,EVARTM0AC0000XVCMNE30SL41C,EVARTM0AC000
 _video_dec_common_list="video_dec_common,EVARTM0AC0000XVCMND30SL41C,EVARTM0AC0000XVCMND30SL41C.tar.bz2"
 _audio_common_list="audio_common,EVARTM0AC0000XACMND30SL41C,RTM0AC0000XACMND30SL41C.tar.gz"
 
-# DTV Library
-# Please add DTV library to "_dtv_list"
-# Don't use space in xxx_name.
-# dtv_xx_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
-#           <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
-#           <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_dtv_km_list="dtv_km,RCG3T001L4101ZDO,Software.tar.gz"
-_dtv_um_list="dtv_lib,RTM0RC0000TE020000SL41C,Software.tar.gz,RTM0RC0000TE020000SL41C1 \
-              dtv_userfunc,RTM0RC0000TE020000SL41C,../Reference/Reference.tar.gz,RTM0RC0000TE020000SL41C2"
-
-# DVD Library
-# Please add DVD library to "_dvd_list"
-# Don't use space in xxx_name.
-# dvd_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
-#           <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
-#           <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_dvd_list="dvd_lib,RTM0RC0000XDVDC301SL41C,Software.tar.gz"
-
-# CMS Library
-# Please add CMS library to "_cms_list"
-# Don't use space in xxx_name.
-# cms_list="<software_name>,<package_name>,<copy_file_name> \
-#           <software_name>,<package_name>,<copy_file_name> \
-#           <software_name>,<package_name>,<copy_file_name>"
-_cms_list="bcm,RTM0AC0000JRCMBCV0SL41C,RTM0AC0000JRCMBCV0SL41C.tar.gz \
-           blc,RTM0AC0000JRCMBLC0SL41C,RTM0AC0000JRCMBLC0SL41C.tar.gz \
-           dgc,RTM0AC0000JRCMDGV0SL41C,RTM0AC0000JRCMDGV0SL41C.tar.gz"
-
-# ADSP
-# Please add ADSP to "_adsp_list"
-# Don't use space in xxx_name.
-# adsp_xx_list="<software_name>,<package_name>,<copy_file_name> \
-#               <software_name>,<package_name>,<copy_file_name> \
-#               <software_name>,<package_name>,<copy_file_name>"
-_adsp_um_list="adsp_fw,RCG3AHFWN0201ZDP,RCG3AHFWN0201ZDP.tar.gz \
-               adsp_if,RCG3AHIFL4101ZDP,RCG3AHIFL4101ZDP.tar.gz"
-_adsp_km_list="adsp_driver,RCG3AHPDL4101ZDO,RCG3AHPDL4101ZDO.tar.gz"
-
 # GFX
 # Please add GFX to "_gfx_list"
 # Don't use space in xxx_name.
@@ -128,43 +70,15 @@ _adsp_km_list="adsp_driver,RCG3AHPDL4101ZDO,RCG3AHPDL4101ZDO.tar.gz"
 #           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)> \
 #           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)>"
 _gfx_list="EVARTM0RC7795GLPG0001SL41C,EVA_r8a7795_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
-           EVARTM0RC7796GLPG0001SL41C,EVA_r8a7796_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2 \
-           INFRTM0RC7795GLPG0001SL41C,INF_r8a7795_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
-           INFRTM0RC7796GLPG0001SL41C,INF_r8a7796_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2 \
-           INFRTM0RC7796GLPGB001SL41C,INF_r8a77965_linux_gsx_binaries_gles.tar.bz2,RCN3G001L4101ZDO,GSX_KM_M3N.tar.bz2"
-
-# ICCOM
-# Please add ICCOM to "_iccom_list"
-# Don't use space in xxx_name.
-# iccom_xx_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
-#                <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
-#                <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_iccom_km_list="iccom_mfis,RCG3ZLIDL4101ZNO,iccom-mfis.tar.bz2,RCG3ZLIDL4101ZNO1 \
-             iccom_sample,RCG3ZLIDL4101ZNO,iccom-hwspinlock-sample.tar.bz2,RCG3ZLIDL4101ZNO2"
-_iccom_um_list="iccom_lib,RCG3ZLILL4101ZNO,libiccom.tar.bz2,RCG3ZLILL4101ZNO"
-
-# Crypto Package list
-# Please add crypto (zip) package name to "_crypto_pkg_list"
-# Don't use space in xxx_name.
-# crypto_pkg_list="<packgae name> <packgae name> <packgae name>"
-_crypto_pkg_list="RTM0AC0000ADDD5MZ1SL41C"
+           EVARTM0RC7796GLPG0001SL41C,EVA_r8a7796_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2"
 
 ##### static value
 _MODE_ZIP=1
 _MODE_TAR=2
-_MODE_CRYPTO_ZIP=3
 _GFX_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-gles/kernel-module-gles"
 _GFX_UM_INST_DIR="../meta-rcar-gen3/recipes-graphics/gles-module/gles-user-module"
 _UVCS_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-uvcs/kernel-module-uvcs-drv"
 _OMX_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/omx-module/omx-user-module"
-_DTV_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-dtv/files"
-_DTV_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dtv-module/dtv-user-module"
-_DVD_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dvd-module/dvd-user-module"
-_CMS_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/cms-module/cms-user-module"
-_ADSP_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-adsp/xtensa-hifi"
-_ADSP_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/adsp-module/files"
-_ICCOM_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-iccom/files"
-_ICCOM_UM_INST_DIR="../meta-rcar-gen3/recipes-connectivity/iccom-module/files"
 
 ##### common function
 
@@ -202,15 +116,6 @@ func_cmn_find_file()
         func_error "ERROR: $1: too many files"
     fi
 
-    crypto_zip_count=0
-    for i in ${_crypto_pkg_list}
-    do
-        if [ $1 = $i ]; then
-            crypto_zip_count=$zip_count
-            zip_count=0
-        fi
-    done
-
     # set result
     if [ 1 = $zip_count ]; then
         _find_filename=$(ls ${_search_dir}/$1*.zip)
@@ -218,9 +123,6 @@ func_cmn_find_file()
     elif [ 1 = $tar_count ]; then
         _find_filename=$(ls ${_search_dir}/$1*.tar.*)
         _extract_mode=${_MODE_TAR}
-    elif [ 1 = $crypto_zip_count ]; then
-        _find_filename=$(ls ${_search_dir}/$1*.zip)
-        _extract_mode=${_MODE_CRYPTO_ZIP}
     else
         _find_filename=""
     fi
@@ -238,18 +140,6 @@ func_cmn_extract_archive()
         $_MODE_TAR)
 #           echo "Tar mode"
             tar xf $2
-            ;;
-        $_MODE_CRYPTO_ZIP)
-#           echo "Crypto Zip mode"
-            unzip -oq $2
-            top_dir=$(basename $2)
-            top_dir=${top_dir%.*}
-            cd ${top_dir}
-            unzip -oq *.zip
-            if [ $? -gt 0 ]; then
-                func_error "ERROR: FAILED ZIP PASSWORD"
-            fi
-            cd ${TMPWORK}
             ;;
         *)
             func_error "ERROR: func_cmn_extract_archive: mode error."
@@ -1031,209 +921,6 @@ func_video_encoder()
     echo /=======================================================/
 }
 
-# For DTV kernel module
-func_dtv_kern()
-{
-    echo ""
-    echo "Copying for DTV kernel module"
-
-    _dtv_kern_install=0
-
-    func_list_search_and_md5check "${_dtv_km_list}"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo ""
-        echo "DTV kernel library not found!"
-        return
-    fi
-
-    pkg_name=`echo ${_dtv_km_list} | cut -d "," -f 2`
-    copyfile_name=`echo ${_dtv_km_list} | cut -d "," -f 3`
-
-    # extract --> archive --> copied
-    echo "Installed DTV kernel modules"
-    func_search_file_in_package "${pkg_name}" "${copyfile_name}" "${_src_full}"
-    func_cmn_extract_archive "${_extract_mode}" "${_find_filename}"
-
-    dtv_driver_list="ssp_drv scu_src_drv tsif_drv tddmac_drv"
-    for i in ${dtv_driver_list}
-    do
-        tar cfz $i.tar.gz $i
-        install -d ${_DTV_KM_INST_DIR}
-        install -m 644 $i.tar.gz ${_DTV_KM_INST_DIR}
-        echo "                : $i.tar.gz"
-    done
-
-    _dtv_kern_install=1
-
-    echo ""
-    echo "DTV kernel module were found and copied."
-    echo /=======================================================/
-}
-
-# For DTV lib
-func_dtv_lib()
-{
-    echo ""
-    echo "Copying for DTV Library Packages"
-
-    # DTV kernel modules
-    if [ ${_dtv_kern_install} -eq 0 ]; then
-        echo "DTV kernel module not found!"
-        echo "Skip DTV Package"
-        echo ""
-        return
-    fi
-
-    # MD5 check (rigid flag=TRUE)
-    func_list_search_and_md5check "${_dtv_um_list}" "1"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo ""
-        echo "DTV library not found"
-        return
-    fi
-
-    # install
-    func_list_search_and_install_wo_md5check "${_dtv_um_list}" "${_DTV_UM_INST_DIR}"
-
-    echo ""
-    echo "DTV Package were found and copied."
-    echo /=======================================================/
-}
-
-# For DVD lib
-func_dvd_lib()
-{
-    echo ""
-    echo "Copying for DVD Library Packages"
-
-    # MD5 check (rigid flag=TRUE)
-    func_list_search_and_md5check "${_dvd_list}" "1"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo ""
-        echo "DVD library not found"
-        return
-    fi
-
-    # install searched library
-    func_list_search_and_install_wo_md5check "${_dvd_list}" "${_DVD_UM_INST_DIR}"
-
-    echo ""
-    echo "DVD Package were found and copied."
-    echo /=======================================================/
-}
-
-# For DTV/DVD main routine
-func_dtv_dvd()
-{
-    echo ""
-    echo "Copying for DTV/DVD Packages"
-
-    # DTV package
-    func_dtv_kern
-    func_dtv_lib
-
-    # DVD package
-    func_dvd_lib
-}
-
-# For CMS main routine
-func_cms()
-{
-    echo ""
-    echo "Copying for CMS Packages"
-
-    copy_flag=0
-
-    # MD5 check
-    func_list_search_and_md5check "${_cms_list}"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo "Skip CMS package"
-        echo ""
-        return
-    fi
-
-    # Install library
-    func_list_search_and_install_wo_md5check "${_cms_list}" "${_CMS_UM_INST_DIR}"
-
-    echo ""
-    echo "Packages for CMS were found and copied."
-    echo /=======================================================/
-}
-
-# For ADSP main routine
-func_adsp()
-{
-    echo ""
-    echo "Copying for ADSP Packages"
-
-    # MD5 check (rigid flag = TRUE)
-    # In ADSP, all files are necesarry
-    func_list_search_and_md5check "${_adsp_km_list}" "1"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo "Skip ADSP Package"
-        echo ""
-        return
-    fi
-
-    func_list_search_and_md5check "${_adsp_um_list}" "1"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo "Skip ADSP Package"
-        echo ""
-        return
-    fi
-
-    # Install kernel module
-    func_list_search_and_install_wo_md5check "${_adsp_km_list}" "${_ADSP_KM_INST_DIR}"
-
-    # Install user module
-    func_list_search_and_install_wo_md5check "${_adsp_um_list}" "${_ADSP_UM_INST_DIR}"
-
-    echo ""
-    echo "Packages for ADSP were found and copied."
-    echo /=======================================================/
-}
-
-# For ICCOM main routine
-func_iccom()
-{
-    echo ""
-    echo "Copying for ICCOM Packages"
-
-    # MD5 check (rigid flag = TRUE)
-    # In ICCOM, all files are necesarry
-    func_list_search_and_md5check "${_iccom_km_list}" "1"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo "Skip ICCOM Package"
-        echo ""
-        return
-    fi
-
-    func_list_search_and_md5check "${_iccom_um_list}" "1"
-    if [ $? -eq 0 ]; then
-        # library not found.
-        echo "Skip ICCOM Package"
-        echo ""
-        return
-    fi
-
-    # Install kernel module
-    func_list_search_and_install_wo_md5check "${_iccom_km_list}" "${_ICCOM_KM_INST_DIR}"
-
-    # Install user module
-    func_list_search_and_install_wo_md5check "${_iccom_um_list}" "${_ICCOM_UM_INST_DIR}"
-
-    echo ""
-    echo "Packages for ICCOM were found and copied."
-    echo /=======================================================/
-}
-
 ################################
 # Copy Script Main routine
 ################################
@@ -1317,17 +1004,12 @@ _uvcs_install=0
 _audio_common_install=0
 _video_decoder_common_install=0
 _video_encoder_common_install=0
-_dtv_kern_install=0
 
 func_gfx
 func_audio
 func_audio_mw
 func_video_decoder
 func_video_encoder
-func_dtv_dvd
-func_cms
-func_adsp
-func_iccom
 
 ##### 5) cleanup temp directory
 func_clean_tempdir
