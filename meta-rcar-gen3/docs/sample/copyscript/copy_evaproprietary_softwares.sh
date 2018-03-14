@@ -69,8 +69,8 @@ _audio_common_list="audio_common,EVARTM0AC0000XACMND30SL41C,RTM0AC0000XACMND30SL
 # gfx_list="<package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)> \
 #           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)> \
 #           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)>"
-_gfx_list="EVARTM0RC7795GLPG0001SL41C,EVA_r8a7795_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
-           EVARTM0RC7796GLPG0001SL41C,EVA_r8a7796_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2"
+_gfx_list="EVARTM0RC7795GLPG0001SL41C,EVA_r8a77951_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
+           EVARTM0RC7796GLPG0001SL41C,EVA_r8a77960_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2"
 
 ##### static value
 _MODE_ZIP=1
