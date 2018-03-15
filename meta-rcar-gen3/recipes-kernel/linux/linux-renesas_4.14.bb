@@ -3,6 +3,7 @@ DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 require include/avb-control.inc
 require include/iccom-control.inc
 require recipes-kernel/linux/linux-yocto.inc
+require include/cas-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|ebisu"
@@ -35,7 +36,7 @@ SRC_URI_append = " \
 
 # Add SCHED_DEBUG config fragment to support CAS
 SRC_URI_append = " \
-    ${@bb.utils.contains('MACHINE_FEATURES','cas','file://capacity_aware_migration_strategy.cfg','',d)} \
+    ${@base_conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
 "
 
 # Install USB3.0 firmware to rootfs
