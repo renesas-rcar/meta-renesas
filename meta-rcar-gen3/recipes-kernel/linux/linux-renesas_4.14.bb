@@ -4,11 +4,11 @@ require include/avb-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb"
+COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|ebisu"
 
 RENESAS_BSP_URL = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
-BRANCH = "v4.14/rcar-3.6.0"
-SRCREV = "cdbdfa1452a86607db4d43914f4953ac811d2c56"
+BRANCH = "v4.14/rcar-3.6.1"
+SRCREV = "4a7e26bdbc8d210369eab25765c277200cd910a8"
 
 SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 
