@@ -33,7 +33,7 @@ This layer depends on:
     branch: rocko
 
     URI: git://git.openembedded.org/meta-openembedded
-    layers: meta-oe, meta-python, meta-networking
+    layers: meta-oe
     branch: rocko
 
 Build Instructions
@@ -54,8 +54,6 @@ After that, initialized configure bblayers.conf by adding meta-rcar-gen3 layer. 
         <path to layer>/meta-renesas/meta-rcar-gen3 \
         <path to layer>/meta-linaro/meta-optee \
         <path to layer>/meta-openembedded/meta-oe \
-        <path to layer>/meta-openembedded/meta-python \
-        <path to layer>/meta-openembedded/meta-networking \
     "
 
 To build a specific target BSP, configure the associated machine in local.conf:
