@@ -92,8 +92,6 @@ index 0000000..e1fe40a
 +        <path to layer>/meta-linaro/meta-linaro-toolchain \
 +        <path to layer>/meta-linaro/meta-optee \
 +        <path to layer>/meta-openembedded/meta-oe \
-+        <path to layer>/meta-openembedded/meta-python \
-+        <path to layer>/meta-openembedded/meta-networking \
 +    "
 +
 +To build a specific target BSP, configure the associated machine in local.conf:
@@ -117,7 +115,7 @@ index 0000000..e1fe40a
 +
 +Must Change the Gcc version in local.conf.
 +
-+    GCCVERSION="linaro-7.1"
++    GCCVERSION="linaro-7.2"
 +
 +Configure for systemd init in local.conf:
 +
