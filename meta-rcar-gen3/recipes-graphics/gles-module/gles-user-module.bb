@@ -35,7 +35,7 @@ do_install() {
     # Install configuration files
     install -d ${D}/${sysconfdir}/init.d
     install -m 644 ${S}/${sysconfdir}/powervr.ini ${D}/${sysconfdir}
-    install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${sysconfdir}/init.d/
+    install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${sysconfdir}/init.d/pvrinit
     install -d ${D}/${sysconfdir}/udev/rules.d
     install -m 644 ${S}/${sysconfdir}/udev/rules.d/72-pvr-seat.rules ${D}/${sysconfdir}/udev/rules.d/
 
