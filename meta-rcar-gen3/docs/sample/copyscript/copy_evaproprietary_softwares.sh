@@ -956,13 +956,27 @@ while [ $# -gt 0 ] ; do
 done
 
 #### 3) Checking ClickThrough present
-if [ ! -f ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip ]; then
+
+COUNTFILE=$(ls ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip  2>/dev/null | wc --lines)
+if [ ${COUNTFILE} -eq 0 ]; then
     echo "R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip not found!"
     usage
     exit 1
 fi
-if [ ! -f ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip ]; then
+if [ ${COUNTFILE} -gt 1 ]; then
+    echo "More than one (${COUNTFILE}) R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip file found!"
+    echo "Clean your directory \"${_src_full}\""
+    exit 1
+fi
+
+COUNTFILE=$(ls ${_src_full}/R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip  2>/dev/null | wc --lines)
+if [ ${COUNTFILE} -eq 0 ]; then
     echo "R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip not found!"
+    exit 1
+fi
+if [ ${COUNTFILE} -gt 1 ]; then
+    echo "More than one (${COUNTFILE}) R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip file found!"
+    echo "Clean your directory \"${_src_full}\""
     usage
     exit 1
 fi
