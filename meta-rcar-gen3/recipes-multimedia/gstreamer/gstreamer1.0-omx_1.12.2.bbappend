@@ -6,6 +6,8 @@ SRC_URI_append = " \
     file://gstomx.conf \
 "
 
+require include/rcar-gen3-path-common.inc
+
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
 SRCREV = "6813dedbc9a61ea8a80e54fc373fa07d37114d4a"
@@ -27,6 +29,7 @@ do_configure_prepend() {
     export HTTPS_PROXY=${HTTPS_PROXY}
     cd ${S}
     install -m 0644 ${WORKDIR}/gstomx.conf ${S}/config/rcar/
+    sed -i 's,@RENESAS_DATADIR@,${RENESAS_DATADIR},g' ${S}/config/rcar/gstomx.conf
     ./autogen.sh --noconfigure
     cd ${B}
 }
