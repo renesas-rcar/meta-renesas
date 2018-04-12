@@ -13,7 +13,7 @@ inherit deploy pythonnative
 PV = "2.6.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3"
-SRCREV_renesas = "58147841a05b8a09aa92a8fae60b3207e4fe72bc"
+SRCREV_renesas = "894c561158d7f63e4211cdad46ff69cf220bc972"
 SRCREV_officialgit = "6d57389f9eec0c213da917e35861a8eca4b205b3"
 SRCREV_FORMAT = "renesas_officialgit"
 

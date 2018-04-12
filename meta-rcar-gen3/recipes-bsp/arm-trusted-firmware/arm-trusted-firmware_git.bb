@@ -7,22 +7,24 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit deploy
 require include/multimedia-control.inc
+require include/arm-trusted-firmware-control.inc
 
 S = "${WORKDIR}/git"
 
 BRANCH = "rcar_gen3"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
-SRCREV = "3f4912a3199c19ac3253dc95a1e3ecd5af8f0efd"
+SRCREV = "1eee0adaee2769fa22b72d4cde5a1897047ece68"
 
 PV = "v1.4+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PLATFORM = "rcar"
+H3_IPL_OPTION = "${@get_ipl_config_opt(d)}"
 ATFW_OPT_LOSSY = "${@base_conditional("USE_MULTIMEDIA", "1", "RCAR_LOSSY_ENABLE=1", "", d)}"
-ATFW_OPT_r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 ${ATFW_OPT_LOSSY}"
+ATFW_OPT_r8a7795 = "LSI=H3 ${H3_IPL_OPTION} ${ATFW_OPT_LOSSY}"
 ATFW_OPT_r8a7796 = "LSI=M3 RCAR_DRAM_SPLIT=2 ${ATFW_OPT_LOSSY}"
 ATFW_OPT_r8a77965 = "LSI=M3N ${ATFW_OPT_LOSSY}"
-ATFW_OPT_r8a77990 = "LSI=E3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0 ${ATFW_OPT_LOSSY}"
+ATFW_OPT_r8a77990 = "LSI=E3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0"
 ATFW_OPT_append_ulcb = " RCAR_GEN3_ULCB=1 PMIC_LEVEL_MODE=0"
 
 # requires CROSS_COMPILE set by hand as there is no configure script
