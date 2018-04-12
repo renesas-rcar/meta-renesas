@@ -31,6 +31,8 @@ SRC_URI = " \
 
 S = "${WORKDIR}"
 
+includedir = "${RENESAS_DATADIR}/include"
+
 # do_configure() nothing
 do_configure[noexec] = "1"
 # do_compile() nothing

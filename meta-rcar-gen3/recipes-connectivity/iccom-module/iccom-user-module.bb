@@ -17,6 +17,8 @@ export MEG_LEV="4"
 S = "${WORKDIR}/libiccom"
 B = "${S}/source"
 
+includedir = "${RENESAS_DATADIR}/include"
+
 do_install() {
     # Create destination directories
     install -d ${D}/${libdir}
