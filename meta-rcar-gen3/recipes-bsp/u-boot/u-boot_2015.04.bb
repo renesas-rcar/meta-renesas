@@ -1,17 +1,21 @@
 require recipes-bsp/u-boot/u-boot-common_${PV}.inc
 require recipes-bsp/u-boot/u-boot.inc
+require include/uboot-control.inc
 
 DEPENDS += "dtc-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
-BRANCH = "v2015.04/rcar-3.6.1"
+BRANCH = "v2015.04/rcar-3.6.2"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
-SRCREV = "9d718378c4e48d043832f2c2067eb08478c19c53"
+SRCREV = "fb858758470b6ca8e829c9ad455ecac3dbb9774c"
 
 PV = "v2015.04+git${SRCPV}"
 
 EXTRA_OEMAKE_append = " KCFLAGS=-fgnu89-inline"
+
+# Add u-boot options for H3
+EXTRA_OEMAKE_append_r8a7795 = " ${@get_uboot_config_opt(d)}"
 
 UBOOT_SREC ?= "u-boot-elf.srec"
 UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.srec"
