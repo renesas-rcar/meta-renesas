@@ -20,7 +20,7 @@ SRCREV = "642aba2b7e892ff45f6288d23410e2faa1f77f91"
 
 S = "${WORKDIR}/git"
 
-includedir="${RENESAS_DATADIR}/include"
+includedir = "${RENESAS_DATADIR}/include"
 
 # Build AVB Streaming kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""

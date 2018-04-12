@@ -15,7 +15,7 @@ MMNGR_CFG_h3ulcb = "MMNGR_SALVATORX"
 MMNGR_CFG_m3ulcb = "MMNGR_SALVATORX"
 MMNGR_CFG_ebisu = "MMNGR_EBISU"
 
-includedir="${RENESAS_DATADIR}/include"
+includedir = "${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
 
 # Build Memory Manager kernel module without suffix
