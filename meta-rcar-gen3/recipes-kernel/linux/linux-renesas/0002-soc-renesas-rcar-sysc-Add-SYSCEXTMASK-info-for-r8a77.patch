@@ -1,0 +1,60 @@
+From e1fcb7cf84d92cbb31f5e1bcff24247fbc23fa77 Mon Sep 17 00:00:00 2001
+From: Dien Pham <dien.pham.ry@renesas.com>
+Date: Wed, 11 Apr 2018 16:20:49 +0700
+Subject: [PATCH 2/6] soc: renesas: rcar-sysc: Add SYSCEXTMASK info for r8a7795
+
+Add specific SYSCEXTMASK register info so that
+it is controlled during power domain on/off.
+
+Signed-off-by: Dien Pham <dien.pham.ry@renesas.com>
+---
+ drivers/soc/renesas/r8a7795-sysc.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/soc/renesas/r8a7795-sysc.c b/drivers/soc/renesas/r8a7795-sysc.c
+index 7412666..aac1053 100644
+--- a/drivers/soc/renesas/r8a7795-sysc.c
++++ b/drivers/soc/renesas/r8a7795-sysc.c
+@@ -8,6 +8,7 @@
+  * the Free Software Foundation; version 2 of the License.
+  */
+ 
++#include <linux/bitops.h>
+ #include <linux/bug.h>
+ #include <linux/kernel.h>
+ #include <linux/sys_soc.h>
+@@ -62,17 +63,31 @@
+ 	{ /* sentinel */ }
+ };
+ 
++static const struct soc_device_attribute r8a7795es2[] __initconst = {
++	{ .soc_id = "r8a7795", .revision = "ES2.*" },
++	{ /* sentinel */ }
++};
++
+ static int __init r8a7795_sysc_init(void)
+ {
+ 	if (!soc_device_match(r8a7795es1))
+ 		rcar_sysc_nullify(r8a7795_areas, ARRAY_SIZE(r8a7795_areas),
+ 				  R8A7795_PD_A2VC0);
+ 
++	if (soc_device_match(r8a7795es1) || soc_device_match(r8a7795es2))
++		r8a7795_sysc_info.extra_regs->sysc_extmask_msks = 0;
++
+ 	return 0;
+ }
+ 
++static struct rcar_sysc_extra_regs r8a7795_extra_regs = {
++	.sysc_extmask_offs = 0x2F8, .sysc_extmask_msks = BIT(0)
++};
++
++
+ const struct rcar_sysc_info r8a7795_sysc_info __initconst = {
+ 	.init = r8a7795_sysc_init,
+ 	.areas = r8a7795_areas,
+ 	.num_areas = ARRAY_SIZE(r8a7795_areas),
++	.extra_regs = &r8a7795_extra_regs,
+ };
+-- 
+1.9.1
+

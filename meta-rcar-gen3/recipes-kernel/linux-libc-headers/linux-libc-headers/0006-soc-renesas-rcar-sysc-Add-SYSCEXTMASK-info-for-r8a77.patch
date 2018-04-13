@@ -1,0 +1,42 @@
+From 9264b321a1de7ff851f2015384cc0fcbd35e2736 Mon Sep 17 00:00:00 2001
+From: Dien Pham <dien.pham.ry@renesas.com>
+Date: Thu, 12 Apr 2018 16:27:44 +0700
+Subject: [PATCH 6/6] soc: renesas: rcar-sysc: Add SYSCEXTMASK info for
+ r8a77970
+
+Add specific SYSCEXTMASK register info so that
+it is controlled during power domain on/off.
+
+Signed-off-by: Dien Pham <dien.pham.ry@renesas.com>
+---
+ drivers/soc/renesas/r8a77970-sysc.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/soc/renesas/r8a77970-sysc.c b/drivers/soc/renesas/r8a77970-sysc.c
+index 8c61416..db7b0de 100644
+--- a/drivers/soc/renesas/r8a77970-sysc.c
++++ b/drivers/soc/renesas/r8a77970-sysc.c
+@@ -8,6 +8,7 @@
+  * published by the Free Software Foundation.
+  */
+ 
++#include <linux/bitops.h>
+ #include <linux/bug.h>
+ #include <linux/kernel.h>
+ 
+@@ -33,7 +34,12 @@
+ 	{ "a2sc1",	0x400, 5, R8A77970_PD_A2SC1,	R8A77970_PD_A2SC0 },
+ };
+ 
++static struct rcar_sysc_extra_regs r8a77970_extra_regs = {
++	.sysc_extmask_offs = 0x1B0, .sysc_extmask_msks = BIT(0)
++};
++
+ const struct rcar_sysc_info r8a77970_sysc_info __initconst = {
+ 	.areas = r8a77970_areas,
+ 	.num_areas = ARRAY_SIZE(r8a77970_areas),
++	.extra_regs = &r8a77970_extra_regs,
+ };
+-- 
+1.9.1
+
