@@ -1,8 +1,10 @@
---- a/etc/init.d/rc.pvr	2014-08-01 09:56:47.528824893 +0900
-+++ b/etc/init.d/rc.pvr	2014-08-01 09:56:55.744827677 +0900
+Index: rogue/etc/init.d/rc.pvr
+===================================================================
+--- rogue.orig/etc/init.d/rc.pvr
++++ rogue/etc/init.d/rc.pvr
 @@ -1,4 +1,4 @@
 -#!/bin/bash
 +#!/bin/sh
  ############################################################################ ###
- #@Copyright     Copyright (c) Imagination Technologies Ltd. All Rights Reserved
- #@License       Strictly Confidential.
+ # File rc.pvr
+ # Copyright Copyright (C) 2013-2016 Renesas Electronics Corporation
