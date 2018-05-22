@@ -12,7 +12,7 @@ SRC_URI += " \
     file://optee.service \
 "
 
-inherit systemd
+inherit pythonnative systemd
 SYSTEMD_SERVICE_${PN} = "optee.service"
 
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|ebisu"

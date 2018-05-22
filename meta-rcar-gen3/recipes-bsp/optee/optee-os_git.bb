@@ -33,10 +33,7 @@ SRC_URI_append = " \
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|ebisu)"
 PLATFORM = "rcar"
 
-DEPENDS = "python-wand-native python-pycrypto-native"
-
-# Needed so that python-wand can find the installed imagemagick install.
-export MAGICK_HOME="${STAGING_DIR_NATIVE}${prefix}"
+DEPENDS = "python-pycrypto-native"
 
 export CROSS_COMPILE64="${TARGET_PREFIX}"
 
