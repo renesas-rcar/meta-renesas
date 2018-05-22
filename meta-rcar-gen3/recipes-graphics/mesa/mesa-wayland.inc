@@ -11,8 +11,8 @@ PACKAGES_remove = " \
     libegl-mesa-dev libegl-mesa \
     libegl-dev libegl \
     libgles2-mesa libgles2-mesa-dev \
+    libwayland-egl libwayland-egl-dev \
 "
-INSTALLED_HEADER = "src/egl/wayland/wayland-egl/wayland-egl-priv.h"
 
 do_install_append() {
     # Remove libegl-mesa modules and headers
@@ -21,13 +21,4 @@ do_install_append() {
     rm -f ${D}/${libdir}/pkgconfig/egl.pc
     rm -rf ${D}/${includedir}/EGL
     rm -rf ${D}/${includedir}/KHR
-
-    # install required header for wayland
-    install -d ${D}/usr/include
-    install -m 644 ${S}/${INSTALLED_HEADER} ${D}/usr/include/
 }
-
-FILES_libwayland-egl-dev += " \
-    /usr/include \
-    /usr/include/*.h \
-"
