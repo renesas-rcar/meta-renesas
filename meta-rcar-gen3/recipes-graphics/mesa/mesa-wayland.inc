@@ -12,7 +12,7 @@ PACKAGES_remove = " \
     libegl-dev libegl \
     libgles2-mesa libgles2-mesa-dev \
 "
-INSTALLED_HEADER = "src/egl/wayland/wayland-egl/wayland-egl-priv.h"
+INSTALLED_HEADER = "src/egl/wayland/wayland-egl/wayland-egl-backend.h"
 
 do_install_append() {
     # Remove libegl-mesa modules and headers
