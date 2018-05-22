@@ -15,6 +15,7 @@ SRC_URI_append = " \
     file://xwayland.weston-start \
     file://weston.ini \
     file://weston_v4l2.ini \
+    file://weston.sh \
 "
 
 S = "${WORKDIR}/git"
@@ -50,8 +51,13 @@ do_install_append() {
             -e '$a\cursor-theme=default' \
             -i ${D}/${sysconfdir}/xdg/weston/weston.ini
     fi
+
+    # Set XDG_RUNTIME_DIR to /run/user/$UID (e.g. run/user/0)
+    install -d ${D}/${sysconfdir}/profile.d
+    install -m 0755 ${WORKDIR}/weston.sh ${D}/${sysconfdir}/profile.d/weston.sh
 }
 
 FILES_${PN}_append = " \
     ${sysconfdir}/xdg/weston/weston.ini \
+    ${sysconfdir}/profile.d/weston.sh \
 "
