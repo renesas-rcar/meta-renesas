@@ -64,6 +64,10 @@ module_clean_symbol() {
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/pvrsrvkm.ko \
+    ${sysconfdir}/modules-load.d \
 "
 
 RPROVIDES_${PN} += "kernel-module-pvrsrvkm kernel-module-dc-linuxfb"
+
+# Auto load pvrsrvkm
+KERNEL_MODULE_AUTOLOAD_append = " pvrsrvkm"
