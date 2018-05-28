@@ -31,4 +31,4 @@ do_configure_prepend() {
     cd ${B}
 }
 
-RDEPENDS_${PN} = "libwayland-egl"
+RDEPENDS_${PN}_append = " libwayland-egl"
