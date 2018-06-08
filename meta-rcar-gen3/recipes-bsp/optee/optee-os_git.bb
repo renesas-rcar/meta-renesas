@@ -10,11 +10,11 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit deploy pythonnative
 
-PV = "2.6.0+renesas+git${SRCPV}"
+PV = "3.1.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3"
-SRCREV_renesas = "894c561158d7f63e4211cdad46ff69cf220bc972"
-SRCREV_officialgit = "6d57389f9eec0c213da917e35861a8eca4b205b3"
+SRCREV_renesas = "5524832ca895973a372223a6bff9cc3fc7df4b15"
+SRCREV_officialgit = "0ab9388c0d553a6bb5ae04e41b38ba40cf0474bf"
 SRCREV_FORMAT = "renesas_officialgit"
 
 SRC_URI = " \
@@ -43,7 +43,7 @@ S = "${WORKDIR}/git"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
 do_configure() {
-    cp -r ${WORKDIR}/git_official/core/lib/libtomcrypt ${B}/core/lib/.
+    cp -rn ${WORKDIR}/git_official/core/lib/libtomcrypt ${B}/core/lib/.
 }
 
 do_compile() {

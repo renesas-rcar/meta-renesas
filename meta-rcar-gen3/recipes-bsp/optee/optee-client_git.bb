@@ -3,13 +3,12 @@ LICENSE = "BSD-2-Clause"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 PR = "r0"
-PV = "2.6.0+renesas+git${SRCPV}"
+PV = "3.1.0+renesas+git${SRCPV}"
 BRANCH = "master"
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH}"
-SRCREV = "73b4e490a8ed0b4a7714818e80998b9d8a7da958"
+SRCREV = "3f16662284a69fdec97b1712064be94d1fed7ae7"
 
 SRC_URI += " \
-    file://0001-Add-LDFLAGS-option.patch \
     file://optee.service \
 "
 
