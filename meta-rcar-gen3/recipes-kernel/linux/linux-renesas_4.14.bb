@@ -9,12 +9,12 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|ebisu"
 
 RENESAS_BSP_URL = "git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
-BRANCH = "v4.14/rcar-3.6.2"
-SRCREV = "a95d91d636e3dcfdb8279a0293da17e90c871186"
+BRANCH = "v4.14/rcar-3.7.0"
+SRCREV = "118adc53e8e9806d76f40859ba96290f289f8839"
 
 SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 
-LINUX_VERSION ?= "4.14.0"
+LINUX_VERSION ?= "4.14.35"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
@@ -22,16 +22,6 @@ SRC_URI_append = " \
     file://defconfig \
     file://touch.cfg \
     ${@base_conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
-"
-
-# Patches for sysc
-SRC_URI_append = " \
-    file://0001-soc-renesas-rcar-sysc-Update-power-control-flow-for-.patch \
-    file://0002-soc-renesas-rcar-sysc-Add-SYSCEXTMASK-info-for-r8a77.patch \
-    file://0003-soc-renesas-rcar-sysc-Add-SYSCEXTMASK-info-for-r8a77.patch \
-    file://0004-soc-renesas-rcar-sysc-Add-SYSCEXTMASK-info-for-r8a77.patch \
-    file://0005-soc-renesas-rcar-sysc-Add-SYSCEXTMASK-info-for-r8a77.patch \
-    file://0006-soc-renesas-rcar-sysc-Add-SYSCEXTMASK-info-for-r8a77.patch \
 "
 
 # Enable RPMSG_VIRTIO depend on ICCOM
