@@ -5,10 +5,10 @@ require include/uboot-control.inc
 DEPENDS += "dtc-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
-BRANCH = "v2015.04/rcar-3.6.2"
+BRANCH = "v2015.04/rcar-3.7.0"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
-SRCREV = "fb858758470b6ca8e829c9ad455ecac3dbb9774c"
+SRCREV = "6a82c94590cda5d61720798979bdf0144b9569b9"
 
 PV = "v2015.04+git${SRCPV}"
 
