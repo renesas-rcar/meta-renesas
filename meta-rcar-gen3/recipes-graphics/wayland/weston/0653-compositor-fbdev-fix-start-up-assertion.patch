@@ -1,0 +1,81 @@
+From acd71fb0af82fb6065dd239865bd18bbbf1ceab4 Mon Sep 17 00:00:00 2001
+From: Pekka Paalanen <pekka.paalanen@collabora.co.uk>
+Date: Tue, 15 Aug 2017 10:35:09 +0300
+Subject: [PATCH 0653/1000] compositor-fbdev: fix start-up assertion
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Fixes the failure to start with fbdev-backend:
+
+weston: /home/pq/git/weston/libweston/compositor.c:4733: weston_compositor_add_pending_output: Assertion `output->disable' failed.
+
+The disable hook was completely unimplemented, and the regression was
+caused by e952a01c3b42c7c870091e71488e9469bd897153
+"libweston: move asserts to add_pending_output()".
+It used to work because Weston never tried to explicitly disable the
+fbdev output, but now it is hitting the assert.
+
+Fix it by tentatively implementing a disable hook. It has not been
+tested to work for explicit disabling, but it does solve the regression.
+
+Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=102208
+Cc: bluescreen_avenger@verizon.net
+Signed-off-by: Pekka Paalanen <pekka.paalanen@collabora.co.uk>
+Reviewed-by: Armin Krezović <krezovic.armin@gmail.com>
+Tested-by: n3rdopolis <bluescreen_avenger@verizon.net>
+---
+ libweston/compositor-fbdev.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/libweston/compositor-fbdev.c b/libweston/compositor-fbdev.c
+index e80a504..6a30538 100644
+--- a/libweston/compositor-fbdev.c
++++ b/libweston/compositor-fbdev.c
+@@ -473,6 +473,21 @@ out_hw_surface:
+ }
+ 
+ static int
++fbdev_output_disable_handler(struct weston_output *base)
++{
++	if (!base->enabled)
++		return 0;
++
++	/* Close the frame buffer. */
++	fbdev_output_disable(base);
++
++	if (base->renderer_state != NULL)
++		pixman_renderer_output_destroy(base);
++
++	return 0;
++}
++
++static int
+ fbdev_output_create(struct fbdev_backend *backend,
+                     const char *device)
+ {
+@@ -497,7 +512,7 @@ fbdev_output_create(struct fbdev_backend *backend,
+ 
+ 	output->base.name = strdup("fbdev");
+ 	output->base.destroy = fbdev_output_destroy;
+-	output->base.disable = NULL;
++	output->base.disable = fbdev_output_disable_handler;
+ 	output->base.enable = fbdev_output_enable;
+ 
+ 	weston_output_init(&output->base, backend->compositor);
+@@ -539,11 +554,7 @@ fbdev_output_destroy(struct weston_output *base)
+ 
+ 	weston_log("Destroying fbdev output.\n");
+ 
+-	/* Close the frame buffer. */
+-	fbdev_output_disable(base);
+-
+-	if (base->renderer_state != NULL)
+-		pixman_renderer_output_destroy(base);
++	fbdev_output_disable_handler(base);
+ 
+ 	/* Remove the output. */
+ 	weston_output_destroy(&output->base);
+-- 
+2.7.4
+
