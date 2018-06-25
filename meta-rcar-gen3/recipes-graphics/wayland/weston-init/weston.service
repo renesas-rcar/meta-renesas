@@ -1,8 +1,10 @@
 [Unit]
-Description=Weston Wayland compositor
+Description=Weston Wayland Compositor
 After=dbus.service rc.pvr.service multi-user.target
 
 [Service]
+User=root
+EnvironmentFile=-/etc/default/weston
 ExecStart=/usr/bin/weston-launch -u root -- $OPTARGS
 ExecStop=/usr/bin/killall -s KILL weston
 Type=simple

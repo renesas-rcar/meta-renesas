@@ -1,3 +1,5 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
 require include/gles-control.inc
 
 SRC_URI += " \
