@@ -15,7 +15,7 @@ SRC_URI_append = " \
 
 # Enable RPMSG_VIRTIO depend on ICCOM
 SRC_URI_append = " \
-    ${@base_conditional("USE_ICCOM", "1", " file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch", "", d)} \
+    ${@oe.utils.conditional("USE_ICCOM", "1", " file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch", "", d)} \
 "
 
 S = "${WORKDIR}/git"

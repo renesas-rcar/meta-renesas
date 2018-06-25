@@ -27,7 +27,7 @@ SRC_URI_append = " \
     file://defconfig \
     file://touch.cfg \
     file://devfreq.cfg \
-    ${@base_conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
+    ${@oe.utils.conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
 
 # Enable RPMSG_VIRTIO depend on ICCOM
@@ -37,12 +37,12 @@ SUPPORT_ICCOM = " \
 "
 
 SRC_URI_append = " \
-    ${@base_conditional("USE_ICCOM", "1", "${SUPPORT_ICCOM}", "", d)} \
+    ${@oe.utils.conditional("USE_ICCOM", "1", "${SUPPORT_ICCOM}", "", d)} \
 "
 
 # Add SCHED_DEBUG config fragment to support CAS
 SRC_URI_append = " \
-    ${@base_conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
+    ${@oe.utils.conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
 "
 
 # Install USB3.0 firmware to rootfs

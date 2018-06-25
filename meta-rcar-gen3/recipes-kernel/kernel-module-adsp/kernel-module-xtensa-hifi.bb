@@ -11,7 +11,7 @@ inherit module
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/xtensa-hifi:"
 
-SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHPDL4101ZDO.tar.gz', '', d)}"
+SRC_URI = "${@oe.utils.conditional('USE_ADSP', '1', 'file://RCG3AHPDL4101ZDO.tar.gz', '', d)}"
 
 S = "${WORKDIR}/RCG3AHPDL4101ZDO"
 

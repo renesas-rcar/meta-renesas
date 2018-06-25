@@ -7,7 +7,7 @@ require include/rcar-gen3-path-common.inc
 DEPENDS = " \
     kernel-module-iccom-mfis \
     iccom-user-module \
-    ${@base_conditional('USE_MULTIMEDIA', '1', 'mmngr-user-module', '', d )} \
+    ${@oe.utils.conditional('USE_MULTIMEDIA', '1', 'mmngr-user-module', '', d )} \
 "
 
 export USE_MMNGR="${USE_MULTIMEDIA}"

@@ -37,7 +37,7 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 FILES_${PN} = " \
-    ${@base_conditional('WS', '32', '${RENESAS_DATADIR}/bin/vspm_tp32 ${RENESAS_DATADIR}/bin/fdpm_tp32', \
+    ${@oe.utils.conditional('WS', '32', '${RENESAS_DATADIR}/bin/vspm_tp32 ${RENESAS_DATADIR}/bin/fdpm_tp32', \
     '${RENESAS_DATADIR}/bin/vspm_tp ${RENESAS_DATADIR}/bin/fdpm_tp', d)}"
 
 FILES_${PN}-dbg = " \

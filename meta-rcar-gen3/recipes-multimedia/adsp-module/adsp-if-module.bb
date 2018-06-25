@@ -5,7 +5,7 @@ require include/adsp-control.inc
 
 DEPENDS += "kernel-module-xtensa-hifi"
 
-SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHIFL4101ZDP.tar.gz', '', d )}"
+SRC_URI = "${@oe.utils.conditional('USE_ADSP', '1', 'file://RCG3AHIFL4101ZDP.tar.gz', '', d )}"
 
 S = "${WORKDIR}/RCG3AHIFL4101ZDP"
 

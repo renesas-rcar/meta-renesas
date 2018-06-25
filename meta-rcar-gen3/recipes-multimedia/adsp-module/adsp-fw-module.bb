@@ -3,7 +3,7 @@ LICENSE = "CLOSED"
 
 require include/adsp-control.inc
 
-SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHFWN0201ZDP.tar.gz', '', d )}"
+SRC_URI = "${@oe.utils.conditional('USE_ADSP', '1', 'file://RCG3AHFWN0201ZDP.tar.gz', '', d )}"
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"

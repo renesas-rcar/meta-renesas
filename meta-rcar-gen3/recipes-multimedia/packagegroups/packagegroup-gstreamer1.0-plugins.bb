@@ -6,7 +6,7 @@ require include/omx-control.inc
 DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good"
 DEPENDS += "gstreamer1.0-plugins-bad"
 DEPENDS += "gstreamer1.0-plugins-ugly"
-DEPENDS += "${@base_conditional("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)}"
+DEPENDS += "${@oe.utils.conditional("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)}"
 
 LIC_FILES_CHKSUM = " \
     file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302 \
@@ -21,7 +21,7 @@ PACKAGES = " \
     packagegroup-gstreamer1.0-plugins-base \
     packagegroup-gstreamer1.0-plugins-audio \
     packagegroup-gstreamer1.0-plugins-video \
-    ${@base_conditional("USE_OMX_COMMON", "1", "packagegroup-gstreamer1.0-omx", "", d)} \
+    ${@oe.utils.conditional("USE_OMX_COMMON", "1", "packagegroup-gstreamer1.0-omx", "", d)} \
     packagegroup-gstreamer1.0-plugins-debug \
 "
 
@@ -29,7 +29,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins = " \
     packagegroup-gstreamer1.0-plugins-base \
     packagegroup-gstreamer1.0-plugins-audio \
     packagegroup-gstreamer1.0-plugins-video \
-    ${@base_conditional("USE_OMX_COMMON", "1", "packagegroup-gstreamer1.0-omx", "", d)} \
+    ${@oe.utils.conditional("USE_OMX_COMMON", "1", "packagegroup-gstreamer1.0-omx", "", d)} \
     packagegroup-gstreamer1.0-plugins-debug \
 "
 
@@ -38,7 +38,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-base = " \
     gstreamer1.0-plugins-base-typefindfunctions \
     gstreamer1.0-plugins-good-id3demux \
     gstreamer1.0-plugins-good-autodetect \
-    ${@base_conditional("USE_OMX_COMMON", "1", "gstreamer1.0-plugin-vspfilter", "", d)} \
+    ${@oe.utils.conditional("USE_OMX_COMMON", "1", "gstreamer1.0-plugin-vspfilter", "", d)} \
 "
 
 RDEPENDS_packagegroup-gstreamer1.0-plugins-audio = " \
@@ -77,7 +77,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-video = " \
 "
 
 RDEPENDS_packagegroup-gstreamer1.0-omx = " \
-    ${@base_conditional("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)} \
+    ${@oe.utils.conditional("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)} \
 "
 
 RDEPENDS_packagegroup-gstreamer1.0-plugins-debug = " \
