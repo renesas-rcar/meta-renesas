@@ -1,11 +1,16 @@
-SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
-SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.12.2"
+SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${PV}.tar.xz"
+SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-good.git;branch=RCAR-GEN3/1.12.4"
 
-SRCREV = "db554fad172f2dabb0f7a75ef1e8e4cb35e172c9"
+SRCREV = "9848f9e2af74a4787bba1f316fab10fd9960a16b"
 
-DEPENDS += "weston"
+DEPENDS += "mmngrbuf-user-module"
 
 S = "${WORKDIR}/git"
+
+EXTRA_OECONF_append = " \
+    --enable-cont-frame-capture \
+    --enable-ignore-fps-of-video-standard \
+"
 
 # submodule is extracted before do_populate_lic
 addtask do_init_submodule after do_unpack before do_patch
@@ -25,5 +30,3 @@ do_configure_prepend() {
     ./autogen.sh --noconfigure
     cd ${B}
 }
-
-RDEPENDS_gstreamer1.0-plugins-bad += "libwayland-egl"
