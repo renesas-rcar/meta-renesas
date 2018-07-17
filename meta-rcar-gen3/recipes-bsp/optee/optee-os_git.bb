@@ -46,7 +46,7 @@ do_configure() {
 }
 
 do_compile() {
-    oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y
+    oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y NOWERROR=1
 }
 
 # do_install() nothing
