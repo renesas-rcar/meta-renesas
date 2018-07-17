@@ -19,6 +19,7 @@ do_configure[noexec] = "1"
 # Don't use EXTRA_OEMAKE default value to avoid default CFLAGS, LDFLAGS
 # of poky override the CFLAGS, LDFLAGS inside RCG3AHIFL4101ZDP/Makefile
 EXTRA_OEMAKE = "INCSHARED=${STAGING_INCDIR}"
+CFLAGS += "-Wno-packed-not-aligned"
 
 do_compile() {
     cd ${S}
