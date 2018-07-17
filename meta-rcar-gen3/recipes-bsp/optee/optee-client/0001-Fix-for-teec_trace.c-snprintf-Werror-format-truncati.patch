@@ -1,0 +1,28 @@
+From 30dd2986fb64aba7ee78d4e231c344e2c39d7999 Mon Sep 17 00:00:00 2001
+From: Simon Hughes <simon.hughes@arm.com>
+Date: Thu, 21 Jun 2018 17:22:23 +0100
+Subject: [PATCH] Fix for teec_trace.c snprintf -Werror=format-truncation=
+ error.
+
+Signed-off-by: Simon Hughes <simon.hughes@arm.com>
+---
+ libteec/src/teec_trace.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/libteec/src/teec_trace.c b/libteec/src/teec_trace.c
+index 78b79d6..c91bc43 100644
+--- a/libteec/src/teec_trace.c
++++ b/libteec/src/teec_trace.c
+@@ -106,7 +106,8 @@ int _dprintf(const char *function, int flen, int line, int level,
+ 		 */
+ 		int thread_id = syscall(SYS_gettid);	/* perf issue ? */
+ 
+-		snprintf(prefixed, MAX_PRINT_SIZE,
++		int len = 0;
++		len  = snprintf(prefixed+len, MAX_PRINT_SIZE,
+ 			 "%s [%d] %s:%s:%d: %s",
+ 			 trace_level_strings[level], thread_id, prefix, func,
+ 			 line, raw);
+-- 
+2.7.4
+
