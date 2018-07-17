@@ -14,9 +14,10 @@ SRCREV = "118adc53e8e9806d76f40859ba96290f289f8839"
 
 SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 
-# Fix micro SD card issue on M3ULCB
+# Fix micro SD card issue on M3ULCB and HDMI1 clock issue on H3ULCB
 SRC_URI_append = " \
     file://0001-Revert-mmc-renesas_sdhi_internal_dmac-limit-DMA-RX-f.patch \
+    file://0001-r8a7795-h3ulcb-Fix-dclkin.2-clock.patch \
 "
 
 LINUX_VERSION ?= "4.14.35"
