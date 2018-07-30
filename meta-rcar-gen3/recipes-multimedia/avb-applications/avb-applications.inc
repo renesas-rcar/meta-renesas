@@ -1,4 +1,3 @@
-require include/avb-control.inc
 require include/rcar-gen3-modules-common.inc
 
 inherit distro_features_check
