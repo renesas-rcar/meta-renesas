@@ -34,7 +34,7 @@ do_compile() {
 }
 
 do_install () {
-    # Create destination directries
+    # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
     install -d ${D}/${includedir}
 
