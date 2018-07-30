@@ -1,11 +1,13 @@
 DESCRIPTION = "ADSP Interface for Linux"
 LICENSE = "CLOSED"
 
-require include/adsp-control.inc
+inherit distro_features_check
+
+REQUIRED_DISTRO_FEATURES = "adsp"
 
 DEPENDS += "kernel-module-xtensa-hifi"
 
-SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHIFL4101ZDP.tar.gz', '', d )}"
+SRC_URI = "file://RCG3AHIFL4101ZDP.tar.gz"
 
 S = "${WORKDIR}/RCG3AHIFL4101ZDP"
 

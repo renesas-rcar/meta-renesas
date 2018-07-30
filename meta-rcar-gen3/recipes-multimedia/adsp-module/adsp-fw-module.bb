@@ -1,9 +1,11 @@
 DESCRIPTION = "ADSP Framework for Linux"
 LICENSE = "CLOSED"
 
-require include/adsp-control.inc
+inherit distro_features_check
 
-SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHFWN0201ZDP.tar.gz', '', d )}"
+REQUIRED_DISTRO_FEATURES = "adsp"
+
+SRC_URI = "file://RCG3AHFWN0201ZDP.tar.gz"
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
