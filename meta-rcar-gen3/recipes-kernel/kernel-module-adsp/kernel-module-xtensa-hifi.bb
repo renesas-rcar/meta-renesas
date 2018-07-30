@@ -6,12 +6,13 @@ LIC_FILES_CHKSUM = " \
     file://MIT-COPYING;md5=f932f6ad0feea4f97b6e8316e172070e \
 "
 
-require include/adsp-control.inc
-inherit module
+inherit module distro_features_check
+
+REQUIRED_DISTRO_FEATURES = "adsp"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/xtensa-hifi:"
 
-SRC_URI = "${@base_conditional('USE_ADSP', '1', 'file://RCG3AHPDL4101ZDO.tar.gz', '', d)}"
+SRC_URI = "file://RCG3AHPDL4101ZDO.tar.gz"
 
 S = "${WORKDIR}/RCG3AHPDL4101ZDO"
 
