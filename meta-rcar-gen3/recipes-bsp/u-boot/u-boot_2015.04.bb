@@ -12,8 +12,6 @@ SRCREV = "6a82c94590cda5d61720798979bdf0144b9569b9"
 
 PV = "v2015.04+git${SRCPV}"
 
-EXTRA_OEMAKE_append = " KCFLAGS=-fgnu89-inline"
-
 # Add u-boot options for H3
 EXTRA_OEMAKE_append_r8a7795 = " ${@get_uboot_config_opt(d)}"
 
