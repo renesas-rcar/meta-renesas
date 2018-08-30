@@ -61,10 +61,6 @@ index 0000000..e1fe40a
 +    layers: meta, meta-yocto, meta-yocto-bsp
 +    branch: rocko
 +
-+    URI: git://git.yoctoproject.org/meta-renesas
-+    layers: meta-rcar-gen3
-+    branch: rocko
-+
 +    URI: https://git.linaro.org/openembedded/meta-linaro.git
 +    layers: meta-linaro-toolchain, meta-optee
 +    branch: rocko
