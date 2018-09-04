@@ -13,13 +13,19 @@ inherit deploy pythonnative
 PV = "3.1.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3"
-SRCREV_renesas = "5524832ca895973a372223a6bff9cc3fc7df4b15"
-SRCREV_officialgit = "0ab9388c0d553a6bb5ae04e41b38ba40cf0474bf"
+SRCREV_renesas = "459c612224e123658a2ad29a91a3d186342d24a9"
+SRCREV_officialgit = "e77020396508fc086d7a4d6137388b116e4a662f"
 SRCREV_FORMAT = "renesas_officialgit"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};name=renesas \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
+"
+
+# Patch for Yv3.9.0.1
+SRC_URI_append = " \
+    file://0001-OPTEE_PROVIDER-188185-Fix-a-contxt-size-allocated-by.patch \
+    file://0002-OPTEE_PROVIDER-188122-Fix-to-exclusive-control-for-R.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|ebisu)"
@@ -43,6 +49,8 @@ S = "${WORKDIR}/git"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
 do_configure() {
+    git -C ${WORKDIR}/git_official checkout -B official 3.1.0
+    git -C ${WORKDIR}/git_official cherry-pick ${SRCREV_officialgit}
     cp -rn ${WORKDIR}/git_official/core/lib/libtomcrypt ${B}/core/lib/.
 }
 
