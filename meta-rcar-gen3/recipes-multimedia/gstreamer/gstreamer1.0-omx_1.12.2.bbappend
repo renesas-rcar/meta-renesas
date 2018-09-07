@@ -34,4 +34,5 @@ do_configure_prepend() {
     cd ${B}
 }
 
-RDEPENDS_${PN}_append = " libwayland-egl"
+RDEPENDS_${PN}_append = " libwayland-egl omx-user-module"
+RDEPENDS_${PN}_remove = "libomxil"
