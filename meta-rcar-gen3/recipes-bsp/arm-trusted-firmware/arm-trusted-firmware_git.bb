@@ -19,9 +19,8 @@ PV = "v1.5+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PLATFORM = "rcar"
-H3_IPL_OPTION = "${@get_ipl_config_opt(d)}"
 ATFW_OPT_LOSSY = "${@base_conditional("USE_MULTIMEDIA", "1", "RCAR_LOSSY_ENABLE=1", "", d)}"
-ATFW_OPT_r8a7795 = "LSI=H3 ${H3_IPL_OPTION} ${ATFW_OPT_LOSSY}"
+ATFW_OPT_r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 RCAR_DRAM_LPDDR4_MEMCONF=0 ${ATFW_OPT_LOSSY}"
 ATFW_OPT_r8a7796 = "LSI=M3 RCAR_DRAM_SPLIT=2 ${ATFW_OPT_LOSSY}"
 ATFW_OPT_r8a77965 = "LSI=M3N ${ATFW_OPT_LOSSY}"
 ATFW_OPT_r8a77990 = "LSI=E3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0 RCAR_DRAM_DDR3L_MEMCONF=0 RCAR_DRAM_DDR3L_MEMDUAL=0"
@@ -37,6 +36,7 @@ AS[unexport] = "1"
 LD[unexport] = "1"
 
 do_compile() {
+    oe_runmake distclean
     oe_runmake bl2 bl31 dummytool PLAT=${PLATFORM} ${ATFW_OPT}
 }
 
