@@ -29,6 +29,9 @@ do_compile() {
 
     cd ${S}/sample_lock
     make
+
+    cd ${S}/sample_pvconv
+    make
 }
 
 do_install() {
@@ -40,6 +43,7 @@ do_install() {
     install -m 755 ${S}/sample_test_fatal/sample_test_fatal ${D}${RENESAS_DATADIR}/bin/
     install -m 755 ${S}/sample_sharedmem/sample_sharedmem ${D}${RENESAS_DATADIR}/bin/
     install -m 755 ${S}/sample_lock/sample_lock ${D}${RENESAS_DATADIR}/bin/
+    install -m 755 ${S}/sample_pvconv/sample_pvconv ${D}${RENESAS_DATADIR}/bin/
 }
 
 FILES_${PN} = " \
@@ -47,6 +51,7 @@ FILES_${PN} = " \
     ${RENESAS_DATADIR}/bin/sample_test_fatal \
     ${RENESAS_DATADIR}/bin/sample_sharedmem \
     ${RENESAS_DATADIR}/bin/sample_lock \
+    ${RENESAS_DATADIR}/bin/sample_pvconv \
 "
 
 # Skip debug split
