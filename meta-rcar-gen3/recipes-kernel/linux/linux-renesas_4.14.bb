@@ -14,11 +14,6 @@ SRCREV = "c5090444b63749f899a39c7d39fbbd65e614eeba"
 
 SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 
-# Fix micro SD card issue on M3ULCB
-SRC_URI_append = " \
-    file://0001-Revert-mmc-renesas_sdhi_internal_dmac-limit-DMA-RX-f.patch \
-"
-
 LINUX_VERSION ?= "4.14.35"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
