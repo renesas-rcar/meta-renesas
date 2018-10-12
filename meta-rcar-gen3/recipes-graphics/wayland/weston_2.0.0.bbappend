@@ -4,7 +4,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 BRANCH = "rcar-gen3/2.0.0/gl-fallback"
 
-SRCREV = "95d0e2e9da67959a98c79c5839e5530d30b73445"
+SRCREV = "84709ddcbf1e94edae96038f530e9ddd855f707f"
 
 SRC_URI_remove = "https://wayland.freedesktop.org/releases/${BPN}-${PV}.tar.xz"
 
