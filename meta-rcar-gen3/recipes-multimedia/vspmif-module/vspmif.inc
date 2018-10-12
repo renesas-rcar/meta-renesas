@@ -7,7 +7,7 @@ require include/rcar-gen3-modules-common.inc
 
 VSPMIF_LIB_URL = "git://github.com/renesas-rcar/vspmif_lib.git"
 BRANCH = "rcar_gen3"
-SRCREV = "da26036e12a913ceae440b66e0abf068559f52f0"
+SRCREV = "a2d67ccc2080a5fdc63dd0f31cf7366792c2e113"
 
 SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH}"
 
