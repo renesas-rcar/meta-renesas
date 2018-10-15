@@ -1,5 +1,6 @@
 require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 require include/iccom-control.inc
+require include/adsp-control.inc
 
 RENESAS_BSP_URL = " \
     git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
@@ -21,6 +22,18 @@ SRC_URI_append = " \
     file://0004-arm64-dts-r8a7795-salvator-xs-Remove-Sound-Card.patch \
     file://0005-arm64-dts-r8a7795-es1-salvator-x-Remove-Sound-Card.patch \
     file://0006-arm64-dts-r8a7796-salvator-x-Remove-Sound-Card.patch \
+"
+
+# Add ADSP ALSA driver
+SUPPORT_ADSP_ASOC = " \
+    file://0001-Add-build-for-ADSP-sound-driver.patch \
+    file://0002-Add-document-file-for-ADSP-sound-driver.patch \
+    file://0003-Add-ADSP-sound-driver-source.patch \
+    file://0004-Update-device-tree-for-ADSP-sound-driver.patch \
+"
+
+SRC_URI_append = " \
+    ${@base_conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
 "
 
 S = "${WORKDIR}/git"
