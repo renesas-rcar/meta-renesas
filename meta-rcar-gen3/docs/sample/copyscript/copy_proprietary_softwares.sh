@@ -100,7 +100,8 @@ _dtv_um_list="dtv_lib,RTM0RC0000TE020000SL41C,Software.tar.gz,RTM0RC0000TE020000
 # dvd_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #           <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #           <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_dvd_list="dvd_lib,RTM0RC0000XDVDC301SL41C,Software.tar.gz"
+_dvd_list="dvd_lib,RTM0RC0000XDVDC301SL41C,Software.tar.gz \
+           dvd_encrypt_lib,RTM0RC0000XDVDF301SL41C,Software.tar.gz"
 
 # CMS Library
 # Please add CMS library to "_cms_list"
@@ -163,7 +164,8 @@ _UVCS_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-uvcs/kernel-modul
 _OMX_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/omx-module/omx-user-module"
 _DTV_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-dtv/files"
 _DTV_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dtv-module/dtv-user-module"
-_DVD_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dvd-module/dvd-user-module"
+_DVD_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dvd-module/dvd-user-module \
+                  ../meta-rcar-gen3/recipes-multimedia/dvd-module/dvd-encryption-module"
 _CMS_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/cms-module/cms-user-module"
 _ADSP_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-adsp/xtensa-hifi"
 _ADSP_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/adsp-module/files"
@@ -1113,7 +1115,7 @@ func_dvd_lib()
     echo "Copying for DVD Library Packages"
 
     # MD5 check (rigid flag=TRUE)
-    func_list_search_and_md5check "${_dvd_list}" "1"
+    func_list_search_and_md5check "${_dvd_list}"
     if [ $? -eq 0 ]; then
         # library not found.
         echo ""
@@ -1121,8 +1123,13 @@ func_dvd_lib()
         return
     fi
 
+    index="1"
     # install searched library
-    func_list_search_and_install_wo_md5check "${_dvd_list}" "${_DVD_UM_INST_DIR}"
+    for i in ${_dvd_list}; do
+       install_dir=`echo ${_DVD_UM_INST_DIR} | cut -d " " -f ${index}`
+       func_list_search_and_install_wo_md5check ${i} ${install_dir}
+       index=`expr ${index} + 1`
+    done
 
     echo ""
     echo "DVD Package were found and copied."
