@@ -26,6 +26,7 @@ SRC_URI = " \
 SRC_URI_append = " \
     file://0001-OPTEE_PROVIDER-188185-Fix-a-contxt-size-allocated-by.patch \
     file://0002-OPTEE_PROVIDER-188122-Fix-to-exclusive-control-for-R.patch \
+    file://0001-Update-optee_os-Rev1.0.16-rev2.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|ebisu)"
