@@ -1,0 +1,195 @@
+From 21abfbb558967dbfad75ed18abdb426dbb185eb9 Mon Sep 17 00:00:00 2001
+From: Chiaki Fujii <chiaki.fujii.wj@renesas.com>
+Date: Tue, 16 Oct 2018 14:34:22 +0900
+Subject: [PATCH] Update IPL: patch for DDR setting rev.0.33
+
+[IPL]
+- Update DDR setting (rev.0.33patch2) 20180926
+
+Signed-off-by: Chiaki Fujii <chiaki.fujii.wj@renesas.com>
+Signed-off-by: Yoshifumi Hosoya <yoshifumi.hosoya.wj@renesas.com>
+---
+ plat/renesas/rcar/ddr/ddr_b/boot_init_dram.c       | 72 +++++++++++-----------
+ .../renesas/rcar/ddr/ddr_b/boot_init_dram_regdef.h |  2 +-
+ 2 files changed, 36 insertions(+), 38 deletions(-)
+
+diff --git a/plat/renesas/rcar/ddr/ddr_b/boot_init_dram.c b/plat/renesas/rcar/ddr/ddr_b/boot_init_dram.c
+index 4cee117..aa81968 100644
+--- a/plat/renesas/rcar/ddr/ddr_b/boot_init_dram.c
++++ b/plat/renesas/rcar/ddr/ddr_b/boot_init_dram.c
+@@ -275,7 +275,7 @@ static void dbsc_regset_post(void);
+ static uint32_t dfi_init_start(void);
+ static void change_lpddr4_en(uint32_t mode);
+ static uint32_t set_term_code(void);
+-static void ddr_register_set(uint32_t ch);
++static void ddr_register_set(void);
+ static inline uint32_t wait_freqchgreq(uint32_t assert);
+ static inline void set_freqchgack(uint32_t assert);
+ static inline void set_dfifrequency(uint32_t freq);
+@@ -1919,7 +1919,11 @@ static void dbsc_regset(void)
+ 	/* WRCSGAP = 5 */
+ 	tmp[1] = 5;
+ 	/* RDCSLAT = RDLAT_ADJ +2*/
+-	tmp[2] = tmp[3] +2;
++	if(Prr_Product==PRR_PRODUCT_M3){
++		tmp[2] = tmp[3];
++	} else {
++		tmp[2] = tmp[3] +2;
++	}
+ 	/* RDCSGAP = 6 */
+ 	if(Prr_Product==PRR_PRODUCT_M3) {
+ 		tmp[3] = 4;
+@@ -2467,36 +2471,34 @@ static uint32_t set_term_code(void)
+ /*******************************************************************************
+  *	DDR mode register setting
+  ******************************************************************************/
+-static void ddr_register_set(uint32_t ch)
++static void ddr_register_set(void)
+ {
+ 	int32_t fspwp;
+-	uint32_t chind;
+ 	uint32_t tmp;
+ 
+-	chind = ch<<20;
+ 	for(fspwp=1;fspwp>=0;fspwp--){
+ 		/*MR13,fspwp*/
+-		send_dbcmd(0x0e040d08|chind|(fspwp<<6));
++		send_dbcmd(0x0e840d08|(fspwp<<6));
+ 
+ 		tmp = ddrtbl_getval(_cnf_DDR_PI_REGSET, _reg_PI_MR1_DATA_Fx_CSx[fspwp][0]);
+-		send_dbcmd(0x0e040100|chind|tmp);
++		send_dbcmd(0x0e840100|tmp);
+ 
+ 		tmp = ddrtbl_getval(_cnf_DDR_PI_REGSET, _reg_PI_MR2_DATA_Fx_CSx[fspwp][0]);
+-		send_dbcmd(0x0e040200|chind|tmp);
++		send_dbcmd(0x0e840200|tmp);
+ 
+ 		tmp = ddrtbl_getval(_cnf_DDR_PI_REGSET, _reg_PI_MR3_DATA_Fx_CSx[fspwp][0]);
+-		send_dbcmd(0x0e040300|chind|tmp);
++		send_dbcmd(0x0e840300|tmp);
+ 
+ 		tmp = ddrtbl_getval(_cnf_DDR_PI_REGSET, _reg_PI_MR11_DATA_Fx_CSx[fspwp][0]);
+-		send_dbcmd(0x0e040b00|chind|tmp);
++		send_dbcmd(0x0e840b00|tmp);
+ 
+ 		tmp = ddrtbl_getval(_cnf_DDR_PI_REGSET, _reg_PI_MR12_DATA_Fx_CSx[fspwp][0]);
+-		send_dbcmd(0x0e040c00|chind|tmp);
++		send_dbcmd(0x0e840c00|tmp);
+ 
+ 		tmp = ddrtbl_getval(_cnf_DDR_PI_REGSET, _reg_PI_MR14_DATA_Fx_CSx[fspwp][0]);
+-		send_dbcmd(0x0e040e00|chind|tmp);
++		send_dbcmd(0x0e840e00|tmp);
+ 		/* MR22 */
+-		send_dbcmd(0x0e041600|chind|0x16);
++		send_dbcmd(0x0e841616);
+ 	}
+ }
+ 
+@@ -2690,7 +2692,7 @@ static uint32_t init_ddr(void)
+ 	int32_t	i;
+ 	uint32_t dataL;
+ 	uint32_t phytrainingok;
+-	uint32_t ch;
++	uint32_t ch, slice;
+ 	uint32_t err;
+ 
+ 	MSG_LF("init_ddr:0\n");
+@@ -2794,6 +2796,9 @@ static uint32_t init_ddr(void)
+ 	if(err)return(INITDRAM_ERR_O);
+ 	MSG_LF("init_ddr:5\n");
+ 
++	/* PDX */
++	send_dbcmd(0x08840001);
++
+ 	/***********************************************************************
+ 	set ie_mode=1
+ 	***********************************************************************/
+@@ -2818,23 +2823,14 @@ static uint32_t init_ddr(void)
+ 	/* CMOS MODE */
+ 	change_lpddr4_en(0);
+ 
+-	ch=0x08;
+-
+-	/* PDE */
+-	send_dbcmd(0x08040000|(0x00100000 * ch));
+-
+-	/* PDX */
+-	send_dbcmd(0x08040001|(0x00100000 * ch));
+-
+-	/* MR22 (ODTCS & RQZ */
+-	send_dbcmd(0x0e041600|(0x00100000 * ch)|0x16);
++	/* MRS */
++	ddr_register_set();
+ 
+ 	/* ZQCAL start */
+-	send_dbcmd(0x0d04004F|(0x00100000 * ch));
+-	micro_wait(100);
++	send_dbcmd(0x0d84004F);
+ 
+ 	/* ZQLAT */
+-	send_dbcmd(0x0d040051|(0x00100000 * ch));
++	send_dbcmd(0x0d840051);
+ 
+ 	/***********************************************************************
+ 	Thermal sensor setting
+@@ -2843,12 +2839,6 @@ static uint32_t init_ddr(void)
+ 	dataL = ((*((volatile uint32_t*)THS1_THCTR)) & 0xFFFFFFBF) | 0x00000001;
+ 	*((volatile uint32_t*)THS1_THCTR) = dataL;
+ 
+-	/***********************************************************************
+-	setup DDR mode registers
+-	***********************************************************************/
+-	foreach_vch(ch) {
+-		ddr_register_set(ch);
+-	}
+ 	/* LPDDR4 MODE */
+ 	change_lpddr4_en(1);
+ 
+@@ -2868,7 +2858,15 @@ static uint32_t init_ddr(void)
+ 	exec pi_training
+ 	***********************************************************************/
+ 	ddr_setval_ach_as(_reg_PHY_PER_CS_TRAINING_MULTICAST_EN, 0x00);
+-	ddr_setval_ach_as(_reg_PHY_PER_CS_TRAINING_EN, 0x01);
++	if((Prr_Product==PRR_PRODUCT_H3)&&(Prr_Cut<=PRR_PRODUCT_11)){
++		ddr_setval_ach_as(_reg_PHY_PER_CS_TRAINING_EN, 0x01);
++	} else {
++		foreach_vch(ch){
++			for(slice=0;slice<SLICE_CNT;slice++){
++				ddr_setval_s(ch, slice, _reg_PHY_PER_CS_TRAINING_EN, ((ch_have_this_cs[1])>>ch) & 0x01);
++			}
++		}
++	}
+ 
+ 	phytrainingok = pi_training_go();
+ 
+@@ -3728,11 +3726,11 @@ int32_t InitDram(void)
+ 	Thermal sensor setting
+ 	***********************************************************************/
+ 	dataL = *((volatile uint32_t*)CPG_MSTPSR5);
+-	if(dataL & BIT22){	// case THS/TSC Standby
+-		dataL &= ~(BIT22);
++	if(dataL & (1<<22)){	// case THS/TSC Standby
++		dataL &= ~(1<<22);
+ 		*((volatile uint32_t*)CPG_CPGWPR)   = ~dataL;
+ 		*((volatile uint32_t*)CPG_SMSTPCR5) =  dataL;
+-		while( (BIT22) & *((volatile uint32_t*)CPG_MSTPSR5) );  // wait bit=0
++		while((1<<22) & *((volatile uint32_t*)CPG_MSTPSR5));  // wait bit=0
+ 	}
+ 
+ 	/* THCTR Bit6: PONM=0 , Bit0: THSST=0	*/
+diff --git a/plat/renesas/rcar/ddr/ddr_b/boot_init_dram_regdef.h b/plat/renesas/rcar/ddr/ddr_b/boot_init_dram_regdef.h
+index 6170481..d5c03ae 100644
+--- a/plat/renesas/rcar/ddr/ddr_b/boot_init_dram_regdef.h
++++ b/plat/renesas/rcar/ddr/ddr_b/boot_init_dram_regdef.h
+@@ -4,7 +4,7 @@
+  * SPDX-License-Identifier: BSD-3-Clause
+  */
+ 
+-#define RCAR_DDR_VERSION        "rev.0.33"
++#define RCAR_DDR_VERSION        "rev.0.33patch2"
+ #define DRAM_CH_CNT		0x04
+ #define SLICE_CNT		0x04
+ #define CS_CNT			0x02
+-- 
+1.9.1
+

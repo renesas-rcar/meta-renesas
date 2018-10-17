@@ -15,6 +15,11 @@ BRANCH = "rcar_gen3"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
 SRCREV = "d4a607b7ea3886d8d1098192d2c657face631202"
 
+# Update DDR Setting
+SRC_URI_append = " \
+    file://0001-Update-IPL-patch-for-DDR-setting-rev.0.33.patch \
+"
+
 PV = "v1.4+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
