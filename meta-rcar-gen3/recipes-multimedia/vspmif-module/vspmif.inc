@@ -11,5 +11,9 @@ SRCREV = "a2d67ccc2080a5fdc63dd0f31cf7366792c2e113"
 
 SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH}"
 
+SRC_URI_append = " \
+    file://0001-rcar_gen3-To-correspond-boards-that-do-not-support-F.patch \
+"
+
 # This module is machine specific.
 PACKAGE_ARCH = "${MACHINE_ARCH}"
