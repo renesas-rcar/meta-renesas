@@ -39,6 +39,16 @@ SRC_URI_append = " \
     ${@base_conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
 "
 
+# Device tree patches
+SRC_URI_append = " \
+    file://0001-arm64-dts-salvator-common-Rcar-Sound.patch \
+    file://0002-arm64-dts-r8a7796-salvator-xs-Remove-Sound-Card.patch \
+    file://0003-arm64-dts-r8a7795-salvator-x-Remove-Sound-Card.patch \
+    file://0004-arm64-dts-r8a7795-salvator-xs-Remove-Sound-Card.patch \
+    file://0005-arm64-dts-r8a7795-es1-salvator-x-Remove-Sound-Card.patch \
+    file://0006-arm64-dts-r8a7796-salvator-x-Remove-Sound-Card.patch \
+"
+
 # Install USB3.0 firmware to rootfs
 USB3_FIRMWARE_V2 = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/r8a779x_usb3_v2.dlmem;md5sum=645db7e9056029efa15f158e51cc8a11"
 USB3_FIRMWARE_V3 = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/r8a779x_usb3_v3.dlmem;md5sum=687d5d42f38f9850f8d5a6071dca3109"
