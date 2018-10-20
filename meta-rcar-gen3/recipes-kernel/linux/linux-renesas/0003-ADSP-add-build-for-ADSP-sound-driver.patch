@@ -1,12 +1,16 @@
-From 4e7d2e7b5737d9a7ffbd59ad260e6b86b2e48691 Mon Sep 17 00:00:00 2001
+From 3ae5cb9feda031f660becc94f5496d5ee9b90e22 Mon Sep 17 00:00:00 2001
 From: tienphitran <tien.tran.uw@renesas.com>
 Date: Mon, 15 Oct 2018 17:57:56 +0700
-Subject: [PATCH 1/4] Add build for ADSP sound driver
+Subject: [PATCH 3/6] ADSP: add build for ADSP sound driver
 
 Signed-off-by: tienphitran <tien.tran.uw@renesas.com>
+---
+ sound/soc/Kconfig  | 1 +
+ sound/soc/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
 
 diff --git a/sound/soc/Kconfig b/sound/soc/Kconfig
-index c0abad2..f5f6abb 100644
+index c0abad2067e1..f5f6abbd6e14 100644
 --- a/sound/soc/Kconfig
 +++ b/sound/soc/Kconfig
 @@ -71,6 +71,7 @@ source "sound/soc/txx9/Kconfig"
@@ -18,7 +22,7 @@ index c0abad2..f5f6abb 100644
  # Supported codecs
  source "sound/soc/codecs/Kconfig"
 diff --git a/sound/soc/Makefile b/sound/soc/Makefile
-index bf8c1e2..6e77abb 100644
+index bf8c1e2ce0bf..6e77abba2b01 100644
 --- a/sound/soc/Makefile
 +++ b/sound/soc/Makefile
 @@ -52,3 +52,4 @@ obj-$(CONFIG_SND_SOC)	+= txx9/
@@ -27,5 +31,5 @@ index bf8c1e2..6e77abb 100644
  obj-$(CONFIG_SND_SOC)	+= zte/
 +obj-$(CONFIG_SND_SOC)	+= adsp/
 -- 
-2.7.4
+2.19.1
 

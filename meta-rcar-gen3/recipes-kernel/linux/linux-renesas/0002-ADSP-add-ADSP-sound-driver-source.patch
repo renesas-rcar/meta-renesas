@@ -1,16 +1,32 @@
-From 1705856b55d8f93a22843a9577eadac4212342e7 Mon Sep 17 00:00:00 2001
+From 8fb0a86601a73224c5c0b76e3b0037a40da880fc Mon Sep 17 00:00:00 2001
 From: tienphitran <tien.tran.uw@renesas.com>
 Date: Mon, 15 Oct 2018 18:00:42 +0700
-Subject: [PATCH 3/4] Add ADSP sound driver source
+Subject: [PATCH 2/6] ADSP: add ADSP sound driver source
 
 Signed-off-by: tienphitran <tien.tran.uw@renesas.com>
+---
+ include/adsp_drv/xf-adsp-drv-ext.h |   58 +
+ sound/soc/adsp/Kconfig             |   14 +
+ sound/soc/adsp/Makefile            |    3 +
+ sound/soc/adsp/xf-adsp-alsa.c      | 3936 ++++++++++++++++++++++++++++
+ sound/soc/adsp/xf-adsp-base.c      | 2259 ++++++++++++++++
+ sound/soc/adsp/xf-adsp-base.h      |  275 ++
+ sound/soc/adsp/xf-adsp-config.h    |  604 +++++
+ 7 files changed, 7149 insertions(+)
+ create mode 100644 include/adsp_drv/xf-adsp-drv-ext.h
+ create mode 100644 sound/soc/adsp/Kconfig
+ create mode 100644 sound/soc/adsp/Makefile
+ create mode 100644 sound/soc/adsp/xf-adsp-alsa.c
+ create mode 100644 sound/soc/adsp/xf-adsp-base.c
+ create mode 100644 sound/soc/adsp/xf-adsp-base.h
+ create mode 100644 sound/soc/adsp/xf-adsp-config.h
 
 diff --git a/include/adsp_drv/xf-adsp-drv-ext.h b/include/adsp_drv/xf-adsp-drv-ext.h
 new file mode 100644
-index 0000000..6e56b45
+index 000000000000..6c3dbc0be1ef
 --- /dev/null
 +++ b/include/adsp_drv/xf-adsp-drv-ext.h
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,58 @@
 +/*****************************************************************************
 + * \file       xf-adsp-driver-ext.h
 + * \brief      Header file for ADSP driver extension part
@@ -49,8 +65,6 @@ index 0000000..6e56b45
 + * Extension client APIs
 + * ********************************************************/
 +
-+typedef struct xf_adsp_base_cmd xf_adsp_base_cmd_t;
-+
 +struct xf_adsp_base_cmd {
 +	/* register new client for ADSP base control */
 +	int (*client_register)(void **private_data);
@@ -61,11 +75,11 @@ index 0000000..6e56b45
 +	/* send data to proxy */
 +	int (*send)(void *private_data, void *buf);
 +	/* wait the valid message in the response queue */
-+	int (*poll)(void *private_data, volatile int *condition);
++	int (*poll)(void *private_data, int *condition);
 +};
 +
 +/* create ADSP base control data */
-+int xf_adsp_base_create(xf_adsp_base_cmd_t *cmd);
++int xf_adsp_base_create(struct xf_adsp_base_cmd *cmd);
 +
 +/* destroy ADSP base control data */
 +int xf_adsp_base_destroy(void);
@@ -73,7 +87,7 @@ index 0000000..6e56b45
 +#endif
 diff --git a/sound/soc/adsp/Kconfig b/sound/soc/adsp/Kconfig
 new file mode 100644
-index 0000000..605261f
+index 000000000000..605261f0855f
 --- /dev/null
 +++ b/sound/soc/adsp/Kconfig
 @@ -0,0 +1,14 @@
@@ -93,7 +107,7 @@ index 0000000..605261f
 +endmenu
 diff --git a/sound/soc/adsp/Makefile b/sound/soc/adsp/Makefile
 new file mode 100644
-index 0000000..8277fdb
+index 000000000000..8277fdbc5bbe
 --- /dev/null
 +++ b/sound/soc/adsp/Makefile
 @@ -0,0 +1,3 @@
@@ -102,16 +116,16 @@ index 0000000..8277fdb
 +obj-$(CONFIG_SND_SOC_ADSP)	+= snd-soc-adsp.o
 diff --git a/sound/soc/adsp/xf-adsp-alsa.c b/sound/soc/adsp/xf-adsp-alsa.c
 new file mode 100644
-index 0000000..b6c5752
+index 000000000000..e602c6efcc6a
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-alsa.c
-@@ -0,0 +1,3924 @@
+@@ -0,0 +1,3936 @@
 +/** ***************************************************************************
-+ * \file	   xf-adsp-alsa.c
-+ * \brief	  Source file for ADSP ALSA Driver
-+ * \addtogroup ADSP Driver
++ * \file	 xf-adsp-alsa.c
++ * \brief	 Source file for ADSP ALSA Driver
++ * \addtogroup	 ADSP Driver
 + ******************************************************************************
-+ * \date	   Oct. 21, 2017
++ * \date	 Oct. 21, 2017
 + * \author	 Renesas Electronics Corporation
 + ******************************************************************************
 + * \par		Copyright
@@ -152,7 +166,6 @@ index 0000000..b6c5752
 +#include <linux/time.h>
 +
 +#include "xf-adsp-base.h"
-+
 +
 +/* Name of Volume control for playback */
 +#define PLAYBACK_VOLUME_CTR_NAME	"PlaybackVolume"
@@ -318,10 +331,10 @@ index 0000000..b6c5752
 +#define XF_HANDLE_NULL		(0)
 +
 +/* Handle state is CREATED after creating handle successfully */
-+#define XF_HANDLE_CREATED	(1 << 0)
++#define XF_HANDLE_CREATED	BIT(0)
 +
 +/* Handle state is READY after finishing handle init */
-+#define XF_HANDLE_READY		(1 << 1)
++#define XF_HANDLE_READY		BIT(1)
 +
 +/* channels */
 +/* Mono stream */
@@ -339,30 +352,6 @@ index 0000000..b6c5752
 +
 +/* helper macro to get bytes per sample number */
 +#define BYTES_PER_SAMPLE(fmt)   (FMTBIT_##fmt##_BYTES_PER_SAMPLE)
-+
-+/* copy a sample from S24_LE format to S24_3LE format type */
-+#define SAMPLE_COPY_FROM_S24_LE_TO_S24_3LE(dst, src)	\
-+	do {						\
-+		dst[0] = src[0];			\
-+		dst[1] = src[1];			\
-+		dst[2] = src[2];			\
-+	} while (0)
-+
-+/* copy a sample from S24_3LE format to S24_LE format type */
-+#define SAMPLE_COPY_FROM_S24_3LE_TO_S24_LE(dst, src)	\
-+	do {						\
-+		dst[0] = src[0];			\
-+		dst[1] = src[1];			\
-+		dst[2] = src[2];			\
-+		dst[3] = 0;				\
-+	} while (0)
-+
-+/* helper macro to copy a sample from difference format data */
-+#define SAMPLE_COPY(dst, src, dst_fmt, src_fmt)		\
-+	SAMPLE_COPY_FROM_##src_fmt##_TO_##dst_fmt(dst, src)
-+
-+/* check if data is valid */
-+#define IS_VALID(data)		(data != NULL)
 +
 +/* check component is created */
 +#define COMPONENT_IS_CREATED(n)	(((n & XF_HANDLE_CREATED) != 0) ? TRUE : FALSE)
@@ -469,7 +458,7 @@ index 0000000..b6c5752
 +	struct xf_adsp_renderer		*renderer;
 +
 +	/* Equalizer component data */
-+	struct xf_adsp_equalizer		*equalizer;
++	struct xf_adsp_equalizer	*equalizer;
 +
 +	/* Renderer component state */
 +	int				rdr_state;
@@ -489,7 +478,7 @@ index 0000000..b6c5752
 +	struct xf_adsp_capture		*capture;
 +
 +	/* Equalizer component data */
-+	struct xf_adsp_equalizer		*equalizer;
++	struct xf_adsp_equalizer	*equalizer;
 +
 +	/* Capture component state */
 +	int				cap_state;
@@ -506,7 +495,7 @@ index 0000000..b6c5752
 +	struct snd_adsp_base_info	base;
 +
 +	/* TDM Renderer component data */
-+	struct xf_adsp_tdm_renderer		*tdm_renderer;
++	struct xf_adsp_tdm_renderer	*tdm_renderer;
 +
 +	/* TDM Renderer component state */
 +	int				state;
@@ -520,7 +509,7 @@ index 0000000..b6c5752
 +	struct snd_adsp_base_info	base;
 +
 +	/* TDM Capture component data */
-+	struct xf_adsp_tdm_capture		*tdm_capture;
++	struct xf_adsp_tdm_capture	*tdm_capture;
 +
 +	/* TDM Capture component state */
 +	int				state;
@@ -552,7 +541,7 @@ index 0000000..b6c5752
 +			 | SNDRV_PCM_INFO_RESUME
 +			 | SNDRV_PCM_INFO_BLOCK_TRANSFER
 +			 | SNDRV_PCM_INFO_MMAP | SNDRV_PCM_INFO_MMAP_VALID),
-+	.formats		= SND_ADSP_PCM_WIDTHS,
++	.formats	   = SND_ADSP_PCM_WIDTHS,
 +	.rates		   = SND_ADSP_SAMPLE_RATES,
 +	.rate_min	   = 32000,
 +	.rate_max	   = 48000,
@@ -608,93 +597,93 @@ index 0000000..b6c5752
 + * function declaration
 + * ****************************************************************/
 +
-+static int snd_adsp_rdr_empty_buf_done
-+	(void *data, int opcode, int length, char *buffer);
-+static int snd_adsp_rdr_fill_buf_done
-+	(void *data, int opcode, int length, char *buffer);
-+static int snd_adsp_cap_empty_buf_done
-+	(void *data, int opcode, int length, char *buffer);
-+static int snd_adsp_cap_fill_buf_done
-+	(void *data, int opcode, int length, char *buffer);
-+static int snd_adsp_get_dai_id_from_substream
-+	(struct snd_pcm_substream *substream);
-+static void *snd_adsp_get_drvdata_from_substream
-+	(struct snd_pcm_substream *substream);
-+static struct snd_adsp_base_info *snd_adsp_get_base_from_substream
-+	(struct snd_pcm_substream *substream);
-+static struct snd_adsp_base_info *snd_adsp_get_base_from_hrt
-+	(struct hrtimer *hrt);
-+static enum hrtimer_restart snd_adsp_hrtimer_func
-+	(struct hrtimer *hrt);
-+static int snd_adsp_playback_init
-+	(struct snd_adsp_playback **data, int eqz_flag,
-+	 struct snd_pcm_substream *substream);
-+static int snd_adsp_record_init
-+	(struct snd_adsp_record **data, int eqz_flag,
-+	 struct snd_pcm_substream *substream);
-+static int snd_adsp_playback_prepare
-+	(struct snd_adsp_playback *playback,
-+	 struct snd_pcm_substream *substream);
-+static int snd_adsp_record_prepare
-+	(struct snd_adsp_record *record, struct snd_pcm_substream *substream);
++static int
++snd_adsp_rdr_empty_buf_done(void *data, int opcode, int length, char *buffer);
++static int
++snd_adsp_rdr_fill_buf_done(void *data, int opcode, int length, char *buffer);
++static int
++snd_adsp_cap_empty_buf_done(void *data, int opcode, int length, char *buffer);
++static int
++snd_adsp_cap_fill_buf_done(void *data, int opcode, int length, char *buffer);
++static int
++snd_adsp_get_dai_id_from_substream(struct snd_pcm_substream *substream);
++static void *
++snd_adsp_get_drvdata_from_substream(struct snd_pcm_substream *substream);
++static struct snd_adsp_base_info *
++snd_adsp_get_base_from_substream(struct snd_pcm_substream *substream);
++static struct snd_adsp_base_info *
++snd_adsp_get_base_from_hrt(struct hrtimer *hrt);
++static enum hrtimer_restart snd_adsp_hrtimer_func(struct hrtimer *hrt);
++static int snd_adsp_playback_init(struct snd_adsp_playback **data,
++				  int eqz_flag,
++				  struct snd_pcm_substream *substream);
++static int snd_adsp_record_init(struct snd_adsp_record **data,
++				int eqz_flag,
++				struct snd_pcm_substream *substream);
++static int snd_adsp_playback_prepare(struct snd_adsp_playback *playback,
++				     struct snd_pcm_substream *substream);
++static int snd_adsp_record_prepare(struct snd_adsp_record *record,
++				   struct snd_pcm_substream *substream);
 +static int snd_adsp_playback_deinit(struct snd_adsp_playback *playback);
 +static int snd_adsp_record_deinit(struct snd_adsp_record *record);
-+static int snd_adsp_tdm_playback_init
-+	(struct snd_adsp_tdm_playback **data,
-+	 struct snd_pcm_substream *substream);
-+static int snd_adsp_tdm_record_init
-+	(struct snd_adsp_tdm_record **data,
-+	 struct snd_pcm_substream *substream);
-+static int snd_adsp_tdm_playback_prepare
-+	(struct snd_adsp_tdm_playback *tdm_playback,
-+	 struct snd_pcm_substream *substream);
-+static int snd_adsp_tdm_record_prepare
-+	(struct snd_adsp_tdm_record *tdm_record,
-+	 struct snd_pcm_substream *substream);
-+static int snd_adsp_tdm_playback_deinit
-+	(struct snd_adsp_tdm_playback *tdm_playback);
++static int snd_adsp_tdm_playback_init(struct snd_adsp_tdm_playback **data,
++				      struct snd_pcm_substream *substream);
++static int snd_adsp_tdm_record_init(struct snd_adsp_tdm_record **data,
++				    struct snd_pcm_substream *substream);
++static int
++snd_adsp_tdm_playback_prepare(struct snd_adsp_tdm_playback *tdm_playback,
++			      struct snd_pcm_substream *substream);
++static int snd_adsp_tdm_record_prepare(struct snd_adsp_tdm_record *tdm_record,
++				       struct snd_pcm_substream *substream);
++static int
++snd_adsp_tdm_playback_deinit(struct snd_adsp_tdm_playback *tdm_playback);
 +static int snd_adsp_tdm_record_deinit(struct snd_adsp_tdm_record *tdm_record);
 +static int snd_adsp_pcm_open(struct snd_pcm_substream *substream);
 +static int snd_adsp_pcm_close(struct snd_pcm_substream *substream);
-+static int snd_adsp_pcm_hw_params
-+	(struct snd_pcm_substream *substream,
-+	 struct snd_pcm_hw_params *hw_params);
++static int snd_adsp_pcm_hw_params(struct snd_pcm_substream *substream,
++				  struct snd_pcm_hw_params *hw_params);
 +static int snd_adsp_pcm_hw_free(struct snd_pcm_substream *substream);
 +static int snd_adsp_pcm_prepare(struct snd_pcm_substream *substream);
 +static int snd_adsp_pcm_trigger(struct snd_pcm_substream *substream, int idx);
-+static snd_pcm_uframes_t snd_adsp_pcm_pointer
-+	(struct snd_pcm_substream *substream);
++static snd_pcm_uframes_t
++snd_adsp_pcm_pointer(struct snd_pcm_substream *substream);
 +static int snd_adsp_pcm_ack(struct snd_pcm_substream *substream);
-+static void snd_adsp_pcm_transfer
-+	(struct snd_pcm_substream *substream,
-+	 struct snd_pcm_indirect *rec, size_t bytes);
-+static int snd_adsp_control_volume_info
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_info *uinfo);
-+static int snd_adsp_control_volume_get
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static int snd_adsp_control_volume_put
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static int snd_adsp_control_eqz_get
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static int snd_adsp_control_eqz_info
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_info *uinfo);
-+static int snd_adsp_control_eqz_put
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static int snd_adsp_control_eqz_switch_get
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static int snd_adsp_control_eqz_switch_info
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_info *uinfo);
-+static int snd_adsp_control_sample_rate_put
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static int snd_adsp_control_sample_rate_info
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_info *uinfo);
-+static int snd_adsp_control_sample_rate_get
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static int snd_adsp_control_eqz_switch_put
-+	(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol);
-+static void snd_adsp_get_eqz_params_from_control
-+	(struct xf_adsp_equalizer_params *eqz_params,
-+	 struct xf_adsp_equalizer_params *eqz_ctr_params, bool flag);
++static void snd_adsp_pcm_transfer(struct snd_pcm_substream *substream,
++				  struct snd_pcm_indirect *rec, size_t bytes);
++static int snd_adsp_control_volume_info(struct snd_kcontrol *kcontrol,
++					struct snd_ctl_elem_info *uinfo);
++static int snd_adsp_control_volume_get(struct snd_kcontrol *kcontrol,
++				       struct snd_ctl_elem_value *ucontrol);
++static int snd_adsp_control_volume_put(struct snd_kcontrol *kcontrol,
++				       struct snd_ctl_elem_value *ucontrol);
++static int snd_adsp_control_eqz_get(struct snd_kcontrol *kcontrol,
++				    struct snd_ctl_elem_value *ucontrol);
++static int snd_adsp_control_eqz_info(struct snd_kcontrol *kcontrol,
++				     struct snd_ctl_elem_info *uinfo);
++static int snd_adsp_control_eqz_put(struct snd_kcontrol *kcontrol,
++				    struct snd_ctl_elem_value *ucontrol);
++static int
++snd_adsp_control_eqz_switch_get(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol);
++static int
++snd_adsp_control_eqz_switch_info(struct snd_kcontrol *kcontrol,
++				 struct snd_ctl_elem_info *uinfo);
++static int
++snd_adsp_control_sample_rate_put(struct snd_kcontrol *kcontrol,
++				 struct snd_ctl_elem_value *ucontrol);
++static int
++snd_adsp_control_sample_rate_info(struct snd_kcontrol *kcontrol,
++				  struct snd_ctl_elem_info *uinfo);
++static int
++snd_adsp_control_sample_rate_get(struct snd_kcontrol *kcontrol,
++				 struct snd_ctl_elem_value *ucontrol);
++static int
++snd_adsp_control_eqz_switch_put(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol);
++static void snd_adsp_get_eqz_params_from_control(
++				struct xf_adsp_equalizer_params *eqz_params,
++				struct xf_adsp_equalizer_params *eqz_ctr_params,
++				bool flag);
 +static int snd_adsp_pcm_new(struct snd_soc_pcm_runtime *runtime);
 +static int snd_adsp_probe(struct platform_device *pdev);
 +static int snd_adsp_remove(struct platform_device *pdev);
@@ -712,7 +701,7 @@ index 0000000..b6c5752
 +{
 +	struct snd_adsp_base_info *base = (struct snd_adsp_base_info *)data;
 +
-+	if (base != NULL)
++	if (base)
 +		base->runtime_err = TRUE;
 +
 +	return 0;
@@ -727,12 +716,12 @@ index 0000000..b6c5752
 + *  \param[in]	  buffer	Pointer to data buffer
 + *  \retval	  0		Success
 + *****************************************************************************/
-+static int snd_adsp_rdr_empty_buf_done
-+	(void *data, int opcode, int length, char *buffer)
++static int
++snd_adsp_rdr_empty_buf_done(void *data, int opcode, int length, char *buffer)
 +{
 +	struct snd_adsp_base_info *base = (struct snd_adsp_base_info *)data;
 +
-+	if (base != NULL) {
++	if (base) {
 +		spin_lock(&base->lock);
 +
 +		base->buf_queue++;
@@ -748,13 +737,13 @@ index 0000000..b6c5752
 + *  \brief	 fill buf done callback for playback/TDM playback functions
 + *
 + *  \param[in]	  data		Pointer to ADSP ALSA sound card
-+ *  \param[in]	  opcode		Opcode of message
-+ *  \param[in]	  length		Length of data buffer
-+ *  \param[in]	  buffer		Pointer to data buffer
-+ *  \retval		 0			Success
++ *  \param[in]	  opcode	Opcode of message
++ *  \param[in]	  length	Length of data buffer
++ *  \param[in]	  buffer	Pointer to data buffer
++ *  \retval	  0		Success
 + *****************************************************************************/
-+static int snd_adsp_rdr_fill_buf_done
-+	(void *data, int opcode, int length, char *buffer)
++static int
++snd_adsp_rdr_fill_buf_done(void *data, int opcode, int length, char *buffer)
 +{
 +	return 0;
 +}
@@ -763,13 +752,13 @@ index 0000000..b6c5752
 + *  \brief	 empty buf done callback for record/TDM record functions
 + *
 + *  \param[in]	  data		Pointer to ADSP ALSA sound card
-+ *  \param[in]	  opcode		Opcode of message
-+ *  \param[in]	  length		Length of data buffer
-+ *  \param[in]	  buffer		Pointer to data buffer
-+ *  \retval		 0			Success
++ *  \param[in]	  opcode	Opcode of message
++ *  \param[in]	  length	Length of data buffer
++ *  \param[in]	  buffer	Pointer to data buffer
++ *  \retval	  0		Success
 + *****************************************************************************/
-+static int snd_adsp_cap_empty_buf_done
-+	(void *data, int opcode, int length, char *buffer)
++static int
++snd_adsp_cap_empty_buf_done(void *data, int opcode, int length, char *buffer)
 +{
 +	return 0;
 +}
@@ -778,17 +767,17 @@ index 0000000..b6c5752
 + *  \brief	 fill buf done callback for record/TDM record functions
 + *
 + *  \param[in]	  data		Pointer to ADSP ALSA sound card
-+ *  \param[in]	  opcode		Opcode of message
-+ *  \param[in]	  length		Length of data buffer
-+ *  \param[in]	  buffer		Pointer to data buffer
-+ * \retval		  0			Success
++ *  \param[in]	  opcode	Opcode of message
++ *  \param[in]	  length	Length of data buffer
++ *  \param[in]	  buffer	Pointer to data buffer
++ * \retval	  0		Success
 + *****************************************************************************/
-+static int snd_adsp_cap_fill_buf_done
-+	(void *data, int opcode, int length, char *buffer)
++static int
++snd_adsp_cap_fill_buf_done(void *data, int opcode, int length, char *buffer)
 +{
 +	struct snd_adsp_base_info *base = (struct snd_adsp_base_info *)data;
 +
-+	if (base != NULL) {
++	if (base) {
 +		spin_lock(&base->lock);
 +
 +		base->buf_queue++;
@@ -823,11 +812,11 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	Get current index of CPU DAI from runtime data of substream
 + *
-+ *  \param[in]	  substream	   Pointer to PCM stream data
-+ *  \retval		 id			  Index of current CPU DAI
++ *  \param[in]	  substream	Pointer to PCM stream data
++ *  \retval	  id		Index of current CPU DAI
 + *****************************************************************************/
-+static int snd_adsp_get_dai_id_from_substream
-+	(struct snd_pcm_substream *substream)
++static int
++snd_adsp_get_dai_id_from_substream(struct snd_pcm_substream *substream)
 +{
 +	struct snd_soc_pcm_runtime *rtd;
 +
@@ -838,11 +827,11 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	Get ADSP ALSA driver's data from runtime data of substream
 + *
-+ *  \param[in]	  substream	   Pointer to PCM stream data
-+ *  \retval		 pointer		 Pointer to driver's data
++ *  \param[in]	substream	Pointer to PCM stream data
++ *  \retval	pointer		Pointer to driver's data
 + *****************************************************************************/
-+static void *snd_adsp_get_drvdata_from_substream
-+	(struct snd_pcm_substream *substream)
++static void *
++snd_adsp_get_drvdata_from_substream(struct snd_pcm_substream *substream)
 +{
 +	struct snd_soc_pcm_runtime *rtd;
 +
@@ -856,8 +845,8 @@ index 0000000..b6c5752
 + *  \param[in]	substream	Pointer to PCM stream data
 + *  \retval	pointer		Pointer to playback/record's base data
 + *****************************************************************************/
-+static struct snd_adsp_base_info *snd_adsp_get_base_from_substream
-+	(struct snd_pcm_substream *substream)
++static struct snd_adsp_base_info *
++snd_adsp_get_base_from_substream(struct snd_pcm_substream *substream)
 +{
 +	struct snd_adsp_card *adsp_card;
 +	struct snd_adsp_base_info *base;
@@ -869,21 +858,21 @@ index 0000000..b6c5752
 +	dai_idx = snd_adsp_get_dai_id_from_substream(substream);
 +
 +	/* get base data of the substream */
-+	if ((dai_idx == RDR_DAI_IDX0) || (dai_idx == RDR_DAI_IDX1) ||
-+		(dai_idx == RDR_DAI_IDX2) || (dai_idx == RDR_DAI_IDX3)) {
++	if (dai_idx == RDR_DAI_IDX0 || dai_idx == RDR_DAI_IDX1 ||
++	    dai_idx == RDR_DAI_IDX2 || dai_idx == RDR_DAI_IDX3) {
 +		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
-+			base = (adsp_card->playback[dai_idx] == NULL) ?
++			base = !adsp_card->playback[dai_idx] ?
 +				NULL : &adsp_card->playback[dai_idx]->base;
 +		} else {
-+			base = (adsp_card->record[dai_idx] == NULL) ?
++			base = !adsp_card->record[dai_idx] ?
 +				NULL : &adsp_card->record[dai_idx]->base;
 +		}
 +	} else {
 +		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
-+			base = (adsp_card->tdm_playback == NULL) ?
++			base = !adsp_card->tdm_playback ?
 +				NULL : &adsp_card->tdm_playback->base;
 +		} else {
-+			base = (adsp_card->tdm_record == NULL) ?
++			base = !adsp_card->tdm_record ?
 +				NULL : &adsp_card->tdm_record->base;
 +		}
 +	}
@@ -898,8 +887,8 @@ index 0000000..b6c5752
 + *  \param[in]	hrt		Pointer to hr timer data
 + *  \retval	pointer		Pointer to playback/record's base data
 + *****************************************************************************/
-+static struct snd_adsp_base_info *snd_adsp_get_base_from_hrt
-+	(struct hrtimer *hrt)
++static struct snd_adsp_base_info *
++snd_adsp_get_base_from_hrt(struct hrtimer *hrt)
 +{
 +	return (struct snd_adsp_base_info *)hrt;
 +}
@@ -911,8 +900,8 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	Interrupt function of high resolution timer
 + *
-+ *  \param[in]	  hrt			 Pointer to hr timer data
-+ *  \retval		 HRTIMER_RESTART Restart the timer after expire time
++ *  \param[in]	hrt		Pointer to hr timer data
++ *  \retval	HRTIMER_RESTART Restart the timer after expire time
 + *****************************************************************************/
 +static enum hrtimer_restart snd_adsp_hrtimer_func(struct hrtimer *hrt)
 +{
@@ -920,8 +909,8 @@ index 0000000..b6c5752
 +
 +	spin_lock(&base->lock);
 +	if (base->hw_idx != 0) {
-+		/* update PCM status for the next period */
 +		spin_unlock(&base->lock);
++		/* update PCM status for the next period */
 +		snd_pcm_period_elapsed(base->substream);
 +	} else {
 +		spin_unlock(&base->lock);
@@ -942,18 +931,18 @@ index 0000000..b6c5752
 + *  \param[out]	  playback_data		Pointer to store playback data
 + *  \param[in]	  eqz_flag		Flag to indicate equalizer usage
 + *  \param[in]	  substream		Pointer to substream data
-+ *  \retval	  -EINVAL		Failed to initialize playback data
++ *  \retval	  EINVAL		Failed to initialize playback data
 + *  \retval	  0			Success
 + *****************************************************************************/
-+static int snd_adsp_playback_init
-+	(struct snd_adsp_playback **playback_data, int eqz_flag,
-+	 struct snd_pcm_substream *substream)
++static int snd_adsp_playback_init(struct snd_adsp_playback **playback_data,
++				  int eqz_flag,
++				  struct snd_pcm_substream *substream)
 +{
 +	struct snd_adsp_playback *playback;
 +
 +	/* allocate memory for playback data */
-+	playback = kmalloc(sizeof(struct snd_adsp_playback), GFP_KERNEL);
-+	if (playback == NULL)
++	playback = kmalloc(sizeof(*playback), GFP_KERNEL);
++	if (!playback)
 +		return -EINVAL;
 +
 +	/* init params */
@@ -968,8 +957,9 @@ index 0000000..b6c5752
 +	playback->base.hrt_state = XF_HANDLE_NULL;
 +
 +	/* register renderer component */
-+	if (xf_adsp_renderer_create(&playback->renderer, &rdr_callbacks,
-+					(void *)&playback->base) < 0)
++	if (xf_adsp_renderer_create(&playback->renderer,
++				    &rdr_callbacks,
++				    (void *)&playback->base) < 0)
 +		return -EINVAL;
 +
 +	/* mark renderer component created */
@@ -981,8 +971,8 @@ index 0000000..b6c5752
 +	if (eqz_flag == EQZ_ON) {
 +		/* create equalizer component when equalizer is used */
 +		if (xf_adsp_equalizer_create(&playback->equalizer,
-+						 &rdr_callbacks,
-+						 (void *)&playback->base) < 0)
++					     &rdr_callbacks,
++					     (void *)&playback->base) < 0)
 +			return -EINVAL;
 +
 +		/* mark equalizer component created */
@@ -999,8 +989,9 @@ index 0000000..b6c5752
 +	playback->base.substream = substream;
 +
 +	/* init high resolution timer for updating hw status */
-+	hrtimer_init(&playback->base.hrtimer, CLOCK_MONOTONIC,
-+			 HRTIMER_MODE_REL);
++	hrtimer_init(&playback->base.hrtimer,
++		     CLOCK_MONOTONIC,
++		     HRTIMER_MODE_REL);
 +
 +	/* PRQA S 0563 1 */
 +	playback->base.hrtimer.function = &snd_adsp_hrtimer_func;
@@ -1013,11 +1004,11 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	Initialize record data
 + *
-+ *  \param[out]	 record_data		Pointer to store record data
-+ *  \param[in]	  eqz_flag		Flag to indicate equalizer usage
-+ *  \param[in]	  substream		Pointer to substream data
-+ *  \retval		 -EINVAL	Failed to initialize record data
-+ *  \retval		 0		Success
++ *  \param[out]	 record_data	Pointer to store record data
++ *  \param[in]	 eqz_flag	Flag to indicate equalizer usage
++ *  \param[in]	 substream	Pointer to substream data
++ *  \retval	-EINVAL		Failed to initialize record data
++ *  \retval	 0		Success
 + *****************************************************************************/
 +static int snd_adsp_record_init(struct snd_adsp_record **record_data,
 +				int eqz_flag,
@@ -1026,8 +1017,8 @@ index 0000000..b6c5752
 +	struct snd_adsp_record *record;
 +
 +	/* allocate memory for record data */
-+	record = kmalloc(sizeof(struct snd_adsp_record), GFP_KERNEL);
-+	if (record == NULL)
++	record = kmalloc(sizeof(*record), GFP_KERNEL);
++	if (!record)
 +		return -EINVAL;
 +
 +	/* init params */
@@ -1056,8 +1047,8 @@ index 0000000..b6c5752
 +	/* create equalizer component in case of it being used */
 +	if (eqz_flag == EQZ_ON) {
 +		if (xf_adsp_equalizer_create(&record->equalizer,
-+						 &cap_callbacks,
-+						 (void *)&record->base) < 0)
++					     &cap_callbacks,
++					     (void *)&record->base) < 0)
 +			return -EINVAL;
 +
 +		/* mark equalizer component created */
@@ -1089,11 +1080,11 @@ index 0000000..b6c5752
 + *
 + *  \param[out]	  playback		Pointer to playback data
 + *  \param[in]	  substream		Pointer to substream data
-+ *  \retval	  -EINVAL		Failed to prepare playback function
++ *  \retval	 -EINVAL		Failed to prepare playback function
 + *  \retval	  0			Success
 + *****************************************************************************/
 +static int snd_adsp_playback_prepare(struct snd_adsp_playback *playback,
-+					 struct snd_pcm_substream *substream)
++				     struct snd_pcm_substream *substream)
 +{
 +	struct snd_adsp_card *adsp_card;
 +	int dai_idx, pcm_width, ch, fs, frame_size, vol_rate, hw_buffer_size;
@@ -1187,13 +1178,15 @@ index 0000000..b6c5752
 +
 +		/* allocate buffer pool to prepare the execution */
 +		renderer->buf_pool = xf_adsp_allocate_mem_pool(
-+					XF_BUF_POOL_SIZE, base->buf_bytes);
++				XF_BUF_POOL_SIZE, base->buf_bytes);
++
 +		if (IS_ERR(renderer->buf_pool))	/* PRQA S 306*/
 +			return -EINVAL;
 +
 +		for (i = 0; i < XF_BUF_POOL_SIZE; i++) {
 +			base->buffer[i] = xf_adsp_get_data_from_pool(
-+							renderer->buf_pool, i);
++					renderer->buf_pool, i);
++
 +			base->buf_queue++;
 +			memset(base->buffer[i], 0, base->buf_bytes);
 +		}
@@ -1234,8 +1227,10 @@ index 0000000..b6c5752
 +			for (i = 0; i < XF_BUF_POOL_SIZE; i++) {
 +				/* send buffer to plugin to kick */
 +				/* init-processing */
-+				if (xf_adsp_empty_this_buffer(base->handle_id,
-+					base->buffer[i], base->buf_bytes) != 0)
++				if (xf_adsp_empty_this_buffer(
++							base->handle_id,
++							base->buffer[i],
++							base->buf_bytes) != 0)
 +					return -EINVAL;
 +
 +				spin_lock(&base->lock);
@@ -1246,7 +1241,8 @@ index 0000000..b6c5752
 +			/* send zero buffer to plugin to kick */
 +			/* init-processing */
 +			if (xf_adsp_empty_this_buffer(base->handle_id,
-+					base->buffer[0], base->buf_bytes) != 0)
++						      base->buffer[0],
++						      base->buf_bytes) != 0)
 +				return -EINVAL;
 +
 +			spin_lock(&base->lock);
@@ -1261,7 +1257,7 @@ index 0000000..b6c5752
 +				break;
 +
 +			/* check the error from initialization */
-+			if (base->runtime_err == TRUE)
++			if (base->runtime_err)
 +				return -EINVAL;
 +		}
 +
@@ -1278,7 +1274,7 @@ index 0000000..b6c5752
 + *
 + *  \param[out]	  record		Pointer to record data
 + *  \param[in]	  substream		Pointer to substream data
-+ *  \retval	  -EINVAL		Failed to prepare record function
++ *  \retval	 -EINVAL		Failed to prepare record function
 + *  \retval	  0			Success
 + *****************************************************************************/
 +static int snd_adsp_record_prepare(struct snd_adsp_record *record,
@@ -1356,14 +1352,16 @@ index 0000000..b6c5752
 +			params->in_rate = in_rate;
 +
 +		/* allocate buffer pool to prepare the execution */
-+		capture->buf_pool = xf_adsp_allocate_mem_pool(XF_BUF_POOL_SIZE,
-+							base->buf_bytes);
++		capture->buf_pool = xf_adsp_allocate_mem_pool(
++				XF_BUF_POOL_SIZE, base->buf_bytes);
++
 +		if (IS_ERR(capture->buf_pool))		 /* PRQA S 306 */
 +			return -EINVAL;
 +
 +		for (i = 0; i < XF_BUF_POOL_SIZE; i++) {
 +			base->buffer[i] = xf_adsp_get_data_from_pool(
-+						capture->buf_pool, i);
++					capture->buf_pool, i);
++
 +			base->buf_queue++;
 +		}
 +
@@ -1399,7 +1397,6 @@ index 0000000..b6c5752
 +					  base->buf_bytes) != 0)
 +				return -EINVAL;
 +
-+
 +			/* mark Equalizer ready */
 +			record->eqz_state |= XF_HANDLE_READY;
 +		}
@@ -1418,7 +1415,7 @@ index 0000000..b6c5752
 +				break;
 +
 +			/* check the error from initialization */
-+			if (base->runtime_err == TRUE)
++			if (base->runtime_err)
 +				return -EINVAL;
 +		}
 +
@@ -1444,7 +1441,7 @@ index 0000000..b6c5752
 +					break;
 +
 +				/* check the error from initialization */
-+				if (base->runtime_err == TRUE)
++				if (base->runtime_err)
 +					return -EINVAL;
 +			}
 +		}
@@ -1469,7 +1466,7 @@ index 0000000..b6c5752
 +	int ret = 0;
 +
 +	/* perform de-initialization if playback has been created already */
-+	if (IS_VALID(playback)) {
++	if (playback) {
 +		/* perform completion process */
 +		if (COMPONENT_IS_CREATED(playback->rdr_state) == TRUE) {
 +			/* send buffer with zero length to plugin for */
@@ -1518,38 +1515,38 @@ index 0000000..b6c5752
 +	int ret = 0;
 +
 +	/* perform de-initialization if record has been created already */
-+	if (IS_VALID(record)) {
-+		/* perform completion process */
-+		if (COMPONENT_IS_CREATED(record->cap_state) == TRUE) {
-+			/* send buffer with zero length to plugin for */
-+			/* completion process *//* PRQA S 3200 2 */
-+			xf_adsp_empty_this_buffer(record->base.handle_id,
-+						  NULL, 0);
++	if (!record)
++		return ret;
 +
-+			/* free buffer pool */ /* PRQA S 3200 1 */
-+			xf_adsp_free_mem_pool(record->capture->buf_pool);
++	/* perform completion process */
++	if (COMPONENT_IS_CREATED(record->cap_state) == TRUE) {
++		/* send buffer with zero length to plugin for */
++		/* completion process *//* PRQA S 3200 2 */
++		xf_adsp_empty_this_buffer(record->base.handle_id, NULL, 0);
 +
-+			if (xf_adsp_capture_destroy(record->capture))
-+				ret = -EINVAL;
++		/* free buffer pool */ /* PRQA S 3200 1 */
++		xf_adsp_free_mem_pool(record->capture->buf_pool);
 +
-+			record->capture = NULL;
-+		}
++		if (xf_adsp_capture_destroy(record->capture))
++			ret = -EINVAL;
 +
-+		/* destroy Equalizer if it is used */
-+		if (COMPONENT_IS_CREATED(record->eqz_state) == TRUE) {
-+			if (xf_adsp_equalizer_destroy(record->equalizer) != 0)
-+				ret = -EINVAL;
-+
-+			record->equalizer = NULL;
-+		}
-+
-+		/* canncel timer interrupt */
-+		if (COMPONENT_IS_CREATED(record->base.hrt_state) == TRUE)
-+			hrtimer_cancel(&record->base.hrtimer);
-+
-+		/* free record data */
-+		kfree(record);
++		record->capture = NULL;
 +	}
++
++	/* destroy Equalizer if it is used */
++	if (COMPONENT_IS_CREATED(record->eqz_state) == TRUE) {
++		if (xf_adsp_equalizer_destroy(record->equalizer) != 0)
++			ret = -EINVAL;
++
++		record->equalizer = NULL;
++	}
++
++	/* canncel timer interrupt */
++	if (COMPONENT_IS_CREATED(record->base.hrt_state) == TRUE)
++		hrtimer_cancel(&record->base.hrtimer);
++
++	/* free record data */
++	kfree(record);
 +
 +	return ret;
 +}
@@ -1566,16 +1563,16 @@ index 0000000..b6c5752
 + *  \retval	  -EINVAL		Failed to initialize TDM playback data
 + *  \retval	  0			Success
 + *****************************************************************************/
-+static int snd_adsp_tdm_playback_init(
-+	struct snd_adsp_tdm_playback **tdm_playback_data,
-+	struct snd_pcm_substream *substream)
++static int
++snd_adsp_tdm_playback_init(struct snd_adsp_tdm_playback **tdm_playback_data,
++			   struct snd_pcm_substream *substream)
 +{
 +	struct snd_adsp_tdm_playback *tdm_playback;
 +
 +	/* allocate memory for TDM playback data */
-+	tdm_playback = kmalloc(sizeof(struct snd_adsp_tdm_playback),
-+				GFP_KERNEL);
-+	if (tdm_playback == NULL)
++	tdm_playback = kmalloc(sizeof(*tdm_playback), GFP_KERNEL);
++
++	if (!tdm_playback)
 +		return -EINVAL;
 +
 +	/* init params */
@@ -1626,15 +1623,15 @@ index 0000000..b6c5752
 + *  \retval	  -EINVAL		Failed to initialize TDM record data
 + *  \retval	  0			Success
 + *****************************************************************************/
-+static int snd_adsp_tdm_record_init(
-+	struct snd_adsp_tdm_record **tdm_record_data,
-+	struct snd_pcm_substream *substream)
++static int
++snd_adsp_tdm_record_init(struct snd_adsp_tdm_record **tdm_record_data,
++			 struct snd_pcm_substream *substream)
 +{
 +	struct snd_adsp_tdm_record *tdm_record;
 +
 +	/* allocate memory for TDM record data */
-+	tdm_record = kmalloc(sizeof(struct snd_adsp_tdm_record), GFP_KERNEL);
-+	if (tdm_record == NULL)
++	tdm_record = kmalloc(sizeof(*tdm_record), GFP_KERNEL);
++	if (!tdm_record)
 +		return -EINVAL;
 +
 +	/* init params */
@@ -1686,9 +1683,9 @@ index 0000000..b6c5752
 + *  \retval	  -EINVAL		Failed to prepare TDM playback function
 + *  \retval	  0			Success
 + *****************************************************************************/
-+static int snd_adsp_tdm_playback_prepare(
-+	struct snd_adsp_tdm_playback *tdm_playback,
-+	struct snd_pcm_substream *substream)
++static int
++snd_adsp_tdm_playback_prepare(struct snd_adsp_tdm_playback *tdm_playback,
++			      struct snd_pcm_substream *substream)
 +{
 +	struct snd_adsp_card *adsp_card;
 +	struct snd_adsp_control *ctr_if;
@@ -1708,8 +1705,10 @@ index 0000000..b6c5752
 +	fs = runtime->rate;
 +	pcm_width = (runtime->format == SNDRV_PCM_FORMAT_S16_LE) ? 16 : 24;
 +	frame_size = runtime->period_size;
++
 +	ch_mode = (runtime->channels == 8) ?
 +		XA_TDM_RDR_CHANNEL_MODE_1X8 : XA_TDM_RDR_CHANNEL_MODE_1X6;
++
 +	hw_buffer_size = snd_pcm_lib_buffer_bytes(substream);
 +
 +	/* get number of bytes in a period */
@@ -1719,8 +1718,7 @@ index 0000000..b6c5752
 +		base->buf_bytes = base->period_bytes;
 +	else
 +		base->buf_bytes = ((base->period_bytes *
-+				    BYTES_PER_SAMPLE(S24_3LE)) /
-+					BYTES_PER_SAMPLE(S24_LE));
++			BYTES_PER_SAMPLE(S24_3LE)) / BYTES_PER_SAMPLE(S24_LE));
 +
 +	/* pcm indirect configuration */
 +	base->pcm_indirect.hw_buffer_size = hw_buffer_size;
@@ -1731,8 +1729,9 @@ index 0000000..b6c5752
 +
 +	/* prepare parameters to set to TDM playback as it is not ready */
 +	if (COMPONENT_IS_READY(tdm_playback->state) == FALSE) {
-+		struct xf_adsp_tdm_renderer_params *params =
-+							&tdm_renderer->params;
++		struct xf_adsp_tdm_renderer_params *params;
++
++		params = &tdm_renderer->params;
 +
 +		/* apply renderer parameters */
 +		params->in_rate = fs;
@@ -1761,16 +1760,16 @@ index 0000000..b6c5752
 +			return -EINVAL;
 +
 +		/* allocate buffer pool to prepare the execution */
-+		tdm_renderer->buf_pool =
-+			xf_adsp_allocate_mem_pool(XF_BUF_POOL_SIZE,
-+						  base->buf_bytes);
++		tdm_renderer->buf_pool = xf_adsp_allocate_mem_pool(
++				XF_BUF_POOL_SIZE, base->buf_bytes);
++
 +		if (IS_ERR(tdm_renderer->buf_pool))	/* PRQA S 306*/
 +			return -EINVAL;
 +
 +		for (i = 0; i < XF_BUF_POOL_SIZE; i++) {
-+			base->buffer[i] =
-+				xf_adsp_get_data_from_pool(
-+						tdm_renderer->buf_pool, i);
++			base->buffer[i] = xf_adsp_get_data_from_pool(
++					tdm_renderer->buf_pool, i);
++
 +			base->buf_queue++;
 +		}
 +
@@ -1779,6 +1778,7 @@ index 0000000..b6c5752
 +
 +		/* send zero buffer to plugin to kick init-processing */
 +		memset(base->buffer[0], 0, base->buf_bytes);
++
 +		if (xf_adsp_empty_this_buffer(base->handle_id, base->buffer[0],
 +					      base->buf_bytes) != 0)
 +			return -EINVAL;
@@ -1794,7 +1794,7 @@ index 0000000..b6c5752
 +				break;
 +
 +			/* check the error from initialization */
-+			if (base->runtime_err == TRUE)
++			if (base->runtime_err)
 +				return -EINVAL;
 +		}
 +
@@ -1814,9 +1814,8 @@ index 0000000..b6c5752
 + *  \retval	  -EINVAL		Failed to prepare TDM record function
 + *  \retval	  0			Success
 + *****************************************************************************/
-+static int snd_adsp_tdm_record_prepare(
-+	struct snd_adsp_tdm_record *tdm_record,
-+	struct snd_pcm_substream *substream)
++static int snd_adsp_tdm_record_prepare(struct snd_adsp_tdm_record *tdm_record,
++				       struct snd_pcm_substream *substream)
 +{
 +	struct snd_adsp_card *adsp_card =
 +		snd_adsp_get_drvdata_from_substream(substream);
@@ -1829,31 +1828,33 @@ index 0000000..b6c5752
 +
 +	/* runtime parameter */
 +	fs = runtime->rate;
++
 +	ch_mode = (runtime->channels == 8) ?
 +		XA_TDM_RDR_CHANNEL_MODE_1X8 : XA_TDM_RDR_CHANNEL_MODE_1X6;
++
 +	pcm_width = (runtime->format == SNDRV_PCM_FORMAT_S16_LE) ? 16 : 24;
 +	frame_size = runtime->period_size;
 +
 +	/* get number of bytes in a period */
 +	base->period_bytes = snd_pcm_lib_period_bytes(substream);
-+	base->buf_bytes = (pcm_width == 16) ? base->period_bytes :
-+				((base->period_bytes *
-+					BYTES_PER_SAMPLE(S24_3LE))
-+						/ BYTES_PER_SAMPLE(S24_LE));
++	base->buf_bytes = (pcm_width == 16) ?
++			   base->period_bytes : ((base->period_bytes *
++						BYTES_PER_SAMPLE(S24_3LE)) /
++						BYTES_PER_SAMPLE(S24_LE));
 +
 +	/* pcm indirect configuration */
-+	base->pcm_indirect.hw_buffer_size =
-+		snd_pcm_lib_buffer_bytes(substream);
-+	base->pcm_indirect.sw_buffer_size =  base->pcm_indirect.hw_buffer_size;
++	base->pcm_indirect.hw_buffer_size = snd_pcm_lib_buffer_bytes(substream);
++	base->pcm_indirect.sw_buffer_size = base->pcm_indirect.hw_buffer_size;
 +
 +	/* total size of allocated buffers */
 +	base->pcm_indirect.hw_queue_size = base->period_bytes *
-+						XF_BUF_POOL_SIZE;
++					   XF_BUF_POOL_SIZE;
 +
 +	/* prepare parameters to set to TDM Capture as it is not yet ready */
 +	if (COMPONENT_IS_READY(tdm_record->state) == FALSE) {
-+		struct xf_adsp_tdm_capture_params *params =
-+							&tdm_capture->params;
++		struct xf_adsp_tdm_capture_params *params;
++
++		params = &tdm_capture->params;
 +
 +		/* apply capture parameters */
 +		params->out_rate = fs;
@@ -1880,13 +1881,15 @@ index 0000000..b6c5752
 +
 +		/* allocate buffer pool to prepare the execution */
 +		tdm_capture->buf_pool = xf_adsp_allocate_mem_pool(
-+					XF_BUF_POOL_SIZE, base->buf_bytes);
++				XF_BUF_POOL_SIZE, base->buf_bytes);
++
 +		if (IS_ERR(tdm_capture->buf_pool))	/* PRQA S 306 */
 +			return -EINVAL;
 +
 +		for (i = 0; i < XF_BUF_POOL_SIZE; i++) {
 +			base->buffer[i] = xf_adsp_get_data_from_pool(
-+						tdm_capture->buf_pool, i);
++					tdm_capture->buf_pool, i);
++
 +			base->buf_queue++;
 +		}
 +
@@ -1911,7 +1914,7 @@ index 0000000..b6c5752
 +				break;
 +
 +			/* check the error from initialization */
-+			if (base->runtime_err == TRUE)
++			if (base->runtime_err)
 +				return -EINVAL;
 +		}
 +
@@ -1926,45 +1929,44 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	Deinitialize TDM playback function
 + *
-+ *  \param[out]	  tdm_playback		Pointer to TDM playback data
++ *  \param[out]	  tdm_playback	Pointer to TDM playback data
 + *  \retval	  -EINVAL	Failed to deinitialize TDM playback function
 + *  \retval	  0		Success
 + *****************************************************************************/
-+static int snd_adsp_tdm_playback_deinit(
-+	struct snd_adsp_tdm_playback *tdm_playback)
++static int
++snd_adsp_tdm_playback_deinit(struct snd_adsp_tdm_playback *tdm_playback)
 +{
 +	int ret = 0;
 +
 +	/* perform de-initialization if TDM playback has been created */
-+	/* already */
-+	if (IS_VALID(tdm_playback)) {
-+		/* perform completion process */
-+		if (COMPONENT_IS_CREATED(tdm_playback->state) == TRUE) {
-+			/* send buffer with zero length to plugin for */
-+			/* completion process */
-+			/* PRQA S 3200 2 */
-+			xf_adsp_empty_this_buffer(tdm_playback->base.handle_id,
-+							NULL, 0);
++	if (!tdm_playback)
++		return ret;
 +
-+			/* free buffer pool *//* PRQA S 3200 2 */
-+			xf_adsp_free_mem_pool(
-+				tdm_playback->tdm_renderer->buf_pool);
++	/* perform completion process */
++	if (COMPONENT_IS_CREATED(tdm_playback->state) == TRUE) {
++		/* send buffer with zero length to plugin for */
++		/* completion process */
++		/* PRQA S 3200 2 */
++		xf_adsp_empty_this_buffer(tdm_playback->base.handle_id,
++					  NULL, 0);
 +
-+			/* destroy TDM Renderer component */
-+			if (xf_adsp_tdm_renderer_destroy(
-+					tdm_playback->tdm_renderer) != 0)
-+				ret = -EINVAL;
++		/* free buffer pool *//* PRQA S 3200 2 */
++		xf_adsp_free_mem_pool(tdm_playback->tdm_renderer->buf_pool);
 +
-+			tdm_playback->tdm_renderer = NULL;
-+		}
++		/* destroy TDM Renderer component */
++		if (xf_adsp_tdm_renderer_destroy(
++				tdm_playback->tdm_renderer) != 0)
++			ret = -EINVAL;
 +
-+		/* canncel timer interrupt */
-+		if (COMPONENT_IS_CREATED(tdm_playback->base.hrt_state) == TRUE)
-+			hrtimer_cancel(&tdm_playback->base.hrtimer);
-+
-+		/* free playback data */
-+		kfree(tdm_playback);
++		tdm_playback->tdm_renderer = NULL;
 +	}
++
++	/* canncel timer interrupt */
++	if (COMPONENT_IS_CREATED(tdm_playback->base.hrt_state) == TRUE)
++		hrtimer_cancel(&tdm_playback->base.hrtimer);
++
++	/* free playback data */
++	kfree(tdm_playback);
 +
 +	return ret;
 +}
@@ -1981,34 +1983,32 @@ index 0000000..b6c5752
 +	int ret = 0;
 +
 +	/* perform de-initialization if TDM record has been created already */
-+	if (IS_VALID(tdm_record)) {
-+		/* perform completion process */
-+		if (COMPONENT_IS_CREATED(tdm_record->state) == TRUE) {
-+			/* send buffer with zero length to plugin for */
-+			/* completion process */
-+			/* PRQA S 3200 2 */
-+			xf_adsp_empty_this_buffer(tdm_record->base.handle_id,
-+							NULL, 0);
++	if (!tdm_record)
++		return ret;
 +
-+			/* free buffer pool *//* PRQA S 3200 2 */
-+			xf_adsp_free_mem_pool(
-+					tdm_record->tdm_capture->buf_pool);
++	/* perform completion process */
++	if (COMPONENT_IS_CREATED(tdm_record->state) == TRUE) {
++		/* send buffer with zero length to plugin for */
++		/* completion process */
++		/* PRQA S 3200 2 */
++		xf_adsp_empty_this_buffer(tdm_record->base.handle_id, NULL, 0);
 +
-+			/* destroy TDM Capture component */
-+			if (xf_adsp_tdm_capture_destroy(
-+					tdm_record->tdm_capture) != 0)
-+				ret = -EINVAL;
++		/* free buffer pool *//* PRQA S 3200 2 */
++		xf_adsp_free_mem_pool(tdm_record->tdm_capture->buf_pool);
 +
-+			tdm_record->tdm_capture = NULL;
-+		}
++		/* destroy TDM Capture component */
++		if (xf_adsp_tdm_capture_destroy(tdm_record->tdm_capture) != 0)
++			ret = -EINVAL;
 +
-+		/* canncel timer interrupt */
-+		if (COMPONENT_IS_CREATED(tdm_record->base.hrt_state) == TRUE)
-+			hrtimer_cancel(&tdm_record->base.hrtimer);
-+
-+		/* free record data */
-+		kfree(tdm_record);
++		tdm_record->tdm_capture = NULL;
 +	}
++
++	/* canncel timer interrupt */
++	if (COMPONENT_IS_CREATED(tdm_record->base.hrt_state) == TRUE)
++		hrtimer_cancel(&tdm_record->base.hrtimer);
++
++	/* free record data */
++	kfree(tdm_record);
 +
 +	return ret;
 +}
@@ -2027,35 +2027,41 @@ index 0000000..b6c5752
 +static int snd_adsp_pcm_open(struct snd_pcm_substream *substream)
 +{
 +	/* get ADSP soundcard and CPU DAI index */
-+	struct snd_adsp_card *adsp_card =
-+		snd_adsp_get_drvdata_from_substream(substream);
++	struct snd_adsp_card *adsp_card;
 +	int dai_idx = snd_adsp_get_dai_id_from_substream(substream);
++	struct snd_adsp_control *ctr_if;
 +
-+	if ((dai_idx == RDR_DAI_IDX0) || (dai_idx == RDR_DAI_IDX1) ||
-+	    (dai_idx == RDR_DAI_IDX2) || (dai_idx == RDR_DAI_IDX3)) {
++	adsp_card = snd_adsp_get_drvdata_from_substream(substream);
++	ctr_if = &adsp_card->ctr_if;
++
++	if (dai_idx == RDR_DAI_IDX0 || dai_idx == RDR_DAI_IDX1 ||
++	    dai_idx == RDR_DAI_IDX2 || dai_idx == RDR_DAI_IDX3) {
 +		/* register data for playback/record functions */
 +		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
 +			/* perform playback initialization */
 +			if (snd_adsp_playback_init(
-+			&adsp_card->playback[dai_idx],
-+			adsp_card->ctr_if.eqz_switch[DIRECT_PLAYBACK][dai_idx],
-+			substream) < 0) {
++				   &adsp_card->playback[dai_idx],
++				   ctr_if->eqz_switch[DIRECT_PLAYBACK][dai_idx],
++				   substream) < 0) {
 +				/* perform playback de-initialization when */
 +				/* the initialization fails */
 +				snd_adsp_playback_deinit(
-+					adsp_card->playback[dai_idx]);
++						adsp_card->playback[dai_idx]);
++
 +				adsp_card->playback[dai_idx] = NULL;
 +				return -EINVAL;
 +			}
 +		} else {
 +			/* perform record initialization */
-+			if (snd_adsp_record_init(&adsp_card->record[dai_idx],
-+			adsp_card->ctr_if.eqz_switch[DIRECT_CAPTURE][dai_idx],
-+			substream) < 0) {
++			if (snd_adsp_record_init(
++				    &adsp_card->record[dai_idx],
++				    ctr_if->eqz_switch[DIRECT_CAPTURE][dai_idx],
++				    substream) < 0) {
 +				/* perform record de-initialization when the */
 +				/* initialization fails */
 +				snd_adsp_record_deinit(
-+					adsp_card->record[dai_idx]);
++						adsp_card->record[dai_idx]);
++
 +				adsp_card->record[dai_idx] = NULL;
 +				return -EINVAL;
 +			}
@@ -2073,22 +2079,25 @@ index 0000000..b6c5752
 +		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
 +			/* perform TDM playback initialization */
 +			if (snd_adsp_tdm_playback_init(
-+				&adsp_card->tdm_playback, substream) < 0) {
++						&adsp_card->tdm_playback,
++						substream) < 0) {
 +				/* perform TDM playback de-initialization */
 +				/* when the initialization fails */
 +				snd_adsp_tdm_playback_deinit(
 +						adsp_card->tdm_playback);
++
 +				adsp_card->tdm_playback = NULL;
 +				return -EINVAL;
 +			}
 +		} else {
 +			/* perform TDM record initialization */
 +			if (snd_adsp_tdm_record_init(&adsp_card->tdm_record,
-+							substream) < 0) {
++						     substream) < 0) {
 +				/* perform TDM record de-initialization */
 +				/* when the initialization fails */
 +				snd_adsp_tdm_record_deinit(
 +						adsp_card->tdm_record);
++
 +				adsp_card->tdm_record = NULL;
 +				return -EINVAL;
 +			}
@@ -2099,11 +2108,12 @@ index 0000000..b6c5752
 +
 +		/* each period has a frame size */
 +		snd_pcm_hw_constraint_single(substream->runtime,
-+			SNDRV_PCM_HW_PARAM_PERIOD_SIZE, TDM_FRAME_SIZE);
++					     SNDRV_PCM_HW_PARAM_PERIOD_SIZE,
++					     TDM_FRAME_SIZE);
 +	}
 +
 +	snd_pcm_hw_constraint_integer(substream->runtime,
-+					SNDRV_PCM_HW_PARAM_PERIODS);
++				      SNDRV_PCM_HW_PARAM_PERIODS);
 +
 +	return 0;
 +}
@@ -2123,8 +2133,8 @@ index 0000000..b6c5752
 +	int dai_idx = snd_adsp_get_dai_id_from_substream(substream);
 +	int err = 0;
 +
-+	if ((dai_idx == RDR_DAI_IDX0) || (dai_idx == RDR_DAI_IDX1) ||
-+	    (dai_idx == RDR_DAI_IDX2) || (dai_idx == RDR_DAI_IDX3)) {
++	if (dai_idx == RDR_DAI_IDX0 || dai_idx == RDR_DAI_IDX1 ||
++	    dai_idx == RDR_DAI_IDX2 || dai_idx == RDR_DAI_IDX3) {
 +		/* destroy Renderer/Capture or Equalizer (if used) */
 +		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
 +			if (snd_adsp_playback_deinit(
@@ -2180,7 +2190,7 @@ index 0000000..b6c5752
 +				  params_period_size(hw_params));
 +
 +	err = snd_pcm_lib_malloc_pages(substream,
-+					params_buffer_bytes(hw_params));
++				       params_buffer_bytes(hw_params));
 +
 +	/* reset DMA buffer area */
 +	memset(substream->runtime->dma_area, 0, substream->runtime->dma_bytes);
@@ -2211,13 +2221,13 @@ index 0000000..b6c5752
 +static int snd_adsp_pcm_prepare(struct snd_pcm_substream *substream)
 +{
 +	/* get ADSP soundcard and CPU DAI index */
-+	struct snd_adsp_card *adsp_card =
-+		snd_adsp_get_drvdata_from_substream(substream);
++	struct snd_adsp_card *
++		adsp_card = snd_adsp_get_drvdata_from_substream(substream);
 +	int dai_idx = snd_adsp_get_dai_id_from_substream(substream);
 +	int err = 0;
 +
-+	if ((dai_idx == RDR_DAI_IDX0) || (dai_idx == RDR_DAI_IDX1) ||
-+	    (dai_idx == RDR_DAI_IDX2) || (dai_idx == RDR_DAI_IDX3)) {
++	if (dai_idx == RDR_DAI_IDX0 || dai_idx == RDR_DAI_IDX1 ||
++	    dai_idx == RDR_DAI_IDX2 || dai_idx == RDR_DAI_IDX3) {
 +		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 +			/* get playback prepared to execute */
 +			err = snd_adsp_playback_prepare(
@@ -2250,15 +2260,14 @@ index 0000000..b6c5752
 + *****************************************************************************/
 +static int snd_adsp_pcm_trigger(struct snd_pcm_substream *substream, int idx)
 +{
-+	struct snd_adsp_base_info *base =
-+		snd_adsp_get_base_from_substream(substream);
++	struct snd_adsp_base_info *
++		base = snd_adsp_get_base_from_substream(substream);
 +
 +	switch (idx) {
 +	case SNDRV_PCM_TRIGGER_START:
 +	case SNDRV_PCM_TRIGGER_RESUME:
 +		/* start high-resolution timer */
-+		hrtimer_start(&base->hrtimer, base->ktime,
-+			     HRTIMER_MODE_REL);
++		hrtimer_start(&base->hrtimer, base->ktime, HRTIMER_MODE_REL);
 +
 +		if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
 +			int buf_queue = 0;
@@ -2272,9 +2281,9 @@ index 0000000..b6c5752
 +			/* get data */
 +			for (; buf_queue > 0; buf_queue--) {
 +				if (xf_adsp_fill_this_buffer(
-+					base->handle_id,
-+					base->buffer[base->buf_idx],
-+					base->buf_bytes) != 0)
++						base->handle_id,
++						base->buffer[base->buf_idx],
++						base->buf_bytes) != 0)
 +					return -EINVAL;
 +
 +				spin_lock(&base->lock);
@@ -2282,6 +2291,7 @@ index 0000000..b6c5752
 +				spin_unlock(&base->lock);
 +
 +				base->buf_idx++;
++
 +				if (base->buf_idx >= XF_BUF_POOL_SIZE)
 +					base->buf_idx = 0;
 +			}
@@ -2302,11 +2312,11 @@ index 0000000..b6c5752
 + *  \param[in]	  substream		Pointer to substream object
 + *  \retval	  position		HW data position
 + *****************************************************************************/
-+static snd_pcm_uframes_t snd_adsp_pcm_pointer(
-+	struct snd_pcm_substream *substream)
++static snd_pcm_uframes_t
++snd_adsp_pcm_pointer(struct snd_pcm_substream *substream)
 +{
-+	struct snd_adsp_base_info *base =
-+		snd_adsp_get_base_from_substream(substream);
++	struct snd_adsp_base_info *
++		base = snd_adsp_get_base_from_substream(substream);
 +	unsigned int hw_idx, hw_buffer_size;
 +	snd_pcm_uframes_t pointer;
 +
@@ -2319,19 +2329,21 @@ index 0000000..b6c5752
 +
 +	if (hw_idx >= hw_buffer_size) {
 +		spin_lock(&base->lock);
++
 +		base->hw_idx -= (hw_buffer_size / base->period_bytes) *
 +							base->buf_bytes;
++
 +		spin_unlock(&base->lock);
 +	}
 +
 +	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 +		pointer = snd_pcm_indirect_playback_pointer(substream,
-+							   &base->pcm_indirect,
-+							   hw_idx);
++							    &base->pcm_indirect,
++							    hw_idx);
 +	else
 +		pointer = snd_pcm_indirect_capture_pointer(substream,
-+							  &base->pcm_indirect,
-+							  hw_idx);
++							   &base->pcm_indirect,
++							   hw_idx);
 +
 +	return pointer;
 +}
@@ -2345,10 +2357,10 @@ index 0000000..b6c5752
 + *****************************************************************************/
 +static int snd_adsp_pcm_ack(struct snd_pcm_substream *substream)
 +{
-+	struct snd_adsp_base_info *base =
-+			snd_adsp_get_base_from_substream(substream);
++	struct snd_adsp_base_info *
++		base = snd_adsp_get_base_from_substream(substream);
 +
-+	if (base->runtime_err == TRUE)
++	if (base->runtime_err)
 +		return -EINVAL;
 +
 +	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
@@ -2357,8 +2369,8 @@ index 0000000..b6c5752
 +						   snd_adsp_pcm_transfer);
 +	else
 +		snd_pcm_indirect_capture_transfer(substream,
-+						   &base->pcm_indirect,
-+						   snd_adsp_pcm_transfer);
++						  &base->pcm_indirect,
++						  snd_adsp_pcm_transfer);
 +
 +	return 0;
 +}
@@ -2366,38 +2378,42 @@ index 0000000..b6c5752
 +/** ***************************************************************************
 + *  \brief	  Copy data from source buffer to destination buffer
 + *
-+ *  \params[in]	 dst		 Destination buffer pointer
-+ *  \params[out]	src		 Source buffer pointer
++ *  \params[in]	 dst		Destination buffer pointer
++ *  \params[out] src		Source buffer pointer
 + *  \params[in]	 dst_size	Destination buffer size in byte
 + *  \params[in]	 src_size	Source buffer size in byte
-+ *  \retval		 None
++ *  \retval	 None
 + *****************************************************************************/
-+static inline void snd_adsp_copy_data(void *dst, void *src, int dst_size,
-+				      int src_size)
++static inline void
++snd_adsp_copy_data(void *dst, void *src, int dst_size, int src_size)
 +{
 +	unsigned char *data_dst = dst;
 +	unsigned char *data_src = src;
 +	int i;
 +
-+	if (dst_size == src_size)
-+		/* src and dst buffers are same size, does not need to */
-+		/* convert */
++	if (dst_size == src_size) {
++		/* src and dst bufs are same size, does not need to convert */
 +		memcpy(data_dst, data_src, dst_size);
-+	else if (dst_size < src_size) {
++
++	} else if (dst_size < src_size) {
 +		for (i = 0; i < (dst_size - BYTES_PER_SAMPLE(S24_3LE));
-+					i += BYTES_PER_SAMPLE(S24_3LE)) {
++				i += BYTES_PER_SAMPLE(S24_3LE)) {
 +			*(u32 *)data_dst = *(u32 *)data_src;
 +
 +			data_dst += BYTES_PER_SAMPLE(S24_3LE);
 +			data_src += BYTES_PER_SAMPLE(S24_LE);
 +		}
 +
-+		SAMPLE_COPY(data_dst, data_src, S24_3LE, S24_LE);
++		/* copy a S24_3LE sample from S24_LE sample */
++		data_dst[0] = data_src[0];
++		data_dst[1] = data_src[1];
++		data_dst[2] = data_src[2];
++
 +	} else {
 +		unsigned int tmp;
 +
 +		for (i = 0; i < (dst_size - BYTES_PER_SAMPLE(S24_LE));
-+					i += BYTES_PER_SAMPLE(S24_LE)) {
++				i += BYTES_PER_SAMPLE(S24_LE)) {
 +			tmp = *(u32 *)data_src;
 +			*(u32 *)data_dst = tmp & 0x0FFFFFF;
 +
@@ -2405,7 +2421,11 @@ index 0000000..b6c5752
 +			data_src += BYTES_PER_SAMPLE(S24_3LE);
 +		}
 +
-+		SAMPLE_COPY(data_dst, data_src, S24_LE, S24_3LE);
++		/* copy a S24_LE sample from S24_3LE sample */
++		data_dst[0] = data_src[0];
++		data_dst[1] = data_src[1];
++		data_dst[2] = data_src[2];
++		data_dst[3] = 0;
 +	}
 +}
 +
@@ -2418,10 +2438,11 @@ index 0000000..b6c5752
 + *  \retval	  None
 + *****************************************************************************/
 +static void snd_adsp_pcm_transfer(struct snd_pcm_substream *substream,
-+				struct snd_pcm_indirect *rec, size_t bytes)
++				  struct snd_pcm_indirect *rec,
++				  size_t bytes)
 +{
-+	struct snd_adsp_base_info *base =
-+		snd_adsp_get_base_from_substream(substream);
++	struct snd_adsp_base_info *
++		base = snd_adsp_get_base_from_substream(substream);
 +	int direct = substream->stream;
 +	int trans_bytes = bytes;
 +	int buf_bytes, period_bytes;
@@ -2437,7 +2458,7 @@ index 0000000..b6c5752
 +	/* make sure the available buffer and transfer size - TBD */
 +	while (trans_bytes > 0) {
 +		spin_lock(&base->lock);
-+		if ((base->buf_queue > 0) && (trans_bytes >= period_bytes)) {
++		if (base->buf_queue > 0 && trans_bytes >= period_bytes) {
 +			base->buf_queue--;
 +			spin_unlock(&base->lock);
 +
@@ -2447,7 +2468,7 @@ index 0000000..b6c5752
 +			if (direct == SNDRV_PCM_STREAM_PLAYBACK) {
 +				/* copy data from user *//* PRQA S 3200 2 */
 +				snd_adsp_copy_data(data_buff, dma_buf,
-+						buf_bytes, period_bytes);
++						   buf_bytes, period_bytes);
 +
 +				/* send buffer to plugin */
 +				if (xf_adsp_empty_this_buffer(base->handle_id,
@@ -2504,7 +2525,7 @@ index 0000000..b6c5752
 + *  \retval	-EINVAL			Error
 + *****************************************************************************/
 +static int snd_adsp_control_volume_get(struct snd_kcontrol *kcontrol,
-+					struct snd_ctl_elem_value *ucontrol)
++				       struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	struct snd_adsp_control *ctr_if = &adsp_card->ctr_if;
@@ -2524,17 +2545,19 @@ index 0000000..b6c5752
 +		cmd_idx = XA_RDR_CONFIG_PARAM_VOLUME_RATE;
 +		direction = DIRECT_PLAYBACK;
 +
-+		if (IS_VALID(adsp_card->playback[index])) {
++		if (adsp_card->playback[index]) {
 +			handle_state = adsp_card->playback[index]->rdr_state;
++
 +			handle_id =
-+			   adsp_card->playback[index]->renderer->handle_id;
++				adsp_card->playback[index]->renderer->handle_id;
 +		}
 +	} else if (kcontrol->id.name[0] == PREFIX_OF_CAPTURE_CTR_NAME) {
 +		cmd_idx = XA_CAP_CONFIG_PARAM_VOLUME_RATE;
 +		direction = DIRECT_CAPTURE;
 +
-+		if (IS_VALID(adsp_card->record[index])) {
++		if (adsp_card->record[index]) {
 +			handle_state = adsp_card->record[index]->cap_state;
++
 +			handle_id =
 +				adsp_card->record[index]->capture->handle_id;
 +		}
@@ -2543,19 +2566,21 @@ index 0000000..b6c5752
 +			cmd_idx = XA_TDM_RDR_CONFIG_PARAM_VOLUME_RATE;
 +			direction = DIRECT_PLAYBACK;
 +
-+			if (IS_VALID(adsp_card->tdm_playback)) {
++			if (adsp_card->tdm_playback) {
 +				handle_state = adsp_card->tdm_playback->state;
++
 +				handle_id =
-+			     adsp_card->tdm_playback->tdm_renderer->handle_id;
++			       adsp_card->tdm_playback->tdm_renderer->handle_id;
 +			}
 +		} else {
 +			cmd_idx = XA_TDM_CAP_CONFIG_PARAM_VOLUME_RATE;
 +			direction = DIRECT_CAPTURE;
 +
-+			if (IS_VALID(adsp_card->tdm_record)) {
++			if (adsp_card->tdm_record) {
 +				handle_state = adsp_card->tdm_record->state;
++
 +				handle_id =
-+				 adsp_card->tdm_record->tdm_capture->handle_id;
++				  adsp_card->tdm_record->tdm_capture->handle_id;
 +			}
 +		}
 +	}
@@ -2572,12 +2597,12 @@ index 0000000..b6c5752
 +	} else {
 +		if (kcontrol->id.name[0] != PREFIX_OF_TDM_CTR_NAME)
 +			ucontrol->value.integer.value[0] =
-+				(ctr_if->vol_rate[direction][index]
-+					* VOLUME_SCALE) >> 20;
++					(ctr_if->vol_rate[direction][index] *
++					 VOLUME_SCALE) >> 20;
 +		else
 +			ucontrol->value.integer.value[0] =
-+				(ctr_if->tdm_vol_rate[direction]
-+					* VOLUME_SCALE) >> 20;
++					(ctr_if->tdm_vol_rate[direction] *
++					 VOLUME_SCALE) >> 20;
 +	}
 +
 +	return 0;
@@ -2586,14 +2611,16 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Set volume value
 + *
-+ *  \param[in]	  kcontrol		Pointer to control instance
-+ *  \param[in]	  ucontrol		Pointer to volume value
-+ *  \retval		 1		  Volume change
-+ *  \retval		 0		  Volume does not change
-+ *  \retval		 -EINVAL	Error
++ *  \param[in]	  kcontrol	Pointer to control instance
++ *  \param[in]	  ucontrol	Pointer to volume value
++ *  \retval	  1		Volume change
++ *  \retval	  0		Volume does not change
++ *  \retval	  -EINVAL	Error
 + *****************************************************************************/
-+static int snd_adsp_control_volume_put(struct snd_kcontrol *kcontrol,
-+		struct snd_ctl_elem_value *ucontrol)	/* PRQA S 3673 */
++/* PRQA S 3673 1*/
++static int
++snd_adsp_control_volume_put(struct snd_kcontrol *kcontrol,
++			    struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	struct snd_adsp_control *ctr_if = &adsp_card->ctr_if;
@@ -2611,14 +2638,15 @@ index 0000000..b6c5752
 +	handle_id = -1;
 +
 +	/* get the value to set */
-+	if (ucontrol->value.integer.value[0] == -1)
++	if (ucontrol->value.integer.value[0] == -1) {
 +		volume = 0xFFFFFFFF;
-+	else {
++	} else {
 +		/* round up the value if needed */
 +		volume = (ucontrol->value.integer.value[0] * (1 << 20)) /
-+								VOLUME_SCALE;
++			  VOLUME_SCALE;
++
 +		if ((ucontrol->value.integer.value[0] * (1 << 20)) >
-+						(VOLUME_SCALE * volume))
++		    (VOLUME_SCALE * volume))
 +			volume += 1;
 +	}
 +
@@ -2627,17 +2655,19 @@ index 0000000..b6c5752
 +		cmd_idx = XA_RDR_CONFIG_PARAM_VOLUME_RATE;
 +		direction = DIRECT_PLAYBACK;
 +
-+		if (IS_VALID(adsp_card->playback[index])) {
++		if (adsp_card->playback[index]) {
 +			handle_state = adsp_card->playback[index]->rdr_state;
++
 +			handle_id =
-+			 adsp_card->playback[index]->renderer->handle_id;
++				adsp_card->playback[index]->renderer->handle_id;
 +		}
 +	} else if (kcontrol->id.name[0] == PREFIX_OF_CAPTURE_CTR_NAME) {
 +		cmd_idx = XA_CAP_CONFIG_PARAM_VOLUME_RATE;
 +		direction = DIRECT_CAPTURE;
 +
-+		if (IS_VALID(adsp_card->record[index])) {
++		if (adsp_card->record[index]) {
 +			handle_state = adsp_card->record[index]->cap_state;
++
 +			handle_id =
 +				adsp_card->record[index]->capture->handle_id;
 +		}
@@ -2646,19 +2676,21 @@ index 0000000..b6c5752
 +			cmd_idx = XA_TDM_RDR_CONFIG_PARAM_VOLUME_RATE;
 +			direction = DIRECT_PLAYBACK;
 +
-+			if (IS_VALID(adsp_card->tdm_playback)) {
++			if (adsp_card->tdm_playback) {
 +				handle_state = adsp_card->tdm_playback->state;
++
 +				handle_id =
-+			     adsp_card->tdm_playback->tdm_renderer->handle_id;
++			       adsp_card->tdm_playback->tdm_renderer->handle_id;
 +			}
 +		} else {
 +			cmd_idx = XA_TDM_CAP_CONFIG_PARAM_VOLUME_RATE;
 +			direction = DIRECT_CAPTURE;
 +
-+			if (IS_VALID(adsp_card->tdm_record)) {
++			if (adsp_card->tdm_record) {
 +				handle_state = adsp_card->tdm_record->state;
++
 +				handle_id =
-+				 adsp_card->tdm_record->tdm_capture->handle_id;
++				  adsp_card->tdm_record->tdm_capture->handle_id;
 +			}
 +		}
 +	}
@@ -2697,7 +2729,7 @@ index 0000000..b6c5752
 + *  \param[in]	kcontrol	Pointer to control instance
 + *  \param[in]	uinfo		Pointer to info structure of sample rate
 + *				converter control
-+ *  \retval		 0	Success
++ *  \retval	0		Success
 + *****************************************************************************/
 +static int snd_adsp_control_sample_rate_info(struct snd_kcontrol *kcontrol,
 +					     struct snd_ctl_elem_info *uinfo)
@@ -2712,20 +2744,20 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Get sample rate value
 + *
-+ *  \param[in]	  kcontrol		Pointer to control instance
-+ *  \param[in]	  ucontrol		Pointer to sample rate value
-+ *  \retval		 0		Success
-+ *  \retval		 -EINVAL	Error
++ *  \param[in]	kcontrol	Pointer to control instance
++ *  \param[in]	ucontrol	Pointer to sample rate value
++ *  \retval	0		Success
++ *  \retval	-EINVAL		Error
 + *****************************************************************************/
 +static int snd_adsp_control_sample_rate_get(struct snd_kcontrol *kcontrol,
-+					struct snd_ctl_elem_value *ucontrol)
++					    struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	int *rate;
 +	int handle_id, handle_state, cmd_idx, direction;
 +	unsigned int index;
 +
-+	rate = (int *)&(ucontrol->value.integer.value[0]); /* PRQA S 310 */
++	rate = (int *)&ucontrol->value.integer.value[0]; /* PRQA S 310 */
 +
 +	/* get the index */
 +	index = kcontrol->id.index;
@@ -2739,38 +2771,42 @@ index 0000000..b6c5752
 +		cmd_idx = XA_RDR_CONFIG_PARAM_OUT_SAMPLE_RATE;
 +		direction = DIRECT_PLAYBACK;
 +
-+		if (IS_VALID(adsp_card->playback[index])) {
++		if (adsp_card->playback[index]) {
 +			handle_state = adsp_card->playback[index]->rdr_state;
++
 +			handle_id =
-+			    adsp_card->playback[index]->renderer->handle_id;
++				adsp_card->playback[index]->renderer->handle_id;
 +		}
 +	} else if (kcontrol->id.name[0] == PREFIX_OF_CAPTURE_CTR_NAME) {
 +		cmd_idx = XA_CAP_CONFIG_PARAM_SAMPLE_RATE;
 +		direction = DIRECT_CAPTURE;
 +
-+		if (IS_VALID(adsp_card->record[index])) {
++		if (adsp_card->record[index]) {
 +			handle_state = adsp_card->record[index]->cap_state;
++
 +			handle_id =
-+			    adsp_card->record[index]->capture->handle_id;
++				adsp_card->record[index]->capture->handle_id;
 +		}
 +	} else {
 +		if (kcontrol->id.name[3] == TDM_PLAYBACK) {
 +			cmd_idx = XA_TDM_RDR_CONFIG_PARAM_OUT_SAMPLE_RATE;
 +			direction = DIRECT_PLAYBACK;
 +
-+			if (IS_VALID(adsp_card->tdm_playback)) {
++			if (adsp_card->tdm_playback) {
 +				handle_state = adsp_card->tdm_playback->state;
++
 +				handle_id =
-+			     adsp_card->tdm_playback->tdm_renderer->handle_id;
++			       adsp_card->tdm_playback->tdm_renderer->handle_id;
 +			}
 +		} else {
 +			cmd_idx = XA_TDM_CAP_CONFIG_PARAM_IN_SAMPLE_RATE;
 +			direction = DIRECT_CAPTURE;
 +
-+			if (IS_VALID(adsp_card->tdm_record)) {
++			if (adsp_card->tdm_record) {
 +				handle_state = adsp_card->tdm_record->state;
++
 +				handle_id =
-+				 adsp_card->tdm_record->tdm_capture->handle_id;
++				  adsp_card->tdm_record->tdm_capture->handle_id;
 +			}
 +		}
 +	}
@@ -2780,12 +2816,10 @@ index 0000000..b6c5752
 +		if (xf_adsp_get_param(handle_id, cmd_idx, rate) != 0)
 +			return -EINVAL;
 +	} else {
-+		if (kcontrol->id.name[0] != PREFIX_OF_TDM_CTR_NAME) {
-+			*rate =
-+			    adsp_card->ctr_if.sample_rate[direction][index];
-+		} else {
++		if (kcontrol->id.name[0] != PREFIX_OF_TDM_CTR_NAME)
++			*rate = adsp_card->ctr_if.sample_rate[direction][index];
++		else
 +			*rate = adsp_card->ctr_if.tdm_sample_rate[direction];
-+		}
 +	}
 +
 +	/* success */
@@ -2795,14 +2829,16 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Set sample rate value
 + *
-+ *  \param[in]	  kcontrol		Pointer to control instance
-+ *  \param[in]	  ucontrol		Pointer to sample rate value
-+ *  \retval		 1		Sample rate change
-+ *  \retval		 0		Sample rate does not change
-+ *  \retval		 -EINVAL	Error
++ *  \param[in]	kcontrol	Pointer to control instance
++ *  \param[in]	ucontrol	Pointer to sample rate value
++ *  \retval	1		Sample rate change
++ *  \retval	0		Sample rate does not change
++ *  \retval	-EINVAL		Error
 + *****************************************************************************/
-+static int snd_adsp_control_sample_rate_put(struct snd_kcontrol *kcontrol,
-+	struct snd_ctl_elem_value *ucontrol)	/* PRQA S 3673 */
++/* PRQA S 3673 1 */
++static int
++snd_adsp_control_sample_rate_put(struct snd_kcontrol *kcontrol,
++				 struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	unsigned int index;
@@ -2823,26 +2859,29 @@ index 0000000..b6c5752
 +		cmd_idx = XA_RDR_CONFIG_PARAM_OUT_SAMPLE_RATE;
 +		direction = DIRECT_PLAYBACK;
 +
-+		if (IS_VALID(adsp_card->playback[index]))
++		if (adsp_card->playback[index])
 +			handle_state = adsp_card->playback[index]->rdr_state;
++
 +	} else if (kcontrol->id.name[0] == PREFIX_OF_CAPTURE_CTR_NAME) {
 +		cmd_idx = XA_CAP_CONFIG_PARAM_SAMPLE_RATE;
 +		direction = DIRECT_CAPTURE;
 +
-+		if (IS_VALID(adsp_card->record[index]))
++		if (adsp_card->record[index])
 +			handle_state = adsp_card->record[index]->cap_state;
++
 +	} else {
 +		if (kcontrol->id.name[3] == TDM_PLAYBACK) {
 +			cmd_idx = XA_TDM_RDR_CONFIG_PARAM_OUT_SAMPLE_RATE;
 +			direction = DIRECT_PLAYBACK;
 +
-+			if (IS_VALID(adsp_card->tdm_playback))
++			if (adsp_card->tdm_playback)
 +				handle_state = adsp_card->tdm_playback->state;
++
 +		} else {
 +			cmd_idx = XA_TDM_CAP_CONFIG_PARAM_IN_SAMPLE_RATE;
 +			direction = DIRECT_CAPTURE;
 +
-+			if (IS_VALID(adsp_card->tdm_record))
++			if (adsp_card->tdm_record)
 +				handle_state = adsp_card->tdm_record->state;
 +		}
 +	}
@@ -2864,12 +2903,12 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Get info of Equalizer control
 + *
-+ *  \param[in]	  kcontrol	Pointer to control instance
-+ *  \param[in]	  uinfo		Pointer to info structure of Equalizer control
-+ *  \retval		 0	Success
++ *  \param[in]	kcontrol	Pointer to control instance
++ *  \param[in]	uinfo		Pointer to info structure of Equalizer control
++ *  \retval	0		Success
 + *****************************************************************************/
 +static int snd_adsp_control_eqz_info(struct snd_kcontrol *kcontrol,
-+					struct snd_ctl_elem_info *uinfo)
++				     struct snd_ctl_elem_info *uinfo)
 +{
 +	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
 +	uinfo->count = MAX_EQZ_PARAM_NUMBER;
@@ -2881,13 +2920,13 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Get equalizer parameters value
 + *
-+ *  \param[in]	  kcontrol	   Pointer to control instance
-+ *  \param[in]	  ucontrol	   Pointer to equalizer parameters value
-+ *  \retval		 0			  Success
-+ *  \retval		 -EINVAL		Error
++ *  \param[in]	  kcontrol		Pointer to control instance
++ *  \param[in]	  ucontrol		Pointer to equalizer parameters value
++ *  \retval	  0			Success
++ *  \retval	  -EINVAL		Error
 + *****************************************************************************/
-+static int snd_adsp_control_eqz_get(struct snd_kcontrol *kcontrol
-+				   , struct snd_ctl_elem_value *ucontrol)
++static int snd_adsp_control_eqz_get(struct snd_kcontrol *kcontrol,
++				    struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	int handle_state, direction;
@@ -2900,8 +2939,8 @@ index 0000000..b6c5752
 +	index = kcontrol->id.index;
 +
 +	/* determin direction of stream */
-+	direction = (kcontrol->id.name[0] ==
-+		PREFIX_OF_PLAYBACK_CTR_NAME) ? DIRECT_PLAYBACK : DIRECT_CAPTURE;
++	direction = (kcontrol->id.name[0] == PREFIX_OF_PLAYBACK_CTR_NAME) ?
++					     DIRECT_PLAYBACK : DIRECT_CAPTURE;
 +
 +	/* set handle state as NULL state, handle ID, equalizer pointer */
 +	handle_state = XF_HANDLE_NULL;
@@ -2909,12 +2948,12 @@ index 0000000..b6c5752
 +
 +	/* get component's state */
 +	if (direction == DIRECT_PLAYBACK) {
-+		if (IS_VALID(adsp_card->playback[index])) {
++		if (adsp_card->playback[index]) {
 +			handle_state = adsp_card->playback[index]->eqz_state;
 +			equalizer = adsp_card->playback[index]->equalizer;
 +		}
 +	} else {
-+		if (IS_VALID(adsp_card->record[index])) {
++		if (adsp_card->record[index]) {
 +			handle_state = adsp_card->record[index]->eqz_state;
 +			equalizer = adsp_card->record[index]->equalizer;
 +		}
@@ -2927,8 +2966,9 @@ index 0000000..b6c5752
 +			return -EINVAL;
 +
 +		eqz_params = &equalizer->params;
-+	} else
++	} else {
 +		eqz_params = &adsp_card->ctr_if.eqz_params[direction][index];
++	}
 +
 +	/* get equalizer type: PARAMETRIC or GRAPHIC */
 +	ucontrol->value.integer.value[0] = eqz_params->eqz_type;
@@ -2936,43 +2976,43 @@ index 0000000..b6c5752
 +	/* get parameters' value from Equalizer plugin */
 +	if (eqz_params->eqz_type == XA_REL_EQZ_TYPE_PARAMETRIC) {
 +		for (i = 0, filter_index = 1;
-+		    filter_index <= XA_REL_EQZ_FILTER_NUM;
-+		    i++, filter_index++) {
++		     filter_index <= XA_REL_EQZ_FILTER_NUM;
++		     i++, filter_index++) {
 +			/* get filter index */
 +			ucontrol->value.integer.value[(i * 6) + 1] =
-+						filter_index;
++				filter_index;
 +
 +			/* get frequency centre */
 +			ucontrol->value.integer.value[(i * 6) + 2] =
-+						eqz_params->p_coef.fc[i];
++				eqz_params->p_coef.fc[i];
 +
 +			/* get bandwidth */
 +			ucontrol->value.integer.value[(i * 6) + 3] =
-+			eqz_params->p_coef.band_width[i];
++				eqz_params->p_coef.band_width[i];
 +
 +			/* get filter type */
 +			ucontrol->value.integer.value[(i * 6) + 4] =
-+			eqz_params->p_coef.type[i];
++				eqz_params->p_coef.type[i];
 +
 +			/* get gain base */
 +			ucontrol->value.integer.value[(i * 6) + 5] =
-+			eqz_params->p_coef.gain_base[i];
++				eqz_params->p_coef.gain_base[i];
 +
 +			/* get gain */
 +			ucontrol->value.integer.value[(i * 6) + 6] =
-+			eqz_params->p_coef.gain[i];
++				eqz_params->p_coef.gain[i];
 +		}
 +	} else {
 +		for (i = 0, filter_index = 1;
-+		    filter_index <= XA_REL_EQZ_GRAPHIC_BAND_NUM;
-+		    i++, filter_index++) {
++		     filter_index <= XA_REL_EQZ_GRAPHIC_BAND_NUM;
++		     i++, filter_index++) {
 +			/* get band index */
 +			ucontrol->value.integer.value[(i * 2) + 1] =
-+						filter_index;
++				filter_index;
 +
 +			/* get graphic gain */
 +			ucontrol->value.integer.value[(i * 2) + 2] =
-+						eqz_params->g_coef.gain_g[i];
++				eqz_params->g_coef.gain_g[i];
 +		}
 +
 +		j = (i * 2) + 1;
@@ -2990,11 +3030,11 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Set equalizer parameters value
 + *
-+ *  \param[in]	  kcontrol	   Pointer to control instance
-+ *  \param[in]	  ucontrol	   Pointer to equalizer parameters value
-+ *  \retval	1			  Equalizer parameters change
-+ *  \retval	 0	  Equalizer parameters does not change
-+ *  \retval	 -EINVAL		Error
++ *  \param[in]	  kcontrol	Pointer to control instance
++ *  \param[in]	  ucontrol	Pointer to equalizer parameters value
++ *  \retval	  1		Equalizer parameters change
++ *  \retval	  0		Equalizer parameters does not change
++ *  \retval	 -EINVAL	Error
 + *****************************************************************************/
 +/* PRQA S 3673 1*/
 +static int snd_adsp_control_eqz_put(struct snd_kcontrol *kcontrol,
@@ -3004,112 +3044,113 @@ index 0000000..b6c5752
 +	int handle_state, direction, filter_idx;
 +	int i;
 +	int index;
-+	int ret = 0;
++	struct xf_adsp_equalizer_params *eqz_params = NULL;
 +
 +	/* get the index */
 +	index = kcontrol->id.index;
 +
 +	/* determine the direction */
-+	direction = (kcontrol->id.name[0] ==
-+		PREFIX_OF_PLAYBACK_CTR_NAME) ? DIRECT_PLAYBACK : DIRECT_CAPTURE;
++	direction = (kcontrol->id.name[0] == PREFIX_OF_PLAYBACK_CTR_NAME) ?
++					     DIRECT_PLAYBACK : DIRECT_CAPTURE;
 +
 +	/* set handle state as NULL state */
 +	handle_state = XF_HANDLE_NULL;
 +
 +	/* get the handle state */
 +	if (direction == DIRECT_PLAYBACK) {
-+		if (IS_VALID(adsp_card->playback[index]))
++		if (adsp_card->playback[index])
 +			handle_state = adsp_card->playback[index]->eqz_state;
 +	} else {
-+		if (IS_VALID(adsp_card->record[index]))
++		if (adsp_card->record[index])
 +			handle_state = adsp_card->record[index]->eqz_state;
 +	}
 +
 +	/* perform equalizer's parameters setting */
 +	if (COMPONENT_IS_READY(handle_state) == TRUE)
-+		ret = -EINVAL;
-+	else {
-+		/* PRQA S 310 1*/
-+		struct xf_adsp_equalizer_params *eqz_params =
-+			&adsp_card->ctr_if.eqz_params[direction][index];
++		return -EINVAL;
 +
-+		i = 0;
-+		/* PRQA S 3440 1*/
-+		eqz_params->eqz_type = ucontrol->value.integer.value[i];
-+		i++;
-+		filter_idx = 0;
++	/* PRQA S 310 1*/
++	eqz_params = &adsp_card->ctr_if.eqz_params[direction][index];
 +
-+		if (eqz_params->eqz_type == XA_REL_EQZ_TYPE_PARAMETRIC) {
-+			while (i < MAX_EQZ_PARAM_NUMBER) {
-+				/* get index filter */
-+				/* PRQA S 3440*/
-+				filter_idx = ucontrol->value.integer.value[i];
++	i = 0;
++	/* PRQA S 3440 1*/
++	eqz_params->eqz_type = ucontrol->value.integer.value[i];
++	i++;
++	filter_idx = 0;
++
++	if (eqz_params->eqz_type == XA_REL_EQZ_TYPE_PARAMETRIC) {
++		while (i < MAX_EQZ_PARAM_NUMBER) {
++			/* get index filter */
++			/* PRQA S 3440*/
++			filter_idx = ucontrol->value.integer.value[i];
++			i++;
++
++			/* valid index filter is range */
++			/* (1 to XA_REL_EQZ_FILTER_NUM) */
++			if (filter_idx >= 1 &&
++			    filter_idx <= XA_REL_EQZ_FILTER_NUM) {
++					/* PRQA S 3440 5*/
++				eqz_params->p_coef.fc[filter_idx - 1] =
++					ucontrol->value.integer.value[i];
++
++				i++;
++				eqz_params->p_coef.band_width[filter_idx - 1] =
++					ucontrol->value.integer.value[i];
++
++				i++;
++				eqz_params->p_coef.type[filter_idx - 1] =
++					ucontrol->value.integer.value[i];
++
++				i++;
++				eqz_params->p_coef.gain_base[filter_idx - 1] =
++					ucontrol->value.integer.value[i];
++
++				i++;
++				eqz_params->p_coef.gain[filter_idx - 1] =
++					ucontrol->value.integer.value[i];
++
++				i++;
++			}
++			/* index filter = -1 means that user */
++			/* does not set this filter */
++			else if (filter_idx == -1 || filter_idx == 0) {
++				i += 5;
++			} else {
++				return -EINVAL;
++			}
++		}
++	} else if (eqz_params->eqz_type == XA_REL_EQZ_TYPE_GRAPHIC) {
++		while (i < ((XA_REL_EQZ_GRAPHIC_BAND_NUM * 2) + 1)) {
++			/*get index filter */
++			/* PRQA S 3440 */
++			filter_idx = ucontrol->value.integer.value[i++];
++
++			if (filter_idx >= 1 &&
++			    filter_idx <= XA_REL_EQZ_GRAPHIC_BAND_NUM) {
++				eqz_params->g_coef.gain_g[filter_idx - 1] =
++					ucontrol->value.integer.value[i];
 +				i++;
 +
-+				/* valid index filter is range */
-+				/* (1 to XA_REL_EQZ_FILTER_NUM) */
-+				if ((filter_idx >= 1) &&
-+				   (filter_idx <= XA_REL_EQZ_FILTER_NUM)) {
-+					   /* PRQA S 3440 5*/
-+					eqz_params->p_coef.fc[filter_idx - 1] =
-+					ucontrol->value.integer.value[i];
-+					i++;
-+					eqz_params->p_coef.band_width[
-+						filter_idx - 1] =
-+					ucontrol->value.integer.value[i];
-+					i++;
-+					eqz_params->p_coef.type[filter_idx - 1]
-+					   = ucontrol->value.integer.value[i];
-+					i++;
-+					eqz_params->p_coef.gain_base[
-+					  filter_idx - 1] =
-+					   ucontrol->value.integer.value[i];
-+					i++;
-+					eqz_params->p_coef.gain[filter_idx - 1]
-+					  = ucontrol->value.integer.value[i];
-+					i++;
-+				}
-+				/* index filter = -1 means that user */
-+				/* does not set this filter */
-+				else if (filter_idx == -1 || filter_idx == 0)
-+					i += 5;
-+				else
-+					return -EINVAL;
++			} else if (filter_idx == -1 || filter_idx == 0) {
++				i += 1;
++			} else {
++				return -EINVAL;
 +			}
-+		} else if (eqz_params->eqz_type == XA_REL_EQZ_TYPE_GRAPHIC) {
-+			while (i < ((XA_REL_EQZ_GRAPHIC_BAND_NUM * 2) + 1)) {
-+				/*get index filter */
-+				/* PRQA S 3440 */
-+				filter_idx = ucontrol->value.integer.value[i++];
-+
-+				if ((filter_idx >= 1) && (filter_idx <=
-+				    XA_REL_EQZ_GRAPHIC_BAND_NUM)) {
-+					eqz_params->g_coef.gain_g[filter_idx
-+						- 1] =
-+					  ucontrol->value.integer.value[i];
-+					i++;
-+				} else if (filter_idx == -1 ||
-+					   filter_idx == 0)
-+					i += 1;
-+				else
-+					return -EINVAL;
-+			}
-+		} else
-+			return -EINVAL;
-+
-+		ret = 1;
++		}
++	} else {
++		return -EINVAL;
 +	}
 +
-+	return ret;
++	return 1;
 +}
 +
 +/** **************************************************************************
 + *  \brief	 Get info of Equalizer Switch control
 + *
-+ *  \param[in]	  kcontrol	 Pointer to control instance
++ *  \param[in]	  kcontrol	Pointer to control instance
 + *  \param[in]	  uinfo		Pointer to info structure of Equalizer
 + *				Switch control
-+ *  \retval		 0	   Success
++ *  \retval	  0		Success
 + *****************************************************************************/
 +static int snd_adsp_control_eqz_switch_info(struct snd_kcontrol *kcontrol,
 +					    struct snd_ctl_elem_info *uinfo)
@@ -3124,13 +3165,14 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Get equalizer switch value
 + *
-+ *  \param[in]	  kcontrol		Pointer to control instance
-+ *  \param[in]	  ucontrol		Pointer to equalizer switch value
-+ *  \retval		 0		Success
-+ *  \retval		 -EINVAL	Error
++ *  \param[in]	  kcontrol	Pointer to control instance
++ *  \param[in]	  ucontrol	Pointer to equalizer switch value
++ *  \retval	  0		Success
++ *  \retval	  -EINVAL	Error
 + *****************************************************************************/
-+static int snd_adsp_control_eqz_switch_get(struct snd_kcontrol *kcontrol,
-+					struct snd_ctl_elem_value *ucontrol)
++static int
++snd_adsp_control_eqz_switch_get(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	int direction;
@@ -3141,11 +3183,11 @@ index 0000000..b6c5752
 +
 +	/* determine the direction */
 +	direction = (kcontrol->id.name[0] == PREFIX_OF_PLAYBACK_CTR_NAME) ?
-+			DIRECT_PLAYBACK : DIRECT_CAPTURE;
++					     DIRECT_PLAYBACK : DIRECT_CAPTURE;
 +
 +	/* get the Equalizer switch status */
 +	ucontrol->value.integer.value[0] =
-+			adsp_card->ctr_if.eqz_switch[direction][index];
++		adsp_card->ctr_if.eqz_switch[direction][index];
 +
 +	return 0;
 +}
@@ -3153,14 +3195,16 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Set equalizer switch value
 + *
-+ *  \param[in]	  kcontrol		 Pointer to control instance
-+ *  \param[in]	  ucontrol		 Pointer to equalizer switch value
-+ *  \retval		 1		  Equalizer switch change
-+ *  \retval		 0		  Equalizer switch does not change
-+ *  \retval		 -EINVAL	Error
++ *  \param[in]	  kcontrol	Pointer to control instance
++ *  \param[in]	  ucontrol	Pointer to equalizer switch value
++ *  \retval	  1		Equalizer switch change
++ *  \retval	  0		Equalizer switch does not change
++ *  \retval	 -EINVAL	Error
 + *****************************************************************************/
-+static int snd_adsp_control_eqz_switch_put(struct snd_kcontrol *kcontrol,
-+		struct snd_ctl_elem_value *ucontrol)	/* PRQA S 3673 */
++/* PRQA S 3673 1 */
++static int
++snd_adsp_control_eqz_switch_put(struct snd_kcontrol *kcontrol,
++				struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	int eqz_switch;
@@ -3175,25 +3219,25 @@ index 0000000..b6c5752
 +
 +	/* determine the direction */
 +	direction = (kcontrol->id.name[0] == PREFIX_OF_PLAYBACK_CTR_NAME) ?
-+		DIRECT_PLAYBACK : DIRECT_CAPTURE;
++		     DIRECT_PLAYBACK : DIRECT_CAPTURE;
 +
 +	/* set handle state as NULL state */
 +	handle_state = XF_HANDLE_NULL;
 +
 +	/* determine handle state */
 +	if (direction == DIRECT_PLAYBACK) {
-+		if (IS_VALID(adsp_card->playback[index]))
++		if (adsp_card->playback[index])
 +			handle_state = adsp_card->playback[index]->rdr_state;
 +	} else {
-+		if (IS_VALID(adsp_card->record[index]))
++		if (adsp_card->record[index])
 +			handle_state = adsp_card->record[index]->cap_state;
 +	}
 +
 +	/* set the status of Equalizer */
-+	if (COMPONENT_IS_READY(handle_state) == TRUE)
++	if (COMPONENT_IS_READY(handle_state) == TRUE) {
 +		/* runtime setting is not supported */
 +		ret = -EINVAL;
-+	else {
++	} else {
 +		adsp_card->ctr_if.eqz_switch[direction][index] = eqz_switch;
 +		ret = 1;
 +	}
@@ -3204,13 +3248,13 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Get info of Renderer output channel
 + *
-+ *  \param[in]	  kcontrol	Pointer to control instance
-+ *  \param[in]	  uinfo   Pointer to info structure of Renderer output channel
-+ *  \retval		 0		   Success
++ *  \param[in]	  kcontrol Pointer to control instance
++ *  \param[in]	  uinfo	   Pointer to info structure of Renderer output channel
++ *  \retval	  0	   Success
 + *****************************************************************************/
-+static
-+int snd_adsp_control_rdr_out_channel_info(struct snd_kcontrol *kcontrol
-+					 , struct snd_ctl_elem_info *uinfo)
++static int
++snd_adsp_control_rdr_out_channel_info(struct snd_kcontrol *kcontrol,
++				      struct snd_ctl_elem_info *uinfo)
 +{
 +	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
 +	uinfo->count = 1;
@@ -3224,12 +3268,12 @@ index 0000000..b6c5752
 + *
 + *  \param[in]	  kcontrol	Pointer to control instance
 + *  \param[in]	  ucontrol	Pointer to Renderer output channel value
-+ *  \retval		 0		   Success
-+ *  \retval		 -EINVAL	 Error
++ *  \retval	  0		Success
++ *  \retval	 -EINVAL	Error
 + *****************************************************************************/
-+static
-+int snd_adsp_control_rdr_out_channel_get(struct snd_kcontrol *kcontrol
-+					, struct snd_ctl_elem_value *ucontrol)
++static int
++snd_adsp_control_rdr_out_channel_get(struct snd_kcontrol *kcontrol,
++				     struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	int rdr_out_ch;
@@ -3243,7 +3287,7 @@ index 0000000..b6c5752
 +	handle_id = -1;
 +
 +	/* determine handle state and handle ID */
-+	if (IS_VALID(adsp_card->playback[index])) {
++	if (adsp_card->playback[index]) {
 +		handle_state = adsp_card->playback[index]->rdr_state;
 +		handle_id = adsp_card->playback[index]->renderer->handle_id;
 +	}
@@ -3251,9 +3295,9 @@ index 0000000..b6c5752
 +	/* get Renderer output channel's value */
 +	if (COMPONENT_IS_READY(handle_state) == TRUE) {
 +		/* get Renderer output channel's value from Renderer plugin */
-+		if (xf_adsp_get_param(handle_id
-+					 , XA_RDR_CONFIG_PARAM_OUT_CHANNELS
-+					 , &rdr_out_ch) != 0) {
++		if (xf_adsp_get_param(handle_id,
++				      XA_RDR_CONFIG_PARAM_OUT_CHANNELS,
++				      &rdr_out_ch) != 0) {
 +			return -EINVAL;
 +		}
 +
@@ -3271,12 +3315,12 @@ index 0000000..b6c5752
 + *
 + *  \param[in]	  kcontrol	Pointer to control instance
 + *  \param[in]	  ucontrol	Pointer to Renderer output channel value
-+ *  \retval		 1		   Success
-+ *  \retval		 -EINVAL	 Error
++ *  \retval	  1		Success
++ *  \retval	  -EINVAL	Error
 + *****************************************************************************/
-+static
-+int snd_adsp_control_rdr_out_channel_put(struct snd_kcontrol *kcontrol
-+					, struct snd_ctl_elem_value *ucontrol)
++static int
++snd_adsp_control_rdr_out_channel_put(struct snd_kcontrol *kcontrol,
++				     struct snd_ctl_elem_value *ucontrol)
 +{
 +	struct snd_adsp_card *adsp_card = snd_kcontrol_chip(kcontrol);
 +	unsigned int index;
@@ -3289,7 +3333,7 @@ index 0000000..b6c5752
 +	handle_state = XF_HANDLE_NULL;
 +
 +	/* determine handle state and handle ID */
-+	if (IS_VALID(adsp_card->playback[index]))
++	if (adsp_card->playback[index])
 +		handle_state = adsp_card->playback[index]->rdr_state;
 +
 +	/* get Renderer output channel's value */
@@ -3298,15 +3342,15 @@ index 0000000..b6c5752
 +		ret = -EINVAL;
 +	else
 +		adsp_card->ctr_if.rdr_out_ch[index] =
-+		ucontrol->value.integer.value[0];
++			ucontrol->value.integer.value[0];
 +
 +	return ret;
 +}
 +
 +/** control interface for playback's volume rate */
 +/* PRQA S 3218 */
-+static
-+struct snd_kcontrol_new snd_adsp_playback_volume_control[MAX_DAI_IDX - 1] = {
++static struct snd_kcontrol_new
++snd_adsp_playback_volume_control[MAX_DAI_IDX - 1] = {
 +	{
 +		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	/* PRQA S 1053 5 */
 +		.index = RDR_DAI_IDX0,
@@ -3343,8 +3387,8 @@ index 0000000..b6c5752
 +
 +/** control interface for Capture's volume rate */
 +/* PRQA S 3218 1*/
-+static
-+struct snd_kcontrol_new snd_adsp_capture_volume_control[MAX_DAI_IDX - 1] = {
++static struct snd_kcontrol_new
++snd_adsp_capture_volume_control[MAX_DAI_IDX - 1] = {
 +	{
 +		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	/* PRQA S 1053 5 */
 +		.index = RDR_DAI_IDX0,
@@ -3382,7 +3426,7 @@ index 0000000..b6c5752
 +/** control interface for playback's output sample rate */
 +/* PRQA S 3218 1*/
 +static struct snd_kcontrol_new
-+	snd_adsp_playback_sample_rate_out_control[MAX_DAI_IDX - 1] = {
++snd_adsp_playback_sample_rate_out_control[MAX_DAI_IDX - 1] = {
 +	{
 +		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	/* PRQA S 1053 5 */
 +		.index = RDR_DAI_IDX0,
@@ -3420,7 +3464,7 @@ index 0000000..b6c5752
 +/** control interface for Capture's input sample rate */
 +/* PRQA S 3218 */
 +static struct snd_kcontrol_new
-+	snd_adsp_capture_sample_rate_in_control[MAX_DAI_IDX - 1] = {
++snd_adsp_capture_sample_rate_in_control[MAX_DAI_IDX - 1] = {
 +	{
 +		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	/* PRQA S 1053 5 */
 +		.index = RDR_DAI_IDX0,
@@ -3458,7 +3502,7 @@ index 0000000..b6c5752
 +/** control interface for Equalizer parameters in playback */
 +/* PRQA S 3218 1*/
 +static struct snd_kcontrol_new
-+	snd_adsp_playback_equalizer_control[MAX_DAI_IDX - 1] = {
++snd_adsp_playback_equalizer_control[MAX_DAI_IDX - 1] = {
 +	{
 +		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	/* PRQA S 1053 5 */
 +		.index = RDR_DAI_IDX0,
@@ -3496,7 +3540,7 @@ index 0000000..b6c5752
 +/** control interface for Equalizer parameters in record */
 +/* PRQA S 3218 */
 +static struct snd_kcontrol_new
-+	snd_adsp_capture_equalizer_control[MAX_DAI_IDX - 1] = {
++snd_adsp_capture_equalizer_control[MAX_DAI_IDX - 1] = {
 +	{
 +		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	/* PRQA S 1053 5 */
 +		.index = RDR_DAI_IDX0,
@@ -3572,7 +3616,7 @@ index 0000000..b6c5752
 +/** control interface for Equalizer usage in record */
 +/* PRQA S 3218 1*/
 +static struct snd_kcontrol_new
-+	snd_adsp_capture_equalizer_switch_control[MAX_DAI_IDX - 1] = {
++snd_adsp_capture_equalizer_switch_control[MAX_DAI_IDX - 1] = {
 +	{
 +		.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	/* PRQA S 1053 5 */
 +		.index = RDR_DAI_IDX0,
@@ -3700,9 +3744,9 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Process information get from control structure
 + *
-+ *  \param[in]	  eqz_params		 Equalizer parameters object
++ *  \param[in]	  eqz_params	 Equalizer parameters object
 + *  \param[in]	  eqz_ctr_params Equalizer parameters stored in control object
-+ *  \param[in]	  flag			   Indicate playback or capture stream
++ *  \param[in]	  flag		 Indicate playback or capture stream
 + *****************************************************************************/
 +static void snd_adsp_get_eqz_params_from_control(
 +		struct xf_adsp_equalizer_params *eqz_params,
@@ -3710,54 +3754,40 @@ index 0000000..b6c5752
 +{
 +	int filter_idx;
 +
-+	if (flag == true) {
++	if (flag) {
 +		if (eqz_ctr_params->eqz_type >= 0)
 +			eqz_params->eqz_type = eqz_ctr_params->eqz_type;
 +
 +		for (filter_idx = 0; filter_idx < XA_REL_EQZ_FILTER_NUM;
-+			filter_idx++) {
++		     filter_idx++) {
 +			if (eqz_ctr_params->p_coef.fc[filter_idx] >= 0)
 +				eqz_params->p_coef.fc[filter_idx] =
-+				eqz_ctr_params->p_coef.fc[filter_idx];
++				  eqz_ctr_params->p_coef.fc[filter_idx];
++
 +			if (eqz_ctr_params->p_coef.band_width[filter_idx] >= 0)
 +				eqz_params->p_coef.band_width[filter_idx] =
 +				eqz_ctr_params->p_coef.band_width[filter_idx];
++
 +			if (eqz_ctr_params->p_coef.type[filter_idx] >= 0)
 +				eqz_params->p_coef.type[filter_idx] =
-+				eqz_ctr_params->p_coef.type[filter_idx];
++				  eqz_ctr_params->p_coef.type[filter_idx];
++
 +			if (eqz_ctr_params->p_coef.gain_base[filter_idx] >= 0)
 +				eqz_params->p_coef.gain_base[filter_idx] =
-+				eqz_ctr_params->p_coef.gain_base[filter_idx];
++				  eqz_ctr_params->p_coef.gain_base[filter_idx];
++
 +			if (eqz_ctr_params->p_coef.gain[filter_idx] >= 0)
 +				eqz_params->p_coef.gain[filter_idx] =
-+			eqz_ctr_params->p_coef.gain[filter_idx];
++				  eqz_ctr_params->p_coef.gain[filter_idx];
 +		}
 +		for (filter_idx = 0; filter_idx < XA_REL_EQZ_GRAPHIC_BAND_NUM;
-+			filter_idx++) {
++		     filter_idx++) {
 +			if (eqz_ctr_params->g_coef.gain_g[filter_idx] >= 0)
 +				eqz_params->g_coef.gain_g[filter_idx] =
-+				eqz_ctr_params->g_coef.gain_g[filter_idx];
++				  eqz_ctr_params->g_coef.gain_g[filter_idx];
 +		}
 +	} else {
-+		eqz_ctr_params->eqz_type = eqz_params->eqz_type;
-+
-+		for (filter_idx = 0; filter_idx < XA_REL_EQZ_FILTER_NUM;
-+			filter_idx++) {
-+			eqz_ctr_params->p_coef.fc[filter_idx] =
-+			eqz_params->p_coef.fc[filter_idx];
-+			eqz_ctr_params->p_coef.band_width[filter_idx] =
-+			eqz_params->p_coef.band_width[filter_idx];
-+			eqz_ctr_params->p_coef.type[filter_idx] =
-+			eqz_params->p_coef.type[filter_idx];
-+			eqz_ctr_params->p_coef.gain_base[filter_idx] =
-+			eqz_params->p_coef.gain_base[filter_idx];
-+			eqz_ctr_params->p_coef.gain[filter_idx] =
-+			eqz_params->p_coef.gain[filter_idx];
-+		}
-+		for (filter_idx = 0; filter_idx < XA_REL_EQZ_GRAPHIC_BAND_NUM;
-+			filter_idx++)
-+			eqz_ctr_params->g_coef.gain_g[filter_idx] =
-+			eqz_params->g_coef.gain_g[filter_idx];
++		memcpy(eqz_ctr_params, eqz_params, sizeof(*eqz_params));
 +	}
 +}
 +
@@ -3768,9 +3798,9 @@ index 0000000..b6c5752
 +/** ****************************************************************************
 + *  \brief	 Register control interface and preallocate ALSA buffer
 + *
-+ *  \param[in]	  runtime		 Pointer to runtime PCM data
-+ *  \retval		 0			   Success
-+ *  \retval		 -EINVAL	Cannot register control interface
++ *  \param[in]	  runtime	Pointer to runtime PCM data
++ *  \retval	  0		Success
++ *  \retval	 -EINVAL	Cannot register control interface
 + ******************************************************************************/
 +static int snd_adsp_pcm_new(struct snd_soc_pcm_runtime *runtime)
 +{
@@ -3790,8 +3820,8 @@ index 0000000..b6c5752
 +	id = runtime->cpu_dai->id;
 +
 +	/* register control interfaces */
-+	if (id == RDR_DAI_IDX0 || id == RDR_DAI_IDX1
-+	|| id == RDR_DAI_IDX2 || id == RDR_DAI_IDX3) {
++	if (id == RDR_DAI_IDX0 || id == RDR_DAI_IDX1 ||
++	    id == RDR_DAI_IDX2 || id == RDR_DAI_IDX3) {
 +		struct snd_kcontrol *kctl[RDR_CONTROL_NUM];
 +		void *rdr_ctr[RDR_CONTROL_NUM] = {
 +			&snd_adsp_playback_volume_control[id], /* PRQA S 1031 */
@@ -3868,32 +3898,32 @@ index 0000000..b6c5752
 +static struct snd_soc_dai_driver snd_adsp_dai[MAX_DAI_IDX] = {
 +	{
 +		/* PRQA S 1053 */
-+		.id					 = RDR_DAI_IDX0,
-+		.name					= "adsp-dai.0",
++		.id			= RDR_DAI_IDX0,
++		.name			= "adsp-dai.0",
 +		.playback.stream_name   = "Playback0",
 +		.capture.stream_name	= "Capture0",
 +	},
 +	{
-+		.id					 = RDR_DAI_IDX1,
-+		.name					= "adsp-dai.1",
++		.id			= RDR_DAI_IDX1,
++		.name			= "adsp-dai.1",
 +		.playback.stream_name   = "Playback1",
 +		.capture.stream_name	= "Capture1",
 +	},
 +	{
-+		.id					 = RDR_DAI_IDX2,
-+		.name					= "adsp-dai.2",
++		.id			= RDR_DAI_IDX2,
++		.name			= "adsp-dai.2",
 +		.playback.stream_name   = "Playback2",
 +		.capture.stream_name	= "Capture2",
 +	},
 +	{
-+		.id					 = RDR_DAI_IDX3,
-+		.name					= "adsp-dai.3",
++		.id			= RDR_DAI_IDX3,
++		.name			= "adsp-dai.3",
 +		.playback.stream_name   = "Playback3",
 +		.capture.stream_name	= "Capture3",
 +	},
 +	{
-+		.id					 = TDM_DAI_IDX,
-+		.name					= "adsp-tdm-dai",
++		.id			= TDM_DAI_IDX,
++		.name			= "adsp-tdm-dai",
 +		.playback.stream_name   = "TDM Playback",
 +		.capture.stream_name	= "TDM Capture",
 +	}
@@ -3902,10 +3932,10 @@ index 0000000..b6c5752
 +/** ***************************************************************************
 + *  \brief	 Register platform driver and ADSP ALSA sound card
 + *
-+ *  \param[in]	  pdev			Pointer to platform driver data
-+ *  \retval		 0			   Success
-+ *  \retval		 -ENOMEM	 Cannot allocate driver's data
-+ *  \retval		 -EINVAL  Cannot register platform driver or sound card
++ *  \param[in]	  pdev		Pointer to platform driver data
++ *  \retval	  0		Success
++ *  \retval	 -ENOMEM	Cannot allocate driver's data
++ *  \retval	 -EINVAL	Cannot register platform driver or sound card
 + ****************************************************************************/
 +static int snd_adsp_probe(struct platform_device *pdev)
 +{
@@ -3919,6 +3949,7 @@ index 0000000..b6c5752
 +
 +	/* init parameters */
 +	memset(adsp_card, 0, sizeof(*adsp_card)); /* PRQA S 3200 */
++
 +	/* PRQA S 3200 1*/
 +	memset(&adsp_card->ctr_if, -1, sizeof(struct snd_adsp_control));
 +
@@ -3936,7 +3967,6 @@ index 0000000..b6c5752
 +
 +	/* register platform device */
 +	if (snd_soc_register_platform(&pdev->dev, &snd_adsp_platform) < 0) {
-+		//snd_printk("[ADSP] Cannot register platform driver\n");
 +		snd_soc_unregister_platform(&pdev->dev);
 +		return -EINVAL;
 +	}
@@ -3966,10 +3996,9 @@ index 0000000..b6c5752
 +	snd_adsp_dai[i].capture.channels_max = TDM_MAX_CHANNEL;
 +
 +	/* register CPU dai */
-+	if (snd_soc_register_component(&pdev->dev, &snd_adsp_component
-+					  , snd_adsp_dai
-+					  , ARRAY_SIZE(snd_adsp_dai)) < 0) {
-+		//snd_printk("[ADSP] Cannot register component\n");
++	if (snd_soc_register_component(&pdev->dev, &snd_adsp_component,
++				       snd_adsp_dai,
++				       ARRAY_SIZE(snd_adsp_dai)) < 0) {
 +		snd_soc_unregister_platform(&pdev->dev);
 +		return -EINVAL;
 +	}
@@ -3983,20 +4012,17 @@ index 0000000..b6c5752
 +/** **************************************************************************
 + *  \brief	 Unregister platform driver and ADSP ALSA sound card
 + *
-+ *  \param[in]	  pdev			Pointer platform driver data
-+ *  \retval		 0			   Success
-+ *  \retval		 -EINVAL		 Invalid driver's data
++ *  \param[in]	pdev		Pointer platform driver data
++ *  \retval	0		Success
++ *  \retval	-EINVAL		Invalid driver's data
 + *****************************************************************************/
 +static int snd_adsp_remove(struct platform_device *pdev)
 +{
 +	/* get ADSP sound card data */
-+	struct snd_adsp_card *adsp_card =
-+	(struct snd_adsp_card *)dev_get_drvdata(&pdev->dev);
++	struct snd_adsp_card *adsp_card = dev_get_drvdata(&pdev->dev);
 +
-+	if (!adsp_card) {
-+		//snd_printk("Invalid snd_adsp_card data\n");
++	if (!adsp_card)
 +		return -ENODEV;
-+	}
 +
 +	/* release the ADSP sound card */
 +	kfree(adsp_card);
@@ -4032,17 +4058,17 @@ index 0000000..b6c5752
 +MODULE_ALIAS("platform:ADSP-PCM-AUDIO");
 diff --git a/sound/soc/adsp/xf-adsp-base.c b/sound/soc/adsp/xf-adsp-base.c
 new file mode 100644
-index 0000000..d797bf5
+index 000000000000..3ad944583800
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-base.c
-@@ -0,0 +1,2239 @@
+@@ -0,0 +1,2259 @@
 +/** ***************************************************************************
-+ *\file	   xf-adsp-base.c
-+ *\brief	  Source file for ADSP Base Control layer
-+ *\addtogroup ADSP Driver
++ *\file		xf-adsp-base.c
++ *\brief	Source file for ADSP Base Control layer
++ *\addtogroup	ADSP Driver
 + ******************************************************************************
-+ *\date	   Oct. 21, 2017
-+ *\author	 Renesas Electronics Corporation
++ *\date		Oct. 21, 2017
++ *\author	Renesas Electronics Corporation
 + ******************************************************************************
 + *\par		Copyright
 + *
@@ -4073,10 +4099,10 @@ index 0000000..d797bf5
 +
 +#include "xf-adsp-base.h"
 +
-+#define XF_AUX_POOL_SIZE		(16)	/**< size of auxiliary pool*/
-+#define XF_AUX_POOL_MSG_LENGTH  (256)   /**< size of auxiliary buffer   */
++#define XF_AUX_POOL_SIZE	(16)	/**< size of auxiliary pool*/
++#define XF_AUX_POOL_MSG_LENGTH	(256)	/**< size of auxiliary buffer   */
 +
-+#define XF_PROXY_ALIGN		  (64)	/**< proxy alignment		*/
++#define XF_PROXY_ALIGN		(64)	/**< proxy alignment		*/
 +
 +/** \def XF_ALIGNED(size)
 + *  Get properly aligned buffer length
@@ -4101,8 +4127,8 @@ index 0000000..d797bf5
 +
 +/* function declaration */
 +static int xf_adsp_base_register_handle(void *private_data,
-+					struct xf_callback_func *cb
-+					, int comp_id);
++					struct xf_callback_func *cb,
++					int comp_id);
 +static inline struct xf_handle *xf_adsp_base_get_handle(int handle_id);
 +static int xf_adsp_base_free_handle(int handle_id);
 +static void xf_adsp_base_init_handle(void);
@@ -4124,7 +4150,7 @@ index 0000000..d797bf5
 + *  \brief get buffer from given pool
 + *
 + *  \param[in]  pool	Data pool address
-+ *  \retval	 b	   Pointer to buffer address in pool
++ *  \retval	b	Pointer to buffer address in pool
 + **************************************************************/
 +static struct xf_buffer *xf_buffer_get(struct xf_pool *pool)
 +{
@@ -4154,8 +4180,8 @@ index 0000000..d797bf5
 +/***********************************************************
 + *\brief get the address of the given buffer data
 + *
-+ *\param[in]  b	   Pointer to the buffer data
-+ *\retval	 address Address of buffer data
++ *\param[in]	b		Pointer to the buffer data
++ *\retval	address		Address of buffer data
 + ************************************************************/
 +static void *xf_buffer_data(struct xf_buffer *b)
 +{
@@ -4165,8 +4191,8 @@ index 0000000..d797bf5
 +/************************************************************
 + *\brief get the length of the given buffer data
 + *
-+ *\param[in]  b	   Pointer to the buffer data
-+ *\retval	 length  Size of buffer data
++ *\param[in]	b		Pointer to the buffer data
++ *\retval	length		Size of buffer data
 + ************************************************************/
 +static u32 xf_buffer_length(struct xf_buffer *b)  /* PRQA S 3673 */
 +{
@@ -4176,17 +4202,17 @@ index 0000000..d797bf5
 +/************************************************************
 + *\brief set data to the given command message
 + *
-+ *\param[out] m	   Pointer to the command message
-+ *\param[in]  id	  Message ID
-+ *\param[in]  opcode  Message opcode
-+ *\param[in]  length  Message length
-+ *\param[in]  buf	 Pointer to the buffer data
++ *\param[out] m		Pointer to the command message
++ *\param[in]  id	Message ID
++ *\param[in]  opcode	Message opcode
++ *\param[in]  length	Message length
++ *\param[in]  buf	Pointer to the buffer data
 + *\param[in]  next	Pointer to the next message
-+ *\retval	 m	   Pointer to the command message
++ *\retval     m		Pointer to the command message
 + ************************************************************/
-+static inline struct xf_message *xf_create_msg(
-+				struct xf_message *m, u32 id, u32 opcode,
-+				u32 length, void *buf, struct xf_message *next)
++static inline struct xf_message *
++xf_create_msg(struct xf_message *m, u32 id, u32 opcode, u32 length, void *buf,
++	      struct xf_message *next)
 +{
 +	if (m) {
 +		m->id = id;
@@ -4202,9 +4228,9 @@ index 0000000..d797bf5
 +/*****************************************************************
 + *\brief synchronous send and wait for response message from proxy
 + *
-+ *\param[in]  msg		 Pointer to the command message
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	msg		Pointer to the command message
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + ****************************************************************/
 +static int xf_send_and_receive(struct xf_message *msg)
 +{
@@ -4247,9 +4273,9 @@ index 0000000..d797bf5
 +/*************************************************************
 + *\brief send a message to proxy
 + *
-+ *\param[in]  msg		 Pointer to the command message
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	msg		Pointer to the command message
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +static inline int xf_send(struct xf_message *msg)
 +{
@@ -4259,9 +4285,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief receive message from proxy
 + *
-+ *\param[in]  msg		 Pointer to store the response message
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	msg		Pointer to store the response message
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +static inline int xf_receive(struct xf_message *msg)
 +{
@@ -4289,6 +4315,7 @@ index 0000000..d797bf5
 +
 +		if (xf_receive(&msg) != 0)
 +			continue;
++
 +		/* get the handle id */
 +		id = XF_AP_CLIENT(msg.id);
 +
@@ -4296,11 +4323,13 @@ index 0000000..d797bf5
 +		if (id == 0) {
 +			/* message is from base control */
 +			/* PRQA S 3200 1*/
-+			memcpy(&base->base_msg
-+			      , &msg, sizeof(struct xf_message));
++			memcpy(&base->base_msg, &msg,
++			       sizeof(struct xf_message));
++
 +			spin_lock(&base->lock);
 +			base->base_flag = TRUE;
 +			spin_unlock(&base->lock);
++
 +			wake_up(&base->base_wait);
 +			continue;
 +		}
@@ -4331,18 +4360,23 @@ index 0000000..d797bf5
 +			/* message is from base control */
 +			memcpy(&base->base_msg, &msg,
 +			       sizeof(struct xf_message)); /* PRQA S 3200 */
++
 +			spin_lock(&base->lock);
 +			base->base_flag = TRUE;
 +			spin_unlock(&base->lock);
++
 +			wake_up(&base->base_wait);
 +			break;
 +		default:
 +			/* error has occurred */
 +			handle->cb->event_handler(handle->private_data);
++
 +			xf_adsp_base_free_handle(id); /* PRQA S 3200 */
++
 +			spin_lock(&base->lock);
 +			base->err_flag = TRUE;
 +			spin_unlock(&base->lock);
++
 +			wake_up(&base->base_wait);
 +			break;
 +		}
@@ -4357,10 +4391,10 @@ index 0000000..d797bf5
 +/*************************************************************
 + *	\brief register component to ADSP
 + *
-+ *	\param[in]  name		Name string of component
-+ *	\param[out] comp_id	 Store the registered component ID
-+ *	\retval	 0		   Success
-+ *	\retval	 -EINVAL	 Failed
++ *	\param[in]    name      Name string of component
++ *	\param[out]   comp_id   Store the registered component ID
++ *	\retval	      0         Success
++ *	\retval	      -EINVAL   Failed
 + **************************************************************/
 +static int xf_adsp_register(char *name, int *comp_id)	/* PRQA S 3673 */
 +{
@@ -4395,9 +4429,9 @@ index 0000000..d797bf5
 +
 +/** ***********************************************************
 + * \brief unregister component from ADSP
-+ * \param[in]  comp_id	 Registered component ID
-+ * \retval	 0		   Success
-+ * \retval	 -EINVAL	 Failed
++ * \param[in]	comp_id		Registered component ID
++ * \retval	0		Success
++ * \retval	-EINVAL		Failed
 + **************************************************************/
 +static int xf_adsp_unregister(int comp_id)
 +{
@@ -4414,11 +4448,11 @@ index 0000000..d797bf5
 + * ************************************************************/
 +/** ***********************************************************
 + * \brief allocate memory pool from shared memory
-+ * \param[in]  pool_size   Number of buffer need to allocate
-+ * \param[in]  buf_length  Size of each buffer in bytes
-+ * \retval	 pool		Pointer to allocated pool
-+ * \retval	 -EINVAL	 Invalid base data
-+ * \retval	 -ENOMEM	 Out of memory resource
++ * \param[in]   pool_size	Number of buffer need to allocate
++ * \param[in]   buf_length	Size of each buffer in bytes
++ * \retval	pool		Pointer to allocated pool
++ * \retval	-EINVAL		Invalid base data
++ * \retval	-ENOMEM		Out of memory resource
 + **************************************************************/
 +struct xf_pool *xf_adsp_allocate_mem_pool(int pool_size, int buf_length)
 +{
@@ -4441,8 +4475,10 @@ index 0000000..d797bf5
 +	if (err != 0)
 +		return ERR_PTR(-ENOMEM);		/* PRQA S 0306 */
 +
++	/* PRQA S 0306 1 */
 +	pool = kmalloc(offset_of(struct xf_pool, buffer) +
-+	  (pool_size * sizeof(struct xf_buffer)), GFP_KERNEL);/* PRQA S 0306 */
++		       (pool_size * sizeof(struct xf_buffer)), GFP_KERNEL);
++
 +	if (!pool)
 +		return ERR_PTR(-ENOMEM);	/* PRQA S 0306 */
 +
@@ -4471,9 +4507,9 @@ index 0000000..d797bf5
 +
 +/** ***********************************************************
 + *\brief return memory to shared memory
-+ *\param[in]  pool	Data pool address
-+ *\retval	 0	   Success
-+ *\retval	 -EINVAL Invalid base or pool data
++ *\param[in]	pool	Data pool address
++ *\retval	0	Success
++ *\retval	-EINVAL Invalid base or pool data
 + **************************************************************/
 +int xf_adsp_free_mem_pool(struct xf_pool *pool)
 +{
@@ -4497,10 +4533,10 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief get buffer from given pool
 + *
-+ *\param[in]  pool	Data pool address
-+ *\param[in]  index   Buffer index
-+ *\retval	 b	   Pointer to buffer address in pool
-+ *\retval	 -EINVAL Invalid pool or index
++ *\param[in]	pool	Data pool address
++ *\param[in]	index   Buffer index
++ *\retval	b	Pointer to buffer address in pool
++ *\retval	-EINVAL Invalid pool or index
 + **************************************************************/
 +char *xf_adsp_get_data_from_pool(struct xf_pool *pool, int index)
 +{
@@ -4533,11 +4569,11 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  send empty this buffer command to ADSP framework
 + *
-+ *\param[in]  handle_id   ID of the registered handle
-+ *\param[in]  buffer	  Pointer to data buffer
-+ *\param[in]  length	  Size of buffer in bytes
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	handle_id	ID of the registered handle
++ *\param[in]	buffer		Pointer to data buffer
++ *\param[in]	length		Size of buffer in bytes
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +int xf_adsp_empty_this_buffer(int handle_id, char *buffer, int length)
 +{
@@ -4554,10 +4590,10 @@ index 0000000..d797bf5
 +
 +	/* submit message to port 0 of component */
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(
-+		     &msg, __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id),
-+		     __XF_PORT_SPEC2(handle->comp_id, 0)),
-+		     XF_EMPTY_THIS_BUFFER, length, buffer, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_EMPTY_THIS_BUFFER, length, buffer, NULL);
 +
 +	xf_send(&msg);		/* PRQA S 3200 */
 +
@@ -4567,11 +4603,11 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  send fill this buffer command to ADSP framework
 + *
-+ *\param[in]  handle_id   ID of the registered handle
-+ *\param[in]  buffer	  Pointer to data buffer
-+ *\param[in]  length	  Size of buffer in bytes
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	handle_id	ID of the registered handle
++ *\param[in]	buffer		Pointer to data buffer
++ *\param[in]	length		Size of buffer in bytes
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +int xf_adsp_fill_this_buffer(int handle_id, char *buffer, int length)
 +{
@@ -4588,10 +4624,10 @@ index 0000000..d797bf5
 +
 +	/* submit message to port 1 of component */
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(
-+		     &msg, __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id),
-+		     __XF_PORT_SPEC2(handle->comp_id, 1)),
-+		     XF_FILL_THIS_BUFFER, length, buffer, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 1)),
++		      XF_FILL_THIS_BUFFER, length, buffer, NULL);
 +
 +	xf_send(&msg);		/* PRQA S 3200 */
 +
@@ -4601,16 +4637,15 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief route data between two registered ADSP plugins
 + *
-+ *\param[in]  src_handle_id   Handle ID of source plugin
-+ *\param[in]  dst_handle_id   Handle ID of sink plugin
-+ *\param[in]  buf_cnt		 Number of buffer in tunnel
-+ *\param[in]  buf_size		Size of each buffer in tunnel
-+ *\retval	 0			   Success
-+ *\retval	 -EINVAL		 Failed
++ *\param[in]	src_handle_id	Handle ID of source plugin
++ *\param[in]	dst_handle_id	Handle ID of sink plugin
++ *\param[in]	buf_cnt		Number of buffer in tunnel
++ *\param[in]	buf_size	Size of each buffer in tunnel
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
-+int xf_adsp_route(int src_handle_id,
-+		  int dst_handle_id,
-+		  int buf_cnt, int buf_size)
++int
++xf_adsp_route(int src_handle_id, int dst_handle_id, int buf_cnt, int buf_size)
 +{
 +	struct xf_route_port_msg *route_msg;
 +	struct xf_message msg;
@@ -4639,9 +4674,10 @@ index 0000000..d797bf5
 +	route_msg->alloc_size = buf_size;
 +
 +	/* PRQA S 3200 2*/
-+	xf_create_msg(&msg, __XF_MSG_ID(__XF_AP_CLIENT(0, src_handle_id)
-+		     , __XF_PORT_SPEC2(src_handle->comp_id, 1)),
-+		     XF_ROUTE, sizeof(*route_msg), route_msg, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, src_handle_id),
++				  __XF_PORT_SPEC2(src_handle->comp_id, 1)),
++		      XF_ROUTE, sizeof(*route_msg), route_msg, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +
@@ -4653,11 +4689,11 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief set a single parameter
 + *
-+ *\param[in]  handle_id   ID of registered handle
-+ *\param[in]  index	   Sub-command index of parameter
-+ *\param[in]  value	   the setting value
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	handle_id	ID of registered handle
++ *\param[in]	index		Sub-command index of parameter
++ *\param[in]	value		the setting value
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +int xf_adsp_set_param(int handle_id, int index, int value)
 +{
@@ -4682,11 +4718,10 @@ index 0000000..d797bf5
 +	msg_params->item[0].value = value;
 +
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(1)
-+		     , msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(1), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +
@@ -4699,11 +4734,11 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief get a single parameter
 + *
-+ *\param[in]  handle_id   ID of registered handle
-+ *\param[in]  index	   Sub-command index of parameter
-+ *\param[out] value	   Store the getting value
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	handle_id	ID of registered handle
++ *\param[in]	index		Sub-command index of parameter
++ *\param[out]	value		Store the getting value
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +int xf_adsp_get_param(int handle_id, int index, int *value)
 +{
@@ -4727,10 +4762,10 @@ index 0000000..d797bf5
 +	msg_params->c.id[0] = index;
 +
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0)),
-+		     XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(1), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(1), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +	if (err != 0)
@@ -4753,20 +4788,20 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief initialize ADSP base's instance
 + *
-+ *\retval 0	   Success
++ *\retval 0	  Success
 + *\retval -EINVAL ADSP base's instance has been initialized
 + *\retval -ENOMEM Cannot allocate memory for ADSP base
 + *\retval -EBUSY  Cannot register client to proxy
 + **************************************************************/
-+int xf_adsp_base_create(xf_adsp_base_cmd_t *cmd)
++int xf_adsp_base_create(struct xf_adsp_base_cmd *cmd)
 +{
 +	int err = 0;
 +
 +	if (base != 0)
 +		return -EINVAL;
 +
-+	if (!cmd || !cmd->recv || !cmd->send || !cmd->poll
-+	|| !cmd->client_register || !cmd->client_unregister)
++	if (!cmd || !cmd->recv || !cmd->send || !cmd->poll ||
++	    !cmd->client_register || !cmd->client_unregister)
 +		return -EINVAL;
 +
 +	base = kmalloc(sizeof(*base), GFP_KERNEL);
@@ -4776,7 +4811,7 @@ index 0000000..d797bf5
 +	memset(base, 0, sizeof(struct xf_adsp_base));	/* PRQA S 3200 */
 +
 +	/* store the proxy command */
-+	memcpy(&base->cmd, cmd, sizeof(xf_adsp_base_cmd_t));
++	memcpy(&base->cmd, cmd, sizeof(struct xf_adsp_base_cmd));
 +
 +	/* create client to connect from proxy driver */
 +	err = base->cmd.client_register(&base->client);
@@ -4790,8 +4825,9 @@ index 0000000..d797bf5
 +	xf_adsp_base_init_handle();
 +
 +	/* create thread to get the responsed message from proxy */
-+	base->rsp_thread = kthread_run(&xf_response_thread
-+				      , (void *)base, "adsp base");
++	base->rsp_thread = kthread_run(&xf_response_thread,
++				       (void *)base, "adsp base");
++
 +	if (base->rsp_thread != 0) {
 +		pr_info("ADSP base thread has been started.\n");
 +	} else {
@@ -4801,9 +4837,10 @@ index 0000000..d797bf5
 +	}
 +
 +	/* allocate auxiliary pool for component usage */
-+	base->aux_pool =
-+	xf_adsp_allocate_mem_pool(XF_AUX_POOL_SIZE
-+				 , XF_ALIGNED(XF_AUX_POOL_MSG_LENGTH));
++	base->aux_pool = xf_adsp_allocate_mem_pool(
++					XF_AUX_POOL_SIZE,
++					XF_ALIGNED(XF_AUX_POOL_MSG_LENGTH));
++
 +	if (IS_ERR(base->aux_pool)) {		/* PRQA S 306 */
 +		err = -ENOMEM;
 +		goto err1;		/* PRQA S 2001 */
@@ -4880,7 +4917,7 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief get the next available handle ID for register
 + *
-+ *\retval -1		  Unavailable handle ID
++ *\retval -1		Unavailable handle ID
 + *\retval 0 to 255	Available handle ID
 + **************************************************************/
 +static inline int xf_adsp_base_get_valid_handle(void)
@@ -4890,7 +4927,7 @@ index 0000000..d797bf5
 +
 +	for (i = 0; i < MAX_HANDLE; i++) {
 +		/* get the id of the first available handler */
-+		if (base->handle[i] == NULL) {
++		if (!base->handle[i]) {
 +			id = i;
 +			break;
 +		}
@@ -4902,16 +4939,16 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief register a handle instance for component usage
 + *
-+ *\param[in]  private_data	Private data of this component
-+ *\param[in]  cb			  Callback function
-+ *\param[in]  comp_id		 ID of register component
-+ *\retval	 id			  ID of registered handle
-+ *\retval	 -EINVAL		 Cannot get the handle instance
-+ *\retval	 -ENOMEM		 Cannot allocate handle memory
++ *\param[in]	 private_data	Private data of this component
++ *\param[in]	 cb		Callback function
++ *\param[in]	 comp_id	ID of register component
++ *\retval	 id		ID of registered handle
++ *\retval	 -EINVAL	Cannot get the handle instance
++ *\retval	 -ENOMEM	Cannot allocate handle memory
 + **************************************************************/
-+static int xf_adsp_base_register_handle(void *private_data
-+				       , struct xf_callback_func *cb
-+					   , int comp_id)
++static int xf_adsp_base_register_handle(void *private_data,
++					struct xf_callback_func *cb,
++					int comp_id)
 +{
 +	struct xf_handle *handle;
 +	int id;
@@ -4943,8 +4980,8 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  get handle instance from handle ID
 + *
-+ *\param[in]  handle_id   ID of registered handle
-+ *\retval	 handle	  Pointer to handle instance
++ *\param[in]	 handle_id	ID of registered handle
++ *\retval	 handle		Pointer to handle instance
 + **************************************************************/
 +static inline struct xf_handle *xf_adsp_base_get_handle(int handle_id)
 +{
@@ -4954,9 +4991,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief free the registered handle instance
 + *
-+ *\param[in]  handle_id   ID of registered handle
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Invalid handle ID
++ *\param[in]	handle_id	ID of registered handle
++ *\retval	0		Success
++ *\retval	-EINVAL		Invalid handle ID
 + **************************************************************/
 +static int xf_adsp_base_free_handle(int handle_id)
 +{
@@ -4976,9 +5013,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  set ADSP Renderer parameters
 + *
-+ *\param[in]  renderer	Pointer to Renderer component
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	renderer	Pointer to Renderer component
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +int xf_adsp_renderer_set_params(struct xf_adsp_renderer *renderer)
 +{
@@ -5046,10 +5083,10 @@ index 0000000..d797bf5
 +	msg_params->item[i++].value = params->state;
 +
 +	/* PRQA S 3200 2*/
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, renderer->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, renderer->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +
@@ -5062,9 +5099,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  get ADSP Renderer parameters
 + *
-+ *\param[in]  renderer	Pointer to Renderer component
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Failed
++ *\param[in]	renderer	Pointer to Renderer component
++ *\retval	0		Success
++ *\retval	-EINVAL		Failed
 + **************************************************************/
 +/* PRQA S 1505 */
 +int xf_adsp_renderer_get_params(struct xf_adsp_renderer *renderer)
@@ -5108,9 +5145,10 @@ index 0000000..d797bf5
 +	msg_params->c.id[i++] = XA_RDR_CONFIG_PARAM_STATE;
 +
 +	/* PRQA S 3200 2*/
-+	xf_create_msg(&msg, __XF_MSG_ID(__XF_AP_CLIENT(0, renderer->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, renderer->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +	if (err != 0)
@@ -5142,15 +5180,15 @@ index 0000000..d797bf5
 +/** **************************************************************************
 + *\brief  create Renderer component
 + *
-+ *\param[in,out]  renderer		Pointer to the registered component
-+ *\param[in]	  cb			  Callback function
++ *\param[in,out]  renderer	Pointer to the registered component
++ *\param[in]	  cb		Callback function
 + *\param[in]	  private_data	Private data
-+ *\retval		 0		  Success
-+ *\retval		 -EINVAL	Invalid base instance or register fail
-+ *\retval		 -ENOMEM	Cannot allocate Renderer instance
++ *\retval	  0		Success
++ *\retval	 -EINVAL	Invalid base instance or register fail
++ *\retval	 -ENOMEM	Cannot allocate Renderer instance
 + *****************************************************************************/
-+int xf_adsp_renderer_create(struct xf_adsp_renderer **renderer
-+			   , struct xf_callback_func *cb, void *private_data)
++int xf_adsp_renderer_create(struct xf_adsp_renderer **renderer,
++			    struct xf_callback_func *cb, void *private_data)
 +{
 +	struct xf_adsp_renderer *rdr;
 +	int err;
@@ -5172,8 +5210,9 @@ index 0000000..d797bf5
 +		goto err2;		/* PRQA S 2001 */
 +
 +	/* register Renderer to ADSP base control */
-+	rdr->handle_id = xf_adsp_base_register_handle(private_data
-+						     , cb, comp_id);
++	rdr->handle_id = xf_adsp_base_register_handle(private_data,
++						      cb, comp_id);
++
 +	if (rdr->handle_id <= 0) {
 +		err = -EINVAL;
 +		goto err1;		/* PRQA S 2001 */
@@ -5201,9 +5240,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  deinitialize ADSP Renderer component
 + *
-+ *\param[in]  renderer	Pointer to Renderer component
-+ *\retval	 0		   Success
-+ *\retval	 -EINVAL	 Invalid base or Renderer data
++ *\param[in]	 renderer	Pointer to Renderer component
++ *\retval	 0		Success
++ *\retval	 -EINVAL	Invalid base or Renderer data
 + **************************************************************/
 +/* PRQA S 3673 */
 +int xf_adsp_renderer_destroy(struct xf_adsp_renderer *renderer)
@@ -5240,8 +5279,8 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  set ADSP Capture parameters
 + *
-+ *\param[in]  capture	 Pointer to Capture component
-+ *\retval	 0		   Success
++ *\param[in]	 capture	 Pointer to Capture component
++ *\retval	 0		 Success
 + *\retval	 -EINVAL	 Failed
 + **************************************************************/
 +int xf_adsp_capture_set_params(struct xf_adsp_capture *capture)
@@ -5304,10 +5343,10 @@ index 0000000..d797bf5
 +	msg_params->item[i++].value = params->state;
 +
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, capture->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, capture->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +
@@ -5320,8 +5359,8 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  get ADSP Capture parameters
 + *
-+ *\param[in]  capture	 Pointer to Capture component
-+ *\retval	 0		   Success
++ *\param[in]	 capture	 Pointer to Capture component
++ *\retval	 0		 Success
 + *\retval	 -EINVAL	 Failed
 + **************************************************************/
 +/* PRQA S 1505 */
@@ -5364,10 +5403,10 @@ index 0000000..d797bf5
 +	msg_params->c.id[i++] = XA_CAP_CONFIG_PARAM_STATE;
 +
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, capture->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, capture->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +	if (err != 0)
@@ -5397,15 +5436,15 @@ index 0000000..d797bf5
 +/** **************************************************************************
 + *\brief  create Capture component
 + *
-+ *\param[in,out]  capture		 Pointer to the registered component
-+ *\param[in]	  cb			  Callback function
-+ *\param[in]	  private_data	Private data
-+ *\retval		 0		   Success
-+ *\retval		 -EINVAL	 Invalid base instance or register fail
-+ *\retval		 -ENOMEM	 Cannot allocate Capture instance
++ *\param[in,out]  capture	 Pointer to the registered component
++ *\param[in]	  cb		 Callback function
++ *\param[in]	  private_data	 Private data
++ *\retval	  0		 Success
++ *\retval	  -EINVAL	 Invalid base instance or register fail
++ *\retval	  -ENOMEM	 Cannot allocate Capture instance
 + *****************************************************************************/
-+int xf_adsp_capture_create(struct xf_adsp_capture **capture
-+			  , struct xf_callback_func *cb, void *private_data)
++int xf_adsp_capture_create(struct xf_adsp_capture **capture,
++			   struct xf_callback_func *cb, void *private_data)
 +{
 +	struct xf_adsp_capture *cap;
 +	int err;
@@ -5427,8 +5466,9 @@ index 0000000..d797bf5
 +		goto err2;		/* PRQA S 2001 */
 +
 +	/* register capture to ADSP base control */
-+	cap->handle_id = xf_adsp_base_register_handle(private_data
-+						     , cb, comp_id);
++	cap->handle_id = xf_adsp_base_register_handle(private_data,
++						      cb, comp_id);
++
 +	if (cap->handle_id <= 0) {
 +		err = -EINVAL;
 +		goto err1;		/* PRQA S 2001 */
@@ -5456,8 +5496,8 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  deinitialize ADSP Capture component
 + *
-+ *\param[in]  capture	 Pointer to Capture component
-+ *\retval	 0		   Success
++ *\param[in]	 capture	 Pointer to Capture component
++ *\retval	 0		 Success
 + *\retval	 -EINVAL	 Invalid base or Capture data
 + **************************************************************/
 +int xf_adsp_capture_destroy(struct xf_adsp_capture *capture) /* PRQA S 3673 */
@@ -5483,7 +5523,6 @@ index 0000000..d797bf5
 +
 +exit:
 +	kfree(capture);
-+	//pr_info("ADSP Capture[%d] was destroyed\n", handle_id);
 +
 +	return 0;
 +}
@@ -5495,8 +5534,8 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  set ADSP Equalizer parameters
 + *
-+ *\param[in]  equalizer   Pointer to Equalizer component
-+ *\retval	 0		   Success
++ *\param[in]	 equalizer	 Pointer to Equalizer component
++ *\retval	 0		 Success
 + *\retval	 -EINVAL	 Failed
 + **************************************************************/
 +int xf_adsp_equalizer_set_params(struct xf_adsp_equalizer *equalizer)
@@ -5542,24 +5581,23 @@ index 0000000..d797bf5
 +
 +		for (n = 0; n < XA_REL_EQZ_FILTER_NUM; n++) {
 +			msg_params->item[i].id =
-+			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_TYPE + n;
++				XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_TYPE + n;
 +			msg_params->item[i++].value = coef->type[n];
 +
 +			msg_params->item[i].id =
-+			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_FC + n;
++				XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_FC + n;
 +			msg_params->item[i++].value = coef->fc[n];
 +
 +			msg_params->item[i].id =
-+			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BW + n;
-+			msg_params->item[i++].value =
-+			coef->band_width[n];
++				XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BW + n;
++			msg_params->item[i++].value = coef->band_width[n];
 +
 +			msg_params->item[i].id =
-+			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_GA + n;
++				XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_GA + n;
 +			msg_params->item[i++].value = coef->gain[n];
 +
 +			msg_params->item[i].id =
-+			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BA + n;
++				XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BA + n;
 +			msg_params->item[i++].value = coef->gain_base[n];
 +		}
 +	} else {
@@ -5567,16 +5605,16 @@ index 0000000..d797bf5
 +
 +		for (n = 0; n < XA_REL_EQZ_GRAPHIC_BAND_NUM; n++) {
 +			msg_params->item[i].id =
-+			XA_EQZ_CONFIG_PARAM_BAND_0_GCOEF_GA + n;
++				XA_EQZ_CONFIG_PARAM_BAND_0_GCOEF_GA + n;
 +			msg_params->item[i++].value = coef->gain_g[n];
 +		}
 +	}
 +
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, equalizer->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, equalizer->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +
@@ -5589,8 +5627,8 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  get ADSP Equalizer parameters
 + *
-+ *\param[in]  equalizer   Pointer to Equalizer component
-+ *\retval	 0		   Success
++ *\param[in]	 equalizer	 Pointer to Equalizer component
++ *\retval	 0		 Success
 + *\retval	 -EINVAL	 Failed
 + **************************************************************/
 +/* PRQA S 1505 1*/
@@ -5625,27 +5663,32 @@ index 0000000..d797bf5
 +	msg_params->c.id[i++] = XA_EQZ_CONFIG_PARAM_EQZ_TYPE;
 +
 +	for (n = 0; n < XA_REL_EQZ_FILTER_NUM; n++) {
++		/* PRQA S 3440 5 */
 +		msg_params->c.id[i++] =
-+		XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_TYPE + n; /* PRQA S 3440 5 */
++			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_TYPE + n;
++
 +		msg_params->c.id[i++] =
-+		XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_FC + n;
++			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_FC + n;
++
 +		msg_params->c.id[i++] =
-+		XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BW + n;
++			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BW + n;
++
 +		msg_params->c.id[i++] =
-+		XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_GA + n;
++			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_GA + n;
++
 +		msg_params->c.id[i++] =
-+		XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BA + n;
++			XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_BA + n;
 +	}
 +
 +	for (n = 0; n < XA_REL_EQZ_GRAPHIC_BAND_NUM; n++)
-+		msg_params->c.id[i++] =
-+		XA_EQZ_CONFIG_PARAM_BAND_0_GCOEF_GA + n;/* PRQA S 3440 */
++		/* PRQA S 3440 1 */
++		msg_params->c.id[i++] = XA_EQZ_CONFIG_PARAM_BAND_0_GCOEF_GA + n;
 +
 +	/* PRQA S 3200 2 */
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, equalizer->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, equalizer->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +	if (err != 0)
@@ -5659,8 +5702,8 @@ index 0000000..d797bf5
 +	eqz_params->eqz_type = msg_params->r.value[i++];
 +
 +	for (n = 0; n < XA_REL_EQZ_FILTER_NUM; n++) {
-+		eqz_params->p_coef.type[n] =
-+		msg_params->r.value[i++];		/* PRQA S 3440 5 */
++		/* PRQA S 3440 5 */
++		eqz_params->p_coef.type[n] = msg_params->r.value[i++];
 +		eqz_params->p_coef.fc[n] = msg_params->r.value[i++];
 +		eqz_params->p_coef.band_width[n] = msg_params->r.value[i++];
 +		eqz_params->p_coef.gain[n] = msg_params->r.value[i++];
@@ -5668,8 +5711,8 @@ index 0000000..d797bf5
 +	}
 +
 +	for (n = 0; n < XA_REL_EQZ_GRAPHIC_BAND_NUM; n++) {
-+		eqz_params->g_coef.gain_g[n] =
-+		msg_params->r.value[i++];		/* PRQA S 3440 */
++		/* PRQA S 3440 1 */
++		eqz_params->g_coef.gain_g[n] = msg_params->r.value[i++];
 +	}
 +
 +exit:
@@ -5682,15 +5725,15 @@ index 0000000..d797bf5
 +/** **************************************************************************
 + *\brief  create Equalizer component
 + *
-+ *\param[in,out]  equalizer	   Pointer to the registered component
-+ *\param[in]	  cb			  Callback function
-+ *\param[in]	  private_data	Private data
-+ *\retval		 0		   Success
-+ *\retval		 -EINVAL	 Invalid base instance or register fail
-+ *\retval		 -ENOMEM	 Cannot allocate Equalier instance
++ *\param[in,out]  equalizer	 Pointer to the registered component
++ *\param[in]	  cb		 Callback function
++ *\param[in]	  private_data	 Private data
++ *\retval	  0		 Success
++ *\retval	  -EINVAL	 Invalid base instance or register fail
++ *\retval	  -ENOMEM	 Cannot allocate Equalier instance
 + *****************************************************************************/
-+int xf_adsp_equalizer_create(struct xf_adsp_equalizer **equalizer
-+			    , struct xf_callback_func *cb, void *private_data)
++int xf_adsp_equalizer_create(struct xf_adsp_equalizer **equalizer,
++			     struct xf_callback_func *cb, void *private_data)
 +{
 +	struct xf_adsp_equalizer *eqz;
 +	int err;
@@ -5712,8 +5755,9 @@ index 0000000..d797bf5
 +		goto err2;			/* PRQA S 2001 */
 +
 +	/* register equalizer to ADSP base control */
-+	eqz->handle_id = xf_adsp_base_register_handle(private_data
-+						     , cb, comp_id);
++	eqz->handle_id = xf_adsp_base_register_handle(private_data,
++						      cb, comp_id);
++
 +	if (eqz->handle_id <= 0) {
 +		err = -EINVAL;
 +		goto err1;			/* PRQA S 2001 */
@@ -5741,8 +5785,8 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  deinitialize ADSP Equalizer component
 + *
-+ *\param[in]  equalizer   Pointer to Equalizer component
-+ *\retval	 0		   Success
++ *\param[in]	 equalizer	 Pointer to Equalizer component
++ *\retval	 0		 Success
 + *\retval	 -EINVAL	 Invalid base or Equalizer data
 + **************************************************************/
 +/* PRQA S 3673 */
@@ -5769,7 +5813,6 @@ index 0000000..d797bf5
 +
 +exit:
 +	kfree(equalizer);
-+	//pr_info("ADSP Equalizer[%d] was destroyed\n", handle_id);
 +
 +	return 0;
 +}
@@ -5781,9 +5824,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  set ADSP TDM Renderer parameters
 + *
-+ *\param[in]  tdm_renderer	Pointer to TDM Renderer component
-+ *\retval	 0			   Success
-+ *\retval	 -EINVAL		 Failed
++ *\param[in]	 tdm_renderer	Pointer to TDM Renderer component
++ *\retval	 0		Success
++ *\retval	 -EINVAL	Failed
 + **************************************************************/
 +int xf_adsp_tdm_renderer_set_params(struct xf_adsp_tdm_renderer *tdm_renderer)
 +{
@@ -5842,10 +5885,10 @@ index 0000000..d797bf5
 +	msg_params->item[i++].value = params->vol_rate;
 +
 +	/* PRQA S 3200 2*/
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_renderer->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_renderer->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +
@@ -5858,9 +5901,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  get ADSP TDM Renderer parameters
 + *
-+ *\param[in]  tdm_renderer	Pointer to TDM Renderer component
-+ *\retval	 0			   Success
-+ *\retval	 -EINVAL		 Failed
++ *\param[in]	 tdm_renderer	Pointer to TDM Renderer component
++ *\retval	 0		Success
++ *\retval	 -EINVAL	Failed
 + **************************************************************/
 +/* PRQA S 1505 1*/
 +int xf_adsp_tdm_renderer_get_params(struct xf_adsp_tdm_renderer *tdm_renderer)
@@ -5901,10 +5944,10 @@ index 0000000..d797bf5
 +	msg_params->c.id[i++] = XA_TDM_RDR_CONFIG_PARAM_VOLUME_RATE;
 +
 +	/* PRQA S 3200 2*/
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_renderer->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_renderer->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +	if (err != 0)
@@ -5933,16 +5976,16 @@ index 0000000..d797bf5
 +/** **************************************************************************
 + *\brief  create TDM Renderer component
 + *
-+ *\param[in,out]  tdm_renderer	Pointer to the registered component
-+ *\param[in]	  cb			  Callback function
-+ *\param[in]	  private_data	Private data
-+ *\retval		 0		   Success
-+ *\retval		 -EINVAL	 Invalid base instance or register fail
-+ *\retval		 -ENOMEM	 Cannot allocate Renderer instance
++ *\param[in,out]  tdm_renderer	 Pointer to the registered component
++ *\param[in]	  cb		 Callback function
++ *\param[in]	  private_data	 Private data
++ *\retval	  0		 Success
++ *\retval	  -EINVAL	 Invalid base instance or register fail
++ *\retval	  -ENOMEM	 Cannot allocate Renderer instance
 + *****************************************************************************/
-+int xf_adsp_tdm_renderer_create(struct xf_adsp_tdm_renderer **tdm_renderer
-+			       , struct xf_callback_func *cb
-+				   , void *private_data)
++int xf_adsp_tdm_renderer_create(struct xf_adsp_tdm_renderer **tdm_renderer,
++				struct xf_callback_func *cb,
++				void *private_data)
 +{
 +	struct xf_adsp_tdm_renderer *tdm_rdr;
 +	int err;
@@ -5955,6 +5998,7 @@ index 0000000..d797bf5
 +	tdm_rdr = kmalloc(sizeof(*tdm_rdr), GFP_KERNEL);
 +	if (!tdm_rdr)
 +		return -ENOMEM;
++
 +	/* PRQA S 3200 */
 +	memset(tdm_rdr, 0, sizeof(struct xf_adsp_tdm_renderer));
 +
@@ -5964,8 +6008,9 @@ index 0000000..d797bf5
 +		goto err2;		/* PRQA S 2001 */
 +
 +	/* register TDM Renderer to ADSP base control */
-+	tdm_rdr->handle_id = xf_adsp_base_register_handle(private_data
-+							 , cb, comp_id);
++	tdm_rdr->handle_id = xf_adsp_base_register_handle(private_data,
++							  cb, comp_id);
++
 +	if (tdm_rdr->handle_id <= 0) {
 +		err = -EINVAL;
 +		goto err1;		/* PRQA S 2001 */
@@ -5993,9 +6038,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  deinitialize ADSP TDM Renderer component
 + *
-+ *\param[in]  tdm_renderer	Pointer to TDM Renderer component
-+ *\retval	 0			   Success
-+ *\retval	 -EINVAL		 Invalid base or Renderer data
++ *\param[in]	 tdm_renderer	Pointer to TDM Renderer component
++ *\retval	 0		Success
++ *\retval	 -EINVAL	Invalid base or Renderer data
 + **************************************************************/
 +/* PRQA S 3673 1*/
 +int xf_adsp_tdm_renderer_destroy(struct xf_adsp_tdm_renderer *tdm_renderer)
@@ -6032,9 +6077,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  set ADSP TDM Capture parameters
 + *
-+ *\param[in]  tdm_capture	 Pointer to TDM Capture component
-+ *\retval	 0			   Success
-+ *\retval	 -EINVAL		 Failed
++ *\param[in]	 tdm_capture	Pointer to TDM Capture component
++ *\retval	 0		Success
++ *\retval	 -EINVAL	Failed
 + **************************************************************/
 +int xf_adsp_tdm_capture_set_params(struct xf_adsp_tdm_capture *tdm_capture)
 +{
@@ -6093,10 +6138,10 @@ index 0000000..d797bf5
 +	msg_params->item[i++].value = params->vol_rate;
 +
 +	/* PRQA S 3200 2*/
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_capture->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_capture->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_SET_PARAM, XF_SET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +
@@ -6109,9 +6154,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  get ADSP TDM Capture parameters
 + *
-+ *\param[in]  tdm_capture	 Pointer to TDM Capture component
-+ *\retval	 0			   Success
-+ *\retval	 -EINVAL		 Failed
++ *\param[in]	 tdm_capture	Pointer to TDM Capture component
++ *\retval	 0		Success
++ *\retval	 -EINVAL	Failed
 + **************************************************************/
 +/* PRQA S 1505 1*/
 +int xf_adsp_tdm_capture_get_params(struct xf_adsp_tdm_capture *tdm_capture)
@@ -6152,10 +6197,10 @@ index 0000000..d797bf5
 +	msg_params->c.id[i++] = XA_TDM_CAP_CONFIG_PARAM_VOLUME_RATE;
 +
 +	/* PRQA S 3200 2*/
-+	xf_create_msg(&msg
-+		     , __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_capture->handle_id)
-+		     , __XF_PORT_SPEC2(handle->comp_id, 0))
-+		     , XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
++	xf_create_msg(&msg,
++		      __XF_MSG_ID(__XF_AP_CLIENT(0, tdm_capture->handle_id),
++				  __XF_PORT_SPEC2(handle->comp_id, 0)),
++		      XF_GET_PARAM, XF_GET_PARAM_CMD_LEN(i), msg_params, NULL);
 +
 +	err = xf_send_and_receive(&msg);
 +	if (err != 0)
@@ -6185,14 +6230,14 @@ index 0000000..d797bf5
 + *\brief  create TDM Capture component
 + *
 + *\param[in,out]  tdm_capture	 Pointer to the registered component
-+ *\param[in]	  cb			  Callback function
-+ *\param[in]	  private_data	Private data
-+ *\retval		 0		   Success
-+ *\retval		 -EINVAL	 Invalid base instance or register fail
-+ *\retval		 -ENOMEM	 Cannot allocate Renderer instance
++ *\param[in]	  cb		 Callback function
++ *\param[in]	  private_data	 Private data
++ *\retval	  0		 Success
++ *\retval	  -EINVAL	 Invalid base instance or register fail
++ *\retval	  -ENOMEM	 Cannot allocate Renderer instance
 + *****************************************************************************/
-+int xf_adsp_tdm_capture_create(struct xf_adsp_tdm_capture **tdm_capture
-+			      , struct xf_callback_func *cb, void *private_data)
++int xf_adsp_tdm_capture_create(struct xf_adsp_tdm_capture **tdm_capture,
++			       struct xf_callback_func *cb, void *private_data)
 +{
 +	struct xf_adsp_tdm_capture *tdm_cap;
 +	int err;
@@ -6215,8 +6260,9 @@ index 0000000..d797bf5
 +		goto err2;		/* PRQA S 2001 */
 +
 +	/* register TDM Capture to ADSP base control */
-+	tdm_cap->handle_id = xf_adsp_base_register_handle(private_data
-+							 , cb, comp_id);
++	tdm_cap->handle_id = xf_adsp_base_register_handle(private_data,
++							  cb, comp_id);
++
 +	if (tdm_cap->handle_id <= 0) {
 +		err = -EINVAL;
 +		goto err1;		/* PRQA S 2001 */
@@ -6244,9 +6290,9 @@ index 0000000..d797bf5
 +/** ***********************************************************
 + *\brief  deinitialize ADSP TDM Capture component
 + *
-+ *\param[in]  tdm_capture	 Pointer to TDM Capture component
-+ *\retval	 0			   Success
-+ *\retval	 -EINVAL		 Invalid base or Renderer data
++ *\param[in]	 tdm_capture	 Pointer to TDM Capture component
++ *\retval	 0		 Success
++ *\retval	 -EINVAL	 Invalid base or Renderer data
 + **************************************************************/
 +/* PRQA S 3673 */
 +int xf_adsp_tdm_capture_destroy(struct xf_adsp_tdm_capture *tdm_capture)
@@ -6277,17 +6323,17 @@ index 0000000..d797bf5
 +}
 diff --git a/sound/soc/adsp/xf-adsp-base.h b/sound/soc/adsp/xf-adsp-base.h
 new file mode 100644
-index 0000000..818ebdd
+index 000000000000..27eb084a99a5
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-base.h
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,275 @@
 +/** *************************************************************************
-+ *\file	   xf-adsp-base.h
-+ *\brief	  Header file for ADSP Base Control layer
-+ *\addtogroup ADSP Driver
++ *\file		xf-adsp-base.h
++ *\brief	Header file for ADSP Base Control layer
++ *\addtogroup	ADSP Driver
 + ****************************************************************************
-+ *\date	   Oct. 21, 2017
-+ *\author	 Renesas Electronics Corporation
++ *\date		Oct. 21, 2017
++ *\author	Renesas Electronics Corporation
 + ****************************************************************************
 + *\par		Copyright
 + *
@@ -6321,11 +6367,11 @@ index 0000000..818ebdd
 +#define XF_BUF_POOL_SIZE	(4)	 /**< number of buffer in a data pool */
 +
 +/**< maximum number of DSP component can be registered */
-+#define MAX_HANDLE (256)
++#define MAX_HANDLE		(256)
 +
 +/* define boolean */
-+#define TRUE					(1)
-+#define FALSE				   (0)
++#define TRUE			(1)
++#define FALSE			(0)
 +
 +/** \struct xf_callback_func
 + *  \brief  callback function for ADSP's response message
@@ -6345,19 +6391,19 @@ index 0000000..818ebdd
 + *  \brief  parameter structure for Renderer component
 + */
 +struct xf_adsp_renderer_params {
-+	int	 channel;	/**< channel number		 */
-+	int	 pcm_width;  /**< PCM width			  */
-+	int	 frame_size; /**< frame size			 */
++	int	 channel;	/**< channel number		*/
++	int	 pcm_width;	/**< PCM width			*/
++	int	 frame_size;	/**< frame size			*/
 +	int	 in_rate;	/**< input sampling rate	*/
-+	int	 out_rate;   /**< output sampling rate   */
-+	int	 vol_rate;   /**< volume rate			*/
-+	int	 dev1;	   /**< 1st device index	   */
-+	int	 dev2;	   /**< 2nd device index	   */
-+	int	 dma1;	   /**< 1st DMA index		  */
-+	int	 dma2;	   /**< 2nd DMA index		  */
-+	int	 out_channel; /**< output channels	   */
-+	int	 mix_ctrl;   /**< mix control flag	   */
-+	int	 state;	  /**< operation state		*/
++	int	 out_rate;	/**< output sampling rate	*/
++	int	 vol_rate;	/**< volume rate		*/
++	int	 dev1;		/**< 1st device index		*/
++	int	 dev2;		/**< 2nd device index		*/
++	int	 dma1;		/**< 1st DMA index		*/
++	int	 dma2;		/**< 2nd DMA index		*/
++	int	 out_channel;	/**< output channels		*/
++	int	 mix_ctrl;	/**< mix control flag		*/
++	int	 state;		/**< operation state		*/
 +};
 +
 +/** \struct xf_adsp_renderer
@@ -6373,17 +6419,17 @@ index 0000000..818ebdd
 + *\brief  parameter structure of Capture component
 + */
 +struct xf_adsp_capture_params {
-+	int	 channel;	/**< channel number		 */
-+	int	 pcm_width;  /**< PCM width			  */
-+	int	 frame_size; /**< frame size			 */
++	int	 channel;	/**< channel number		*/
++	int	 pcm_width;	/**< PCM width			*/
++	int	 frame_size;	/**< frame size			*/
 +	int	 in_rate;	/**< input sampling rate	*/
-+	int	 out_rate;   /**< output sampling rate   */
-+	int	 vol_rate;   /**< volume rate			*/
-+	int	 dev1;	   /**< 1st device index	   */
-+	int	 dev2;	   /**< 2nd device index	   */
-+	int	 dma1;	   /**< 1st DMA index		  */
-+	int	 dma2;	   /**< 2nd DMA index		  */
-+	int	 state;	  /**< operation state		*/
++	int	 out_rate;	/**< output sampling rate	*/
++	int	 vol_rate;	/**< volume rate		*/
++	int	 dev1;		/**< 1st device index		*/
++	int	 dev2;		/**< 2nd device index		*/
++	int	 dma1;		/**< 1st DMA index		*/
++	int	 dma2;		/**< 2nd DMA index		*/
++	int	 state;		/**< operation state		*/
 +};
 +
 +/** \struct xf_adsp_capture
@@ -6399,9 +6445,9 @@ index 0000000..818ebdd
 + *\brief  Parametric Equalizer type's parameters
 + */
 +struct xf_equalizer_parametric_coef {
-+	int  type[XA_REL_EQZ_FILTER_NUM];		/**< Filter type*/
-+	int  fc[XA_REL_EQZ_FILTER_NUM];	  /**< Filter center frequency*/
-+	int  gain[XA_REL_EQZ_FILTER_NUM];		/**< Filter gain*/
++	int  type[XA_REL_EQZ_FILTER_NUM];		/**< Filter type */
++	int  fc[XA_REL_EQZ_FILTER_NUM];	  /**< Filter center frequency */
++	int  gain[XA_REL_EQZ_FILTER_NUM];	/**< Filter gain */
 +	int  band_width[XA_REL_EQZ_FILTER_NUM];  /**< Filter band width	  */
 +	int  gain_base[XA_REL_EQZ_FILTER_NUM];   /**< Filter base gain	  */
 +};
@@ -6417,13 +6463,12 @@ index 0000000..818ebdd
 + *\brief  Equalizer parameters
 + */
 +struct xf_adsp_equalizer_params {
-+	int		 channel;	/**< channel number		 */
-+	int		 pcm_width;  /**< PCM width			  */
-+	int		 rate;	   /**< sampling rate		  */
-+	int		 eqz_type;   /**< Equalizer type		 */
-+	/**< Parametric parameters */
-+	struct xf_equalizer_parametric_coef  p_coef;
-+	struct xf_equalizer_graphic_coef g_coef; /**< Graphic parameters */
++	int		 channel;	/**< channel number	 */
++	int		 pcm_width;	/**< PCM width		 */
++	int		 rate;		/**< sampling rate	 */
++	int		 eqz_type;	/**< Equalizer type	 */
++	struct xf_equalizer_parametric_coef  p_coef; /**< Parametric params */
++	struct xf_equalizer_graphic_coef g_coef; /**< Graphic params */
 +};
 +
 +/** \struct xf_adsp_equalizer
@@ -6431,7 +6476,7 @@ index 0000000..818ebdd
 + */
 +struct xf_adsp_equalizer {
 +	struct xf_adsp_equalizer_params   params;/**< Equalizer parameters   */
-+	struct xf_pool	   *buf_pool;  /**< buffer pool for transfer data  */
++	struct xf_pool	  *buf_pool;  /**< buffer pool for transfer data  */
 +	int		  handle_id; /**< ID of registered handle	*/
 +};
 +
@@ -6439,16 +6484,16 @@ index 0000000..818ebdd
 + *  \brief  parameter structure for TDM Renderer component
 + */
 +struct xf_adsp_tdm_renderer_params {
-+	int		 ch_mode;	/**< channel mode		   */
-+	int		 pcm_width;  /**< PCM width			  */
-+	int		 frame_size; /**< frame size			 */
++	int		 ch_mode;	/**< channel mode		*/
++	int		 pcm_width;	/**< PCM width			*/
++	int		 frame_size;	/**< frame size			*/
 +	int		 in_rate;	/**< input sampling rate	*/
-+	int		 out_rate;   /**< output sampling rate   */
-+	int		 vol_rate;   /**< volume rate			*/
-+	int		 dev1;	   /**< 1st device index	   */
-+	int		 dev2;	   /**< 2nd device index	   */
-+	int		 dma1;	   /**< 1st DMA index		  */
-+	int		 dma2;	   /**< 2nd DMA index		  */
++	int		 out_rate;	/**< output sampling rate	*/
++	int		 vol_rate;	/**< volume rate		*/
++	int		 dev1;		/**< 1st device index		*/
++	int		 dev2;		/**< 2nd device index		*/
++	int		 dma1;		/**< 1st DMA index		*/
++	int		 dma2;		/**< 2nd DMA index		*/
 +};
 +
 +/** \struct xf_adsp_tdm_renderer
@@ -6457,23 +6502,23 @@ index 0000000..818ebdd
 +struct xf_adsp_tdm_renderer {
 +	struct xf_adsp_tdm_renderer_params   params; /**< parameter structure*/
 +	struct xf_pool	  *buf_pool;  /**< buffer pool for data transfer  */
-+	int	 handle_id;  /**< ID of registered handle		*/
++	int	 handle_id;  /**< ID of registered handle	*/
 +};
 +
 +/** \struct xf_adsp_tdm_capture_params
 + *  \brief  parameter structure for TDM Capture component
 + */
 +struct xf_adsp_tdm_capture_params {
-+	int	 ch_mode;	/**< channel mode		   */
-+	int	 pcm_width;  /**< PCM width			  */
-+	int	 frame_size; /**< frame size			 */
++	int	 ch_mode;	/**< channel mode		*/
++	int	 pcm_width;	/**< PCM width			*/
++	int	 frame_size;	/**< frame size			*/
 +	int	 in_rate;	/**< input sampling rate	*/
-+	int	 out_rate;   /**< output sampling rate   */
-+	int	 vol_rate;   /**< volume rate			*/
-+	int	 dev1;	   /**< 1st device index	   */
-+	int	 dev2;	   /**< 2nd device index	   */
-+	int	 dma1;	   /**< 1st DMA index		  */
-+	int	 dma2;	   /**< 2nd DMA index		  */
++	int	 out_rate;	/**< output sampling rate	*/
++	int	 vol_rate;	/**< volume rate		*/
++	int	 dev1;		/**< 1st device index		*/
++	int	 dev2;		/**< 2nd device index		*/
++	int	 dma1;		/**< 1st DMA index		*/
++	int	 dma2;		/**< 2nd DMA index		*/
 +};
 +
 +/** \struct xf_adsp_tdm_capture
@@ -6498,16 +6543,16 @@ index 0000000..818ebdd
 + *  \brief Base component structure
 + */
 +struct xf_adsp_base {
-+	xf_adsp_base_cmd_t  cmd;	/**< proxy commands	 */
-+	void	*client;/**< client data which registered to proxy  */
++	struct xf_adsp_base_cmd  cmd; /**< proxy commands	 */
++	void	*client; /**< client data which registered to proxy  */
 +	struct xf_pool	 *aux_pool;  /**< auxiliary buffer pool data	 */
-+	struct xf_handle	 *handle[MAX_HANDLE];	/**< handler data   */
-+	struct task_struct  *rsp_thread;/**< thread for response message*/
-+	wait_queue_head_t   base_wait;	 /**< ADSP base's waiting queue	 */
-+	struct xf_message  base_msg;   /**< ADSP base's response message   */
-+	int	base_flag;  /**< flag to control its waiting queue  */
-+	int	err_flag;  /**< flag to indicate a error from plugins */
-+	int	wait_flag;  /**< flag to control the polling waiting*/
++	struct xf_handle *handle[MAX_HANDLE];	/**< handler data   */
++	struct task_struct *rsp_thread;/**< thread for response message*/
++	wait_queue_head_t base_wait;	 /**< ADSP base's waiting queue	 */
++	struct xf_message base_msg;   /**< ADSP base's response message   */
++	int base_flag;  /**< flag to control its waiting queue  */
++	int err_flag;  /**< flag to indicate a error from plugins */
++	int wait_flag;  /**< flag to control the polling waiting*/
 +	spinlock_t lock; /**< spinlock data */
 +};
 +
@@ -6524,34 +6569,34 @@ index 0000000..818ebdd
 +int xf_adsp_set_param(int handle_id, int index, int value);
 +int xf_adsp_get_param(int handle_id, int index, int *value);
 +
-+int xf_adsp_renderer_create(struct xf_adsp_renderer **renderer
-+			   , struct xf_callback_func *cb, void *private_data);
++int xf_adsp_renderer_create(struct xf_adsp_renderer **renderer,
++			    struct xf_callback_func *cb, void *private_data);
 +int xf_adsp_renderer_destroy(struct xf_adsp_renderer *renderer);
 +int xf_adsp_renderer_set_params(struct xf_adsp_renderer *renderer);
 +int xf_adsp_renderer_get_params(struct xf_adsp_renderer *renderer);
 +
-+int xf_adsp_capture_create(struct xf_adsp_capture **capture
-+			  , struct xf_callback_func *cb, void *private_data);
++int xf_adsp_capture_create(struct xf_adsp_capture **capture,
++			   struct xf_callback_func *cb, void *private_data);
 +int xf_adsp_capture_destroy(struct xf_adsp_capture *capture);
 +int xf_adsp_capture_set_params(struct xf_adsp_capture *capture);
 +int xf_adsp_capture_get_params(struct xf_adsp_capture *capture);
 +
-+int xf_adsp_equalizer_create(struct xf_adsp_equalizer **equalizer
-+			    , struct xf_callback_func *cb, void *private_data);
++int xf_adsp_equalizer_create(struct xf_adsp_equalizer **equalizer,
++			     struct xf_callback_func *cb, void *private_data);
 +int xf_adsp_equalizer_destroy(struct xf_adsp_equalizer *equalizer);
 +int xf_adsp_equalizer_set_params(struct xf_adsp_equalizer *equalizer);
 +int xf_adsp_equalizer_get_params(struct xf_adsp_equalizer *equalizer);
 +
-+int xf_adsp_tdm_renderer_create(struct xf_adsp_tdm_renderer **tdm_renderer
-+			       , struct xf_callback_func *cb
-+			       , void *private_data);
++int xf_adsp_tdm_renderer_create(struct xf_adsp_tdm_renderer **tdm_renderer,
++				struct xf_callback_func *cb,
++				void *private_data);
 +int xf_adsp_tdm_renderer_destroy(struct xf_adsp_tdm_renderer *tdm_renderer);
 +int xf_adsp_tdm_renderer_set_params(struct xf_adsp_tdm_renderer *tdm_renderer);
 +int xf_adsp_tdm_renderer_get_params(struct xf_adsp_tdm_renderer *tdm_renderer);
 +
-+int xf_adsp_tdm_capture_create(struct xf_adsp_tdm_capture **tdm_capture
-+			      , struct xf_callback_func *cb
-+			      , void *private_data);
++int xf_adsp_tdm_capture_create(struct xf_adsp_tdm_capture **tdm_capture,
++			       struct xf_callback_func *cb,
++			       void *private_data);
 +int xf_adsp_tdm_capture_destroy(struct xf_adsp_tdm_capture *tdm_capture);
 +int xf_adsp_tdm_capture_set_params(struct xf_adsp_tdm_capture *tdm_capture);
 +int xf_adsp_tdm_capture_get_params(struct xf_adsp_tdm_capture *tdm_capture);
@@ -6559,17 +6604,17 @@ index 0000000..818ebdd
 +#endif
 diff --git a/sound/soc/adsp/xf-adsp-config.h b/sound/soc/adsp/xf-adsp-config.h
 new file mode 100644
-index 0000000..7fc93ab
+index 000000000000..818a46a66600
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-config.h
 @@ -0,0 +1,604 @@
 +/** ****************************************************************************
-+ *\file	   xf-adsp-config.h
-+ *\brief	  Header file for ADSP configuration
-+ *\addtogroup ADSP Driver
++ *\file		xf-adsp-config.h
++ *\brief	Header file for ADSP configuration
++ *\addtogroup	ADSP Driver
 + *******************************************************************************
-+ *\date	   Oct. 21, 2017
-+ *\author	 Renesas Electronics Corporation
++ *\date		Oct. 21, 2017
++ *\author	Renesas Electronics Corporation
 + *******************************************************************************
 + *\par		Copyright
 + *
@@ -6611,19 +6656,19 @@ index 0000000..7fc93ab
 +
 +struct xf_pool {
 +	/* length of individual buffer in a pool */
-+	u32			 length;
++	u32			length;
 +
 +	/* number of buffer in a pool */
-+	u32			 number;
++	u32			number;
 +
 +	/* pointer to pool memory */
 +	void			*p;
 +
 +	/* pointer to first free buffer in a pool */
-+	struct xf_buffer	 *free;
++	struct xf_buffer	*free;
 +
 +	/* individual buffer */
-+	struct xf_buffer	 buffer[0];		/* PRQA S 1037 */
++	struct xf_buffer	buffer[0];		/* PRQA S 1037 */
 +};
 +
 +struct xf_message {
@@ -6631,13 +6676,13 @@ index 0000000..7fc93ab
 +	struct xf_message	*next;
 +
 +	/* shmem session_id */
-+	u32			 id;
++	u32			id;
 +
 +	/* operation code */
-+	u32			 opcode;
++	u32			opcode;
 +
 +	/* length of attached message buffer */
-+	u32			 length;
++	u32			length;
 +
 +	/* message buffer */
 +	void			*buffer;
@@ -6652,14 +6697,14 @@ index 0000000..7fc93ab
 +	/* ...command structure */
 +	struct {
 +		/* ...array of parameters requested */
-+		u32				 id[0];	/* PRQA S 1037 */
++		u32		id[0];	/* PRQA S 1037 */
 +
 +	}   __attribute__((__packed__)) c;
 +
 +	/* ...response structure */
 +	struct {
 +		/* ...array of parameters values */
-+		u32				 value[0];/* PRQA S 1037 */
++		u32		value[0];/* PRQA S 1037 */
 +
 +	}   __attribute__((__packed__)) r;
 +
@@ -6736,15 +6781,15 @@ index 0000000..7fc93ab
 +/* ...Capture states  */
 +enum xa_capture_state {
 +	XA_CAP_STATE_RUN	= 0,
-+	XA_CAP_STATE_IDLE   = 1,
-+	XA_CAP_STATE_PAUSE  = 2
++	XA_CAP_STATE_IDLE	= 1,
++	XA_CAP_STATE_PAUSE	= 2
 +};
 +
 +/* ...Renderer states  */
 +enum xa_renderer_state {
 +	XA_RDR_STATE_RUN	= 0,
-+	XA_RDR_STATE_IDLE   = 1,
-+	XA_RDR_STATE_PAUSE  = 2
++	XA_RDR_STATE_IDLE	= 1,
++	XA_RDR_STATE_PAUSE	= 2
 +};
 +
 +/*******************************************************************************
@@ -6761,29 +6806,29 @@ index 0000000..7fc93ab
 +
 +/* ...port specification (12 bits) */
 +#define __XF_PORT_SPEC(core, id, port)  ((core) | ((id) << 2) | ((port) << 8))
-+#define __XF_PORT_SPEC2(id, port)	   ((id) | ((port) << 8))
-+#define XF_PORT_CORE(spec)			  ((spec) & 0x3)
-+#define XF_PORT_CLIENT(spec)			(((spec) >> 2) & 0x3F)
-+#define XF_PORT_ID(spec)				(((spec) >> 8) & 0xF)
++#define __XF_PORT_SPEC2(id, port)	((id) | ((port) << 8))
++#define XF_PORT_CORE(spec)		((spec) & 0x3)
++#define XF_PORT_CLIENT(spec)		(((spec) >> 2) & 0x3F)
++#define XF_PORT_ID(spec)		(((spec) >> 8) & 0xF)
 +
 +/* ...message id contains source and destination ports specification */
-+#define __XF_MSG_ID(src, dst)	   (((src) & 0xFFFF) | (((dst) & 0xFFFF) << 16))
-+#define XF_MSG_SRC(id)				  (((id) >> 0) & 0xFFFF)
-+#define XF_MSG_SRC_CORE(id)			 (((id) >> 0) & 0x3)
-+#define XF_MSG_SRC_CLIENT(id)		   (((id) >> 2) & 0x3F)
-+#define XF_MSG_SRC_PORT(id)			 (((id) >> 8) & 0xF)
-+#define XF_MSG_SRC_PROXY(id)			(((id) >> 15) & 0x1)
-+#define XF_MSG_DST(id)				  (((id) >> 16) & 0xFFFF)
-+#define XF_MSG_DST_CORE(id)			 (((id) >> 16) & 0x3)
-+#define XF_MSG_DST_CLIENT(id)		   (((id) >> 18) & 0x3F)
-+#define XF_MSG_DST_PORT(id)			 (((id) >> 24) & 0xF)
-+#define XF_MSG_DST_PROXY(id)			(((id) >> 31) & 0x1)
++#define __XF_MSG_ID(src, dst)	(((src) & 0xFFFF) | (((dst) & 0xFFFF) << 16))
++#define XF_MSG_SRC(id)			(((id) >> 0) & 0xFFFF)
++#define XF_MSG_SRC_CORE(id)		(((id) >> 0) & 0x3)
++#define XF_MSG_SRC_CLIENT(id)		(((id) >> 2) & 0x3F)
++#define XF_MSG_SRC_PORT(id)		(((id) >> 8) & 0xF)
++#define XF_MSG_SRC_PROXY(id)		(((id) >> 15) & 0x1)
++#define XF_MSG_DST(id)			(((id) >> 16) & 0xFFFF)
++#define XF_MSG_DST_CORE(id)		(((id) >> 16) & 0x3)
++#define XF_MSG_DST_CLIENT(id)		(((id) >> 18) & 0x3F)
++#define XF_MSG_DST_PORT(id)		(((id) >> 24) & 0xF)
++#define XF_MSG_DST_PROXY(id)		(((id) >> 31) & 0x1)
 +
 +/* ...special treatment of AP-proxy destination field */
-+#define XF_AP_IPC_CLIENT(id)			(((id) >> 18) & 0xF)
-+#define XF_AP_CLIENT(id)				(((id) >> 22) & 0x1FF)
-+#define __XF_AP_PROXY(core)			 ((core) | 0x8000)
-+#define __XF_DSP_PROXY(core)			((core) | 0x8000)
++#define XF_AP_IPC_CLIENT(id)		(((id) >> 18) & 0xF)
++#define XF_AP_CLIENT(id)		(((id) >> 22) & 0x1FF)
++#define __XF_AP_PROXY(core)		((core) | 0x8000)
++#define __XF_DSP_PROXY(core)		((core) | 0x8000)
 +#define __XF_AP_CLIENT(core, client)	((core) | ((client) << 6) | 0x8000)
 +
 +/*******************************************************************************
@@ -6791,84 +6836,84 @@ index 0000000..7fc93ab
 + ******************************************************************************/
 +
 +/* ...opcode composition with command/response data tags */
-+#define __XF_OPCODE(c, r, op)	   (((c) << 31) | ((r) << 30) | ((op) & 0x3F))
++#define __XF_OPCODE(c, r, op)	(((c) << 31) | ((r) << 30) | ((op) & 0x3F))
 +
 +/* ...accessors */
-+#define XF_OPCODE_CDATA(opcode)		 ((opcode) & (1 << 31))
-+#define XF_OPCODE_RDATA(opcode)		 ((opcode) & (1 << 30))
-+#define XF_OPCODE_TYPE(opcode)		  ((opcode) & (0x3F))
++#define XF_OPCODE_CDATA(opcode)		((opcode) & (1 << 31))
++#define XF_OPCODE_RDATA(opcode)		((opcode) & (1 << 30))
++#define XF_OPCODE_TYPE(opcode)		((opcode) & (0x3F))
 +
 +/*******************************************************************************
 + * Opcode types
 + ******************************************************************************/
 +
 +/* ...unregister client */
-+#define XF_UNREGISTER				   __XF_OPCODE(0, 0, 0)
++#define XF_UNREGISTER			__XF_OPCODE(0, 0, 0)
 +
 +/* ...register client at proxy */
-+#define XF_REGISTER					 __XF_OPCODE(1, 0, 1)
++#define XF_REGISTER			__XF_OPCODE(1, 0, 1)
 +
 +/* ...port routing command */
-+#define XF_ROUTE					__XF_OPCODE(1, 0, 2)
++#define XF_ROUTE			__XF_OPCODE(1, 0, 2)
 +
 +/* ...port unrouting command */
-+#define XF_UNROUTE				  __XF_OPCODE(1, 0, 3)
++#define XF_UNROUTE			__XF_OPCODE(1, 0, 3)
 +
 +/* ...shared buffer allocation */
-+#define XF_ALLOC					__XF_OPCODE(0, 0, 4)
++#define XF_ALLOC			__XF_OPCODE(0, 0, 4)
 +
 +/* ...shared buffer freeing */
-+#define XF_FREE					 __XF_OPCODE(0, 0, 5)
++#define XF_FREE				__XF_OPCODE(0, 0, 5)
 +
 +/* ...set component parameters */
-+#define XF_SET_PARAM				__XF_OPCODE(1, 0, 6)
++#define XF_SET_PARAM			__XF_OPCODE(1, 0, 6)
 +
 +/* ...get component parameters */
-+#define XF_GET_PARAM				__XF_OPCODE(1, 1, 7)
++#define XF_GET_PARAM			__XF_OPCODE(1, 1, 7)
 +
 +/* ...input buffer reception */
 +#define XF_EMPTY_THIS_BUFFER		__XF_OPCODE(1, 0, 8)
 +
 +/* ...output buffer reception */
-+#define XF_FILL_THIS_BUFFER			 __XF_OPCODE(0, 1, 9)
++#define XF_FILL_THIS_BUFFER		__XF_OPCODE(0, 1, 9)
 +
 +/* ...flush specific port */
-+#define XF_FLUSH					__XF_OPCODE(0, 0, 10)
++#define XF_FLUSH			__XF_OPCODE(0, 0, 10)
 +
 +/* ...start component operation */
-+#define XF_START					__XF_OPCODE(0, 0, 11)
++#define XF_START			__XF_OPCODE(0, 0, 11)
 +
 +/* ...stop component operation */
-+#define XF_STOP					 __XF_OPCODE(0, 0, 12)
++#define XF_STOP				__XF_OPCODE(0, 0, 12)
 +
 +/* ...pause component operation */
-+#define XF_PAUSE					__XF_OPCODE(0, 0, 13)
++#define XF_PAUSE			__XF_OPCODE(0, 0, 13)
 +
 +/* ...resume component operation */
-+#define XF_RESUME				   __XF_OPCODE(0, 0, 14)
++#define XF_RESUME			__XF_OPCODE(0, 0, 14)
 +
 +/* ...total amount of supported decoder commands */
-+#define __XF_OP_NUM					 (15)
++#define __XF_OP_NUM			(15)
 +
 +/*************************************************
 + * Renderer - specific configuration parameters
 + * **********************************************/
 +
 +enum xa_config_param_renderer {
-+	XA_RDR_CONFIG_PARAM_STATE			= 0,
++	XA_RDR_CONFIG_PARAM_STATE		= 0,
 +	XA_RDR_CONFIG_PARAM_PCM_WIDTH		= 1,
-+	XA_RDR_CONFIG_PARAM_CHANNELS		 = 2,
-+	XA_RDR_CONFIG_PARAM_SAMPLE_RATE	  = 3,
-+	XA_RDR_CONFIG_PARAM_FRAME_SIZE	   = 4,
-+	XA_RDR_CONFIG_PARAM_OUTPUT1		  = 5,
-+	XA_RDR_CONFIG_PARAM_DMACHANNEL1	  = 6,
-+	XA_RDR_CONFIG_PARAM_OUTPUT2		  = 7,
-+	XA_RDR_CONFIG_PARAM_DMACHANNEL2	  = 8,
-+	XA_RDR_CONFIG_PARAM_OUT_SAMPLE_RATE  = 9,
-+	XA_RDR_CONFIG_PARAM_VOLUME_RATE	  = 10,
-+	XA_RDR_CONFIG_PARAM_OUT_CHANNELS	 = 11,
-+	XA_RDR_CONFIG_PARAM_MIX_CONTROL	  = 12,
-+	XA_RDR_CONFIG_PARAM_NUM			  = 13
++	XA_RDR_CONFIG_PARAM_CHANNELS		= 2,
++	XA_RDR_CONFIG_PARAM_SAMPLE_RATE		= 3,
++	XA_RDR_CONFIG_PARAM_FRAME_SIZE		= 4,
++	XA_RDR_CONFIG_PARAM_OUTPUT1		= 5,
++	XA_RDR_CONFIG_PARAM_DMACHANNEL1		= 6,
++	XA_RDR_CONFIG_PARAM_OUTPUT2		= 7,
++	XA_RDR_CONFIG_PARAM_DMACHANNEL2		= 8,
++	XA_RDR_CONFIG_PARAM_OUT_SAMPLE_RATE	= 9,
++	XA_RDR_CONFIG_PARAM_VOLUME_RATE		= 10,
++	XA_RDR_CONFIG_PARAM_OUT_CHANNELS	= 11,
++	XA_RDR_CONFIG_PARAM_MIX_CONTROL		= 12,
++	XA_RDR_CONFIG_PARAM_NUM			= 13
 +};
 +
 +/*************************************************
@@ -6876,19 +6921,19 @@ index 0000000..7fc93ab
 + * **********************************************/
 +
 +enum xa_config_param_capture {
-+	XA_CAP_CONFIG_PARAM_CB			   = 0,
-+	XA_CAP_CONFIG_PARAM_STATE			= 1,
++	XA_CAP_CONFIG_PARAM_CB			= 0,
++	XA_CAP_CONFIG_PARAM_STATE		= 1,
 +	XA_CAP_CONFIG_PARAM_PCM_WIDTH		= 2,
-+	XA_CAP_CONFIG_PARAM_CHANNELS		 = 3,
-+	XA_CAP_CONFIG_PARAM_SAMPLE_RATE	  = 4,
-+	XA_CAP_CONFIG_PARAM_FRAME_SIZE	   = 5,
-+	XA_CAP_CONFIG_PARAM_INPUT1		   = 6,
-+	XA_CAP_CONFIG_PARAM_DMACHANNEL1	  = 7,
-+	XA_CAP_CONFIG_PARAM_INPUT2		   = 8,
-+	XA_CAP_CONFIG_PARAM_DMACHANNEL2	  = 9,
-+	XA_CAP_CONFIG_PARAM_OUT_SAMPLE_RATE  = 10,
-+	XA_CAP_CONFIG_PARAM_VOLUME_RATE	  = 11,
-+	XA_CAP_CONFIG_PARAM_NUM			  = 12
++	XA_CAP_CONFIG_PARAM_CHANNELS		= 3,
++	XA_CAP_CONFIG_PARAM_SAMPLE_RATE		= 4,
++	XA_CAP_CONFIG_PARAM_FRAME_SIZE		= 5,
++	XA_CAP_CONFIG_PARAM_INPUT1		= 6,
++	XA_CAP_CONFIG_PARAM_DMACHANNEL1		= 7,
++	XA_CAP_CONFIG_PARAM_INPUT2		= 8,
++	XA_CAP_CONFIG_PARAM_DMACHANNEL2		= 9,
++	XA_CAP_CONFIG_PARAM_OUT_SAMPLE_RATE	= 10,
++	XA_CAP_CONFIG_PARAM_VOLUME_RATE		= 11,
++	XA_CAP_CONFIG_PARAM_NUM			= 12
 +};
 +
 +/*************************************************
@@ -6913,9 +6958,9 @@ index 0000000..7fc93ab
 +
 +enum xa_add_cmd_type_generic {
 +	/* XA_API_CMD_SET_CONFIG_PARAM indices */
-+	XA_EQZ_CONFIG_PARAM_COEF_FS				= 0x0000,
++	XA_EQZ_CONFIG_PARAM_COEF_FS			= 0x0000,
 +	XA_EQZ_CONFIG_PARAM_PCM_WIDTH			= 0x0001,
-+	XA_EQZ_CONFIG_PARAM_CH					= 0x0002,
++	XA_EQZ_CONFIG_PARAM_CH				= 0x0002,
 +	XA_EQZ_CONFIG_PARAM_EQZ_TYPE			= 0x0003,
 +
 +	XA_EQZ_CONFIG_PARAM_FILTER_0_COEF_FC	= 0x0010,
@@ -6968,25 +7013,25 @@ index 0000000..7fc93ab
 +	XA_EQZ_CONFIG_PARAM_FILTER_7_COEF_BA	= 0x0057,
 +	XA_EQZ_CONFIG_PARAM_FILTER_8_COEF_BA	= 0x0058,
 +
-+	XA_EQZ_CONFIG_PARAM_BAND_0_GCOEF_GA		= 0x0060,
-+	XA_EQZ_CONFIG_PARAM_BAND_1_GCOEF_GA		= 0x0061,
-+	XA_EQZ_CONFIG_PARAM_BAND_2_GCOEF_GA		= 0x0062,
-+	XA_EQZ_CONFIG_PARAM_BAND_3_GCOEF_GA		= 0x0063,
-+	XA_EQZ_CONFIG_PARAM_BAND_4_GCOEF_GA		= 0x0064
++	XA_EQZ_CONFIG_PARAM_BAND_0_GCOEF_GA	= 0x0060,
++	XA_EQZ_CONFIG_PARAM_BAND_1_GCOEF_GA	= 0x0061,
++	XA_EQZ_CONFIG_PARAM_BAND_2_GCOEF_GA	= 0x0062,
++	XA_EQZ_CONFIG_PARAM_BAND_3_GCOEF_GA	= 0x0063,
++	XA_EQZ_CONFIG_PARAM_BAND_4_GCOEF_GA	= 0x0064
 +};
 +
 +/* ...tdm-renderer-specific configuration parameters */
 +enum xa_config_param_tdm_renderer {
-+	XA_TDM_RDR_CONFIG_PARAM_PCM_WIDTH	   = 0,
++	XA_TDM_RDR_CONFIG_PARAM_PCM_WIDTH	= 0,
 +	XA_TDM_RDR_CONFIG_PARAM_CHANNEL_MODE	= 1,
 +	XA_TDM_RDR_CONFIG_PARAM_IN_SAMPLE_RATE  = 2,
-+	XA_TDM_RDR_CONFIG_PARAM_FRAME_SIZE	  = 3,
-+	XA_TDM_RDR_CONFIG_PARAM_OUTPUT1		 = 4,
-+	XA_TDM_RDR_CONFIG_PARAM_DMACHANNEL1	 = 5,
-+	XA_TDM_RDR_CONFIG_PARAM_OUTPUT2		 = 6,
-+	XA_TDM_RDR_CONFIG_PARAM_DMACHANNEL2	 = 7,
++	XA_TDM_RDR_CONFIG_PARAM_FRAME_SIZE	= 3,
++	XA_TDM_RDR_CONFIG_PARAM_OUTPUT1		= 4,
++	XA_TDM_RDR_CONFIG_PARAM_DMACHANNEL1	= 5,
++	XA_TDM_RDR_CONFIG_PARAM_OUTPUT2		= 6,
++	XA_TDM_RDR_CONFIG_PARAM_DMACHANNEL2	= 7,
 +	XA_TDM_RDR_CONFIG_PARAM_OUT_SAMPLE_RATE = 8,
-+	XA_TDM_RDR_CONFIG_PARAM_VOLUME_RATE	 = 9
++	XA_TDM_RDR_CONFIG_PARAM_VOLUME_RATE	= 9
 +};
 +
 +enum xa_rel_tdm_renderer_channel_mode {
@@ -7000,16 +7045,16 @@ index 0000000..7fc93ab
 +
 +/* ...TDM Capture-specific configuration parameters */
 +enum xa_config_param_tdm_capture {
-+	XA_TDM_CAP_CONFIG_PARAM_PCM_WIDTH	   = 0,
++	XA_TDM_CAP_CONFIG_PARAM_PCM_WIDTH	= 0,
 +	XA_TDM_CAP_CONFIG_PARAM_CHANNEL_MODE	= 1,
 +	XA_TDM_CAP_CONFIG_PARAM_IN_SAMPLE_RATE  = 2,
-+	XA_TDM_CAP_CONFIG_PARAM_FRAME_SIZE	  = 3,
-+	XA_TDM_CAP_CONFIG_PARAM_INPUT1		  = 4,
-+	XA_TDM_CAP_CONFIG_PARAM_DMACHANNEL1	 = 5,
-+	XA_TDM_CAP_CONFIG_PARAM_INPUT2		  = 6,
-+	XA_TDM_CAP_CONFIG_PARAM_DMACHANNEL2	 = 7,
++	XA_TDM_CAP_CONFIG_PARAM_FRAME_SIZE	= 3,
++	XA_TDM_CAP_CONFIG_PARAM_INPUT1		= 4,
++	XA_TDM_CAP_CONFIG_PARAM_DMACHANNEL1	= 5,
++	XA_TDM_CAP_CONFIG_PARAM_INPUT2		= 6,
++	XA_TDM_CAP_CONFIG_PARAM_DMACHANNEL2	= 7,
 +	XA_TDM_CAP_CONFIG_PARAM_OUT_SAMPLE_RATE = 8,
-+	XA_TDM_CAP_CONFIG_PARAM_VOLUME_RATE	 = 9
++	XA_TDM_CAP_CONFIG_PARAM_VOLUME_RATE	= 9
 +};
 +
 +enum xa_rel_tdm_capture_channel_mode {
@@ -7168,5 +7213,5 @@ index 0000000..7fc93ab
 +
 +#endif
 -- 
-2.7.4
+2.19.1
 

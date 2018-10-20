@@ -1,13 +1,18 @@
-From 35f2052da7ebf049daaf85ff8c8eb8d31617c80f Mon Sep 17 00:00:00 2001
+From 5f378e5db591a4a119b6cface6037cbded240506 Mon Sep 17 00:00:00 2001
 From: tienphitran <tien.tran.uw@renesas.com>
-Date: Mon, 15 Oct 2018 17:59:33 +0700
-Subject: [PATCH 2/4] Add document file for ADSP sound driver
+Date: Thu, 25 Oct 2018 13:25:10 +0700
+Subject: [PATCH 1/6] ADSP: add document for compatible string
+ "renesas,rcar_adsp_sound_gen3"
 
 Signed-off-by: tienphitran <tien.tran.uw@renesas.com>
+---
+ .../devicetree/bindings/sound/renesas,adsp.txt        | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/sound/renesas,adsp.txt
 
 diff --git a/Documentation/devicetree/bindings/sound/renesas,adsp.txt b/Documentation/devicetree/bindings/sound/renesas,adsp.txt
 new file mode 100644
-index 0000000..b529bca
+index 000000000000..b529bcadea82
 --- /dev/null
 +++ b/Documentation/devicetree/bindings/sound/renesas,adsp.txt
 @@ -0,0 +1,11 @@
@@ -23,5 +28,5 @@ index 0000000..b529bca
 +     status = "disabled";
 +};
 -- 
-2.7.4
+2.19.1
 

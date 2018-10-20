@@ -1,0 +1,272 @@
+From 455f26d0de1cf6eaeb0aa5b58725e3e34d8d34bd Mon Sep 17 00:00:00 2001
+From: Nguyen Dang <nguyen.dang.wh@rvc.renesas.com>
+Date: Tue, 6 Nov 2018 11:36:15 +0700
+Subject: [PATCH 5/6] ADSP: integrate ADSP sound for E3 board
+
+Signed-off-by: Nguyen Dang <nguyen.dang.wh@renesas.com>
+[takeshi.kihara.df: fix W=1 dtc warning]
+[takeshi.kihara.df: support for dt file separation by E3 ES1.0 SoC]
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ .../arm64/boot/dts/renesas/r8a77990-ebisu.dts | 84 +++++++++++++++++--
+ .../boot/dts/renesas/r8a77990-es10-ebisu.dts  | 84 +++++++++++++++++--
+ arch/arm64/boot/dts/renesas/r8a77990.dtsi     |  5 ++
+ 3 files changed, 163 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77990-ebisu.dts b/arch/arm64/boot/dts/renesas/r8a77990-ebisu.dts
+index 26081a6e1866..20fdb4085d87 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77990-ebisu.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77990-ebisu.dts
+@@ -221,11 +221,27 @@
+ 	};
+ 
+ 	sound_card: sound {
+-		compatible = "audio-graph-card";
++		compatible = "audio-graph-scu-card";
+ 
+ 		label = "rcar-sound";
+ 
+-		dais = <&rsnd_port0>;
++		prefix = "ak4613";
++		routing = "ak4613 Playback", "DAI0 Playback",
++				"DAI0 Capture",   "ak4613 Capture",
++				"ak4613 Playback", "Playback0",
++				"ak4613 Playback", "Playback1",
++				"ak4613 Playback", "Playback2",
++				"ak4613 Playback", "Playback3",
++				"Capture0", "ak4613 Capture",
++				"Capture1", "ak4613 Capture",
++				"Capture2", "ak4613 Capture",
++				"Capture3", "ak4613 Capture";
++
++		dais = <&adsp_port0
++			&adsp_port1
++			&adsp_port2
++			&adsp_port3
++			&rsnd_port0>;
+ 	};
+ 
+ 	vbus0_usb2: regulator-vbus0-usb2 {
+@@ -501,8 +517,27 @@
+ 		asahi-kasei,out5-single-end;
+ 		asahi-kasei,out6-single-end;
+ 
+-		port {
+-			ak4613_endpoint: endpoint {
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			ak4613_endpoint0: endpoint@0 {
++				reg = <0>;
++				remote-endpoint = <&adsp_endpoint0>;
++			};
++			ak4613_endpoint1: endpoint@1 {
++				reg = <1>;
++				remote-endpoint = <&adsp_endpoint1>;
++			};
++			ak4613_endpoint2: endpoint@2 {
++				reg = <2>;
++				remote-endpoint = <&adsp_endpoint2>;
++			};
++			ak4613_endpoint3: endpoint@3 {
++				reg = <3>;
++				remote-endpoint = <&adsp_endpoint3>;
++			};
++			ak4613_endpoint4: endpoint@4 {
++				reg = <4>;
+ 				remote-endpoint = <&rsnd_endpoint0>;
+ 			};
+ 		};
+@@ -702,6 +737,45 @@
+ 	status = "okay";
+ };
+ 
++&rcar_adsp_sound {
++	status = "okay";
++	/* Multiple DAI */
++	#sound-dai-cells = <1>;
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		adsp_port0: port@0 {
++			reg = <0>;
++			adsp_endpoint0: endpoint {
++				remote-endpoint = <&ak4613_endpoint0>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port1: port@1 {
++			reg = <1>;
++			adsp_endpoint1: endpoint {
++				remote-endpoint = <&ak4613_endpoint1>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port2: port@2 {
++			reg = <2>;
++			adsp_endpoint2: endpoint {
++				remote-endpoint = <&ak4613_endpoint2>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port3: port@3 {
++			reg = <3>;
++			adsp_endpoint3: endpoint {
++				remote-endpoint = <&ak4613_endpoint3>;
++				dai-format = "left_j";
++			};
++		};
++	};
++};
++
+ &rcar_sound {
+ 	pinctrl-0 = <&sound_pins &sound_clk_pins>;
+ 	pinctrl-names = "default";
+@@ -737,7 +811,7 @@
+ 	ports {
+ 		rsnd_port0: port@0 {
+ 			rsnd_endpoint0: endpoint {
+-				remote-endpoint = <&ak4613_endpoint>;
++				remote-endpoint = <&ak4613_endpoint4>;
+ 
+ 				dai-format = "left_j";
+ 				bitclock-master = <&rsnd_endpoint0>;
+diff --git a/arch/arm64/boot/dts/renesas/r8a77990-es10-ebisu.dts b/arch/arm64/boot/dts/renesas/r8a77990-es10-ebisu.dts
+index 087d5533f3db..61e18309c4a4 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77990-es10-ebisu.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77990-es10-ebisu.dts
+@@ -221,11 +221,27 @@
+ 	};
+ 
+ 	sound_card: sound {
+-		compatible = "audio-graph-card";
++		compatible = "audio-graph-scu-card";
+ 
+ 		label = "rcar-sound";
+ 
+-		dais = <&rsnd_port0>;
++		prefix = "ak4613";
++		routing = "ak4613 Playback", "DAI0 Playback",
++				"DAI0 Capture",   "ak4613 Capture",
++				"ak4613 Playback", "Playback0",
++				"ak4613 Playback", "Playback1",
++				"ak4613 Playback", "Playback2",
++				"ak4613 Playback", "Playback3",
++				"Capture0", "ak4613 Capture",
++				"Capture1", "ak4613 Capture",
++				"Capture2", "ak4613 Capture",
++				"Capture3", "ak4613 Capture";
++
++		dais = <&adsp_port0
++			&adsp_port1
++			&adsp_port2
++			&adsp_port3
++			&rsnd_port0>;
+ 	};
+ 
+ 	vbus0_usb2: regulator-vbus0-usb2 {
+@@ -501,8 +517,27 @@
+ 		asahi-kasei,out5-single-end;
+ 		asahi-kasei,out6-single-end;
+ 
+-		port {
+-			ak4613_endpoint: endpoint {
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			ak4613_endpoint0: endpoint@0 {
++				reg = <0>;
++				remote-endpoint = <&adsp_endpoint0>;
++			};
++			ak4613_endpoint1: endpoint@1 {
++				reg = <1>;
++				remote-endpoint = <&adsp_endpoint1>;
++			};
++			ak4613_endpoint2: endpoint@2 {
++				reg = <2>;
++				remote-endpoint = <&adsp_endpoint2>;
++			};
++			ak4613_endpoint3: endpoint@3 {
++				reg = <3>;
++				remote-endpoint = <&adsp_endpoint3>;
++			};
++			ak4613_endpoint4: endpoint@4 {
++				reg = <4>;
+ 				remote-endpoint = <&rsnd_endpoint0>;
+ 			};
+ 		};
+@@ -702,6 +737,45 @@
+ 	status = "okay";
+ };
+ 
++&rcar_adsp_sound {
++	status = "okay";
++	/* Multiple DAI */
++	#sound-dai-cells = <1>;
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		adsp_port0: port@0 {
++			reg = <0>;
++			adsp_endpoint0: endpoint {
++				remote-endpoint = <&ak4613_endpoint0>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port1: port@1 {
++			reg = <1>;
++			adsp_endpoint1: endpoint {
++				remote-endpoint = <&ak4613_endpoint1>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port2: port@2 {
++			reg = <2>;
++			adsp_endpoint2: endpoint {
++				remote-endpoint = <&ak4613_endpoint2>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port3: port@3 {
++			reg = <3>;
++			adsp_endpoint3: endpoint {
++				remote-endpoint = <&ak4613_endpoint3>;
++				dai-format = "left_j";
++			};
++		};
++	};
++};
++
+ &rcar_sound {
+ 	pinctrl-0 = <&sound_pins &sound_clk_pins>;
+ 	pinctrl-names = "default";
+@@ -737,7 +811,7 @@
+ 	ports {
+ 		rsnd_port0: port@0 {
+ 			rsnd_endpoint0: endpoint {
+-				remote-endpoint = <&ak4613_endpoint>;
++				remote-endpoint = <&ak4613_endpoint4>;
+ 
+ 				dai-format = "left_j";
+ 				bitclock-master = <&rsnd_endpoint0>;
+diff --git a/arch/arm64/boot/dts/renesas/r8a77990.dtsi b/arch/arm64/boot/dts/renesas/r8a77990.dtsi
+index bd4d71e2b93e..845399adcbdb 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77990.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77990.dtsi
+@@ -181,6 +181,11 @@
+ 		method = "smc";
+ 	};
+ 
++	rcar_adsp_sound: adsp_sound {
++		compatible =  "renesas,rcar_adsp_sound_gen3";
++		status = "disabled";
++	};
++
+ 	/* External SCIF clock - to be overridden by boards that provide it */
+ 	scif_clk: scif {
+ 		compatible = "fixed-clock";
+-- 
+2.19.1
+

@@ -1,0 +1,185 @@
+From 825517f3f8ebe551d297db16e4582c0eae646f05 Mon Sep 17 00:00:00 2001
+From: tienphitran <tien.tran.uw@renesas.com>
+Date: Wed, 31 Oct 2018 16:12:36 +0700
+Subject: [PATCH 4/6] ADSP: integrate ADSP sound for H3, M3, M3N board
+
+Signed-off-by: tienphitran <tien.tran.uw@renesas.com>
+[takeshi.kihara.df: fix W=1 dtc warning]
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795.dtsi      |  5 ++
+ arch/arm64/boot/dts/renesas/r8a7796.dtsi      |  5 ++
+ arch/arm64/boot/dts/renesas/r8a77965.dtsi     |  5 ++
+ .../boot/dts/renesas/salvator-common.dtsi     | 84 +++++++++++++++++--
+ 4 files changed, 94 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795.dtsi b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+index 1896e5250dff..8dfda0fda91c 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7795.dtsi
+@@ -793,6 +793,11 @@
+ 		method = "smc";
+ 	};
+ 
++	rcar_adsp_sound: adsp_sound {
++		compatible =  "renesas,rcar_adsp_sound_gen3";
++		status = "disabled";
++	};
++
+ 	/* External SCIF clock - to be overridden by boards that provide it */
+ 	scif_clk: scif {
+ 		compatible = "fixed-clock";
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796.dtsi b/arch/arm64/boot/dts/renesas/r8a7796.dtsi
+index c00d1da64198..726c0d07fe59 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a7796.dtsi
+@@ -798,6 +798,11 @@
+ 		method = "smc";
+ 	};
+ 
++	rcar_adsp_sound: adsp_sound {
++		compatible =  "renesas,rcar_adsp_sound_gen3";
++		status = "disabled";
++	};
++
+ 	/* External SCIF clock - to be overridden by boards that provide it */
+ 	scif_clk: scif {
+ 		compatible = "fixed-clock";
+diff --git a/arch/arm64/boot/dts/renesas/r8a77965.dtsi b/arch/arm64/boot/dts/renesas/r8a77965.dtsi
+index 454a67b132f4..799b005ade92 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77965.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77965.dtsi
+@@ -227,6 +227,11 @@
+ 		method = "smc";
+ 	};
+ 
++	rcar_adsp_sound: adsp_sound {
++		compatible =  "renesas,rcar_adsp_sound_gen3";
++		status = "disabled";
++	};
++
+ 	/* External SCIF clock - to be overridden by boards that provide it */
+ 	scif_clk: scif {
+ 		compatible = "fixed-clock";
+diff --git a/arch/arm64/boot/dts/renesas/salvator-common.dtsi b/arch/arm64/boot/dts/renesas/salvator-common.dtsi
+index 922b9cc4797c..2c1d49c4bcaa 100644
+--- a/arch/arm64/boot/dts/renesas/salvator-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/salvator-common.dtsi
+@@ -153,11 +153,27 @@
+ 	};
+ 
+ 	sound_card: sound {
+-		compatible = "audio-graph-card";
++		compatible = "audio-graph-scu-card";
+ 
+ 		label = "rcar-sound";
+ 
+-		dais = <&rsnd_port0>;
++		prefix = "ak4613";
++		routing = "ak4613 Playback", "Playback0",
++				"ak4613 Playback", "Playback1",
++				"ak4613 Playback", "Playback2",
++				"ak4613 Playback", "Playback3",
++				"Capture0", "ak4613 Capture",
++				"Capture1", "ak4613 Capture",
++				"Capture2", "ak4613 Capture",
++				"Capture3", "ak4613 Capture",
++				"ak4613 Playback", "DAI0 Playback",
++				"DAI0 Capture", "ak4613 Capture";
++
++		dais = <&adsp_port0
++			&adsp_port1
++			&adsp_port2
++			&adsp_port3
++			&rsnd_port0>;
+ 	};
+ 
+ 	vbus0_usb2: regulator-vbus0-usb2 {
+@@ -419,8 +435,27 @@
+ 		asahi-kasei,out5-single-end;
+ 		asahi-kasei,out6-single-end;
+ 
+-		port {
+-			ak4613_endpoint: endpoint {
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			ak4613_endpoint0: endpoint@0 {
++				reg = <0>;
++				remote-endpoint = <&adsp_endpoint0>;
++			};
++			ak4613_endpoint1: endpoint@1 {
++				reg = <1>;
++				remote-endpoint = <&adsp_endpoint1>;
++			};
++			ak4613_endpoint2: endpoint@2 {
++				reg = <2>;
++				remote-endpoint = <&adsp_endpoint2>;
++			};
++			ak4613_endpoint3: endpoint@3 {
++				reg = <3>;
++				remote-endpoint = <&adsp_endpoint3>;
++			};
++			ak4613_endpoint4: endpoint@4 {
++				reg = <4>;
+ 				remote-endpoint = <&rsnd_endpoint0>;
+ 			};
+ 		};
+@@ -731,6 +766,45 @@
+ 	status = "okay";
+ };
+ 
++&rcar_adsp_sound {
++	status = "okay";
++	/* Multiple DAI */
++	#sound-dai-cells = <1>;
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		adsp_port0: port@0 {
++			reg = <0>;
++			adsp_endpoint0: endpoint {
++				remote-endpoint = <&ak4613_endpoint0>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port1: port@1 {
++			reg = <1>;
++			adsp_endpoint1: endpoint {
++				remote-endpoint = <&ak4613_endpoint1>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port2: port@2 {
++			reg = <2>;
++			adsp_endpoint2: endpoint {
++				remote-endpoint = <&ak4613_endpoint2>;
++				dai-format = "left_j";
++			};
++		};
++		adsp_port3: port@3 {
++			reg = <3>;
++			adsp_endpoint3: endpoint {
++				remote-endpoint = <&ak4613_endpoint3>;
++				dai-format = "left_j";
++			};
++		};
++	};
++};
++
+ &rcar_sound {
+ 	pinctrl-0 = <&sound_pins &sound_clk_pins>;
+ 	pinctrl-names = "default";
+@@ -769,7 +843,7 @@
+ 		rsnd_port0: port@0 {
+ 			reg = <0>;
+ 			rsnd_endpoint0: endpoint {
+-				remote-endpoint = <&ak4613_endpoint>;
++				remote-endpoint = <&ak4613_endpoint4>;
+ 
+ 				dai-format = "left_j";
+ 				bitclock-master = <&rsnd_endpoint0>;
+-- 
+2.19.1
+

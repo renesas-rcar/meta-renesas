@@ -1,0 +1,82 @@
+From 9ad46b0976a91a5de41ab62c3d0fe923857a8dda Mon Sep 17 00:00:00 2001
+From: Nguyen Dang <nguyen.dang.wh@renesas.com>
+Date: Tue, 6 Nov 2018 11:46:25 +0700
+Subject: [PATCH 6/6] ADSP: remove HDMI support from rcar-sound
+
+Signed-off-by: Nguyen Dang <nguyen.dang.wh@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts  | 6 ------
+ arch/arm64/boot/dts/renesas/r8a7795-salvator-xs.dts | 6 ------
+ arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts  | 5 -----
+ arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts | 5 -----
+ 4 files changed, 22 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts
+index 6928afbd8e06..b268afd7df85 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts
+@@ -104,12 +104,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1	/* HDMI0  */
+-		&rsnd_port2>;	/* HDMI1  */
+-};
+-
+ &hdmi0 {
+ 	status = "okay";
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvator-xs.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvator-xs.dts
+index 498f78875dbd..b6ec3036e9fd 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7795-salvator-xs.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7795-salvator-xs.dts
+@@ -114,12 +114,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1	/* HDMI0  */
+-		&rsnd_port2>;	/* HDMI1  */
+-};
+-
+ &hdmi0 {
+ 	status = "okay";
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts
+index 02a938b416d0..2dba6e8e627a 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts
+@@ -88,11 +88,6 @@
+ 		      "dclkin.0", "dclkin.1", "dclkin.2";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1>;	/* HDMI0  */
+-};
+-
+ &hdmi0 {
+ 	status = "okay";
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts
+index bd66be180d6d..708bd634b5af 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts
+@@ -88,11 +88,6 @@
+ 		      "dclkin.0", "dclkin.1", "dclkin.2";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1>;	/* HDMI0  */
+-};
+-
+ &hdmi0 {
+ 	status = "okay";
+ 
+-- 
+2.19.1
+
