@@ -4,6 +4,9 @@ USE_DTV = "${@'1' if 'dtv' in '${DISTRO_FEATURES}' else '0'}"
 # USE_DVD for DVD Core-Middleware for Linux
 USE_DVD = "${@'1' if 'dvd' in '${DISTRO_FEATURES}' else '0'}"
 
+# USE_DVD_ENCRYPTION_LIB for DVD Encryption Library for Linux
+USE_DVD_ENCRYPTION_LIB = "${@'1' if 'dvd_encryption_library' in '${DISTRO_FEATURES}' else '0'}"
+
 # This function to prevent build DTV feature with E3
 python do_dtv_checking () {
     soc = d.getVar('SOC_FAMILY')

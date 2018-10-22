@@ -45,6 +45,11 @@ DVD_PKGS = " \
     dvd-user-module \
 "
 
+# DVD Encryption Library packages
+DVD_ENCRYPTION_PKGS = " \
+    dvd-encryption-module \
+"
+
 # ADSP Packages
 ADSP_PKGS = " \
     kernel-module-xtensa-hifi \
@@ -90,6 +95,7 @@ IMAGE_INSTALL_append = " \
     ${@base_conditional("USE_CMS", "1", " ${CMS_MULTIMEDIA_PKGS}", "", d)} \
     ${@base_conditional("USE_DTV", "1", " ${DTV_PKGS}", "", d)} \
     ${@base_conditional("USE_DVD", "1", " ${DVD_PKGS}", "", d)} \
+    ${@base_conditional("USE_DVD_ENCRYPTION_LIB", "1", " ${DVD_ENCRYPTION_PKGS}", "", d)} \
     ${@base_conditional("USE_ADSP", "1", " ${ADSP_PKGS}", "", d)} \
     ${@base_conditional("USE_AVB", "1", " ${AVB_PKGS}", "", d)} \
     ${@base_conditional("USE_32BIT_MMP", "1", " ${MMP_32BIT_PKGS}", "", d)} \
