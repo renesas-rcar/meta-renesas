@@ -13,21 +13,13 @@ inherit deploy pythonnative
 PV = "3.1.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3"
-SRCREV_renesas = "459c612224e123658a2ad29a91a3d186342d24a9"
+SRCREV_renesas = "35f6b872b7bd4cd0245f4c8b2e4a2cdc86fe8151"
 SRCREV_officialgit = "e77020396508fc086d7a4d6137388b116e4a662f"
 SRCREV_FORMAT = "renesas_officialgit"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};name=renesas \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
-"
-
-# Patch for Yv3.9.0.1
-SRC_URI_append = " \
-    file://0001-OPTEE_PROVIDER-188185-Fix-a-contxt-size-allocated-by.patch \
-    file://0002-OPTEE_PROVIDER-188122-Fix-to-exclusive-control-for-R.patch \
-    file://0001-Update-optee_os-Rev1.0.16-rev2.patch \
-    file://0001-plat-rcar-fix-MMU-configuration-of-shared-memory.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|ebisu)"

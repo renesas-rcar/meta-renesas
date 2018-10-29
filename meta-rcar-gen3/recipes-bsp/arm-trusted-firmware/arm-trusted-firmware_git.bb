@@ -1,7 +1,7 @@
 DESCRIPTION = "ARM Trusted Firmware"
 
 LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://license.rst;md5=33065335ea03d977d0569f270b39603e"
+LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -13,14 +13,9 @@ S = "${WORKDIR}/git"
 
 BRANCH = "rcar_gen3"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
-SRCREV = "d4a607b7ea3886d8d1098192d2c657face631202"
+SRCREV = "7f126e2e718a69bec850c87bd05c4c168b32c4df"
 
-# Update DDR Setting
-SRC_URI_append = " \
-    file://0001-Update-IPL-patch-for-DDR-setting-rev.0.33.patch \
-"
-
-PV = "v1.4+renesas+git${SRCPV}"
+PV = "v1.5+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PLATFORM = "rcar"
