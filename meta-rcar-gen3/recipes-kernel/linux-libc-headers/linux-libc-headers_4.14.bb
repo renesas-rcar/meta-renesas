@@ -11,7 +11,7 @@ SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
 # Enable RPMSG_VIRTIO depend on ICCOM
 SRC_URI_append = " \
-    ${@base_conditional("USE_ICCOM", "1", " file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch", "", d)} \
+    ${@oe.utils.conditional("USE_ICCOM", "1", " file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch", "", d)} \
 "
 
 # Add ADSP ALSA driver
@@ -25,7 +25,7 @@ SUPPORT_ADSP_ASOC = " \
 "
 
 SRC_URI_append = " \
-    ${@base_conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
+    ${@oe.utils.conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
 "
 
 S = "${WORKDIR}/git"
