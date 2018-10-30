@@ -1,5 +1,6 @@
 [Unit]
 Description=PowerVR consumer services
+Before=weston.service
 
 [Service]
 ExecStart=/usr/bin/pvrinit start
@@ -9,3 +10,4 @@ RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
+RequiredBy=weston.service
