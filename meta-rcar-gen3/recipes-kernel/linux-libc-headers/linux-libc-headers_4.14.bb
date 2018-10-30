@@ -9,6 +9,8 @@ SRCREV = "1f12f0466c7782ef7f44481ecf08db5e77448c7f"
 
 SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
+LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
+
 # Enable RPMSG_VIRTIO depend on ICCOM
 SRC_URI_append = " \
     ${@oe.utils.conditional("USE_ICCOM", "1", " file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch", "", d)} \
