@@ -22,6 +22,9 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 S = "${WORKDIR}/git"
 
+# Recipe which fail to compile when enabling _FORTIFY_SOURCE=2 option
+SECURITY_CFLAGS_pn-optee-client = ""
+
 EXTRA_OEMAKE = "RPMB_EMU=0"
 
 do_install () {
