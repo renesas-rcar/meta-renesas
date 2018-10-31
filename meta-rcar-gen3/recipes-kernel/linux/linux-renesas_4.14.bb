@@ -66,6 +66,11 @@ SRC_URI_append = " \
     ${@bb.utils.contains('MACHINE_FEATURES','usb3','file://usb3.cfg','',d)} \
 "
 
+# W/A Fix build issue with Linux v4.14
+SRC_URI_append = " \
+    file://0001-arm64-bpf-correct-broken-uapi-for-BPF_PROG_TYPE_PERF.patch \
+"
+
 do_download_firmware () {
     install -m 755 ${WORKDIR}/r8a779x_usb3_v*.dlmem ${STAGING_KERNEL_DIR}/firmware
 }
