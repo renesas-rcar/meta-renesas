@@ -29,3 +29,8 @@ SRC_URI_append = " \
 "
 
 S = "${WORKDIR}/git"
+
+# W/A Fix build issue with Linux v4.14
+SRC_URI_append = " \
+    file://0001-arm64-bpf-correct-broken-uapi-for-BPF_PROG_TYPE_PERF.patch \
+"
