@@ -16,7 +16,7 @@ DEPENDS = "linux-renesas kernel-module-avb-streaming kernel-module-avb-mch"
 REQUIRED_DISTRO_FEATURES = "avb"
 
 SRC_URI = "git://github.com/renesas-rcar/avb-mse.git;branch=rcar-gen3"
-SRCREV = "f482b5eb1597592b52e219fded2e09f026201fa1"
+SRCREV = "d290b4a5d7afab654a8b3a356934be2c1406c378"
 
 S = "${WORKDIR}/git"
 
