@@ -7,13 +7,9 @@ require include/rcar-gen3-modules-common.inc
 
 VSPMIF_LIB_URL = "git://github.com/renesas-rcar/vspmif_lib.git"
 BRANCH = "rcar_gen3"
-SRCREV = "a2d67ccc2080a5fdc63dd0f31cf7366792c2e113"
+SRCREV = "06fe8b1341801079f8a2b964ea95980967dcf789"
 
 SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH}"
-
-SRC_URI_append = " \
-    file://0001-rcar_gen3-To-correspond-boards-that-do-not-support-F.patch \
-"
 
 # This module is machine specific.
 PACKAGE_ARCH = "${MACHINE_ARCH}"
