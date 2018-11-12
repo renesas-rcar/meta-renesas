@@ -27,6 +27,10 @@ S = "${WORKDIR}/git"
 
 EXTRA_OEMAKE = "'CC=${CC}' 'CXX=${CXX}'"
 
+do_configure() {
+    oe_runmake daemons_all_clean
+}
+
 do_compile() {
     oe_runmake daemons_all
 }
