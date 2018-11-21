@@ -37,37 +37,37 @@ do_populate_sysroot[depends] += "virtual/mesa:do_populate_sysroot"
 
 do_install() {
     # Install configuration files
-    install -d ${D}/${sysconfdir}/init.d
-    install -m 644 ${S}/${sysconfdir}/powervr.ini ${D}/${sysconfdir}
-    install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${sysconfdir}/init.d/pvrinit
-    install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${sysconfdir}/init.d/
-    install -d ${D}/${sysconfdir}/udev/rules.d
-    install -m 644 ${S}/${sysconfdir}/udev/rules.d/72-pvr-seat.rules ${D}/${sysconfdir}/udev/rules.d/
+    install -d ${D}${sysconfdir}/init.d
+    install -m 644 ${S}/etc/powervr.ini ${D}${sysconfdir}
+    install -m 755 ${S}/etc/init.d/rc.pvr ${D}${sysconfdir}/init.d/pvrinit
+    install -m 755 ${S}/etc/init.d/rc.pvr ${D}${sysconfdir}/init.d/
+    install -d ${D}${sysconfdir}/udev/rules.d
+    install -m 644 ${S}/etc/udev/rules.d/72-pvr-seat.rules ${D}${sysconfdir}/udev/rules.d/
 
     # Install header files
-    install -d ${D}/${includedir}/EGL
-    install -m 644 ${S}/${includedir}/EGL/*.h ${D}/${includedir}/EGL/
-    install -d ${D}/${includedir}/GLES2
-    install -m 644 ${S}/${includedir}/GLES2/*.h ${D}/${includedir}/GLES2/
-    install -d ${D}/${includedir}/GLES3
-    install -m 644 ${S}/${includedir}/GLES3/*.h ${D}/${includedir}/GLES3/
-    install -d ${D}/${includedir}/KHR
-    install -m 644 ${S}/${includedir}/KHR/khrplatform.h ${D}/${includedir}/KHR/khrplatform.h
+    install -d ${D}${includedir}/EGL
+    install -m 644 ${S}/usr/include/EGL/*.h ${D}${includedir}/EGL/
+    install -d ${D}${includedir}/GLES2
+    install -m 644 ${S}/usr/include/GLES2/*.h ${D}${includedir}/GLES2/
+    install -d ${D}${includedir}/GLES3
+    install -m 644 ${S}/usr/include/GLES3/*.h ${D}${includedir}/GLES3/
+    install -d ${D}${includedir}/KHR
+    install -m 644 ${S}/usr/include/KHR/khrplatform.h ${D}${includedir}/KHR/khrplatform.h
 
     # Install pre-builded binaries
-    install -d ${D}/${libdir}
-    install -m 755 ${S}/${libdir}/*.so ${D}/${libdir}/
+    install -d ${D}${libdir}
+    install -m 755 ${S}/usr/lib/*.so ${D}${libdir}/
     install -d ${D}${RENESAS_DATADIR}/bin
     install -m 755 ${S}/usr/local/bin/dlcsrv_REL ${D}${RENESAS_DATADIR}/bin/dlcsrv_REL
     install -d ${D}/lib/firmware
     install -m 644 ${S}/lib/firmware/* ${D}/lib/firmware/
 
     # Install pkgconfig
-    install -d ${D}/${libdir}/pkgconfig
-    install -m 644 ${S}/${libdir}/pkgconfig/*.pc ${D}/${libdir}/pkgconfig/
+    install -d ${D}${libdir}/pkgconfig
+    install -m 644 ${S}/usr/lib/pkgconfig/*.pc ${D}${libdir}/pkgconfig/
 
     # Create symbolic link
-    cd ${D}/${libdir}
+    cd ${D}${libdir}
     ln -s libEGL.so libEGL.so.1
     ln -s libGLESv2.so libGLESv2.so.2
 
@@ -75,16 +75,16 @@ do_install() {
         # Set the "WindowSystem" parameter for wayland
         if [ "${GLES}" = "gsx" ]; then
             sed -i -e "s/WindowSystem=libpvrDRM_WSEGL.so/WindowSystem=libpvrWAYLAND_WSEGL.so/g" \
-                ${D}/${sysconfdir}/powervr.ini
+                ${D}${sysconfdir}/powervr.ini
         fi
     fi
 
     # Install systemd service
     if [ ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ]; then
-        install -d ${D}/${systemd_system_unitdir}/
-        install -m 644 ${WORKDIR}/rc.pvr.service ${D}/${systemd_system_unitdir}/
-        install -d ${D}/${exec_prefix}/bin
-        install -m 755 ${S}/${sysconfdir}/init.d/rc.pvr ${D}/${exec_prefix}/bin/pvrinit
+        install -d ${D}${systemd_system_unitdir}/
+        install -m 644 ${WORKDIR}/rc.pvr.service ${D}${systemd_system_unitdir}/
+        install -d ${D}${exec_prefix}/bin
+        install -m 755 ${S}/etc/init.d/rc.pvr ${D}${exec_prefix}/bin/pvrinit
     fi
 }
 
