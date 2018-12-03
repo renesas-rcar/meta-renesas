@@ -24,6 +24,7 @@ do_deploy_append() {
                 j=$(expr $j + 1);
                 if [ $j -eq $i ]
                 then
+                    type=${type#*_}
                     install -m 644 ${B}/${config}/${UBOOT_SREC} ${DEPLOYDIR}/u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}
                     cd ${DEPLOYDIR}
                     ln -sf u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX} u-boot-elf-${type}.${UBOOT_SREC_SUFFIX}
