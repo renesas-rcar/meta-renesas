@@ -25,7 +25,7 @@ PR = "r1"
 SRC_URI_append = " \
     file://defconfig \
     file://touch.cfg \
-    ${@base_conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
+    ${@oe.utils.conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
 
 # Enable RPMSG_VIRTIO depend on ICCOM
@@ -35,12 +35,12 @@ SUPPORT_ICCOM = " \
 "
 
 SRC_URI_append = " \
-    ${@base_conditional("USE_ICCOM", "1", "${SUPPORT_ICCOM}", "", d)} \
+    ${@oe.utils.conditional("USE_ICCOM", "1", "${SUPPORT_ICCOM}", "", d)} \
 "
 
 # Add SCHED_DEBUG config fragment to support CAS
 SRC_URI_append = " \
-    ${@base_conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
+    ${@oe.utils.conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
 "
 
 # Add ADSP ALSA driver
@@ -55,7 +55,7 @@ SUPPORT_ADSP_ASOC = " \
 "
 
 SRC_URI_append = " \
-    ${@base_conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
+    ${@oe.utils.conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
 "
 
 # Install USB3.0 firmware to rootfs

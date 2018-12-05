@@ -39,7 +39,7 @@ BASIC_32BIT_PKGS = " \
 
 # Installation for 32bit packages
 IMAGE_INSTALL_append = " \
-    ${@base_conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
+    ${@oe.utils.conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
 "
 
 # Kernel modules of ICCOM
@@ -63,5 +63,5 @@ ICCOM_PKGS = " \
 
 # Installation for ICCOM Packages
 IMAGE_INSTALL_append = " \
-    ${@base_conditional("USE_ICCOM", "1", " ${ICCOM_PKGS}", "", d)} \
+    ${@oe.utils.conditional("USE_ICCOM", "1", " ${ICCOM_PKGS}", "", d)} \
 "
