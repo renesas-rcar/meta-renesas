@@ -21,7 +21,7 @@ SRC_URI_append = " \
 S = "${WORKDIR}/git"
 
 PACKAGECONFIG_append = " \
-    ${@base_conditional('USE_MULTIMEDIA', '1', ' v4l2', '', d)} \
+    ${@oe.utils.conditional('USE_MULTIMEDIA', '1', ' v4l2', '', d)} \
 "
 PACKAGECONFIG[v4l2] = " --enable-v4l2, --disable-v4l2,,kernel-module-vsp2driver"
 

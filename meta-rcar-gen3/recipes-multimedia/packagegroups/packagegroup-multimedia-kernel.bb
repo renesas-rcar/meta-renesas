@@ -8,7 +8,7 @@ DEPENDS = "kernel-module-mmngr kernel-module-mmngrbuf \
     kernel-module-vsp2driver \
 "
 
-DEPENDS += '${@base_conditional("USE_VIDEO_OMX", "1", "kernel-module-uvcs-drv", "", d )}'
+DEPENDS += '${@oe.utils.conditional("USE_VIDEO_OMX", "1", "kernel-module-uvcs-drv", "", d )}'
 
 PR = "r0"
 
@@ -27,5 +27,5 @@ RDEPENDS_packagegroup-multimedia-kernel-modules = " \
 "
 
 RDEPENDS_packagegroup-multimedia-kernel-modules += " \
-    ${@base_conditional("USE_VIDEO_OMX", "1", "kernel-module-uvcs-drv", "", d )} \
+    ${@oe.utils.conditional("USE_VIDEO_OMX", "1", "kernel-module-uvcs-drv", "", d )} \
 "
