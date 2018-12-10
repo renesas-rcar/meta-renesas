@@ -2,7 +2,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
 SRC_URI_append = " \
-    git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.12.2 \
+    git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.12.4 \
     file://gstomx.conf \
 "
 
@@ -10,7 +10,7 @@ require include/rcar-gen3-path-common.inc
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
-SRCREV = "b836b899f9036221377302fa8e19c03ad5f92f96"
+SRCREV = "835d039013ac26d3a05dfebb5dc6af0b830226ae"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
     file://omx/gstomx.h;beginline=1;endline=22;md5=41f577b291a84518889deaaaf2bcbc95 \
