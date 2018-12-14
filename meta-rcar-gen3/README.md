@@ -33,6 +33,12 @@ This layer depends on:
 
 The following instructions require a Poky installation (or equivalent).
 
+This also needs git user name and email defined:
+```bash
+   $ git config --global user.email "you@example.com"
+   $ git config --global user.name "Your Name"
+```
+
 Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
 ```bash
     $ source poky/oe-init-build-env
