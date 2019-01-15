@@ -15,11 +15,24 @@ VSPFILTER_CONF_r8a77965 = "gstvspfilter-${MACHINE}_r8a77965.conf"
 VSPFILTER_CONF_r8a77990 = "gstvspfilter-${MACHINE}_r8a77990.conf"
 
 SRC_URI = " \
-    git://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.0 \
+    git://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.1 \
     file://${VSPFILTER_CONF} \
 "
 
-SRCREV = "c506c57b6c169e0cd9578a294a829640a531c2d4"
+# submodule is extracted before do_populate_lic
+addtask do_init_submodule after do_unpack before do_patch
+
+do_init_submodule() {
+    export http_proxy=${http_proxy}
+    export https_proxy=${https_proxy}
+    export HTTP_PROXY=${HTTP_PROXY}
+    export HTTPS_PROXY=${HTTPS_PROXY}
+    cd ${S}
+    git submodule init
+    git submodule update
+}
+
+SRCREV = "e7f61ef736a8824e26246733863b0dcabfa6dae2"
 
 S = "${WORKDIR}/git"
 
