@@ -80,7 +80,7 @@ do_install() {
     fi
 
     # Install systemd service
-    if [ ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ]; then
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ; then
         install -d ${D}${systemd_system_unitdir}/
         install -m 644 ${WORKDIR}/rc.pvr.service ${D}${systemd_system_unitdir}/
         install -d ${D}${exec_prefix}/bin
