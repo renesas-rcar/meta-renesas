@@ -6,6 +6,7 @@ board and the SoCs of the following:
 - Board: Salvator-X / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
 - Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A7795 (R-Car H3)
 - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796 (R-Car M3)
+- Board: R-Car Starter Kit pro(M3NULCB) / SoC: R8A77965 (R-Car M3N)
 - Board: Ebisu / SoC: R8A77990 (R-Car E3)
 
 ## Patches

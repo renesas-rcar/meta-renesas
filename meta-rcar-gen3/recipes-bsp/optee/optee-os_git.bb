@@ -22,7 +22,7 @@ SRC_URI = " \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
 "
 
-COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|ebisu)"
+COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu)"
 PLATFORM = "rcar"
 
 DEPENDS = "python-pycrypto-native"
