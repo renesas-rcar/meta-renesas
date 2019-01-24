@@ -7,7 +7,7 @@ require include/cas-control.inc
 require include/adsp-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|ebisu"
+COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
 
 RENESAS_BSP_URL = " \
     git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"

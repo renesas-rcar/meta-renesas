@@ -13,6 +13,7 @@ MMNGR_DRV_DIR = "mmngr_drv/mmngr/mmngr-module/files/mmngr"
 MMNGR_CFG_salvator-x = "MMNGR_SALVATORX"
 MMNGR_CFG_h3ulcb = "MMNGR_SALVATORX"
 MMNGR_CFG_m3ulcb = "MMNGR_SALVATORX"
+MMNGR_CFG_m3nulcb = "MMNGR_SALVATORX"
 MMNGR_CFG_ebisu = "MMNGR_EBISU"
 
 includedir = "${RENESAS_DATADIR}/include"

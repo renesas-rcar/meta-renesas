@@ -15,6 +15,7 @@ Layer and boards that support is the following:
         - Renesas Electronics Corporation. Salvator-X (R8A7795/R8A7796/R8A77965)
         - Renesas Electronics Corporation. R-Car Starter Kit premier(H3ULCB) (R8A7795)
         - Renesas Electronics Corporation. R-Car Starter Kit pro(M3ULCB) (R8A7796)
+        - Renesas Electronics Corporation. R-Car Starter Kit pro(M3NULCB) (R8A77965)
         - Renesas Electronics Corporation. R-Car Ebisu (R8A77990)
 
 Please see README in the layer directory for the description of the board.

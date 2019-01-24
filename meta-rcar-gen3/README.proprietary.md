@@ -51,6 +51,12 @@ to use, you will need to get them from Renesas.
        MACHINE = "m3ulcb"
     ```
 
+    * For R-Car Starter Kit Pro(M3NULCB) board
+
+    ```bash
+        MACHINE = "m3nulcb"
+    ```
+
     * For Ebisu board
 
     ```bash

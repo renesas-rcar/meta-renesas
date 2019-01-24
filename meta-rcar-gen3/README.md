@@ -1,6 +1,17 @@
 # meta-rcar-gen3
 
 
+This layer provides the support for the evaluation board mounted ARM SoCs of Renesas
+Electronics, called the R-Car Generation 3.
+
+Currently, this supports boards and the SoCs of the following:
+
+- Board: Salvator-X / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
+- Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A7795 (R-Car H3)
+- Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796 (R-Car M3)
+- Board: R-Car Starter Kit pro(M3NULCB) / SoC: R8A77965 (R-Car M3N)
+- Board: Ebisu / SoC: R8A77990 (R-Car E3)
+
 This layer provides the support for the evaluation board mounted ARM SoCs of
 Renesas Electronics, called the R-Car Generation 3.
 
