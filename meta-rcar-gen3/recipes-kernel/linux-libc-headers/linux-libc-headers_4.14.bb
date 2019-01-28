@@ -4,8 +4,8 @@ require include/adsp-control.inc
 
 RENESAS_BSP_URL = " \
     git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
-BRANCH = "v4.14.75-ltsi/rcar-3.9.2"
-SRCREV = "a5266d298124874c2c06b8b13d073f6ecc2ee355"
+BRANCH = "v4.14.75-ltsi/rcar-3.9.4"
+SRCREV = "1f12f0466c7782ef7f44481ecf08db5e77448c7f"
 
 SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
@@ -35,9 +35,4 @@ S = "${WORKDIR}/git"
 # W/A Fix build issue with Linux v4.14
 SRC_URI_append = " \
     file://0001-arm64-bpf-correct-broken-uapi-for-BPF_PROG_TYPE_PERF.patch \
-"
-
-# W/A to fix kernel crash
-SRC_URI_append = " \
-    file://bugfix-crash-during-Full-HD-playback.patch \
 "
