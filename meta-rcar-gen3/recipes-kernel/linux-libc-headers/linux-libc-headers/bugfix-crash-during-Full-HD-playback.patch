@@ -1,0 +1,37 @@
+From b4b3ac9b2bdd5c234251bcf9f843cb972f8c06cf Mon Sep 17 00:00:00 2001
+From: Vitaliy Vasylskyy <vitaliy.vasylskyy@globallogic.com>
+Date: Mon, 17 Dec 2018 15:36:17 +0200
+Subject: [PATCH] bugfix: crash during Full HD playback
+
+This fixes issue with kernel crash during Full HD playback.
+Loop variable was used twice by mistake, so only plane 0 was
+handled properly, and crash happened when plane 1 was in use.
+
+Jira-Id: ADM-2589
+
+Change-Id: I52b69906a10646f5a95220ebced8d3a437ccc89a
+Signed-off-by: Vitaliy Vasylskyy <vitaliy.vasylskyy@globallogic.com>
+---
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+index db32c20..26309fe 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+@@ -227,7 +227,7 @@
+ 	struct rcar_du_vsp_plane_state *rstate = to_rcar_vsp_plane_state(state);
+ 	struct rcar_du_vsp *vsp = to_rcar_vsp_plane(plane)->vsp;
+ 	struct rcar_du_device *rcdu = vsp->dev;
+-	unsigned int i;
++	unsigned int i, j;
+ 	int ret;
+ 
+ 	/*
+@@ -260,7 +260,7 @@
+ 
+ 			src = gem->sgt->sgl;
+ 			dst = sgt->sgl;
+-			for (i = 0; i < gem->sgt->orig_nents; ++i) {
++			for (j = 0; j < gem->sgt->orig_nents; ++j) {
+ 				sg_set_page(dst, sg_page(src), src->length,
+ 					    src->offset);
+ 				src = sg_next(src);
