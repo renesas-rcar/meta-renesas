@@ -2,7 +2,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
 SRC_URI_append = " \
-    git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.12.2 \
+    git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.14.2 \
     file://gstomx.conf \
 "
 
@@ -10,10 +10,10 @@ require include/rcar-gen3-path-common.inc
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
-SRCREV = "b836b899f9036221377302fa8e19c03ad5f92f96"
+SRCREV = "9e1d2ad0790111af7d131ec98b1204e27eca19bc"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
-    file://omx/gstomx.h;beginline=1;endline=22;md5=41f577b291a84518889deaaaf2bcbc95 \
+    file://omx/gstomx.h;beginline=1;endline=22;md5=e2c6664eda77dc22095adbed9cb6c6e4 \
 "
 
 S = "${WORKDIR}/git"
@@ -34,5 +34,5 @@ do_configure_prepend() {
     cd ${B}
 }
 
-RDEPENDS_${PN}_append = " libwayland-egl omx-user-module"
+RDEPENDS_${PN}_append = " omx-user-module"
 RDEPENDS_${PN}_remove = "libomxil"
