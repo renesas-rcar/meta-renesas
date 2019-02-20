@@ -1,15 +1,15 @@
 # Proprietary libraries for meta-rcar-gen3
 
-The meta-rcar-gen3 layer of meta-renesas is supported Graphic GLES(GSX) libraries,
-proprietary library of multimedia, and ICCOM software.
+
+The meta-rcar-gen3 layer of meta-renesas is supported Graphic GLES(GSX)
+libraries, proprietary library of multimedia, and ICCOM software.
 
 This README describes how to use these features and setting to local.conf.
 
-```
-  I/   Board configuration
-  II/  Build with GLES
-  III/ Build with Renesas multimedia libraries
-  IV/  Enable Linux ICCOM driver and Linux ICCOM library
+```bash
+    I/   Board configuration
+    II/  Build with GLES
+    III/ Build with Renesas multimedia libraries
 ```
 
 There are 2 main paths:
@@ -17,51 +17,68 @@ There are 2 main paths:
 * Please check section II to config for GLES.
 * Please check section III to enable Multimedia functions.
 
-If you would like to use Linux ICCOM driver and Linux ICCOM library,
-please check section IV.
+If you would like to use Linux ICCOM driver and Linux ICCOM library, please
+check section IV.
 
-**Note:**
+**NOTE:**
 
-* However, to have a completed local.conf,
-please also refer to Build Instruction in _meta-renesas/meta-rcar-gen3/README_.
-* In addition, these libraries are not provided with recipes. If you would like to use,
-you will need to get them from Renesas.
+* However, to have a completed local.conf, please also refer to Build
+Instruction in meta-renesas/meta-rcar-gen3/README.
+
+* In addition, these libraries are not provided with recipes. If you would like
+to use, you will need to get them from Renesas.
 
 ## I/ Board configuration
+
 
 * Add this line to local.conf
 
     * For Salvator-X board
+
     ```bash
-        MACHINE = "salvator-x"
+       MACHINE = "salvator-x"
     ```
+
     * For R-Car Starter Kit Premier(H3ULCB) board
+
     ```bash
-        MACHINE = "h3ulcb"
+       MACHINE = "h3ulcb"
     ```
+
     * For R-Car Starter Kit Pro(M3ULCB) board
+
     ```bash
-        MACHINE = "m3ulcb"
+       MACHINE = "m3ulcb"
     ```
+
     * For Ebisu board
+
     ```bash
-        MACHINE = "ebisu"
+       MACHINE = "ebisu"
     ```
-* Set SOC family name:
+
+* Set SOC family name
 
     * For H3: r8a7795
+
     ```bash
-        SOC_FAMILY = "r8a7795"
+       SOC_FAMILY = "r8a7795"
     ```
+
     * For M3: r8a7796
+
     ```bash
-        SOC_FAMILY = "r8a7796"
+       SOC_FAMILY = "r8a7796"
     ```
+
     * For M3N: r8a77965
+
     ```bash
-        SOC_FAMILY = "r8a77965"
+       SOC_FAMILY = "r8a77965"
     ```
+
     * For E3: r8a77990
+
     ```bash
         # Already added in machine config: ebisu.conf
         SOC_FAMILY = "r8a77990"
@@ -69,10 +86,12 @@ you will need to get them from Renesas.
 
 ## II/ Build with GLES
 
+
 For wayland with GSX
 
-1. Please copy proprietary libraries to the directory of recipes.
-2. Set local.conf the following.
+* Please copy proprietary libraries to the directory of recipes.
+
+* Set local.conf the following.
 
 ```bash
     # Enable Gfx Pkgs
@@ -92,78 +111,85 @@ For wayland with GSX
     BBMASK = "mesa-gl"
 ```
 
-3. Run
-
-```bash
-    $ bitbake core-image-weston
-```
+* Run `bitbake core-image-weston`
 
 ## III/ Build with Renesas multimedia libraries
 
+
 Multimedia portions depend on GLES portions.
 
-**A/ Configuration for Multimedia features**
+### A/ Configuration for Multimedia features
 
-1. Please copy proprietary libraries to the directory of recipes.
-2. Please set local.conf the following.
+
+* Please copy proprietary libraries to the directory of recipes.
+
+* Please set local.conf the following.
+
 ```bash
-        # Enable multimedia features.
-        # This provides package group of plug-ins of the GStreamer, multimedia
-        # libraries and kernel drivers.
+    # Enable multimedia features.
+    # This provides package group of plug-ins of the GStreamer, multimedia
+    # libraries and kernel drivers.
 
-            MACHINE_FEATURES_append = " multimedia"
+        MACHINE_FEATURES_append = " multimedia"
 ```
 
-**B/ Configuration for optional codecs and middleware**
+### B/ Configuration for optional codecs and middleware
 
-1. Please copy proprietary libraries to the directory of recipes.
-2. Add features to DISTRO_FEATURES_append to local.conf
+
+* Please copy proprietary libraries to the directory of recipes.
+
+* Add features to DISTRO_FEATURES_append to local.conf
+
 ```bash
-        # Additional configuration in OMX module
-        " h263dec_lib"       - for OMX Media Component H263 Decoder Library
-        " h264dec_lib"       - for OMX Media Component H264 Decoder Library
-        " h264enc_lib"       - for OMX Media Component H.264 Encoder Library
-        " h265dec_lib"       - for OMX Media Component H265 Decoder Library
-        " mpeg2dec_lib"      - for OMX Media Component MPEG2 Decoder Library
-        " mpeg4dec_lib"      - for OMX Media Component MPEG4 Decoder Library
-        " vc1dec_lib"        - for OMX Media Component VC-1 Decoder Library
-        " divxdec_lib"       - for OMX Media Component DivX Decoder Library
-        " rvdec_lib"         - for OMX Media Component RealVideo Decoder Library
-        " alacdec_lib"       - for OMX Media Component ALAC Decoder Library
-        " flacdec_lib"       - for OMX Media Component FLAC Decoder Library
-        " aaclcdec_lib"      - for OMX Media Component AAC-LC Decoder Library
-        " aaclcdec_mdw"      - for AAC-LC 2ch Decoder Middleware for Linux
-        " aacpv2dec_lib"     - for OMX Media Component aacPlus V2 Decoder Library
-        " aacpv2dec_mdw"     - for aacPlus V2 Decoder Middleware for Linux
-        " mp3dec_lib"        - for OMX Media Component MP3 Decoder Library
-        " mp3dec_mdw"        - for MP3 Decoder Middleware for Linux
-        " wmadec_lib"        - for OMX Media Component WMA Standard Decoder Library
-        " wmadec_mdw"        - for WMA Standard Decoder Middleware for Linux
-        " dddec_lib"         - for OMX Media Component Dolby(R) Digital Decoder Library
-        " dddec_mdw"         - for Dolby(R) Digital Decoder Middleware for Linux
-        " aaclcenc_lib"      - for OMX Media Component AAC-LC Encoder Library
-        " vp8dec_lib"        - for OMX Media Component VP8 Decoder Library for Linux
-        " vp8enc_lib"        - for OMX Media Component VP8 Encoder Library for Linux
-        " vp9dec_lib"        - for OMX Media Component VP9 Decoder Library for Linux
-        " aaclcenc_mdw"      - for AAC-LC Encoder Middleware for Linux
-        " cmsbcm"            - for CMS Basic Color Management Middleware for Linux
-        " cmsblc"            - for CMS CMM3 Backlight Control Middleware for Linux
-        " cmsdgc"            - for CMS VSP2 Dynamic Gamma Correction Middleware for Linux
-        " dtv"               - for ISDB-T DTV Software Package for Linux
-        " dvd"               - for DVD Core-Middleware for Linux
-        " adsp"              - for ADSP driver, ADSP interface and ADSP framework for Linux
-        " avb"               - for AVB Software Package for Linux
+    # Additional configuration in OMX module
+    " h263dec_lib"       - for OMX Media Component H263 Decoder Library
+    " h264dec_lib"       - for OMX Media Component H264 Decoder Library
+    " h264enc_lib"       - for OMX Media Component H.264 Encoder Library
+    " h265dec_lib"       - for OMX Media Component H265 Decoder Library
+    " mpeg2dec_lib"      - for OMX Media Component MPEG2 Decoder Library
+    " mpeg4dec_lib"      - for OMX Media Component MPEG4 Decoder Library
+    " vc1dec_lib"        - for OMX Media Component VC-1 Decoder Library
+    " divxdec_lib"       - for OMX Media Component DivX Decoder Library
+    " rvdec_lib"         - for OMX Media Component RealVideo Decoder Library
+    " alacdec_lib"       - for OMX Media Component ALAC Decoder Library
+    " flacdec_lib"       - for OMX Media Component FLAC Decoder Library
+    " aaclcdec_lib"      - for OMX Media Component AAC-LC Decoder Library
+    " aaclcdec_mdw"      - for AAC-LC 2ch Decoder Middleware for Linux
+    " aacpv2dec_lib"     - for OMX Media Component aacPlus V2 Decoder Library
+    " aacpv2dec_mdw"     - for aacPlus V2 Decoder Middleware for Linux
+    " mp3dec_lib"        - for OMX Media Component MP3 Decoder Library
+    " mp3dec_mdw"        - for MP3 Decoder Middleware for Linux
+    " wmadec_lib"        - for OMX Media Component WMA Standard Decoder Library
+    " wmadec_mdw"        - for WMA Standard Decoder Middleware for Linux
+    " dddec_lib"         - for OMX Media Component Dolby(R) Digital Decoder Library
+    " dddec_mdw"         - for Dolby(R) Digital Decoder Middleware for Linux
+    " aaclcenc_lib"      - for OMX Media Component AAC-LC Encoder Library
+    " vp8dec_lib"        - for OMX Media Component VP8 Decoder Library for Linux
+    " vp8enc_lib"        - for OMX Media Component VP8 Encoder Library for Linux
+    " vp9dec_lib"        - for OMX Media Component VP9 Decoder Library for Linux
+    " aaclcenc_mdw"      - for AAC-LC Encoder Middleware for Linux
+    " cmsbcm"            - for CMS Basic Color Management Middleware for Linux
+    " cmsblc"            - for CMS CMM3 Backlight Control Middleware for Linux
+    " cmsdgc"            - for CMS VSP2 Dynamic Gamma Correction Middleware for Linux
+    " dtv"               - for ISDB-T DTV Software Package for Linux
+    " dvd"               - for DVD Core-Middleware for Linux
+    " adsp"              - for ADSP driver, ADSP interface and ADSP framework for Linux
+    " avb"               - for AVB Software Package for Linux
 ```
+
 Ex:
-```bash
-        DISTRO_FEATURES_append = " h264dec_lib h265dec_lib mpeg2dec_lib aaclcdec_lib aaclcdec_mdw"
+```
+    DISTRO_FEATURES_append = " h264dec_lib h265dec_lib mpeg2dec_lib aaclcdec_lib aaclcdec_mdw"
 ```
 
-**C/ Configuration for test packages**
+### C/ Configuration for test packages
 
-Must ensure that Multimedia features have been enabled. (Please refer to III/A to enable Multimedia.)
 
-Please add feature to DISTRO_FEATURES_append to local.conf:
+Must ensure that Multimedia features have been enabled.
+(Please refer to III/A to enable Multimedia.)
+
+* Please add feature to DISTRO_FEATURES_append to local.conf.
+
 ```bash
     # Configuration for multimedia test package
 
@@ -172,10 +198,15 @@ Please add feature to DISTRO_FEATURES_append to local.conf:
 
 ## IV/ Enable Linux ICCOM driver and Linux ICCOM library
 
+
 For Linux ICCOM driver and Linux ICCOM library
 
-1. Please copy proprietary libraries to the directory of recipes.
-2. Please set local.conf the following.
+* Please copy proprietary libraries to the directory of recipes.
+
+* Please set local.conf the following.
+
 ```bash
-        DISTRO_FEATURES_append = " iccom"
+    DISTRO_FEATURES_append = " iccom"
 ```
+END.
+
