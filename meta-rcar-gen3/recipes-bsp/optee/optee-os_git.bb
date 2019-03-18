@@ -14,12 +14,13 @@ PV = "3.1.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3"
 SRCREV_renesas = "c3f73c1e8667a829e085c6d2c4d8a6ff1ec3d213"
-SRCREV_officialgit = "e77020396508fc086d7a4d6137388b116e4a662f"
+SRCREV_officialgit = "0ab9388c0d553a6bb5ae04e41b38ba40cf0474bf"
 SRCREV_FORMAT = "renesas_officialgit"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};name=renesas \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
+    file://0001-core-crypto-arm64-ce-update-AES-CBC-routines.patch;patchdir=../git_official \
 "
 
 SRC_URI_append = " \
@@ -44,8 +45,6 @@ S = "${WORKDIR}/git"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
 do_configure() {
-    git -C ${WORKDIR}/git_official checkout -B official 3.1.0
-    git -C ${WORKDIR}/git_official cherry-pick ${SRCREV_officialgit}
     cp -rn ${WORKDIR}/git_official/core/lib/libtomcrypt ${B}/core/lib/.
 }
 
