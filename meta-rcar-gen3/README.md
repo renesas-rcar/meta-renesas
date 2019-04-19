@@ -42,7 +42,7 @@ rebased and released accordingly.
 *  thud-X:
 
     * The versions used on thud (Yocto Project 2.6) will start on
-      thud-Yocto-v3.15.0 to keep the major version numbers in sync.
+      thud-Yocto-v3.19.0 to keep the major version numbers in sync.
 
 ## Contribution
 
@@ -62,7 +62,7 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-yocto, meta-yocto-bsp
     branch: thud
-    revision: 84eecb017ef92ef36b4df730908828e54aeff85c
+    revision: e7f0177ef3b6e06b8bc1722fca0241fef08a1530
 ```
 * meta-linaro
 
@@ -70,7 +70,7 @@ This layer depends on:
     URI: git://git.linaro.org/openembedded/meta-linaro.git
     layers: meta-optee
     branch: thud
-    revision: edb7ffc2a121df7596385595abe75180296103e0
+    revision: 0a94decea3bd2504590d1637eadff9d502c19ee2
 ```
 
 * meta-openembedded
@@ -79,7 +79,7 @@ This layer depends on:
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe
     branch: thud
-    revision: cca27b5ea7569d2730ee5da7ee7f47b39d775d89
+    revision: 4cd3a39f22a2712bfa8fc657d09fe2c7765a4005
 ```
 
 ## Build Instructions
