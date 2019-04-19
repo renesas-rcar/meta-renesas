@@ -21,6 +21,7 @@ SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};name=renesas \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
     file://0001-core-crypto-arm64-ce-update-AES-CBC-routines.patch;patchdir=../git_official \
+    file://0001-core-define-syscall_t-as-void-void.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu)"
@@ -45,7 +46,7 @@ do_configure() {
 }
 
 do_compile() {
-    oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y NOWERROR=1
+    oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y
 }
 
 # do_install() nothing
