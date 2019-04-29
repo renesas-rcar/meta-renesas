@@ -60,7 +60,16 @@ To build a specific target BSP, configure the associated machine in local.conf:
 ```bash
     MACHINE ??= "<supported board name>"
 ```
-Select the SOC
+
+Board|MACHINE
+-----|-------
+Salvator-X/XS|MACHINE="salvator-x"
+Ebisu|MACHINE="ebisu"
+Starter Kit Pro (M3ULCB)|MACHINE="m3ulcb"
+Starter Kit Pro (M3NULCB)|MACHINE="m3nulcb"
+Starter Kit Premier (H3ULCB)|MACHINE="h3ulcb"
+
+Select the SOC:
 ```bash
     For H3: r8a7795
     SOC_FAMILY = "r8a7795"
@@ -92,6 +101,9 @@ Enable tuning support for Capacity Aware migration Strategy (CAS)
 ```bash
     MACHINE_FEATURES_append = " cas"
 ```
+
+For a list of sample local.conf file, please refer to: [docs/sample/conf/](docs/sample/conf/)
+
 Build the target file system image using bitbake:
 ```bash
     $ bitbake core-image-minimal
