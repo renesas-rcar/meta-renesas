@@ -22,6 +22,10 @@ SRC_URI = " \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
 "
 
+SRC_URI_append = " \
+    file://0001-core-define-syscall_t-as-void-void.patch \
+"
+
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu)"
 PLATFORM = "rcar"
 
