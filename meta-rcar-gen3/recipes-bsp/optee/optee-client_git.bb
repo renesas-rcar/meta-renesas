@@ -10,6 +10,7 @@ SRCREV = "3f16662284a69fdec97b1712064be94d1fed7ae7"
 
 SRC_URI += " \
     file://optee.service \
+    file://0001-tee-supplicant-use-MMC_IOC_MULTI_CMD-for-RPMB-access.patch \
 "
 
 inherit pythonnative systemd
