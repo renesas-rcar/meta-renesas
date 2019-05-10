@@ -11,8 +11,8 @@ COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
 
 RENESAS_BSP_URL = " \
     git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
-BRANCH = "v4.14.75-ltsi/rcar-3.9.4"
-SRCREV = "1f12f0466c7782ef7f44481ecf08db5e77448c7f"
+BRANCH = "v4.14.75-ltsi/rcar-3.9.6"
+SRCREV = "1d76a004d3a19367669b861559c1fbbf546b3065"
 
 SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 
