@@ -1,15 +1,18 @@
-From 9ad46b0976a91a5de41ab62c3d0fe923857a8dda Mon Sep 17 00:00:00 2001
+From acd7751ebcce90a442588f37fc6731990b5e09ea Mon Sep 17 00:00:00 2001
 From: Nguyen Dang <nguyen.dang.wh@renesas.com>
 Date: Tue, 6 Nov 2018 11:46:25 +0700
-Subject: [PATCH 6/6] ADSP: remove HDMI support from rcar-sound
+Subject: [PATCH v2 6/6] ADSP: remove HDMI support from rcar-sound
 
 Signed-off-by: Nguyen Dang <nguyen.dang.wh@renesas.com>
+[takeshi.kihara.df: support for dt file separation by M3v3.0 SoC]
+Signed-off-by: Takeshi Kihara <takeshi.kihara.df@renesas.com>
 ---
- arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts  | 6 ------
- arch/arm64/boot/dts/renesas/r8a7795-salvator-xs.dts | 6 ------
- arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts  | 5 -----
- arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts | 5 -----
- 4 files changed, 22 deletions(-)
+ arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts       | 6 ------
+ arch/arm64/boot/dts/renesas/r8a7795-salvator-xs.dts      | 6 ------
+ arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts       | 5 -----
+ arch/arm64/boot/dts/renesas/r8a7796-salvator-xs-2x4g.dts | 5 -----
+ arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts      | 5 -----
+ 5 files changed, 27 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a7795-salvator-x.dts
 index 6928afbd8e06..b268afd7df85 100644
@@ -46,7 +49,7 @@ index 498f78875dbd..b6ec3036e9fd 100644
  	status = "okay";
  
 diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts
-index 02a938b416d0..2dba6e8e627a 100644
+index cf92aa3939e3..4faf935c4a32 100644
 --- a/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts
 +++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-x.dts
 @@ -88,11 +88,6 @@
@@ -61,8 +64,24 @@ index 02a938b416d0..2dba6e8e627a 100644
  &hdmi0 {
  	status = "okay";
  
+diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs-2x4g.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs-2x4g.dts
+index 664dc9250bbb..13960f69b2f7 100644
+--- a/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs-2x4g.dts
++++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs-2x4g.dts
+@@ -96,11 +96,6 @@
+ 		      "dclkin.0", "dclkin.1", "dclkin.2";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1>;	/* HDMI0  */
+-};
+-
+ &hdmi0 {
+ 	status = "okay";
+ 
 diff --git a/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts b/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts
-index bd66be180d6d..708bd634b5af 100644
+index 7d39dc96ac8a..1cd6f0463361 100644
 --- a/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts
 +++ b/arch/arm64/boot/dts/renesas/r8a7796-salvator-xs.dts
 @@ -88,11 +88,6 @@
@@ -78,5 +97,5 @@ index bd66be180d6d..708bd634b5af 100644
  	status = "okay";
  
 -- 
-2.19.1
+2.21.0
 
