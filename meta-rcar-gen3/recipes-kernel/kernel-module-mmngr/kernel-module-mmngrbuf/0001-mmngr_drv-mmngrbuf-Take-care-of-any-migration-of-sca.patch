@@ -1,0 +1,44 @@
+From be1ce185051b49ae471dbf9d3a5a90df5633aa98 Mon Sep 17 00:00:00 2001
+From: Hai Nguyen Pham <hai.pham.ud@renesas.com>
+Date: Tue, 26 Mar 2019 15:56:30 +0700
+Subject: [PATCH] mmngr_drv: mmngrbuf: Take care of any migration of
+ scatterlist
+
+MMNGRBUF should take care of any migration of scatterlist for
+all (shared) users of the DMA buffer. Although we only care about
+DMA addresses at the moment, this will benefit the DRM system that
+uses the buffer allocated by MMNGR directly.
+
+Initialize the scatterlist entry so that it can be happily traversed.
+
+Signed-off-by: Hai Nguyen Pham <hai.pham.ud@renesas.com>
+---
+ .../mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c      | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index 778bb69..7496dbf 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  MMNGR
+ 
+- Copyright (C) 2015-2016 Renesas Electronics Corporation
++ Copyright (C) 2015-2019 Renesas Electronics Corporation
+ 
+  License        Dual MIT/GPLv2
+ 
+@@ -256,6 +256,9 @@ static struct sg_table *dmabuf_map_dma_buf(struct dma_buf_attachment *attach,
+ 		return NULL;
+ 	}
+ 
++	sg_set_page(sgt->sgl, pfn_to_page(PFN_DOWN(priv->hard_addr)),
++		    priv->size, offset_in_page(priv->hard_addr));
++
+ 	sg_dma_address(sgt->sgl) = priv->hard_addr;
+ 	sg_dma_len(sgt->sgl) = priv->size;
+ 
+-- 
+2.7.4
+
