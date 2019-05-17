@@ -1,0 +1,29 @@
+From 50dd867589931beef05dbcdb17a37a8a678e4b13 Mon Sep 17 00:00:00 2001
+From: Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Fri, 10 May 2019 13:34:42 +0900
+Subject: [PATCH] Handle data_offset setting from V4L2 API
+
+The data in each buffer does not necessarily start at the
+beginning of the buffer.  Adjust as necessary according to
+the data_offset field specified from user space.
+---
+ vsp2driver/vsp2_video.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index 8875578..0abf81c 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -764,7 +764,8 @@ static int vsp2_video_buffer_prepare(struct vb2_buffer *vb)
+ 	}
+ 
+ 	for (i = 0; i < vb->num_planes; ++i) {
+-		buf->mem.addr[i] = vb2_dma_contig_plane_dma_addr(vb, i);
++		buf->mem.addr[i] = vb2_dma_contig_plane_dma_addr(vb, i) +
++                           vb->planes[i].data_offset;
+ 
+ 		if (vb2_plane_size(vb, i) < format->plane_fmt[i].sizeimage)
+ 			return -EINVAL;
+-- 
+2.17.1
+
