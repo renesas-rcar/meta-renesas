@@ -1,29 +1,13 @@
-From 8fb0a86601a73224c5c0b76e3b0037a40da880fc Mon Sep 17 00:00:00 2001
+From 829c17a722611c39cda6926f0fac46fa586c70ef Mon Sep 17 00:00:00 2001
 From: tienphitran <tien.tran.uw@renesas.com>
-Date: Mon, 15 Oct 2018 18:00:42 +0700
+Date: Mon, 17 Jun 2019 17:04:02 +0700
 Subject: [PATCH 2/6] ADSP: add ADSP sound driver source
 
 Signed-off-by: tienphitran <tien.tran.uw@renesas.com>
----
- include/adsp_drv/xf-adsp-drv-ext.h |   58 +
- sound/soc/adsp/Kconfig             |   14 +
- sound/soc/adsp/Makefile            |    3 +
- sound/soc/adsp/xf-adsp-alsa.c      | 3936 ++++++++++++++++++++++++++++
- sound/soc/adsp/xf-adsp-base.c      | 2259 ++++++++++++++++
- sound/soc/adsp/xf-adsp-base.h      |  275 ++
- sound/soc/adsp/xf-adsp-config.h    |  604 +++++
- 7 files changed, 7149 insertions(+)
- create mode 100644 include/adsp_drv/xf-adsp-drv-ext.h
- create mode 100644 sound/soc/adsp/Kconfig
- create mode 100644 sound/soc/adsp/Makefile
- create mode 100644 sound/soc/adsp/xf-adsp-alsa.c
- create mode 100644 sound/soc/adsp/xf-adsp-base.c
- create mode 100644 sound/soc/adsp/xf-adsp-base.h
- create mode 100644 sound/soc/adsp/xf-adsp-config.h
 
 diff --git a/include/adsp_drv/xf-adsp-drv-ext.h b/include/adsp_drv/xf-adsp-drv-ext.h
 new file mode 100644
-index 000000000000..6c3dbc0be1ef
+index 0000000..6c3dbc0
 --- /dev/null
 +++ b/include/adsp_drv/xf-adsp-drv-ext.h
 @@ -0,0 +1,58 @@
@@ -87,7 +71,7 @@ index 000000000000..6c3dbc0be1ef
 +#endif
 diff --git a/sound/soc/adsp/Kconfig b/sound/soc/adsp/Kconfig
 new file mode 100644
-index 000000000000..605261f0855f
+index 0000000..605261f
 --- /dev/null
 +++ b/sound/soc/adsp/Kconfig
 @@ -0,0 +1,14 @@
@@ -107,7 +91,7 @@ index 000000000000..605261f0855f
 +endmenu
 diff --git a/sound/soc/adsp/Makefile b/sound/soc/adsp/Makefile
 new file mode 100644
-index 000000000000..8277fdbc5bbe
+index 0000000..8277fdb
 --- /dev/null
 +++ b/sound/soc/adsp/Makefile
 @@ -0,0 +1,3 @@
@@ -116,10 +100,10 @@ index 000000000000..8277fdbc5bbe
 +obj-$(CONFIG_SND_SOC_ADSP)	+= snd-soc-adsp.o
 diff --git a/sound/soc/adsp/xf-adsp-alsa.c b/sound/soc/adsp/xf-adsp-alsa.c
 new file mode 100644
-index 000000000000..e602c6efcc6a
+index 0000000..493ff84
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-alsa.c
-@@ -0,0 +1,3936 @@
+@@ -0,0 +1,3939 @@
 +/** ***************************************************************************
 + * \file	 xf-adsp-alsa.c
 + * \brief	 Source file for ADSP ALSA Driver
@@ -409,6 +393,9 @@ index 000000000000..e602c6efcc6a
 +
 +	/* kernel time value in nanosecond */
 +	ktime_t				ktime;
++
++	/* save interrupt state before getting lock */
++	unsigned long			flag;
 +
 +	/* high resolution timer state */
 +	int				hrt_state;
@@ -722,12 +709,12 @@ index 000000000000..e602c6efcc6a
 +	struct snd_adsp_base_info *base = (struct snd_adsp_base_info *)data;
 +
 +	if (base) {
-+		spin_lock(&base->lock);
++		spin_lock_irqsave(&base->lock, base->flag);
 +
 +		base->buf_queue++;
 +		base->hw_idx += length; /* increase the DMA buffer index */
 +
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +	}
 +
 +	return 0;
@@ -778,12 +765,12 @@ index 000000000000..e602c6efcc6a
 +	struct snd_adsp_base_info *base = (struct snd_adsp_base_info *)data;
 +
 +	if (base) {
-+		spin_lock(&base->lock);
++		spin_lock_irqsave(&base->lock, base->flag);
 +
 +		base->buf_queue++;
 +		base->hw_idx += length; /* increase the DMA buffer index */
 +
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +	}
 +
 +	return 0;
@@ -907,13 +894,13 @@ index 000000000000..e602c6efcc6a
 +{
 +	struct snd_adsp_base_info *base = snd_adsp_get_base_from_hrt(hrt);
 +
-+	spin_lock(&base->lock);
++	spin_lock_irqsave(&base->lock, base->flag);
 +	if (base->hw_idx != 0) {
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +		/* update PCM status for the next period */
 +		snd_pcm_period_elapsed(base->substream);
 +	} else {
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +	}
 +
 +	hrtimer_forward_now(hrt, base->ktime);
@@ -1233,9 +1220,9 @@ index 000000000000..e602c6efcc6a
 +							base->buf_bytes) != 0)
 +					return -EINVAL;
 +
-+				spin_lock(&base->lock);
++				spin_lock_irqsave(&base->lock, base->flag);
 +				base->buf_queue--;
-+				spin_unlock(&base->lock);
++				spin_unlock_irqrestore(&base->lock, base->flag);
 +			}
 +		} else {
 +			/* send zero buffer to plugin to kick */
@@ -1245,9 +1232,9 @@ index 000000000000..e602c6efcc6a
 +						      base->buf_bytes) != 0)
 +				return -EINVAL;
 +
-+			spin_lock(&base->lock);
++			spin_lock_irqsave(&base->lock, base->flag);
 +			base->buf_queue--;
-+			spin_unlock(&base->lock);
++			spin_unlock_irqrestore(&base->lock, base->flag);
 +		}
 +
 +		/* wait until all the buffer have been consummed */
@@ -1404,9 +1391,9 @@ index 000000000000..e602c6efcc6a
 +		/* kick init process by sending a zero buffer length */
 +		xf_adsp_fill_this_buffer(base->handle_id, base->buffer[0], 0);
 +
-+		spin_lock(&base->lock);
++		spin_lock_irqsave(&base->lock, base->flag);
 +		base->buf_queue--;
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +
 +		/* wait until finishing initialization */
 +		while (base->buf_queue != XF_BUF_POOL_SIZE) {
@@ -1429,9 +1416,9 @@ index 000000000000..e602c6efcc6a
 +						base->buf_bytes) != 0)
 +					return -EINVAL;
 +
-+				spin_lock(&base->lock);
++				spin_lock_irqsave(&base->lock, base->flag);
 +				base->buf_queue--;
-+				spin_unlock(&base->lock);
++				spin_unlock_irqrestore(&base->lock, base->flag);
 +			}
 +
 +			/* wait until all the buffer have been responsed */
@@ -1783,9 +1770,9 @@ index 000000000000..e602c6efcc6a
 +					      base->buf_bytes) != 0)
 +			return -EINVAL;
 +
-+		spin_lock(&base->lock);
++		spin_lock_irqsave(&base->lock, base->flag);
 +		base->buf_queue--;
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +
 +		/* wait until all the buffer have been consummed */
 +		while (base->buf_queue != XF_BUF_POOL_SIZE) {
@@ -1903,9 +1890,9 @@ index 000000000000..e602c6efcc6a
 +		/* kick init process by sending a zero buffer length */
 +		xf_adsp_fill_this_buffer(base->handle_id, base->buffer[0], 0);
 +
-+		spin_lock(&base->lock);
++		spin_lock_irqsave(&base->lock, base->flag);
 +		base->buf_queue--;
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +
 +		/* wait until finishing initialization */
 +		while (base->buf_queue != XF_BUF_POOL_SIZE) {
@@ -2273,9 +2260,9 @@ index 000000000000..e602c6efcc6a
 +			int buf_queue = 0;
 +
 +			/* get current available buffer */
-+			spin_lock(&base->lock);
++			spin_lock_irqsave(&base->lock, base->flag);
 +			buf_queue = base->buf_queue;
-+			spin_unlock(&base->lock);
++			spin_unlock_irqrestore(&base->lock, base->flag);
 +
 +			/* send all available buffer to plugin to */
 +			/* get data */
@@ -2286,9 +2273,9 @@ index 000000000000..e602c6efcc6a
 +						base->buf_bytes) != 0)
 +					return -EINVAL;
 +
-+				spin_lock(&base->lock);
++				spin_lock_irqsave(&base->lock, base->flag);
 +				base->buf_queue--;
-+				spin_unlock(&base->lock);
++				spin_unlock_irqrestore(&base->lock, base->flag);
 +
 +				base->buf_idx++;
 +
@@ -2321,19 +2308,19 @@ index 000000000000..e602c6efcc6a
 +	snd_pcm_uframes_t pointer;
 +
 +	/* convert hw index to correct as submitted bytes */
-+	spin_lock(&base->lock);
++	spin_lock_irqsave(&base->lock, base->flag);
 +	hw_idx = (base->hw_idx / base->buf_bytes) * base->period_bytes;
-+	spin_unlock(&base->lock);
++	spin_unlock_irqrestore(&base->lock, base->flag);
 +
 +	hw_buffer_size = base->pcm_indirect.hw_buffer_size;
 +
 +	if (hw_idx >= hw_buffer_size) {
-+		spin_lock(&base->lock);
++		spin_lock_irqsave(&base->lock, base->flag);
 +
 +		base->hw_idx -= (hw_buffer_size / base->period_bytes) *
 +							base->buf_bytes;
 +
-+		spin_unlock(&base->lock);
++		spin_unlock_irqrestore(&base->lock, base->flag);
 +	}
 +
 +	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
@@ -2457,10 +2444,10 @@ index 000000000000..e602c6efcc6a
 +
 +	/* make sure the available buffer and transfer size - TBD */
 +	while (trans_bytes > 0) {
-+		spin_lock(&base->lock);
++		spin_lock_irqsave(&base->lock, base->flag);
 +		if (base->buf_queue > 0 && trans_bytes >= period_bytes) {
 +			base->buf_queue--;
-+			spin_unlock(&base->lock);
++			spin_unlock_irqrestore(&base->lock, base->flag);
 +
 +			/* get the buffer pointer from stream */
 +			data_buff = base->buffer[base->buf_idx];
@@ -2491,7 +2478,7 @@ index 000000000000..e602c6efcc6a
 +			if (base->buf_idx >= XF_BUF_POOL_SIZE)
 +				base->buf_idx = 0;
 +		} else {
-+			spin_unlock(&base->lock);
++			spin_unlock_irqrestore(&base->lock, base->flag);
 +			break;
 +		}
 +
@@ -4058,7 +4045,7 @@ index 000000000000..e602c6efcc6a
 +MODULE_ALIAS("platform:ADSP-PCM-AUDIO");
 diff --git a/sound/soc/adsp/xf-adsp-base.c b/sound/soc/adsp/xf-adsp-base.c
 new file mode 100644
-index 000000000000..3ad944583800
+index 0000000..3ad9445
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-base.c
 @@ -0,0 +1,2259 @@
@@ -6323,7 +6310,7 @@ index 000000000000..3ad944583800
 +}
 diff --git a/sound/soc/adsp/xf-adsp-base.h b/sound/soc/adsp/xf-adsp-base.h
 new file mode 100644
-index 000000000000..27eb084a99a5
+index 0000000..27eb084
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-base.h
 @@ -0,0 +1,275 @@
@@ -6604,7 +6591,7 @@ index 000000000000..27eb084a99a5
 +#endif
 diff --git a/sound/soc/adsp/xf-adsp-config.h b/sound/soc/adsp/xf-adsp-config.h
 new file mode 100644
-index 000000000000..818a46a66600
+index 0000000..818a46a
 --- /dev/null
 +++ b/sound/soc/adsp/xf-adsp-config.h
 @@ -0,0 +1,604 @@
@@ -7213,5 +7200,5 @@ index 000000000000..818a46a66600
 +
 +#endif
 -- 
-2.19.1
+2.7.4
 
