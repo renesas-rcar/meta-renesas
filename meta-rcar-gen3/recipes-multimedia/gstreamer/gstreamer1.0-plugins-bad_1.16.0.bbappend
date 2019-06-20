@@ -1,16 +1,11 @@
-SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${PV}.tar.xz"
-SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-good.git;branch=RCAR-GEN3/1.12.2"
+SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
+SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.16.0"
 
-SRCREV = "3fd901306fb0fad520e7cbb6a3b0acc79e810700"
+SRCREV = "7f334f733534a3a64d848df110da12af9650eaed"
 
-DEPENDS += "mmngrbuf-user-module"
+DEPENDS += "weston"
 
 S = "${WORKDIR}/git"
-
-EXTRA_OECONF_append = " \
-    --enable-cont-frame-capture \
-    --enable-ignore-fps-of-video-standard \
-"
 
 # submodule is extracted before do_populate_lic
 addtask do_init_submodule after do_unpack before do_patch
