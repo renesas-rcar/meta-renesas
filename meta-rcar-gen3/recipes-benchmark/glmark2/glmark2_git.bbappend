@@ -1,2 +1,2 @@
-PACKAGECONFIG[drm-gl] = ",,virtual/libgl libdrm libgbm"
-PACKAGECONFIG[drm-gles2] = ",,virtual/libgles2 libdrm libgbm"
+require ${@"glmark2.inc" if "rcar-gen3" in d.getVar("OVERRIDES") else ""}
+
