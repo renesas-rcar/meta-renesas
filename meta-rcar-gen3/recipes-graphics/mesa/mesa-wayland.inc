@@ -1,6 +1,6 @@
 # FIXME: can not override PACKAGECONFIG.
-PACKAGECONFIG[gles] = "--enable-gles1 --disable-gles2"
-PACKAGECONFIG[egl] = "--enable-egl --with-egl-platforms=wayland"
+PACKAGECONFIG[gles] = "-Dgles1=true -Dgles2=false"
+PACKAGECONFIG[egl] = "-Degl=true"
 
 # Disable the gbm modules of mesa
 PACKAGECONFIG_remove = "gbm"
