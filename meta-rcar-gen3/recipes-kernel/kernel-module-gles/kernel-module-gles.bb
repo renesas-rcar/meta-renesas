@@ -18,6 +18,9 @@ SRC_URI_r8a77990 = 'file://GSX_KM_E3.tar.bz2'
 
 S = "${WORKDIR}/rogue_km"
 
+# W/A fix build errors with GCC 8.1
+SRC_URI_append = " file://0001-Silence-warnings-being-treated-as-errors.patch"
+
 KBUILD_DIR_r8a7795 = "${S}/build/linux/r8a7795_linux"
 KBUILD_DIR_r8a7796 = "${S}/build/linux/r8a7796_linux"
 KBUILD_DIR_r8a77965 = "${S}/build/linux/r8a77965_linux"

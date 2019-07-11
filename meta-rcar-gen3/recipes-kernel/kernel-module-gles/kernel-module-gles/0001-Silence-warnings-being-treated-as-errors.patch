@@ -1,0 +1,25 @@
+Current GFX source code will get compilation error with GCC 9.x,
+because it is defined in makefile to use -Wall to enable all Warnings
+check.
+-Wcast-function-type, -Wsizeof-pointer-div and -Wstringop-truncation
+-Wmissing-attributes -Waddress-of-packed-member
+are new Warnings from GCC 9.
+
+Signed-off-by: Khang Nguyen <khang.nguyen.xw@renesas.com>
+---
+ build/linux/buildvars.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: rogue_km/build/linux/buildvars.mk
+===================================================================
+--- rogue_km.orig/build/linux/buildvars.mk
++++ rogue_km/build/linux/buildvars.mk
+@@ -51,7 +51,7 @@
+ 
+ # These flags are used for kernel, User C and User C++
+ #
+-COMMON_FLAGS := -W -Wall
++COMMON_FLAGS := -W -Wall -Wno-cast-function-type -Wno-sizeof-pointer-div -Wno-stringop-truncation -Wno-missing-attributes -Wno-address-of-packed-member
+ 
+ # Enable 64-bit file & memory handling on 32-bit systems.
+ #
