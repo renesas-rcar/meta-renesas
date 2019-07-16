@@ -1,11 +1,11 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI = " \
+SRC_URI_rcar-gen3 = " \
     file://weston.ini \
     file://weston.sh \
 "
 
-do_install_append() {
+do_install_append_rcar-gen3() {
     install -d ${D}/${sysconfdir}/xdg/weston
     # install weston.ini as sample settings of gl-renderer
     install -m 644 ${WORKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/
@@ -29,6 +29,6 @@ do_install_append() {
     install -m 0755 ${WORKDIR}/weston.sh ${D}/${sysconfdir}/profile.d/weston.sh
 }
 
-FILES_${PN}_append = " \
+FILES_${PN}_append_rcar-gen3 = " \
     ${sysconfdir}/profile.d/weston.sh \
 "

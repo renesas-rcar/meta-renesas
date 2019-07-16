@@ -1,1 +1,1 @@
-PACKAGECONFIG_remove = "timesyncd"
+PACKAGECONFIG_remove_rcar-gen3 = "timesyncd"
