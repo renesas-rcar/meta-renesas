@@ -7,6 +7,8 @@ inherit autotools pkgconfig
 
 PN = "gstreamer1.0-plugin-vspfilter"
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+
 EXTRA_AUTORECONF_append = " -I ${STAGING_DATADIR}/aclocal"
 
 VSPFILTER_CONF_r8a7795 = "gstvspfilter-${MACHINE}_r8a7795.conf"

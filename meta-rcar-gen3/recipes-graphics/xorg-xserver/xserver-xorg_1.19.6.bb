@@ -1,5 +1,7 @@
 require xserver-xorg.inc
 
+COMPATIBLE_MACHINE = "(salvator-x|ebisu|ulcb)"
+
 SRC_URI += "file://musl-arm-inb-outb.patch \
             file://0001-configure.ac-Fix-check-for-CLOCK_MONOTONIC.patch \
             file://0003-modesetting-Fix-16-bit-depth-bpp-mode.patch \

@@ -16,6 +16,8 @@ require include/rcar-gen3-path-common.inc
 inherit module
 PR = "r0"
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+
 SRC_URI = "${@oe.utils.conditional('USE_VIDEO_OMX', '1', 'file://RCG3VUDRL4101ZDO.tar.bz2', '', d)}"
 
 S = "${WORKDIR}/RCG3VUDRL4101ZDO"

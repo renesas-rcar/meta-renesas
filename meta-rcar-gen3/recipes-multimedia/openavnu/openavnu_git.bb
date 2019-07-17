@@ -14,6 +14,7 @@ LIC_FILES_CHKSUM = " \
 "
 
 DEPENDS = "libpcap"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
 PV = "1.1+git${SRCPV}"
 

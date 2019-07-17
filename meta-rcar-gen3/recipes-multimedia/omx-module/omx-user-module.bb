@@ -3,6 +3,8 @@ LICENSE = "CLOSED"
 require include/omx-control.inc
 require include/rcar-gen3-modules-common.inc
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+
 DEPENDS = " \
     kernel-module-mmngr mmngr-user-module \
     vspmif-user-module kernel-module-vspmif \

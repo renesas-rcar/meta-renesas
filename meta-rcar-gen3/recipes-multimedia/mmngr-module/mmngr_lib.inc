@@ -14,5 +14,6 @@ WS_virtclass-multilib-lib32 = "32"
 
 # These modules are machine specific.
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
 inherit autotools

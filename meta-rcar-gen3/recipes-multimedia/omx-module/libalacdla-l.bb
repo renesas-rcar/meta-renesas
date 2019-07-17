@@ -6,6 +6,8 @@ LIC_FILES_CHKSUM = " \
     file://APPLE_LICENSE.txt;md5=b180a94f894d2a868d40ea43da2bbaba \
 "
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 DEPENDS = " \

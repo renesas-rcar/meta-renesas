@@ -9,6 +9,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://xf86drm.c;beginline=9;endline=32;md5=c8a3b961af7667c530816761e949dc71"
 PROVIDES = "drm"
 DEPENDS = "libpthread-stubs libpciaccess"
+COMPATIBLE_MACHINE = "(salvator-x|ebisu|ulcb)"
 
 SRC_URI = "http://dri.freedesktop.org/libdrm/${BP}.tar.bz2 \
            file://installtests.patch \

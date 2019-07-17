@@ -11,6 +11,7 @@ SRC_URI = "file://RCG3AHIFL4101ZDP.tar.gz"
 
 S = "${WORKDIR}/RCG3AHIFL4101ZDP"
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 # Don't need to do_configure

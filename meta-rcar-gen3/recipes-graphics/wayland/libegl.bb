@@ -1,6 +1,8 @@
 SUMMARY = "Recipe for libegl"
 LICENSE = "CLOSED"
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+
 DEPENDS = "gles-user-module \
     ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'libgbm wayland-kms', '', d)} \
 "
