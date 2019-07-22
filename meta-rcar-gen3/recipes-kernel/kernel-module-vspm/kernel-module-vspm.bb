@@ -20,6 +20,11 @@ SRCREV = "7f854a9a1c4760255a54b7c14891d1545ed1bf43"
 
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH}"
 
+# Fix patch for upscaling issue
+SRC_URI_append = " \
+    file://0001-Set-UDS-horizontal-scaling-phase-to-auto.patch \
+"
+
 S = "${WORKDIR}/git"
 VSPM_DRV_DIR = "vspm-module/files/vspm"
 includedir = "${RENESAS_DATADIR}/include"
