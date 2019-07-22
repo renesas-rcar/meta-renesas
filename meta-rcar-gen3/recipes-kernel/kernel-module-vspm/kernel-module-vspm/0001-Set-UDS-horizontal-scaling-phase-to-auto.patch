@@ -1,0 +1,40 @@
+From dd7dffa07065100c3164ca94a1d4395712e647cd Mon Sep 17 00:00:00 2001
+From: Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Mon, 3 Jun 2019 12:33:57 +0900
+Subject: [PATCH] Set UDS horizontal scaling phase to auto
+
+Use the register default settings for the scaling phase instead
+of manually calculating them.
+
+The default setting seems to calculate the phase correctly,
+which the manual settings seem to shift the output image to the left
+my an amount proportional to the scaling ratio.  i.e x16 scaling
+will shift the output by 16 pixels.
+---
+ vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c b/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
+index 8f63565..6f89bae 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
+@@ -1454,16 +1454,6 @@ static void vsp_ins_replace_part_uds_module(
+ 			r_temp *= ratio;
+ 		}
+ 
+-		/* add horizontal filter phase of control register */
+-		uds_info->val_ctrl |= VSP_UDS_CTRL_AMDSLH;
+-
+-		/* replace scaling filter horizontal phase */
+-		if (l_temp & 0xfff)
+-			uds_info->val_hphase = (4096 - (l_temp & 0xfff)) << 16;
+-		else
+-			uds_info->val_hphase = 0;
+-		if (r_temp & 0xfff)
+-			uds_info->val_hphase |= (4096 - (r_temp & 0xfff));
+ 	} else {
+ 		l_temp *= 4096;
+ 		r_temp *= 4096;
+-- 
+2.17.1
+
