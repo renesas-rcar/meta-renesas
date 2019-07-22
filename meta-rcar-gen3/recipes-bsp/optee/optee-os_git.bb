@@ -20,7 +20,6 @@ SRCREV_FORMAT = "renesas_officialgit"
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};name=renesas \
     git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
-    file://0001-core-crypto-arm64-ce-update-AES-CBC-routines.patch;patchdir=../git_official \
     file://0001-core-define-syscall_t-as-void-void.patch \
 "
 
@@ -42,6 +41,8 @@ S = "${WORKDIR}/git"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
 do_configure() {
+    git -C ${WORKDIR}/git_official checkout -B official 3.1.0
+    git -C ${WORKDIR}/git_official cherry-pick -n ${SRCREV_officialgit}
     cp -rn ${WORKDIR}/git_official/core/lib/libtomcrypt ${B}/core/lib/.
 }
 
