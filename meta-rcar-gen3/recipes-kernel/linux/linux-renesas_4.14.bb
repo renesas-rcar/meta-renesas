@@ -20,8 +20,11 @@ LINUX_VERSION ?= "4.14.75"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
+# For generating defconfig
+KCONFIG_MODE = "--alldefconfig"
+KBUILD_DEFCONFIG = "defconfig"
+
 SRC_URI_append = " \
-    file://defconfig \
     file://touch.cfg \
     ${@oe.utils.conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
