@@ -1,7 +1,7 @@
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${PV}.tar.xz"
 SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-good.git;branch=RCAR-GEN3/1.14.4"
 
-SRCREV = "352f99348100fd447eb506c0c0236fdc96993c45"
+SRCREV = "11b76b496300a62c984f3dff5f4dfd772b16b9c0"
 
 DEPENDS += "mmngrbuf-user-module"
 
