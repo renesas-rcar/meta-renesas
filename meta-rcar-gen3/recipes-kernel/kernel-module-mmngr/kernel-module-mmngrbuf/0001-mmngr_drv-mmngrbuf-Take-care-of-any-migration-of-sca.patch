@@ -1,4 +1,4 @@
-From be1ce185051b49ae471dbf9d3a5a90df5633aa98 Mon Sep 17 00:00:00 2001
+From 43d2cc7496340eea3f96cb3c3cf66139e0878f3c Mon Sep 17 00:00:00 2001
 From: Hai Nguyen Pham <hai.pham.ud@renesas.com>
 Date: Tue, 26 Mar 2019 15:56:30 +0700
 Subject: [PATCH] mmngr_drv: mmngrbuf: Take care of any migration of
@@ -13,22 +13,13 @@ Initialize the scatterlist entry so that it can be happily traversed.
 
 Signed-off-by: Hai Nguyen Pham <hai.pham.ud@renesas.com>
 ---
- .../mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c      | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
-index 778bb69..7496dbf 100644
+index fe3db08..d9189e9 100644
 --- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
 +++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
-@@ -1,7 +1,7 @@
- /*************************************************************************/ /*
-  MMNGR
- 
-- Copyright (C) 2015-2016 Renesas Electronics Corporation
-+ Copyright (C) 2015-2019 Renesas Electronics Corporation
- 
-  License        Dual MIT/GPLv2
- 
 @@ -256,6 +256,9 @@ static struct sg_table *dmabuf_map_dma_buf(struct dma_buf_attachment *attach,
  		return NULL;
  	}
