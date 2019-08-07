@@ -9,6 +9,11 @@ PR = "r0"
 S = "${WORKDIR}/git"
 MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 
+# Support HW overlay mode
+SRC_URI_append = "\
+    file://0001-mmngr_drv-mmngrbuf-Take-care-of-any-migration-of-sca.patch \
+"
+
 includedir = "${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
 
