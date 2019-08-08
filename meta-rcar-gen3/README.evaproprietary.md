@@ -14,7 +14,7 @@ This README describes how to use these features and setting local.conf.
 **NOTE:**
 
 * However, to have a completed local.conf, please also refer to Build
-Instruction in meta-renesas/meta-rcar-gen3/README.
+Instruction in [meta-renesas/meta-rcar-gen3/README.md](README.md).
 
 * In addition, these libraries are not provided with recipes. If you would like
 to use, you will need to get them from Renesas.
@@ -40,6 +40,12 @@ to use, you will need to get them from Renesas.
 
     ```bash
        MACHINE = "m3ulcb"
+    ```
+
+    * For R-Car Starter Kit Pro(M3NULCB) board
+
+    ```bash
+       MACHINE = "m3nulcb"
     ```
 
     * For Ebisu board

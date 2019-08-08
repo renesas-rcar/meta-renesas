@@ -1,17 +1,6 @@
 # meta-rcar-gen3
 
 
-This layer provides the support for the evaluation board mounted ARM SoCs of Renesas
-Electronics, called the R-Car Generation 3.
-
-Currently, this supports boards and the SoCs of the following:
-
-- Board: Salvator-X / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
-- Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A7795 (R-Car H3)
-- Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796 (R-Car M3)
-- Board: R-Car Starter Kit pro(M3NULCB) / SoC: R8A77965 (R-Car M3N)
-- Board: Ebisu / SoC: R8A77990 (R-Car E3)
-
 This layer provides the support for the evaluation board mounted ARM SoCs of
 Renesas Electronics, called the R-Car Generation 3.
 
@@ -21,6 +10,7 @@ Currently, this supports boards and the SoCs of the following:
     - Board: Salvator-X / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
     - Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A7795 (R-Car H3)
     - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796 (R-Car M3)
+    - Board: R-Car Starter Kit pro(M3NULCB) / SoC: R8A77965 (R-Car M3N)
     - Board: Ebisu / SoC: R8A77990 (R-Car E3)
 ```
 
@@ -120,6 +110,14 @@ e.g.:
     MACHINE ??= "<supported board name>"
 ```
 
+Board|MACHINE
+-----|-------
+Salvator-X/XS|MACHINE="salvator-x"
+Ebisu|MACHINE="ebisu"
+Starter Kit Pro (M3ULCB)|MACHINE="m3ulcb"
+Starter Kit Pro (M3NULCB)|MACHINE="m3nulcb"
+Starter Kit Premier (H3ULCB)|MACHINE="h3ulcb"
+
 * Select the SOC
 
     * For H3: r8a7795
@@ -172,6 +170,8 @@ e.g.:
     MACHINE_FEATURES_append = " cas"
 ```
 
+* For a list of sample local.conf file, please refer to: [docs/sample/conf/](docs/sample/conf/)
+
 * Build the target file system image using bitbake:
 
 ```bash
@@ -185,11 +185,11 @@ Images generated:
 
 * Image (generic Linux Kernel binary image file)
 
-* Image-<machine name>.dtb (DTB for target machine)
+* \<SoC\>-\<machine name\>.dtb (DTB for target machine)
 
-* core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
+* core-image-minimal-\<machine name\>.tar.bz2 (rootfs tar+bzip2)
 
-* core-image-minimal-<machine name>.ext4  (rootfs ext4 format)
+* core-image-minimal-\<machine name\>.ext4  (rootfs ext4 format)
 
 ## Build Instructions for SDK
 
@@ -239,4 +239,5 @@ Install the SDK to the default: `/opt/poky/x.x`
 
 
 Refer to the following for more information from eLinux website
+
 https://elinux.org/R-Car
