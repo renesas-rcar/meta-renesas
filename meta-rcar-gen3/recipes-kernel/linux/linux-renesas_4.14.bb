@@ -10,9 +10,9 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
 
 RENESAS_BSP_URL = " \
-    git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-bsp.git"
-BRANCH = "v4.14.75-ltsi/rcar-3.9.6"
-SRCREV = "1d76a004d3a19367669b861559c1fbbf546b3065"
+    git://github.com/renesas-rcar/linux-bsp.git"
+BRANCH = "v4.14.75-ltsi/rcar-3.9.7"
+SRCREV = "59ccbcefaebb4a33110e11fb87f3811cd59f192d"
 
 SRC_URI = "${RENESAS_BSP_URL};protocol=git;nocheckout=1;branch=${BRANCH}"
 
