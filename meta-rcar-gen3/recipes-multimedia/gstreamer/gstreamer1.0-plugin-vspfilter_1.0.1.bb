@@ -17,26 +17,13 @@ VSPFILTER_CONF_r8a77965 = "gstvspfilter-${MACHINE}_r8a77965.conf"
 VSPFILTER_CONF_r8a77990 = "gstvspfilter-${MACHINE}_r8a77990.conf"
 
 SRC_URI = " \
-    git://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.1 \
+    gitsm://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.1 \
     file://${VSPFILTER_CONF} \
 "
 
 SRCREV = "e94cf40ab5515abd716b21f77caa48db0d077927"
 
 S = "${WORKDIR}/git"
-
-# submodule is extracted before do_populate_lic
-addtask do_init_submodule after do_unpack before do_patch
-
-do_init_submodule() {
-    export http_proxy=${http_proxy}
-    export https_proxy=${https_proxy}
-    export HTTP_PROXY=${HTTP_PROXY}
-    export HTTPS_PROXY=${HTTPS_PROXY}
-    cd ${S}
-    git submodule init
-    git submodule update
-}
 
 FILES_${PN} = " \
     ${libdir}/gstreamer-1.0/libgstvspfilter.so \

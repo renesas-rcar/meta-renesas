@@ -2,7 +2,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
 SRC_URI_append = " \
-    git://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.16.0 \
+    gitsm://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3/1.16.0 \
     file://gstomx.conf \
 "
 
@@ -23,10 +23,6 @@ GSTREAMER_1_0_OMX_CORE_NAME = "${libdir}/libomxr_core.so"
 EXTRA_OECONF_append = " --enable-experimental"
 
 do_configure_prepend() {
-    export http_proxy=${http_proxy}
-    export https_proxy=${https_proxy}
-    export HTTP_PROXY=${HTTP_PROXY}
-    export HTTPS_PROXY=${HTTPS_PROXY}
     cd ${S}
     install -m 0644 ${WORKDIR}/gstomx.conf ${S}/config/rcar/
     sed -i 's,@RENESAS_DATADIR@,${RENESAS_DATADIR},g' ${S}/config/rcar/gstomx.conf
