@@ -31,7 +31,7 @@ rebased and released accordingly.
 
 *  zeus-X:
 
-    * The versions used on zeus (Yocto Project 2.8) will start on
+    * The versions used on zeus (Yocto Project 3.0) will start on
       zeus-Yocto-v3.21.0 to keep the major version numbers in sync.
 
 ## Contribution
@@ -51,25 +51,17 @@ This layer depends on:
 ```bash
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-yocto, meta-yocto-bsp
-    branch: master
-    revision: 835f7eac0610325e906591cd81890bebe8627580
-```
-* meta-linaro
-
-```bash
-    URI: git://git.linaro.org/openembedded/meta-linaro.git
-    layers: meta-optee
-    branch: warrior
-    revision: c38fb78fd1eb3883f2a8199c2d21358f4a412fb4
+    branch: zeus
+    revision: 94f6b31befda5c496f65e863a6f8152b42d7ebf0
 ```
 
 * meta-openembedded
 
 ```bash
     URI: git://git.openembedded.org/meta-openembedded
-    layers: meta-oe
-    branch: master
-    revision: 80e0113f7a31447191204e1a1bda9c12e4ac693b
+    layers: meta-oe, meta-python
+    branch: zeus
+    revision: 1bfaa2e63a184e21a2db5c286444828d5948a8b4
 ```
 
 ## Build Instructions
@@ -99,7 +91,7 @@ e.g.:
         <path to layer>/poky/meta-yocto \
         <path to layer>/poky/meta-yocto-bsp \
         <path to layer>/meta-renesas/meta-rcar-gen3 \
-        <path to layer>/meta-linaro/meta-optee \
+        <path to layer>/meta-openembedded/meta-python \
         <path to layer>/meta-openembedded/meta-oe \
     "
 ```
