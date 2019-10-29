@@ -29,6 +29,11 @@ SRC_URI_append = " \
     ${@oe.utils.conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
 
+# Add python3 support to fix Perf build failure
+SRC_URI_append = " \
+    file://0001-perf-tools-Add-Python-3-support.patch \
+"
+
 # Enable RPMSG_VIRTIO depend on ICCOM
 SUPPORT_ICCOM = " \
     file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch \

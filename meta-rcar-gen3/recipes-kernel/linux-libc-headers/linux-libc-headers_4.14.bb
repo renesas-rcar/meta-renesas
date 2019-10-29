@@ -11,6 +11,11 @@ SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 
+# Add python3 support to fix Perf build failure
+SRC_URI_append = " \
+    file://0001-perf-tools-Add-Python-3-support.patch \
+"
+
 # Enable RPMSG_VIRTIO depend on ICCOM
 SRC_URI_append = " \
     ${@oe.utils.conditional("USE_ICCOM", "1", " file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch", "", d)} \
