@@ -10,7 +10,7 @@ require include/rcar-gen3-path-common.inc
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
-SRCREV = "2542e931c13b6f3e0dfa97d7b6230ca584ca11bc"
+SRCREV = "ac0a9d331ef492f216e90753bd7aae7d0811bcc5"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
     file://omx/gstomx.h;beginline=1;endline=22;md5=e2c6664eda77dc22095adbed9cb6c6e4 \
