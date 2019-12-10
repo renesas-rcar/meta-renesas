@@ -91,7 +91,7 @@ e.g.:
         <path to layer>/poky/meta-yocto \
         <path to layer>/poky/meta-yocto-bsp \
         <path to layer>/meta-renesas/meta-rcar-gen3 \
-        <path to layer>/meta-linaro/meta-optee \
+        <path to layer>/meta-openembedded/meta-python \
         <path to layer>/meta-openembedded/meta-oe \
     "
 ```
