@@ -5,7 +5,7 @@ SECTION = "libs"
 LIC_FILES_CHKSUM = " \
     file://gbm.c;beginline=4;endline=22;md5=5cdaac262c876e98e47771f11c7036b5"
 
-SRCREV = "9f2b38a2c205020857b67d013419eb6cb46e5d67"
+SRCREV = "953f6515dc07c717360c499273dccc227857e6ed"
 SRC_URI = "git://github.com/renesas-rcar/libgbm;branch=match-mesa-19.0.1"
 
 S = "${WORKDIR}/git"
