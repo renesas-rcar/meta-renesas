@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = " \
     file://MIT-COPYING;md5=96e553279b3fff0d6168dafe0b596197 \
 "
 
-inherit module distro_features_check
+inherit module features_check
 
 DEPENDS = "linux-renesas"
 

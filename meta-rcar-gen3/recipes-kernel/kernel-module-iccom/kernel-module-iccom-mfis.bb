@@ -5,7 +5,7 @@ require include/rcar-gen3-modules-common.inc
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
-inherit module distro_features_check
+inherit module features_check
 
 DEPENDS = "linux-renesas"
 PN = "kernel-module-iccom-mfis"
