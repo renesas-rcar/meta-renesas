@@ -3,7 +3,7 @@ LICENSE = "CLOSED"
 
 require include/rcar-gen3-path-common.inc
 
-inherit distro_features_check
+inherit features_check
 REQUIRED_DISTRO_FEATURES = "dvd_encryption_library"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"

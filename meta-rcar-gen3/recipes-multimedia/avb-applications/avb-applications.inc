@@ -1,6 +1,6 @@
 require include/rcar-gen3-modules-common.inc
 
-inherit distro_features_check
+inherit features_check
 
 REQUIRED_DISTRO_FEATURES = "avb"
 

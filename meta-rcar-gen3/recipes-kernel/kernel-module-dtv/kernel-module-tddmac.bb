@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = " \
     file://tddmac_drv/include/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 
-inherit module distro_features_check
+inherit module features_check
 
 DEPENDS = "linux-renesas"
 PN = "kernel-module-tddmac"

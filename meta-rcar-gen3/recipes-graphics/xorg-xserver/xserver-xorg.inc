@@ -23,7 +23,7 @@ S = "${WORKDIR}/${XORG_PN}-${PV}"
 
 inherit autotools pkgconfig
 
-inherit distro_features_check
+inherit features_check
 REQUIRED_DISTRO_FEATURES = "x11"
 
 PROTO_DEPS = "xorgproto"

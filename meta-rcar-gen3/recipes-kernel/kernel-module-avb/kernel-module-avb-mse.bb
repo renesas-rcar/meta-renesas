@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = " \
     file://MIT-COPYING;md5=98449101c5d5452a9429b88d6ead1ba4 \
 "
 
-inherit module distro_features_check
+inherit module features_check
 
 DEPENDS = "linux-renesas kernel-module-avb-streaming kernel-module-avb-mch"
 

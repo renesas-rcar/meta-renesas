@@ -1,7 +1,7 @@
 DESCRIPTION = "ADSP Interface for Linux"
 LICENSE = "CLOSED"
 
-inherit distro_features_check
+inherit features_check
 
 REQUIRED_DISTRO_FEATURES = "adsp"
 

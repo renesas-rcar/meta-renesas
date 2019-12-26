@@ -4,7 +4,7 @@ LICENSE = "CLOSED"
 require include/rcar-gen3-modules-common.inc
 require include/dtv-dvd-control.inc
 
-inherit distro_features_check
+inherit features_check
 
 DEPENDS = " \
     kernel-module-vspmif mmngr-user-module \

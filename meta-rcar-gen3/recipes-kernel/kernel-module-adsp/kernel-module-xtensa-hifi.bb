@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = " \
     file://MIT-COPYING;md5=f932f6ad0feea4f97b6e8316e172070e \
 "
 
-inherit module distro_features_check
+inherit module features_check
 
 REQUIRED_DISTRO_FEATURES = "adsp"
 
