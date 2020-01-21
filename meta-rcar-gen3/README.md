@@ -19,7 +19,7 @@ Please see the MAINTAINERS file for more details.
 This layer depends on:
 
     URI: git://git.yoctoproject.org/poky
-    layers: meta, meta-yocto, meta-yocto-bsp
+    layers: meta, meta-poky, meta-yocto-bsp
     branch: rocko
 
     URI: git://git.linaro.org/openembedded/meta-linaro.git
@@ -49,7 +49,7 @@ After that, initialized configure bblayers.conf by adding meta-rcar-gen3 layer. 
 ```bash
     BBLAYERS ?= " \
         <path to layer>/poky/meta \
-        <path to layer>/poky/meta-yocto \
+        <path to layer>/poky/meta-poky \
         <path to layer>/poky/meta-yocto-bsp \
         <path to layer>/meta-renesas/meta-rcar-gen3 \
         <path to layer>/meta-linaro/meta-optee \
