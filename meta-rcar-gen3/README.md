@@ -50,7 +50,7 @@ This layer depends on:
 
 ```bash
     URI: git://git.yoctoproject.org/poky
-    layers: meta, meta-yocto, meta-yocto-bsp
+    layers: meta, meta-poky, meta-yocto-bsp
     branch: thud
     revision: e7f0177ef3b6e06b8bc1722fca0241fef08a1530
 ```
@@ -96,7 +96,7 @@ e.g.:
 ```bash
     BBLAYERS ?= " \
         <path to layer>/poky/meta \
-        <path to layer>/poky/meta-yocto \
+        <path to layer>/poky/meta-poky \
         <path to layer>/poky/meta-yocto-bsp \
         <path to layer>/meta-renesas/meta-rcar-gen3 \
         <path to layer>/meta-linaro/meta-optee \
