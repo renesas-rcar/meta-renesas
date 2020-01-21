@@ -10,6 +10,7 @@ This README describes how to use these features and setting to local.conf.
     I/   Board configuration
     II/  Build with GLES
     III/ Build with Renesas multimedia libraries
+    IV/  Enable Linux ICCOM driver and Linux ICCOM library
 ```
 
 There are 2 main paths:
