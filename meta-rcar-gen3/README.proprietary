@@ -5,10 +5,12 @@ The meta-rcar-gen3 layer of meta-renesas is supported Graphic GLES(GSX) librarie
 proprietary library of multimedia, and ICCOM software.
 This README describes how to use these features and setting to local.conf.
 
-There are 2 main paths:
     I/   Board configuration
     II/  Build with GLES
     III/ Build with Renesas multimedia libraries
+    IV/  Enable Linux ICCOM driver and Linux ICCOM library
+
+There are 2 main paths:
 
 Please check section II to config for GLES.
 Please check section III to enable Multimedia functions.
