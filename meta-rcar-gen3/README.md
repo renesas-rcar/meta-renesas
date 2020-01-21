@@ -1,5 +1,6 @@
-## Patches
-=======
+# meta-rcar-gen3
+
+
 This layer provides the support for the evaluation board mounted ARM SoCs of
 Renesas Electronics, called the R-Car Generation 3.
 
@@ -49,7 +50,7 @@ This layer depends on:
 
 ```bash
     URI: git://git.yoctoproject.org/poky
-    layers: meta, meta-yocto, meta-yocto-bsp
+    layers: meta, meta-poky, meta-yocto-bsp
     branch: warrior
     revision: 0e392026ffefee098a890c39bc3ca1f697bacb52
 ```
@@ -94,7 +95,7 @@ e.g.:
 ```bash
     BBLAYERS ?= " \
         <path to layer>/poky/meta \
-        <path to layer>/poky/meta-yocto \
+        <path to layer>/poky/meta-poky \
         <path to layer>/poky/meta-yocto-bsp \
         <path to layer>/meta-renesas/meta-rcar-gen3 \
         <path to layer>/meta-linaro/meta-optee \
@@ -107,6 +108,14 @@ e.g.:
 ```bash
     MACHINE ??= "<supported board name>"
 ```
+
+Board|MACHINE
+-----|-------
+Salvator-X/XS|MACHINE="salvator-x"
+Ebisu|MACHINE="ebisu"
+Starter Kit Pro (M3ULCB)|MACHINE="m3ulcb"
+Starter Kit Pro (M3NULCB)|MACHINE="m3nulcb"
+Starter Kit Premier (H3ULCB)|MACHINE="h3ulcb"
 
 * Select the SOC
 
@@ -173,11 +182,11 @@ Images generated:
 
 * Image (generic Linux Kernel binary image file)
 
-* Image-<machine name>.dtb (DTB for target machine)
+* \<SoC\>-\<machine name\>.dtb (DTB for target machine)
 
-* core-image-minimal-<machine name>.tar.bz2 (rootfs tar+bzip2)
+* core-image-minimal-\<machine name\>.tar.bz2 (rootfs tar+bzip2)
 
-* core-image-minimal-<machine name>.ext4  (rootfs ext4 format)
+* core-image-minimal-\<machine name\>.ext4  (rootfs ext4 format)
 
 ## Build Instructions for SDK
 
