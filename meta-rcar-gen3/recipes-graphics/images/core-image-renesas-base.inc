@@ -11,7 +11,6 @@ IMAGE_INSTALL_append = " \
     bash \
     v4l-utils \
     i2c-tools \
-    libx11-locale \
     coreutils \
 "
 
