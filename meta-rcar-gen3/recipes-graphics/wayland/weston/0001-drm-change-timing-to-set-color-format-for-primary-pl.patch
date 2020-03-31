@@ -1,0 +1,49 @@
+From 51048463dae4ace13776bb77675316007083a6ee Mon Sep 17 00:00:00 2001
+From: Tomohito Esaki <etom@igel.co.jp>
+Date: Mon, 30 Mar 2020 17:10:54 +0900
+Subject: [PATCH] drm: change timing to set color format for primary plane
+ without universal plane
+
+Without universal plane, the weston crashes with null pointer access in
+set_gbm_format function because that function called before output
+enable function. By changing timing to set color format for primary
+plane in this case, this issue fixes.
+
+Signed-off-by: Tomohito Esaki <etom@igel.co.jp>
+---
+ libweston/backend-drm/drm.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index 3c5ca65..2aea82f 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -1389,12 +1389,6 @@ drm_output_set_gbm_format(struct weston_output *base,
+ 
+ 	if (parse_gbm_format(gbm_format, b->gbm_format, &output->gbm_format) == -1)
+ 		output->gbm_format = b->gbm_format;
+-
+-	/* Without universal planes, we can't discover which formats are
+-	 * supported by the primary plane; we just hope that the GBM format
+-	 * works. */
+-	if (!b->universal_planes)
+-		output->scanout_plane->formats[0].format = output->gbm_format;
+ }
+ 
+ static void
+@@ -1626,6 +1620,12 @@ drm_output_init_crtc(struct drm_output *output, drmModeRes *resources)
+ 		goto err_crtc;
+ 	}
+ 
++	/* Without universal planes, we can't discover which formats are
++	 * supported by the primary plane; we just hope that the GBM format
++	 * works. */
++	if (!b->universal_planes)
++		output->scanout_plane->formats[0].format = output->gbm_format;
++
+ 	/* Failing to find a cursor plane is not fatal, as we'll fall back
+ 	 * to software cursor. */
+ 	output->cursor_plane =
+-- 
+2.7.4
+
