@@ -1,0 +1,89 @@
+From f8358c2afe0be62cffe4cca58c5373951ecc1c8d Mon Sep 17 00:00:00 2001
+From: Khang Nguyen <khang.nguyen.xw@renesas.com>
+Date: Mon, 13 Apr 2020 21:49:28 +0900
+Subject: [PATCH] drm: rcar-du: Set primary plane zpos immutably at
+ initializing
+
+This patch backports a fix from [1] for an issue occurs on Weston 8.0.0.
+
+[1]:
+https://lists.freedesktop.org/archives/dri-devel/2020-April/261224.html
+
+According to drm_plane_create_zpos_property() function documentation,
+all planes zpos range should be set if zpos property is supported.
+However, the rcar-du driver didn't set primary plane zpos range. Since
+the primary plane's zpos is fixed, set it immutably.
+
+Signed-off-by: Khang Nguyen <khang.nguyen.xw@renesas.com>
+Signed-off-by: Tram Huynh <tram.huynh.aj@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_plane.c | 13 ++++++++-----
+ drivers/gpu/drm/rcar-du/rcar_du_vsp.c   | 18 ++++++++++--------
+ 2 files changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_plane.c b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+index 1b70db3..5818c59 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_plane.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_plane.c
+@@ -825,15 +825,18 @@ int rcar_du_planes_init(struct rcar_du_group *rgrp)
+ 		drm_plane_helper_add(&plane->plane,
+ 				     &rcar_du_plane_helper_funcs);
+ 
+-		if (type == DRM_PLANE_TYPE_PRIMARY)
+-			continue;
++		if (type == DRM_PLANE_TYPE_PRIMARY){
++			drm_plane_create_zpos_immutable_property(&plane->plane,
++								 0);
++		} else {
+ 
+-		drm_object_attach_property(&plane->plane.base,
++			drm_object_attach_property(&plane->plane.base,
+ 					   rcdu->props.alpha, 255);
+-		drm_object_attach_property(&plane->plane.base,
++			drm_object_attach_property(&plane->plane.base,
+ 					   rcdu->props.colorkey,
+ 					   RCAR_DU_COLORKEY_NONE);
+-		drm_plane_create_zpos_property(&plane->plane, 1, 1, 7);
++			drm_plane_create_zpos_property(&plane->plane, 1, 1, 7);
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+index c44d336..0c352a0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+@@ -633,20 +633,22 @@ int rcar_du_vsp_init(struct rcar_du_vsp *vsp, struct device_node *np,
+ 		drm_plane_helper_add(&plane->plane,
+ 				     &rcar_du_vsp_plane_helper_funcs);
+ 
+-		if (type == DRM_PLANE_TYPE_PRIMARY)
+-			continue;
+-
+-		drm_object_attach_property(&plane->plane.base,
++		if (type == DRM_PLANE_TYPE_PRIMARY) {
++			drm_plane_create_zpos_immutable_property(&plane->plane,
++					   0);
++		} else {
++			drm_object_attach_property(&plane->plane.base,
+ 					   rcdu->props.alpha, 255);
+-		drm_object_attach_property(&plane->plane.base,
++			drm_object_attach_property(&plane->plane.base,
+ 					   rcdu->props.colorkey,
+ 					   RCAR_DU_COLORKEY_NONE);
+-		if (rcdu->props.colorkey_alpha)
+-			drm_object_attach_property(&plane->plane.base,
++			if (rcdu->props.colorkey_alpha)
++				drm_object_attach_property(&plane->plane.base,
+ 						   rcdu->props.colorkey_alpha,
+ 						   0);
+-		drm_plane_create_zpos_property(&plane->plane, 1, 1,
++			drm_plane_create_zpos_property(&plane->plane, 1, 1,
+ 					       vsp->num_planes - 1);
++		}
+ 	}
+ 
+ 	return 0;
+-- 
+2.7.4
+
