@@ -34,6 +34,11 @@ SRC_URI_append = " \
     file://0001-perf-tools-Add-Python-3-support.patch \
 "
 
+# Fix patch for Weston 8.0.0 issue
+SRC_URI_append = " \
+    file://0001-drm-rcar-du-Set-primary-plane-zpos-immutably-at-init.patch \
+"
+
 # Enable RPMSG_VIRTIO depend on ICCOM
 SUPPORT_ICCOM = " \
     file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch \
