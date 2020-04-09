@@ -35,9 +35,14 @@ do_install_append_rcar-gen3() {
     # Set XDG_RUNTIME_DIR to /run/user/$UID (e.g. run/user/0)
     install -d ${D}/${sysconfdir}/profile.d
     install -m 0755 ${WORKDIR}/weston.sh ${D}/${sysconfdir}/profile.d/weston.sh
+
+    # Fix weston.service and weston@.service run simultaneously.
+    mv ${D}/${sysconfdir}/init.d/weston ${D}/${sysconfdir}/init.d/weston@
 }
 
 FILES_${PN}_append_rcar-gen3 = " \
     ${sysconfdir}/profile.d/weston.sh \
 "
+
+INITSCRIPT_NAME = "weston@"
 
