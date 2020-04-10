@@ -4,8 +4,8 @@ require include/adsp-control.inc
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v4.14.75-ltsi/rcar-3.9.7"
-SRCREV = "59ccbcefaebb4a33110e11fb87f3811cd59f192d"
+BRANCH = "v4.14.75-ltsi/rcar-3.9.9"
+SRCREV = "4d2a32e5d314e2c77346f13e8736e97ca3e1b90b"
 
 SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
