@@ -4,17 +4,12 @@ require include/adsp-control.inc
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v4.14.75-ltsi/rcar-3.9.7"
-SRCREV = "59ccbcefaebb4a33110e11fb87f3811cd59f192d"
+BRANCH = "v5.4/rcar-3.10.0.rc1"
+SRCREV = "52be90f101cd18160cda57d246c1e2e6abfe4a74"
 
 SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
-LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
-
-# Add python3 support to fix Perf build failure
-SRC_URI_append = " \
-    file://0001-perf-tools-Add-Python-3-support.patch \
-"
+LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 # Enable RPMSG_VIRTIO depend on ICCOM
 SRC_URI_append = " \
@@ -37,7 +32,3 @@ SRC_URI_append = " \
 
 S = "${WORKDIR}/git"
 
-# W/A Fix build issue with Linux v4.14
-SRC_URI_append = " \
-    file://0001-arm64-bpf-correct-broken-uapi-for-BPF_PROG_TYPE_PERF.patch \
-"
