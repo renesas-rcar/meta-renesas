@@ -6,7 +6,6 @@ require include/avb-control.inc
 require include/iccom-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 require include/cas-control.inc
-require include/adsp-control.inc
 
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
 
@@ -43,20 +42,5 @@ SRC_URI_append = " \
 # Add SCHED_DEBUG config fragment to support CAS
 SRC_URI_append = " \
     ${@oe.utils.conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
-"
-
-# Add ADSP ALSA driver
-SUPPORT_ADSP_ASOC = " \
-    file://0001-ADSP-add-document-for-compatible-string-renesas-rcar.patch \
-    file://0002-ADSP-add-ADSP-sound-driver-source.patch \
-    file://0003-ADSP-add-build-for-ADSP-sound-driver.patch \
-    file://0004-ADSP-integrate-ADSP-sound-for-H3-M3-M3N-board.patch \
-    file://0005-ADSP-integrate-ADSP-sound-for-E3-board.patch \
-    file://0006-ADSP-remove-HDMI-support-from-rcar-sound.patch \
-    file://adsp.cfg \
-"
-
-SRC_URI_append = " \
-    ${@oe.utils.conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
 "
 
