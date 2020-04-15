@@ -31,7 +31,6 @@ SRC_URI_append = " \
 
 # Enable RPMSG_VIRTIO depend on ICCOM
 SUPPORT_ICCOM = " \
-    file://0001-rpmsg-Add-message-to-be-able-to-configure-RPMSG_VIRT.patch \
     file://iccom.cfg \
 "
 
