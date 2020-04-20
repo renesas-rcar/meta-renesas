@@ -1,0 +1,45 @@
+diff --git a/vsp2driver/vsp2_rpf.c b/vsp2driver/vsp2_rpf.c
+index afb93be..108c85e 100644
+--- a/vsp2driver/vsp2_rpf.c
++++ b/vsp2driver/vsp2_rpf.c
+@@ -240,10 +240,12 @@ static void rpf_configure(struct vsp2_entity *entity,
+ 
+ 	switch (fmtinfo->fourcc) {
+ 	case V4L2_PIX_FMT_ARGB555:
++#ifdef CONFIG_VIDEO_RENESAS_VSP_ALPHA_BIT_ARGB1555
+ 		if (CONFIG_VIDEO_RENESAS_VSP_ALPHA_BIT_ARGB1555 == 1)
+ 			alph_sel = (2 << 28) | (1 << 18) |
+ 				   (0xFF << 8) | (rpf->alpha & 0xFF);
+ 		else
++#endif
+ 			alph_sel = (2 << 28) | (1 << 18) |
+ 				   ((rpf->alpha & 0xFF) << 8) | 0xFF;
+ 		laya = 0;
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index 8875578..3e64d67 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -59,7 +59,7 @@
+ #include <linux/list.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+-#include <linux/reservation.h>
++#include <linux/dma-resv.h>
+ #include <linux/sched.h>
+ #include <linux/slab.h>
+ #include <linux/v4l2-mediabus.h>
+@@ -747,12 +747,12 @@ static int vsp2_video_buffer_prepare(struct vb2_buffer *vb)
+ 
+ 	if (vq->memory == VB2_MEMORY_DMABUF &&
+ 	    vq->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+-		struct reservation_object *resv = vb->planes[0].dbuf->resv;
++		struct dma_resv  *resv = vb->planes[0].dbuf->resv;
+ 
+ 		if (resv) {
+ 			struct dma_fence *fence;
+ 
+-			fence = reservation_object_get_excl_rcu(resv);
++			fence = dma_resv_get_excl_rcu(resv);
+ 			if (fence) {
+ 				int ret = dma_fence_wait(fence, true);
+ 
