@@ -21,6 +21,11 @@ SRCREV = "6172cc7273aae0345db894faa5ab59777549c247"
 
 SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH}"
 
+# Fix compile error with Kernel 5.4
+SRC_URI_append = " \
+    file://vspm_if_patch.patch \
+"
+
 S = "${WORKDIR}/git"
 VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
 
