@@ -1,0 +1,31 @@
+From a58e985f70e28c42977575f02aeeb44706dbad44 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Thu, 13 Dec 2018 13:19:25 +0700
+Subject: [PATCH] qos_drv: include mod_devicetable.h
+
+Fix missing mod_devicetable.h since some declarations splitted out
+platform_device.h
+
+qos-module/files/qos/drv/qos_drv.c:186:34: error: array type has
+incomplete element type 'struct of_device_id'
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ qos-module/files/qos/drv/qos_drv.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/qos-module/files/qos/drv/qos_drv.c b/qos-module/files/qos/drv/qos_drv.c
+index f1cf399..c513b21 100644
+--- a/qos-module/files/qos/drv/qos_drv.c
++++ b/qos-module/files/qos/drv/qos_drv.c
+@@ -65,6 +65,7 @@
+ #include <linux/fs.h>
+ #include <linux/miscdevice.h>
+ #include <linux/platform_device.h>
++#include <linux/mod_devicetable.h>
+ #include <linux/ioctl.h>
+ #include <linux/slab.h>
+ #include <linux/uaccess.h>
+-- 
+2.7.4
+
