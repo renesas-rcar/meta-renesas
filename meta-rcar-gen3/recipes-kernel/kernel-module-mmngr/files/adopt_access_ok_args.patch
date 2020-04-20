@@ -1,0 +1,88 @@
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 6ae00e9..fc33d08 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -991,27 +991,27 @@ static long compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 	switch (cmd) {
+ 	case COMPAT_MM_IOC_ALLOC:
+ 		cmd = MM_IOC_ALLOC;
+-		if (!access_ok(VERIFY_WRITE, tmp, sizeof(*tmp))
++		if (!access_ok( tmp, sizeof(*tmp))
+ 		    || __put_user(tmp32.size, &tmp->size)
+ 		    || __put_user(tmp32.flag, &tmp->flag))
+ 			return -EFAULT;
+ 		break;
+ 	case COMPAT_MM_IOC_SET:
+ 		cmd = MM_IOC_SET;
+-		if (!access_ok(VERIFY_WRITE, tmp, sizeof(*tmp))
++		if (!access_ok( tmp, sizeof(*tmp))
+ 		    || __put_user(tmp32.user_virt_addr, &tmp->user_virt_addr))
+ 			return -EFAULT;
+ 		break;
+ 	case COMPAT_MM_IOC_ALLOC_CO:
+ 		cmd = MM_IOC_ALLOC_CO;
+-		if (!access_ok(VERIFY_WRITE, tmp, sizeof(*tmp))
++		if (!access_ok( tmp, sizeof(*tmp))
+ 		    || __put_user(tmp32.size, &tmp->size)
+ 		    || __put_user(tmp32.flag, &tmp->flag))
+ 			return -EFAULT;
+ 		break;
+ 	case COMPAT_MM_IOC_SHARE:
+ 		cmd = MM_IOC_SHARE;
+-		if (!access_ok(VERIFY_WRITE, tmp, sizeof(*tmp))
++		if (!access_ok( tmp, sizeof(*tmp))
+ 		    || __put_user(tmp32.size, &tmp->size)
+ 		    || __put_user(tmp32.phy_addr, &tmp->phy_addr))
+ 			return -EFAULT;
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index fe3db08..8c76e11 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -66,6 +66,7 @@
+ #include <linux/miscdevice.h>
+ #include <linux/platform_device.h>
+ #include <linux/dma-buf.h>
++#include <linux/of_address.h>
+ 
+ #include "mmngr_buf_private.h"
+ 
+@@ -174,7 +175,7 @@ static long compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		return ret;
+ 	}
+ 
+-	if (!access_ok(VERIFY_WRITE, tmp, sizeof(*tmp))
++	if (!access_ok( tmp, sizeof(*tmp))
+ 	    || __put_user(tmp32.size, &tmp->size)
+ 	    || __put_user(tmp32.hard_addr, &tmp->hard_addr)
+ 	    || __put_user(tmp32.buf, &tmp->buf))
+@@ -229,7 +230,7 @@ static struct miscdevice misc = {
+ 	.fops		= &fops,
+ };
+ 
+-static int dmabuf_attach(struct dma_buf *buf, struct device *dev,
++static int dmabuf_attach(struct dma_buf *buf, /*struct device *dev, */
+ 	struct dma_buf_attachment *attach)
+ {
+ 	return 0;
+@@ -341,8 +348,6 @@ static const struct dma_buf_ops dmabuf_ops = {
+ 	.release = dmabuf_release,
+ 	.begin_cpu_access = dmabuf_begin_cpu_access,
+ 	.end_cpu_access = dmabuf_end_cpu_access,
+-	.map_atomic = dmabuf_map_atomic,
+-	.unmap_atomic = dmabuf_unmap_atomic,
+ 	.map = dmabuf_map,
+ 	.unmap = dmabuf_unmap,
+ 	.mmap = dmabuf_mmap,
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+index dfbea57..064b168 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+@@ -104,7 +104,7 @@ static long compat_ioctl(struct file *file, unsigned int cmd,
+ static int open(struct inode *inode, struct file *file);
+ static int close(struct inode *inode, struct file *file);
+ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+-static int dmabuf_attach(struct dma_buf *buf, struct device *dev,
++static int dmabuf_attach(struct dma_buf *buf, /* struct device *dev,*/
+ 			struct dma_buf_attachment *attach);
+ static void dmabuf_detach(struct dma_buf *buf,
+ 			struct dma_buf_attachment *attach);
