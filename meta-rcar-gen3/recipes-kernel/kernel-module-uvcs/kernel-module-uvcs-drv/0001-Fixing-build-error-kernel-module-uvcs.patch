@@ -1,0 +1,102 @@
+From 3f92209bceb83b26a70a9efbee293992a30801d7 Mon Sep 17 00:00:00 2001
+From: Loc Nguyen <loc.nguyen.ks@renesas.com>
+Date: Thu, 27 Dec 2018 13:17:35 +0700
+Subject: [PATCH] Fixing build error kernel module uvcs
+
+This patch is created due to kernel update
+-in kernel 4.19, .data is removed from struct timer_list
+-function in struct timer_list has changed from (*function)(unsigned long)
+to (*function)(struct timer_list *)
+Therefore, we add timer_vlc_data and timer_ce_data and use from_timer()
+-function init_timer() is replaced by function timer_setup()
+
+Signed-off-by: Loc Nguyen <loc.nguyen.ks@renesas.com>
+---
+ src/lkm/uvcs_lkm_internal.h |  2 ++
+ src/lkm/uvcs_lkm_uf_io.c    | 22 ++++++++++++----------
+ 2 files changed, 14 insertions(+), 10 deletions(-)
+
+diff --git a/src/lkm/uvcs_lkm_internal.h b/src/lkm/uvcs_lkm_internal.h
+index d3f3249..012991a 100644
+--- a/src/lkm/uvcs_lkm_internal.h
++++ b/src/lkm/uvcs_lkm_internal.h
+@@ -162,6 +162,8 @@ struct uvcs_vcp_hwinf {
+ 	u32						 iparch;
+ 	u32						 ipgroup;
+ 	bool					 irq_enable;
++	unsigned long					timer_vlc_data;
++	unsigned long					timer_ce_data;
+ 
+ 	struct platform_device	*pdev;
+ 	struct timer_list       timer_vlc;
+diff --git a/src/lkm/uvcs_lkm_uf_io.c b/src/lkm/uvcs_lkm_uf_io.c
+index 282a2bf..a9393ee 100644
+--- a/src/lkm/uvcs_lkm_uf_io.c
++++ b/src/lkm/uvcs_lkm_uf_io.c
+@@ -144,8 +144,8 @@ static const struct soc_device_attribute device_es2x[] = {
+ /******************************************************************************/
+ static irqreturn_t uvcs_vlc_int_handler(int irq, void *dev);
+ static irqreturn_t uvcs_ce_int_handler(int irq, void *dev);
+-static void uvcs_vlc_timer_handler(unsigned long data);
+-static void uvcs_ce_timer_handler(unsigned long data);
++static void uvcs_vlc_timer_handler(struct timer_list *data_ptr);
++static void uvcs_ce_timer_handler(struct timer_list *data_ptr);
+ 
+ static int uvcs_vcp_request_irq(struct platform_device *pdev);
+ static void uvcs_vcp_free_irq(struct platform_device *pdev);
+@@ -230,9 +230,11 @@ static irqreturn_t uvcs_ce_int_handler(
+  * \brief Timer handler for VLC module (timeout VCP processing)
+  */
+ static void uvcs_vlc_timer_handler(
+-	unsigned long data /**< [in] hardware identifier */
++	struct timer_list *data_ptr /**< [in] hardware identifier */
+ 	)
+ {
++	struct uvcs_vcp_hwinf *vcpinfo = from_timer(vcpinfo, data_ptr, timer_vlc);
++	unsigned long data = vcpinfo -> timer_vlc_data;
+ 	if (driver_info) {
+ 		struct timespec ts;
+ 		unsigned long flags;
+@@ -252,9 +254,11 @@ static void uvcs_vlc_timer_handler(
+  * \brief Timer handler for CE module (timeout VCP processing)
+  */
+ static void uvcs_ce_timer_handler(
+-	unsigned long data /**< [in] hardware identifier */
++	struct timer_list *data_ptr /**< [in] hardware identifier */
+ 	)
+ {
++	struct uvcs_vcp_hwinf *vcpinfo = from_timer(vcpinfo, data_ptr, timer_ce);
++	unsigned long data = vcpinfo -> timer_ce_data;
+ 	if (driver_info) {
+ 		struct timespec ts;
+ 		unsigned long flags;
+@@ -326,13 +330,11 @@ static void uvcs_hw_start(
+ 		/* set kernel timer */
+ 		if (hw_module_id == UVCS_CMN_BASE_ADDR_VLC) {
+ 			drv->vcpinf[hw_ip_id].timer_vlc.expires = jiffies + UVCS_TIMEOUT_TIMER;
+-			drv->vcpinf[hw_ip_id].timer_vlc.data = hw_ip_id;
+-			drv->vcpinf[hw_ip_id].timer_vlc.function = &uvcs_vlc_timer_handler;
++			drv->vcpinf[hw_ip_id].timer_vlc_data = hw_ip_id;
+ 			add_timer(&drv->vcpinf[hw_ip_id].timer_vlc);
+ 		} else {
+ 			drv->vcpinf[hw_ip_id].timer_ce.expires = jiffies + UVCS_TIMEOUT_TIMER;
+-			drv->vcpinf[hw_ip_id].timer_ce.data = hw_ip_id;
+-			drv->vcpinf[hw_ip_id].timer_ce.function = &uvcs_ce_timer_handler;
++			drv->vcpinf[hw_ip_id].timer_ce_data = hw_ip_id;
+ 			add_timer(&drv->vcpinf[hw_ip_id].timer_ce);
+ 		}
+ 	}
+@@ -730,8 +732,8 @@ static int uvcs_vcp_request_irq(
+ 		goto err_exit_2;
+ 	}
+ 
+-	init_timer(&vcpinf->timer_vlc);
+-	init_timer(&vcpinf->timer_ce);
++	timer_setup(&vcpinf->timer_vlc,uvcs_vlc_timer_handler,0);
++	timer_setup(&vcpinf->timer_ce,uvcs_ce_timer_handler,0);
+ 	spin_lock_init(&vcpinf->slock_vlc);
+ 	spin_lock_init(&vcpinf->slock_ce);
+ 	vcpinf->irq_enable = true;
+-- 
+2.7.4
+

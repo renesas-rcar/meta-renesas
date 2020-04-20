@@ -20,6 +20,11 @@ COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
 SRC_URI = "${@oe.utils.conditional('USE_VIDEO_OMX', '1', 'file://RCG3VUDRL4101ZDO.tar.bz2', '', d)}"
 
+# Fix compile error with Kernel 5.4
+SRC_URI_append = " \
+    file://0001-Fixing-build-error-kernel-module-uvcs.patch \
+"
+
 S = "${WORKDIR}/RCG3VUDRL4101ZDO"
 
 EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR}"
