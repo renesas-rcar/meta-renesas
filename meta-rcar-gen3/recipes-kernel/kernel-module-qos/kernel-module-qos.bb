@@ -20,6 +20,11 @@ SRCREV = "d32fbee4d7b76056c37935ff31102c3583801a29"
 
 SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
 
+# For missing mod_devicetable.h
+SRC_URI_append = " \
+    file://0001-qos_drv-include-mod_devicetable.h.patch \
+"
+
 S = "${WORKDIR}/git"
 QOS_DRV_DIR = "qos-module/files/qos/drv"
 
