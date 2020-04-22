@@ -29,10 +29,10 @@ Currently, this supports boards and the SoCs of the following:
 *  After a Customer Yocto BSP version releases, the Community Yocto BSP will be
 rebased and released accordingly.
 
-*  zeus-X:
+*  dunfell-X:
 
-    * The versions used on zeus (Yocto Project 3.0) will start on
-      zeus-Yocto-v3.21.0 to keep the major version numbers in sync.
+    * The versions used on dunfell (Yocto Project 3.1) will start on
+      dunfell-Yocto-v3.21.0 to keep the major version numbers in sync.
 
 ## Contribution
 
@@ -51,8 +51,7 @@ This layer depends on:
 ```bash
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
-    branch: zeus
-    revision: 94f6b31befda5c496f65e863a6f8152b42d7ebf0
+    branch: dunfell
 ```
 
 * meta-openembedded
@@ -60,8 +59,7 @@ This layer depends on:
 ```bash
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python
-    branch: zeus
-    revision: 1bfaa2e63a184e21a2db5c286444828d5948a8b4
+    branch: dunfell
 ```
 
 ## Build Instructions
