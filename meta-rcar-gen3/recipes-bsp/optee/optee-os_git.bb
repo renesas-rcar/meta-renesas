@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = " \
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-inherit deploy pythonnative
+inherit deploy python3native
 
 PV = "3.1.0+renesas+git${SRCPV}"
 
@@ -24,12 +24,13 @@ SRC_URI = " \
 
 SRC_URI_append = " \
     file://0001-core-define-syscall_t-as-void-void.patch \
+    file://0001-scripts-update-scripts-to-use-python3.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu)"
 PLATFORM = "rcar"
 
-DEPENDS = "python-pycrypto-native"
+DEPENDS = "python3-pycrypto-native"
 
 export CROSS_COMPILE64="${TARGET_PREFIX}"
 

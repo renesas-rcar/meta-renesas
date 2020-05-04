@@ -14,7 +14,7 @@ SRC_URI += " \
     file://0001-Fix-for-teec_trace.c-snprintf-Werror-format-truncati.patch \
 "
 
-inherit pythonnative systemd
+inherit python3native systemd
 SYSTEMD_SERVICE_${PN} = "optee.service"
 
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
