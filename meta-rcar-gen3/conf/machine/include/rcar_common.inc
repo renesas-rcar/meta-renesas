@@ -29,5 +29,6 @@ PREFERRED_VERSION_libdrm = "2.4.100"
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"
 
-# Command using to build kernel-module-gles
-HOSTTOOLS += "sync"
+# sync is required to build kernel-module-gles
+# rsync is required to build kernel 5.4
+HOSTTOOLS += "sync rsync"
