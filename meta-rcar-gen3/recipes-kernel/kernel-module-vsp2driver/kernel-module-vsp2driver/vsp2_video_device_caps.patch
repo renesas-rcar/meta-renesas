@@ -1,0 +1,34 @@
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index 3e64d67..daba944 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -1036,13 +1036,6 @@ vsp2_video_querycap(struct file *file, void *fh, struct v4l2_capability *cap)
+ 			  | V4L2_CAP_VIDEO_CAPTURE_MPLANE
+ 			  | V4L2_CAP_VIDEO_OUTPUT_MPLANE;
+ 
+-	if (video->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)
+-		cap->device_caps = V4L2_CAP_VIDEO_CAPTURE_MPLANE
+-				 | V4L2_CAP_STREAMING;
+-	else
+-		cap->device_caps = V4L2_CAP_VIDEO_OUTPUT_MPLANE
+-				 | V4L2_CAP_STREAMING;
+-
+ 	strlcpy(cap->driver, "vsp2", sizeof(cap->driver));
+ 	strlcpy(cap->card, video->video.name, sizeof(cap->card));
+ 	snprintf(cap->bus_info, sizeof(cap->bus_info), "platform:%s",
+@@ -1358,11 +1351,15 @@ struct vsp2_video *vsp2_video_create(struct vsp2_device *vsp2,
+ 		video->type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+ 		video->pad.flags = MEDIA_PAD_FL_SOURCE;
+ 		video->video.vfl_dir = VFL_DIR_TX;
++		video->video.device_caps = V4L2_CAP_VIDEO_OUTPUT_MPLANE
++				 | V4L2_CAP_STREAMING;
+ 	} else {
+ 		direction = "output";
+ 		video->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+ 		video->pad.flags = MEDIA_PAD_FL_SINK;
+ 		video->video.vfl_dir = VFL_DIR_RX;
++		video->video.device_caps = V4L2_CAP_VIDEO_CAPTURE_MPLANE
++				 | V4L2_CAP_STREAMING;
+ 	}
+ 
+ 	mutex_init(&video->lock);

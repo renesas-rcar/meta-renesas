@@ -26,6 +26,7 @@ SRC_URI_append = " file://0001-Handle-data_offset-setting-from-V4L2-API.patch"
 # Fix compile error with Kernel 5.4
 SRC_URI_append = " \
     file://vsp2drv_diff.patch \
+	file://vsp2_video_device_caps.patch \
 "
 
 S = "${WORKDIR}/git"
