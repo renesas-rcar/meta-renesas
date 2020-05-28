@@ -129,11 +129,11 @@ _adsp_km_list="adsp_driver,RCG3AHPDL4101ZDO,RCG3AHPDL4101ZDO.tar.gz"
 # gfx_list="<package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)> \
 #           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)> \
 #           <package_name(user)>,<copy_file_name(user)>,<package_name(kernel)>,<copy_file_name(kernel)>"
-_gfx_list="RTM0RC7795GLPG0001SL41C,r8a77951_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
+_gfx_list="RTM8RC7795ZG300Q10JPL2E,r8a77951_linux_gsx_binaries_gles.tar.bz2,RCH3G001L5001ZDO,GSX_KM_H3.tar.bz2 \
            RTM0RC7796GLPG0001SL41C,r8a77960_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2 \
            RTM0RC7796GLPGB001SL41C,r8a77965_linux_gsx_binaries_gles.tar.bz2,RCN3G001L4101ZDO,GSX_KM_M3N.tar.bz2 \
            RTM0RC7799GLPG0001SL41C,r8a77990_linux_gsx_binaries_gles.tar.bz2,RCE3G001L4101ZDO,GSX_KM_E3.tar.bz2 \
-           INFRTM0RC7795GLPG0001SL41C,INF_r8a77951_linux_gsx_binaries_gles.tar.bz2,RCH3G001L4101ZDO,GSX_KM_H3.tar.bz2 \
+           INFRTM8RC7795ZG300Q10JPL2E,INF_r8a77951_linux_gsx_binaries_gles.tar.bz2,RCH3G001L5001ZDO,GSX_KM_H3.tar.bz2 \
            INFRTM0RC7796GLPG0001SL41C,INF_r8a77960_linux_gsx_binaries_gles.tar.bz2,RCM3G001L4101ZDO,GSX_KM_M3.tar.bz2 \
            INFRTM0RC7796GLPGB001SL41C,INF_r8a77965_linux_gsx_binaries_gles.tar.bz2,RCN3G001L4101ZDO,GSX_KM_M3N.tar.bz2 \
            INFRTM0RC7799GLPG0001SL41C,INF_r8a77990_linux_gsx_binaries_gles.tar.bz2,RCE3G001L4101ZDO,GSX_KM_E3.tar.bz2"
