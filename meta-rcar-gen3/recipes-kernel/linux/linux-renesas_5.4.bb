@@ -11,8 +11,8 @@ COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.4/rcar-3.10.0.rc1"
-SRCREV = "52be90f101cd18160cda57d246c1e2e6abfe4a74"
+BRANCH = "v5.4/rcar-3.10.0.rc2"
+SRCREV = "1f410e52794c5b93bd5fcbdec1909e93bd509046"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
