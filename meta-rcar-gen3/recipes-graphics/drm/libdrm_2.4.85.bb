@@ -15,6 +15,7 @@ SRC_URI = "http://dri.freedesktop.org/libdrm/${BP}.tar.bz2 \
            file://installtests.patch \
            file://fix_O_CLOEXEC_undeclared.patch \
            file://0001-configure.ac-Allow-explicit-enabling-of-cunit-tests.patch \
+           file://0001-Add-sync_fence_info-and-sync_pt_info.patch \
           "
 
 SRC_URI[md5sum] = "7aa540aeea4a1f3d1e9b0828f1772543"
