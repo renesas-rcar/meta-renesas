@@ -2,7 +2,7 @@
 Description=optee services
 
 [Service]
-ExecStart=/usr/bin/tee-supplicant
+ExecStart=/usr/bin/tee-supplicant -d
 ExecStop=/usr/bin/killall -s KILL tee-supplicant
 
 [Install]

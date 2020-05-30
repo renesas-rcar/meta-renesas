@@ -3,15 +3,14 @@ LICENSE = "BSD-2-Clause"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 PR = "r0"
-PV = "3.1.0+renesas+git${SRCPV}"
+PV = "3.8.0+renesas+git${SRCPV}"
 BRANCH = "master"
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH}"
-SRCREV = "3f16662284a69fdec97b1712064be94d1fed7ae7"
+SRCREV = "be4fa2e36f717f03ca46e574aa66f697a897d090"
 
 SRC_URI += " \
     file://optee.service \
     file://0001-tee-supplicant-use-MMC_IOC_MULTI_CMD-for-RPMB-access.patch \
-    file://0001-Fix-for-teec_trace.c-snprintf-Werror-format-truncati.patch \
 "
 
 inherit pythonnative systemd
@@ -34,15 +33,16 @@ do_install () {
     install -d ${D}/${includedir}
 
     # Install library
-    install -m 0755 ${S}/out/export/lib/libteec.so.1.0 ${D}/${libdir}
+    install -m 0755 ${S}/out/export/usr/lib/libteec.so.1.0.0 ${D}/${libdir}
 
     # Create symbolic link
     cd ${D}/${libdir}
+    ln -sf libteec.so.1.0.0 libteec.so.1.0
     ln -sf libteec.so.1.0 libteec.so.1
     ln -sf libteec.so.1 libteec.so
 
     # Install header files
-    install -m 0644 ${S}/out/export/include/* ${D}/${includedir}
+    install -m 0644 ${S}/out/export/usr/include/* ${D}/${includedir}
 
     # Install systemd service configure file for OP-TEE client
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
@@ -57,7 +57,7 @@ do_install_append_aarch64 () {
     install -d ${D}/${bindir}
 
     # Install binary to bindir
-    install -m 0755 ${S}/out/export/bin/tee-supplicant ${D}/${bindir}
+    install -m 0755 ${S}/out/export/usr/sbin/tee-supplicant ${D}/${bindir}
 }
 
 RPROVIDES_${PN} += "optee-client"
