@@ -11,5 +11,4 @@ IMAGE_INSTALL_append = " \
     ${GSTREAMER_PKGS} \
     packagegroup-wayland-community \
     packagegroup-graphics-renesas-proprietary \
-    packagegroup-graphics-renesas-wayland \
 "

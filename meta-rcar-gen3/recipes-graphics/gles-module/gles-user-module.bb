@@ -68,14 +68,6 @@ do_install() {
     ln -s libEGL.so libEGL.so.1
     ln -s libGLESv2.so libGLESv2.so.2
 
-    if [ "${USE_GLES_WAYLAND}" = "1" ]; then
-        # Set the "WindowSystem" parameter for wayland
-        if [ "${GLES}" = "gsx" ]; then
-            sed -i -e "s/WindowSystem=libpvrDRM_WSEGL.so/WindowSystem=libpvrWAYLAND_WSEGL.so/g" \
-                ${D}${sysconfdir}/powervr.ini
-        fi
-    fi
-
     # Install systemd service
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ; then
         install -d ${D}${systemd_system_unitdir}/
@@ -114,7 +106,6 @@ RPROVIDES_${PN} += " \
 
 RDEPENDS_${PN} = " \
     kernel-module-gles \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'libgbm wayland-kms', '', d)} \
 "
 
 INSANE_SKIP_${PN} = "ldflags build-deps file-rdeps"
