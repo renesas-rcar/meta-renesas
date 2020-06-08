@@ -2,16 +2,13 @@
 PACKAGECONFIG[gles] = "-Dgles1=true -Dgles2=false"
 PACKAGECONFIG[egl] = "-Degl=true"
 
-# Disable the gbm modules of mesa
-PACKAGECONFIG_remove = "gbm"
+PROVIDES_append = " ${@bb.utils.contains('PACKAGECONFIG', 'gbm', 'libgbm', '', d)}"
 
 # Remove the gbm and egl packages. These are provided in other recipes.
 PACKAGES_remove = " \
-    libgbm-dev libgbm \
     libegl-mesa-dev libegl-mesa \
     libegl-dev libegl \
     libgles2-mesa libgles2-mesa-dev \
-    libwayland-egl libwayland-egl-dev \
 "
 
 do_install_append() {
