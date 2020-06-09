@@ -30,8 +30,10 @@ SRC_URI_append = " \
 "
 
 # Add python3 support to fix Perf build failure
+# Add patch to build perf with new libbfd
 SRC_URI_append = " \
     file://0001-perf-tools-Add-Python-3-support.patch \
+    file://Make-perf-able-to-build-with-latest-libbfd.patch \
 "
 
 # Fix patch for Weston 8.0.0 issue
