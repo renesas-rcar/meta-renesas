@@ -4,7 +4,7 @@ require u-boot.inc
 DEPENDS += "bc-native dtc-native lzop-native srecord-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
-BRANCH = "v2020.01/rcar-3.10.0.rc2"
+BRANCH = "v2020.01/rcar-4.0.0"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
 SRCREV = "e37a493eb62b23f41c055f34922f3e59bedaf5bd"
