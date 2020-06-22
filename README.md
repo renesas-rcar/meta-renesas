@@ -3,7 +3,10 @@
 This layer provides support for Renesas Electronics's platforms for use with
 OpenEmbedded and/or Yocto.
 
-Layer maintainer: Takamitsu Honda <takamitsu.honda.pv@renesas.com>
+Layer maintainer(s):
+
+* Khang Nguyen <khang.nguyen.xw@renesas.com>
+* Duy Dang <duy.dang.yw@renesas.com>
 
 ## Supported Boards/Machines
 

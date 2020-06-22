@@ -14,30 +14,10 @@ Currently, this supports boards and the SoCs of the following:
     - Board: Ebisu / SoC: R8A77990 (R-Car E3)
 ```
 
-## Branch Policy
-
-
-* This is Community Yocto BSP to follow Yocto/Poky releases.
-
-* It is not supported to the level of the Customer Yocto BSP.
-
-## Tag Policy
-
-
-*  Releases are created from the respective working branch.
-
-*  After a Customer Yocto BSP version releases, the Community Yocto BSP will be
-rebased and released accordingly.
-
-*  zeus-X:
-
-    * The versions used on zeus (Yocto Project 3.0) will start on
-      zeus-Yocto-v3.21.0 to keep the major version numbers in sync.
-
 ## Contribution
 
 
-* Please submit any patches for this layer to: takamitsu.honda.pv@renesas.com
+* Please submit any patches for this layer to: khang.nguyen.xw@renesas.com
 
 * Please see the MAINTAINERS file for more details.
 
@@ -52,7 +32,6 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
     branch: zeus
-    revision: 94f6b31befda5c496f65e863a6f8152b42d7ebf0
 ```
 
 * meta-openembedded
@@ -61,7 +40,6 @@ This layer depends on:
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python
     branch: zeus
-    revision: 1bfaa2e63a184e21a2db5c286444828d5948a8b4
 ```
 
 ## Build Instructions
