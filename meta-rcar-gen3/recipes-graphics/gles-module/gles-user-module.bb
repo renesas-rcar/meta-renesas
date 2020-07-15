@@ -80,6 +80,11 @@ do_install() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ; then
         install -d ${D}${systemd_system_unitdir}/
         install -m 644 ${WORKDIR}/rc.pvr.service ${D}${systemd_system_unitdir}/
+
+        # Fix weston dependency, needs to be weston@.service
+        sed -i 's/^RequiredBy=weston.service$/RequiredBy=weston@.service/' \
+                ${D}${systemd_system_unitdir}/rc.pvr.service
+
         install -d ${D}${exec_prefix}/bin
         install -m 755 ${S}/etc/init.d/rc.pvr ${D}${exec_prefix}/bin/pvrinit
     fi
