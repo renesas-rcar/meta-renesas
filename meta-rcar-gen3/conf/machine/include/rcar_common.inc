@@ -24,7 +24,7 @@ PREFERRED_VERSION_u-boot = "v2020.01%"
 EXTRA_IMAGEDEPENDS += " u-boot"
 
 # libdrm
-PREFERRED_VERSION_libdrm = "2.4.100"
+PREFERRED_VERSION_libdrm = "2.4.101"
 
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"
