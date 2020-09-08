@@ -11,7 +11,7 @@ IMAGE_INSTALL_append = " \
 
 # Support secure environment
 IMAGE_INSTALL_append = " \
-    optee-client \
+    ${@bb.utils.contains("MACHINE_FEATURES", "optee", "optee-client", "", d)} \
 "
 
 # Add overrides for selection 32 bit or 64 bit target
