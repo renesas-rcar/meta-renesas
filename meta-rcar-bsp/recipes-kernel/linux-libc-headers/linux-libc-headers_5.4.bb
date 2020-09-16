@@ -12,6 +12,11 @@ SRC_URI_append = " \
     file://0001-renesas_uioctl-Fix-missing-WITH-Linux-syscall-note.patch \
 "
 
+# Fix perf compile error
+SRC_URI_append = " \
+    file://Make-perf-able-to-build-with-latest-libbfd.patch \
+"
+
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 S = "${WORKDIR}/git"

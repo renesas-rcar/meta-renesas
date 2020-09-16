@@ -18,6 +18,11 @@ SRC_URI_append = " \
     file://0001-renesas_uioctl-Fix-missing-WITH-Linux-syscall-note.patch \
 "
 
+# Fix perf compile error
+SRC_URI_append = " \
+    file://Make-perf-able-to-build-with-latest-libbfd.patch \
+"
+
 LINUX_VERSION ?= "5.4.0"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
