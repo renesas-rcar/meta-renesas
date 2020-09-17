@@ -13,6 +13,11 @@ SRCREV = "7f6e5e961032c3a4395650197633f332d3efaef9"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
+# Fix missing "WITH Linux-syscall-note" for SPDX-License-Identifier
+SRC_URI_append = " \
+    file://0001-renesas_uioctl-Fix-missing-WITH-Linux-syscall-note.patch \
+"
+
 LINUX_VERSION ?= "5.4.0"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"

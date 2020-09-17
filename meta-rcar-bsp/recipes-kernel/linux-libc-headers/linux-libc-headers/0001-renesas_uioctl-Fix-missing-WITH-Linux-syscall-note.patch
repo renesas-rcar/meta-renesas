@@ -1,0 +1,30 @@
+From 26f0cbab62bac0ec670c35de5b70bfa109e30999 Mon Sep 17 00:00:00 2001
+From: Khang Nguyen <khang.nguyen.xw@renesas.com>
+Date: Thu, 17 Sep 2020 13:25:14 +0900
+Subject: [PATCH] renesas_uioctl: Fix missing WITH Linux-syscall-note
+
+Add WITH Linux-syscall-note to avoid the following error:
+
+| error: include/uapi/linux/renesas_uioctl.h: missing "WITH Linux-syscall-note" for SPDX-License-Identifier
+| scripts/Makefile.headersinst:66: recipe for target 'usr/include/linux/renesas_uioctl.h' failed
+| make[1]: *** [usr/include/linux/renesas_uioctl.h] Error 1
+| make[1]: *** Waiting for unfinished jobs....
+
+Signed-off-by: Khang Nguyen <khang.nguyen.xw@renesas.com>
+---
+ include/uapi/linux/renesas_uioctl.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/uapi/linux/renesas_uioctl.h b/include/uapi/linux/renesas_uioctl.h
+index c88e6ed..fba86e2 100644
+--- a/include/uapi/linux/renesas_uioctl.h
++++ b/include/uapi/linux/renesas_uioctl.h
+@@ -1,4 +1,4 @@
+-/* SPDX-License-Identifier: GPL-2.0-only */
++/* SPDX-License-Identifier: GPL-2.0-only WITH Linux-syscall-note */
+ /*
+  * Renesas IOCTL defines for user io drivers;
+  * used to control power, clock and reset
+-- 
+2.7.4
+
