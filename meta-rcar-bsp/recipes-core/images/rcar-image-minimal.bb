@@ -4,6 +4,9 @@ require recipes-core/images/core-image-minimal.bb
 
 COMPATIBLE_MACHINE = "(falcon)"
 
+# Enable package manager
+EXTRA_IMAGE_FEATURES += "package-management"
+
 # Basic packages
 IMAGE_INSTALL_append = " \
     bash \
