@@ -24,14 +24,12 @@ includedir = "${RENESAS_DATADIR}/include"
 CFLAGS += " -I${STAGING_DIR_HOST}${RENESAS_DATADIR}/include"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-OMX_EVA_PREFIX = '${@oe.utils.conditional("USE_OMX_EVA_PKG", "1", "EVA", "", d )}'
-
 # SRC file name
-SRC_URI_OMX = '${@oe.utils.conditional("USE_OMX_COMMON", "1", "file://${OMX_EVA_PREFIX}RTM0AC0000XCMCTL30SL41C.tar.bz2;unpack=0", "", d )}'
-SRC_URI_VCMND = '${@oe.utils.conditional("USE_VIDEO_DEC", "1", "file://${OMX_EVA_PREFIX}RTM0AC0000XVCMND30SL41C.tar.bz2;unpack=0", "", d )}'
-SRC_URI_VCMNE = '${@oe.utils.conditional("USE_VIDEO_ENC", "1", "file://${OMX_EVA_PREFIX}RTM0AC0000XVCMNE30SL41C.tar.bz2;unpack=0", "", d )}'
-SRC_URI_H264D = '${@oe.utils.conditional("USE_H264D_OMX", "1", "file://${OMX_EVA_PREFIX}RTM0AC0000XV264D30SL41C.tar.bz2", "", d )}'
-SRC_URI_H264E = '${@oe.utils.conditional("USE_H264E_OMX", "1", "file://${OMX_EVA_PREFIX}RTM0AC0000XV264E30SL41C.tar.bz2", "", d )}'
+SRC_URI_OMX = '${@oe.utils.conditional("USE_OMX_COMMON", "1", "file://RTM0AC0000XCMCTL30SL41C.tar.bz2;unpack=0", "", d )}'
+SRC_URI_VCMND = '${@oe.utils.conditional("USE_VIDEO_DEC", "1", "file://RTM0AC0000XVCMND30SL41C.tar.bz2;unpack=0", "", d )}'
+SRC_URI_VCMNE = '${@oe.utils.conditional("USE_VIDEO_ENC", "1", "file://RTM0AC0000XVCMNE30SL41C.tar.bz2;unpack=0", "", d )}'
+SRC_URI_H264D = '${@oe.utils.conditional("USE_H264D_OMX", "1", "file://RTM0AC0000XV264D30SL41C.tar.bz2", "", d )}'
+SRC_URI_H264E = '${@oe.utils.conditional("USE_H264E_OMX", "1", "file://RTM0AC0000XV264E30SL41C.tar.bz2", "", d )}'
 
 SRC_URI_H263D = '${@oe.utils.conditional("USE_H263D_OMX", "1", "file://RTM0AC0000XV263D30SL41C.tar.bz2", "", d )}'
 SRC_URI_H265D = '${@oe.utils.conditional("USE_H265D_OMX", "1", "file://RTM0AC0000XV265D30SL41C.tar.bz2", "", d )}'
@@ -93,12 +91,12 @@ SRC_URI = " \
 "
 
 # SRC directory name
-OMX_COMMON_SRC = '${@oe.utils.conditional("USE_OMX_COMMON", "1", "${OMX_EVA_PREFIX}RTM0AC0000XCMCTL30SL41C", "", d )}'
-OMX_VIDEO_DEC_COMMON_SRC = '${@oe.utils.conditional("USE_VIDEO_DEC", "1", "${OMX_EVA_PREFIX}RTM0AC0000XVCMND30SL41C", "", d )}'
-OMX_VIDEO_ENC_COMMON_SRC = '${@oe.utils.conditional("USE_VIDEO_ENC", "1", "${OMX_EVA_PREFIX}RTM0AC0000XVCMNE30SL41C", "", d )}'
+OMX_COMMON_SRC = '${@oe.utils.conditional("USE_OMX_COMMON", "1", "RTM0AC0000XCMCTL30SL41C", "", d )}'
+OMX_VIDEO_DEC_COMMON_SRC = '${@oe.utils.conditional("USE_VIDEO_DEC", "1", "RTM0AC0000XVCMND30SL41C", "", d )}'
+OMX_VIDEO_ENC_COMMON_SRC = '${@oe.utils.conditional("USE_VIDEO_ENC", "1", "RTM0AC0000XVCMNE30SL41C", "", d )}'
 
-OMX_H264_DEC_SRC = '${@oe.utils.conditional("USE_H264D_OMX", "1", "${OMX_EVA_PREFIX}RTM0AC0000XV264D30SL41C", "", d )}'
-OMX_H264_ENC_SRC = '${@oe.utils.conditional("USE_H264E_OMX", "1", "${OMX_EVA_PREFIX}RTM0AC0000XV264E30SL41C", "", d )}'
+OMX_H264_DEC_SRC = '${@oe.utils.conditional("USE_H264D_OMX", "1", "RTM0AC0000XV264D30SL41C", "", d )}'
+OMX_H264_ENC_SRC = '${@oe.utils.conditional("USE_H264E_OMX", "1", "RTM0AC0000XV264E30SL41C", "", d )}'
 
 OMX_H263_DEC_SRC = '${@oe.utils.conditional("USE_H263D_OMX", "1", "RTM0AC0000XV263D30SL41C", "", d )}'
 OMX_H265_DEC_SRC = '${@oe.utils.conditional("USE_H265D_OMX", "1", "RTM0AC0000XV265D30SL41C", "", d )}'

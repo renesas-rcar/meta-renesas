@@ -152,5 +152,3 @@ USE_OMX_COMMON = "${@'1' if '1' in '${USE_VIDEO_OMX} ${USE_AUDIO_OMX}' else '0'}
 # USE_OMX_USER_MODULE for OMX User Module
 # Note) List of USE_OMX_COMMON = {USE_VIDEO_OMX} + {USE_AUDIO_OMX}
 USE_OMX_USER_MODULE = "${@'1' if '1' in '${USE_OMX_COMMON} ${LIST_AUDIO_MDW_FLAG}' else '0'}"
-
-USE_OMX_EVA_PKG = "${@'1' if 'use_eva_pkg' in '${DISTRO_FEATURES}' else '0'}"

@@ -81,13 +81,6 @@ to use, you will need to get them from Renesas.
         SOC_FAMILY = "r8a77990"
     ```
 
-* When using the click-through version of the gfx/mmp packages, you need to add
-the following to your local.conf
-
-```bash
-   DISTRO_FEATURES_append = " use_eva_pkg"
-```
-
 ## II/ Obtain and Install Renesas Graphics Drivers
 
 
