@@ -16,13 +16,8 @@ Maintainers List (try to look for most precise areas first)
 
 		-----------------------------------
 Renesas ARM SoCs R-Car Generation 3
-M:	Takamitsu Honda <takamitsu.honda.pv@renesas.com>
+M:	Khang Nguyen <khang.nguyen.xw@renesas.com>
+M:	Duy Dang <duy.dang.yw@renesas.com>
 F:	meta-rcar-gen3
-
-Renesas ARM SoCs R-Car Generation 2
-M:	Takamitsu Honda <takamitsu.honda.pv@renesas.com>
-F:	meta-rcar-gen2
-
-COMMON
-M:	Takamitsu Honda <takamitsu.honda.pv@renesas.com>
-F:	common
+F:      meta-rcar-bsp
+F:      meta-rcar-adas
