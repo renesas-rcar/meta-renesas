@@ -12,6 +12,11 @@ SRC_URI_appen_rcar-gen3 = " \
     file://0001-drm-rcar-du-Set-primary-plane-zpos-immutably-at-init.patch \
 "
 
+# Fix compile error on host installs GCC 10
+SRC_URI_append = " \
+    file://0001-scripts-dtc-Remove-redundant-YYLOC-global-declaratio.patch \
+"
+
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 S = "${WORKDIR}/git"

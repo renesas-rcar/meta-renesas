@@ -40,6 +40,11 @@ SRC_URI_append = " \
     file://0001-drm-rcar-du-Set-primary-plane-zpos-immutably-at-init.patch \
 "
 
+# Fix compile error on host installs GCC 10
+SRC_URI_append = " \
+    file://0001-scripts-dtc-Remove-redundant-YYLOC-global-declaratio.patch \
+"
+
 # Enable RPMSG_VIRTIO depend on ICCOM
 SUPPORT_ICCOM = " \
     file://iccom.cfg \
