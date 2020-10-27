@@ -39,6 +39,9 @@ libdir[unexport] = "1"
 S = "${WORKDIR}/git"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
+# Avoid compile error with GCC 10.2.0
+CFLAGS += "-mno-outline-atomics"
+
 do_compile() {
     oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y
 }
