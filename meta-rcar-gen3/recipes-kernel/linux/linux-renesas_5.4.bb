@@ -26,7 +26,6 @@ KBUILD_DEFCONFIG = "defconfig"
 
 SRC_URI_append = " \
     file://touch.cfg \
-    ${@bb.utils.contains('MACHINE_FEATURES','usb3','file://usb3.cfg','',d)} \
     ${@oe.utils.conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
 
@@ -51,7 +50,7 @@ USB3_FIRMWARE_V3 = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/lin
 SRC_URI_append = " \
     ${USB3_FIRMWARE_V2} \
     ${USB3_FIRMWARE_V3} \
-    ${@bb.utils.contains('MACHINE_FEATURES','usb3','file://usb3.cfg','',d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'usb3', 'file://usb3.cfg', 'file://disable_fw_loader_user_helper.cfg', d)} \
 "
 
 do_download_firmware () {
