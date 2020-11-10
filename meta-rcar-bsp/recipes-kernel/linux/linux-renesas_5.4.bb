@@ -8,22 +8,12 @@ COMPATIBLE_MACHINE = "falcon"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.4/rcar-4.0.1.rc1"
-SRCREV = "7f6e5e961032c3a4395650197633f332d3efaef9"
+BRANCH = "v5.4.72/rcar-4.1.0.rc4"
+SRCREV = "35428fc0d95235167192b9fbbba24b89cb39bbeb"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
-# Fix missing "WITH Linux-syscall-note" for SPDX-License-Identifier
-SRC_URI_append = " \
-    file://0001-renesas_uioctl-Fix-missing-WITH-Linux-syscall-note.patch \
-"
-
-# Fix perf compile error
-SRC_URI_append = " \
-    file://Make-perf-able-to-build-with-latest-libbfd.patch \
-"
-
-LINUX_VERSION ?= "5.4.0"
+LINUX_VERSION ?= "5.4.72"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
