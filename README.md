@@ -5,8 +5,7 @@ OpenEmbedded and/or Yocto.
 
 Layer maintainer(s):
 
-* Khang Nguyen <khang.nguyen.xw@renesas.com>
-* Duy Dang <duy.dang.yw@renesas.com>
+* Please see the MAINTAINERS file for more details.
 
 ## Supported Boards/Machines
 
@@ -23,6 +22,8 @@ Layers and boards that support is the following:
 
     meta-rcar-bsp, meta-rcar-adas
         - Renesas Electronics Corporation. R-Car Falcon (R8A779A0)
+        - Renesas Electronics Corporation. Condor (R8A77980)
+        - Renesas Electronics Corporation. Eagle (R8A77970)
 
 Please see README in the layer directory for the description of the board.
 

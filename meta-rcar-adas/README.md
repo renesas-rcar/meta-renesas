@@ -31,7 +31,7 @@ This layer depends on:
 ## Contribution
 
 
-* Please submit any patches for this layer to: khang.nguyen.xw@renesas.com
+* Please submit any patches for this layer to: rcar-yocto@lm.renesas.com
 
 * Please see the MAINTAINERS file for more details.
 
@@ -83,7 +83,9 @@ e.g.:
 
 Board|MACHINE
 -----|-------
-Falcon|MACHINE="falcon"
+Falcon|MACHINE = "falcon"
+Condor|MACHINE = "condor"
+Eagle|MACHINE = "eagle"
 
 * Configure for systemd init in local.conf:
 
@@ -139,7 +141,7 @@ Use `bitbake -c populate_sdk` for generating the toolchain SDK
 
 The SDK can be found in the output directory `tmp/deploy/sdk`
 
-* `poky-glibc-x86_64-rcar-image-adas-aarch64-\<machine name\>-toolchain-x.x.sh`
+* `poky-glibc-x86_64-rcar-image-adas-aarch64-<machine name>-toolchain-x.x.sh`
 
 ### Usage of toolchain SDK
 
@@ -149,7 +151,7 @@ Install the SDK to the default: `/opt/poky/x.x`
 * For 64-bit target SDK
 
 ```bash
-    $ sh poky-glibc-x86_64-rcar-image-adas-aarch64-\<machine name\>-toolchain-x.x.sh
+    $ sh poky-glibc-x86_64-rcar-image-adas-aarch64-<machine name>-toolchain-x.x.sh
 ```
 
 * For 64-bit application, using environment script in `/opt/poky/x.x`
