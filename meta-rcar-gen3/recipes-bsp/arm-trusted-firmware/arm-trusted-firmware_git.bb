@@ -1,7 +1,7 @@
 DESCRIPTION = "ARM Trusted Firmware"
 
 LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
+LIC_FILES_CHKSUM = "file://license.rst;md5=1dd070c98a281d18d9eefd938729b031"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -10,11 +10,11 @@ require include/multimedia-control.inc
 
 S = "${WORKDIR}/git"
 
-BRANCH = "rcar_gen3"
+BRANCH = "rcar_gen3_v2.3"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
-SRCREV = "af9f429a48b438e314289f17947ad5d8036f398e"
+SRCREV = "28718558e77e357c9c44b185145157c8788106e4"
 
-PV = "v1.5+renesas+git${SRCPV}"
+PV = "v2.3+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PLATFORM = "rcar"
@@ -45,7 +45,7 @@ LD[unexport] = "1"
 
 do_compile() {
     oe_runmake distclean
-    oe_runmake bl2 bl31 dummytool PLAT=${PLATFORM} ${ATFW_OPT}
+    oe_runmake bl2 bl31 rcar_layout_tool rcar_srecord PLAT=${PLATFORM} SPD=opteed MBEDTLS_COMMON_MK=1 ${ATFW_OPT}
 }
 
 # do_install() nothing
@@ -62,13 +62,13 @@ do_deploy() {
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${MACHINE}.elf
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}.bin
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31.srec ${DEPLOYDIR}/bl31-${MACHINE}.srec
-    install -m 0644 ${S}/tools/dummy_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0.srec
-    install -m 0644 ${S}/tools/dummy_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6.srec
 }
 
 do_ipl_opt_compile () {
     oe_runmake distclean
-    oe_runmake bl2 bl31 dummytool PLAT=${PLATFORM} ${EXTRA_ATFW_OPT} ${ATFW_OPT_LOSSY}
+    oe_runmake bl2 bl31 rcar_layout_tool rcar_srecord PLAT=${PLATFORM} SPD=opteed MBEDTLS_COMMON_MK=1 ${EXTRA_ATFW_OPT} ${ATFW_OPT_LOSSY}
 }
 
 do_ipl_opt_deploy () {
@@ -81,8 +81,8 @@ do_ipl_opt_deploy () {
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.elf
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.bin
     install -m 0644 ${S}/build/${PLATFORM}/release/bl31.srec ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/tools/dummy_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/tools/dummy_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6-${EXTRA_ATFW_CONF}.srec
 }
 
 def do_extra_aft_build (d, board):
