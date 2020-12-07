@@ -35,7 +35,6 @@ do_compile() {
 do_install () {
     # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${KERNELSRC}/include
 
     # Install kernel module
     install -m 644 ${S}/tsif_drv/drv/tsif_drv.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
