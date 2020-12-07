@@ -35,7 +35,6 @@ do_compile() {
 do_install () {
     # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${KERNELSRC}/include
     install -d ${D}/${includedir}
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
