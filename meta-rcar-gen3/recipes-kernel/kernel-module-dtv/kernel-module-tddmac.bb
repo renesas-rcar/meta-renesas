@@ -36,7 +36,6 @@ do_compile() {
 do_install () {
     # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
-    install -d ${KERNELSRC}/include
 
     # Install kernel module
     install -m 644 ${S}/tddmac_drv/drv/tddmac.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/

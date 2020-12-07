@@ -27,7 +27,6 @@ KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
 do_install_append() {
     # Create destination directories
-    install -d ${KERNELSRC}/include
     install -d ${D}/${includedir}
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR).

@@ -43,7 +43,6 @@ do_install () {
     # Create destination directories
     install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
     install -d ${D}/${includedir}
-    install -d ${KERNELSRC}/include
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
     # This file installed in SDK by kernel-devsrc pkg.
