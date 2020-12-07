@@ -156,7 +156,7 @@ OMX_AUDIO_SRC_LIST = " \
     ${OMX_AACLC_ENC_SRC} \
 "
 
-S = "${WORKDIR}/omx/"
+S = "${WORKDIR}/omx"
 
 # Create ${S} directory
 do_unpack_prepend() {
