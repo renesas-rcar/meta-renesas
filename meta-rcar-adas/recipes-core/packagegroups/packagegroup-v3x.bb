@@ -13,4 +13,5 @@ RDEPENDS_packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
     udev-rules-cvlib \
+    linux-renesas-uapi \
 "
