@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 require recipes-kernel/linux/linux-yocto.inc
 
-COMPATIBLE_MACHINE = "falcon"
+COMPATIBLE_MACHINE = "(falcon|condor)"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
