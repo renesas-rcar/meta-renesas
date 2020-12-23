@@ -9,7 +9,7 @@ USE_32BIT_MMP ?= "0"
 MACHINE_FEATURES = ""
 
 KERNEL_IMAGETYPE = "Image"
-IMAGE_FSTYPES_append = " tar.bz2 ext4"
+IMAGE_FSTYPES += " tar.bz2 ext4"
 
 SERIAL_CONSOLES = "115200;ttySC0"
 
