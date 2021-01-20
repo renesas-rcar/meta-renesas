@@ -5,10 +5,13 @@ LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=4fbd65380cdd255951079008b364516c"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
+RENESAS_VSPFILTER_URL ?= "gitsm://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.2"
+
 SRC_URI = " \
-    gitsm://github.com/renesas-rcar/gst-plugin-vspfilter.git;branch=RCAR-GEN3/1.0.1 \
+    ${RENESAS_VSPFILTER_URL} \
 "
-SRCREV = "c66854c46af649be65eb371aa42ef35dcc858acf"
+
+SRCREV = "e6f3cd19e3dd51b0870b27913b134fc8edbff1c6"
 
 S = "${WORKDIR}/git"
 
