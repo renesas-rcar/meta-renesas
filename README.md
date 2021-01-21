@@ -5,8 +5,7 @@ OpenEmbedded and/or Yocto.
 
 Layer maintainer(s):
 
-* Khang Nguyen <khang.nguyen.xw@renesas.com>
-* Duy Dang <duy.dang.yw@renesas.com>
+* Please see the MAINTAINERS file for more details.
 
 ## Supported Boards/Machines
 

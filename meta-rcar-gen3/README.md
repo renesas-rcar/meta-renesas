@@ -37,7 +37,7 @@ rebased and released accordingly.
 ## Contribution
 
 
-* Please submit any patches for this layer to: khang.nguyen.xw@renesas.com
+* Please submit any patches for this layer to: rcar-yocto@lm.renesas.com
 
 * Please see the MAINTAINERS file for more details.
 
