@@ -18,6 +18,6 @@ RDEPENDS_${PN}_append_rcar-gen3 = " \
 RDEPENDS_${PN}-examples_append_rcar-gen3 = " \
     ${@oe.utils.conditional('USE_GLES', '1', ' libgbm', '', d)}"
 
-EXTRA_OECONF_append_rcar-gen3 = " \
+EXTRA_OEMESON_append_rcar-gen3 = " \
     ${@oe.utils.conditional('USE_GLES', '1', '', \
-        ' WESTON_NATIVE_BACKEND="fbdev-backend.so"', d)}"
+        ' -Dbackend-default="fbdev"', d)}"
