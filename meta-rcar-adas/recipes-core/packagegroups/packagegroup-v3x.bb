@@ -12,6 +12,7 @@ PACKAGES = " \
 RDEPENDS_packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
+    kernel-module-cmemdrv-dev \
     udev-rules-cvlib \
     linux-renesas-uapi \
 "
