@@ -1,7 +1,14 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
+
 # uio_pdrv_genirq configuration
 KERNEL_MODULE_AUTOLOAD_append = " uio_pdrv_genirq"
 KERNEL_MODULE_PROBECONF_append = " uio_pdrv_genirq"
 module_conf_uio_pdrv_genirq_append = ' options uio_pdrv_genirq of_id="generic-uio"'
+
+# LVDS camera configuration
+SRC_URI_append_rcar-gen3 = " \
+    file://lvds_camera.cfg \
+"
 
 PACKAGES += "${PN}-uapi"
 
