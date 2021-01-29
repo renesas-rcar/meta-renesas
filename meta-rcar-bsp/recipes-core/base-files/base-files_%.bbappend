@@ -30,3 +30,7 @@ do_install_basefilesissue_append_rcar-gen3 () {
     printf "BSP Renesas version: ${BSP_RENESAS_VERSION}" >> ${D}${sysconfdir}/issue.e2
     echo >> ${D}${sysconfdir}/issue.e2
 }
+
+# Set hostname for V3H/V3M
+hostname_r8a77980 = "v3x"
+hostname_r8a77970 = "v3x"
