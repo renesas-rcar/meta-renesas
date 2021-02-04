@@ -29,6 +29,11 @@ SRC_URI_append = " \
     ${@oe.utils.conditional("USE_AVB", "1", " file://usb-video-class.cfg", "", d)} \
 "
 
+# Add module.lds
+SRC_URI_append = " \
+    file://0001-scripts-Add-module.lds-to-fix-out-of-tree-modules-bu.patch \
+"
+
 # Enable RPMSG_VIRTIO depend on ICCOM
 SUPPORT_ICCOM = " \
     file://iccom.cfg \
@@ -61,3 +66,11 @@ do_download_firmware () {
 
 addtask do_download_firmware after do_configure before do_compile
 
+do_compile_kernelmodules_append () {
+    if (grep -q -i -e '^CONFIG_MODULES=y$' ${B}/.config); then
+        # 5.10+ kernels have module.lds that we need to copy for external module builds
+        if [ -e "${B}/scripts/module.lds" ]; then
+            install -Dm 0644 ${B}/scripts/module.lds ${STAGING_KERNEL_BUILDDIR}/scripts/module.lds
+        fi
+    fi
+}
