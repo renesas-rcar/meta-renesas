@@ -3,7 +3,8 @@ require conf/machine/include/${SOC_FAMILY}.inc
 MACHINE_FEATURES = ""
 
 KERNEL_IMAGETYPE = "Image"
-IMAGE_FSTYPES_append = " tar.bz2 ext4"
+IMAGE_FSTYPES += "tar.bz2 wic.gz wic.bmap wic.gz.sha256sum"
+WKS_FILE ?= "image-v3x.wks"
 
 SERIAL_CONSOLES = "115200;ttySC0"
 
