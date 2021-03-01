@@ -13,6 +13,4 @@ IMAGE_INSTALL_append = " \
     v4l-utils \
     i2c-tools \
     coreutils \
-    packagegroup-bsp-custom \
-    packagegroup-bsp-devdbg \
 "
