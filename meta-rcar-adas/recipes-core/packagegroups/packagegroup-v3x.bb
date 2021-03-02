@@ -15,4 +15,5 @@ RDEPENDS_packagegroup-v3x = " \
     kernel-module-cmemdrv-dev \
     udev-rules-cvlib \
     linux-renesas-uapi \
+    bsp-config \
 "
