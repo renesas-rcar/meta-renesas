@@ -10,6 +10,11 @@ SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
 SRCREV = "ede36601a30e38416ec593298c249999a91fe8f0"
 PV = "v2020.01+git${SRCPV}"
 
+# Fix compile error on host installs GCC 10
+SRC_URI_append = " \
+    file://0001-Remove-redundant-YYLOC-global-declaration.patch \
+"
+
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
 UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"
