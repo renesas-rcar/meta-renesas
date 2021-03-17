@@ -8,9 +8,11 @@ SRC_URI_append_rcar-gen3 = " \
 "
 
 do_install_append_rcar-gen3() {
-    sed -e "/^After=/s/$/ dbus.service multi-user.target/" \
-        -e "s/\$OPTARGS/--idle-time=0 \$OPTARGS/" \
-        -i ${D}/${systemd_system_unitdir}/weston@.service
+    if [ "X${USE_GLES}" = "X1" ]; then
+        sed -e "/^After=/s/$/ dbus.service multi-user.target/" \
+            -e "s/\$OPTARGS/--idle-time=0 \$OPTARGS/" \
+            -i ${D}/${systemd_system_unitdir}/weston@.service
+    fi
 
     install -d ${D}/${sysconfdir}/xdg/weston
     # install weston.ini as sample settings of gl-renderer

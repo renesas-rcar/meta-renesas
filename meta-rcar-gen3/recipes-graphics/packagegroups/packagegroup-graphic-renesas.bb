@@ -9,6 +9,7 @@ COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PACKAGES = " \
     packagegroup-wayland-community \
     packagegroup-graphics-renesas-proprietary \
+    packagegroup-graphics-renesas-wayland \
 "
 
 PR = "r0"
@@ -29,3 +30,10 @@ RDEPENDS_packagegroup-graphics-renesas-proprietary = " \
     '', d)} \
 "
 
+DEPENDS_packagegroup-graphics-renesas-wayland = "libegl"
+
+RDEPENDS_packagegroup-graphics-renesas-wayland = " \
+    ${@bb.utils.contains('USE_GLES_WAYLAND', '1', \
+    'libgbm libgbm-dev wayland-kms', \
+    '', d)} \
+"

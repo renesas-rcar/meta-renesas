@@ -1,6 +1,10 @@
 # FIXME: can not override PACKAGECONFIG.
 PACKAGECONFIG[gles] = "-Dgles1=true -Dgles2=false, -Dgles1=false -Dgles2=false"
 
+# Disable the gbm modules of mesa
+PACKAGECONFIG_remove = "gbm"
+
+# Remove egl packages. These are provided in other recipes.
 PACKAGES_remove = " \
     libegl-mesa-dev libegl-mesa \
     libgles2-mesa libgles2-mesa-dev \
