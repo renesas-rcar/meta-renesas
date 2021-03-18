@@ -1,6 +1,5 @@
 # FIXME: can not override PACKAGECONFIG.
-PACKAGECONFIG[gles] = "-Dgles1=true -Dgles2=false"
-PACKAGECONFIG[egl] = "-Degl=true"
+PACKAGECONFIG[gles] = "-Dgles1=true -Dgles2=false, -Dgles1=false -Dgles2=false"
 
 # Disable the gbm modules of mesa
 PACKAGECONFIG_remove = "gbm"
@@ -9,9 +8,7 @@ PACKAGECONFIG_remove = "gbm"
 PACKAGES_remove = " \
     libgbm-dev libgbm \
     libegl-mesa-dev libegl-mesa \
-    libegl-dev libegl \
     libgles2-mesa libgles2-mesa-dev \
-    libwayland-egl libwayland-egl-dev \
 "
 
 do_install_append() {
