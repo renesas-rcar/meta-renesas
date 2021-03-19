@@ -1,22 +1,22 @@
 DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 
-LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
+LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 require include/avb-control.inc
 require include/iccom-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 require include/cas-control.inc
 
-COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
+COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.4.72/rcar-4.1.0.rc2"
-SRCREV = "77f691b28600cfdc66ce17541e05e9ffe0c918d0"
+BRANCH = "v5.10/rcar-5.0.0.rc4"
+SRCREV = "301d2c636929be96f3d87b1b5d287f87ed67a7be"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
-LINUX_VERSION ?= "5.4.72"
+LINUX_VERSION ?= "5.10.0"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
