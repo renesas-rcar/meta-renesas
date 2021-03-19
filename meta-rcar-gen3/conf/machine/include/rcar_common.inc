@@ -22,7 +22,7 @@ PREFERRED_PROVIDER_virtual/kernel = "linux-renesas"
 EXTRA_IMAGEDEPENDS += " arm-trusted-firmware optee-os"
 
 # u-boot
-PREFERRED_VERSION_u-boot = "v2020.01%"
+PREFERRED_VERSION_u-boot = "v2020.10%"
 EXTRA_IMAGEDEPENDS += " u-boot"
 
 # libdrm
