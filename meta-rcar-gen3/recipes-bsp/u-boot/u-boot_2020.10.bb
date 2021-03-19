@@ -1,14 +1,14 @@
-require u-boot-common_${PV}.inc
+require u-boot-common.inc
 require u-boot.inc
 
-DEPENDS += "bc-native dtc-native lzop-native srecord-native"
+DEPENDS += "lzop-native srecord-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
-BRANCH = "v2020.01/rcar-4.1.0.rc2"
+BRANCH = "v2020.10/rcar-5.0.0.rc1"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
-SRCREV = "ede36601a30e38416ec593298c249999a91fe8f0"
-PV = "v2020.01+git${SRCPV}"
+SRCREV = "050acee119b3757fee3bd128f55d720fdd9bb890"
+PV = "v2020.10+git${SRCPV}"
 
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
