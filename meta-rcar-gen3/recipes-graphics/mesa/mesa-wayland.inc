@@ -6,6 +6,7 @@ PACKAGECONFIG_remove = "gbm"
 
 # Remove egl packages. These are provided in other recipes.
 PACKAGES_remove = " \
+    libgbm-dev libgbm \
     libegl-mesa-dev libegl-mesa \
     libgles2-mesa libgles2-mesa-dev \
 "
