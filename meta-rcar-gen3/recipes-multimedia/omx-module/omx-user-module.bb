@@ -480,9 +480,8 @@ RDEPENDS_${PN} += "mmngr-user-module vspmif-user-module"
 RDEPENDS_${PN} += '${@oe.utils.conditional("USE_ALACD_OMX", "1", "libalacdla-l", "", d )}'
 RDEPENDS_${PN} += '${@oe.utils.conditional("USE_FLACD_OMX", "1", "libflacdla-l", "", d )}'
 
-# Skip debug strip of do_populate_sysroot()
-INHIBIT_SYSROOT_STRIP = "1"
+#To avoid already-stripped errors and not stripped libs from packages
+INSANE_SKIP_${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
-INHIBIT_PACKAGE_STRIP = "1"

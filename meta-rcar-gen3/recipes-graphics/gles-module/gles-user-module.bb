@@ -128,9 +128,8 @@ INSANE_SKIP_${PN} += "arch"
 INSANE_SKIP_${PN}-dev += "arch"
 INSANE_SKIP_${PN}-dbg = "arch"
 
-# Skip debug strip of do_populate_sysroot()
-INHIBIT_SYSROOT_STRIP = "1"
+#To avoid already-stripped errors and not stripped libs from packages
+INSANE_SKIP_${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
-INHIBIT_PACKAGE_STRIP = "1"
