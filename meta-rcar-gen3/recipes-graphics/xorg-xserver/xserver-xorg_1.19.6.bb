@@ -1,6 +1,6 @@
 require xserver-xorg.inc
 
-COMPATIBLE_MACHINE = "(salvator-x|ebisu|ulcb)"
+COMPATIBLE_MACHINE = "(salvator-x|ebisu|ulcb|draak)"
 
 SRC_URI += "file://musl-arm-inb-outb.patch \
             file://0001-configure.ac-Fix-check-for-CLOCK_MONOTONIC.patch \
