@@ -16,14 +16,9 @@ PR = "r0"
 
 VSPM_DRV_URL = "git://github.com/renesas-rcar/vspm_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "7f854a9a1c4760255a54b7c14891d1545ed1bf43"
+SRCREV = "07787fc1168e7fe37c305aca151a6f756f35874f"
 
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH}"
-
-# Fix patch for upscaling issue
-SRC_URI_append = " \
-    file://0001-Set-UDS-horizontal-scaling-phase-to-auto.patch \
-"
 
 S = "${WORKDIR}/git"
 VSPM_DRV_DIR = "vspm-module/files/vspm"
