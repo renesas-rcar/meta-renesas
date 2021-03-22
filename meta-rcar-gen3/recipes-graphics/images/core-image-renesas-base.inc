@@ -1,6 +1,6 @@
 require include/iccom-control.inc
 
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 
 # Basic packages
 IMAGE_INSTALL_append = " \
