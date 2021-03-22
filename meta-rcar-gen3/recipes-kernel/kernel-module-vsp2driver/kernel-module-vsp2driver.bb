@@ -17,11 +17,9 @@ PR = "r0"
 VSP2DRIVER_URL = " \
     git://github.com/renesas-rcar/vsp2driver.git"
 BRANCH = "rcar-gen3"
-SRCREV = "0ecf35aa05c103ba4d3ab83e3320a22fccd912c3"
+SRCREV = "d3ac6f8ec4f61b6109060fb1859cbb968b1c4da1"
 
 SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH}"
-
-SRC_URI_append = " file://0001-Handle-data_offset-setting-from-V4L2-API.patch"
 
 S = "${WORKDIR}/git"
 
