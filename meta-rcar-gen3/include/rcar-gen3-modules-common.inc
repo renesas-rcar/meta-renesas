@@ -8,4 +8,4 @@ export LDFLAGS = ""
 export CP = "cp"
 require include/rcar-gen3-path-common.inc
 
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"

@@ -4,7 +4,7 @@ LICENSE = "CLOSED & MIT"
 inherit packagegroup
 require include/gles-control.inc
 
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 
 PACKAGES = " \
     packagegroup-wayland-community \
