@@ -7,11 +7,12 @@ Renesas Electronics, called the R-Car Generation 3.
 Currently, this supports boards and the SoCs of the following:
 
 ```bash
-    - Board: Salvator-X / SoC: R8A7795 (R-Car H3), R8A7796 (R-Car M3), R8A77965 (R-Car M3N)
-    - Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A7795 (R-Car H3)
-    - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A7796 (R-Car M3)
+    - Board: Salvator-X / SoC: R8A77950/R8A77951 (R-Car H3), R8A77960/R8A77961 (R-Car M3), R8A77965 (R-Car M3N)
+    - Board: R-Car Starter Kit premier(H3ULCB) / SoC: R8A77950/R8A77951 (R-Car H3)
+    - Board: R-Car Starter Kit pro(M3ULCB) / SoC: R8A77960/R8A77961 (R-Car M3)
     - Board: R-Car Starter Kit pro(M3NULCB) / SoC: R8A77965 (R-Car M3N)
     - Board: Ebisu / SoC: R8A77990 (R-Car E3)
+    - Board: Draak / SoC: R8A77995 (R-Car D3)
 ```
 
 ## Branch Policy
@@ -102,11 +103,12 @@ e.g.:
 
 Board|MACHINE
 -----|-------
-Salvator-X/XS|MACHINE="salvator-x"
-Ebisu|MACHINE="ebisu"
-Starter Kit Pro (M3ULCB)|MACHINE="m3ulcb"
-Starter Kit Pro (M3NULCB)|MACHINE="m3nulcb"
-Starter Kit Premier (H3ULCB)|MACHINE="h3ulcb"
+Salvator-X/XS|MACHINE = "salvator-x"
+Ebisu|MACHINE = "ebisu"
+Starter Kit Pro (M3ULCB)|MACHINE = "m3ulcb"
+Starter Kit Pro (M3NULCB)|MACHINE = "m3nulcb"
+Starter Kit Premier (H3ULCB)|MACHINE = "h3ulcb"
+Draak|MACHINE = "draak"
 
 * Select the SOC
 
@@ -133,6 +135,13 @@ Starter Kit Premier (H3ULCB)|MACHINE="h3ulcb"
     ```bash
         # Already added in machine config: ebisu.conf
         SOC_FAMILY = "r8a77990"
+    ```
+
+    * For D3: r8a77995
+
+    ```bash
+        # Already added in machine config: draak.conf
+        SOC_FAMILY = "r8a77995"
     ```
 
 * Configure for systemd init in local.conf:
@@ -206,7 +215,7 @@ Use `bitbake -c populate_sdk` for generating the toolchain SDK
 
 The SDK can be found in the output directory `tmp/deploy/sdk`
 
-* `poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh`
+* `poky-glibc-x86_64-core-image-minimal-aarch64-<machine name>-toolchain-x.x.sh`
 
 ### Usage of toolchain SDK
 
@@ -216,7 +225,7 @@ Install the SDK to the default: `/opt/poky/x.x`
 * For 64-bit target SDK
 
 ```bash
-    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh
+    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-<machine name>-toolchain-x.x.sh
 ```
 
 * For 64-bit application, using environment script in `/opt/poky/x.x`
