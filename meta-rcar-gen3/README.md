@@ -15,26 +15,6 @@ Currently, this supports boards and the SoCs of the following:
     - Board: Draak / SoC: R8A77995 (R-Car D3)
 ```
 
-## Branch Policy
-
-
-* This is Community Yocto BSP to follow Yocto/Poky releases.
-
-* It is not supported to the level of the Customer Yocto BSP.
-
-## Tag Policy
-
-
-*  Releases are created from the respective working branch.
-
-*  After a Customer Yocto BSP version releases, the Community Yocto BSP will be
-rebased and released accordingly.
-
-*  dunfell-X:
-
-    * The versions used on dunfell (Yocto Project 3.1) will start on
-      dunfell-Yocto-v3.21.0 to keep the major version numbers in sync.
-
 ## Contribution
 
 
@@ -215,7 +195,7 @@ Use `bitbake -c populate_sdk` for generating the toolchain SDK
 
 The SDK can be found in the output directory `tmp/deploy/sdk`
 
-* `poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh`
+* `poky-glibc-x86_64-core-image-minimal-aarch64-<machine name>-toolchain-x.x.sh`
 
 ### Usage of toolchain SDK
 
@@ -225,7 +205,7 @@ Install the SDK to the default: `/opt/poky/x.x`
 * For 64-bit target SDK
 
 ```bash
-    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-toolchain-x.x.sh
+    $ sh poky-glibc-x86_64-core-image-minimal-aarch64-<machine name>-toolchain-x.x.sh
 ```
 
 * For 64-bit application, using environment script in `/opt/poky/x.x`
