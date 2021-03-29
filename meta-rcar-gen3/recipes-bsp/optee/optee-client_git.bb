@@ -17,7 +17,7 @@ SRC_URI += " \
 inherit python3native systemd
 SYSTEMD_SERVICE_${PN} = "optee.service"
 
-COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu"
+COMPATIBLE_MACHINE = "salvator-x|ulcb|ebisu|draak"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
