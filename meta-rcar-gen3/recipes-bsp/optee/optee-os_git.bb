@@ -12,7 +12,7 @@ inherit deploy python3native
 PV = "3.8.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar_gen3_3.8.0_2"
-SRCREV = "d47d59fc409e6d31e99cec7dd5f8c1cd2eb8031f"
+SRCREV = "43a5c57857f1cf29eacfd145268329bfd300c489"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH} \
@@ -22,7 +22,7 @@ SRC_URI_append = " \
     file://change-cryptodome-to-crypto-module.patch \
 "
 
-COMPATIBLE_MACHINE = "(salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu)"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 PLATFORM = "rcar"
 
 DEPENDS = "python3-pycryptodome-native python3-pyelftools-native"
