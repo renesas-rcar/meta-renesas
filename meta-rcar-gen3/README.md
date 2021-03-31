@@ -29,10 +29,10 @@ Currently, this supports boards and the SoCs of the following:
 *  After a Customer Yocto BSP version releases, the Community Yocto BSP will be
 rebased and released accordingly.
 
-*  dunfell-X:
+*  gatesgarth-X:
 
-    * The versions used on dunfell (Yocto Project 3.1) will start on
-      dunfell-Yocto-v3.21.0 to keep the major version numbers in sync.
+    * The versions used on gatesgarth (Yocto Project 3.2) will start on
+      gatesgarth-Yocto-v4.7.0 to keep the major version numbers in sync.
 
 ## Contribution
 
@@ -51,7 +51,7 @@ This layer depends on:
 ```bash
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
-    branch: dunfell
+    branch: gatesgarth
 ```
 
 * meta-openembedded
@@ -59,7 +59,7 @@ This layer depends on:
 ```bash
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python
-    branch: dunfell
+    branch: gatesgarth
 ```
 
 ## Build Instructions
