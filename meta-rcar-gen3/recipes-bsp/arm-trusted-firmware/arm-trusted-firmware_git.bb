@@ -76,14 +76,14 @@ do_ipl_opt_deploy () {
     install -d ${DEPLOYDIR}
 
     # Copy IPL to deploy folder
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOYDIR}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.elf
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.bin
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.srec ${DEPLOYDIR}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.elf
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.bin
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.srec ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/tools/renesas/rcar_layout_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/tools/renesas/rcar_layout_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.elf
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.bin ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.bin
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.srec ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.elf
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.bin
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.srec ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/bootparam_sa0.srec ${DEPLOY_DIR_IMAGE}/bootparam_sa0-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/cert_header_sa6.srec ${DEPLOY_DIR_IMAGE}/cert_header_sa6-${EXTRA_ATFW_CONF}.srec
 }
 
 def do_extra_aft_build (d, board):
