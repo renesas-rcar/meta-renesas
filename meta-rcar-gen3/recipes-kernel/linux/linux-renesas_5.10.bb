@@ -6,6 +6,7 @@ require include/avb-control.inc
 require include/iccom-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 require include/cas-control.inc
+require include/adsp-control.inc
 
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
 
@@ -46,6 +47,17 @@ SRC_URI_append = " \
 # Add SCHED_DEBUG config fragment to support CAS
 SRC_URI_append = " \
     ${@oe.utils.conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
+"
+
+# Add ADSP ALSA driver
+SUPPORT_ADSP_ASOC = " \
+    file://ADSP-add-ADSP-sound-driver-source-final.patch \
+    file://update_kernel_device_tree_and_build_config_rc4.patch \
+    file://adsp.cfg \
+"
+
+SRC_URI_append = " \
+    ${@oe.utils.conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
 "
 
 # Install USB3.0 firmware to rootfs
