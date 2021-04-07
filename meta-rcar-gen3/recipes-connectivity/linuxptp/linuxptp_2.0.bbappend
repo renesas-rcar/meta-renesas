@@ -1,0 +1,1 @@
+CFLAGS_rcar-gen3 += "-DHAVE_ONESTEP_P2P"
