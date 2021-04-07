@@ -24,13 +24,13 @@ EOF
 # audio_list="<software_name>,<package_name>,<copy_file_name> \
 #             <software_name>,<package_name>,<copy_file_name> \
 #             <software_name>,<package_name>,<copy_file_name>"
-_audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL41C,RTM0AC0000XAAACD30SL41C.tar.gz \
-             aacPlusV2_decoder_lib,RTM0AC0000XAAAPD30SL41C,RTM0AC0000XAAAPD30SL41C.tar.gz \
-             MP3_decoder_lib,RTM0AC0000XAMP3D30SL41C,RTM0AC0000XAMP3D30SL41C.tar.gz \
-             WMA_decoder_lib,RTM0AC0000XAWMAD30SL41C,RTM0AC0000XAWMAD30SL41C.tar.gz \
-             AAC-LC_encoder_lib,RTM0AC0000XAAACE30SL41C,RTM0AC0000XAAACE30SL41C.tar.gz \
-             ALAC_decoder_lib,RTM0AC0000XAALAD30SL41C,RTM0AC0000XAALAD30SL41C.tar.gz \
-             FLAC_decoder_lib,RTM0AC0000XAFLAD30SL41C,RTM0AC0000XAFLAD30SL41C.tar.gz \
+_audio_list="AAC-LC_decoder_lib,RTM8RC0000ZND1LQ00JPL3E,RTM8RC0000ZND1LQ00JPL3E.tar.gz \
+             aacPlusV2_decoder_lib,RTM8RC0000ZND2LQ00JPL3E,RTM8RC0000ZND2LQ00JPL3E.tar.gz \
+             MP3_decoder_lib,RTM8RC0000ZND3LQ00JPL3E,RTM8RC0000ZND3LQ00JPL3E.tar.gz \
+             WMA_decoder_lib,RTM8RC0000ZND4LQ00JPL3E,RTM8RC0000ZND4LQ00JPL3E.tar.gz \
+             AAC-LC_encoder_lib,RTM8RC0000ZNE1LQ00JPL3E,RTM8RC0000ZNE1LQ00JPL3E.tar.gz \
+             ALAC_decoder_lib,RTM8RC0000ZND7LQ00JPL3E,RTM8RC0000ZND7LQ00JPL3E.tar.gz \
+             FLAC_decoder_lib,RTM8RC0000ZND6LQ00JPL3E,RTM8RC0000ZND6LQ00JPL3E.tar.gz \
              Dolby_decoder_lib,RTM0AC0000XADD5D30SL41C,RTM0AC0000XADD5D30SL41C.tar.gz"
 
 # Audio M/W Library
@@ -39,11 +39,11 @@ _audio_list="AAC-LC_decoder_lib,RTM0AC0000XAAACD30SL41C,RTM0AC0000XAAACD30SL41C.
 # audio_mw_list="<software_name>,<package_name>,<copy_file_name> \
 #                <software_name>,<package_name>,<copy_file_name> \
 #                <software_name>,<package_name>,<copy_file_name>"
-_audio_mw_list="AAC-LC_decoder_M/W,RTM0AC0000ADAACMZ1SL41C,RTM0AC0000ADAACMZ1SL41C.tar.gz \
-                aacPlusV2_decoder_M/W,RTM0AC0000ADAAPMZ1SL41C,RTM0AC0000ADAAPMZ1SL41C.tar.gz \
-                MP3_decoder_M/W,RTM0AC0000ADMP3MZ1SL41C,RTM0AC0000ADMP3MZ1SL41C.tar.gz \
-                WMA_decoder_M/W,RTM0AC0000ADWMAMZ1SL41C,RTM0AC0000ADWMAMZ1SL41C.tar.gz \
-                AAC-LC_encoder_M/W,RTM0AC0000AEAACMZ1SL41C,RTM0AC0000AEAACMZ1SL41C.tar.gz \
+_audio_mw_list="AAC-LC_decoder_M/W,RTM8RC0000ZAD1LQ00JPL3E,RTM8RC0000ZAD1LQ00JPL3E.tar.gz \
+                aacPlusV2_decoder_M/W,RTM8RC0000ZAD2LQ00JPL3E,RTM8RC0000ZAD2LQ00JPL3E.tar.gz \
+                MP3_decoder_M/W,RTM8RC0000ZAD3LQ00JPL3E,RTM8RC0000ZAD3LQ00JPL3E.tar.gz \
+                WMA_decoder_M/W,RTM8RC0000ZAD4LQ00JPL3E,RTM8RC0000ZAD4LQ00JPL3E.tar.gz \
+                AAC-LC_encoder_M/W,RTM8RC0000ZAE1LQ00JPL3E,RTM8RC0000ZAE1LQ00JPL3E.tar.gz \
                 DDD_decoder_M/W,RTM0AC0000ADDD5MZ1SL41C,RTM0AC0000ADDD5MZ1SL41C.tar.gz"
 
 # Video Decoder Library
@@ -81,7 +81,7 @@ _omx_common_list="omx_common_lib,RTM0AC0000XCMCTL30SL41C,RTM0AC0000XCMCTL30SL41C
 _uvcs_list="uvcs_lib,RCG3VUDRL4101ZDO,RCG3VUDRL4101ZDO.tar.bz2"
 _video_enc_common_list="video_enc_common,RTM0AC0000XVCMNE30SL41C,RTM0AC0000XVCMNE30SL41C.tar.bz2"
 _video_dec_common_list="video_dec_common,RTM0AC0000XVCMND30SL41C,RTM0AC0000XVCMND30SL41C.tar.bz2"
-_audio_common_list="audio_common,RTM0AC0000XACMND30SL41C,RTM0AC0000XACMND30SL41C.tar.gz"
+_audio_common_list="audio_common,RTM8RC0000ZNX0LQ00JPL3E,RTM8RC0000ZNX0LQ00JPL3E.tar.gz"
 
 
 # DTV Library
