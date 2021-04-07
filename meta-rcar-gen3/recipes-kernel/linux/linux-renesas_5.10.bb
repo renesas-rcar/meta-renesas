@@ -6,6 +6,7 @@ require include/avb-control.inc
 require include/iccom-control.inc
 require recipes-kernel/linux/linux-yocto.inc
 require include/cas-control.inc
+require include/adsp-control.inc
 
 COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
 
@@ -48,10 +49,20 @@ SRC_URI_append = " \
     ${@oe.utils.conditional("USE_CAS", "1", " file://capacity_aware_migration_strategy.cfg", "",d)} \
 "
 
-# Install USB3.0 firmware
-KERNEL_FIRMWARE_URI = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain"
-USB3_FIRMWARE_V2 = "${KERNEL_FIRMWARE_URI}/r8a779x_usb3_v2.dlmem;md5sum=645db7e9056029efa15f158e51cc8a11"
-USB3_FIRMWARE_V3 = "${KERNEL_FIRMWARE_URI}/r8a779x_usb3_v3.dlmem;md5sum=687d5d42f38f9850f8d5a6071dca3109"
+# Add ADSP ALSA driver
+SUPPORT_ADSP_ASOC = " \
+    file://ADSP-add-ADSP-sound-driver-source-final.patch \
+    file://update_kernel_device_tree_and_build_config_rc4.patch \
+    file://adsp.cfg \
+"
+
+SRC_URI_append = " \
+    ${@oe.utils.conditional("USE_ADSP", "1", "${SUPPORT_ADSP_ASOC}", "", d)} \
+"
+
+# Install USB3.0 firmware to rootfs
+USB3_FIRMWARE_V2 = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/r8a779x_usb3_v2.dlmem;md5sum=645db7e9056029efa15f158e51cc8a11"
+USB3_FIRMWARE_V3 = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/r8a779x_usb3_v3.dlmem;md5sum=687d5d42f38f9850f8d5a6071dca3109"
 
 SRC_URI_append = " \
     ${USB3_FIRMWARE_V2} \
