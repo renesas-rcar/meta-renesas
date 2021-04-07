@@ -16,14 +16,9 @@ PR = "r0"
 
 QOS_DRV_URL = "git://github.com/renesas-rcar/qos_drv.git"
 BRANCH = "rcar-gen3"
-SRCREV = "d32fbee4d7b76056c37935ff31102c3583801a29"
+SRCREV = "90981d2aa1730589fa87b50f07d9feec09396b9b"
 
 SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
-
-# For missing mod_devicetable.h
-SRC_URI_append = " \
-    file://0001-qos_drv-include-mod_devicetable.h.patch \
-"
 
 S = "${WORKDIR}/git"
 QOS_DRV_DIR = "qos-module/files/qos/drv"
