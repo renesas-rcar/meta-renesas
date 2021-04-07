@@ -7,9 +7,9 @@ REQUIRED_DISTRO_FEATURES = "adsp"
 
 DEPENDS += "kernel-module-xtensa-hifi"
 
-SRC_URI = "file://RCG3AHIFL4101ZDP.tar.gz"
+SRC_URI = "file://RTM8RC0000ZNA1SS00JFL3E.tar.gz"
 
-S = "${WORKDIR}/RCG3AHIFL4101ZDP"
+S = "${WORKDIR}/RTM8RC0000ZNA1SS00JFL3E"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -18,7 +18,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 do_configure[noexec] = "1"
 
 # Don't use EXTRA_OEMAKE default value to avoid default CFLAGS, LDFLAGS
-# of poky override the CFLAGS, LDFLAGS inside RCG3AHIFL4101ZDP/Makefile
+# of poky override the CFLAGS, LDFLAGS inside RTM8RC0000ZNA1SS00JFL3E/Makefile
 EXTRA_OEMAKE = "INCSHARED=${STAGING_INCDIR}"
 
 do_compile() {

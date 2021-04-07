@@ -12,9 +12,9 @@ REQUIRED_DISTRO_FEATURES = "adsp"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/xtensa-hifi:"
 
-SRC_URI = "file://RCG3AHPDL4101ZDO.tar.gz"
+SRC_URI = "file://RTM8RC0000ZNA2DS00JFL3E.tar.gz"
 
-S = "${WORKDIR}/RCG3AHPDL4101ZDO"
+S = "${WORKDIR}/RTM8RC0000ZNA2DS00JFL3E"
 
 # Define the extra config for using module.bbclass to build ADSP driver
 EXTRA_OEMAKE_append = " KDIR=${STAGING_KERNEL_DIR}"

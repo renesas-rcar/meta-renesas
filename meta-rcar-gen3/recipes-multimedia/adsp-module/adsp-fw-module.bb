@@ -6,14 +6,14 @@ inherit features_check
 REQUIRED_DISTRO_FEATURES = "adsp"
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
-SRC_URI = "file://RCG3AHFWN0201ZDP.tar.gz"
+SRC_URI = "file://RTM8RC0000ZNA3SS00JFL3E.tar.gz"
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-S = "${WORKDIR}/RCG3AHFWN0201ZDP"
+S = "${WORKDIR}/RTM8RC0000ZNA3SS00JFL3E"
 
 do_install() {
     # create the firmware dir
