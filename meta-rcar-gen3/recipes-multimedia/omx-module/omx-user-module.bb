@@ -41,21 +41,21 @@ SRC_URI_RVD = '${@oe.utils.conditional("USE_RVD_OMX", "1", "file://RTM0AC0000XVR
 SRC_URI_VP8D = '${@oe.utils.conditional("USE_VP8D_OMX", "1", "file://RTM0AC0000XVVP8D30SL41C.tar.bz2", "", d )}'
 SRC_URI_VP8E = '${@oe.utils.conditional("USE_VP8E_OMX", "1", "file://RTM0AC0000XVVP8E30SL41C.tar.bz2", "", d )}'
 SRC_URI_VP9D = '${@oe.utils.conditional("USE_VP9D_OMX", "1", "file://RTM0AC0000XVVP9D30SL41C.tar.bz2", "", d )}'
-SRC_URI_ACMND = '${@oe.utils.conditional("USE_AUDIO_OMX", "1", "file://RTM0AC0000XACMND30SL41C.tar.gz", "", d )}'
-SRC_URI_AACLC = '${@oe.utils.conditional("USE_AACLCD_OMX", "1", "file://RTM0AC0000XAAACD30SL41C.tar.gz", "", d )}'
-SRC_URI_AACPV2 = '${@oe.utils.conditional("USE_AACPV2D_OMX", "1", "file://RTM0AC0000XAAAPD30SL41C.tar.gz", "", d )}'
-SRC_URI_MP3 = '${@oe.utils.conditional("USE_MP3D_OMX", "1", "file://RTM0AC0000XAMP3D30SL41C.tar.gz", "", d )}'
-SRC_URI_AACLCE = '${@oe.utils.conditional("USE_AACLCE_OMX", "1", "file://RTM0AC0000XAAACE30SL41C.tar.gz", "", d )}'
-SRC_URI_WMA = '${@oe.utils.conditional("USE_WMAD_OMX", "1", "file://RTM0AC0000XAWMAD30SL41C.tar.gz", "", d )}'
-SRC_URI_ALACD = '${@oe.utils.conditional("USE_ALACD_OMX", "1", "file://RTM0AC0000XAALAD30SL41C.tar.gz", "", d )}'
-SRC_URI_FLACD = '${@oe.utils.conditional("USE_FLACD_OMX", "1", "file://RTM0AC0000XAFLAD30SL41C.tar.gz", "", d )}'
+SRC_URI_ACMND = '${@oe.utils.conditional("USE_AUDIO_OMX", "1", "file://RTM8RC0000ZNX0LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_AACLC = '${@oe.utils.conditional("USE_AACLCD_OMX", "1", "file://RTM8RC0000ZND1LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_AACPV2 = '${@oe.utils.conditional("USE_AACPV2D_OMX", "1", "file://RTM8RC0000ZND2LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_MP3 = '${@oe.utils.conditional("USE_MP3D_OMX", "1", "file://RTM8RC0000ZND3LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_AACLCE = '${@oe.utils.conditional("USE_AACLCE_OMX", "1", "file://RTM8RC0000ZNE1LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_WMA = '${@oe.utils.conditional("USE_WMAD_OMX", "1", "file://RTM8RC0000ZND4LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_ALACD = '${@oe.utils.conditional("USE_ALACD_OMX", "1", "file://RTM8RC0000ZND7LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_FLACD = '${@oe.utils.conditional("USE_FLACD_OMX", "1", "file://RTM8RC0000ZND6LQ00JPL3E.tar.gz", "", d )}'
 SRC_URI_DDD = '${@oe.utils.conditional("USE_DDD_OMX", "1", "file://RTM0AC0000XADD5D30SL41C.tar.gz", "", d )}'
-SRC_URI_AACMZ = '${@oe.utils.conditional("USE_AACLC_MDW", "1", "file://RTM0AC0000ADAACMZ1SL41C.tar.gz", "", d )}'
-SRC_URI_AACPV2MZ = '${@oe.utils.conditional("USE_AACPV2_MDW", "1", "file://RTM0AC0000ADAAPMZ1SL41C.tar.gz", "", d )}'
-SRC_URI_MP3MZ = '${@oe.utils.conditional("USE_MP3_MDW", "1", "file://RTM0AC0000ADMP3MZ1SL41C.tar.gz", "", d )}'
-SRC_URI_WMAMZ = '${@oe.utils.conditional("USE_WMA_MDW", "1", "file://RTM0AC0000ADWMAMZ1SL41C.tar.gz", "", d )}'
+SRC_URI_AACMZ = '${@oe.utils.conditional("USE_AACLC_MDW", "1", "file://RTM8RC0000ZAD1LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_AACPV2MZ = '${@oe.utils.conditional("USE_AACPV2_MDW", "1", "file://RTM8RC0000ZAD2LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_MP3MZ = '${@oe.utils.conditional("USE_MP3_MDW", "1", "file://RTM8RC0000ZAD3LQ00JPL3E.tar.gz", "", d )}'
+SRC_URI_WMAMZ = '${@oe.utils.conditional("USE_WMA_MDW", "1", "file://RTM8RC0000ZAD4LQ00JPL3E.tar.gz", "", d )}'
 SRC_URI_DDMZ = '${@oe.utils.conditional("USE_DD_MDW", "1", "file://RTM0AC0000ADDD5MZ1SL41C.tar.gz", "", d )}'
-SRC_URI_AEAACMZ = '${@oe.utils.conditional("USE_AACLCE_MDW", "1", "file://RTM0AC0000AEAACMZ1SL41C.tar.gz", "", d )}'
+SRC_URI_AEAACMZ = '${@oe.utils.conditional("USE_AACLCE_MDW", "1", "file://RTM8RC0000ZAE1LQ00JPL3E.tar.gz", "", d )}'
 
 SRC_URI = " \
     ${SRC_URI_OMX} \
@@ -127,22 +127,22 @@ OMX_VIDEO_SRC_LIST = " \
     ${OMX_VP9_DEC_SRC} \
 "
 
-AAC_MIDDLEWARE_SRC = "RTM0AC0000ADAACMZ1SL41C"
-AACPV2_MIDDLEWARE_SRC = "RTM0AC0000ADAAPMZ1SL41C"
-MP3_MIDDLEWARE_SRC = "RTM0AC0000ADMP3MZ1SL41C"
-WMA_MIDDLEWARE_SRC = "RTM0AC0000ADWMAMZ1SL41C"
+AAC_MIDDLEWARE_SRC = "RTM8RC0000ZAD1LQ00JPL3E"
+AACPV2_MIDDLEWARE_SRC = "RTM8RC0000ZAD2LQ00JPL3E"
+MP3_MIDDLEWARE_SRC = "RTM8RC0000ZAD3LQ00JPL3E"
+WMA_MIDDLEWARE_SRC = "RTM8RC0000ZAD4LQ00JPL3E"
 DD_MIDDLEWARE_SRC = "RTM0AC0000ADDD5MZ1SL41C"
-AEAAC_MIDDLEWARE_SRC = "RTM0AC0000AEAACMZ1SL41C"
+AEAAC_MIDDLEWARE_SRC = "RTM8RC0000ZAE1LQ00JPL3E"
 
-OMX_AUDIO_COMMON_SRC = '${@oe.utils.conditional("USE_AUDIO_OMX", "1", "RTM0AC0000XACMND30SL41C", "", d )}'
-OMX_AACLC_DEC_SRC = '${@oe.utils.conditional("USE_AACLCD_OMX", "1", "RTM0AC0000XAAACD30SL41C", "", d )}'
-OMX_AACPV2_DEC_SRC = '${@oe.utils.conditional("USE_AACPV2D_OMX", "1", "RTM0AC0000XAAAPD30SL41C", "", d )}'
-OMX_MP3_DEC_SRC = '${@oe.utils.conditional("USE_MP3D_OMX", "1", "RTM0AC0000XAMP3D30SL41C", "", d )}'
-OMX_WMA_DEC_SRC = '${@oe.utils.conditional("USE_WMAD_OMX", "1", "RTM0AC0000XAWMAD30SL41C", "", d )}'
-OMX_ALAC_DEC_SRC = '${@oe.utils.conditional("USE_ALACD_OMX", "1", "RTM0AC0000XAALAD30SL41C", "", d )}'
-OMX_FLAC_DEC_SRC = '${@oe.utils.conditional("USE_FLACD_OMX", "1", "RTM0AC0000XAFLAD30SL41C", "", d )}'
+OMX_AUDIO_COMMON_SRC = '${@oe.utils.conditional("USE_AUDIO_OMX", "1", "RTM8RC0000ZNX0LQ00JPL3E", "", d )}'
+OMX_AACLC_DEC_SRC = '${@oe.utils.conditional("USE_AACLCD_OMX", "1", "RTM8RC0000ZND1LQ00JPL3E", "", d )}'
+OMX_AACPV2_DEC_SRC = '${@oe.utils.conditional("USE_AACPV2D_OMX", "1", "RTM8RC0000ZND2LQ00JPL3E", "", d )}'
+OMX_MP3_DEC_SRC = '${@oe.utils.conditional("USE_MP3D_OMX", "1", "RTM8RC0000ZND3LQ00JPL3E", "", d )}'
+OMX_WMA_DEC_SRC = '${@oe.utils.conditional("USE_WMAD_OMX", "1", "RTM8RC0000ZND4LQ00JPL3E", "", d )}'
+OMX_ALAC_DEC_SRC = '${@oe.utils.conditional("USE_ALACD_OMX", "1", "RTM8RC0000ZND7LQ00JPL3E", "", d )}'
+OMX_FLAC_DEC_SRC = '${@oe.utils.conditional("USE_FLACD_OMX", "1", "RTM8RC0000ZND6LQ00JPL3E", "", d )}'
 OMX_DD_DEC_SRC = '${@oe.utils.conditional("USE_DDD_OMX", "1", "RTM0AC0000XADD5D30SL41C", "", d )}'
-OMX_AACLC_ENC_SRC = '${@oe.utils.conditional("USE_AACLCE_OMX", "1", "RTM0AC0000XAAACE30SL41C", "", d )}'
+OMX_AACLC_ENC_SRC = '${@oe.utils.conditional("USE_AACLCE_OMX", "1", "RTM8RC0000ZNE1LQ00JPL3E", "", d )}'
 
 OMX_AUDIO_SRC_LIST = " \
     ${OMX_AUDIO_COMMON_SRC} \
