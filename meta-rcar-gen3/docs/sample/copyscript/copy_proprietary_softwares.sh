@@ -52,16 +52,16 @@ _audio_mw_list="AAC-LC_decoder_M/W,RTM8RC0000ZAD1LQ00JPL3E,RTM8RC0000ZAD1LQ00JPL
 # video_dec_list="<software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name>"
-_video_dec_list="H263_decoder,RTM0AC0000XV263D30SL41C,RTM0AC0000XV263D30SL41C.tar.bz2 \
-                 H264_decoder,RTM0AC0000XV264D30SL41C,RTM0AC0000XV264D30SL41C.tar.bz2 \
-                 H265_decoder,RTM0AC0000XV265D30SL41C,RTM0AC0000XV265D30SL41C.tar.bz2 \
-                 MPEG2_decoder,RTM0AC0000XVM2VD30SL41C,RTM0AC0000XVM2VD30SL41C.tar.bz2 \
-                 MPEG4_decoder,RTM0AC0000XVM4VD30SL41C,RTM0AC0000XVM4VD30SL41C.tar.bz2 \
-                 VC1_decoder,RTM0AC0000XVVC1D30SL41C,RTM0AC0000XVVC1D30SL41C.tar.bz2 \
-                 DivX_decoder,RTM0AC0000XVDVXD30SL41C,RTM0AC0000XVDVXD30SL41C.tar.bz2 \
-                 RealVideo_decoder,RTM0AC0000XVRLVD30SL41C,RTM0AC0000XVRLVD30SL41C.tar.bz2 \
-                 VP8_decoder,RTM0AC0000XVVP8D30SL41C,RTM0AC0000XVVP8D30SL41C.tar.bz2 \
-                 VP9_decoder,RTM0AC0000XVVP9D30SL41C,RTM0AC0000XVVP9D30SL41C.tar.bz2"
+_video_dec_list="H263_decoder,RTM8RC0000ZMD4LQ00JPL3E,RTM8RC0000ZMD4LQ00JPL3E.tar.bz2 \
+                 H264_decoder,RTM8RC0000ZMD1LQ00JPL3E,RTM8RC0000ZMD1LQ00JPL3E.tar.bz2 \
+                 H265_decoder,RTM8RC0000ZMDALQ00JPL3E,RTM8RC0000ZMDALQ00JPL3E.tar.bz2 \
+                 MPEG2_decoder,RTM8RC0000ZMD5LQ00JPL3E,RTM8RC0000ZMD5LQ00JPL3E.tar.bz2 \
+                 MPEG4_decoder,RTM8RC0000ZMD2LQ00JPL3E,RTM8RC0000ZMD2LQ00JPL3E.tar.bz2 \
+                 VC1_decoder,RTM8RC0000ZMD3LQ00JPL3E,RTM8RC0000ZMD3LQ00JPL3E.tar.bz2 \
+                 DivX_decoder,RTM8RC0000ZMD7LQ00JPL3E,RTM8RC0000ZMD7LQ00JPL3E.tar.bz2 \
+                 RealVideo_decoder,RTM8RC0000ZMD6LQ00JPL3E,RTM8RC0000ZMD6LQ00JPL3E.tar.bz2 \
+                 VP8_decoder,RTM8RC0000ZMD8LQ00JPL3E,RTM8RC0000ZMD8LQ00JPL3E.tar.bz2 \
+                 VP9_decoder,RTM8RC0000ZMD9LQ00JPL3E,RTM8RC0000ZMD9LQ00JPL3E.tar.bz2"
 
 # Video Encoder Library
 # Please add omx video encoder library to "_video_enc_list"
@@ -69,18 +69,18 @@ _video_dec_list="H263_decoder,RTM0AC0000XV263D30SL41C,RTM0AC0000XV263D30SL41C.ta
 # video_enc_list="<software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name> \
 #                 <software_name>,<package_name>,<copy_file_name>"
-_video_enc_list="H264_encoder,RTM0AC0000XV264E30SL41C,RTM0AC0000XV264E30SL41C.tar.bz2 \
-                 VP8_encoder,RTM0AC0000XVVP8E30SL41C,RTM0AC0000XVVP8E30SL41C.tar.bz2"
+_video_enc_list="H264_encoder,RTM8RC0000ZME1LQ00JPL3E,RTM8RC0000ZME1LQ00JPL3E.tar.bz2 \
+                 VP8_encoder,RTM8RC0000ZME8LQ00JPL3E,RTM8RC0000ZME8LQ00JPL3E.tar.bz2"
 
 # Common library packages
 # Don't use space in xxx_name.
 # XXX_list="<software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name> \
 #           <software_name>,<package_name>,<copy_file_name>"
-_omx_common_list="omx_common_lib,RTM0AC0000XCMCTL30SL41C,RTM0AC0000XCMCTL30SL41C.tar.bz2"
-_uvcs_list="uvcs_lib,RCG3VUDRL4101ZDO,RCG3VUDRL4101ZDO.tar.bz2"
-_video_enc_common_list="video_enc_common,RTM0AC0000XVCMNE30SL41C,RTM0AC0000XVCMNE30SL41C.tar.bz2"
-_video_dec_common_list="video_dec_common,RTM0AC0000XVCMND30SL41C,RTM0AC0000XVCMND30SL41C.tar.bz2"
+_omx_common_list="omx_common_lib,RTM8RC0000ZMX0LQ00JPL3E,RTM8RC0000ZMX0LQ00JPL3E.tar.bz2"
+_uvcs_list="uvcs_lib,RTM8RC0000ZMX0DQ00JFL3E,RTM8RC0000ZMX0DQ00JFL3E.tar.bz2"
+_video_enc_common_list="video_enc_common,RTM8RC0000ZME0LQ00JPL3E,RTM8RC0000ZME0LQ00JPL3E.tar.bz2"
+_video_dec_common_list="video_dec_common,RTM8RC0000ZMD0LQ00JPL3E,RTM8RC0000ZMD0LQ00JPL3E.tar.bz2"
 _audio_common_list="audio_common,RTM8RC0000ZNX0LQ00JPL3E,RTM8RC0000ZNX0LQ00JPL3E.tar.gz"
 
 
