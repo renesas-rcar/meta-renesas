@@ -13,6 +13,7 @@ RDEPENDS_packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
     kernel-module-cmemdrv-dev \
+    kernel-module-cpurttdrv \
     udev-rules-cvlib \
     linux-renesas-uapi \
     bsp-config \
