@@ -35,6 +35,11 @@ SRC_URI_append = " \
     file://0001-scripts-Add-module.lds-to-fix-out-of-tree-modules-bu.patch \
 "
 
+# Add OP-TEE node for R8A77995
+SRC_URI_append = " \
+    file://0001-arm64-dts-r8a77995-Add-optee-node.patch \
+"
+
 # Enable RPMSG_VIRTIO depend on ICCOM
 SUPPORT_ICCOM = " \
     file://iccom.cfg \
