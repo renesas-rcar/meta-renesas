@@ -67,7 +67,18 @@ IMAGE_INSTALL_append = " \
     ${@oe.utils.conditional("USE_ICCOM", "1", " ${ICCOM_PKGS}", "", d)} \
 "
 
-#Installation for ethtool
+# Kernel modules support Safe Rendering
+SAFE_RENDERING_KERNEL_PKGS = " \
+    kernel-module-rcar-cr7-remoteproc \
+    kernel-module-rcar-rvgc-drm \
+    kernel-module-virtio-rpmsg-bus \
+"
+
+IMAGE_INSTALL_append = " \
+    ${@oe.utils.conditional("USE_SAFE_RENDERING", "1", "${SAFE_RENDERING_KERNEL_PKGS}", "", d)} \
+"
+
+# Installation for ethtool
 IMAGE_INSTALL_append = " ethtool"
 
 # Initscript for setting CPUFreq governor
