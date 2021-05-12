@@ -66,3 +66,6 @@ ICCOM_PKGS = " \
 IMAGE_INSTALL_append = " \
     ${@oe.utils.conditional("USE_ICCOM", "1", " ${ICCOM_PKGS}", "", d)} \
 "
+
+#Installation for ethtool
+IMAGE_INSTALL_append = " ethtool"
