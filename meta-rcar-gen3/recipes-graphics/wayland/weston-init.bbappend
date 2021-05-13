@@ -8,12 +8,6 @@ SRC_URI_append_rcar-gen3 = " \
 "
 
 do_install_append_rcar-gen3() {
-    if [ "X${USE_GLES}" = "X1" ]; then
-        sed -e "/^After=/s/$/ dbus.service multi-user.target/" \
-            -e "s/\$OPTARGS/--idle-time=0 \$OPTARGS/" \
-            -i ${D}/${systemd_system_unitdir}/weston@.service
-    fi
-
     install -d ${D}/${sysconfdir}/xdg/weston
     # install weston.ini as sample settings of gl-renderer
     install -m 644 ${WORKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/
@@ -35,14 +29,9 @@ do_install_append_rcar-gen3() {
     # Set XDG_RUNTIME_DIR to /run/user/$UID (e.g. run/user/0)
     install -d ${D}/${sysconfdir}/profile.d
     install -m 0755 ${WORKDIR}/weston.sh ${D}/${sysconfdir}/profile.d/weston.sh
-
-    # Fix weston.service and weston@.service run simultaneously.
-    mv ${D}/${sysconfdir}/init.d/weston ${D}/${sysconfdir}/init.d/weston@
 }
 
 FILES_${PN}_append_rcar-gen3 = " \
     ${sysconfdir}/profile.d/weston.sh \
 "
-
-INITSCRIPT_NAME = "weston@"
 
