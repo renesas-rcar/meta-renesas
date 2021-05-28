@@ -7,7 +7,10 @@ IMAGE_FSTYPES += "tar.bz2 wic.gz wic.bmap wic.gz.sha256sum wic.gz.crc"
 WKS_FILE ?= "image-v3x.wks"
 
 COMPRESSIONTYPES += "crc"
-CONVERSION_CMD_crc = "crc32 ${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type} > ${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.crc"
+CONVERSION_CMD_crc = "${RECIPE_SYSROOT_NATIVE}/usr/bin/perl-native/perl \
+                      ${RECIPE_SYSROOT_NATIVE}/usr/bin/crc32 \
+		      ${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type} \
+		      > ${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.crc"
 
 SERIAL_CONSOLES = "115200;ttySC0"
 
@@ -22,4 +25,4 @@ EXTRA_IMAGEDEPENDS += " u-boot"
 BUILDCFG_VARS_append = " SOC_FAMILY"
 
 # rsync is required to build kernel 5.4
-HOSTTOOLS += "rsync crc32"
+HOSTTOOLS += "rsync"

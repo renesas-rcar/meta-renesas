@@ -14,3 +14,5 @@ IMAGE_INSTALL_append = " \
     i2c-tools \
     coreutils \
 "
+
+DEPENDS += "perl-native libarchive-zip-perl-native"
