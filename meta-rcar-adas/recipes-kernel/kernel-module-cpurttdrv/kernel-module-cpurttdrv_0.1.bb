@@ -13,7 +13,7 @@ PV = "0.1"
 RENESAS_CPURTTDRV_URL ?= "git://github.com/renesas-rcar/cpurttdrv.git"
 
 SRC_URI = "${RENESAS_CPURTTDRV_URL};nobranch=1"
-SRCREV = "e5854521959c8483d9f9a5c8a8277d75a2b7a00d"
+SRCREV = "d12570679075e13351bd7d27a1fe655548e99a79"
 
 S = "${WORKDIR}/git"
 
@@ -21,3 +21,6 @@ do_install_append () {
     install -d ${D}${includedir}
     install -m 644 ${S}/cpurtt_common.h ${D}${includedir}
 }
+
+KERNEL_MODULE_PROBECONF += "cpurttmod"
+module_conf_cpurttmod = "blacklist cpurttmod"
