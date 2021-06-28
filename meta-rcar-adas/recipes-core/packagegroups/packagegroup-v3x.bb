@@ -21,4 +21,5 @@ RDEPENDS_packagegroup-v3x = " \
     udev-rules-cvlib \
     linux-renesas-uapi \
     bsp-config \
+    capture \
 "
