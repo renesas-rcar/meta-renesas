@@ -3,7 +3,7 @@ RENESAS_GST_PLUGINS_GOOD_URL ?= "gitsm://github.com/renesas-rcar/gst-plugins-goo
 SRC_URI_remove = "https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${PV}.tar.xz"
 SRC_URI_append = " ${RENESAS_GST_PLUGINS_GOOD_URL}"
 
-SRCREV = "34a8bf145506eca37291c8e72ab09fa0b5eb6149"
+SRCREV = "2af969c91be22e2cf71ec1aa81c158171ecfb028"
 
 DEPENDS += "mmngrbuf-user-module"
 

@@ -3,8 +3,12 @@ RENESAS_GST_PLUGINS_BAD_URL ?= "gitsm://github.com/renesas-rcar/gst-plugins-bad.
 SRC_URI_remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
 SRC_URI_append = " ${RENESAS_GST_PLUGINS_BAD_URL}"
 
-SRCREV = "3ef17d3c57e12f9d7536e464656b871a8949fa5b"
+SRCREV = "0b00bd6365ddd87b05242d9d2b08955cf02e474e"
 
-DEPENDS += "weston"
+require include/rcar-gen3-modules-common.inc
+DEPENDS += "weston libdrm mmngr-user-module linux-renesas"
 
 S = "${WORKDIR}/git"
+
+EXTRA_OECONF += "--enable-kms"
+PACKAGECONFIG_append = "kms"
