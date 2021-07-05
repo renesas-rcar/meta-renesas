@@ -1,6 +1,6 @@
 SUMMARY = "GStreamer VSP filter plugin"
 SECTION = "multimedia"
-LICENSE = "GPLv2+"
+LICENSE = "LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=4fbd65380cdd255951079008b364516c"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
@@ -11,7 +11,7 @@ SRC_URI = " \
     ${RENESAS_VSPFILTER_URL} \
 "
 
-SRCREV = "c5af044ff9c2e827f2c9a838fe56b753b1a09f39"
+SRCREV = "15734c26b6c159394eb8b1454d48887c817be013"
 
 S = "${WORKDIR}/git"
 
