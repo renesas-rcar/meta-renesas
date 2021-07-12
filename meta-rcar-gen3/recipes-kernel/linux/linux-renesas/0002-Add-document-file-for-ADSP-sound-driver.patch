@@ -1,0 +1,30 @@
+From cf95191ba39dc4a890e9a3366353d6924f146e66 Mon Sep 17 00:00:00 2001
+From: "Thanh Thai. Nguyen" <thanh.nguyen.zc@renesas.com>
+Date: Mon, 19 Jul 2021 08:54:28 +0700
+Subject: [PATCH 2/2] Add-document-file-for-ADSP-sound-driver
+
+---
+ .../devicetree/bindings/sound/renesas,adsp.txt        | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/sound/renesas,adsp.txt
+
+diff --git a/Documentation/devicetree/bindings/sound/renesas,adsp.txt b/Documentation/devicetree/bindings/sound/renesas,adsp.txt
+new file mode 100644
+index 0000000..b529bca
+--- /dev/null
++++ b/Documentation/devicetree/bindings/sound/renesas,adsp.txt
+@@ -0,0 +1,11 @@
++Renesas ADSP sound driver
++
++Required properties:
++- compatible			: "renesas,rcar_adsp_sound_gen3"
++
++Example:
++
++rcar_adsp_sound: adsp_sound@0 {
++     compatible =  "renesas,rcar_adsp_sound_gen3";
++     status = "disabled";
++};
+-- 
+2.17.1
+

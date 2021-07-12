@@ -2,8 +2,8 @@ require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.10/rcar-5.0.0.rc5"
-SRCREV = "f495fadf677fead5dbb0ec6289678b552ba597fd"
+BRANCH = "v5.10.41/rcar-5.1.0"
+SRCREV = "f57b391ab2e65356875526d9e1a94cd02f9f73d2"
 
 SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
