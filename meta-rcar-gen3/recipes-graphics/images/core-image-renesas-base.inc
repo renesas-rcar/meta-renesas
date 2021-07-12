@@ -80,3 +80,6 @@ IMAGE_INSTALL_append = " \
 
 # Initscript for setting CPUFreq governor
 IMAGE_INSTALL_append = " cpufreq-initscripts"
+
+# Kernel modules of CMEMDRV
+IMAGE_INSTALL_append = " kernel-module-cmemdrv"
