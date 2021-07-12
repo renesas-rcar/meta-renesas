@@ -69,3 +69,6 @@ IMAGE_INSTALL_append = " \
 
 #Installation for ethtool
 IMAGE_INSTALL_append = " ethtool"
+
+# Initscript for setting CPUFreq governor
+IMAGE_INSTALL_append = " cpufreq-initscripts"
