@@ -1,0 +1,152 @@
+From 871b25505ffd6dd580dc24017aba81cf17035fd3 Mon Sep 17 00:00:00 2001
+From: "Thanh Thai. Nguyen" <thanh.nguyen.zc@renesas.com>
+Date: Tue, 20 Jul 2021 14:43:03 +0700
+Subject: [PATCH] ADSP-remove-HDMI-support-from-rcar-sound
+
+---
+ arch/arm64/boot/dts/renesas/r8a77950-salvator-x.dts  | 6 ------
+ arch/arm64/boot/dts/renesas/r8a77951-salvator-x.dts  | 6 ------
+ arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts | 6 ------
+ arch/arm64/boot/dts/renesas/r8a779m1-salvator-x.dts  | 6 ------
+ arch/arm64/boot/dts/renesas/r8a779m1-salvator-xs.dts | 6 ------
+ arch/arm64/boot/dts/renesas/r8a779m3-salvator-xs.dts | 5 -----
+ arch/arm64/boot/dts/renesas/r8a779m5-salvator-x.dts  | 5 -----
+ arch/arm64/boot/dts/renesas/r8a779m5-salvator-xs.dts | 5 -----
+ 8 files changed, 45 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77950-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a77950-salvator-x.dts
+index 1a1f2324dd6e..4031e1b40b3d 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77950-salvator-x.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77950-salvator-x.dts
+@@ -170,12 +170,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1	/* HDMI0  */
+-		&rsnd_port2>;	/* HDMI1  */
+-};
+-
+ &usb2_phy2 {
+ 	pinctrl-0 = <&usb2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm64/boot/dts/renesas/r8a77951-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a77951-salvator-x.dts
+index ade33b2ee741..ff77539d389b 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77951-salvator-x.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77951-salvator-x.dts
+@@ -170,12 +170,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1	/* HDMI0  */
+-		&rsnd_port2>;	/* HDMI1  */
+-};
+-
+ &usb2_phy2 {
+ 	pinctrl-0 = <&usb2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts b/arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts
+index aa1ff538a4b6..19be02300ef2 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts
++++ b/arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts
+@@ -212,12 +212,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1	/* HDMI0  */
+-		&rsnd_port2>;	/* HDMI1  */
+-};
+-
+ &usb2_phy2 {
+ 	pinctrl-0 = <&usb2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm64/boot/dts/renesas/r8a779m1-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a779m1-salvator-x.dts
+index 3715a609f8f1..d39cbab5e688 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779m1-salvator-x.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779m1-salvator-x.dts
+@@ -206,12 +206,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1	/* HDMI0  */
+-		&rsnd_port2>;	/* HDMI1  */
+-};
+-
+ &usb2_phy2 {
+ 	pinctrl-0 = <&usb2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm64/boot/dts/renesas/r8a779m1-salvator-xs.dts b/arch/arm64/boot/dts/renesas/r8a779m1-salvator-xs.dts
+index e3341694ed70..9d5c4d392994 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779m1-salvator-xs.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779m1-salvator-xs.dts
+@@ -248,12 +248,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1	/* HDMI0  */
+-		&rsnd_port2>;	/* HDMI1  */
+-};
+-
+ &usb2_phy2 {
+ 	pinctrl-0 = <&usb2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm64/boot/dts/renesas/r8a779m3-salvator-xs.dts b/arch/arm64/boot/dts/renesas/r8a779m3-salvator-xs.dts
+index 7a7ee7b470a0..dfbb106ccaa7 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779m3-salvator-xs.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779m3-salvator-xs.dts
+@@ -145,11 +145,6 @@
+ 	};
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1>;	/* HDMI0  */
+-};
+-
+ &vspb {
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/renesas/r8a779m5-salvator-x.dts b/arch/arm64/boot/dts/renesas/r8a779m5-salvator-x.dts
+index a723cb4da6ff..71d807e05641 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779m5-salvator-x.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779m5-salvator-x.dts
+@@ -134,11 +134,6 @@
+ 	};
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1>;	/* HDMI0  */
+-};
+-
+ &vspb {
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/renesas/r8a779m5-salvator-xs.dts b/arch/arm64/boot/dts/renesas/r8a779m5-salvator-xs.dts
+index 466829b9c435..b08dd34eaec4 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779m5-salvator-xs.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779m5-salvator-xs.dts
+@@ -148,11 +148,6 @@
+ 	status = "okay";
+ };
+ 
+-&sound_card {
+-	dais = <&rsnd_port0	/* ak4613 */
+-		&rsnd_port1>;	/* HDMI0  */
+-};
+-
+ &vspb {
+ 	status = "okay";
+ };
+-- 
+2.17.1
+

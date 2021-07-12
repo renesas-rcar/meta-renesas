@@ -16,11 +16,6 @@ SRC_URI = "file://RTM8RC0000ZNA2DS00JFL3E.tar.gz"
 
 S = "${WORKDIR}/RTM8RC0000ZNA2DS00JFL3E"
 
-SRC_URI_append = " \
-    file://update-adsp-alsa.c-RTM8RC0000ZNA2DS00JFL3E.patch;patchdir=kernel-source/sound/soc/adsp/ \
-    file://update-xf-rcar.c-RTM8RC0000ZNA2DS00JFL3E.patch;patchdir=src \
-"
-
 # Define the extra config for using module.bbclass to build ADSP driver
 EXTRA_OEMAKE_append = " KDIR=${STAGING_KERNEL_DIR}"
 
