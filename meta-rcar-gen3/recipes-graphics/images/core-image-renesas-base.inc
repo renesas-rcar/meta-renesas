@@ -77,3 +77,6 @@ SAFE_RENDERING_KERNEL_PKGS = " \
 IMAGE_INSTALL_append = " \
     ${@oe.utils.conditional("USE_SAFE_RENDERING", "1", "${SAFE_RENDERING_KERNEL_PKGS}", "", d)} \
 "
+
+# Initscript for setting CPUFreq governor
+IMAGE_INSTALL_append = " cpufreq-initscripts"
