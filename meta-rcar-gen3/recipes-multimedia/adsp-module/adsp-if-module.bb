@@ -14,10 +14,6 @@ S = "${WORKDIR}/RTM8RC0000ZNA1SS00JFL3E"
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SRC_URI_append = " \
-    file://update-xf-ap-msg.h_RTM8RC0000ZNA1SS00JFL3E.patch;patchdir=include \
-"
-
 # Don't need to do_configure
 do_configure[noexec] = "1"
 

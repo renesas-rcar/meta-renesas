@@ -1,0 +1,34 @@
+From ade1a9ce9a4798277e59aa8983f601439bab1427 Mon Sep 17 00:00:00 2001
+From: "Thanh Thai. Nguyen" <thanh.nguyen.zc@renesas.com>
+Date: Tue, 20 Jul 2021 17:14:06 +0700
+Subject: [PATCH 3/3] ADSP-add-build-for-ADSP-sound-driver
+
+---
+ sound/soc/Kconfig  | 1 +
+ sound/soc/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/sound/soc/Kconfig b/sound/soc/Kconfig
+index 71a6fe87d1a1..6d9086f5ed75 100644
+--- a/sound/soc/Kconfig
++++ b/sound/soc/Kconfig
+@@ -77,6 +77,7 @@ source "sound/soc/ux500/Kconfig"
+ source "sound/soc/xilinx/Kconfig"
+ source "sound/soc/xtensa/Kconfig"
+ source "sound/soc/zte/Kconfig"
++source "sound/soc/adsp/Kconfig"
+ 
+ # Supported codecs
+ source "sound/soc/codecs/Kconfig"
+diff --git a/sound/soc/Makefile b/sound/soc/Makefile
+index ddbac3a2169f..b22c93c5fcfb 100644
+--- a/sound/soc/Makefile
++++ b/sound/soc/Makefile
+@@ -60,3 +60,4 @@ obj-$(CONFIG_SND_SOC)	+= ux500/
+ obj-$(CONFIG_SND_SOC)	+= xilinx/
+ obj-$(CONFIG_SND_SOC)	+= xtensa/
+ obj-$(CONFIG_SND_SOC)	+= zte/
++obj-$(CONFIG_SND_SOC)	+= adsp/
+-- 
+2.17.1
+

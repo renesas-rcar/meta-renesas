@@ -12,12 +12,12 @@ COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.10/rcar-5.0.0.rc5"
-SRCREV = "f495fadf677fead5dbb0ec6289678b552ba597fd"
+BRANCH = "v5.10.41/rcar-5.1.0"
+SRCREV = "f57b391ab2e65356875526d9e1a94cd02f9f73d2"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
-LINUX_VERSION ?= "5.10.0"
+LINUX_VERSION ?= "5.10.41"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
@@ -56,8 +56,12 @@ SRC_URI_append = " \
 
 # Add ADSP ALSA driver
 SUPPORT_ADSP_ASOC = " \
-    file://ADSP-add-ADSP-sound-driver-source-final.patch \
-    file://update_kernel_device_tree_and_build_config_rc4.patch \
+    file://0001-Add-ADSP-sound-driver-source.patch \
+    file://0002-Add-document-file-for-ADSP-sound-driver.patch \
+    file://0003-ADSP-remove-HDMI-support-from-rcar-sound.patch \
+    file://0004-ADSP-integrate-ADSP-sound-for-H3-M3-M3N-board.patch \
+    file://0005-ADSP-add-build-for-ADSP-sound-driver.patch \
+    file://0006-ADSP-integrate-ADSP-sound-for-E3-board.patch \
     file://adsp.cfg \
 "
 
@@ -90,3 +94,9 @@ do_compile_kernelmodules_append () {
         fi
     fi
 }
+
+# uio_pdrv_genirq configuration
+KERNEL_MODULE_AUTOLOAD_append = " uio_pdrv_genirq"
+KERNEL_MODULE_PROBECONF_append = " uio_pdrv_genirq"
+module_conf_uio_pdrv_genirq_append = ' options uio_pdrv_genirq of_id="generic-uio"'
+
