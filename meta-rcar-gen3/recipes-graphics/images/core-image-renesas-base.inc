@@ -83,3 +83,6 @@ IMAGE_INSTALL_append = " cpufreq-initscripts"
 
 # Kernel modules of CMEMDRV
 IMAGE_INSTALL_append = " kernel-module-cmemdrv"
+
+# Kernel module UIO
+IMAGE_INSTALL_append = " kernel-module-uio-pdrv-genirq"
