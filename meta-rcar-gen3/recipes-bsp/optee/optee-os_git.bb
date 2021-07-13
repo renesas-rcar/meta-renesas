@@ -9,17 +9,17 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit deploy python3native
 
-PV = "3.8.0+renesas+git${SRCPV}"
+PV = "3.13.0+renesas+git${SRCPV}"
 
-BRANCH = "rcar_gen3_3.8.0_2"
-SRCREV = "43a5c57857f1cf29eacfd145268329bfd300c489"
+BRANCH = "rcar_gen3_3.13.0"
+SRCREV = "93483d65a40690e8a4b9f5e575d0948226efd821"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH} \
 "
 
 SRC_URI_append = " \
-    file://change-cryptodome-to-crypto-module.patch \
+    file://0001-mk-gcc.mk-Change-the-path-to-the-library.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
@@ -30,10 +30,10 @@ DEPENDS = "python3-pycryptodome-native python3-pyelftools-native"
 export CROSS_COMPILE64="${TARGET_PREFIX}"
 
 # Let the Makefile handle setting up the flags as it is a standalone application
-LD[unexport] = "1"
+#LD[unexport] = "1"
 LDFLAGS[unexport] = "1"
-export CCcore="${CC}"
-export LDcore="${LD}"
+#export CCcore="${CC}"
+#export LDcore="${LD}"
 libdir[unexport] = "1"
 
 S = "${WORKDIR}/git"

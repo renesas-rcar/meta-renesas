@@ -3,15 +3,14 @@ LICENSE = "BSD-2-Clause"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 PR = "r0"
-PV = "3.8.0+renesas+git${SRCPV}"
+PV = "3.13.0+renesas+git${SRCPV}"
 BRANCH = "master"
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH}"
-SRCREV = "be4fa2e36f717f03ca46e574aa66f697a897d090"
+SRCREV = "7c9c423d00e96bf51debd5fe10fd70dce83be5cc"
 
 SRC_URI += " \
     file://optee.service \
-    file://0001-tee-supplicant-use-MMC_IOC_MULTI_CMD-for-RPMB-access.patch \
-    file://0001-tee-supplicant-fix-to-initialize-mioc-cmds-member-va.patch \
+    file://0001-tee-supplicant-Delete-the-sleep-time-when-writing-da.patch \
 "
 
 inherit python3native systemd
