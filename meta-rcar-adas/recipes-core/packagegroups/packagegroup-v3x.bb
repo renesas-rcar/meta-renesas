@@ -13,7 +13,6 @@ RDEPENDS_packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
     kernel-module-cmemdrv-dev \
-    kernel-module-cpurttdrv \
     kernel-module-mmngr \
     kernel-module-mmngrbuf \
     mmngr-user-module \
@@ -22,4 +21,12 @@ RDEPENDS_packagegroup-v3x = " \
     linux-renesas-uapi \
     bsp-config \
     capture \
+"
+RDEPENDS_packagegroup-v3x_condor += " \
+    kernel-module-cpurttdrv \
+    kernel-module-cpurttdrv2 \
+"
+RDEPENDS_packagegroup-v3x_eagle += " \
+    kernel-module-cpurttdrv \
+    kernel-module-cpurttdrv2 \
 "

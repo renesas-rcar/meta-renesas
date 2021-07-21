@@ -1,0 +1,12 @@
+diff --git a/Makefile b/Makefile
+index 82c0c6e..c1e8540 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,5 +1,5 @@
+-obj-m :=cpurttmod.o
+-cpurttmod-objs := smoni_api.o cpurttdrv.o
++obj-m :=cpurttmod2.o
++cpurttmod2-objs := smoni_api.o cpurttdrv.o
+
+ SRC := $(shell pwd)
+
