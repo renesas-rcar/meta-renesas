@@ -8,8 +8,8 @@ COMPATIBLE_MACHINE = "(falcon|condor|eagle)"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.4.72/rcar-4.1.0.rc13"
-SRCREV = "867b3521150b0c82aab34b7b4076076ded1e4842"
+BRANCH = "v5.4.72/rcar-4.1.0.rc14"
+SRCREV = "8fc05c783a85eb5e3116609fb0b73544b8cc9dac"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
