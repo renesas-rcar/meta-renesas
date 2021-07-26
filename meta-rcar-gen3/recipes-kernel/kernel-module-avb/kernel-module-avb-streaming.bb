@@ -16,7 +16,7 @@ DEPENDS = "linux-renesas"
 REQUIRED_DISTRO_FEATURES = "avb"
 
 SRC_URI = "git://github.com/renesas-rcar/avb-streaming.git;branch=rcar-gen3"
-SRCREV = "6dab094e063a3fdb1cda86575433427afc04d6f2"
+SRCREV = "80bd8f48d18d088c8f2fd33dec9a061862a4d715"
 
 S = "${WORKDIR}/git"
 

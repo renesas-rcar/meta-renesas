@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE;md5=b3e2a6e620763288bcbc3190f6cb1704 \
 "
 
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 
 PV = "1.1+git${SRCPV}"
 
