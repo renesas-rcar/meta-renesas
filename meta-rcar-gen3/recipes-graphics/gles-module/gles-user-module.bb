@@ -99,6 +99,7 @@ FILES_${PN} = " \
     ${sysconfdir}/* \
     ${libdir}/* \
     /lib/firmware/rgx.fw* \
+    /lib/firmware/rgx.sh* \
     ${RENESAS_DATADIR}/bin/* \
     ${exec_prefix}/bin/* \
 "
