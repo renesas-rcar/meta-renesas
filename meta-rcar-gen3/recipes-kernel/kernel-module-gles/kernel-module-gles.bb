@@ -1,7 +1,7 @@
 DESCRIPTION = "Kernel module of PowerVR GPU"
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
-    file://GPL-COPYING;md5=60422928ba677faaa13d6ab5f5baaa1e \
+    file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://MIT-COPYING;md5=8c2810fa6bfdc5ae5c15a0c1ade34054 \
 "
 inherit module
@@ -15,6 +15,7 @@ SRC_URI_r8a7795 = 'file://GSX_KM_H3.tar.bz2'
 SRC_URI_r8a7796 = 'file://GSX_KM_M3.tar.bz2'
 SRC_URI_r8a77965 = 'file://GSX_KM_M3N.tar.bz2'
 SRC_URI_r8a77990 = 'file://GSX_KM_E3.tar.bz2'
+SRC_URI_append = " file://blacklist.conf"
 
 S = "${WORKDIR}/rogue_km"
 
@@ -22,10 +23,10 @@ KBUILD_DIR_r8a7795 = "${S}/build/linux/r8a7795_linux"
 KBUILD_DIR_r8a7796 = "${S}/build/linux/r8a7796_linux"
 KBUILD_DIR_r8a77965 = "${S}/build/linux/r8a77965_linux"
 KBUILD_DIR_r8a77990 = "${S}/build/linux/r8a7799_linux"
-KBUILD_OUTDIR_r8a7795 = "binary_r8a7795_linux_release/target_aarch64/kbuild/"
-KBUILD_OUTDIR_r8a7796 = "binary_r8a7796_linux_release/target_aarch64/kbuild/"
-KBUILD_OUTDIR_r8a77965 = "binary_r8a77965_linux_release/target_aarch64/kbuild/"
-KBUILD_OUTDIR_r8a77990 = "binary_r8a7799_linux_release/target_aarch64/kbuild/"
+KBUILD_OUTDIR_r8a7795 = "binary_r8a7795_linux_nullws_drm_release/target_aarch64/kbuild"
+KBUILD_OUTDIR_r8a7796 = "binary_r8a7796_linux_nullws_drm_release/target_aarch64/kbuild"
+KBUILD_OUTDIR_r8a77965 = "binary_r8a77965_linux_nullws_drm_release/target_aarch64/kbuild"
+KBUILD_OUTDIR_r8a77990 = "binary_r8a7799_linux_nullws_drm_release/target_aarch64/kbuild"
 
 B = "${KBUILD_DIR}"
 
@@ -46,6 +47,10 @@ module_do_install() {
     install -d ${D}/lib/modules/${KERNEL_VERSION}
     cd ${KBUILD_DIR}
     oe_runmake DISCIMAGE="${D}" install
+    rm ${D}/etc/powervr_ddk_install_km.log 
+    # Install blacklist config file
+    install -d ${D}${sysconfdir}/modprobe.d
+    install -m 644 ${WORKDIR}/blacklist.conf ${D}${sysconfdir}/modprobe.d/blacklist.conf
 }
 
 # Ship the module symbol file to kernel build dir
@@ -65,9 +70,7 @@ module_clean_symbol() {
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/pvrsrvkm.ko \
     ${sysconfdir}/modules-load.d \
+    ${sysconfdir}/modprobe.d/blacklist.conf \
 "
 
 RPROVIDES_${PN} += "kernel-module-pvrsrvkm kernel-module-dc-linuxfb"
-
-# Auto load pvrsrvkm
-KERNEL_MODULE_AUTOLOAD_append = " pvrsrvkm"
