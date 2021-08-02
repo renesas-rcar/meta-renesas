@@ -8,6 +8,16 @@ PACKAGES = " \
     packagegroup-v3x \
 "
 
+CPURTT_PKGS_condor = " \
+    kernel-module-cpurttdrv \
+    kernel-module-cpurttdrv2 \
+"
+CPURTT_PKGS_eagle = " \
+    kernel-module-cpurttdrv \
+    kernel-module-cpurttdrv2 \
+"
+CPURTT_PKGS_falcon = ""
+
 # V3x common packages: CMEM, CV lib, MMNGR
 RDEPENDS_packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
@@ -21,12 +31,5 @@ RDEPENDS_packagegroup-v3x = " \
     linux-renesas-uapi \
     bsp-config \
     capture \
-"
-RDEPENDS_packagegroup-v3x_condor += " \
-    kernel-module-cpurttdrv \
-    kernel-module-cpurttdrv2 \
-"
-RDEPENDS_packagegroup-v3x_eagle += " \
-    kernel-module-cpurttdrv \
-    kernel-module-cpurttdrv2 \
+    ${CPURTT_PKGS} \
 "
