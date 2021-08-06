@@ -86,3 +86,9 @@ IMAGE_INSTALL_append = " kernel-module-cmemdrv"
 
 # Kernel module UIO
 IMAGE_INSTALL_append = " kernel-module-uio-pdrv-genirq"
+
+# OSAL package
+IMAGE_INSTALL_append = " \
+    ${@"osal" if "osal" in "${DISTRO_FEATURES}" else ""} \
+"
+
