@@ -154,6 +154,12 @@ _iccom_um_list="iccom_lib,RCG3ZLILL4101ZNO,libiccom.tar.bz2,RCG3ZLILL4101ZNO"
 # crypto_pkg_list="<packgae name> <packgae name> <packgae name>"
 _crypto_pkg_list="RTM0AC0000ADDD5MZ1SL41C"
 
+# OSAL
+# Please add OSAL (zip) package name to "_osal_list"
+# Don't use space in xxx_name.
+# osal_list="<software_name>,<package_name>,<copy_file_name>"
+_osal_list="osal,RTM8RC0000ZSAL2S00JPL3E,RTM8RC0000ZSAL2S00JPL3E.tar.bz2"
+
 ##### static value
 _MODE_ZIP=1
 _MODE_TAR=2
@@ -171,7 +177,7 @@ _ADSP_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-adsp/xtensa-hi
 _ADSP_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/adsp-module/files"
 _ICCOM_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-iccom/files"
 _ICCOM_UM_INST_DIR="../meta-rcar-gen3/recipes-connectivity/iccom-module/files"
-
+_OSAL_UM_INST_DIR="../meta-rcar-gen3/recipes-core/osal/files"
 ##### common function
 
 # $1: search file name
@@ -1245,6 +1251,31 @@ func_iccom()
     echo /=======================================================/
 }
 
+# For OSAL main routine
+func_osal()
+{
+    echo ""
+    echo "Copying for OSAL Packages"
+
+    copy_flag=0
+
+    # MD5 check
+    func_list_search_and_md5check "${_osal_list}"
+    if [ $? -eq 0 ]; then
+        # library not found.
+        echo "Skip OSAL package"
+        echo ""
+        return
+    fi
+
+    # Install library
+    func_list_search_and_install_wo_md5check "${_osal_list}" "${_OSAL_UM_INST_DIR}"
+
+    echo ""
+    echo "Packages for OSAL were found and copied."
+    echo /=======================================================/
+}
+
 ################################
 # Copy Script Main routine
 ################################
@@ -1321,6 +1352,7 @@ func_dtv_dvd
 func_cms
 func_adsp
 func_iccom
+func_osal
 
 ##### 5) cleanup temp directory
 func_clean_tempdir
