@@ -91,4 +91,8 @@ IMAGE_INSTALL_append = " kernel-module-uio-pdrv-genirq"
 IMAGE_INSTALL_append = " \
     ${@"osal" if "osal" in "${DISTRO_FEATURES}" else ""} \
 "
+# IMR package
+IMAGE_INSTALL_append = " \
+    ${@"imr" if "imr" in "${DISTRO_FEATURES}" else ""} \
+"
 

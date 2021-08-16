@@ -160,6 +160,12 @@ _crypto_pkg_list="RTM0AC0000ADDD5MZ1SL41C"
 # osal_list="<software_name>,<package_name>,<copy_file_name>"
 _osal_list="osal,RTM8RC0000ZSAL2S00JPL3E,RTM8RC0000ZSAL2S00JPL3E.tar.bz2"
 
+# IMR
+# Please add IMR (zip) package name to "_imr_list"
+# Don't use space in xxx_name.
+# imr_list="<software_name>,<package_name>,<copy_file_name>"
+_imr_list="imr,RTM8RC0000ZRRDSS00JPL3E,RTM8RC0000ZRRDSS00JPL3E.tar.gz"
+
 ##### static value
 _MODE_ZIP=1
 _MODE_TAR=2
@@ -178,6 +184,8 @@ _ADSP_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/adsp-module/files"
 _ICCOM_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-iccom/files"
 _ICCOM_UM_INST_DIR="../meta-rcar-gen3/recipes-connectivity/iccom-module/files"
 _OSAL_UM_INST_DIR="../meta-rcar-gen3/recipes-core/osal/files"
+_IMR_UM_INST_DIR="../meta-rcar-gen3/recipes-core/imr/files"
+
 ##### common function
 
 # $1: search file name
@@ -1276,6 +1284,31 @@ func_osal()
     echo /=======================================================/
 }
 
+# For IMR main routine
+func_imr()
+{
+    echo ""
+    echo "Copying for IMR Packages"
+
+    copy_flag=0
+
+    # MD5 check
+    func_list_search_and_md5check "${_imr_list}"
+    if [ $? -eq 0 ]; then
+        # library not found.
+        echo "Skip IMR package"
+        echo ""
+        return
+    fi
+
+    # Install library
+    func_list_search_and_install_wo_md5check "${_imr_list}" "${_IMR_UM_INST_DIR}"
+
+    echo ""
+    echo "Packages for IMR were found and copied."
+    echo /=======================================================/
+}
+
 ################################
 # Copy Script Main routine
 ################################
@@ -1353,6 +1386,7 @@ func_cms
 func_adsp
 func_iccom
 func_osal
+func_imr 
 
 ##### 5) cleanup temp directory
 func_clean_tempdir
