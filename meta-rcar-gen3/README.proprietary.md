@@ -215,5 +215,17 @@ For Linux ICCOM driver and Linux ICCOM library
 ```bash
     DISTRO_FEATURES_append = " iccom"
 ```
+
+## V/ Enable Image Renderer and OS Abstract Library in Poky toolchain
+
+* Please copy proprietary libaries to the dicrectory of recipes.
+
+* Set local.conf as following:
+
+```bash
+DISTRO_FEATURES_append = " osal"   # for OSAL Library Package for Linux
+DISTRO_FEATURES_append = " imr"    # for IMR Library Package for Linux
+```
+
 END.
 
