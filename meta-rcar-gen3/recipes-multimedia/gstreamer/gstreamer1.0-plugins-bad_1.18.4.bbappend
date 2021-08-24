@@ -12,6 +12,10 @@ SRC_URI_append = " ${RENESAS_GST_PLUGINS_BAD_URL}"
 
 SRCREV = "3d832a61b92c5a4e55ef38d4ce9f6f9af2b53a4b"
 
-DEPENDS += "weston"
+require include/rcar-gen3-modules-common.inc
+DEPENDS += "weston libdrm"
 
 S = "${WORKDIR}/git"
+
+EXTRA_OECONF += "--enable-kms"
+PACKAGECONFIG_append = "kms"
