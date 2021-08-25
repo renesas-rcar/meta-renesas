@@ -11,6 +11,9 @@ KERNEL_DEVICETREE = " \
     renesas/r8a77980-condor.dtb \
     renesas/r8a77980-es2-v3hsk.dtb \
     renesas/r8a77980-v3hsk.dtb \
+    renesas/r8a77980-es2-v3hsk-vbm.dtb \
+    renesas/r8a77980-v3hsk-vbm.dtb \
+    renesas/r8a77970-v3msk-vbm.dtb\
 "
 
 # V3x u-boot configuration
