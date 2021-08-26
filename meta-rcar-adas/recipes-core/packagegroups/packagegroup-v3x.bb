@@ -32,4 +32,7 @@ RDEPENDS_packagegroup-v3x = " \
     bsp-config \
     capture \
     ${CPURTT_PKGS} \
+    kernel-module-qos \
+    qosif-user-module \
+    qosif-tp-user-module \
 "
