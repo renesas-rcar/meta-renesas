@@ -1,0 +1,68 @@
+From 53250952a7a183b1e56b2acb0dcf07b84b5fb787 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Thu, 13 May 2021 11:21:57 +0900
+Subject: [PATCH] arm64: dts: r8a77961: Fix video codec relation node
+
+Since there is a device difference between r8a77960 and r8a77961,
+This patch modified the device node related to the video codec
+of r8a77961 according to the H/W manual.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a77961.dtsi | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77961.dtsi b/arch/arm64/boot/dts/renesas/r8a77961.dtsi
+index 10abfc4..dc2f501 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77961.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77961.dtsi
+@@ -2883,15 +2883,6 @@
+ 			renesas,#ch = <0>;
+ 		};
+ 
+-		fcpci0: vcp4@fe8df000 {
+-			compatible = "renesas,vcp4-fcpci0";
+-			reg = <0 0xfe8df000 0 0x200>;
+-			clocks = <&cpg CPG_MOD 617>;
+-			power-domains = <&sysc R8A77961_PD_A3VC>;
+-			resets = <&cpg 617>;
+-			renesas,#ch = <1>;
+-		};
+-
+ 		imp_distributer: impdes0 {
+ 			compatible = "renesas,impx4-distributer";
+ 			reg = <0 0xffa00000 0 0x4000>;
+@@ -2958,7 +2949,7 @@
+ 			compatible = "renesas,vcp4-fcpcs";
+ 			reg = <0 0xfe90f000 0 0x200>;
+ 			clocks = <&cpg CPG_MOD 619>;
+-			power-domains = <&sysc R8A77961_PD_A3VC>;
++			power-domains = <&sysc R8A77961_PD_A2VC1>;
+ 			resets = <&cpg 619>;
+ 			renesas,#ch = <0>;
+ 		};
+@@ -2969,9 +2960,9 @@
+ 			interrupts = <GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 381 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 223 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&cpg CPG_MOD 128>;
+-			power-domains = <&sysc R8A77961_PD_A2VC0>;
+-			resets = <&cpg 128>;
++			clocks = <&cpg CPG_MOD 130>;
++			power-domains = <&sysc R8A77961_PD_A2VC1>;
++			resets = <&cpg 130>;
+ 			renesas,#ch = <2>;
+ 			renesas,#fcp_ch = <1>;
+ 		};
+@@ -2994,7 +2985,7 @@
+ 			interrupts = <GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 241 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&cpg CPG_MOD 131>;
+-			power-domains = <&sysc R8A77961_PD_A2VC0>;
++			power-domains = <&sysc R8A77961_PD_A2VC1>;
+ 			resets = <&cpg 131>;
+ 			renesas,#ch = <1>;
+ 			renesas,#fcp_ch = <0>;
+-- 
+2.7.4
+
