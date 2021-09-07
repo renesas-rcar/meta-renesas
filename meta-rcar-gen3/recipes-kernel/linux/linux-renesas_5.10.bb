@@ -40,10 +40,6 @@ SRC_URI_append = " \
     file://0001-arm64-dts-r8a77995-Add-optee-node.patch \
 "
 
-SRC_URI_append = " \
-    file://0001-arm64-dts-r8a77961-Fix-video-codec-relation-node.patch \
-"
-
 # Enable RPMSG_VIRTIO depend on ICCOM
 SUPPORT_ICCOM = " \
     file://iccom.cfg \
