@@ -47,6 +47,8 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     vim \
     wget \
     ${@bb.utils.contains("IMAGE_FEATURES", "ssh-server-openssh", "", "dropbear",d)} \
+    e2fsprogs-resize2fs \
+    avahi-daemon \
 "
 
 # Various packages needed for testing
