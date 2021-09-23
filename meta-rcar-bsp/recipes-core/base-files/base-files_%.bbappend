@@ -1,4 +1,5 @@
 require include/rcar-bsp-path-common.inc
+require include/rcar-kernel-info-common.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 
@@ -23,7 +24,7 @@ do_install_basefilesissue_append_rcar-gen3 () {
     echo >> ${D}${sysconfdir}/issue.e2
 
     # Linux kernel
-    printf "Linux kernel: ${KERNEL_VERSION}" >> ${D}${sysconfdir}/issue.e2
+    printf "Linux kernel: ${KERNEL_VERSION} / ${RENESAS_BSP_BRANCH}" >> ${D}${sysconfdir}/issue.e2
     echo >> ${D}${sysconfdir}/issue.e2
 
     # YBSP version

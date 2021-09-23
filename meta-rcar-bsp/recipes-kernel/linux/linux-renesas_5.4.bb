@@ -3,15 +3,13 @@ DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 require recipes-kernel/linux/linux-yocto.inc
+require include/rcar-kernel-info-common.inc
 
 COMPATIBLE_MACHINE = "(falcon|condor|eagle)"
 
-RENESAS_BSP_URL = " \
-    git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.4.72/rcar-4.1.0.rc15"
-SRCREV = "b3ffd70776c97c6630e391d2a3b452eb518b031c"
+SRCREV = "${RENESAS_BSP_SRCREV}"
 
-SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
+SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH}"
 
 LINUX_VERSION ?= "5.4.72"
 PV = "${LINUX_VERSION}+git${SRCPV}"
