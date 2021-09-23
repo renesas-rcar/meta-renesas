@@ -96,3 +96,5 @@ IMAGE_INSTALL_append = " \
     ${@"imr" if "imr" in "${DISTRO_FEATURES}" else ""} \
 "
 
+#Installation for ethtool
+IMAGE_INSTALL_append = " ethtool"
