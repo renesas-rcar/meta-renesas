@@ -3,7 +3,7 @@ RENESAS_GST_PLUGINS_BAD_URL ?= "gitsm://github.com/renesas-rcar/gst-plugins-bad.
 SRC_URI_remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
 SRC_URI_append = " ${RENESAS_GST_PLUGINS_BAD_URL}"
 
-SRCREV = "0b00bd6365ddd87b05242d9d2b08955cf02e474e"
+SRCREV = "0c9bd4e3fe26ec32928d2a3e93b618857ff50e26"
 
 require include/rcar-gen3-modules-common.inc
 DEPENDS += "weston libdrm mmngr-user-module linux-renesas"
