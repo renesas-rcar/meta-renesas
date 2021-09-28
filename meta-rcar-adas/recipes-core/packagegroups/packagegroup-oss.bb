@@ -49,6 +49,7 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     ${@bb.utils.contains("IMAGE_FEATURES", "ssh-server-openssh", "", "dropbear",d)} \
     e2fsprogs-resize2fs \
     avahi-daemon \
+    libdrm-tests \
 "
 
 # Various packages needed for testing
