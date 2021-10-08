@@ -10,7 +10,7 @@ SRCREV = "d641c05b9e7ea7a8b04d0eaa0815a74a9ea62709"
 
 COMPATIBLE_MACHINE = "(r8a7795|r8a7796|r8a77965|r8a77990)"
 
-DEPENDS = "libgbm wayland-kms libdrm wayland wayland-native"
+DEPENDS = "libgbm wayland-kms libdrm wayland wayland-native wayland-protocols"
 
 inherit autotools pkgconfig
 

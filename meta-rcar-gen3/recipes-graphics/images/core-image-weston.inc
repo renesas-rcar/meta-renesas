@@ -12,5 +12,4 @@ IMAGE_INSTALL:append = " \
     packagegroup-wayland-community \
     packagegroup-graphics-renesas-proprietary \
     packagegroup-graphics-renesas-wayland \
-    libx11-locale \
 "
