@@ -25,9 +25,6 @@ EXTRA_IMAGEDEPENDS += " arm-trusted-firmware optee-os"
 PREFERRED_VERSION_u-boot = "v2020.10%"
 EXTRA_IMAGEDEPENDS += " u-boot"
 
-# libdrm
-PREFERRED_VERSION_libdrm = "2.4.101"
-
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"
 
