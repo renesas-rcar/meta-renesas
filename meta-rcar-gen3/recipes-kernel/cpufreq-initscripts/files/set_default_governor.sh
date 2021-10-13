@@ -1,16 +1,17 @@
 #!/bin/sh
 
-timeout="10"
-i="0"
+DIR="/sys/devices/system/cpu/cpufreq/"
 
-while [ $i -lt $timeout ]
-do
-	if [ -e  /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]
-	then
-		echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-		break
-	else
-		i=$((i + 1))
-		sleep 1
-	fi
+COUNT="`ls $DIR |  grep policy  | wc -l`"
+
+var=`ls $DIR | grep policy`
+vars=( $var )
+
+while [ $COUNT -gt 0 ]; do
+
+echo performance > /sys/devices/system/cpu/cpufreq/${vars[$COUNT - 1]}/scaling_governor
+
+let COUNT=COUNT-1
 done
+
+true
