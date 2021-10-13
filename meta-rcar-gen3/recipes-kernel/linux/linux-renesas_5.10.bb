@@ -12,8 +12,8 @@ COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.10.41/rcar-5.1.1"
-SRCREV = "3e1beedbebfb92917a715b6c8438403de9e644d8"
+BRANCH = "v5.10.41/rcar-5.1.4"
+SRCREV = "4846ef7755062737891d10bf15da4721bfb79b04"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
@@ -33,11 +33,6 @@ SRC_URI_append = " \
 # Add module.lds
 SRC_URI_append = " \
     file://0001-scripts-Add-module.lds-to-fix-out-of-tree-modules-bu.patch \
-"
-
-# Add OP-TEE node for R8A77995
-SRC_URI_append = " \
-    file://0001-arm64-dts-r8a77995-Add-optee-node.patch \
 "
 
 # Enable RPMSG_VIRTIO depend on ICCOM
@@ -93,6 +88,16 @@ do_compile_kernelmodules_append () {
             install -Dm 0644 ${B}/scripts/module.lds ${STAGING_KERNEL_BUILDDIR}/scripts/module.lds
         fi
     fi
+}
+ 
+do_deploy_append() {
+    # Remove the redundant device tree file (<device_tree>-<MACHINE>.dtb) that was created in the deploy directory
+    for dtbf in ${KERNEL_DEVICETREE}; do
+        dtb=`normalize_dtb "$dtbf"`
+        dtb_ext=${dtb##*.}
+        dtb_base_name=`basename $dtb .$dtb_ext`
+        rm -f $deployDir/$dtb_base_name-${KERNEL_DTB_LINK_NAME}.$dtb_ext
+    done
 }
 
 # uio_pdrv_genirq configuration
