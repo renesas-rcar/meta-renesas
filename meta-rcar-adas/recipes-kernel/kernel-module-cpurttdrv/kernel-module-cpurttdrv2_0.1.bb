@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = " \
 inherit module
 
 RENESAS_CPURTTDRV_URL ?= "git://github.com/renesas-rcar/cpurttdrv2.git"
-SRCREV = "778086c72c30648a65b6e08d0437bdc25348d0f3"
+SRCREV = "798cf8bb3c3b2d16ded86a345fb2152e07eab71e"
 
 SRC_URI = "${RENESAS_CPURTTDRV_URL};nobranch=1"
 
