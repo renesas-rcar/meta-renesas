@@ -10,7 +10,7 @@ S = "${WORKDIR}/git"
 MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 
 # Support HW overlay mode
-SRC_URI_append = "\
+SRC_URI:append = "\
     file://0001-mmngr_drv-mmngrbuf-Take-care-of-any-migration-of-sca.patch \
 "
 
@@ -52,8 +52,8 @@ PACKAGES = "\
     ${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/mmngrbuf.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-mmngrbuf"
+RPROVIDES:${PN} += "kernel-module-mmngrbuf"

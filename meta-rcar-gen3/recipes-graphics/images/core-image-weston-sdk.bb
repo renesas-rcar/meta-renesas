@@ -12,4 +12,4 @@ IMAGE_FEATURES += " \
     ssh-server-openssh \
 "
 
-IMAGE_INSTALL_append = " kernel-devsrc ltp"
+IMAGE_INSTALL:append = " kernel-devsrc ltp"

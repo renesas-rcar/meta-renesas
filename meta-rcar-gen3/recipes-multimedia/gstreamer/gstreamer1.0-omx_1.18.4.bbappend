@@ -1,9 +1,9 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/:"
 
 RENESAS_OMX_URL ?= "gitsm://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3e/1.18.4"
 
-SRC_URI_remove = "https://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
-SRC_URI_append = " \
+SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
+SRC_URI:append = " \
     ${RENESAS_OMX_URL} \
     file://gstomx.conf \
 "
@@ -22,14 +22,14 @@ S = "${WORKDIR}/git"
 
 GSTREAMER_1_0_OMX_TARGET = "rcar"
 GSTREAMER_1_0_OMX_CORE_NAME = "${libdir}/libomxr_core.so"
-EXTRA_OEMESON_append = " -Dheader_path=${STAGING_DIR_TARGET}/usr/local/include"
+EXTRA_OEMESON:append = " -Dheader_path=${STAGING_DIR_TARGET}/usr/local/include"
 
-do_configure_prepend() {
+do_configure:prepend() {
     cd ${S}
     install -m 0644 ${WORKDIR}/gstomx.conf ${S}/config/rcar/
     sed -i 's,@RENESAS_DATADIR@,${RENESAS_DATADIR},g' ${S}/config/rcar/gstomx.conf
     cd ${B}
 }
 
-RDEPENDS_${PN}_append = " omx-user-module"
-RDEPENDS_${PN}_remove = "libomxil"
+RDEPENDS:${PN}:append = " omx-user-module"
+RDEPENDS:${PN}:remove = "libomxil"

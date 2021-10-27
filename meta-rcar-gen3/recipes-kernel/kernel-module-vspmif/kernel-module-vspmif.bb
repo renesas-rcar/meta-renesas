@@ -59,8 +59,8 @@ PACKAGES = "\
     ${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vspm_if.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-vspmif kernel-module-vspm-if"
+RPROVIDES:${PN} += "kernel-module-vspmif kernel-module-vspm-if"

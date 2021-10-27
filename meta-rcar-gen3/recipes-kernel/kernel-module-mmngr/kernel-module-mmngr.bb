@@ -10,11 +10,11 @@ PR = "r0"
 S = "${WORKDIR}/git"
 MMNGR_DRV_DIR = "mmngr_drv/mmngr/mmngr-module/files/mmngr"
 
-MMNGR_CFG_salvator-x = "MMNGR_SALVATORX"
-MMNGR_CFG_h3ulcb = "MMNGR_SALVATORX"
-MMNGR_CFG_m3ulcb = "MMNGR_SALVATORX"
-MMNGR_CFG_m3nulcb = "MMNGR_SALVATORX"
-MMNGR_CFG_ebisu = "MMNGR_EBISU"
+MMNGR_CFG:salvator-x = "MMNGR_SALVATORX"
+MMNGR_CFG:h3ulcb = "MMNGR_SALVATORX"
+MMNGR_CFG:m3ulcb = "MMNGR_SALVATORX"
+MMNGR_CFG:m3nulcb = "MMNGR_SALVATORX"
+MMNGR_CFG:ebisu = "MMNGR_EBISU"
 
 includedir = "${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
@@ -67,8 +67,8 @@ PACKAGES = "\
     ${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/mmngr.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-mmngr"
+RPROVIDES:${PN} += "kernel-module-mmngr"

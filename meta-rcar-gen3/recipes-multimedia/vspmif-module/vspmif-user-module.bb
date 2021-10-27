@@ -44,6 +44,6 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 
-RPROVIDES_${PN} += "vspmif-user-module"
-INSANE_SKIP_${PN} += "libdir"
-INSANE_SKIP_${PN}-dev += "libdir"
+RPROVIDES:${PN} += "vspmif-user-module"
+INSANE_SKIP:${PN} += "libdir"
+INSANE_SKIP:${PN}-dev += "libdir"

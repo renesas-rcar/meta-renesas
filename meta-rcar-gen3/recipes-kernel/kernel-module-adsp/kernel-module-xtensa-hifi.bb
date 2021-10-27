@@ -10,24 +10,24 @@ inherit module features_check
 
 REQUIRED_DISTRO_FEATURES = "adsp"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/xtensa-hifi:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/xtensa-hifi:"
 
 SRC_URI = "file://RTM8RC0000ZNA2DS00JFL3E.tar.gz"
 
 S = "${WORKDIR}/RTM8RC0000ZNA2DS00JFL3E"
 
 # Define the extra config for using module.bbclass to build ADSP driver
-EXTRA_OEMAKE_append = " KDIR=${STAGING_KERNEL_DIR}"
+EXTRA_OEMAKE:append = " KDIR=${STAGING_KERNEL_DIR}"
 
 # Build ADSP kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
 # Enable build target for E3 board
-do_configure_prepend_r8a77990(){
+do_configure:prepend_r8a77990(){
     sed -i 's|-DTARGET_BOARD_E3=0|-DTARGET_BOARD_E3=1|g' ${S}/Kbuild
 }
 
-do_install_append(){
+do_install:append(){
     # Create install directories
     install -d ${D}/${includedir}
     install -d ${D}/${includedir}/sys/xt-shmem
@@ -38,4 +38,4 @@ do_install_append(){
 }
 
 # The ADSP driver need adsp firmware for running
-RDEPENDS_${PN}_append = " adsp-fw-module"
+RDEPENDS:${PN}:append = " adsp-fw-module"

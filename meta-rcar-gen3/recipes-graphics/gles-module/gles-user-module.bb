@@ -13,12 +13,12 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 S = "${WORKDIR}/rogue"
 GLES = "gsx"
 
-SRC_URI_r8a7795 = "file://r8a77951_linux_gsx_binaries_gles.tar.bz2"
-SRC_URI_r8a7796 = "file://r8a77960_linux_gsx_binaries_gles.tar.bz2"
-SRC_URI_r8a77965 = "file://r8a77965_linux_gsx_binaries_gles.tar.bz2"
-SRC_URI_r8a77990 = "file://r8a77990_linux_gsx_binaries_gles.tar.bz2"
+SRC_URI:r8a7795 = "file://r8a77951_linux_gsx_binaries_gles.tar.bz2"
+SRC_URI:r8a7796 = "file://r8a77960_linux_gsx_binaries_gles.tar.bz2"
+SRC_URI:r8a77965 = "file://r8a77965_linux_gsx_binaries_gles.tar.bz2"
+SRC_URI:r8a77990 = "file://r8a77990_linux_gsx_binaries_gles.tar.bz2"
 
-SRC_URI_append = " \
+SRC_URI:append = " \
     file://change-shell.patch \
     file://rc.pvr.service \
 "
@@ -27,7 +27,7 @@ inherit update-rc.d systemd
 
 INITSCRIPT_NAME = "pvrinit"
 INITSCRIPT_PARAMS = "start 7 5 2 . stop 62 0 1 6 ."
-SYSTEMD_SERVICE_${PN} = "rc.pvr.service"
+SYSTEMD_SERVICE:${PN} = "rc.pvr.service"
 
 do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
@@ -95,7 +95,7 @@ PACKAGES = "\
     ${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${sysconfdir}/* \
     ${libdir}/* \
     /lib/firmware/rgx.fw* \
@@ -104,13 +104,13 @@ FILES_${PN} = " \
     ${exec_prefix}/bin/* \
 "
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${includedir}/* \
     ${libdir}/pkgconfig/* \
 "
 
 PROVIDES = "virtual/libgles2"
-RPROVIDES_${PN} += " \
+RPROVIDES:${PN} += " \
     ${GLES}-user-module \
     libgles2-mesa \
     libgles2-mesa-dev \
@@ -118,19 +118,19 @@ RPROVIDES_${PN} += " \
     libgles2-dev \
 "
 
-RDEPENDS_${PN} = " \
+RDEPENDS:${PN} = " \
     kernel-module-gles \
     ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'libgbm wayland-kms', '', d)} \
 "
 
-INSANE_SKIP_${PN} = "ldflags build-deps file-rdeps"
-INSANE_SKIP_${PN}-dev = "ldflags build-deps file-rdeps"
-INSANE_SKIP_${PN} += "arch"
-INSANE_SKIP_${PN}-dev += "arch"
-INSANE_SKIP_${PN}-dbg = "arch"
+INSANE_SKIP:${PN} = "ldflags build-deps file-rdeps"
+INSANE_SKIP:${PN}-dev = "ldflags build-deps file-rdeps"
+INSANE_SKIP:${PN} += "arch"
+INSANE_SKIP:${PN}-dev += "arch"
+INSANE_SKIP:${PN}-dbg = "arch"
 
 #To avoid already-stripped errors and not stripped libs from packages
-INSANE_SKIP_${PN} += "already-stripped"
+INSANE_SKIP:${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

@@ -53,9 +53,9 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-INSANE_SKIP_${PN} += "dev-so"
+INSANE_SKIP:${PN} += "dev-so"
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${libdir}/*.so* \
     ${includedir} \
 "

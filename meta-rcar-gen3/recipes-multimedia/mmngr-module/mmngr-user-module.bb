@@ -16,7 +16,7 @@ bindir = "${RENESAS_DATADIR}/bin"
 includedir = "${RENESAS_DATADIR}/include"
 CFLAGS += " -I${STAGING_DIR_HOST}${RENESAS_DATADIR}/include"
 
-do_install_append() {
+do_install:append() {
     if [ -f ${D}${RENESAS_DATADIR}/bin/mmtp ]; then
         if [ X${WS} = "X32" ]; then
             mv ${D}${RENESAS_DATADIR}/bin/mmtp ${D}${RENESAS_DATADIR}/bin/mmtp${WS}

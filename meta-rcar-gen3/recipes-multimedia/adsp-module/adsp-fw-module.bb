@@ -27,6 +27,6 @@ PACKAGES = " \
     ${PN} \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/firmware \
 "

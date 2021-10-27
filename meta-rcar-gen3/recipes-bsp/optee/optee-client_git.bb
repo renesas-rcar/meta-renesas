@@ -14,7 +14,7 @@ SRC_URI += " \
 "
 
 inherit python3native systemd
-SYSTEMD_SERVICE_${PN} = "optee.service"
+SYSTEMD_SERVICE:${PN} = "optee.service"
 
 COMPATIBLE_MACHINE = "salvator-x|ulcb|ebisu|draak"
 
@@ -23,7 +23,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 S = "${WORKDIR}/git"
 
 # Recipe which fail to compile when enabling _FORTIFY_SOURCE=2 option
-SECURITY_CFLAGS_pn-optee-client = ""
+SECURITY_CFLAGS:pn-optee-client = ""
 
 EXTRA_OEMAKE = "RPMB_EMU=0"
 
@@ -52,7 +52,7 @@ do_install () {
 }
 
 # install the tee-supplicant for 64 bit only.
-do_install_append_aarch64 () {
+do_install:append:aarch64 () {
     # Create destination directory
     install -d ${D}/${bindir}
 
@@ -60,4 +60,4 @@ do_install_append_aarch64 () {
     install -m 0755 ${S}/out/export/usr/sbin/tee-supplicant ${D}/${bindir}
 }
 
-RPROVIDES_${PN} += "optee-client"
+RPROVIDES:${PN} += "optee-client"

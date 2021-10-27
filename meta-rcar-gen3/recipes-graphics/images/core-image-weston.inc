@@ -7,7 +7,7 @@ GSTREAMER_PKGS = "packagegroup-gstreamer1.0-plugins"
 # Install packages for Wayland Env
 # default: Basic packages, Gstreamer packages
 # optional: GFX packages
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     ${GSTREAMER_PKGS} \
     packagegroup-wayland-community \
     packagegroup-graphics-renesas-proprietary \

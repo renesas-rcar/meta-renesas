@@ -127,26 +127,26 @@ Draak|MACHINE = "draak"
 * Configure for systemd init in local.conf:
 
 ```bash
-    DISTRO_FEATURES_append = " systemd"
+    DISTRO_FEATURES:append = " systemd"
     VIRTUAL-RUNTIME_init_manager = "systemd"
 ```
 
 * Configure for ivi-shell and ivi-extension
 
 ```bash
-    DISTRO_FEATURES_append = " ivi-shell"
+    DISTRO_FEATURES:append = " ivi-shell"
 ```
 
 * Configure for USB 3.0
 
 ```bash
-    MACHINE_FEATURES_append = " usb3"
+    MACHINE_FEATURES:append = " usb3"
 ```
 
 * Enable tuning support for Capacity Aware migration Strategy (CAS)
 
 ```bash
-    MACHINE_FEATURES_append = " cas"
+    MACHINE_FEATURES:append = " cas"
 ```
 
 * For a list of sample local.conf file, please refer to: [docs/sample/conf/](docs/sample/conf/)
@@ -181,7 +181,7 @@ Should define the staticdev in SDK image feature for installing the static libs
 to SDK in local.conf.
 
 ```bash
-    SDKIMAGE_FEATURES_append = " staticdev-pkgs"
+    SDKIMAGE_FEATURES:append = " staticdev-pkgs"
 ```
 
 ### For 64-bit target SDK (aarch64)

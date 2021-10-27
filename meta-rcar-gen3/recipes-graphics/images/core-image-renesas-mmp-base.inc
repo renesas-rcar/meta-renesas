@@ -88,7 +88,7 @@ MMP_32BIT_PKGS = " \
 "
 
 # Install pkg selection
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     ${@oe.utils.conditional("USE_MULTIMEDIA", "1", " ${MULTIMEDIA_PKGS}", "", d)} \
     ${@oe.utils.conditional("USE_MULTIMEDIA_TP", "1", " ${MULTIMEDIA_TP_PKGS}", "", d)} \
     ${@oe.utils.conditional("USE_OMX_USER_MODULE", "1", " ${OMX_MULTIMEDIA_PKGS}", "", d)} \

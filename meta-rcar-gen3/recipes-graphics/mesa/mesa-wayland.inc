@@ -2,16 +2,16 @@
 PACKAGECONFIG[gles] = "-Dgles1=true -Dgles2=false, -Dgles1=false -Dgles2=false"
 
 # Disable the gbm modules of mesa
-PACKAGECONFIG_remove = "gbm"
+PACKAGECONFIG:remove = "gbm"
 
 # Remove egl packages. These are provided in other recipes.
-PACKAGES_remove = " \
+PACKAGES:remove = " \
     libgbm-dev libgbm \
     libegl-mesa-dev libegl-mesa \
     libgles2-mesa libgles2-mesa-dev \
 "
 
-do_install_append() {
+do_install:append() {
     # Remove libegl-mesa modules and headers
     rm -f ${D}/${libdir}/libEGL.la
     rm -f ${D}/${libdir}/libEGL.so*

@@ -102,12 +102,12 @@ For wayland with GSX
 
 ```bash
     # Enable Gfx Pkgs
-    MACHINE_FEATURES_append = " gsx"
+    MACHINE_FEATURES:append = " gsx"
     MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
 
     # for Wayland/Weston
-    DISTRO_FEATURES_NATIVESDK_append = " wayland"
-    DISTRO_FEATURES_append = " pam"
+    DISTRO_FEATURES_NATIVESDK:append = " wayland"
+    DISTRO_FEATURES:append = " pam"
     PREFERRED_PROVIDER_virtual/libgles1 = ""
     PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
     PREFERRED_PROVIDER_virtual/egl = "libegl"
@@ -137,7 +137,7 @@ Multimedia portions depend on GLES portions.
     # This provides package group of plug-ins of the GStreamer, multimedia
     # libraries and kernel drivers.
 
-        MACHINE_FEATURES_append = " multimedia"
+        MACHINE_FEATURES:append = " multimedia"
 ```
 
 ### B/ Configuration for optional codecs and middleware
@@ -145,7 +145,7 @@ Multimedia portions depend on GLES portions.
 
 * Please copy proprietary libraries to the directory of recipes.
 
-* Add features to DISTRO_FEATURES_append to local.conf
+* Add features to DISTRO_FEATURES:append to local.conf
 
 ```bash
     # Additional configuration in OMX module
@@ -186,7 +186,7 @@ Multimedia portions depend on GLES portions.
 
 Ex:
 ```
-    DISTRO_FEATURES_append = " h264dec_lib h265dec_lib mpeg2dec_lib aaclcdec_lib aaclcdec_mdw"
+    DISTRO_FEATURES:append = " h264dec_lib h265dec_lib mpeg2dec_lib aaclcdec_lib aaclcdec_mdw"
 ```
 
 ### C/ Configuration for test packages
@@ -195,12 +195,12 @@ Ex:
 Must ensure that Multimedia features have been enabled.
 (Please refer to III/A to enable Multimedia.)
 
-* Please add feature to DISTRO_FEATURES_append to local.conf.
+* Please add feature to DISTRO_FEATURES:append to local.conf.
 
 ```bash
     # Configuration for multimedia test package
 
-        DISTRO_FEATURES_append = " mm-test"
+        DISTRO_FEATURES:append = " mm-test"
 ```
 
 ## IV/ Enable Linux ICCOM driver and Linux ICCOM library
@@ -213,7 +213,7 @@ For Linux ICCOM driver and Linux ICCOM library
 * Please set local.conf the following.
 
 ```bash
-    DISTRO_FEATURES_append = " iccom"
+    DISTRO_FEATURES:append = " iccom"
 ```
 
 ## V/ Enable Image Renderer and OS Abstract Library in Poky toolchain
@@ -223,8 +223,8 @@ For Linux ICCOM driver and Linux ICCOM library
 * Set local.conf as following:
 
 ```bash
-DISTRO_FEATURES_append = " osal"   # for OSAL Library Package for Linux
-DISTRO_FEATURES_append = " imr"    # for IMR Library Package for Linux
+DISTRO_FEATURES:append = " osal"   # for OSAL Library Package for Linux
+DISTRO_FEATURES:append = " imr"    # for IMR Library Package for Linux
 ```
 
 END.

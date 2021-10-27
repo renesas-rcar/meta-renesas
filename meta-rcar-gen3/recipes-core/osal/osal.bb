@@ -29,13 +29,13 @@ PACKAGES = " \
     ${PN}-staticdev \
 "
 
-FILES_${PN} = ""
-ALLOW_EMPTY_${PN} = "1"
+FILES:${PN} = ""
+ALLOW_EMPTY:${PN} = "1"
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     /usr/include/rcar-xos/osal/*.h \
 "
 
-FILES_${PN}-staticdev = " \
+FILES:${PN}-staticdev = " \
     /usr/lib/libosal_wrapper.a \
 "

@@ -86,11 +86,11 @@ PACKAGES = " \
     ${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vspm.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-vspm"
+RPROVIDES:${PN} += "kernel-module-vspm"
 
 # Autoload VSPM
-KERNEL_MODULE_AUTOLOAD_append = " vspm"
+KERNEL_MODULE_AUTOLOAD:append = " vspm"

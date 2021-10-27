@@ -15,7 +15,7 @@ UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
 UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"
 UBOOT_SREC_SYMLINK ?= "u-boot-elf-${MACHINE}.${UBOOT_SREC_SUFFIX}"
 
-do_deploy_append() {
+do_deploy:append() {
     if [ -n "${UBOOT_CONFIG}" ]
     then
         for config in ${UBOOT_MACHINE}; do

@@ -22,15 +22,15 @@ PACKAGES = " \
     ${PN}-staticdev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${libdir}/libgbm.so.* \
     ${libdir}/gbm/libgbm_kms.so.* \
     ${libdir}/gbm/*.so \
     ${libdir}/*.so \
 "
-FILES_${PN}-dev += "${libdir}/gbm/*.la"
-FILES_${PN}-dbg += "${libdir}/gbm/.debug/*"
-FILES_${PN}-staticdev += "${libdir}/gbm/*.a"
+FILES:${PN}-dev += "${libdir}/gbm/*.la"
+FILES:${PN}-dbg += "${libdir}/gbm/.debug/*"
+FILES:${PN}-staticdev += "${libdir}/gbm/*.a"
 
-INSANE_SKIP_${PN} += "dev-so"
+INSANE_SKIP:${PN} += "dev-so"
 PROVIDES += "virtual/libgbm"

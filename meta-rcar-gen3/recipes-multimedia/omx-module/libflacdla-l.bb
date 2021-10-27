@@ -15,7 +15,7 @@ B = "${S}/build/linux_armyocto/lib"
 EXTRA_OEMAKE = "ARCH=${ARCH}"
 
 ARCH = "arm"
-ARCH_aarch64 = "arm64"
+ARCH:aarch64 = "arm64"
 
 do_install() {
     # Create directories
@@ -34,17 +34,17 @@ do_install() {
     install -m 644 ${S}/lib/flacd_Lib.h ${D}/${includedir}/
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${libdir}/libFLACDLA_L.so.* \
     ${libdir}/libFLACDLA_L.so \
 "
 
-FILES_${PN}-dev = "${includedir}/*.h"
+FILES:${PN}-dev = "${includedir}/*.h"
 
-INSANE_SKIP_${PN} += "dev-so"
+INSANE_SKIP:${PN} += "dev-so"
 
 #To avoid already-stripped errors and not stripped libs from packages
-INSANE_SKIP_${PN} += "already-stripped"
+INSANE_SKIP:${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

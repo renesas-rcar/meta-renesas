@@ -1,13 +1,13 @@
 require include/gles-control.inc
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI_append_rcar-gen3 = " \
+SRC_URI:append:rcar-gen3 = " \
     file://weston.ini \
     file://weston.sh \
 "
 
-do_install_append_rcar-gen3() {
+do_install:append:rcar-gen3() {
     install -d ${D}/${sysconfdir}/xdg/weston
     # install weston.ini as sample settings of gl-renderer
     install -m 644 ${WORKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/
@@ -31,7 +31,7 @@ do_install_append_rcar-gen3() {
     install -m 0755 ${WORKDIR}/weston.sh ${D}/${sysconfdir}/profile.d/weston.sh
 }
 
-FILES_${PN}_append_rcar-gen3 = " \
+FILES:${PN}:append:rcar-gen3 = " \
     ${sysconfdir}/profile.d/weston.sh \
 "
 

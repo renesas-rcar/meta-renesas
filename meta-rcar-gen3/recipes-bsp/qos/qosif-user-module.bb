@@ -41,8 +41,8 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${libdir}/libqos.so* \
 "
 
-INSANE_SKIP_${PN} = "dev-so"
+INSANE_SKIP:${PN} = "dev-so"

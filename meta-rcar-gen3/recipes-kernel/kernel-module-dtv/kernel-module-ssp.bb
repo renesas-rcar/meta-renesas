@@ -50,9 +50,9 @@ PACKAGES = "\
     ${PN} \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/ssp_dev.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-ssp"
+RPROVIDES:${PN} += "kernel-module-ssp"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

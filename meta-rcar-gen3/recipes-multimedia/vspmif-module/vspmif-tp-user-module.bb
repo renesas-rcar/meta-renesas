@@ -10,8 +10,8 @@ S = "${WORKDIR}/git"
 VSPMIF_TP_DIR = "vspm_if-tp-user/files/vspm_if"
 
 # Get Wordsize of test app and change their names later to avoid override
-WS_aarch64 = ""
-WS_virtclass-multilib-lib32 = "32"
+WS:aarch64 = ""
+WS:virtclass-multilib-lib32 = "32"
 
 do_compile() {
     cd ${S}/${VSPMIF_TP_DIR}
@@ -36,11 +36,11 @@ PACKAGES = "\
     ${PN} \
     ${PN}-dbg \
 "
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${@oe.utils.conditional('WS', '32', '${RENESAS_DATADIR}/bin/vspm_tp32 ${RENESAS_DATADIR}/bin/fdpm_tp32', \
     '${RENESAS_DATADIR}/bin/vspm_tp ${RENESAS_DATADIR}/bin/fdpm_tp', d)}"
 
-FILES_${PN}-dbg = " \
+FILES:${PN}-dbg = " \
     ${RENESAS_DATADIR}/bin/.debug/*"
 
-RPROVIDES_${PN} += "vspmif-tp-user-module"
+RPROVIDES:${PN} += "vspmif-tp-user-module"

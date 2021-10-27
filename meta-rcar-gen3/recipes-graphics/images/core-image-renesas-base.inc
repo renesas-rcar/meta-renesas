@@ -3,7 +3,7 @@ require include/iccom-control.inc
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 
 # Basic packages
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     bash \
     v4l-utils \
     i2c-tools \
@@ -11,7 +11,7 @@ IMAGE_INSTALL_append = " \
 "
 
 # Support secure environment
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     optee-client \
 "
 
@@ -20,13 +20,13 @@ OVERRIDES .= ":${TARGET_SYS}"
 
 # Qos user packages only supports 64bit.
 QOS_USER_PKGS = ""
-QOS_USER_PKGS_aarch64-poky-linux = " \
+QOS_USER_PKGS:aarch64-poky-linux = " \
     qosif-user-module \
     qosif-tp-user-module \
 "
 
 # Installation for QoS packages
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     kernel-module-qos \
     ${QOS_USER_PKGS} \
 "
@@ -39,7 +39,7 @@ BASIC_32BIT_PKGS = " \
 "
 
 # Installation for 32bit packages
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     ${@oe.utils.conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
 "
 
@@ -51,7 +51,7 @@ ICCOM_KERNEL_PKGS = " \
 
 # User modules of ICCOM only supports 64bit
 ICCOM_USER_PKGS = ""
-ICCOM_USER_PKGS_aarch64-poky-linux = " \
+ICCOM_USER_PKGS:aarch64-poky-linux = " \
     iccom-user-module \
     iccom-tp-user-module \
 "
@@ -63,7 +63,7 @@ ICCOM_PKGS = " \
 "
 
 # Installation for ICCOM Packages
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     ${@oe.utils.conditional("USE_ICCOM", "1", " ${ICCOM_PKGS}", "", d)} \
 "
 
@@ -74,27 +74,27 @@ SAFE_RENDERING_KERNEL_PKGS = " \
     kernel-module-virtio-rpmsg-bus \
 "
 
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     ${@oe.utils.conditional("USE_SAFE_RENDERING", "1", "${SAFE_RENDERING_KERNEL_PKGS}", "", d)} \
 "
 
 # Initscript for setting CPUFreq governor
-IMAGE_INSTALL_append = " cpufreq-initscripts"
+IMAGE_INSTALL:append = " cpufreq-initscripts"
 
 # Kernel modules of CMEMDRV
-IMAGE_INSTALL_append = " kernel-module-cmemdrv"
+IMAGE_INSTALL:append = " kernel-module-cmemdrv"
 
 # Kernel module UIO
-IMAGE_INSTALL_append = " kernel-module-uio-pdrv-genirq"
+IMAGE_INSTALL:append = " kernel-module-uio-pdrv-genirq"
 
 # OSAL package
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     ${@"osal" if "osal" in "${DISTRO_FEATURES}" else ""} \
 "
 # IMR package
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
     ${@"imr" if "imr" in "${DISTRO_FEATURES}" else ""} \
 "
 
 #Installation for ethtool
-IMAGE_INSTALL_append = " ethtool"
+IMAGE_INSTALL:append = " ethtool"

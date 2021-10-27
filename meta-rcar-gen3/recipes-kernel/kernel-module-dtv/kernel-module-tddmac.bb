@@ -50,9 +50,9 @@ PACKAGES = "\
     ${PN} \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/tddmac.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-tddmac"
+RPROVIDES:${PN} += "kernel-module-tddmac"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

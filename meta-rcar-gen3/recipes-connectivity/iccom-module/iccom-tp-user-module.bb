@@ -46,7 +46,7 @@ do_install() {
     install -m 755 ${S}/sample_pvconv/sample_pvconv ${D}${RENESAS_DATADIR}/bin/
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${RENESAS_DATADIR}/bin/sample_test \
     ${RENESAS_DATADIR}/bin/sample_test_fatal \
     ${RENESAS_DATADIR}/bin/sample_sharedmem \

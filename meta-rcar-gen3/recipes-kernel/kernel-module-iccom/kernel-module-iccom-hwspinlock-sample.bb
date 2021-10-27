@@ -29,6 +29,6 @@ do_install () {
     install -m 644 ${B}/iccom_hwspinlock_sample.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/iccom_hwspinlock_sample.ko \
 "

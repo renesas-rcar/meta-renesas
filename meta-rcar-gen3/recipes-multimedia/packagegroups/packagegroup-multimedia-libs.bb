@@ -15,7 +15,7 @@ PACKAGES = " \
     packagegroup-multimedia-libs \
 "
 
-RDEPENDS_packagegroup-multimedia-libs = " \
+RDEPENDS:packagegroup-multimedia-libs = " \
     mmngr-user-module mmngrbuf-user-module \
     vspmif-user-module \
     libalacdla-l libflacdla-l \

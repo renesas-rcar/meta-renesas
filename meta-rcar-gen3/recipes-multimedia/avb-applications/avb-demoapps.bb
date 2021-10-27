@@ -18,7 +18,7 @@ includedir = "${RENESAS_DATADIR}/include"
 
 EXTRA_OEMAKE = "'CC=${CC}' 'AR=${AR}'"
 
-do_install_append() {
+do_install:append() {
     oe_runmake install INSTALL_DIR=${D}/${bindir}
 
     # Create install directories
@@ -59,13 +59,13 @@ PACKAGES =+ " \
     ${PN}-avblauncher \
 "
 
-ALLOW_EMPTY_${PN} = "1"
+ALLOW_EMPTY:${PN} = "1"
 
-FILES_${PN}-mrpdummy = " \
+FILES:${PN}-mrpdummy = " \
     ${bindir}/mrpdummy \
 "
 
-FILES_${PN}-avblauncher = " \
+FILES:${PN}-avblauncher = " \
     ${sysconfdir}/daemon_cl/gptp_cfg.ini \
     ${sysconfdir}/avblauncher/mse_aaf_pcm.sh \
     ${sysconfdir}/avblauncher/mse_aaf_pcm_listener.ini \
@@ -92,17 +92,17 @@ FILES_${PN}-avblauncher = " \
     ${bindir}/avblauncher \
 "
 
-FILES_${PN}-simple = " \
+FILES:${PN}-simple = " \
     ${sysconfdir}/linuxptp/avb-demoapps.cfg \
     ${bindir}/simple_talker \
     ${bindir}/simple_listener \
 "
 
-RDEPENDS_${PN} = " \
+RDEPENDS:${PN} = " \
     ${PN}-simple \
     ${PN}-avblauncher \
 "
 
-RDEPENDS_${PN}-avblauncher = " \
+RDEPENDS:${PN}-avblauncher = " \
     ${PN}-mrpdummy \
 "

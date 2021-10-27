@@ -27,7 +27,7 @@ PACKAGES = " \
     packagegroup-gstreamer1.0-plugins-debug \
 "
 
-RDEPENDS_packagegroup-gstreamer1.0-plugins = " \
+RDEPENDS:packagegroup-gstreamer1.0-plugins = " \
     packagegroup-gstreamer1.0-plugins-base \
     packagegroup-gstreamer1.0-plugins-audio \
     packagegroup-gstreamer1.0-plugins-video \
@@ -35,7 +35,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins = " \
     packagegroup-gstreamer1.0-plugins-debug \
 "
 
-RDEPENDS_packagegroup-gstreamer1.0-plugins-base = " \
+RDEPENDS:packagegroup-gstreamer1.0-plugins-base = " \
     gstreamer1.0-meta-base \
     gstreamer1.0-plugins-base-typefindfunctions \
     gstreamer1.0-plugins-good-id3demux \
@@ -43,7 +43,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-base = " \
     ${@oe.utils.conditional("USE_OMX_COMMON", "1", "gstreamer1.0-plugin-vspfilter", "", d)} \
 "
 
-RDEPENDS_packagegroup-gstreamer1.0-plugins-audio = " \
+RDEPENDS:packagegroup-gstreamer1.0-plugins-audio = " \
     gstreamer1.0-meta-audio \
     gstreamer1.0-plugins-good-audioparsers \
     gstreamer1.0-plugins-base-audiotestsrc \
@@ -54,7 +54,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-audio = " \
     gstreamer1.0-plugins-base-vorbis \
 "
 
-RDEPENDS_packagegroup-gstreamer1.0-plugins-video = " \
+RDEPENDS:packagegroup-gstreamer1.0-plugins-video = " \
     gstreamer1.0-meta-video \
     gstreamer1.0-plugins-base-videotestsrc \
     gstreamer1.0-plugins-base-videoconvert \
@@ -79,10 +79,10 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-video = " \
     gstreamer1.0-libav \
 "
 
-RDEPENDS_packagegroup-gstreamer1.0-omx = " \
+RDEPENDS:packagegroup-gstreamer1.0-omx = " \
     ${@oe.utils.conditional("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)} \
 "
 
-RDEPENDS_packagegroup-gstreamer1.0-plugins-debug = " \
+RDEPENDS:packagegroup-gstreamer1.0-plugins-debug = " \
     gstreamer1.0-meta-debug \
 "

@@ -29,7 +29,7 @@ B="${S}/src/makefile"
 
 includedir = "${RENESAS_DATADIR}/include"
 
-do_compile_prepend() {
+do_compile:prepend() {
     export UVCS_SRC="${S}/src"
     export UVCS_INC="${S}"
     export VCP4_SRC="${S}/src"
@@ -65,6 +65,6 @@ PACKAGES = " \
     ${PN}-sstate \
 "
 
-FILES_${PN}-sstate = " \
+FILES:${PN}-sstate = " \
     ${includedir}/uvcs_ioctl.h \
 "

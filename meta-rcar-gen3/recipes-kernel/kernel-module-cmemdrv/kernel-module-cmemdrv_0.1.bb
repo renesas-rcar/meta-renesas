@@ -16,7 +16,7 @@ SRCREV = "464156ec1fb082db96e0d3d37e2730ead7af4432"
 
 S = "${WORKDIR}/git"
 
-do_install_append () {
+do_install:append () {
     install -d ${D}${includedir}/linux
     install -m 644 ${S}/cmemdrv.h ${D}${includedir}/linux/
 }

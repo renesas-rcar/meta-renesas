@@ -9,13 +9,13 @@ DEPENDS = "gles-user-module \
 
 PR = "r0"
 
-RDEPENDS_${PN} = " \
+RDEPENDS:${PN} = " \
     gles-user-module \
     ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'libgbm wayland-kms', '', d)} \
 "
 
 PROVIDES = "virtual/egl"
-RPROVIDES_${PN} += " \
+RPROVIDES:${PN} += " \
     libegl \
     libegl1 \
 "

@@ -39,15 +39,15 @@ PACKAGES = " \
     ${PN}-staticdev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${base_libdir}/optee_armtz/*.ta \
 "
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${RENESAS_DATADIR}/include/avc_copdvd.h \
 "
 
-FILES_${PN}-staticdev = " \
+FILES:${PN}-staticdev = " \
     ${libdir}/libcopdvd.a \
 "
 

@@ -13,7 +13,7 @@ SRCREV = "0baef8a36a13105112862919aac0f1eed21a44ea"
 SRC_URI = "git://github.com/AVnu/gptp.git;branch=master"
 
 # Fix QA issue of ldflags
-SRC_URI_append = " file://0001-Fix-QA-issue-when-build-with-Yocto.patch"
+SRC_URI:append = " file://0001-Fix-QA-issue-when-build-with-Yocto.patch"
 
 S = "${WORKDIR}/git"
 

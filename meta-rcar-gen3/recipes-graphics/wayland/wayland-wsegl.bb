@@ -17,17 +17,17 @@ inherit autotools pkgconfig
 S = "${WORKDIR}/git"
 
 # fixing multiple definition error
-SRC_URI_append = " file://0001-wayland-wsegl-fix-multiple-definition-error.patch"
+SRC_URI:append = " file://0001-wayland-wsegl-fix-multiple-definition-error.patch"
 
 PACKAGES = " \
     ${PN} \
     ${PN}-dbg \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${libdir}/libpvrWAYLAND_WSEGL.so.* \
     ${libdir}/*.so \
 "
-FILES_${PN}-dbg += "${libdir}/libpvrWAYLAND_WSEGL/.debug/*"
-INSANE_SKIP_${PN} += "dev-so"
+FILES:${PN}-dbg += "${libdir}/libpvrWAYLAND_WSEGL/.debug/*"
+INSANE_SKIP:${PN} += "dev-so"
 

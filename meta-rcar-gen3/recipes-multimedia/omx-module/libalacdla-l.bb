@@ -16,7 +16,7 @@ DEPENDS = " \
     kernel-module-vspm kernel-module-vsp2driver \
 "
 
-RDEPENDS_${PN} += "mmngr-user-module vspmif-user-module"
+RDEPENDS:${PN} += "mmngr-user-module vspmif-user-module"
 
 SRC_URI = "git://github.com/renesas-rcar/alac_decoder.git;branch=master"
 SRCREV = "5d7e5c91a932bedb36284591612bfbb3342cd672"
@@ -27,7 +27,7 @@ B = "${S}/build/linux_armyocto/lib"
 EXTRA_OEMAKE = "ARCH=${ARCH}"
 
 ARCH = "arm"
-ARCH_aarch64 = "arm64"
+ARCH:aarch64 = "arm64"
 
 do_install() {
     # Create directories
@@ -46,17 +46,17 @@ do_install() {
     install -m 644 ${S}/lib/alacd_Lib.h ${D}/${includedir}/
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${libdir}/libALACDLA_L.so.* \
     ${libdir}/libALACDLA_L.so \
 "
 
-FILES_${PN}-dev = "${includedir}/*.h"
+FILES:${PN}-dev = "${includedir}/*.h"
 
-INSANE_SKIP_${PN} += "dev-so"
+INSANE_SKIP:${PN} += "dev-so"
 
 #To avoid already-stripped errors and not stripped libs from packages
-INSANE_SKIP_${PN} += "already-stripped"
+INSANE_SKIP:${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

@@ -159,11 +159,11 @@ OMX_AUDIO_SRC_LIST = " \
 S = "${WORKDIR}/omx"
 
 # Create ${S} directory
-do_unpack_prepend() {
+do_unpack:prepend() {
     os.system("install -d ${S}")
 }
 
-do_unpack_append() {
+do_unpack:append() {
     bb.build.exec_func('setup_build_tree', d)
 }
 
@@ -449,7 +449,7 @@ do_install () {
     fi
 }
 
-do_install_append() {
+do_install:append() {
     # Create destination directory
     install -d ${D}/${libdir}
     install -d ${D}/${includedir}
@@ -465,23 +465,23 @@ do_install_append() {
     do_install_omx_audio
 }
 
-INSANE_SKIP_${PN} = "dev-so"
+INSANE_SKIP:${PN} = "dev-so"
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${libdir}/*.so \
 "
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${includedir} \
     ${libdir}/*.la \
 "
 
-RDEPENDS_${PN} += "mmngr-user-module vspmif-user-module"
-RDEPENDS_${PN} += '${@oe.utils.conditional("USE_ALACD_OMX", "1", "libalacdla-l", "", d )}'
-RDEPENDS_${PN} += '${@oe.utils.conditional("USE_FLACD_OMX", "1", "libflacdla-l", "", d )}'
+RDEPENDS:${PN} += "mmngr-user-module vspmif-user-module"
+RDEPENDS:${PN} += '${@oe.utils.conditional("USE_ALACD_OMX", "1", "libalacdla-l", "", d )}'
+RDEPENDS:${PN} += '${@oe.utils.conditional("USE_FLACD_OMX", "1", "libflacdla-l", "", d )}'
 
 #To avoid already-stripped errors and not stripped libs from packages
-INSANE_SKIP_${PN} += "already-stripped"
+INSANE_SKIP:${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

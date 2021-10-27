@@ -50,9 +50,9 @@ PACKAGES = "\
     ${PN} \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/scu_src_drv.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-scu-src kernel-module-scu-src-drv"
+RPROVIDES:${PN} += "kernel-module-scu-src kernel-module-scu-src-drv"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

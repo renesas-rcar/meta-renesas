@@ -8,7 +8,7 @@ SRCREV = "626d4b252feed93ceb134817c49f0b32ca7126a8"
 SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
 
 # Add module.lds
-SRC_URI_append = " \
+SRC_URI:append = " \
     file://0001-scripts-Add-module.lds-to-fix-out-of-tree-modules-bu.patch \
 "
 

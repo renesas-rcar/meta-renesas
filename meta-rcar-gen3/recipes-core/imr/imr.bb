@@ -24,13 +24,13 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${libdir}/libIMRDRV.so \
 "
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${includedir}/rcar-xos/imr/*.h \
 "
-FILES_${PN}-dbg += " \
+FILES:${PN}-dbg += " \
     ${libdir}/.debug/libIMRDRV.so \
 "
 

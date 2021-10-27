@@ -52,13 +52,13 @@ PACKAGES = " \
     ${PN}-staticdev \
 "
 
-FILES_${PN} = ""
-ALLOW_EMPTY_${PN} = "1"
+FILES:${PN} = ""
+ALLOW_EMPTY:${PN} = "1"
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${RENESAS_DATADIR}/include/*.h \
 "
-FILES_${PN}-staticdev = " \
+FILES:${PN}-staticdev = " \
     ${libdir}/*.a \
 "
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

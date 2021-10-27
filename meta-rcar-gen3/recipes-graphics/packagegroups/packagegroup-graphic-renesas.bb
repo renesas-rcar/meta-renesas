@@ -14,7 +14,7 @@ PACKAGES = " \
 
 PR = "r0"
 
-RDEPENDS_packagegroup-wayland-community = " \
+RDEPENDS:packagegroup-wayland-community = " \
     wayland \
     weston \
     weston-examples \
@@ -24,7 +24,7 @@ RDEPENDS_packagegroup-wayland-community = " \
     libdrm-kms \
 "
 
-RDEPENDS_packagegroup-graphics-renesas-proprietary = " \
+RDEPENDS:packagegroup-graphics-renesas-proprietary = " \
     ${@bb.utils.contains('USE_GLES', '1', \
     'kernel-module-gles gles-user-module' , \
     '', d)} \
@@ -32,7 +32,7 @@ RDEPENDS_packagegroup-graphics-renesas-proprietary = " \
 
 DEPENDS_packagegroup-graphics-renesas-wayland = "libegl"
 
-RDEPENDS_packagegroup-graphics-renesas-wayland = " \
+RDEPENDS:packagegroup-graphics-renesas-wayland = " \
     ${@bb.utils.contains('USE_GLES_WAYLAND', '1', \
     'libgbm libgbm-dev wayland-kms wayland-wsegl', \
     '', d)} \

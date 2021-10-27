@@ -49,9 +49,9 @@ PACKAGES = "\
     ${PN} \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/tsif_drv.ko \
 "
 
-RPROVIDES_${PN} += "kernel-module-tsif kernel-module-tsif-drv"
+RPROVIDES:${PN} += "kernel-module-tsif kernel-module-tsif-drv"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

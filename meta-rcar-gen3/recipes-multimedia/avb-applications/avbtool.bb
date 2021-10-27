@@ -11,7 +11,7 @@ S = "${WORKDIR}/git/avbtool"
 
 EXTRA_OEMAKE = "'CC=${CC}'"
 
-do_install_append() {
+do_install:append() {
     install -d ${D}/${bindir}
     install -m 755 ${S}/avbtool ${D}/${bindir}
 }

@@ -18,7 +18,7 @@ SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH} \
 "
 
-SRC_URI_append = " \
+SRC_URI:append = " \
     file://0001-mk-gcc.mk-Change-the-path-to-the-library.patch \
 "
 

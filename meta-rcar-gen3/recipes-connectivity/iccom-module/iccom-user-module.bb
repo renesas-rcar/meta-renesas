@@ -31,11 +31,11 @@ do_install() {
     install -m 644 ${S}/include/iccom_if_app.h ${D}${RENESAS_DATADIR}/include/
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${libdir}/libiccom.so \
 "
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${RENESAS_DATADIR}/include/iccom_if_app.h \
 "
 

@@ -29,9 +29,9 @@ do_install () {
     install -m 644 ${B}/iccom_mfis.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/iccom_mfis.ko \
 "
 
 # Autoload ICCOM MFIS Driver
-KERNEL_MODULE_AUTOLOAD_append = " iccom_mfis"
+KERNEL_MODULE_AUTOLOAD:append = " iccom_mfis"

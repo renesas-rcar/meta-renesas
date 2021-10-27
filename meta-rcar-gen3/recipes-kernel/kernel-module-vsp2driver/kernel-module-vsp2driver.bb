@@ -51,12 +51,12 @@ PACKAGES = "\
     ${PN} \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
     ${sysconfdir}/modules-load.d \
 "
 
-RPROVIDES_${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
+RPROVIDES:${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
 
 # Autoload VSP2Driver
-KERNEL_MODULE_AUTOLOAD_append = " vsp2"
+KERNEL_MODULE_AUTOLOAD:append = " vsp2"

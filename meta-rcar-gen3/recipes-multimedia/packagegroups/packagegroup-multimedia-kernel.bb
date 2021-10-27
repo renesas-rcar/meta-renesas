@@ -20,7 +20,7 @@ PACKAGES = " \
     packagegroup-multimedia-kernel-modules \
 "
 
-RDEPENDS_packagegroup-multimedia-kernel-modules = " \
+RDEPENDS:packagegroup-multimedia-kernel-modules = " \
     kernel-module-mmngr \
     kernel-module-mmngrbuf \
     kernel-module-vspm \
@@ -28,6 +28,6 @@ RDEPENDS_packagegroup-multimedia-kernel-modules = " \
     kernel-module-vsp2driver \
 "
 
-RDEPENDS_packagegroup-multimedia-kernel-modules += " \
+RDEPENDS:packagegroup-multimedia-kernel-modules += " \
     ${@oe.utils.conditional("USE_VIDEO_OMX", "1", "kernel-module-uvcs-drv", "", d )} \
 "

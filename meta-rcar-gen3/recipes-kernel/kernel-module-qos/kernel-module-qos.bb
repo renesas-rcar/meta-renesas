@@ -57,6 +57,6 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/qos.ko \
 "

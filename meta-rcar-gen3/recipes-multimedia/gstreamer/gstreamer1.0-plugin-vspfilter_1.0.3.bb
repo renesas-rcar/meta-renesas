@@ -20,17 +20,17 @@ inherit meson
 
 DEPENDS += "gstreamer1.0 gstreamer1.0-plugins-base pkgconfig"
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${libdir}/gstreamer-1.0/libgstvspfilter.so \
 "
 
-FILES_${PN}-dev = "${libdir}/gstreamer-1.0/libgstvspfilter.la"
+FILES:${PN}-dev = "${libdir}/gstreamer-1.0/libgstvspfilter.la"
 
-FILES_${PN}-staticdev = "${libdir}/gstreamer-1.0/libgstvspfilter.a"
+FILES:${PN}-staticdev = "${libdir}/gstreamer-1.0/libgstvspfilter.a"
 
-FILES_${PN}-dbg = " \
+FILES:${PN}-dbg = " \
     ${libdir}/gstreamer-1.0/.debug \
     ${prefix}/src \
 "
 
-RDEPENDS_${PN} = "kernel-module-vsp2driver gstreamer1.0-plugin-vspfilter-config"
+RDEPENDS:${PN} = "kernel-module-vsp2driver gstreamer1.0-plugin-vspfilter-config"

@@ -42,23 +42,23 @@ PACKAGES =+ " \
     ${PN}-maap \
 "
 
-ALLOW_EMPTY_${PN} = "1"
+ALLOW_EMPTY:${PN} = "1"
 
 
-FILES_${PN}-mrpd = " \
+FILES:${PN}-mrpd = " \
     ${bindir}/mrpd \
     ${bindir}/mrpctl \
 "
 
-FILES_${PN}-maap = " \
+FILES:${PN}-maap = " \
     ${bindir}/maap_daemon \
 "
 
-RDEPENDS_${PN} = " \
+RDEPENDS:${PN} = " \
     ${PN}-mrpd \
     ${PN}-maap \
 "
 
-RDEPENDS_${PN}-maap = " \
+RDEPENDS:${PN}-maap = " \
     libpcap \
 "
