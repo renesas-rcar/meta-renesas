@@ -1,6 +1,10 @@
 DESCRIPTION = "Image Renderer module"
 LICENSE = "CLOSED"
 
+inherit features_check
+
+REQUIRED_DISTRO_FEATURES = "imr"
+
 SRC_URI = "file://RTM8RC0000ZRRDSS00JPL3E.tar.gz"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb)"
