@@ -74,7 +74,6 @@ RDEPENDS:packagegroup-gstreamer1.0-plugins-video = " \
     gstreamer1.0-plugins-bad-videoparsersbad \
     gstreamer1.0-plugins-bad-mpegtsdemux \
     gstreamer1.0-plugins-bad-jpegformat \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'gsx', 'gstreamer1.0-plugins-bad-kms', '', d)} \
     gstreamer1.0-plugins-ugly-asf \
     gstreamer1.0-libav \
 "
