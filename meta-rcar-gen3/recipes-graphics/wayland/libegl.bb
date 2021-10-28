@@ -19,3 +19,5 @@ RPROVIDES:${PN} += " \
     libegl \
     libegl1 \
 "
+
+ALLOW_EMPTY:${PN} = "1"
