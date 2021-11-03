@@ -1,6 +1,10 @@
 DESCRIPTION = "OSAL library"
 LICENSE = "CLOSED"
 
+inherit features_check
+
+REQUIRED_DISTRO_FEATURES = "osal"
+
 DEPENDS += "kernel-module-cmemdrv"
 
 SRC_URI = "file://RTM8RC0000ZSAL2S00JPL3E.tar.bz2"
