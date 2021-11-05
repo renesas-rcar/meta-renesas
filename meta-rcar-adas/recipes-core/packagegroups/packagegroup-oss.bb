@@ -50,6 +50,7 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     e2fsprogs-resize2fs \
     avahi-daemon \
     libdrm-tests \
+    libgpiod libgpiod-tools \
 "
 
 # Various packages needed for testing
