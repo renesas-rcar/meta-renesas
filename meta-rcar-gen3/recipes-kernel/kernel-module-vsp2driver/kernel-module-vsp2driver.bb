@@ -19,7 +19,7 @@ VSP2DRIVER_URL = " \
 BRANCH = "rcar-gen3"
 SRCREV = "0ecf35aa05c103ba4d3ab83e3320a22fccd912c3"
 
-SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH}"
+SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH};protocol=https"
 
 SRC_URI_append = " file://0001-Handle-data_offset-setting-from-V4L2-API.patch"
 

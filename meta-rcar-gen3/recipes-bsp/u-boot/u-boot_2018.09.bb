@@ -6,7 +6,7 @@ DEPENDS += "bc-native dtc-native"
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
 BRANCH = "v2018.09/rcar-3.9.10"
 
-SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
+SRC_URI = "${UBOOT_URL};branch=${BRANCH};protocol=https"
 SRCREV = "f70ada7ce1be97753c4ca368c24991344bdaa234"
 PV = "v2018.09+git${SRCPV}"
 

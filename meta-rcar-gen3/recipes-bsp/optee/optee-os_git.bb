@@ -18,8 +18,8 @@ SRCREV_officialgit = "e77020396508fc086d7a4d6137388b116e4a662f"
 SRCREV_FORMAT = "renesas_officialgit"
 
 SRC_URI = " \
-    git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};name=renesas \
-    git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official \
+    git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};name=renesas;protocol=https \
+    git://github.com/OP-TEE/optee_os.git;branch=master;name=officialgit;destsuffix=git_official;protocol=https \
 "
 
 SRC_URI_append = " \

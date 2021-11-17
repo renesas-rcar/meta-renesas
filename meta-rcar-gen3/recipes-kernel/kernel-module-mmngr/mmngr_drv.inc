@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = " \
 require include/rcar-gen3-modules-common.inc
 inherit module
 
-MMNGR_DRV_URI = "git://github.com/renesas-rcar/mmngr_drv.git"
+MMNGR_DRV_URI = "git://github.com/renesas-rcar/mmngr_drv.git;protocol=https"
 
 SRC_URI = "${MMNGR_DRV_URI};branch=rcar_gen3"
 SRCREV = "85d0042924de379307115533d7b6284333409bb3"

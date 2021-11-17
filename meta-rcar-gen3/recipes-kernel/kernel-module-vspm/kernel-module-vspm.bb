@@ -18,7 +18,7 @@ VSPM_DRV_URL = "git://github.com/renesas-rcar/vspm_drv.git"
 BRANCH = "rcar_gen3"
 SRCREV = "7f854a9a1c4760255a54b7c14891d1545ed1bf43"
 
-SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH}"
+SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH};protocol=https"
 
 # Fix patch for upscaling issue
 SRC_URI_append = " \

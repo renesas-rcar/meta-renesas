@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 PR = "r0"
 PV = "3.1.0+renesas+git${SRCPV}"
 BRANCH = "master"
-SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH}"
+SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH};protocol=https"
 SRCREV = "3f16662284a69fdec97b1712064be94d1fed7ae7"
 
 SRC_URI += " \

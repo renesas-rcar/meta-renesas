@@ -3,7 +3,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "\
     file://${WORKDIR}/git/COPYING.MIT;md5=30a99e0d36a3da1f5cf93c070ad7888a"
 
-MMNGR_LIB_URI = "git://github.com/renesas-rcar/mmngr_lib.git"
+MMNGR_LIB_URI = "git://github.com/renesas-rcar/mmngr_lib.git;protocol=https"
 
 SRC_URI = "${MMNGR_LIB_URI};branch=rcar_gen3"
 SRCREV = "e55a8356c906486ee0be78b2a1fde227e7a578f4"

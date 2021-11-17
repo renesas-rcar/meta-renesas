@@ -18,7 +18,7 @@ QOS_DRV_URL = "git://github.com/renesas-rcar/qos_drv.git"
 BRANCH = "rcar-gen3"
 SRCREV = "d32fbee4d7b76056c37935ff31102c3583801a29"
 
-SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
+SRC_URI = "${QOS_DRV_URL};branch=${BRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
 QOS_DRV_DIR = "qos-module/files/qos/drv"

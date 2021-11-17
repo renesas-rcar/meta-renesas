@@ -7,7 +7,7 @@ RENESAS_BSP_URL = " \
 BRANCH = "v4.14.75-ltsi/rcar-3.9.11"
 SRCREV = "fcb34fe338cbde0a64919430733541035f20a784"
 
-SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
+SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH};protocol=https"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 

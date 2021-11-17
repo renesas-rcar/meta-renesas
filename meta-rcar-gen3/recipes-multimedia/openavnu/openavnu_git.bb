@@ -19,7 +19,7 @@ COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 PV = "1.1+git${SRCPV}"
 
 SRCREV = "5e43fa5ae27fbd2b89c320670a32143ce93e0e16"
-SRC_URI = "git://github.com/AVnu/OpenAvnu.git;branch=master"
+SRC_URI = "git://github.com/AVnu/OpenAvnu.git;branch=master;protocol=https"
 
 # Fix QA issue of ldflags
 SRC_URI_append = " file://0001-Fix-QA-issue-when-build-with-Yocto.patch"
