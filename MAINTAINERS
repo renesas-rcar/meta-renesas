@@ -16,6 +16,10 @@ Maintainers List (try to look for most precise areas first)
 
 		-----------------------------------
 Renesas ARM SoCs R-Car Generation 3
+M: 	R-Car Yocto team <rcar-yocto@lm.renesas.com>
+F:	meta-rcar-gen3/*
+
+Renesas ARM SoCs R-Car Generation 3
 M:	Takamitsu Honda <takamitsu.honda.pv@renesas.com>
 F:	meta-rcar-gen3
 
