@@ -23,4 +23,4 @@ do_install_append () {
 
 KERNEL_MODULE_AUTOLOAD += "cmemdrv"
 KERNEL_MODULE_PROBECONF += "cmemdrv"
-module_conf_cmemdrv = "options cmemdrv bsize=0x8000000"
+module_conf_cmemdrv = "options cmemdrv bsize=0x20000000"
