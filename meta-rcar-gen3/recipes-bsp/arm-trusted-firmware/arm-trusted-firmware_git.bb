@@ -11,7 +11,7 @@ require include/multimedia-control.inc
 S = "${WORKDIR}/git"
 
 BRANCH = "rcar_gen3_v2.5"
-SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
+SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH};protocol=https"
 SRCREV = "808d008708448d3eabca2e947b9585d0a1f6774d"
 
 PV = "v2.5+renesas+git${SRCPV}"

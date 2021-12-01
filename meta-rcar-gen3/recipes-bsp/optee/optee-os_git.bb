@@ -15,7 +15,7 @@ BRANCH = "rcar_gen3_3.13.0"
 SRCREV = "48ab729e6f69a088457096fb7c57bba8bf017725"
 
 SRC_URI = " \
-    git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH} \
+    git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https \
 "
 
 SRC_URI_append = " \
