@@ -15,7 +15,7 @@ RENESAS_BSP_URL = " \
 BRANCH = "v5.10.41/rcar-5.1.4"
 SRCREV = "4846ef7755062737891d10bf15da4721bfb79b04"
 
-SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
+SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH};protocol=https"
 
 LINUX_VERSION ?= "5.10.41"
 PV = "${LINUX_VERSION}+git${SRCPV}"

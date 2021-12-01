@@ -9,7 +9,7 @@ VSPMIF_LIB_URL = "git://github.com/renesas-rcar/vspmif_lib.git"
 BRANCH = "rcar_gen3"
 SRCREV = "06fe8b1341801079f8a2b964ea95980967dcf789"
 
-SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH}"
+SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH};protocol=https"
 
 # This module is machine specific.
 PACKAGE_ARCH = "${MACHINE_ARCH}"

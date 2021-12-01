@@ -19,7 +19,7 @@ VSP2DRIVER_URL = " \
 BRANCH = "rcar-gen3"
 SRCREV = "b3a116d8ce68371cac21011ca3b3190ae3576987"
 
-SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH}"
+SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
 

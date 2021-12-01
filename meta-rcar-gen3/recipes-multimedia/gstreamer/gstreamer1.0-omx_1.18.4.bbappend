@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/:"
 
-RENESAS_OMX_URL ?= "gitsm://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3e/1.18.4"
+RENESAS_OMX_URL ?= "gitsm://github.com/renesas-rcar/gst-omx.git;branch=RCAR-GEN3e/1.18.4;protocol=https"
 
 SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-omx/gst-omx-${PV}.tar.xz"
 SRC_URI:append = " \

@@ -19,7 +19,7 @@ VSPMIF_DRV_URL = " \
 BRANCH = "rcar_gen3"
 SRCREV = "2fdb2838a5625e4231f1cff5d10079acc4954952"
 
-SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH}"
+SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
 VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
