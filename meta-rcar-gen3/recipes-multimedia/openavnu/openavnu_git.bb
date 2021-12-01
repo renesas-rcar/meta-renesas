@@ -16,7 +16,7 @@ COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 PV = "1.1+git${SRCPV}"
 
 SRCREV = "ff076e83234d2207f33447b9bd6d1646d9245566"
-SRC_URI = "git://github.com/AVnu/OpenAvnu.git;branch=master"
+SRC_URI = "git://github.com/AVnu/OpenAvnu.git;branch=master;protocol=https"
 
 
 S = "${WORKDIR}/git"

@@ -10,7 +10,7 @@ COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 PV = "1.1+git${SRCPV}"
 
 SRCREV = "0baef8a36a13105112862919aac0f1eed21a44ea"
-SRC_URI = "git://github.com/AVnu/gptp.git;branch=master"
+SRC_URI = "git://github.com/AVnu/gptp.git;branch=master;protocol=https"
 
 # Fix QA issue of ldflags
 SRC_URI_append = " file://0001-Fix-QA-issue-when-build-with-Yocto.patch"
