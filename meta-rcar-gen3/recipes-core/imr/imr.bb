@@ -7,12 +7,20 @@ REQUIRED_DISTRO_FEATURES = "imr"
 
 SRC_URI = "file://RTM8RC0000ZRRDSS00JPL3E.tar.gz"
 
-COMPATIBLE_MACHINE = "(salvator-x|ulcb)"
+COMPATIBLE_MACHINE = "(salvator-x|ebisu|draak|ulcb)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 DEPENDS += "osal"
 
 S = "${WORKDIR}/drivers/imr"
+
+RCAR_SOC_r8a7795 = "h3"
+RCAR_SOC_r8a7796 = "m3"
+RCAR_SOC_r8a77965 = "m3n"
+RCAR_SOC_r8a77990 = "e3"
+RCAR_SOC_r8a77995 = "d3"
+
+EXTRA_OEMAKE = "RCAR_SOC=${RCAR_SOC}"
 
 do_install() {
     install -d ${D}${libdir}
