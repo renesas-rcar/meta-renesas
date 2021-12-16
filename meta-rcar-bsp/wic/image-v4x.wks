@@ -1,0 +1,3 @@
+# short-description: Create image for Renesas V4x Boards (V4H)
+# long-description: Create a partitioned image for Renesas V4x Boards (V4H).
+part / --source rootfs --ondisk mmcblk0 --fstype=ext4 --label root --align 4 --extra-space 128M
