@@ -1,0 +1,14 @@
+diff --git a/src/basic/fs-util.c b/src/basic/fs-util.c
+index b2ac648..553a77a 100644
+--- a/src/basic/fs-util.c
++++ b/src/basic/fs-util.c
+@@ -668,6 +668,9 @@ static bool unsafe_transition(const struct stat *a, const struct stat *b) {
+         if (a->st_uid == 0) /* Transitioning from privileged to unprivileged is always fine */
+                 return false;
+ 
++        if (b->st_uid == 65534) /* Transitioning to a non-owned is OK too */
++                return false;
++
+         return a->st_uid != b->st_uid; /* Otherwise we need to stay within the same UID */
+ }
+ 
