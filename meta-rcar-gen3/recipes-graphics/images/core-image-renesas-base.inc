@@ -78,9 +78,6 @@ IMAGE_INSTALL_append = " \
     ${@oe.utils.conditional("USE_SAFE_RENDERING", "1", "${SAFE_RENDERING_KERNEL_PKGS}", "", d)} \
 "
 
-# Installation for ethtool
-IMAGE_INSTALL_append = " ethtool"
-
 # Initscript for setting CPUFreq governor
 IMAGE_INSTALL_append = " cpufreq-initscripts"
 
