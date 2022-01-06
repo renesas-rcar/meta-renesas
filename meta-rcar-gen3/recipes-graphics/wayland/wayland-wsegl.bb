@@ -16,9 +16,6 @@ inherit autotools pkgconfig
 
 S = "${WORKDIR}/git"
 
-# fixing multiple definition error
-SRC_URI:append = " file://0001-wayland-wsegl-fix-multiple-definition-error.patch"
-
 PACKAGES = " \
     ${PN} \
     ${PN}-dbg \
