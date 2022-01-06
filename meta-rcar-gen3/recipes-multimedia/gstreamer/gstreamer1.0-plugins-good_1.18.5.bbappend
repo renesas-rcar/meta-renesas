@@ -1,4 +1,4 @@
-RENESAS_GST_PLUGINS_GOOD_URL ?= "gitsm://github.com/renesas-rcar/gst-plugins-good.git;branch=RCAR-GEN3e/1.18.4;protocol=https"
+RENESAS_GST_PLUGINS_GOOD_URL ?= "gitsm://github.com/renesas-rcar/gst-plugins-good.git;branch=RCAR-GEN3e/1.18.5;protocol=https"
 
 SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-${PV}.tar.xz \
 		  file://0001-qt-include-ext-qt-gstqtgl.h-instead-of-gst-gl-gstglf.patch \
@@ -7,7 +7,7 @@ SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plu
 
 SRC_URI:append = " ${RENESAS_GST_PLUGINS_GOOD_URL}"
 
-SRCREV = "21479d8ca6bcd68326b172e08d089d48b3171366"
+SRCREV = "66192b6f24ee3b803fccd7629e1423a50264eec2"
 
 DEPENDS += "mmngrbuf-user-module"
 
