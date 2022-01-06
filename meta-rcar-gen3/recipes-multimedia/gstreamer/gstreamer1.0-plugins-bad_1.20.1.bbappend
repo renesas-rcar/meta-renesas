@@ -1,4 +1,4 @@
-RENESAS_GST_PLUGINS_BAD_URL ?= "gitsm://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3e/1.18.4;protocol=https"
+RENESAS_GST_PLUGINS_BAD_URL ?= "gitsm://github.com/renesas-rcar/gstreamer.git;branch=RCAR-GEN3e/1.20.1;protocol=https"
 
 SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz \
                   file://0001-fix-maybe-uninitialized-warnings-when-compiling-with.patch \
@@ -10,12 +10,12 @@ SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plug
 
 SRC_URI:append = " ${RENESAS_GST_PLUGINS_BAD_URL}"
 
-SRCREV = "3d832a61b92c5a4e55ef38d4ce9f6f9af2b53a4b"
+SRCREV = "c8e94177fecb95bc0dcd9d86e8f67cdbc9d913eb"
 
 require include/rcar-gen3-modules-common.inc
 DEPENDS += "weston libdrm"
 
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/git/subprojects/gst-plugins-bad"
 
 EXTRA_OECONF += "--enable-kms"
 PACKAGECONFIG:append = "kms"
