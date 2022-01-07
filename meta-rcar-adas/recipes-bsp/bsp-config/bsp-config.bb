@@ -7,6 +7,7 @@ SRC_URI = " \
     file://bsp-config_v3m.sh \
     file://bsp-config_v3h.sh \
     file://bsp-config_v3u.sh \
+    file://bsp-config_v4h.sh \
 "
 
 do_install() {
