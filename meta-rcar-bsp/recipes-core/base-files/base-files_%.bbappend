@@ -3,17 +3,17 @@ require include/rcar-kernel-info-common.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 
-SRC_URI_append_rcar-gen3 = " \
+SRC_URI_append_rcar = " \
     file://fstab \
 "
 
-do_install_append_rcar-gen3 () {
+do_install_append_rcar () {
     echo "export LD_LIBRARY_PATH=\"\${LD_LIBRARY_PATH}:${RENESAS_DATADIR}/lib\"" >> ${D}${sysconfdir}/profile
 }
 
 inherit module-base
 
-do_install_basefilesissue_append_rcar-gen3 () {
+do_install_basefilesissue_append_rcar () {
     # Yocto version and codename
     printf "${DISTRO_NAME} " >> ${D}${sysconfdir}/issue.e2
 
@@ -35,3 +35,4 @@ do_install_basefilesissue_append_rcar-gen3 () {
 # Set hostname for V3H/V3M
 hostname_r8a77980 = "v3x"
 hostname_r8a77970 = "v3x"
+hostname_r8a779g0 = "v4x"
