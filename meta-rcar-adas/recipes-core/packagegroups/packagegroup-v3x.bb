@@ -1,4 +1,4 @@
-DESCRIPTION = "V3X specific packages"
+DESCRIPTION = "V3x/V4x specific packages"
 
 LICENSE = "BSD-3-Clause & GPLv2+ & LGPLv2+"
 
@@ -17,6 +17,7 @@ CPURTT_PKGS_eagle = " \
     kernel-module-cpurttdrv2 \
 "
 CPURTT_PKGS_falcon = ""
+CPURTT_PKGS_white-hawk = ""
 
 # V3x common packages: CMEM, CV lib, MMNGR
 RDEPENDS_packagegroup-v3x = " \
