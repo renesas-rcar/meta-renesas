@@ -52,6 +52,8 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     libdrm-tests \
     libgpiod libgpiod-tools \
 "
+# Remove strace in V4x due to compile error with Kernel v5.10
+RDEPENDS_packagegroup-bsp-devpkg_remove_rcar-v4x = "strace" 
 
 # Various packages needed for testing
 RDEPENDS_packagegroup-bsp-testpkg = " \
