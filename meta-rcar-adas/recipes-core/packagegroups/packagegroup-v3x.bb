@@ -37,3 +37,12 @@ RDEPENDS_packagegroup-v3x = " \
     qosif-user-module \
     qosif-tp-user-module \
 "
+
+# Remove MMNGR driver and library for V4H due to compilation error
+# with Kernel v5.10.41 in V4x
+RDEPENDS_packagegroup-v3x_remove_rcar-v4x = " \
+    kernel-module-mmngr \
+    kernel-module-mmngrbuf \
+    mmngr-user-module \
+    mmngrbuf-user-module \
+"
