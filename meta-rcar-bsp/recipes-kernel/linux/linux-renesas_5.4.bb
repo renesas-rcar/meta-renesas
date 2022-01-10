@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 require recipes-kernel/linux/linux-yocto.inc
 require include/rcar-kernel-info-common.inc
 
-COMPATIBLE_MACHINE = "(falcon|condor|eagle|white-hawk)"
+COMPATIBLE_MACHINE = "(falcon|condor|eagle)"
 
 SRCREV = "${RENESAS_BSP_SRCREV}"
 

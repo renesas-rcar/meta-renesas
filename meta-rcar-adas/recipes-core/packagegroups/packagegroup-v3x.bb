@@ -17,7 +17,7 @@ CPURTT_PKGS_eagle = " \
     kernel-module-cpurttdrv2 \
 "
 CPURTT_PKGS_falcon = ""
-CPURTT_PKGS_white-hawk = ""
+CPURTT_PKGS_whitehawk = ""
 
 # V3x common packages: CMEM, CV lib, MMNGR
 RDEPENDS_packagegroup-v3x = " \

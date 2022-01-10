@@ -2,7 +2,7 @@ SUMMARY = "A small image just capable of allowing a device to boot."
 
 require recipes-core/images/core-image-minimal.bb
 
-COMPATIBLE_MACHINE = "(falcon|condor|eagle|white-hawk)"
+COMPATIBLE_MACHINE = "(falcon|condor|eagle|whitehawk)"
 
 # Enable package manager
 EXTRA_IMAGE_FEATURES += "package-management"
