@@ -15,14 +15,14 @@ KERNEL_MODULE_AUTOLOAD_append = " dmatest"
 KERNEL_MODULE_PROBECONF_append = " dmatest"
 
 # LVDS camera configuration
-SRC_URI_append_rcar-gen3 = " \
+SRC_URI_append_rcar-v3x = " \
     file://lvds_camera.cfg \
 "
 
 PACKAGES += "${PN}-uapi"
 
 # Install RCAR Gen3 specific UAPI headers
-do_install_append_rcar-gen3() {
+do_install_append_rcar-v3x() {
     install -d ${D}/usr/include/linux/
     install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/rcar-imr.h ${D}/usr/include/linux/
     install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/rcar-ipmmu-domains.h ${D}/usr/include/linux/
