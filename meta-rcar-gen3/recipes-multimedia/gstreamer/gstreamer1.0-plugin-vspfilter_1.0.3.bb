@@ -16,7 +16,7 @@ SRCREV = "e538bc3b400aac44a590099d52273f75b9f54ff7"
 S = "${WORKDIR}/git"
 
 
-inherit meson
+inherit meson pkgconfig
 
 DEPENDS += "gstreamer1.0 gstreamer1.0-plugins-base pkgconfig"
 
