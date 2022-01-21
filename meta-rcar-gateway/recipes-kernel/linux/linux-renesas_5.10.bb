@@ -26,3 +26,14 @@ KERNEL_MODULE_AUTOLOAD_append = " uio_pdrv_genirq"
 KERNEL_MODULE_PROBECONF_append = " uio_pdrv_genirq"
 module_conf_uio_pdrv_genirq_append = ' options uio_pdrv_genirq of_id="generic-uio"'
 
+PACKAGES += "${PN}-uapi"
+
+# Install S4 specific UAPI headers
+do_install_append() {
+    install -d ${D}/usr/include/linux/
+    install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/rcar-ipmmu-domains.h ${D}/usr/include/linux/
+    install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/renesas_uioctl.h ${D}/usr/include/linux/
+}
+
+FILES_${PN}-uapi = "/usr/include"
+
