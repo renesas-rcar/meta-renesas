@@ -16,15 +16,17 @@ diff --git a/mk/gcc.mk b/mk/gcc.mk
 index adc77a24f..e871699e2 100644
 --- a/mk/gcc.mk
 +++ b/mk/gcc.mk
-@@ -1,8 +1,12 @@
+@@ -1,8 +1,14 @@
  
 -CC$(sm)		:= $(CROSS_COMPILE_$(sm))gcc
 -CXX$(sm)	:= $(CROSS_COMPILE_$(sm))g++
 +ifdef PKG_CONFIG_SYSROOT_DIR
 +CC$(sm)        := $(CROSS_COMPILE_$(sm))gcc --sysroot=$(PKG_CONFIG_SYSROOT_DIR)
++CXX$(sm)       := $(CROSS_COMPILE_$(sm))g++ --sysroot=$(PKG_CONFIG_SYSROOT_DIR)
 +LD$(sm)        := $(CROSS_COMPILE_$(sm))ld.bfd --sysroot=$(PKG_CONFIG_SYSROOT_DIR)
 +else
 +CC$(sm)        := $(CROSS_COMPILE_$(sm))gcc
++CXX$(sm)       := $(CROSS_COMPILE_$(sm))g++
 +LD$(sm)        := $(CROSS_COMPILE_$(sm))ld.bfd
 +endif
  CPP$(sm)	:= $(CROSS_COMPILE_$(sm))cpp
