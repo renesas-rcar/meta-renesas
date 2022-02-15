@@ -63,8 +63,12 @@ module_clean_symbol() {
 PACKAGES = " \
     ${PN} \
     ${PN}-sstate \
+    ${PN}-dbg \
 "
 
 FILES:${PN}-sstate = " \
     ${includedir}/uvcs_ioctl.h \
 "
+
+FILES:${PN}-dbg = "" 
+ALLOW_EMPTY:${PN}-dbg = "1" 

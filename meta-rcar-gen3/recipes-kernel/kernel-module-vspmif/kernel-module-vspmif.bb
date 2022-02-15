@@ -57,10 +57,14 @@ do_install () {
 PACKAGES = "\
     ${PN} \
     ${PN}-dev \
+    ${PN}-dbg \
 "
 
 FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vspm_if.ko \
 "
+
+FILES:${PN}-dbg = "" 
+ALLOW_EMPTY:${PN}-dbg = "1" 
 
 RPROVIDES:${PN} += "kernel-module-vspmif kernel-module-vspm-if"

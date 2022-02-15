@@ -65,10 +65,14 @@ do_install () {
 PACKAGES = "\
     ${PN} \
     ${PN}-dev \
+    ${PN}-dbg \
 "
 
 FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/mmngr.ko \
 "
+
+FILES:${PN}-dbg = "" 
+ALLOW_EMPTY:${PN}-dbg = "1" 
 
 RPROVIDES:${PN} += "kernel-module-mmngr"

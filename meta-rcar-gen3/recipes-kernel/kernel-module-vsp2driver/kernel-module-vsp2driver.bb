@@ -49,12 +49,16 @@ do_install () {
 
 PACKAGES = "\
     ${PN} \
+    ${PN}-dbg \
 "
 
 FILES:${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
     ${sysconfdir}/modules-load.d \
 "
+
+FILES:${PN}-dbg = "" 
+ALLOW_EMPTY:${PN}-dbg = "1" 
 
 RPROVIDES:${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
 
