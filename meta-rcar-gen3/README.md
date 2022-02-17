@@ -27,12 +27,15 @@ Currently, this supports boards and the SoCs of the following:
 
 This layer depends on:
 
+* Please refer release note in wiki page for specific commits of poky and meta-openembedded \
+https://github.com/renesas-rcar/meta-renesas/wiki/R-Car-Gen3-Community-Yocto-BSP-Release-Note
+
 * poky
 
 ```bash
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
-    branch: dunfell
+    branch: honister
 ```
 
 * meta-openembedded
@@ -40,7 +43,7 @@ This layer depends on:
 ```bash
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python
-    branch: dunfell
+    branch: honister
 ```
 
 ## Build Instructions
