@@ -38,9 +38,6 @@ do_install_append_rcar-gen3() {
 
     # Fix weston.service and weston@.service run simultaneously.
     mv ${D}/${sysconfdir}/init.d/weston ${D}/${sysconfdir}/init.d/weston@
-    
-    # Fix weston-start time out error
-    sed -i 's|## Module support|systemd-notify --ready\n\n## Module support|g' ${D}${bindir}/weston-start
 }
 
 FILES_${PN}_append_rcar-gen3 = " \
