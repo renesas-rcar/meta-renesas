@@ -30,7 +30,7 @@ RDEPENDS:packagegroup-graphics-renesas-proprietary = " \
     '', d)} \
 "
 
-DEPENDS_packagegroup-graphics-renesas-wayland = "libegl"
+DEPENDS:packagegroup-graphics-renesas-wayland = "libegl"
 
 RDEPENDS:packagegroup-graphics-renesas-wayland = " \
     ${@bb.utils.contains('USE_GLES_WAYLAND', '1', \
