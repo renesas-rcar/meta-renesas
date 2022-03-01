@@ -27,6 +27,10 @@ Currently, this supports boards and the SoCs of the following:
 
 This layer depends on:
 
+
+* Please refer release note in wiki page for specific commits of poky and meta-openembedded \
+https://github.com/renesas-rcar/meta-renesas/wiki/R-Car-Gen3-Community-Yocto-BSP-Release-Note
+
 * poky
 
 ```bash
