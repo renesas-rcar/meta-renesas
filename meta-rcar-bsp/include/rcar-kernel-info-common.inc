@@ -3,8 +3,8 @@ RENESAS_BSP_URL = " \
 RENESAS_BSP_BRANCH_rcar-v3x = "v5.4.72/rcar-4.1.0.rc18"
 RENESAS_BSP_SRCREV_rcar-v3x = "902a351a2509743fbc0a8c0bbb74476379dec975"
 
-RENESAS_BSP_BRANCH_rcar-v4x = "v5.10.41/rcar-5.1.5.pt11"
-RENESAS_BSP_SRCREV_rcar-v4x = "6dd609bdfd5d3374cd19312b2d51c1c6c8ba6fec"
+RENESAS_BSP_BRANCH_rcar-v4x = "v5.10.41/rcar-5.1.5.pt12"
+RENESAS_BSP_SRCREV_rcar-v4x = "1fb986598012bd44121608fdf6bb2d9ea0106f61"
 
 # Renesas Yocto BSP version
 BSP_RENESAS_VERSION_rcar-v3x = "Renesas-Yocto-v4.19.2"
