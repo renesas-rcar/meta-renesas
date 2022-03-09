@@ -48,4 +48,5 @@ RDEPENDS_packagegroup-v3x_remove_rcar-v4x = " \
     kernel-module-mmngrbuf \
     mmngr-user-module \
     mmngrbuf-user-module \
+    udev-rules-cpuhotplug \
 "
