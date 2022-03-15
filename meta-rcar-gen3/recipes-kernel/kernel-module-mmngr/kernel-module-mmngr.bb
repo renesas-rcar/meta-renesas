@@ -17,7 +17,7 @@ MMNGR_CFG:m3nulcb = "MMNGR_SALVATORX"
 MMNGR_CFG:ebisu = "MMNGR_EBISU"
 
 includedir = "${RENESAS_DATADIR}/include"
-SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
+SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 
 # Build Memory Manager kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
