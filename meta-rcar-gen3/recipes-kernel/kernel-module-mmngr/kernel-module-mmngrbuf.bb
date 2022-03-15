@@ -15,7 +15,7 @@ SRC_URI:append = "\
 "
 
 includedir = "${RENESAS_DATADIR}/include"
-SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
+SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 
 # Build Memory Manager Buffer kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
