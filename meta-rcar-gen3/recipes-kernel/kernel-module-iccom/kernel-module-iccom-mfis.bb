@@ -2,7 +2,7 @@ DESCRIPTION = "Linux ICCOM MFIS Driver for Renesas R-Car Gen3"
 
 require include/rcar-gen3-modules-common.inc
 
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 inherit module features_check

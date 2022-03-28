@@ -1,5 +1,5 @@
 DESCRIPTION = "ADSP Driver for Linux"
-LICENSE = "GPLv2 & MIT"
+LICENSE = "GPL-2.0-only & MIT"
 
 LIC_FILES_CHKSUM = " \
     file://COPYING;md5=55979d94ccbb973fdea772250e0c54d6 \

@@ -1,7 +1,7 @@
 SUMMARY = "System call tracing tool"
 HOMEPAGE = "http://strace.io"
 SECTION = "console/utils"
-LICENSE = "LGPL-2.1+ & GPL-2+"
+LICENSE = "LGPL-2.1-or-later & GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://COPYING;md5=c756d9d5dabc27663df64f0bf492166c"
 
 SRC_URI = "https://strace.io/files/${PV}/strace-${PV}.tar.xz \

@@ -1,6 +1,6 @@
 SUMMARY = "GStreamer VSP filter plugin runtime configuration"
 SECTION = "multimedia"
-LICENSE = "GPLv2+"
+LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"

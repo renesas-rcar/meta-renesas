@@ -1,6 +1,6 @@
 DESCRIPTION = "OpenAvnu - an AVnu sponsored repository for Time Sensitive Network (TSN and AVB) technology"
 HOMEPAGE = "https://github.com/AVnu/OpenAvnu"
-LICENSE = "BSD & MIT & GPLv2 & LGPLv2"
+LICENSE = "BSD-3-Clause & MIT & GPL-2.0-only & LGPL-2.0-only"
 LIC_FILES_CHKSUM = " \
     file://daemons/LICENSE;md5=81ccd62d4bc28bafc5e1a2576536b927 \
     file://daemons/shaper/LICENSE;md5=53e60f7a40864e4c075831415f2ecc59 \

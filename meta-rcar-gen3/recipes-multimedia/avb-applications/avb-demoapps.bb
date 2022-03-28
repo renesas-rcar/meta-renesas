@@ -2,7 +2,7 @@ DESCRIPTION = "Renesas Ethernet AVB demo applications"
 
 require avb-applications.inc
 
-LICENSE = "MIT & BSD"
+LICENSE = "MIT & BSD-3-Clause"
 LIC_FILES_CHKSUM = " \
     file://COPYING.MIT;md5=96659f2a7571bfa27483882a653c3bb9 \
     file://lib/msrp/LICENSE.BSD;md5=60ba0ea0afdcbf8d26ce31ce1503aba3 \

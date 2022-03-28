@@ -1,5 +1,5 @@
 SUMMARY = "Multimedia kernel modules package groups"
-LICENSE = "GPLv2 & MIT"
+LICENSE = "GPL-2.0-only & MIT"
 
 require include/omx-control.inc
 

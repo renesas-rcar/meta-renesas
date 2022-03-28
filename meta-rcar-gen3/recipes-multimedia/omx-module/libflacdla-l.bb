@@ -1,6 +1,6 @@
 DESCRIPTION = "FLAC decoder library"
 SECTION = "libs"
-LICENSE = "BSD"
+LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://COPYING.Xiph;md5=a2c4b71c0198682376d483eb5bcc9197"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"

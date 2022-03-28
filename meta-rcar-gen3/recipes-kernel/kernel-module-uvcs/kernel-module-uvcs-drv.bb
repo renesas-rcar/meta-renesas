@@ -1,5 +1,5 @@
 DESCRIPTION = "Kernel module of UVCS"
-LICENSE = "GPLv2 & MIT"
+LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
     file://include/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://src/lkm/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
