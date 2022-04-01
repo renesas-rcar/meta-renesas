@@ -73,7 +73,7 @@ do_ipl_opt_compile () {
 }
 
 do_ipl_opt_deploy () {
-    install -d ${DEPLOYDIR}
+    install -d ${DEPLOY_DIR_IMAGE}
 
     # Copy IPL to deploy folder
     install -m 0644 ${S}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.elf
