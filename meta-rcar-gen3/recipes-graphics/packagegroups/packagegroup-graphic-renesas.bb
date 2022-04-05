@@ -1,6 +1,7 @@
 SUMMARY = "Renesas package group for Weston"
 LICENSE = "CLOSED & MIT"
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 inherit packagegroup
 require include/gles-control.inc
 
