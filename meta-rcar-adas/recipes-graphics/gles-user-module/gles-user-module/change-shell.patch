@@ -1,0 +1,10 @@
+Index: rogue/etc/init.d/rc.pvr
+===================================================================
+--- rogue.orig/etc/init.d/rc.pvr
++++ rogue/etc/init.d/rc.pvr
+@@ -1,4 +1,4 @@
+-#!/bin/bash
++#!/bin/sh
+ ############################################################################ ###
+ # File rc.pvr
+ # Copyright Copyright (C) 2013-2016 Renesas Electronics Corporation
