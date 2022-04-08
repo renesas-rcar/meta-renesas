@@ -10,3 +10,4 @@ IMAGE_INSTALL_append_rcar = " \
     kernel-devicetree \
     kernel-modules \
 "
+

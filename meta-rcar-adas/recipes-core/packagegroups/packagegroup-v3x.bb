@@ -25,6 +25,14 @@ CPURTT_PKGS_whitehawk = " \
 UDEV_RULES_rcar-v3x = ""
 UDEV_RULES_rcar-v4x = "udev-rules-cpuhotplug"
 
+GFX_PKGS_rcar-v3x = ""
+GFX_PKGS_rcar-v4x = " \
+    kernel-module-gles \
+    gles-user-module \
+    libegl \
+    libgles2 \
+"
+
 # V3x common packages: CMEM, CV lib, MMNGR
 RDEPENDS_packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
@@ -43,6 +51,7 @@ RDEPENDS_packagegroup-v3x = " \
     qosif-user-module \
     qosif-tp-user-module \
     ${UDEV_RULES} \
+    ${GFX_PKGS} \
 "
 
 # Remove MMNGR driver and library for V4H due to compilation error
