@@ -72,6 +72,9 @@ SAFE_RENDERING_KERNEL_PKGS = " \
     kernel-module-rcar-cr7-remoteproc \
     kernel-module-rcar-rvgc-drm \
     kernel-module-virtio-rpmsg-bus \
+    kernel-module-rcar-taurus-can \
+    kernel-module-rcar-taurus-ether \
+    kernel-module-rcar-vivid \
 "
 
 IMAGE_INSTALL_append = " \
