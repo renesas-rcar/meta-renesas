@@ -3,6 +3,12 @@ From: Hau Vo <hau.vo.ra@renesas.com>
 Date: Wed, 5 Jan 2022 23:12:53 -0500
 Subject: [PATCH] fixing implicit conversion in GCC 11.2
 
+This patch fix implicit conversion in GCC 11.2
+
+Upstream-Status: Inappropriate [embedded specific]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
 ---
  services/server/devices/rogue/rgxinit.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

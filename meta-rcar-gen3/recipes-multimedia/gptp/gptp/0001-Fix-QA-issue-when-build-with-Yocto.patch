@@ -10,6 +10,8 @@ ERROR: open-avb-1.1+gitAUTOINC+5e43fa5ae2-r0 do_package_qa: QA Issue: No GNU_HAS
 ERROR: open-avb-1.1+gitAUTOINC+5e43fa5ae2-r0 do_package_qa: QA run found fatal errors. Please consider fixing them.
 ERROR: open-avb-1.1+gitAUTOINC+5e43fa5ae2-r0 do_package_qa: Function failed: do_package_qa
 
+Upstream-Status: Inappropriate [configuration]
+
 Signed-off-by: Thao Nguyen <thao.nguyen.yb@renesas.com>
 Signed-off-by: Masaru Nagai <masaru.nagai.vx@renesas.com>
 ---

@@ -3,6 +3,12 @@ From: "Thanh Thai. Nguyen" <thanh.nguyen.zc@renesas.com>
 Date: Tue, 20 Jul 2021 17:14:06 +0700
 Subject: [PATCH 3/3] ADSP-add-build-for-ADSP-sound-driver
 
+This patch will add ADPS alsa driver
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
 ---
  sound/soc/Kconfig  | 1 +
  sound/soc/Makefile | 1 +

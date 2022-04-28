@@ -3,6 +3,13 @@ From: "Thanh Thai. Nguyen" <thanh.nguyen.zc@renesas.com>
 Date: Mon, 19 Jul 2021 08:54:28 +0700
 Subject: [PATCH 2/2] Add-document-file-for-ADSP-sound-driver
 
+Adding document file for ADSP sound driver,
+in case we use ADSP
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
 ---
  .../devicetree/bindings/sound/renesas,adsp.txt        | 11 +++++++++++
  1 file changed, 11 insertions(+)

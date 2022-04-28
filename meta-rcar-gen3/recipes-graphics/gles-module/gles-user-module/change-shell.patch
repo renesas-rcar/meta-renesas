@@ -1,4 +1,10 @@
 Index: rogue/etc/init.d/rc.pvr
+Subject: Change shell
+
+Upstream-Status: Inappropriate [embedded specific]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
 ===================================================================
 --- rogue.orig/etc/init.d/rc.pvr
 +++ rogue/etc/init.d/rc.pvr

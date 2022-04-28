@@ -5,6 +5,8 @@ Subject: [PATCH] tee-supplicant: Delete the sleep time when writing data
 
 Deleted sleep processing to shorten processing time.
 
+Upstream-Status: Inappropriate [embedded specific]
+
 Signed-off-by: Tsukasa Kawaguchi <tsukasa.kawaguchi.aw@hitachi.com>
 Signed-off-by: Yoshifumi Hosoya <yoshifumi.hosoya.wj@renesas.com>
 ---

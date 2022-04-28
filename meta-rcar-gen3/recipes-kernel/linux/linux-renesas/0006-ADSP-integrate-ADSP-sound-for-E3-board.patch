@@ -1,3 +1,14 @@
+Subject: ADSP integrate ADSP sound for E3 board
+
+Integrating ADSP sound for E3 board,
+in case we use ADSP
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
+---
+
 diff --git a/arch/arm64/boot/dts/renesas/r8a77990-ebisu.dts b/arch/arm64/boot/dts/renesas/r8a77990-ebisu.dts
 index d2110f529f61..6768ee16375c 100644
 --- a/arch/arm64/boot/dts/renesas/r8a77990-ebisu.dts

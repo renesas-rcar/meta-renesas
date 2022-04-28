@@ -11,6 +11,8 @@ uses the buffer allocated by MMNGR directly.
 
 Initialize the scatterlist entry so that it can be happily traversed.
 
+Upstream-Status: Pending
+
 Signed-off-by: Hai Nguyen Pham <hai.pham.ud@renesas.com>
 ---
  mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c | 3 +++

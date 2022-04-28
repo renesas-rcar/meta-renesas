@@ -6,6 +6,8 @@ Subject: [PATCH] mk/gcc.mk: Change the path to the library
 Change the path to the library if PKG_CONFIG_SYSROOT_DIR is enabled
 in the Yocto build error fix.
 
+Upstream-Status: Inappropriate [configuration]
+
 Signed-off-by: Tsukasa Kawaguchi <tsukasa.kawaguchi.aw@hitachi.com>
 Signed-off-by: Yoshifumi Hosoya <yoshifumi.hosoya.wj@renesas.com>
 ---

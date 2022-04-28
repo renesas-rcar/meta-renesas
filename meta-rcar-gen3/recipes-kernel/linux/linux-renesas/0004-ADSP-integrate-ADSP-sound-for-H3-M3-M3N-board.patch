@@ -3,6 +3,13 @@ From: "Thanh Thai. Nguyen" <thanh.nguyen.zc@renesas.com>
 Date: Tue, 20 Jul 2021 14:45:44 +0700
 Subject: [PATCH 2/2] ADSP-integrate-ADSP-sound-for-H3-M3-M3N-board
 
+Integrating ADSP-sound for H3, M3, M3N board,
+in case we use ADSP
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
 ---
  arch/arm64/boot/dts/renesas/r8a77951.dtsi     |  5 ++
  .../boot/dts/renesas/r8a77960-salvator-xs.dts |  5 ++

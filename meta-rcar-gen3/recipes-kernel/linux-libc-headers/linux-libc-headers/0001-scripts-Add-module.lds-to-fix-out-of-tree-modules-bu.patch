@@ -7,6 +7,8 @@ Subject: [PATCH] scripts: Add module.lds to fix out-of-tree modules build
 See https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1906131 for
 detail information.
 
+Upstream-Status: Inappropriate [bugfix (https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1906131)]
+
 Signed-off-by: Khang Nguyen <khang.nguyen.xw@renesas.com>
 ---
  scripts/module.lds | 28 ++++++++++++++++++++++++++++

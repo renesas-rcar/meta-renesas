@@ -7,6 +7,10 @@ For pre-4.7 kernels, sync_fence_info returns the data from the
 SYNC_IOC_FENCE_INFO ioctl. For newer kernels, the SYNC_IOC_FILE_INFO
 ioctl is called, and the data converted to SYNC_IOC_FENCE_INFO form.
 
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
 ---
  libsync.h | 172 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 172 insertions(+)

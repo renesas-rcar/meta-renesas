@@ -1,3 +1,16 @@
+Subject: Add non non owned item for safe transitioning
+
+Since safe transition check feature breaks the rootfs created by
+different users, this allows /var/volatile to be mounted as a
+non-owned directory (uid=65534) and defines the transition from a
+normal file/directory to non-owned one as a safe transition.
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
+---
+
 diff --git a/src/basic/chase-symlinks.c b/src/basic/chase-symlinks.c
 index 344e7e1bb7..6f1300598f 100644
 --- a/src/basic/chase-symlinks.c

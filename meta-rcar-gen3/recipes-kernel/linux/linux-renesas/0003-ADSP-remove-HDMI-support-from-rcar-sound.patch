@@ -3,6 +3,13 @@ From: "Thanh Thai. Nguyen" <thanh.nguyen.zc@renesas.com>
 Date: Tue, 20 Jul 2021 14:43:03 +0700
 Subject: [PATCH] ADSP-remove-HDMI-support-from-rcar-sound
 
+This patch will remove HDMI support form rcar sound,
+in case we use ADSP
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
 ---
  arch/arm64/boot/dts/renesas/r8a77950-salvator-x.dts  | 6 ------
  arch/arm64/boot/dts/renesas/r8a77951-salvator-x.dts  | 6 ------
