@@ -33,4 +33,4 @@ FILES:${PN}-dbg += "${libdir}/gbm/.debug/*"
 FILES:${PN}-staticdev += "${libdir}/gbm/*.a"
 
 INSANE_SKIP:${PN} += "dev-so"
-PROVIDES += "virtual/libgbm virtual/nativesdk-libgbm virtual/libgbm-native"
+PROVIDES += "virtual/libgbm"
