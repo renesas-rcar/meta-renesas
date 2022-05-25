@@ -10,6 +10,7 @@ SRCREV = "7c9c423d00e96bf51debd5fe10fd70dce83be5cc"
 
 SRC_URI += " \
     file://optee.service \
+    file://0001-tee-supplicant-Delete-the-sleep-time-when-writing-da.patch \
 "
 
 inherit python3native systemd

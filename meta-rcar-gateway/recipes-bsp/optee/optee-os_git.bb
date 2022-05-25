@@ -12,7 +12,7 @@ inherit deploy python3native
 PV = "3.13+renesas+git${SRCPV}"
 
 BRANCH = "rcar-gen4_3.13"
-SRCREV = "c6f7ca0131063fcd93a80970d79adeae20ddd354"
+SRCREV = "7109ef7b2068a9472987865be01653caacfaca49"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH} \
@@ -38,7 +38,7 @@ S = "${WORKDIR}/git"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
 do_compile() {
-    oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y CFG_ARM_GICV3=y
+    oe_runmake PLATFORM=${PLATFORM}
 }
 
 # do_install() nothing
