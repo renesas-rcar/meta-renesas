@@ -8,8 +8,8 @@ COMPATIBLE_MACHINE = "spider"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.10.41/rcar-5.1.3.rc11"
-SRCREV = "9acb07efa6c070d753ac1de4a146603299e51a49"
+BRANCH = "v5.10.41/rcar-5.1.6.rc3"
+SRCREV = "e7fa01eff8455799e2be308683bc3d9f5ff007e6"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
@@ -31,9 +31,13 @@ PACKAGES += "${PN}-uapi"
 # Install S4 specific UAPI headers
 do_install_append() {
     install -d ${D}/usr/include/linux/
+    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
     install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/rcar-ipmmu-domains.h ${D}/usr/include/linux/
     install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/renesas_uioctl.h ${D}/usr/include/linux/
+    mv ${D}/lib/modules/${KERNEL_VERSION}/kernel/drivers/dma/dmatest.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 }
 
 FILES_${PN}-uapi = "/usr/include"
-
+# dmatest autoload configuration
+KERNEL_MODULE_AUTOLOAD_append = " dmatest"
+KERNEL_MODULE_PROBECONF_append = " dmatest"
