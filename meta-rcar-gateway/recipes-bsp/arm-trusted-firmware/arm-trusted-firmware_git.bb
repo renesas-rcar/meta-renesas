@@ -13,6 +13,11 @@ BRANCH = "rcar-s4_v2.5"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH}"
 SRCREV = "5b0edfa45acfd8e14618cd324b62e49e33dcc40b"
 
+SRC_URI_append = "\
+        file://0001-drivers-gicv3-Fix-setting-E-PPI-SGI-priorities.patch \
+        file://0002-rcar_gen4-plat-BL31-Set-the-interrupt-priority-unifo.patch \
+"
+
 PV = "v2.5+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(spider)"
