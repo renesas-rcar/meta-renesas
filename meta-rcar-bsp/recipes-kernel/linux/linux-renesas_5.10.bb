@@ -1,11 +1,11 @@
-DESCRIPTION = "Linux kernel for the R-Car V4x based board"
+DESCRIPTION = "Linux kernel for the R-Car V3x/V4x based boards"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 require recipes-kernel/linux/linux-yocto.inc
 require include/rcar-kernel-info-common.inc
 
-COMPATIBLE_MACHINE = "whitehawk"
+COMPATIBLE_MACHINE = "(falcon|condor|eagle|whitehawk)"
 
 SRCREV = "${RENESAS_BSP_SRCREV}"
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH}"

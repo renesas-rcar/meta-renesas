@@ -25,7 +25,6 @@ UBOOT_CONFIG[v3msk] = "r8a77970_v3msk_defconfig"
 UBOOT_CONFIG[eagle-function] = "r8a77970_eagle-function_defconfig"
 
 # Set Image & SDK name for V3x
-PREFERRED_VERSION_linux-renesas = "5.4%"
 IMAGE_NAME = "${IMAGE_BASENAME}-v3x${IMAGE_VERSION_SUFFIX}"
 IMAGE_LINK_NAME = "${IMAGE_BASENAME}-v3x"
 SDK_NAME_r8a77980 = "${DISTRO}-${TCLIBC}-${SDKMACHINE}-${IMAGE_BASENAME}-${TUNE_PKGARCH}-v3x"

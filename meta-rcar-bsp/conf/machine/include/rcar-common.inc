@@ -22,6 +22,3 @@ EXTRA_IMAGEDEPENDS += " u-boot"
 
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"
-
-# rsync is required to build kernel 5.4
-HOSTTOOLS += "rsync"
