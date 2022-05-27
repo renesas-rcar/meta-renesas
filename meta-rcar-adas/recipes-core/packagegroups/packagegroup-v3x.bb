@@ -54,11 +54,14 @@ RDEPENDS_packagegroup-v3x = " \
     ${GFX_PKGS} \
 "
 
-# Remove MMNGR driver and library for V4H due to compilation error
-# with Kernel v5.10.41 in V4x
-RDEPENDS_packagegroup-v3x_remove_rcar-v4x = " \
+# Remove MMNGR driver and library for ADAS due to compilation error
+# with Kernel v5.10.41 in ADAS
+RDEPENDS_packagegroup-v3x_remove_rcar = " \
     kernel-module-mmngr \
     kernel-module-mmngrbuf \
     mmngr-user-module \
     mmngrbuf-user-module \
+"
+RDEPENDS_packagegroup-v3x_remove_rcar-v3x = " \
+    ${CPURTT_PKGS} \
 "
