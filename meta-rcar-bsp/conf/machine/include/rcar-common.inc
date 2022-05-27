@@ -18,7 +18,6 @@ SERIAL_CONSOLES = "115200;ttySC0"
 PREFERRED_PROVIDER_virtual/kernel = "linux-renesas"
 
 # u-boot
-PREFERRED_VERSION_u-boot = "v2020.01%"
 EXTRA_IMAGEDEPENDS += " u-boot"
 
 # Add variable to Build Configuration in build log
