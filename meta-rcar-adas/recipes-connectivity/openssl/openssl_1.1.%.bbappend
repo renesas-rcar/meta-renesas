@@ -1,3 +1,2 @@
-# Upgrade to 1.1.1n to fix CVE-2022-0778
-PV = "1.1.1n"
-SRC_URI[sha256sum] = "40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a"
+PV = "1.1.1o"
+SRC_URI[sha256sum] = "9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f"
