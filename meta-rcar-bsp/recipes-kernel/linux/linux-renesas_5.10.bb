@@ -10,6 +10,10 @@ COMPATIBLE_MACHINE = "(falcon|condor|eagle|whitehawk)"
 SRCREV = "${RENESAS_BSP_SRCREV}"
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH}"
 
+SRC_URI += " \
+    file://micrel-phy-gether.patch \
+"
+
 LINUX_VERSION ?= "5.10.41"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
