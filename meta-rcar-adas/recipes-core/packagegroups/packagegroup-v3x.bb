@@ -22,9 +22,6 @@ CPURTT_PKGS_whitehawk = " \
     kernel-module-cpurttdrv3 \
 "
 
-UDEV_RULES_rcar-v3x = ""
-UDEV_RULES_rcar-v4x = "udev-rules-cpuhotplug"
-
 GFX_PKGS_rcar-v3x = ""
 GFX_PKGS_rcar-v4x = " \
     kernel-module-gles \
@@ -50,7 +47,6 @@ RDEPENDS_packagegroup-v3x = " \
     kernel-module-qos \
     qosif-user-module \
     qosif-tp-user-module \
-    ${UDEV_RULES} \
     ${GFX_PKGS} \
 "
 
