@@ -11,7 +11,7 @@ LIC_FILES_CHKSUM = " \
 inherit module
 
 DEPENDS = "linux-renesas kernel-module-vspm"
-PN = "kernel-module-vspmif"
+PN = "kernel-module-vspm-if"
 PR = "r0"
 
 VSPMIF_DRV_URL = " \
@@ -67,4 +67,3 @@ FILES:${PN} = " \
 FILES:${PN}-dbg = "" 
 ALLOW_EMPTY:${PN}-dbg = "1" 
 
-RPROVIDES:${PN} += "kernel-module-vspmif kernel-module-vspm-if"

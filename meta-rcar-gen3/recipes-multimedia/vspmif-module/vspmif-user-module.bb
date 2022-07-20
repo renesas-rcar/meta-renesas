@@ -2,7 +2,7 @@ DESCRIPTION = "VSP Manager Interface library for R-Car Gen3"
 
 require vspmif.inc
 
-DEPENDS = "kernel-module-vspmif mmngr-user-module"
+DEPENDS = "kernel-module-vspm-if mmngr-user-module"
 PN = "vspmif-user-module"
 PR = "r0"
 
