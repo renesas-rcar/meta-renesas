@@ -1,4 +1,5 @@
-RENESAS_GST_PLUGINS_BAD_URL ?= "gitsm://github.com/renesas-rcar/gstreamer.git;branch=RCAR-GEN3e/1.20.1;protocol=https"
+require include/rcar-gen3-modules-common.inc
+require gstreamer.inc
 
 SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz \
                   file://0001-fix-maybe-uninitialized-warnings-when-compiling-with.patch \
@@ -8,11 +9,9 @@ SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plug
                   file://0005-msdk-fix-includedir-path.patch \
                   "
 
-SRC_URI:append = " ${RENESAS_GST_PLUGINS_BAD_URL}"
+SRC_URI:append = " ${RENESAS_GST_URL}"
 
-SRCREV = "c8e94177fecb95bc0dcd9d86e8f67cdbc9d913eb"
 
-require include/rcar-gen3-modules-common.inc
 DEPENDS += "weston libdrm"
 
 S = "${WORKDIR}/git/subprojects/gst-plugins-bad"
