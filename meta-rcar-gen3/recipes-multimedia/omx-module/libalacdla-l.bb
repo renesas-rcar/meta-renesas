@@ -12,7 +12,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 DEPENDS = " \
     kernel-module-mmngr mmngr-user-module \
-    vspmif-user-module kernel-module-vspmif \
+    vspmif-user-module kernel-module-vspm-if \
     kernel-module-vspm kernel-module-vsp2driver \
 "
 

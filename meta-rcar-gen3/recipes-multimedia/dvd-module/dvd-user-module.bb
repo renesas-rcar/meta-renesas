@@ -7,7 +7,7 @@ require include/dtv-dvd-control.inc
 inherit features_check
 
 DEPENDS = " \
-    kernel-module-vspmif mmngr-user-module \
+    kernel-module-vspm-if mmngr-user-module \
     vspmif-user-module kernel-module-vspm \
     omx-user-module kernel-module-uvcs-drv \
 "

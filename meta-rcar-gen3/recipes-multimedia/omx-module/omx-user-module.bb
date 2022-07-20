@@ -7,7 +7,7 @@ COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
 DEPENDS = " \
     kernel-module-mmngr mmngr-user-module \
-    vspmif-user-module kernel-module-vspmif \
+    vspmif-user-module kernel-module-vspm-if \
     kernel-module-vspm kernel-module-vsp2driver \
 "
 

@@ -6,7 +6,7 @@ require include/omx-control.inc
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
 DEPENDS = "kernel-module-mmngr kernel-module-mmngrbuf \
-    kernel-module-vspm kernel-module-vspmif \
+    kernel-module-vspm kernel-module-vspm-if \
     kernel-module-vsp2driver \
 "
 
@@ -24,7 +24,7 @@ RDEPENDS_packagegroup-multimedia-kernel-modules = " \
     kernel-module-mmngr \
     kernel-module-mmngrbuf \
     kernel-module-vspm \
-    kernel-module-vspmif \
+    kernel-module-vspm-if \
     kernel-module-vsp2driver \
 "
 
