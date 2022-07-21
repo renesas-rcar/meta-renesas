@@ -21,4 +21,5 @@ IMAGE_INSTALL_append = " \
     kernel-module-qos \
     qosif-user-module \
     qosif-tp-user-module \
+    pcie-test \
 "
