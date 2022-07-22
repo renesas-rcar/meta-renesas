@@ -8,8 +8,8 @@ COMPATIBLE_MACHINE = "spider"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.10.41/rcar-5.1.6.rc3"
-SRCREV = "2f11ac9c63f737ebbd3a973ba3396e4135e5ae5d"
+BRANCH = "v5.10.41/rcar-5.1.7.rc2"
+SRCREV = "b27b74c20bacdba5d96cf80a3aa365b9f3393158"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
