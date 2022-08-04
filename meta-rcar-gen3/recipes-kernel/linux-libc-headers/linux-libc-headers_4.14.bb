@@ -4,10 +4,10 @@ require include/adsp-control.inc
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v4.14.75-ltsi/rcar-3.9.11"
-SRCREV = "fcb34fe338cbde0a64919430733541035f20a784"
+BRANCH = "v4.14.75-ltsi/rcar-3.9.12"
+SRCREV = "a6fa7ae5c5fa626b62cd6f6008aed8917e788e66"
 
-SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH}"
+SRC_URI = "${RENESAS_BSP_URL};branch=${BRANCH};protocol=https"
 
 # Enable RPMSG_VIRTIO depend on ICCOM
 SRC_URI_append = " \
