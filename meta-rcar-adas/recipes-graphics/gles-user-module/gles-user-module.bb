@@ -19,7 +19,6 @@ PROVIDES = "virtual/gles-user-module virtual/egl virtual/libgles2"
 
 SRC_URI = " \
     file://r8a779g0_linux_gsx_binaries_gles.tar.bz2 \
-    file://change-shell.patch \
     file://rc.pvr.service \
 "
 
