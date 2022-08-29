@@ -41,7 +41,7 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     procps \
     rsync \
     wget \
-    libgpiod \
+    libgpiod libgpiod-tools \
     libyaml \
     i2c-tools \
     stress \
