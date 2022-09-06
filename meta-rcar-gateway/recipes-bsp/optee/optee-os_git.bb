@@ -22,7 +22,7 @@ SRC_URI_append = " \
     file://0001-mk-gcc.mk-Change-the-path-to-the-library.patch \
 "
 
-COMPATIBLE_MACHINE = "(spider)"
+COMPATIBLE_MACHINE = "(spider|s4sk-proto)"
 PLATFORM = "rcar_gen4"
 
 DEPENDS = "python3-pycryptodome-native python3-pyelftools-native"

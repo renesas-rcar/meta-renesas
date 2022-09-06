@@ -10,6 +10,14 @@ SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
 SRCREV = "3ec5cec05015d8b290a8d390b0246e1df3865199"
 PV = "v2020.10+git${SRCPV}"
 
+SRC_URI_append = " \
+    file://0001-net-rswitch-Fix-getting-offset-of-GWTRCi-register.patch \
+    file://0002-net-rswitch-Fix-rswitch_modify-function.patch \
+    file://0003-ARM-dts-renesas-Add-R8A779F0-S4SK-DTs.patch \
+    file://0004-ARM-renesas-Add-R8A779F0-S4SK-board-code.patch \
+    file://0005-ARM-dts-renesas-Add-Ethernet-Switch-support-on-S4SK.patch \
+"
+
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
 UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"

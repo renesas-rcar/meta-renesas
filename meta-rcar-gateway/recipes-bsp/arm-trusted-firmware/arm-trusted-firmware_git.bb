@@ -20,7 +20,7 @@ SRC_URI_append = "\
 
 PV = "v2.5+renesas+git${SRCPV}"
 
-COMPATIBLE_MACHINE = "(spider)"
+COMPATIBLE_MACHINE = "(spider|s4sk-proto)"
 PLATFORM = "rcar_gen4"
 ATFW_OPT_r8a779f0 = "LSI=S4 CTX_INCLUDE_AARCH32_REGS=0 LOG_LEVEL=10 DEBUG=0"
 

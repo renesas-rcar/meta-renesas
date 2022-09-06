@@ -4,14 +4,22 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 require recipes-kernel/linux/linux-yocto.inc
 
-COMPATIBLE_MACHINE = "spider"
+COMPATIBLE_MACHINE = "spider|s4sk-proto"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
 BRANCH = "v5.10.41/rcar-5.1.6.rc3"
-SRCREV = "2f11ac9c63f737ebbd3a973ba3396e4135e5ae5d"
+SRCREV = "40d5324d70e6f697b5280bb76a91b5ec51ecc7ab"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
+
+SRC_URI_append = " \
+    file://0001-arm64-dts-renesas-Add-Renesas-R8A779F0-Starter-Kit-s.patch \
+    file://0002-arm64-dts-renesas-r8a779f0-s4sk-Add-PCIe-device-node.patch \
+    file://0003-arch-arm64-dts-renesas-r8a779f0-s4sk-Add-rswitch-nod.patch \
+    file://pcie_ep.cfg \
+    file://pci_ep_test.cfg \
+"
 
 LINUX_VERSION ?= "5.10.41"
 PV = "${LINUX_VERSION}+git${SRCPV}"

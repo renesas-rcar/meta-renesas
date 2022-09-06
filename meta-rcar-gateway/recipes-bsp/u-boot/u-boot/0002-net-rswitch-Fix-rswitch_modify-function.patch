@@ -1,0 +1,28 @@
+From 78fca87fe56ad619672a6ad14735f09fb7f9d5d8 Mon Sep 17 00:00:00 2001
+From: Hai Pham <hai.pham.ud@renesas.com>
+Date: Thu, 14 Jul 2022 21:56:30 +0700
+Subject: [PATCH 2/5] net: rswitch: Fix rswitch_modify function
+
+The patch adds base address that missed in the rswitch_modify function
+
+Signed-off-by: Hai Pham <hai.pham.ud@renesas.com>
+---
+ drivers/net/rswitch.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/rswitch.c b/drivers/net/rswitch.c
+index 47f2bdcc0b..8b30f772c5 100644
+--- a/drivers/net/rswitch.c
++++ b/drivers/net/rswitch.c
+@@ -353,7 +353,7 @@ static inline void rswitch_invalidate_dcache(u32 addr, u32 len)
+ 
+ void rswitch_modify(struct rswitch_etha *etha, enum rswitch_reg reg, u32 clear, u32 set)
+ {
+-	writel((readl(etha->addr + reg) & ~clear) | set, reg);
++	writel((readl(etha->addr + reg) & ~clear) | set, etha->addr + reg);
+ }
+ 
+ #define RSWITCH_TIMEOUT_MS	1000
+-- 
+2.25.1
+
