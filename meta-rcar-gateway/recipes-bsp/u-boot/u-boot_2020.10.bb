@@ -10,6 +10,12 @@ SRC_URI = "${UBOOT_URL};branch=${BRANCH};protocol=https"
 SRCREV = "db1330ad1a3609f849570b0a92cc1710861ac759"
 PV = "v2020.10+git${SRCPV}"
 
+SRC_URI:append = " \
+    file://0003-ARM-dts-renesas-Add-R8A779F0-S4SK-Prototype-DTs.patch \
+    file://0004-ARM-renesas-Add-R8A779F0-S4SK-prototype-board-code.patch \
+    file://0005-ARM-dts-renesas-Add-Ethernet-Switch-support-on-S4SK-.patch \
+"
+
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
 UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"

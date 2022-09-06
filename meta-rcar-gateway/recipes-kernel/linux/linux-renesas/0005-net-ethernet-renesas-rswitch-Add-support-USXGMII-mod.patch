@@ -1,0 +1,274 @@
+From 94e677aa239aff76b0534ce56079779e401a1d8a Mon Sep 17 00:00:00 2001
+From: Tam Nguyen <tam.nguyen.xa@renesas.com>
+Date: Mon, 14 Nov 2022 22:54:48 +0700
+Subject: [PATCH 5/6] net: ethernet: renesas: rswitch: Add support USXGMII mode
+ support on S4SK
+
+Currently, the 2.5Gbps PHY on S4 Starter Kit (S4SK) Prototype board
+is still a prototype, and it automatically configured by loading
+the configuration from an EEPROM. Hence, communication with PHY device
+is difference with S4 Spider board.
+
+Add USXGMII mode support on S4SK Prototype boards.
+
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ drivers/net/ethernet/renesas/rswitch.c | 117 +++++++++++++++++++++++--
+ 1 file changed, 108 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/rswitch.c b/drivers/net/ethernet/renesas/rswitch.c
+index 46386117ee7a..a192e36e8e22 100644
+--- a/drivers/net/ethernet/renesas/rswitch.c
++++ b/drivers/net/ethernet/renesas/rswitch.c
+@@ -1050,6 +1050,10 @@ static bool parallel_mode;
+ module_param(parallel_mode, bool, 0644);
+ MODULE_PARM_DESC(parallel_mode, "Operate simultaneously with Realtime core");
+ 
++static bool sk_board;
++module_param(sk_board, bool, 0644);
++MODULE_PARM_DESC(sk_board, "Discriminate S4 Starter Kit and Spider board");
++
+ #define RSWITCH_TIMEOUT_MS	1000
+ static int rswitch_reg_wait(void __iomem *addr, u32 offs, u32 mask, u32 expected)
+ {
+@@ -1391,24 +1395,31 @@ static void rswitch_rmac_setting(struct rswitch_etha *etha, const u8 *mac)
+ {
+ 	u32 val;
+ 
++	if (sk_board)
++		etha->speed = 2500;
+ 	/* FIXME */
+ 	/* Set xMII type */
+ 	switch (etha->speed) {
+ 	case 10:
+ 		val = MPIC_LSC_10M;
++		rswitch_etha_write(etha, MPIC_PIS_GMII | val, MPIC);
+ 		break;
+ 	case 100:
+ 		val = MPIC_LSC_100M;
++		rswitch_etha_write(etha, MPIC_PIS_GMII | val, MPIC);
+ 		break;
+ 	case 1000:
+ 		val = MPIC_LSC_1G;
++		rswitch_etha_write(etha, MPIC_PIS_GMII | val, MPIC);
++		break;
++	case 2500:
++		val = MPIC_LSC_2_5G;
++		rswitch_etha_write(etha, MPIC_PIS_XGMII | val, MPIC);
+ 		break;
+ 	default:
+ 		return;
+ 	}
+ 
+-	rswitch_etha_write(etha, MPIC_PIS_GMII | val, MPIC);
+-
+ #if 0
+ 	/* Set Interrupt enable */
+ 	rswitch_etha_write(etha, 0, MEIE);
+@@ -1524,6 +1535,13 @@ static int rswitch_serdes_common_setting(struct rswitch_etha *etha, enum rswitch
+ 		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_MPLLB_CTRL1, BANK_180, 0);
+ 		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_MPLLB_CTRL3, BANK_180, 0x3d);
+ 
++		break;
++	case USXGMII:
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_REF_CLK_CTRL, BANK_180, 0x57);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_10G_MPLLA_CTRL2, BANK_180, 0xc200);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_MPLLA_CTRL0, BANK_180, 0x42);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_MPLLA_CTRL1, BANK_180, 0);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_MPLLA_CTRL3, BANK_180, 0x2f);
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+@@ -1578,6 +1596,45 @@ static int rswitch_serdes_chan_setting(struct rswitch_etha *etha, enum rswitch_s
+ 			return ret;
+ 
+ 		break;
++	case USXGMII:
++		rswitch_serdes_write32(addr, SR_XS_PCS_CTRL2, BANK_300, 0x0);
++		rswitch_serdes_write32(addr, VR_XS_PCS_DEBUG_CTRL, BANK_380, 0x50);
++		rswitch_serdes_write32(addr, VR_XS_PCS_DIG_CTRL1, BANK_380, 0x2200);
++		rswitch_serdes_write32(addr, VR_XS_PCS_KR_CTRL, BANK_380, 0x400);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_MPLL_CMN_CTRL, BANK_180, 0x1);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_VCO_CAL_LD0, BANK_180, 0x56a);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_VCO_CAL_REF0, BANK_180, 0x15);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_RX_GENCTRL1,
++						      BANK_180, 0x1100);
++		rswitch_serdes_write32(addr, VR_XS_PMA_CONSUMER_10G_RX_GENCTRL4, BANK_180, 1);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_TX_RATE_CTRL, BANK_180, 0x01);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_RX_RATE_CTRL, BANK_180, 0x01);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_TX_GENCTRL2, BANK_180, 0x300);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_RX_GENCTRL2, BANK_180, 0x300);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_AFE_DFE_EN_CTRL, BANK_180, 0);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_RX_EQ_CTRL0, BANK_180, 0x4);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_10G_RX_IQ_CTRL0, BANK_180, 0);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_TX_GENCTRL1, BANK_180, 0x310);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_TX_GENCTRL2, BANK_180, 0x0301);
++		ret = rswitch_serdes_reg_wait(addr, VR_XS_PMA_MP_12G_16G_TX_GENCTRL2,
++							      BANK_180, BIT(0), 0);
++		if (ret)
++			return ret;
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_RX_GENCTRL2, BANK_180, 0x301);
++		ret = rswitch_serdes_reg_wait(addr, VR_XS_PMA_MP_12G_16G_RX_GENCTRL2,
++							      BANK_180, BIT(0), 0);
++		if (ret)
++			return ret;
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_TX_GENCTRL1,
++						       BANK_180, 0x1310);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_TX_EQ_CTRL0,
++						       BANK_180, 0x1800);
++		rswitch_serdes_write32(addr, VR_XS_PMA_MP_12G_16G_25G_TX_EQ_CTRL1, BANK_180, 0);
++		rswitch_serdes_write32(addr, VR_XS_PCS_DIG_CTRL1, BANK_380, 0x2300);
++		ret = rswitch_serdes_reg_wait(addr, VR_XS_PCS_DIG_CTRL1, BANK_380, BIT(8), 0);
++		if (ret)
++			return ret;
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -1598,6 +1655,13 @@ static int rswitch_serdes_set_speed(struct rswitch_etha *etha, enum rswitch_serd
+ 			rswitch_serdes_write32(addr, SR_MII_CTRL, BANK_1F00, 0x2100);
+ 
+ 		break;
++
++	case USXGMII:
++		if (speed == 2500)
++			rswitch_serdes_write32(addr, SR_MII_CTRL, BANK_1F00, 0x120);
++			udelay(30);
++			break;
++
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -1617,6 +1681,10 @@ static int __maybe_unused rswitch_serdes_init(struct rswitch_etha *etha)
+ 	case PHY_INTERFACE_MODE_SGMII:
+ 		mode = SGMII;
+ 		break;
++	case PHY_INTERFACE_MODE_USXGMII:
++		mode = USXGMII;
++		break;
++
+ 	default:
+ 		pr_debug("%s: Don't support this interface", __func__);
+ 		return -EOPNOTSUPP;
+@@ -1658,6 +1726,8 @@ static int __maybe_unused rswitch_serdes_init(struct rswitch_etha *etha)
+ 		return ret;
+ 
+ 	/* Set speed (bps) */
++	if (sk_board)
++		etha->speed = 2500;
+ 	ret = rswitch_serdes_set_speed(etha, mode, etha->speed);
+ 	if (ret)
+ 		return ret;
+@@ -1787,8 +1857,13 @@ static struct device_node *rswitch_get_phy_node(struct rswitch_device *rdev)
+ 
+ 		phy = of_parse_phandle(port, "phy-handle", 0);
+ 		if (phy) {
+-			rdev->etha->speed = 1000;
+-			break;
++			if (sk_board) {
++				rdev->etha->speed = 2500;
++				break;
++			} else {
++				rdev->etha->speed = 1000;
++				break;
++			}
+ 		} else {
+ 			if (of_phy_is_fixed_link(port)) {
+ 				struct device_node *fixed_link;
+@@ -1957,10 +2032,14 @@ static int rswitch_open(struct net_device *ndev)
+ 			of_node_put(phy);
+ 		}
+ 
++		if (sk_board)
++			rdev->etha->speed = 2500;
+ 		ndev->phydev->speed = rdev->etha->speed;
+ 		phy_set_max_speed(ndev->phydev, rdev->etha->speed);
+ 
+-		phy_start(ndev->phydev);
++		if (!sk_board)
++			phy_start(ndev->phydev);
++
+ 		phy_started = true;
+ 
+ 		if (!rdev->etha->operated) {
+@@ -1981,6 +2060,10 @@ static int rswitch_open(struct net_device *ndev)
+ 	pr_debug("%s: tx = %d, rx = %d\n", __func__, rdev->tx_chain->index, rdev->rx_chain->index);
+ 	rswitch_enadis_data_irq(rdev->priv, rdev->tx_chain->index, true);
+ 	rswitch_enadis_data_irq(rdev->priv, rdev->rx_chain->index, true);
++	if (sk_board) {
++		netif_device_attach(ndev);
++		netif_carrier_on(ndev);
++	}
+ 
+ 	rtsn_ptp_init(rdev->priv->ptp_priv, RTSN_PTP_REG_LAYOUT_S4, RTSN_PTP_CLOCK_S4);
+ 
+@@ -1988,8 +2071,11 @@ static int rswitch_open(struct net_device *ndev)
+ 	return err;
+ 
+ error:
+-	if (phy_started)
++	if (phy_started) {
++		if (sk_board)
++			ndev->phydev->state = PHY_DOWN;
+ 		phy_stop(ndev->phydev);
++	}
+ 	rswitch_phy_deinit(rdev);
+ 	rswitch_mii_unregister(rdev);
+ 	napi_disable(&rdev->napi);
+@@ -2000,6 +2086,9 @@ static int rswitch_stop(struct net_device *ndev)
+ {
+ 	struct rswitch_device *rdev = netdev_priv(ndev);
+ 
++	if (sk_board)
++		ndev->phydev->state = PHY_DOWN;
++
+ 	if (rdev->etha && ndev->phydev)
+ 		phy_stop(ndev->phydev);
+ 
+@@ -2142,6 +2231,8 @@ static int rswitch_hwstamp_set(struct net_device *ndev, struct ifreq *req)
+ 
+ static int rswitch_do_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ {
++	struct phy_device *phydev = ndev->phydev;
++
+ 	if (!netif_running(ndev))
+ 		return -EINVAL;
+ 
+@@ -2154,7 +2245,10 @@ static int rswitch_do_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 		break;
+ 	}
+ 
+-	return 0;
++	if (!sk_board)
++		return 0;
++	else
++		return phy_mii_ioctl(phydev, req, cmd);
+ }
+ 
+ static const struct net_device_ops rswitch_netdev_ops = {
+@@ -2304,8 +2398,10 @@ static int rswitch_gwca_hw_init(struct rswitch_private *priv)
+ 	rs_write32(lower_32_bits(priv->desc_bat_dma), priv->addr + GWDCBAC1);
+ 	rs_write32(upper_32_bits(priv->desc_bat_dma), priv->addr + GWDCBAC0);
+ 
+-	priv->gwca.speed = 1000;
+-	rswitch_gwca_set_rate_limit(priv, priv->gwca.speed);
++	if (!sk_board) {
++		priv->gwca.speed = 1000;
++		rswitch_gwca_set_rate_limit(priv, priv->gwca.speed);
++	}
+ 
+ 	err = rswitch_gwca_change_mode(priv, GWMC_OPC_DISABLE);
+ 	if (err < 0)
+@@ -2990,6 +3086,9 @@ static int renesas_eth_sw_probe(struct platform_device *pdev)
+ 		clk_enable(priv->phy_clk);
+ 	}
+ 
++	if (of_property_read_bool(pdev->dev.of_node, "board-names"))
++		sk_board = 1;
++
+ 	rswitch_init(priv);
+ 
+ 	device_set_wakeup_capable(&pdev->dev, 1);
+-- 
+2.25.1
+

@@ -65,7 +65,16 @@ e.g.:
 * To build a specific target BSP, configure the associated machine in local.conf:
 
 ```bash
-    MACHINE ??= "spider"
+	MACHINE ??= "<supported board name>"
+```
+
+Board|MACHINE
+-----|-------
+Spider|MACHINE = "spider"
+Starter Kit S4|MACHINE = "s4sk-proto"
+
+s4sk-proto is for the prototype version of S4 Starter Kit board, this machine's name will be replaced after official version of S4 Starter Kit board released.
+
 ```
 
 * For a sample local.conf file, please refer to: [docs/sample/conf/](docs/sample/conf/)

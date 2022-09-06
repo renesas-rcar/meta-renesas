@@ -1,0 +1,335 @@
+From 3bf24de04767c58b53aa83c9ea9a89293167478b Mon Sep 17 00:00:00 2001
+From: Michael Dege <michael.dege@renesas.com>
+Date: Wed, 8 Jun 2022 10:48:05 +0200
+Subject: [PATCH 4/5] ARM: renesas: Add R8A779F0 S4SK prototype board code
+
+Add board code for the R8A779F0 S4SK prototype board.
+Based on the original (and large) patch by Michael Dege.
+
+Signed-off-by: Michael Dege <michael.dege@renesas.com>
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ arch/arm/dts/Makefile                         |  1 +
+ .../dts/r8a779f0-s4sk-prototype-u-boot.dts    | 42 ++++++++++
+ arch/arm/mach-rmobile/Kconfig.64              |  7 ++
+ board/renesas/s4sk-prototype/Kconfig          | 15 ++++
+ board/renesas/s4sk-prototype/Makefile         |  9 +++
+ board/renesas/s4sk-prototype/s4sk-prototype.c | 81 +++++++++++++++++++
+ configs/r8a779f0_s4sk_prototype_defconfig     | 64 +++++++++++++++
+ include/configs/s4sk-prototype.h              | 21 +++++
+ 8 files changed, 240 insertions(+)
+ create mode 100644 arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts
+ create mode 100644 board/renesas/s4sk-prototype/Kconfig
+ create mode 100644 board/renesas/s4sk-prototype/Makefile
+ create mode 100644 board/renesas/s4sk-prototype/s4sk-prototype.c
+ create mode 100644 configs/r8a779f0_s4sk_prototype_defconfig
+ create mode 100644 include/configs/s4sk-prototype.h
+
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index 4934824673..06231afc3d 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -809,6 +809,7 @@ endif
+ 
+ dtb-$(CONFIG_RCAR_GEN4) += \
+ 	r8a779f0-spider-u-boot.dtb \
++	r8a779f0-s4sk-prototype-u-boot.dtb \
+ 	r8a779g0-whitehawk-u-boot.dtb
+ 
+ ifdef CONFIG_RCAR_GEN4
+diff --git a/arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts b/arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts
+new file mode 100644
+index 0000000000..9b54aa38f4
+--- /dev/null
++++ b/arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts
+@@ -0,0 +1,42 @@
++// SPDX-License-Identifier: (GPL-2.0 or MIT)
++/*
++ * Device Tree Source extras for U-Boot for the S4 Starter Kit prototype board
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++#include "r8a779f0-s4sk-prototype.dts"
++#include "r8a779f0-u-boot.dtsi"
++
++/ {
++	aliases {
++		spi0 = &rpc;
++	};
++};
++
++&pfc {
++	qspi0_pins: qspi0 {
++		groups = "qspi0_ctrl", "qspi0_data4";
++		function = "qspi0";
++	};
++};
++
++&rpc {
++	pinctrl-0 = <&qspi0_pins>;
++	pinctrl-names = "default";
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++	spi-max-frequency = <40000000>;
++	status = "okay";
++
++	spi-flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "s25fs512s", "jedec,spi-nor";
++		reg = <0>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		spi-max-frequency = <40000000>;
++	};
++};
+diff --git a/arch/arm/mach-rmobile/Kconfig.64 b/arch/arm/mach-rmobile/Kconfig.64
+index d7ebd8146c..d62ddd9fa8 100644
+--- a/arch/arm/mach-rmobile/Kconfig.64
++++ b/arch/arm/mach-rmobile/Kconfig.64
+@@ -175,6 +175,12 @@ config TARGET_SPIDER
+ 	help
+ 	  Support for Renesas R-Car Gen4 Spider platform
+ 
++config TARGET_S4SK_PROTOTYPE
++	bool "S4SK prototype board"
++	imply R8A779F0
++	help
++	  Support for Renesas R-Car Gen4 S4SK prototype platform
++
+ config TARGET_WHITEHAWK
+ 	bool "White Hawk board"
+ 	imply R8A779G0
+@@ -187,6 +193,7 @@ config SYS_SOC
+ 	default "rmobile"
+ 
+ source "board/renesas/spider/Kconfig"
++source "board/renesas/s4sk-prototype/Kconfig"
+ source "board/renesas/whitehawk/Kconfig"
+ 
+ config SYS_MALLOC_F_LEN
+diff --git a/board/renesas/s4sk-prototype/Kconfig b/board/renesas/s4sk-prototype/Kconfig
+new file mode 100644
+index 0000000000..b40297a29b
+--- /dev/null
++++ b/board/renesas/s4sk-prototype/Kconfig
+@@ -0,0 +1,15 @@
++if TARGET_S4SK_PROTOTYPE
++
++config SYS_SOC
++	default "rmobile"
++
++config SYS_BOARD
++	default "s4sk-prototype"
++
++config SYS_VENDOR
++	default "renesas"
++
++config SYS_CONFIG_NAME
++	default "s4sk-prototype"
++
++endif
+diff --git a/board/renesas/s4sk-prototype/Makefile b/board/renesas/s4sk-prototype/Makefile
+new file mode 100644
+index 0000000000..7f72732a13
+--- /dev/null
++++ b/board/renesas/s4sk-prototype/Makefile
+@@ -0,0 +1,9 @@
++#
++# board/renesas/s4sk-prototype/Makefile
++#
++# Copyright (C) 2022 Renesas Electronics Corp.
++#
++# SPDX-License-Identifier: GPL-2.0+
++#
++
++obj-y	:= s4sk-prototype.o ../rcar-common/gen4-common.o
+diff --git a/board/renesas/s4sk-prototype/s4sk-prototype.c b/board/renesas/s4sk-prototype/s4sk-prototype.c
+new file mode 100644
+index 0000000000..b4bc42404d
+--- /dev/null
++++ b/board/renesas/s4sk-prototype/s4sk-prototype.c
+@@ -0,0 +1,81 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * board/renesas/s4sk-prototype/s4sk-prototype.c
++ *     This file is S4 Starter Kit prototype board support.
++ * Based on Spider board support
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++#include <common.h>
++#include <asm/arch/rmobile.h>
++#include <asm/arch/sys_proto.h>
++#include <asm/global_data.h>
++#include <asm/io.h>
++#include <asm/mach-types.h>
++#include <asm/processor.h>
++#include <linux/errno.h>
++#include <asm/system.h>
++
++DECLARE_GLOBAL_DATA_PTR;
++
++#define EXTAL_CLK	20000000u
++
++static void init_generic_timer(void)
++{
++	u32 freq;
++
++	/* Set frequency data in CNTFID0 */
++	freq = EXTAL_CLK;
++
++	/* Update memory mapped and register based freqency */
++	asm volatile ("msr cntfrq_el0, %0" :: "r" (freq));
++	writel(freq, CNTFID0);
++
++	/* Enable counter */
++	setbits_le32(CNTCR_BASE, CNTCR_EN);
++}
++
++static void init_gic_v3(void)
++{
++	 /* GIC v3 power on */
++	writel(0x00000002, (GICR_LPI_PWRR));
++
++	/* Wait till the WAKER_CA_BIT changes to 0 */
++	writel(readl(GICR_LPI_WAKER) & ~0x00000002, (GICR_LPI_WAKER));
++	while (readl(GICR_LPI_WAKER) & 0x00000004)
++		;
++
++	writel(0xffffffff, GICR_SGI_BASE + GICR_IGROUPR0);
++}
++
++void s_init(void)
++{
++	if (current_el() == 3)
++		init_generic_timer();
++}
++
++int board_early_init_f(void)
++{
++	/* Unlock CPG access */
++	writel(0x5A5AFFFF, CPGWPR);
++	writel(0xA5A50000, CPGWPCR);
++
++	return 0;
++}
++
++int board_init(void)
++{
++	/* address of boot parameters */
++	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
++
++	if (current_el() == 3)
++		init_gic_v3();
++
++	return 0;
++}
++
++void reset_cpu(ulong addr)
++{
++	writel(RST_SPRES, RST_SRESCR0);
++}
+diff --git a/configs/r8a779f0_s4sk_prototype_defconfig b/configs/r8a779f0_s4sk_prototype_defconfig
+new file mode 100644
+index 0000000000..ced51df3ec
+--- /dev/null
++++ b/configs/r8a779f0_s4sk_prototype_defconfig
+@@ -0,0 +1,64 @@
++CONFIG_ARM=y
++CONFIG_ARCH_CPU_INIT=y
++CONFIG_ARCH_RMOBILE=y
++CONFIG_SYS_TEXT_BASE=0x50000000
++CONFIG_ENV_SIZE=0x40000
++CONFIG_ENV_OFFSET=0xD00000
++CONFIG_ENV_SECT_SIZE=0x40000
++CONFIG_DM_GPIO=y
++CONFIG_RCAR_GEN4=y
++CONFIG_TARGET_S4SK_PROTOTYPE=y
++# CONFIG_PSCI_RESET is not set
++# CONFIG_ARMV8_PSCI is not set
++CONFIG_DEFAULT_DEVICE_TREE="r8a779f0-s4sk-prototype-u-boot"
++CONFIG_FIT=y
++CONFIG_SUPPORT_RAW_INITRD=y
++CONFIG_USE_BOOTARGS=y
++CONFIG_BOOTARGS="root=/dev/nfs rw nfsroot=192.168.0.1:/export/rfs ip=192.168.0.20"
++CONFIG_DEFAULT_FDT_FILE="r8a779f0-s4sk-prototype.dtb"
++CONFIG_HUSH_PARSER=y
++CONFIG_CMD_BOOTZ=y
++CONFIG_CMD_GPIO=y
++CONFIG_CMD_I2C=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_SPI=y
++CONFIG_CMD_DHCP=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_OF_CONTROL=y
++CONFIG_ENV_IS_IN_SPI_FLASH=y
++CONFIG_SYS_RELOC_GD_ENV_ADDR=y
++CONFIG_VERSION_VARIABLE=y
++CONFIG_REGMAP=y
++CONFIG_SYSCON=y
++CONFIG_BAUDRATE=921600
++CONFIG_CLK=y
++CONFIG_CLK_RENESAS=y
++CONFIG_RCAR_GPIO=y
++CONFIG_DM_ETH=y
++CONFIG_RENESAS_ETHER_SWITCH=y
++CONFIG_PHY_MARVELL=y
++CONFIG_DM_I2C=y
++CONFIG_SYS_I2C_RCAR_I2C=y
++CONFIG_DM_MMC=y
++CONFIG_MMC_IO_VOLTAGE=y
++CONFIG_MMC_UHS_SUPPORT=y
++CONFIG_MMC_HS200_SUPPORT=y
++CONFIG_RENESAS_SDHI=y
++CONFIG_MTD=y
++CONFIG_DM_SPI_FLASH=y
++CONFIG_SPI_FLASH_SPANSION=y
++# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set
++CONFIG_DM_REGULATOR=y
++CONFIG_DM_REGULATOR_FIXED=y
++CONFIG_DM_REGULATOR_GPIO=y
++CONFIG_SCIF_CONSOLE=y
++CONFIG_SPI=y
++CONFIG_DM_SPI=y
++CONFIG_RENESAS_RPC_SPI=y
++CONFIG_OF_LIBFDT_OVERLAY=y
+diff --git a/include/configs/s4sk-prototype.h b/include/configs/s4sk-prototype.h
+new file mode 100644
+index 0000000000..c592f930da
+--- /dev/null
++++ b/include/configs/s4sk-prototype.h
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * include/configs/s4sk-prototype.h
++ *     This file is S4 Starter Kit prototype board configuration.
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++#ifndef __S4SK_PROTOTYPE_H
++#define __S4SK_PROTOTYPE_H
++
++#include "rcar-gen4-common.h"
++
++/* Board Clock */
++/* XTAL_CLK : 20.00MHz */
++#define CONFIG_SYS_CLK_FREQ	20000000u
++
++/* Generic Timer Definitions (use in assembler source) */
++#define COUNTER_FREQUENCY	0x1312D00	/* 20.00MHz from CPclk */
++
++#endif /* __S4SK_PROTOTYPE_H */
+-- 
+2.25.1
+

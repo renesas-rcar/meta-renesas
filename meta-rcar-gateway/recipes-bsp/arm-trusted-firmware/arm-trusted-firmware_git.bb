@@ -15,7 +15,7 @@ SRCREV = "3a6d7ddd5d90ecf2107c5fc627f0be069191d6e5"
 
 PV = "v2.5+renesas+git${SRCPV}"
 
-COMPATIBLE_MACHINE = "(spider)"
+COMPATIBLE_MACHINE = "(spider|s4sk-proto)"
 PLATFORM = "rcar_gen4"
 ATFW_OPT:r8a779f0 = "LSI=S4 CTX_INCLUDE_AARCH32_REGS=0 LOG_LEVEL=10 DEBUG=0"
 

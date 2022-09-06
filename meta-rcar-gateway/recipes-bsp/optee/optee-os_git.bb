@@ -18,7 +18,7 @@ SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https \
 "
 
-COMPATIBLE_MACHINE = "(spider)"
+COMPATIBLE_MACHINE = "(spider|s4sk-proto)"
 PLATFORM = "rcar_gen4"
 
 DEPENDS = "python3-pycryptodome-native python3-pyelftools-native"
