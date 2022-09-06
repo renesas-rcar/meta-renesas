@@ -1,0 +1,86 @@
+From 87e7ab2113c31f50b65574141fb1334320039fe8 Mon Sep 17 00:00:00 2001
+From: Michael Dege <michael.dege@renesas.com>
+Date: Wed, 1 Jun 2022 14:36:13 +0200
+Subject: [PATCH 5/5] ARM: dts: renesas: Add Ethernet Switch support on S4SK
+ protoype
+
+This patch adds Ethernet Switch support on R-Car S4 Starter Kit prototype board.
+
+Signed-off-by: Michael Dege <michael.dege@renesas.com>
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ arch/arm/dts/r8a779f0-s4sk-prototype.dts | 54 ++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+
+diff --git a/arch/arm/dts/r8a779f0-s4sk-prototype.dts b/arch/arm/dts/r8a779f0-s4sk-prototype.dts
+index 834aed4a3b..f772df8775 100644
+--- a/arch/arm/dts/r8a779f0-s4sk-prototype.dts
++++ b/arch/arm/dts/r8a779f0-s4sk-prototype.dts
+@@ -133,6 +133,36 @@
+ 		groups = "scif_clk";
+ 		function = "scif_clk";
+ 	};
++
++	tsn0_pins: tsn0 {
++		mux {
++			groups = "tsn0_link", "tsn0_mdio";
++			function = "tsn0";
++			drive-strength = <18>;
++			power-source = <3300>;
++		};
++
++		pins_mdio {
++			groups = "tsn0_mdio";
++			drive-strength = <18>;
++			power-source = <3300>;
++		};
++	};
++
++	tsn1_pins: tsn1 {
++		mux {
++			groups = "tsn1_link", "tsn1_mdio";
++			function = "tsn1";
++			drive-strength = <18>;
++			power-source = <3300>;
++		};
++
++		pins_mdio {
++			groups = "tsn1_mdio";
++			drive-strength = <18>;
++			power-source = <3300>;
++		};
++	};
+ };
+ 
+ &rwdt {
+@@ -152,3 +182,27 @@
+ &scif_clk {
+ 	clock-frequency = <24000000>;
+ };
++
++&rswitch {
++	status = "okay";
++	pinctrl-0 = <&tsn0_pins &tsn1_pins>;
++	pinctrl-names = "default";
++	phy-mode = "sgmii";
++	phy-handle = <&etha0>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	etha0: ethernet-phy@0 {
++		phy-connection-type = "sgmii";
++		device_type = "ethernet-phy";
++		compatible = "marvell,88q4364";
++		reg = <1>;
++	};
++
++	etha1: ethernet-phy@1 {
++		phy-connection-type = "sgmii";
++		device_type = "ethernet-phy";
++		compatible = "marvell,88q4364";
++		reg = <2>;
++	};
++};
+-- 
+2.25.1
+

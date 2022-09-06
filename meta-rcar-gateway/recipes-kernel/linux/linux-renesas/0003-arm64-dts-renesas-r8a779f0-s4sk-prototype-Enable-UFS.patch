@@ -1,0 +1,36 @@
+From cdbd78f0e4acd0ad5578d154efacdb8348511fbe Mon Sep 17 00:00:00 2001
+From: Tam Nguyen <tam.nguyen.xa@renesas.com>
+Date: Tue, 25 Oct 2022 19:38:18 +0700
+Subject: [PATCH 3/6] arm64: dts: renesas: r8a779f0-s4sk-prototype: Enable UFS
+ driver on board
+
+The patch enables UFS driver on R-Car S4 Starter Kit
+Prototype board.
+
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+index 4103bcc993fc..0bde592b7c38 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+@@ -204,6 +204,14 @@ &scif_clk {
+ 	clock-frequency = <24000000>;
+ };
+ 
++&ufs {
++	status = "okay";
++};
++
++&ufs30_clk {
++	clock-frequency = <38400000>;
++};
++
+ &pcie_bus_clk {
+ 	clock-frequency = <100000000>;
+ };
+-- 
+2.25.1
+

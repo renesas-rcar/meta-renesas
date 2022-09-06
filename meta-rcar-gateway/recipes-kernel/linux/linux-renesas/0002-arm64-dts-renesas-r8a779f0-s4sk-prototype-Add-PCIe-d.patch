@@ -1,0 +1,75 @@
+From 05c4a83483d05eb46e368183ab320157738791e6 Mon Sep 17 00:00:00 2001
+From: Michael Dege <michael.dege@renesas.com>
+Date: Wed, 18 May 2022 13:45:09 +0200
+Subject: [PATCH 2/6] arm64: dts: renesas: r8a779f0-s4sk-prototype: Add PCIe
+ device nodes for Renesas R-Car S4SK prototype
+
+The patch adds PCIe 0/1 (pciec0 and pciec1) device nodes
+for Renesas R-Car S4 Starter Kit Prototype.
+
+Signed-off-by: Michael Dege <michael.dege@renesas.com>
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ .../dts/renesas/r8a779f0-s4sk-prototype.dts   | 42 +++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+index e318b668964d..4103bcc993fc 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+@@ -157,6 +157,16 @@ scif_clk_pins: scif_clk {
+ 		function = "scif_clk";
+ 	};
+ 
++	pcie0_pins: pcie0 {
++		groups = "pcie0_clkreq_n";
++		function = "pcie";
++	};
++
++	pcie1_pins: pcie1 {
++		groups = "pcie1_clkreq_n";
++		function = "pcie";
++	};
++
+ };
+ 
+ &rwdt {
+@@ -193,3 +203,35 @@ &hscif1 {
+ &scif_clk {
+ 	clock-frequency = <24000000>;
+ };
++
++&pcie_bus_clk {
++	clock-frequency = <100000000>;
++};
++
++&pciec0 {
++	status = "okay";
++	pinctrl-0 = <&pcie0_pins>;
++	pinctrl-names = "default";
++	clkreq-gpios = <&gpio2 15 GPIO_ACTIVE_LOW>;
++};
++
++&pciec0_ep {
++	status = "disabled";
++	pinctrl-0 = <&pcie0_pins>;
++	pinctrl-names = "default";
++	clkreq-gpios = <&gpio2 15 GPIO_ACTIVE_LOW>;
++};
++
++&pciec1 {
++	status = "disabled";
++	pinctrl-0 = <&pcie1_pins>;
++	pinctrl-names = "default";
++	clkreq-gpios = <&gpio2 16 GPIO_ACTIVE_LOW>;
++};
++
++&pciec1_ep {
++	status = "disabled";
++	pinctrl-0 = <&pcie1_pins>;
++	pinctrl-names = "default";
++	clkreq-gpios = <&gpio2 16 GPIO_ACTIVE_LOW>;
++};
+-- 
+2.25.1
+
