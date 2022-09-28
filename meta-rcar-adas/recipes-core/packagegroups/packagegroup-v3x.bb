@@ -8,17 +8,8 @@ PACKAGES = " \
     packagegroup-v3x \
 "
 
-CPURTT_PKGS_condor = " \
-    kernel-module-cpurttdrv \
-    kernel-module-cpurttdrv2 \
-"
-CPURTT_PKGS_eagle = " \
-    kernel-module-cpurttdrv \
-    kernel-module-cpurttdrv2 \
-"
-CPURTT_PKGS_falcon = ""
-
-CPURTT_PKGS_whitehawk = " \
+CPURTT_PKGS_rcar-v3x = ""
+CPURTT_PKGS_rcar-v4x = " \
     kernel-module-cpurttdrv3 \
 "
 
@@ -30,7 +21,7 @@ GFX_PKGS_rcar-v4x = " \
     libgles2 \
 "
 
-# V3x common packages: CMEM, CV lib, MMNGR
+# ADAS common packages: CMEM, CV lib
 RDEPENDS_packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
@@ -46,6 +37,3 @@ RDEPENDS_packagegroup-v3x = " \
     ${GFX_PKGS} \
 "
 
-RDEPENDS_packagegroup-v3x_remove_rcar-v3x = " \
-    ${CPURTT_PKGS} \
-"
