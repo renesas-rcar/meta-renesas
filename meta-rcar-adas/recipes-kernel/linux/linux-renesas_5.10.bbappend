@@ -1,13 +1,5 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 
-# LVDS camera configuration
-SRC_URI_append_rcar = " \
-    file://lvds_camera.cfg \
-"
-SRC_URI_append_rcar-v4x = " \
-    file://dmatest.cfg \
-"
-
 PACKAGES += "${PN}-uapi"
 
 do_install_append_rcar() {
