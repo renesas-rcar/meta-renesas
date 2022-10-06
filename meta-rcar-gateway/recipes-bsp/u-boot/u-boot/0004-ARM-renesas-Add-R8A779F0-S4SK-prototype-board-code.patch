@@ -1,56 +1,56 @@
-From 841e54ee375d67f3a7326ea27c817196a5bdc2de Mon Sep 17 00:00:00 2001
+From 3bf24de04767c58b53aa83c9ea9a89293167478b Mon Sep 17 00:00:00 2001
 From: Michael Dege <michael.dege@renesas.com>
 Date: Wed, 8 Jun 2022 10:48:05 +0200
-Subject: [PATCH 4/5] ARM: renesas: Add R8A779F0 S4SK board code
+Subject: [PATCH 4/5] ARM: renesas: Add R8A779F0 S4SK prototype board code
 
-Add board code for the R8A779F0 S4SK board.
+Add board code for the R8A779F0 S4SK prototype board.
 Based on the original (and large) patch by Michael Dege.
 
 Signed-off-by: Michael Dege <michael.dege@renesas.com>
 Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---
- arch/arm/dts/Makefile                 |  1 +
- arch/arm/dts/r8a779f0-s4sk-u-boot.dts | 42 ++++++++++++++
- arch/arm/mach-rmobile/Kconfig.64      |  7 +++
- board/renesas/s4sk/Kconfig            | 15 +++++
- board/renesas/s4sk/Makefile           |  9 +++
- board/renesas/s4sk/s4sk.c             | 81 +++++++++++++++++++++++++++
- configs/r8a779f0_s4sk_defconfig       | 64 +++++++++++++++++++++
- include/configs/s4sk.h                | 21 +++++++
+ arch/arm/dts/Makefile                         |  1 +
+ .../dts/r8a779f0-s4sk-prototype-u-boot.dts    | 42 ++++++++++
+ arch/arm/mach-rmobile/Kconfig.64              |  7 ++
+ board/renesas/s4sk-prototype/Kconfig          | 15 ++++
+ board/renesas/s4sk-prototype/Makefile         |  9 +++
+ board/renesas/s4sk-prototype/s4sk-prototype.c | 81 +++++++++++++++++++
+ configs/r8a779f0_s4sk_prototype_defconfig     | 64 +++++++++++++++
+ include/configs/s4sk-prototype.h              | 21 +++++
  8 files changed, 240 insertions(+)
- create mode 100644 arch/arm/dts/r8a779f0-s4sk-u-boot.dts
- create mode 100644 board/renesas/s4sk/Kconfig
- create mode 100644 board/renesas/s4sk/Makefile
- create mode 100644 board/renesas/s4sk/s4sk.c
- create mode 100644 configs/r8a779f0_s4sk_defconfig
- create mode 100644 include/configs/s4sk.h
+ create mode 100644 arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts
+ create mode 100644 board/renesas/s4sk-prototype/Kconfig
+ create mode 100644 board/renesas/s4sk-prototype/Makefile
+ create mode 100644 board/renesas/s4sk-prototype/s4sk-prototype.c
+ create mode 100644 configs/r8a779f0_s4sk_prototype_defconfig
+ create mode 100644 include/configs/s4sk-prototype.h
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index 4934824673..91c5616625 100644
+index 4934824673..06231afc3d 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
 @@ -809,6 +809,7 @@ endif
  
  dtb-$(CONFIG_RCAR_GEN4) += \
  	r8a779f0-spider-u-boot.dtb \
-+	r8a779f0-s4sk-u-boot.dtb \
++	r8a779f0-s4sk-prototype-u-boot.dtb \
  	r8a779g0-whitehawk-u-boot.dtb
  
  ifdef CONFIG_RCAR_GEN4
-diff --git a/arch/arm/dts/r8a779f0-s4sk-u-boot.dts b/arch/arm/dts/r8a779f0-s4sk-u-boot.dts
+diff --git a/arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts b/arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts
 new file mode 100644
-index 0000000000..fbbbd02aad
+index 0000000000..9b54aa38f4
 --- /dev/null
-+++ b/arch/arm/dts/r8a779f0-s4sk-u-boot.dts
++++ b/arch/arm/dts/r8a779f0-s4sk-prototype-u-boot.dts
 @@ -0,0 +1,42 @@
 +// SPDX-License-Identifier: (GPL-2.0 or MIT)
 +/*
-+ * Device Tree Source extras for U-Boot for the S4 Starter Kit board
++ * Device Tree Source extras for U-Boot for the S4 Starter Kit prototype board
 + *
 + * Copyright (C) 2022 Renesas Electronics Corp.
 + */
 +
-+#include "r8a779f0-s4sk.dts"
++#include "r8a779f0-s4sk-prototype.dts"
 +#include "r8a779f0-u-boot.dtsi"
 +
 +/ {
@@ -86,18 +86,18 @@ index 0000000000..fbbbd02aad
 +	};
 +};
 diff --git a/arch/arm/mach-rmobile/Kconfig.64 b/arch/arm/mach-rmobile/Kconfig.64
-index d7ebd8146c..89a77c46db 100644
+index d7ebd8146c..d62ddd9fa8 100644
 --- a/arch/arm/mach-rmobile/Kconfig.64
 +++ b/arch/arm/mach-rmobile/Kconfig.64
 @@ -175,6 +175,12 @@ config TARGET_SPIDER
  	help
  	  Support for Renesas R-Car Gen4 Spider platform
  
-+config TARGET_S4SK
-+	bool "S4SK board"
++config TARGET_S4SK_PROTOTYPE
++	bool "S4SK prototype board"
 +	imply R8A779F0
 +	help
-+	  Support for Renesas R-Car Gen4 S4SK platform
++	  Support for Renesas R-Car Gen4 S4SK prototype platform
 +
  config TARGET_WHITEHAWK
  	bool "White Hawk board"
@@ -106,56 +106,56 @@ index d7ebd8146c..89a77c46db 100644
  	default "rmobile"
  
  source "board/renesas/spider/Kconfig"
-+source "board/renesas/s4sk/Kconfig"
++source "board/renesas/s4sk-prototype/Kconfig"
  source "board/renesas/whitehawk/Kconfig"
  
  config SYS_MALLOC_F_LEN
-diff --git a/board/renesas/s4sk/Kconfig b/board/renesas/s4sk/Kconfig
+diff --git a/board/renesas/s4sk-prototype/Kconfig b/board/renesas/s4sk-prototype/Kconfig
 new file mode 100644
-index 0000000000..47ca8ff2d4
+index 0000000000..b40297a29b
 --- /dev/null
-+++ b/board/renesas/s4sk/Kconfig
++++ b/board/renesas/s4sk-prototype/Kconfig
 @@ -0,0 +1,15 @@
-+if TARGET_S4SK
++if TARGET_S4SK_PROTOTYPE
 +
 +config SYS_SOC
 +	default "rmobile"
 +
 +config SYS_BOARD
-+	default "s4sk"
++	default "s4sk-prototype"
 +
 +config SYS_VENDOR
 +	default "renesas"
 +
 +config SYS_CONFIG_NAME
-+	default "s4sk"
++	default "s4sk-prototype"
 +
 +endif
-diff --git a/board/renesas/s4sk/Makefile b/board/renesas/s4sk/Makefile
+diff --git a/board/renesas/s4sk-prototype/Makefile b/board/renesas/s4sk-prototype/Makefile
 new file mode 100644
-index 0000000000..08cf9278e5
+index 0000000000..7f72732a13
 --- /dev/null
-+++ b/board/renesas/s4sk/Makefile
++++ b/board/renesas/s4sk-prototype/Makefile
 @@ -0,0 +1,9 @@
 +#
-+# board/renesas/s4sk/Makefile
++# board/renesas/s4sk-prototype/Makefile
 +#
 +# Copyright (C) 2022 Renesas Electronics Corp.
 +#
 +# SPDX-License-Identifier: GPL-2.0+
 +#
 +
-+obj-y	:= s4sk.o ../rcar-common/gen4-common.o
-diff --git a/board/renesas/s4sk/s4sk.c b/board/renesas/s4sk/s4sk.c
++obj-y	:= s4sk-prototype.o ../rcar-common/gen4-common.o
+diff --git a/board/renesas/s4sk-prototype/s4sk-prototype.c b/board/renesas/s4sk-prototype/s4sk-prototype.c
 new file mode 100644
-index 0000000000..16513b6481
+index 0000000000..b4bc42404d
 --- /dev/null
-+++ b/board/renesas/s4sk/s4sk.c
++++ b/board/renesas/s4sk-prototype/s4sk-prototype.c
 @@ -0,0 +1,81 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
-+ * board/renesas/s4sk/s4sk.c
-+ *     This file is S4 Starter Kit board support.
++ * board/renesas/s4sk-prototype/s4sk-prototype.c
++ *     This file is S4 Starter Kit prototype board support.
 + * Based on Spider board support
 + *
 + * Copyright (C) 2022 Renesas Electronics Corp.
@@ -233,11 +233,11 @@ index 0000000000..16513b6481
 +{
 +	writel(RST_SPRES, RST_SRESCR0);
 +}
-diff --git a/configs/r8a779f0_s4sk_defconfig b/configs/r8a779f0_s4sk_defconfig
+diff --git a/configs/r8a779f0_s4sk_prototype_defconfig b/configs/r8a779f0_s4sk_prototype_defconfig
 new file mode 100644
-index 0000000000..7f1a7b3f4f
+index 0000000000..ced51df3ec
 --- /dev/null
-+++ b/configs/r8a779f0_s4sk_defconfig
++++ b/configs/r8a779f0_s4sk_prototype_defconfig
 @@ -0,0 +1,64 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_CPU_INIT=y
@@ -248,15 +248,15 @@ index 0000000000..7f1a7b3f4f
 +CONFIG_ENV_SECT_SIZE=0x40000
 +CONFIG_DM_GPIO=y
 +CONFIG_RCAR_GEN4=y
-+CONFIG_TARGET_S4SK=y
++CONFIG_TARGET_S4SK_PROTOTYPE=y
 +# CONFIG_PSCI_RESET is not set
 +# CONFIG_ARMV8_PSCI is not set
-+CONFIG_DEFAULT_DEVICE_TREE="r8a779f0-s4sk-u-boot"
++CONFIG_DEFAULT_DEVICE_TREE="r8a779f0-s4sk-prototype-u-boot"
 +CONFIG_FIT=y
 +CONFIG_SUPPORT_RAW_INITRD=y
 +CONFIG_USE_BOOTARGS=y
 +CONFIG_BOOTARGS="root=/dev/nfs rw nfsroot=192.168.0.1:/export/rfs ip=192.168.0.20"
-+CONFIG_DEFAULT_FDT_FILE="r8a779f0-s4sk.dtb"
++CONFIG_DEFAULT_FDT_FILE="r8a779f0-s4sk-prototype.dtb"
 +CONFIG_HUSH_PARSER=y
 +CONFIG_CMD_BOOTZ=y
 +CONFIG_CMD_GPIO=y
@@ -303,22 +303,22 @@ index 0000000000..7f1a7b3f4f
 +CONFIG_DM_SPI=y
 +CONFIG_RENESAS_RPC_SPI=y
 +CONFIG_OF_LIBFDT_OVERLAY=y
-diff --git a/include/configs/s4sk.h b/include/configs/s4sk.h
+diff --git a/include/configs/s4sk-prototype.h b/include/configs/s4sk-prototype.h
 new file mode 100644
-index 0000000000..8b53bc8755
+index 0000000000..c592f930da
 --- /dev/null
-+++ b/include/configs/s4sk.h
++++ b/include/configs/s4sk-prototype.h
 @@ -0,0 +1,21 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
-+ * include/configs/s4sk.h
-+ *     This file is S4 Starter Kit board configuration.
++ * include/configs/s4sk-prototype.h
++ *     This file is S4 Starter Kit prototype board configuration.
 + *
 + * Copyright (C) 2022 Renesas Electronics Corp.
 + */
 +
-+#ifndef __S4SK_H
-+#define __S4SK_H
++#ifndef __S4SK_PROTOTYPE_H
++#define __S4SK_PROTOTYPE_H
 +
 +#include "rcar-gen4-common.h"
 +
@@ -329,7 +329,7 @@ index 0000000000..8b53bc8755
 +/* Generic Timer Definitions (use in assembler source) */
 +#define COUNTER_FREQUENCY	0x1312D00	/* 20.00MHz from CPclk */
 +
-+#endif /* __S4SK_H */
++#endif /* __S4SK_PROTOTYPE_H */
 -- 
 2.25.1
 

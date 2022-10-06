@@ -1,4 +1,4 @@
-From 8c233f52fe69cad644fc1ef63899262e057f8f30 Mon Sep 17 00:00:00 2001
+From 15387cba35abbe571199f7aa2b36503bc4f8f064 Mon Sep 17 00:00:00 2001
 From: Phong Hoang <phong.hoang.wz@renesas.com>
 Date: Fri, 22 Jul 2022 16:23:52 +0700
 Subject: [PATCH 1/5] net: rswitch: Fix getting offset of GWTRCi register

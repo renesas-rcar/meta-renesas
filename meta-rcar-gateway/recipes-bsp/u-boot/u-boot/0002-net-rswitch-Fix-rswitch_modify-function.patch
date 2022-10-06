@@ -1,4 +1,4 @@
-From 78fca87fe56ad619672a6ad14735f09fb7f9d5d8 Mon Sep 17 00:00:00 2001
+From 3d24b5ba3fea0db2599b0f59ff4c32ce57e05691 Mon Sep 17 00:00:00 2001
 From: Hai Pham <hai.pham.ud@renesas.com>
 Date: Thu, 14 Jul 2022 21:56:30 +0700
 Subject: [PATCH 2/5] net: rswitch: Fix rswitch_modify function

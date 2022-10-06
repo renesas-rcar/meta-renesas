@@ -1,20 +1,21 @@
-From 21876d249b570b6ad4395ec2eaa501701c8342e5 Mon Sep 17 00:00:00 2001
+From 87e7ab2113c31f50b65574141fb1334320039fe8 Mon Sep 17 00:00:00 2001
 From: Michael Dege <michael.dege@renesas.com>
 Date: Wed, 1 Jun 2022 14:36:13 +0200
 Subject: [PATCH 5/5] ARM: dts: renesas: Add Ethernet Switch support on S4SK
+ protoype
 
-This patch adds Ethernet Switch support on R-Car S4 Starter Kit board.
+This patch adds Ethernet Switch support on R-Car S4 Starter Kit prototype board.
 
 Signed-off-by: Michael Dege <michael.dege@renesas.com>
 Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---
- arch/arm/dts/r8a779f0-s4sk.dts | 54 ++++++++++++++++++++++++++++++++++
+ arch/arm/dts/r8a779f0-s4sk-prototype.dts | 54 ++++++++++++++++++++++++
  1 file changed, 54 insertions(+)
 
-diff --git a/arch/arm/dts/r8a779f0-s4sk.dts b/arch/arm/dts/r8a779f0-s4sk.dts
-index c6e78fbaf9..b8ba96f96c 100644
---- a/arch/arm/dts/r8a779f0-s4sk.dts
-+++ b/arch/arm/dts/r8a779f0-s4sk.dts
+diff --git a/arch/arm/dts/r8a779f0-s4sk-prototype.dts b/arch/arm/dts/r8a779f0-s4sk-prototype.dts
+index 834aed4a3b..f772df8775 100644
+--- a/arch/arm/dts/r8a779f0-s4sk-prototype.dts
++++ b/arch/arm/dts/r8a779f0-s4sk-prototype.dts
 @@ -133,6 +133,36 @@
  		groups = "scif_clk";
  		function = "scif_clk";
