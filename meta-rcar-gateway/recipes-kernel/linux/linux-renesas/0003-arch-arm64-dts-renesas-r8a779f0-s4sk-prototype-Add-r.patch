@@ -1,22 +1,22 @@
-From 7592ed0c38cd83635b57066b7722572844ae996c Mon Sep 17 00:00:00 2001
+From 43d5d297e84faa4897d034a7f5487a15c4637aff Mon Sep 17 00:00:00 2001
 From: Michael Dege <michael.dege@renesas.com>
 Date: Tue, 17 May 2022 13:12:55 +0200
-Subject: [PATCH 3/3] arch: arm64: dts: renesas: r8a779f0-s4sk: Add rswitch
- node
+Subject: [PATCH 3/3] arch: arm64: dts: renesas: r8a779f0-s4sk-prototype: Add
+ rswitch node
 
-The patch adds rswitch node channel 0/1 for S4 Starter Kit.
+The patch adds rswitch node channel 0/1 for S4 Starter Kit prototype.
 Based on the original (and large) patch by Michael Dege.
 
 Signed-off-by: Michael Dege <michael.dege@renesas.com>
 Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---
- arch/arm64/boot/dts/renesas/r8a779f0-s4sk.dts | 65 +++++++++++++++++++
+ .../dts/renesas/r8a779f0-s4sk-prototype.dts   | 65 +++++++++++++++++++
  1 file changed, 65 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk.dts b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk.dts
-index 29c249988b97..0a960254aed7 100644
---- a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk.dts
-+++ b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk.dts
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+index a3d6cd8c60e7..c13afece9381 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
 @@ -16,6 +16,7 @@ / {
  	aliases {
  		serial0 = &hscif0;

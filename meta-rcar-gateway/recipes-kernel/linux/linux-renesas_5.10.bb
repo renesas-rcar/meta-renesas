@@ -14,9 +14,9 @@ SRCREV = "40d5324d70e6f697b5280bb76a91b5ec51ecc7ab"
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH}"
 
 SRC_URI_append = " \
-    file://0001-arm64-dts-renesas-Add-Renesas-R8A779F0-Starter-Kit-s.patch \
-    file://0002-arm64-dts-renesas-r8a779f0-s4sk-Add-PCIe-device-node.patch \
-    file://0003-arch-arm64-dts-renesas-r8a779f0-s4sk-Add-rswitch-nod.patch \
+    file://0001-arm64-dts-renesas-Add-Renesas-R8A779F0-Starter-Kit-p.patch \
+    file://0002-arm64-dts-renesas-r8a779f0-s4sk-prototype-Add-PCIe-d.patch \
+    file://0003-arch-arm64-dts-renesas-r8a779f0-s4sk-prototype-Add-r.patch \
     file://pcie_ep.cfg \
     file://pci_ep_test.cfg \
 "
