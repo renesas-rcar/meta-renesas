@@ -46,6 +46,7 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     i2c-tools \
     stress \
     spidev-dbg spidev-test \
+    avahi-daemon \
 "
 
 # Various packages needed for testing
