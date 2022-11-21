@@ -1,0 +1,13 @@
+diff --git a/src/native-state-drm.h b/src/native-state-drm.h
+index 4296178..19620d5 100644
+--- a/src/native-state-drm.h
++++ b/src/native-state-drm.h
+@@ -28,7 +28,7 @@
+ #include "native-state.h"
+ #include <csignal>
+ #include <cstring>
+-#include <gbm.h>
++#include <gbm/gbm.h>
+ #include <drm.h>
+ #include <xf86drm.h>
+ #include <xf86drmMode.h>
