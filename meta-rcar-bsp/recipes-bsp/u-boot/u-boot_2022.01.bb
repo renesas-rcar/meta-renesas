@@ -12,10 +12,10 @@ require u-boot.inc
 DEPENDS += "flex-native bison-native bc-native dtc-native lzop-native srecord-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git;protocol=https"
-BRANCH = "v2022.01/rcar-6.0.0.rc1"
+BRANCH = "v2022.01/rcar-6.0.0.rc3"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
-SRCREV = "9a63ac7df3c10503a7e65cae48f22176751e4e87"
+SRCREV = "4d91df84773d2c1caff4692adce098d39062e706"
 PV = "v2022.01+git${SRCPV}"
 
 UBOOT_SREC_SUFFIX = "srec"
