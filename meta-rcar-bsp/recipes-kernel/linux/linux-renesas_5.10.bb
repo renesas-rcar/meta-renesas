@@ -10,7 +10,7 @@ COMPATIBLE_MACHINE = "(falcon|condor|eagle|whitehawk)"
 SRCREV = "${RENESAS_BSP_SRCREV}"
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH}"
 
-LINUX_VERSION ?= "5.10.41"
+LINUX_VERSION ?= "5.10.147"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
