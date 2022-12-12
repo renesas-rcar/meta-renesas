@@ -7,7 +7,7 @@ PN = "kernel-module-mmngrbuf"
 PR = "r0"
 
 S = "${WORKDIR}/git"
-MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
+B = "${WORKDIR}/git/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv"
 
 # Support HW overlay mode
 SRC_URI:append = "\
@@ -20,10 +20,8 @@ SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 # Build Memory Manager Buffer kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
-do_compile() {
-    cd ${S}/${MMNGRBUF_DRV_DIR}/drv
+do_compile:prepend() {
     install -d ${INCSHARED}
-    make all
 }
 
 do_install () {
@@ -33,18 +31,18 @@ do_install () {
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/drv/Module.symvers ${KERNELSRC}/include/mmngrbuf.symvers
+    install -m 644 ${B}/Module.symvers ${KERNELSRC}/include/mmngrbuf.symvers
 
     # Install kernel module
-    install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/drv/mmngrbuf.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${B}/mmngrbuf.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/include/mmngr_buf_private.h ${KERNELSRC}/include/
-    install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/include/mmngr_buf_private_cmn.h ${KERNELSRC}/include/
+    install -m 644 ${B}/../include/mmngr_buf_private.h ${KERNELSRC}/include/
+    install -m 644 ${B}/../include/mmngr_buf_private_cmn.h ${KERNELSRC}/include/
 
     # Install shared header files to ${includedir}
-    install -m 644 ${S}/${MMNGRBUF_DRV_DIR}/include/mmngr_buf_private_cmn.h ${D}/${includedir}/
+    install -m 644 ${B}/../include/mmngr_buf_private_cmn.h ${D}/${includedir}/
 }
 
 PACKAGES = "\

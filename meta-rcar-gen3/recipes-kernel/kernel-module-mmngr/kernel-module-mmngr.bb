@@ -8,7 +8,7 @@ PN = "kernel-module-mmngr"
 PR = "r0"
 
 S = "${WORKDIR}/git"
-MMNGR_DRV_DIR = "mmngr_drv/mmngr/mmngr-module/files/mmngr"
+B = "${WORKDIR}/git/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv"
 
 MMNGR_CFG:salvator-x = "MMNGR_SALVATORX"
 MMNGR_CFG:h3ulcb = "MMNGR_SALVATORX"
@@ -22,7 +22,7 @@ SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 # Build Memory Manager kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
-do_compile() {
+do_compile:prepend() {
     export MMNGR_CONFIG=${MMNGR_CFG}
 
     if [ "X${USE_DTV}" = "X1" ]; then
@@ -33,9 +33,7 @@ do_compile() {
 
     export MMNGR_IPMMU_MMU_CONFIG="IPMMU_MMU_DISABLE"
 
-    cd ${S}/${MMNGR_DRV_DIR}/drv
     install -d ${INCSHARED}
-    make all
 }
 
 do_install () {
@@ -45,21 +43,21 @@ do_install () {
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/drv/Module.symvers ${KERNELSRC}/include/mmngr.symvers
+    install -m 644 ${B}/Module.symvers ${KERNELSRC}/include/mmngr.symvers
 
     # Install kernel module
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/drv/mmngr.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${B}/mmngr.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_public.h ${KERNELSRC}/include/
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_private.h ${KERNELSRC}/include/
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_public_cmn.h ${KERNELSRC}/include/
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_private_cmn.h ${KERNELSRC}/include/
+    install -m 644 ${B}/../include/mmngr_public.h ${KERNELSRC}/include/
+    install -m 644 ${B}/../include/mmngr_private.h ${KERNELSRC}/include/
+    install -m 644 ${B}/../include/mmngr_public_cmn.h ${KERNELSRC}/include/
+    install -m 644 ${B}/../include/mmngr_private_cmn.h ${KERNELSRC}/include/
 
     # Install shared header file to ${includedir}
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_public_cmn.h ${D}/${includedir}/
-    install -m 644 ${S}/${MMNGR_DRV_DIR}/include/mmngr_private_cmn.h ${D}/${includedir}/
+    install -m 644 ${B}/../include/mmngr_public_cmn.h ${D}/${includedir}/
+    install -m 644 ${B}/../include/mmngr_private_cmn.h ${D}/${includedir}/
 }
 
 PACKAGES = "\

@@ -22,14 +22,9 @@ SRCREV = "b3a116d8ce68371cac21011ca3b3190ae3576987"
 SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
-
+B = "${WORKDIR}/git/vsp2driver"
 # Build VSP2 driver kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
-
-do_compile() {
-    cd ${S}/vsp2driver
-    make all
-}
 
 do_install () {
     # Create destination directories
@@ -37,14 +32,14 @@ do_install () {
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/vsp2driver/Module.symvers ${KERNELSRC}/include/vsp2.symvers
+    install -m 644 ${B}/Module.symvers ${KERNELSRC}/include/vsp2.symvers
 
     # Copy kernel module
-    install -m 644 ${S}/vsp2driver/vsp2.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${B}/vsp2.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/vsp2driver/linux/vsp2.h ${KERNELSRC}/include/
+    install -m 644 ${B}/linux/vsp2.h ${KERNELSRC}/include/
 }
 
 PACKAGES = "\

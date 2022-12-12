@@ -22,17 +22,12 @@ SRCREV = "2fdb2838a5625e4231f1cff5d10079acc4954952"
 SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
-VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
+B = "${WORKDIR}/git/vspm_if-module/files/vspm_if/drv"
 
 includedir = "${RENESAS_DATADIR}/include"
 
 # Build VSP Manager Interface kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
-
-do_compile() {
-    cd ${S}/${VSPMIF_DRV_DIR}/drv
-    make all
-}
 
 do_install () {
     # Create destination directories
@@ -41,17 +36,17 @@ do_install () {
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/${VSPMIF_DRV_DIR}/drv/Module.symvers ${KERNELSRC}/include/vspm_if.symvers
+    install -m 644 ${B}/Module.symvers ${KERNELSRC}/include/vspm_if.symvers
 
     # Install kernel module
-    install -m 644 ${S}/${VSPMIF_DRV_DIR}/drv/vspm_if.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${B}/vspm_if.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/${VSPMIF_DRV_DIR}/include/vspm_if.h ${KERNELSRC}/include/
+    install -m 644 ${B}/../include/vspm_if.h ${KERNELSRC}/include/
 
     # Install shared header file
-    install -m 644 ${S}/${VSPMIF_DRV_DIR}/include/vspm_if.h ${D}/${includedir}/
+    install -m 644 ${B}/../include/vspm_if.h ${D}/${includedir}/
 }
 
 PACKAGES = "\
