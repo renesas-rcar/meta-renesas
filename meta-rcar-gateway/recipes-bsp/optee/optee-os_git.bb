@@ -14,9 +14,7 @@ PV = "3.13+renesas+git${SRCPV}"
 BRANCH = "rcar-gen4_3.13"
 SRCREV = "c1262d05075c787d36913e2d7b86fa00b9463078"
 
-SRC_URI = " \
-    git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH} \
-"
+SRC_URI = "git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https"
 
 COMPATIBLE_MACHINE = "(spider)"
 PLATFORM = "rcar_gen4"
