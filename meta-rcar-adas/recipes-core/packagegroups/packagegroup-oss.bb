@@ -51,6 +51,7 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     avahi-daemon \
     libdrm-tests \
     libgpiod libgpiod-tools \
+    alsa-utils \
 "
 # Remove strace in V4x due to compile error with Kernel v5.10
 RDEPENDS_packagegroup-bsp-devpkg_remove_rcar-v4x = "strace" 
