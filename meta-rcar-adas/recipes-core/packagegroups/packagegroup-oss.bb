@@ -88,6 +88,7 @@ RDEPENDS_packagegroup-bsp-python3 = " \
     python3-pygobject \
     python3-pyyaml \
     python3-setuptools \
+    python3-pip \
 "
 
 # Utest (IMR, IMP, etc demos) related packages
