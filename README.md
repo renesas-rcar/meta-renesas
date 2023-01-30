@@ -25,6 +25,7 @@ Layers and boards that support is the following:
         - Renesas Electronics Corporation. R-Car Falcon (R8A779A0)
         - Renesas Electronics Corporation. R-Car Condor (R8A77980)
         - Renesas Electronics Corporation. R-Car Eagle (R8A77970)
+        - Renesas Electronics Corporation. R-Car White Hawk (R8A779G0)
 
     meta-rcar-gateway
         - Renesas Electronics Corporation. R-Car Spider (R8A779F0)
