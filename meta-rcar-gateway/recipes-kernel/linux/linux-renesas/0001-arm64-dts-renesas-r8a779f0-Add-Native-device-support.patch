@@ -1,0 +1,275 @@
+From 31151d0412c2544b249c5a37fbd4b1d5be2df8dc Mon Sep 17 00:00:00 2001
+From: Tam Nguyen <tam.nguyen.xa@renesas.com>
+Date: Thu, 29 Dec 2022 19:58:41 +0700
+Subject: [PATCH] arm64: dts: renesas: r8a779f0: Add Native device support
+
+In SDK package, UIO devices were enabled by default, Native devices
+(such as DMAE device) that were conflicted to UIO device.
+
+The patch will create new DT to support enable Native devices and
+disabled those UIO devices.
+For convience to use:
+- "r8a779f0-spider.dtb": UIO devices enable, Native devices disable.
+- "r8a779f0-spider-native.dtb": UIO devices disable, Native devices enable.
+
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/Makefile          |   1 +
+ .../boot/dts/renesas/r8a779f0-native.dtsi     | 209 ++++++++++++++++++
+ .../dts/renesas/r8a779f0-spider-native.dts    |  16 ++
+ 3 files changed, 226 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index 1499361d6ecf..a2d2bb296b28 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -74,6 +74,7 @@ dtb-$(CONFIG_ARCH_R8A779A0) += r8a779a0-falcon.dtb
+ dtb-$(CONFIG_ARCH_R8A779G0) += r8a779g0-whitehawk.dtb
+ 
+ dtb-$(CONFIG_ARCH_R8A779F0) += r8a779f0-spider.dtb
++dtb-$(CONFIG_ARCH_R8A779F0) += r8a779f0-spider-native.dtb
+ 
+ dtb-$(CONFIG_ARCH_R8A77970) += r8a77970-eagle-function.dtb
+ dtb-$(CONFIG_ARCH_R8A77970) += r8a77970-es1-eagle.dtb r8a77970-es1-eagle-function.dtb
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+new file mode 100644
+index 000000000000..92185faf86a5
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+@@ -0,0 +1,209 @@
++// SPDX-License-Identifier: (GPL-2.0 or MIT)
++/*
++ * Device Tree Source support Native device
++ * for the R-Car S4 (R8A779F0) SoC
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/power/r8a779f0-sysc.h>
++#include <dt-bindings/ipmmu/rcar-ipmmu.h>
++
++/ {
++
++	soc: soc {
++		/delete-node/mfis@e6260000;
++		/delete-node/iccom01;
++		/delete-node/iccom02;
++		/delete-node/iccom03;
++		/delete-node/iccom04;
++		/delete-node/iccom05;
++		/delete-node/iccom06;
++		/delete-node/iccom07;
++		/delete-node/iccom08;
++		/delete-node/iccom09;
++		/delete-node/iccom010;
++		/delete-node/iccom011;
++		/delete-node/iccom012;
++		/delete-node/iccom013;
++		/delete-node/iccom014;
++		/delete-node/iccom015;
++		/delete-node/iccom016;
++		/delete-node/iccom017;
++		/delete-node/iccom018;
++		/delete-node/iccom019;
++		/delete-node/iccom020;
++		/delete-node/iccom021;
++		/delete-node/iccom022;
++		/delete-node/iccom023;
++
++		/delete-node/caiplite_wrapper;
++		/delete-node/caiplite0;
++		/delete-node/caiplite1;
++		/delete-node/caiplite2;
++		/delete-node/caiplite3;
++		/delete-node/caiplite4;
++		/delete-node/caiplite5;
++		/delete-node/caiplite6;
++		/delete-node/caiplite7;
++		/delete-node/wcrc_caiplite0;
++		/delete-node/wcrc_caiplite1;
++		/delete-node/wcrc_caiplite2;
++		/delete-node/wcrc_caiplite3;
++
++		/delete-node/rtdmac_control@ffc10000;
++		/delete-node/rtdmac_control@ffc11000;
++		/delete-node/rtdmac_control@ffc12000;
++		/delete-node/rtdmac_control@ffc13000;
++		/delete-node/rtdmac_control@ffc14000;
++		/delete-node/rtdmac_control@ffc15000;
++		/delete-node/rtdmac_control@ffc16000;
++		/delete-node/rtdmac_control@ffc17000;
++		/delete-node/rtdmac_control@ffc18000;
++		/delete-node/rtdmac_control@ffc19000;
++		/delete-node/rtdmac_control@ffc1a000;
++		/delete-node/rtdmac_control@ffc1b000;
++		/delete-node/rtdmac_control@ffc1c000;
++		/delete-node/rtdmac_control@ffc1d000;
++		/delete-node/rtdmac_control@ffc1e000;
++		/delete-node/rtdmac_control@ffc1f000;
++		/delete-node/rtdmac_control@ffc20000;
++		/delete-node/rtdmac_control@ffc21000;
++		/delete-node/rtdmac_control@ffc22000;
++		/delete-node/rtdmac_control@ffc23000;
++		/delete-node/rtdmac_control@ffc24000;
++		/delete-node/rtdmac_control@ffc25000;
++		/delete-node/rtdmac_control@ffc26000;
++		/delete-node/rtdmac_control@ffc27000;
++		/delete-node/rtdmac_control@ffc28000;
++		/delete-node/rtdmac_control@ffc29000;
++		/delete-node/rtdmac_control@ffc2a000;
++		/delete-node/rtdmac_control@ffc2b000;
++		/delete-node/rtdmac_control@ffc2c000;
++		/delete-node/rtdmac_control@ffc2d000;
++		/delete-node/rtdmac_control@ffc2e000;
++		/delete-node/rtdmac_control@ffc2f000;
++		/delete-node/rtdmac_control@ffd70000;
++		/delete-node/rtdmac_control@ffd71000;
++		/delete-node/rtdmac_control@ffd72000;
++		/delete-node/rtdmac_control@ffd73000;
++		/delete-node/rtdmac_control@ffd74000;
++		/delete-node/rtdmac_control@ffd75000;
++		/delete-node/rtdmac_control@ffd76000;
++		/delete-node/rtdmac_control@ffd77000;
++		/delete-node/rtdmac_control@ffd78000;
++		/delete-node/rtdmac_control@ffd79000;
++		/delete-node/rtdmac_control@ffd7a000;
++		/delete-node/rtdmac_control@ffd7b000;
++		/delete-node/rtdmac_control@ffd7c000;
++		/delete-node/rtdmac_control@ffd7d000;
++		/delete-node/rtdmac_control@ffd7e000;
++		/delete-node/rtdmac_control@ffd7f000;
++		/delete-node/rtdmac_control@ffd80000;
++		/delete-node/rtdmac_control@ffd81000;
++		/delete-node/rtdmac_control@ffd82000;
++		/delete-node/rtdmac_control@ffd83000;
++		/delete-node/rtdmac_control@ffd84000;
++		/delete-node/rtdmac_control@ffd85000;
++		/delete-node/rtdmac_control@ffd86000;
++		/delete-node/rtdmac_control@ffd87000;
++		/delete-node/rtdmac_control@ffd88000;
++		/delete-node/rtdmac_control@ffd89000;
++		/delete-node/rtdmac_control@ffd8a000;
++		/delete-node/rtdmac_control@ffd8b000;
++		/delete-node/rtdmac_control@ffd8c000;
++		/delete-node/rtdmac_control@ffd8d000;
++		/delete-node/rtdmac_control@ffd8e000;
++		/delete-node/rtdmac_control@ffd8f000;
++		/delete-node/rtdmac_descriptor@ffd60000;
++		/delete-node/rtdmac_descriptor@ffd61000;
++		/delete-node/rtdmac_descriptor@ffd62000;
++		/delete-node/rtdmac_descriptor@ffd63000;
++
++		/delete-node/ships0@e7810000;
++		/delete-node/ships0_01;
++		/delete-node/ships1@e7820000;
++		/delete-node/ships1_01;
++		/delete-node/ships2@e7830000;
++		/delete-node/ships2_01;
++
++		/delete-node/systemram@e6300000;
++
++		/delete-node/icumx_cmd@e6610000;
++		/delete-node/icumx_cmd0_01;
++		/delete-node/icumx_cmd0_02;
++		/delete-node/icumx_cmd0_03;
++		/delete-node/icumx_cmd0_04;
++		/delete-node/icumx_cmd0_05;
++		/delete-node/icumx_cmd0_06;
++		/delete-node/icumx_cmd0_07;
++		/delete-node/icumx_cmd0_08;
++		/delete-node/icumx_cmd0_09;
++		/delete-node/icumx_cmd0_10;
++		/delete-node/icumx_cmd0_11;
++		/delete-node/icumx_cmd0_12;
++		/delete-node/icumx_cmd0_13;
++		/delete-node/icumx_cmd0_14;
++		/delete-node/icumx_cmd0_15;
++		/delete-node/icumx_cmd0_16;
++		/delete-node/icumx_cmd0_17;
++		/delete-node/icumx_cmd0_18;
++		/delete-node/icumx_cmd0_19;
++
++		/delete-node/prr@fff00044;
++		/delete-node/qos0@e67e0000;
++		/delete-node/rcarbusmoni0@e67e0000;
++		/delete-node/rcarbusmoni1@e6790000;
++
++		/delete-node/fba@ff870000;
++		/delete-node/post_fba_ca55d0;
++		/delete-node/fba@ff871000;
++		/delete-node/post_fba_ca55d1;
++		/delete-node/fba@ff872000;
++		/delete-node/post_fba_ca550;
++		/delete-node/fba@ff873000;
++		/delete-node/post_fba_ca551;
++		/delete-node/fba@ff874000;
++		/delete-node/post_fba_ca552;
++		/delete-node/fba@ff875000;
++		/delete-node/post_fba_ca553;
++
++		/delete-node/rfso@ffe80000;
++		/delete-node/rfso@ffe81000;
++		/delete-node/rfso@ffe82000;
++		/delete-node/rfso@ffe83000;
++		/delete-node/rfso@ffe84000;
++		/delete-node/rfso@ffe85000;
++		/delete-node/rfso@ffe86000;
++		/delete-node/rfso@ffe87000;
++		/delete-node/rfso@ffe88000;
++		/delete-node/rfso@ffe89000;
++		/delete-node/rfso@ffe8a000;
++
++		rt_dmac0: dma-controller@ffd60000 {
++			status = "okay";
++		};
++
++		rt_dmac1: dma-controller@ffd61000 {
++			status = "okay";
++		};
++
++		rt_dmac2: dma-controller@ffd62000 {
++			status = "okay";
++		};
++
++		rt_dmac3: dma-controller@ffd63000 {
++			status = "okay";
++		};
++
++		qos@e67e0000 {
++			status = "okay";
++		};
++
++		prr: chipid@fff00044 {
++			status = "okay";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts b/arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts
+new file mode 100644
+index 000000000000..567ecfcb6f86
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts
+@@ -0,0 +1,16 @@
++// SPDX-License-Identifier: (GPL-2.0 or MIT)
++/*
++ * Device Tree Source support Native device
++ * for the Spider CPU and Breakout boards
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r8a779f0-spider.dts"
++#include "r8a779f0-native.dtsi"
++
++/ {
++	model = "Renesas Spider Native driver based on r8a779f0";
++	compatible = "renesas,r8a779f0-native";
++};
+-- 
+2.25.1
+
