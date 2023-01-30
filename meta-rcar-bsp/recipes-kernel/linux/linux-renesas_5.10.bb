@@ -8,7 +8,8 @@ require include/rcar-kernel-info-common.inc
 COMPATIBLE_MACHINE = "(falcon|condor|eagle|whitehawk)"
 
 SRCREV = "${RENESAS_BSP_SRCREV}"
-SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH}"
+SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH} \
+    file://0001-arm64-dts-renesas-r8a779g0-Add-Native-device-support.patch"
 
 LINUX_VERSION ?= "5.10.147"
 PV = "${LINUX_VERSION}+git${SRCPV}"
