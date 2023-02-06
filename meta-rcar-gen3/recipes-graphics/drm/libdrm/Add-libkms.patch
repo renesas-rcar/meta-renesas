@@ -1,0 +1,3689 @@
+diff --git a/libkms/Android.mk b/libkms/Android.mk
+new file mode 100644
+index 00000000..a8b9489f
+--- /dev/null
++++ b/libkms/Android.mk
+@@ -0,0 +1,51 @@
++DRM_GPU_DRIVERS := $(strip $(filter-out swrast, $(BOARD_GPU_DRIVERS)))
++
++intel_drivers := i915 i965 i915g iris
++radeon_drivers := r300g r600g radeonsi
++nouveau_drivers := nouveau
++virgl_drivers := virgl
++vmwgfx_drivers := vmwgfx
++
++valid_drivers := \
++	$(intel_drivers) \
++	$(radeon_drivers) \
++	$(nouveau_drivers) \
++	$(virgl_drivers) \
++	$(vmwgfx_drivers)
++
++# warn about invalid drivers
++invalid_drivers := $(filter-out $(valid_drivers), $(DRM_GPU_DRIVERS))
++ifneq ($(invalid_drivers),)
++$(warning invalid GPU drivers: $(invalid_drivers))
++# tidy up
++DRM_GPU_DRIVERS := $(filter-out $(invalid_drivers), $(DRM_GPU_DRIVERS))
++endif
++
++LOCAL_PATH := $(call my-dir)
++
++include $(CLEAR_VARS)
++include $(LOCAL_PATH)/Makefile.sources
++
++LOCAL_SRC_FILES := $(LIBKMS_FILES)
++
++ifneq ($(filter $(vmwgfx_drivers), $(DRM_GPU_DRIVERS)),)
++LOCAL_SRC_FILES += $(LIBKMS_VMWGFX_FILES)
++endif
++
++ifneq ($(filter $(intel_drivers), $(DRM_GPU_DRIVERS)),)
++LOCAL_SRC_FILES += $(LIBKMS_INTEL_FILES)
++endif
++
++ifneq ($(filter $(nouveau_drivers), $(DRM_GPU_DRIVERS)),)
++LOCAL_SRC_FILES += $(LIBKMS_NOUVEAU_FILES)
++endif
++
++ifneq ($(filter $(radeon_drivers), $(DRM_GPU_DRIVERS)),)
++LOCAL_SRC_FILES += $(LIBKMS_RADEON_FILES)
++endif
++
++LOCAL_MODULE := libkms
++LOCAL_SHARED_LIBRARIES := libdrm
++
++include $(LIBDRM_COMMON_MK)
++include $(BUILD_SHARED_LIBRARY)
+diff --git a/libkms/Makefile.sources b/libkms/Makefile.sources
+new file mode 100644
+index 00000000..3191f516
+--- /dev/null
++++ b/libkms/Makefile.sources
+@@ -0,0 +1,23 @@
++LIBKMS_FILES := \
++	internal.h \
++	linux.c \
++	dumb.c \
++	api.c
++
++LIBKMS_VMWGFX_FILES := \
++	vmwgfx.c
++
++LIBKMS_INTEL_FILES := \
++	intel.c
++
++LIBKMS_NOUVEAU_FILES := \
++	nouveau.c
++
++LIBKMS_RADEON_FILES := \
++	radeon.c
++
++LIBKMS_EXYNOS_FILES := \
++	exynos.c
++
++LIBKMS_H_FILES := \
++	libkms.h
+diff --git a/libkms/api.c b/libkms/api.c
+new file mode 100644
+index 00000000..caca1a87
+--- /dev/null
++++ b/libkms/api.c
+@@ -0,0 +1,139 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++
++#include <errno.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include "libdrm_macros.h"
++#include "internal.h"
++
++drm_public int kms_create(int fd, struct kms_driver **out)
++{
++	return linux_create(fd, out);
++}
++
++drm_public int kms_get_prop(struct kms_driver *kms, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_BO_TYPE:
++		break;
++	default:
++		return -EINVAL;
++	}
++	return kms->get_prop(kms, key, out);
++}
++
++drm_public int kms_destroy(struct kms_driver **kms)
++{
++	if (!(*kms))
++		return 0;
++
++	free(*kms);
++	*kms = NULL;
++	return 0;
++}
++
++drm_public int kms_bo_create(struct kms_driver *kms, const unsigned *attr, struct kms_bo **out)
++{
++	unsigned width = 0;
++	unsigned height = 0;
++	enum kms_bo_type type = KMS_BO_TYPE_SCANOUT_X8R8G8B8;
++	int i;
++
++	for (i = 0; attr[i];) {
++		unsigned key = attr[i++];
++		unsigned value = attr[i++];
++
++		switch (key) {
++		case KMS_WIDTH:
++			width = value;
++			break;
++		case KMS_HEIGHT:
++			height = value;
++			break;
++		case KMS_BO_TYPE:
++			type = value;
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	if (width == 0 || height == 0)
++		return -EINVAL;
++
++	/* XXX sanity check type */
++
++	if (type == KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8 &&
++	    (width != 64 || height != 64))
++		return -EINVAL;
++
++	return kms->bo_create(kms, width, height, type, attr, out);
++}
++
++drm_public int kms_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_PITCH:
++		*out = bo->pitch;
++		break;
++	case KMS_HANDLE:
++		*out = bo->handle;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++drm_public int kms_bo_map(struct kms_bo *bo, void **out)
++{
++	return bo->kms->bo_map(bo, out);
++}
++
++drm_public int kms_bo_unmap(struct kms_bo *bo)
++{
++	return bo->kms->bo_unmap(bo);
++}
++
++drm_public int kms_bo_destroy(struct kms_bo **bo)
++{
++	int ret;
++
++	if (!(*bo))
++		return 0;
++
++	ret = (*bo)->kms->bo_destroy(*bo);
++	if (ret)
++		return ret;
++
++	*bo = NULL;
++	return 0;
++}
+diff --git a/libkms/dumb.c b/libkms/dumb.c
+new file mode 100644
+index 00000000..17efc10a
+--- /dev/null
++++ b/libkms/dumb.c
+@@ -0,0 +1,216 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "internal.h"
++
++#include <sys/ioctl.h>
++#include "xf86drm.h"
++#include "libdrm_macros.h"
++
++struct dumb_bo
++{
++	struct kms_bo base;
++	unsigned map_count;
++};
++
++static int
++dumb_get_prop(struct kms_driver *kms, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_BO_TYPE:
++		*out = KMS_BO_TYPE_SCANOUT_X8R8G8B8 | KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++dumb_destroy(struct kms_driver *kms)
++{
++	free(kms);
++	return 0;
++}
++
++static int
++dumb_bo_create(struct kms_driver *kms,
++		 const unsigned width, const unsigned height,
++		 const enum kms_bo_type type, const unsigned *attr,
++		 struct kms_bo **out)
++{
++	struct drm_mode_create_dumb arg;
++	struct dumb_bo *bo;
++	int i, ret;
++
++	for (i = 0; attr[i]; i += 2) {
++		switch (attr[i]) {
++		case KMS_WIDTH:
++		case KMS_HEIGHT:
++			break;
++		case KMS_BO_TYPE:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	bo = calloc(1, sizeof(*bo));
++	if (!bo)
++		return -ENOMEM;
++
++	memset(&arg, 0, sizeof(arg));
++
++	/* All BO_TYPE currently are 32bpp formats */
++	arg.bpp = 32;
++	arg.width = width;
++	arg.height = height;
++
++	ret = drmIoctl(kms->fd, DRM_IOCTL_MODE_CREATE_DUMB, &arg);
++	if (ret)
++		goto err_free;
++
++	bo->base.kms = kms;
++	bo->base.handle = arg.handle;
++	bo->base.size = arg.size;
++	bo->base.pitch = arg.pitch;
++
++	*out = &bo->base;
++
++	return 0;
++
++err_free:
++	free(bo);
++	return ret;
++}
++
++static int
++dumb_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out)
++{
++	switch (key) {
++	default:
++		return -EINVAL;
++	}
++}
++
++static int
++dumb_bo_map(struct kms_bo *_bo, void **out)
++{
++	struct dumb_bo *bo = (struct dumb_bo *)_bo;
++	struct drm_mode_map_dumb arg;
++	void *map = NULL;
++	int ret;
++
++	if (bo->base.ptr) {
++		bo->map_count++;
++		*out = bo->base.ptr;
++		return 0;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmIoctl(bo->base.kms->fd, DRM_IOCTL_MODE_MAP_DUMB, &arg);
++	if (ret)
++		return ret;
++
++	map = drm_mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, arg.offset);
++	if (map == MAP_FAILED)
++		return -errno;
++
++	bo->base.ptr = map;
++	bo->map_count++;
++	*out = bo->base.ptr;
++
++	return 0;
++}
++
++static int
++dumb_bo_unmap(struct kms_bo *_bo)
++{
++	struct dumb_bo *bo = (struct dumb_bo *)_bo;
++	bo->map_count--;
++	return 0;
++}
++
++static int
++dumb_bo_destroy(struct kms_bo *_bo)
++{
++	struct dumb_bo *bo = (struct dumb_bo *)_bo;
++	struct drm_mode_destroy_dumb arg;
++	int ret;
++
++	if (bo->base.ptr) {
++		/* XXX Sanity check map_count */
++		drm_munmap(bo->base.ptr, bo->base.size);
++		bo->base.ptr = NULL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmIoctl(bo->base.kms->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &arg);
++	if (ret)
++		return -errno;
++
++	free(bo);
++	return 0;
++}
++
++drm_private int
++dumb_create(int fd, struct kms_driver **out)
++{
++	struct kms_driver *kms;
++	int ret;
++	uint64_t cap = 0;
++
++	ret = drmGetCap(fd, DRM_CAP_DUMB_BUFFER, &cap);
++	if (ret || cap == 0)
++		return -EINVAL;
++
++	kms = calloc(1, sizeof(*kms));
++	if (!kms)
++		return -ENOMEM;
++
++	kms->fd = fd;
++
++	kms->bo_create = dumb_bo_create;
++	kms->bo_map = dumb_bo_map;
++	kms->bo_unmap = dumb_bo_unmap;
++	kms->bo_get_prop = dumb_bo_get_prop;
++	kms->bo_destroy = dumb_bo_destroy;
++	kms->get_prop = dumb_get_prop;
++	kms->destroy = dumb_destroy;
++	*out = kms;
++
++	return 0;
++}
+diff --git a/libkms/exynos.c b/libkms/exynos.c
+new file mode 100644
+index 00000000..ef64a668
+--- /dev/null
++++ b/libkms/exynos.c
+@@ -0,0 +1,220 @@
++/* exynos.c
++ *
++ * Copyright 2009 Samsung Electronics Co., Ltd.
++ * Authors:
++ *	SooChan Lim <sc1.lim@samsung.com>
++ *      Sangjin LEE <lsj119@samsung.com>
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "internal.h"
++
++#include <sys/mman.h>
++#include <sys/ioctl.h>
++#include "xf86drm.h"
++
++#include "libdrm_macros.h"
++#include "exynos_drm.h"
++
++struct exynos_bo
++{
++	struct kms_bo base;
++	unsigned map_count;
++};
++
++static int
++exynos_get_prop(struct kms_driver *kms, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_BO_TYPE:
++		*out = KMS_BO_TYPE_SCANOUT_X8R8G8B8 | KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++exynos_destroy(struct kms_driver *kms)
++{
++	free(kms);
++	return 0;
++}
++
++static int
++exynos_bo_create(struct kms_driver *kms,
++		 const unsigned width, const unsigned height,
++		 const enum kms_bo_type type, const unsigned *attr,
++		 struct kms_bo **out)
++{
++	struct drm_exynos_gem_create arg;
++	unsigned size, pitch;
++	struct exynos_bo *bo;
++	int i, ret;
++
++	for (i = 0; attr[i]; i += 2) {
++		switch (attr[i]) {
++		case KMS_WIDTH:
++		case KMS_HEIGHT:
++		case KMS_BO_TYPE:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	bo = calloc(1, sizeof(*bo));
++	if (!bo)
++		return -ENOMEM;
++
++	if (type == KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8) {
++		pitch = 64 * 4;
++		size = 64 * 64 * 4;
++	} else if (type == KMS_BO_TYPE_SCANOUT_X8R8G8B8) {
++		pitch = width * 4;
++		pitch = (pitch + 512 - 1) & ~(512 - 1);
++		size = pitch * ((height + 4 - 1) & ~(4 - 1));
++	} else {
++		ret = -EINVAL;
++		goto err_free;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.size = size;
++
++	ret = drmCommandWriteRead(kms->fd, DRM_EXYNOS_GEM_CREATE, &arg, sizeof(arg));
++	if (ret)
++		goto err_free;
++
++	bo->base.kms = kms;
++	bo->base.handle = arg.handle;
++	bo->base.size = size;
++	bo->base.pitch = pitch;
++
++	*out = &bo->base;
++
++	return 0;
++
++err_free:
++	free(bo);
++	return ret;
++}
++
++static int
++exynos_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out)
++{
++	switch (key) {
++	default:
++		return -EINVAL;
++	}
++}
++
++static int
++exynos_bo_map(struct kms_bo *_bo, void **out)
++{
++	struct exynos_bo *bo = (struct exynos_bo *)_bo;
++	struct drm_mode_map_dumb arg;
++	void *map = NULL;
++	int ret;
++
++	if (bo->base.ptr) {
++		bo->map_count++;
++		*out = bo->base.ptr;
++		return 0;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmIoctl(bo->base.kms->fd, DRM_IOCTL_MODE_MAP_DUMB, &arg);
++	if (ret)
++		return ret;
++
++	map = drm_mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, arg.offset);
++	if (map == MAP_FAILED)
++		return -errno;
++
++	bo->base.ptr = map;
++	bo->map_count++;
++	*out = bo->base.ptr;
++
++	return 0;
++}
++
++static int
++exynos_bo_unmap(struct kms_bo *_bo)
++{
++	struct exynos_bo *bo = (struct exynos_bo *)_bo;
++	bo->map_count--;
++	return 0;
++}
++
++static int
++exynos_bo_destroy(struct kms_bo *_bo)
++{
++	struct exynos_bo *bo = (struct exynos_bo *)_bo;
++	struct drm_gem_close arg;
++	int ret;
++
++	if (bo->base.ptr) {
++		/* XXX Sanity check map_count */
++		munmap(bo->base.ptr, bo->base.size);
++		bo->base.ptr = NULL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmIoctl(bo->base.kms->fd, DRM_IOCTL_GEM_CLOSE, &arg);
++	if (ret)
++		return -errno;
++
++	free(bo);
++	return 0;
++}
++
++drm_private int
++exynos_create(int fd, struct kms_driver **out)
++{
++	struct kms_driver *kms;
++
++	kms = calloc(1, sizeof(*kms));
++	if (!kms)
++		return -ENOMEM;
++
++	kms->fd = fd;
++
++	kms->bo_create = exynos_bo_create;
++	kms->bo_map = exynos_bo_map;
++	kms->bo_unmap = exynos_bo_unmap;
++	kms->bo_get_prop = exynos_bo_get_prop;
++	kms->bo_destroy = exynos_bo_destroy;
++	kms->get_prop = exynos_get_prop;
++	kms->destroy = exynos_destroy;
++	*out = kms;
++
++	return 0;
++}
+diff --git a/libkms/intel.c b/libkms/intel.c
+new file mode 100644
+index 00000000..859e7a0f
+--- /dev/null
++++ b/libkms/intel.c
+@@ -0,0 +1,236 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "internal.h"
++
++#include <sys/ioctl.h>
++#include "xf86drm.h"
++#include "libdrm_macros.h"
++
++#include "i915_drm.h"
++
++struct intel_bo
++{
++	struct kms_bo base;
++	unsigned map_count;
++};
++
++static int
++intel_get_prop(struct kms_driver *kms, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_BO_TYPE:
++		*out = KMS_BO_TYPE_SCANOUT_X8R8G8B8 | KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++intel_destroy(struct kms_driver *kms)
++{
++	free(kms);
++	return 0;
++}
++
++static int
++intel_bo_create(struct kms_driver *kms,
++		 const unsigned width, const unsigned height,
++		 const enum kms_bo_type type, const unsigned *attr,
++		 struct kms_bo **out)
++{
++	struct drm_i915_gem_create arg;
++	unsigned size, pitch;
++	struct intel_bo *bo;
++	int i, ret;
++
++	for (i = 0; attr[i]; i += 2) {
++		switch (attr[i]) {
++		case KMS_WIDTH:
++		case KMS_HEIGHT:
++		case KMS_BO_TYPE:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	bo = calloc(1, sizeof(*bo));
++	if (!bo)
++		return -ENOMEM;
++
++	if (type == KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8) {
++		pitch = 64 * 4;
++		size = 64 * 64 * 4;
++	} else if (type == KMS_BO_TYPE_SCANOUT_X8R8G8B8) {
++		pitch = width * 4;
++		pitch = (pitch + 512 - 1) & ~(512 - 1);
++		size = pitch * ((height + 4 - 1) & ~(4 - 1));
++	} else {
++		free(bo);
++		return -EINVAL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.size = size;
++
++	ret = drmCommandWriteRead(kms->fd, DRM_I915_GEM_CREATE, &arg, sizeof(arg));
++	if (ret)
++		goto err_free;
++
++	bo->base.kms = kms;
++	bo->base.handle = arg.handle;
++	bo->base.size = size;
++	bo->base.pitch = pitch;
++
++	*out = &bo->base;
++	if (type == KMS_BO_TYPE_SCANOUT_X8R8G8B8 && pitch > 512) {
++		struct drm_i915_gem_set_tiling tile;
++
++		memset(&tile, 0, sizeof(tile));
++		tile.handle = bo->base.handle;
++		tile.tiling_mode = I915_TILING_X;
++		tile.stride = bo->base.pitch;
++
++		ret = drmCommandWriteRead(kms->fd, DRM_I915_GEM_SET_TILING, &tile, sizeof(tile));
++#if 0
++		if (ret) {
++			kms_bo_destroy(out);
++			return ret;
++		}
++#endif
++	}
++
++	return 0;
++
++err_free:
++	free(bo);
++	return ret;
++}
++
++static int
++intel_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out)
++{
++	switch (key) {
++	default:
++		return -EINVAL;
++	}
++}
++
++static int
++intel_bo_map(struct kms_bo *_bo, void **out)
++{
++	struct intel_bo *bo = (struct intel_bo *)_bo;
++	struct drm_i915_gem_mmap_gtt arg;
++	void *map = NULL;
++	int ret;
++
++	if (bo->base.ptr) {
++		bo->map_count++;
++		*out = bo->base.ptr;
++		return 0;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmCommandWriteRead(bo->base.kms->fd, DRM_I915_GEM_MMAP_GTT, &arg, sizeof(arg));
++	if (ret)
++		return ret;
++
++	map = drm_mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, arg.offset);
++	if (map == MAP_FAILED)
++		return -errno;
++
++	bo->base.ptr = map;
++	bo->map_count++;
++	*out = bo->base.ptr;
++
++	return 0;
++}
++
++static int
++intel_bo_unmap(struct kms_bo *_bo)
++{
++	struct intel_bo *bo = (struct intel_bo *)_bo;
++	bo->map_count--;
++	return 0;
++}
++
++static int
++intel_bo_destroy(struct kms_bo *_bo)
++{
++	struct intel_bo *bo = (struct intel_bo *)_bo;
++	struct drm_gem_close arg;
++	int ret;
++
++	if (bo->base.ptr) {
++		/* XXX Sanity check map_count */
++		drm_munmap(bo->base.ptr, bo->base.size);
++		bo->base.ptr = NULL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmIoctl(bo->base.kms->fd, DRM_IOCTL_GEM_CLOSE, &arg);
++	if (ret)
++		return -errno;
++
++	free(bo);
++	return 0;
++}
++
++drm_private int
++intel_create(int fd, struct kms_driver **out)
++{
++	struct kms_driver *kms;
++
++	kms = calloc(1, sizeof(*kms));
++	if (!kms)
++		return -ENOMEM;
++
++	kms->fd = fd;
++
++	kms->bo_create = intel_bo_create;
++	kms->bo_map = intel_bo_map;
++	kms->bo_unmap = intel_bo_unmap;
++	kms->bo_get_prop = intel_bo_get_prop;
++	kms->bo_destroy = intel_bo_destroy;
++	kms->get_prop = intel_get_prop;
++	kms->destroy = intel_destroy;
++	*out = kms;
++
++	return 0;
++}
+diff --git a/libkms/internal.h b/libkms/internal.h
+new file mode 100644
+index 00000000..8b386db6
+--- /dev/null
++++ b/libkms/internal.h
+@@ -0,0 +1,80 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++
++#ifndef INTERNAL_H_
++#define INTERNAL_H_
++
++#include "libdrm_macros.h"
++#include "libkms.h"
++
++struct kms_driver
++{
++	int (*get_prop)(struct kms_driver *kms, const unsigned key,
++			unsigned *out);
++	int (*destroy)(struct kms_driver *kms);
++
++	int (*bo_create)(struct kms_driver *kms,
++			 unsigned width,
++			 unsigned height,
++			 enum kms_bo_type type,
++			 const unsigned *attr,
++			 struct kms_bo **out);
++	int (*bo_get_prop)(struct kms_bo *bo, const unsigned key,
++			   unsigned *out);
++	int (*bo_map)(struct kms_bo *bo, void **out);
++	int (*bo_unmap)(struct kms_bo *bo);
++	int (*bo_destroy)(struct kms_bo *bo);
++
++	int fd;
++};
++
++struct kms_bo
++{
++	struct kms_driver *kms;
++	void *ptr;
++	size_t size;
++	size_t offset;
++	size_t pitch;
++	unsigned handle;
++};
++
++drm_private int linux_create(int fd, struct kms_driver **out);
++
++drm_private int vmwgfx_create(int fd, struct kms_driver **out);
++
++drm_private int intel_create(int fd, struct kms_driver **out);
++
++drm_private int dumb_create(int fd, struct kms_driver **out);
++
++drm_private int nouveau_create(int fd, struct kms_driver **out);
++
++drm_private int radeon_create(int fd, struct kms_driver **out);
++
++drm_private int exynos_create(int fd, struct kms_driver **out);
++
++#endif
+diff --git a/libkms/kms-symbols.txt b/libkms/kms-symbols.txt
+new file mode 100644
+index 00000000..e0ba8c91
+--- /dev/null
++++ b/libkms/kms-symbols.txt
+@@ -0,0 +1,8 @@
++kms_bo_create
++kms_bo_destroy
++kms_bo_get_prop
++kms_bo_map
++kms_bo_unmap
++kms_create
++kms_destroy
++kms_get_prop
+diff --git a/libkms/libkms.h b/libkms/libkms.h
+new file mode 100644
+index 00000000..930a2bfc
+--- /dev/null
++++ b/libkms/libkms.h
+@@ -0,0 +1,82 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++
++#ifndef _LIBKMS_H_
++#define _LIBKMS_H_
++
++#if defined(__cplusplus)
++extern "C" {
++#endif
++
++/**
++ * \file
++ *
++ */
++
++struct kms_driver;
++struct kms_bo;
++
++enum kms_attrib
++{
++	KMS_TERMINATE_PROP_LIST,
++#define KMS_TERMINATE_PROP_LIST KMS_TERMINATE_PROP_LIST
++	KMS_BO_TYPE,
++#define KMS_BO_TYPE KMS_BO_TYPE
++	KMS_WIDTH,
++#define KMS_WIDTH KMS_WIDTH
++	KMS_HEIGHT,
++#define KMS_HEIGHT KMS_HEIGHT
++	KMS_PITCH,
++#define KMS_PITCH KMS_PITCH
++	KMS_HANDLE,
++#define KMS_HANDLE KMS_HANDLE
++};
++
++enum kms_bo_type
++{
++	KMS_BO_TYPE_SCANOUT_X8R8G8B8 = (1 << 0),
++#define KMS_BO_TYPE_SCANOUT_X8R8G8B8 KMS_BO_TYPE_SCANOUT_X8R8G8B8
++	KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8 =  (1 << 1),
++#define KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8 KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8
++};
++
++int kms_create(int fd, struct kms_driver **out);
++int kms_get_prop(struct kms_driver *kms, unsigned key, unsigned *out);
++int kms_destroy(struct kms_driver **kms);
++
++int kms_bo_create(struct kms_driver *kms, const unsigned *attr, struct kms_bo **out);
++int kms_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out);
++int kms_bo_map(struct kms_bo *bo, void **out);
++int kms_bo_unmap(struct kms_bo *bo);
++int kms_bo_destroy(struct kms_bo **bo);
++
++#if defined(__cplusplus)
++};
++#endif
++
++#endif
+diff --git a/libkms/libkms.pc.in b/libkms/libkms.pc.in
+new file mode 100644
+index 00000000..7c604294
+--- /dev/null
++++ b/libkms/libkms.pc.in
+@@ -0,0 +1,11 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: libkms
++Description: Library that abstracts away the different mm interface for kernel drivers
++Version: 1.0.0
++Libs: -L${libdir} -lkms
++Cflags: -I${includedir}/libkms
++Requires.private: libdrm
+diff --git a/libkms/linux.c b/libkms/linux.c
+new file mode 100644
+index 00000000..56205054
+--- /dev/null
++++ b/libkms/linux.c
+@@ -0,0 +1,147 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++/*
++ * Thanks to krh and jcristau for the tips on
++ * going from fd to pci id via fstat and udev.
++ */
++
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <xf86drm.h>
++#include <string.h>
++#include <unistd.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#ifdef MAJOR_IN_MKDEV
++#include <sys/mkdev.h>
++#endif
++#ifdef MAJOR_IN_SYSMACROS
++#include <sys/sysmacros.h>
++#endif
++
++#include "libdrm_macros.h"
++#include "internal.h"
++
++#define PATH_SIZE 512
++
++static int
++linux_name_from_sysfs(int fd, char **out)
++{
++	char path[PATH_SIZE+1] = ""; /* initialize to please valgrind */
++	char link[PATH_SIZE+1] = "";
++	struct stat buffer;
++	unsigned maj, min;
++	char* slash_name;
++	int ret;
++
++	/* 
++	 * Inside the sysfs directory for the device there is a symlink
++	 * to the directory representing the driver module, that path
++	 * happens to hold the name of the driver.
++	 *
++	 * So lets get the symlink for the drm device. Then read the link
++	 * and filter out the last directory which happens to be the name
++	 * of the driver, which we can use to load the correct interface.
++	 *
++	 * Thanks to Ray Strode of Plymouth for the code.
++	 */
++
++	ret = fstat(fd, &buffer);
++	if (ret)
++		return -EINVAL;
++
++	if (!S_ISCHR(buffer.st_mode))
++		return -EINVAL;
++
++	maj = major(buffer.st_rdev);
++	min = minor(buffer.st_rdev);
++
++	snprintf(path, PATH_SIZE, "/sys/dev/char/%d:%d/device/driver", maj, min);
++
++	if (readlink(path, link, PATH_SIZE) < 0)
++		return -EINVAL;
++
++	/* link looks something like this: ../../../bus/pci/drivers/intel */
++	slash_name = strrchr(link, '/');
++	if (!slash_name)
++		return -EINVAL;
++
++	/* copy name and at the same time remove the slash */
++	*out = strdup(slash_name + 1);
++	return 0;
++}
++
++static int
++linux_from_sysfs(int fd, struct kms_driver **out)
++{
++	char *name;
++	int ret;
++
++	ret = linux_name_from_sysfs(fd, &name);
++	if (ret)
++		return ret;
++
++#if HAVE_INTEL
++	if (!strcmp(name, "intel"))
++		ret = intel_create(fd, out);
++	else
++#endif
++#if HAVE_VMWGFX
++	if (!strcmp(name, "vmwgfx"))
++		ret = vmwgfx_create(fd, out);
++	else
++#endif
++#if HAVE_NOUVEAU
++	if (!strcmp(name, "nouveau"))
++		ret = nouveau_create(fd, out);
++	else
++#endif
++#if HAVE_RADEON
++	if (!strcmp(name, "radeon"))
++		ret = radeon_create(fd, out);
++	else
++#endif
++#if HAVE_EXYNOS
++	if (!strcmp(name, "exynos"))
++		ret = exynos_create(fd, out);
++	else
++#endif
++		ret = -ENOSYS;
++
++	free(name);
++	return ret;
++}
++
++drm_private int
++linux_create(int fd, struct kms_driver **out)
++{
++	if (!dumb_create(fd, out))
++		return 0;
++
++	return linux_from_sysfs(fd, out);
++}
+diff --git a/libkms/meson.build b/libkms/meson.build
+new file mode 100644
+index 00000000..e2adaea3
+--- /dev/null
++++ b/libkms/meson.build
+@@ -0,0 +1,81 @@
++# Copyright © 2017-2018 Intel Corporation
++
++# Permission is hereby granted, free of charge, to any person obtaining a copy
++# of this software and associated documentation files (the "Software"), to deal
++# in the Software without restriction, including without limitation the rights
++# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++# copies of the Software, and to permit persons to whom the Software is
++# furnished to do so, subject to the following conditions:
++
++# The above copyright notice and this permission notice shall be included in
++# all copies or substantial portions of the Software.
++
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++# SOFTWARE.
++
++libkms_include = [inc_root, inc_drm]
++files_libkms = files(
++  'linux.c',
++  'dumb.c',
++  'api.c',
++)
++if with_vmwgfx
++  files_libkms += files('vmwgfx.c')
++endif
++if with_intel
++  files_libkms += files('intel.c')
++endif
++if with_nouveau
++  files_libkms += files('nouveau.c')
++endif
++if with_radeon
++  files_libkms += files('radeon.c')
++endif
++if with_exynos
++  files_libkms += files('exynos.c')
++  libkms_include += include_directories('../exynos')
++endif
++
++libkms = library(
++  'kms',
++  [files_libkms, config_file],
++  c_args : libdrm_c_args,
++  include_directories : libkms_include,
++  link_with : libdrm,
++  version : '1.0.0',
++  install : true,
++)
++
++ext_libkms = declare_dependency(
++  link_with : [libdrm, libkms],
++  include_directories : [libkms_include],
++)
++
++if meson.version().version_compare('>= 0.54.0')
++  meson.override_dependency('kms', ext_libkms)
++endif
++
++install_headers('libkms.h', subdir : 'libkms')
++
++pkg.generate(
++  libkms,
++  name : 'libkms',
++  subdirs : ['libkms'],
++  version : '1.0.0',
++  description : 'Library that abstracts away the different mm interfaces for kernel drivers',
++)
++
++test(
++  'kms-symbols-check',
++  symbols_check,
++  args : [
++    '--lib', libkms,
++    '--symbols-file', files('kms-symbols.txt'),
++    '--nm', prog_nm.path(),
++  ],
++)
+diff --git a/libkms/nouveau.c b/libkms/nouveau.c
+new file mode 100644
+index 00000000..7fe23db3
+--- /dev/null
++++ b/libkms/nouveau.c
+@@ -0,0 +1,218 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "internal.h"
++
++#include <sys/ioctl.h>
++#include "xf86drm.h"
++#include "libdrm_macros.h"
++
++#include "nouveau_drm.h"
++
++struct nouveau_bo
++{
++	struct kms_bo base;
++	uint64_t map_handle;
++	unsigned map_count;
++};
++
++static int
++nouveau_get_prop(struct kms_driver *kms, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_BO_TYPE:
++		*out = KMS_BO_TYPE_SCANOUT_X8R8G8B8 | KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++nouveau_destroy(struct kms_driver *kms)
++{
++	free(kms);
++	return 0;
++}
++
++static int
++nouveau_bo_create(struct kms_driver *kms,
++		 const unsigned width, const unsigned height,
++		 const enum kms_bo_type type, const unsigned *attr,
++		 struct kms_bo **out)
++{
++	struct drm_nouveau_gem_new arg;
++	unsigned size, pitch;
++	struct nouveau_bo *bo;
++	int i, ret;
++
++	for (i = 0; attr[i]; i += 2) {
++		switch (attr[i]) {
++		case KMS_WIDTH:
++		case KMS_HEIGHT:
++		case KMS_BO_TYPE:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	bo = calloc(1, sizeof(*bo));
++	if (!bo)
++		return -ENOMEM;
++
++	if (type == KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8) {
++		pitch = 64 * 4;
++		size = 64 * 64 * 4;
++	} else if (type == KMS_BO_TYPE_SCANOUT_X8R8G8B8) {
++		pitch = width * 4;
++		pitch = (pitch + 512 - 1) & ~(512 - 1);
++		size = pitch * height;
++	} else {
++		free(bo);
++		return -EINVAL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.info.size = size;
++	arg.info.domain = NOUVEAU_GEM_DOMAIN_MAPPABLE | NOUVEAU_GEM_DOMAIN_VRAM;
++	arg.info.tile_mode = 0;
++	arg.info.tile_flags = 0;
++	arg.align = 512;
++	arg.channel_hint = 0;
++
++	ret = drmCommandWriteRead(kms->fd, DRM_NOUVEAU_GEM_NEW, &arg, sizeof(arg));
++	if (ret)
++		goto err_free;
++
++	bo->base.kms = kms;
++	bo->base.handle = arg.info.handle;
++	bo->base.size = size;
++	bo->base.pitch = pitch;
++	bo->map_handle = arg.info.map_handle;
++
++	*out = &bo->base;
++
++	return 0;
++
++err_free:
++	free(bo);
++	return ret;
++}
++
++static int
++nouveau_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out)
++{
++	switch (key) {
++	default:
++		return -EINVAL;
++	}
++}
++
++static int
++nouveau_bo_map(struct kms_bo *_bo, void **out)
++{
++	struct nouveau_bo *bo = (struct nouveau_bo *)_bo;
++	void *map = NULL;
++
++	if (bo->base.ptr) {
++		bo->map_count++;
++		*out = bo->base.ptr;
++		return 0;
++	}
++
++	map = drm_mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, bo->map_handle);
++	if (map == MAP_FAILED)
++		return -errno;
++
++	bo->base.ptr = map;
++	bo->map_count++;
++	*out = bo->base.ptr;
++
++	return 0;
++}
++
++static int
++nouveau_bo_unmap(struct kms_bo *_bo)
++{
++	struct nouveau_bo *bo = (struct nouveau_bo *)_bo;
++	bo->map_count--;
++	return 0;
++}
++
++static int
++nouveau_bo_destroy(struct kms_bo *_bo)
++{
++	struct nouveau_bo *bo = (struct nouveau_bo *)_bo;
++	struct drm_gem_close arg;
++	int ret;
++
++	if (bo->base.ptr) {
++		/* XXX Sanity check map_count */
++		drm_munmap(bo->base.ptr, bo->base.size);
++		bo->base.ptr = NULL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmIoctl(bo->base.kms->fd, DRM_IOCTL_GEM_CLOSE, &arg);
++	if (ret)
++		return -errno;
++
++	free(bo);
++	return 0;
++}
++
++drm_private int
++nouveau_create(int fd, struct kms_driver **out)
++{
++	struct kms_driver *kms;
++
++	kms = calloc(1, sizeof(*kms));
++	if (!kms)
++		return -ENOMEM;
++
++	kms->fd = fd;
++
++	kms->bo_create = nouveau_bo_create;
++	kms->bo_map = nouveau_bo_map;
++	kms->bo_unmap = nouveau_bo_unmap;
++	kms->bo_get_prop = nouveau_bo_get_prop;
++	kms->bo_destroy = nouveau_bo_destroy;
++	kms->get_prop = nouveau_get_prop;
++	kms->destroy = nouveau_destroy;
++	*out = kms;
++
++	return 0;
++}
+diff --git a/libkms/radeon.c b/libkms/radeon.c
+new file mode 100644
+index 00000000..2cb2b11f
+--- /dev/null
++++ b/libkms/radeon.c
+@@ -0,0 +1,239 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "internal.h"
++
++#include <sys/ioctl.h>
++#include "xf86drm.h"
++#include "libdrm_macros.h"
++
++#include "radeon_drm.h"
++
++
++#define ALIGNMENT 512
++
++struct radeon_bo
++{
++	struct kms_bo base;
++	unsigned map_count;
++};
++
++static int
++radeon_get_prop(struct kms_driver *kms, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_BO_TYPE:
++		*out = KMS_BO_TYPE_SCANOUT_X8R8G8B8 | KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++radeon_destroy(struct kms_driver *kms)
++{
++	free(kms);
++	return 0;
++}
++
++static int
++radeon_bo_create(struct kms_driver *kms,
++		 const unsigned width, const unsigned height,
++		 const enum kms_bo_type type, const unsigned *attr,
++		 struct kms_bo **out)
++{
++	struct drm_radeon_gem_create arg;
++	unsigned size, pitch;
++	struct radeon_bo *bo;
++	int i, ret;
++
++	for (i = 0; attr[i]; i += 2) {
++		switch (attr[i]) {
++		case KMS_WIDTH:
++		case KMS_HEIGHT:
++		case KMS_BO_TYPE:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	switch (type) {
++	case KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8:
++		pitch = 4 * 64;
++		size  = 4 * 64 * 64;
++		break;
++	case KMS_BO_TYPE_SCANOUT_X8R8G8B8:
++		pitch = width * 4;
++		pitch = (pitch + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
++		size  = pitch * height;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	bo = calloc(1, sizeof(*bo));
++	if (!bo)
++		return -ENOMEM;
++
++	memset(&arg, 0, sizeof(arg));
++	arg.size = size;
++	arg.alignment = ALIGNMENT;
++	arg.initial_domain = RADEON_GEM_DOMAIN_CPU;
++	arg.flags = 0;
++	arg.handle = 0;
++
++	ret = drmCommandWriteRead(kms->fd, DRM_RADEON_GEM_CREATE,
++	                          &arg, sizeof(arg));
++	if (ret)
++		goto err_free;
++
++	bo->base.kms = kms;
++	bo->base.handle = arg.handle;
++	bo->base.size = size;
++	bo->base.pitch = pitch;
++	bo->base.offset = 0;
++	bo->map_count = 0;
++
++	*out = &bo->base;
++
++	return 0;
++
++err_free:
++	free(bo);
++	return ret;
++}
++
++static int
++radeon_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out)
++{
++	switch (key) {
++	default:
++		return -EINVAL;
++	}
++}
++
++static int
++radeon_bo_map(struct kms_bo *_bo, void **out)
++{
++	struct radeon_bo *bo = (struct radeon_bo *)_bo;
++	struct drm_radeon_gem_mmap arg;
++	void *map = NULL;
++	int ret;
++
++	if (bo->base.ptr) {
++		bo->map_count++;
++		*out = bo->base.ptr;
++		return 0;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++	arg.offset = bo->base.offset;
++	arg.size = (uint64_t)bo->base.size;
++
++	ret = drmCommandWriteRead(bo->base.kms->fd, DRM_RADEON_GEM_MMAP,
++	                        &arg, sizeof(arg));
++	if (ret)
++		return -errno;
++
++	map = drm_mmap(0, arg.size, PROT_READ | PROT_WRITE, MAP_SHARED,
++	           bo->base.kms->fd, arg.addr_ptr);
++	if (map == MAP_FAILED)
++		return -errno;
++
++	bo->base.ptr = map;
++	bo->map_count++;
++	*out = bo->base.ptr;
++
++	return 0;
++}
++
++static int
++radeon_bo_unmap(struct kms_bo *_bo)
++{
++	struct radeon_bo *bo = (struct radeon_bo *)_bo;
++	if (--bo->map_count == 0) {
++		drm_munmap(bo->base.ptr, bo->base.size);
++		bo->base.ptr = NULL;
++	}
++	return 0;
++}
++
++static int
++radeon_bo_destroy(struct kms_bo *_bo)
++{
++	struct radeon_bo *bo = (struct radeon_bo *)_bo;
++	struct drm_gem_close arg;
++	int ret;
++
++	if (bo->base.ptr) {
++		/* XXX Sanity check map_count */
++		drm_munmap(bo->base.ptr, bo->base.size);
++		bo->base.ptr = NULL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++
++	ret = drmIoctl(bo->base.kms->fd, DRM_IOCTL_GEM_CLOSE, &arg);
++	if (ret)
++		return -errno;
++
++	free(bo);
++	return 0;
++}
++
++drm_private int
++radeon_create(int fd, struct kms_driver **out)
++{
++	struct kms_driver *kms;
++
++	kms = calloc(1, sizeof(*kms));
++	if (!kms)
++		return -ENOMEM;
++
++	kms->fd = fd;
++
++	kms->bo_create = radeon_bo_create;
++	kms->bo_map = radeon_bo_map;
++	kms->bo_unmap = radeon_bo_unmap;
++	kms->bo_get_prop = radeon_bo_get_prop;
++	kms->bo_destroy = radeon_bo_destroy;
++	kms->get_prop = radeon_get_prop;
++	kms->destroy = radeon_destroy;
++	*out = kms;
++
++	return 0;
++}
+diff --git a/libkms/vmwgfx.c b/libkms/vmwgfx.c
+new file mode 100644
+index 00000000..1984399c
+--- /dev/null
++++ b/libkms/vmwgfx.c
+@@ -0,0 +1,207 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++#ifdef __FreeBSD__
++#define _WANT_KERNEL_ERRNO
++#endif
++
++#include <errno.h>
++#include <stdlib.h>
++#include <string.h>
++#include "internal.h"
++
++#include "xf86drm.h"
++#include "libdrm_macros.h"
++#include "vmwgfx_drm.h"
++
++struct vmwgfx_bo
++{
++	struct kms_bo base;
++	uint64_t map_handle;
++	unsigned map_count;
++};
++
++static int
++vmwgfx_get_prop(struct kms_driver *kms, unsigned key, unsigned *out)
++{
++	switch (key) {
++	case KMS_BO_TYPE:
++		*out = KMS_BO_TYPE_SCANOUT_X8R8G8B8 | KMS_BO_TYPE_CURSOR_64X64_A8R8G8B8;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int
++vmwgfx_destroy(struct kms_driver *kms)
++{
++	free(kms);
++	return 0;
++}
++
++static int
++vmwgfx_bo_create(struct kms_driver *kms,
++		 const unsigned width, const unsigned height,
++		 const enum kms_bo_type type, const unsigned *attr,
++		 struct kms_bo **out)
++{
++	struct vmwgfx_bo *bo;
++	int i, ret;
++
++	for (i = 0; attr[i]; i += 2) {
++		switch (attr[i]) {
++		case KMS_WIDTH:
++		case KMS_HEIGHT:
++		case KMS_BO_TYPE:
++			break;
++		default:
++			return -EINVAL;
++		}
++	}
++
++	bo = calloc(1, sizeof(*bo));
++	if (!bo)
++		return -EINVAL;
++
++	{
++		union drm_vmw_alloc_dmabuf_arg arg;
++		struct drm_vmw_alloc_dmabuf_req *req = &arg.req;
++		struct drm_vmw_dmabuf_rep *rep = &arg.rep;
++
++		memset(&arg, 0, sizeof(arg));
++		req->size = width * height * 4;
++		bo->base.size = req->size;
++		bo->base.pitch = width * 4;
++		bo->base.kms = kms;
++
++		do {
++			ret = drmCommandWriteRead(bo->base.kms->fd,
++						  DRM_VMW_ALLOC_DMABUF,
++						  &arg, sizeof(arg));
++		} while (ret == -ERESTART);
++
++		if (ret)
++			goto err_free;
++
++		bo->base.handle = rep->handle;
++		bo->map_handle = rep->map_handle;
++		bo->base.handle = rep->cur_gmr_id;
++		bo->base.offset = rep->cur_gmr_offset;
++	}
++
++	*out = &bo->base;
++
++	return 0;
++
++err_free:
++	free(bo);
++	return ret;
++}
++
++static int
++vmwgfx_bo_get_prop(struct kms_bo *bo, unsigned key, unsigned *out)
++{
++	switch (key) {
++	default:
++		return -EINVAL;
++	}
++}
++
++static int
++vmwgfx_bo_map(struct kms_bo *_bo, void **out)
++{
++	struct vmwgfx_bo *bo = (struct vmwgfx_bo *)_bo;
++	void *map;
++
++	if (bo->base.ptr) {
++		bo->map_count++;
++		*out = bo->base.ptr;
++		return 0;
++	}
++
++	map = drm_mmap(NULL, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, bo->map_handle);
++	if (map == MAP_FAILED)
++		return -errno;
++
++	bo->base.ptr = map;
++	bo->map_count++;
++	*out = bo->base.ptr;
++
++	return 0;
++}
++
++static int
++vmwgfx_bo_unmap(struct kms_bo *_bo)
++{
++	struct vmwgfx_bo *bo = (struct vmwgfx_bo *)_bo;
++	bo->map_count--;
++	return 0;
++}
++
++static int
++vmwgfx_bo_destroy(struct kms_bo *_bo)
++{
++	struct vmwgfx_bo *bo = (struct vmwgfx_bo *)_bo;
++	struct drm_vmw_unref_dmabuf_arg arg;
++
++	if (bo->base.ptr) {
++		/* XXX Sanity check map_count */
++		drm_munmap(bo->base.ptr, bo->base.size);
++		bo->base.ptr = NULL;
++	}
++
++	memset(&arg, 0, sizeof(arg));
++	arg.handle = bo->base.handle;
++	drmCommandWrite(bo->base.kms->fd, DRM_VMW_UNREF_DMABUF, &arg, sizeof(arg));
++
++	free(bo);
++	return 0;
++}
++
++drm_private int
++vmwgfx_create(int fd, struct kms_driver **out)
++{
++	struct kms_driver *kms;
++
++	kms = calloc(1, sizeof(*kms));
++	if (!kms)
++		return -ENOMEM;
++
++	kms->fd = fd;
++
++	kms->bo_create = vmwgfx_bo_create;
++	kms->bo_map = vmwgfx_bo_map;
++	kms->bo_unmap = vmwgfx_bo_unmap;
++	kms->bo_get_prop = vmwgfx_bo_get_prop;
++	kms->bo_destroy = vmwgfx_bo_destroy;
++	kms->get_prop = vmwgfx_get_prop;
++	kms->destroy = vmwgfx_destroy;
++	*out = kms;
++	return 0;
++}
+diff --git a/meson.build b/meson.build
+index 62040c67..7d459e28 100644
+--- a/meson.build
++++ b/meson.build
+@@ -188,6 +188,15 @@ if not _vc4.disabled()
+ endif
+ summary('VC4', with_vc4)
+ 
++# XXX: Apparently only freebsd and dragonfly bsd actually need this (and
++# gnu/kfreebsd), not openbsd and netbsd
++with_libkms = false
++_libkms = get_option('libkms')
++if not _libkms.disabled()
++  with_libkms = _libkms.enabled() or (['linux', 'freebsd', 'dragonfly'].contains(host_machine.system()) and not android)
++endif
++summary('libkms', with_libkms)
++
+ # Among others FreeBSD does not have a separate dl library.
+ if not cc.has_function('dlsym')
+   dep_dl = cc.find_library('dl', required : with_nouveau)
+@@ -351,6 +360,9 @@ pkg.generate(
+   description : 'Userspace interface to kernel DRM services',
+ )
+ 
++if with_libkms
++  subdir('libkms')
++endif
+ if with_intel
+   subdir('intel')
+ endif
+diff --git a/meson_options.txt b/meson_options.txt
+index e80d79e2..babc4727 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -18,6 +18,11 @@
+ # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ # SOFTWARE.
+ 
++option(
++  'libkms',
++  type : 'feature',
++  description : 'Build libkms mm abstraction library.',
++)
+ option(
+   'intel',
+   type : 'feature',
+diff --git a/tests/exynos/exynos_fimg2d_test.c b/tests/exynos/exynos_fimg2d_test.c
+index d85e2f6b..99bb9233 100644
+--- a/tests/exynos/exynos_fimg2d_test.c
++++ b/tests/exynos/exynos_fimg2d_test.c
+@@ -35,6 +35,7 @@
+ 
+ #include <xf86drm.h>
+ #include <xf86drmMode.h>
++#include <libkms.h>
+ #include <drm_fourcc.h>
+ 
+ #include "exynos_drm.h"
+diff --git a/tests/exynos/meson.build b/tests/exynos/meson.build
+index 12259c3c..3a048e8a 100644
+--- a/tests/exynos/meson.build
++++ b/tests/exynos/meson.build
+@@ -20,15 +20,18 @@
+ 
+ inc_exynos = include_directories('../../exynos')
+ 
+-exynos_fimg2d_test = executable(
+-  'exynos_fimg2d_test',
+-  files('exynos_fimg2d_test.c'),
+-  c_args : libdrm_c_args,
+-  include_directories : [inc_root, inc_drm, inc_exynos],
+-  link_with : [libdrm, libdrm_exynos],
+-  dependencies : dep_threads,
+-  install : with_install_tests,
+-)
++if with_libkms
++  exynos_fimg2d_test = executable(
++    'exynos_fimg2d_test',
++    files('exynos_fimg2d_test.c'),
++    c_args : libdrm_c_args,
++    include_directories : [inc_root, inc_drm, inc_exynos,
++                           include_directories('../../libkms')],
++    link_with : [libdrm, libkms, libdrm_exynos],
++    dependencies : dep_threads,
++    install : with_install_tests,
++  )
++endif
+ 
+ exynos_fimg2d_perf = executable(
+   'exynos_fimg2d_perf',
+diff --git a/tests/kms/kms-steal-crtc.c b/tests/kms/kms-steal-crtc.c
+new file mode 100644
+index 00000000..4d884c07
+--- /dev/null
++++ b/tests/kms/kms-steal-crtc.c
+@@ -0,0 +1,161 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include <errno.h>
++#include <fcntl.h>
++#include <signal.h>
++#include <stdio.h>
++#include <stdint.h>
++#include <string.h>
++#include <unistd.h>
++#if HAVE_SYS_SELECT_H
++#include <sys/select.h>
++#endif
++
++#include <drm_fourcc.h>
++
++#include "util/pattern.h"
++#include "libkms-test.h"
++
++static void signal_handler(int signum)
++{
++}
++
++int main(int argc, char *argv[])
++{
++	struct kms_framebuffer *fb;
++	struct kms_screen *screen;
++	struct kms_device *device;
++	unsigned int index = 0;
++	struct sigaction sa;
++	int fd, err;
++	void *ptr;
++
++	if (argc < 2) {
++		fprintf(stderr, "usage: %s DEVICE\n", argv[0]);
++		return 1;
++	}
++
++	memset(&sa, 0, sizeof(sa));
++	sa.sa_handler = signal_handler;
++
++	err = sigaction(SIGINT, &sa, NULL);
++	if (err < 0) {
++		fprintf(stderr, "sigaction() failed: %m\n");
++		return 1;
++	}
++
++	fd = open(argv[1], O_RDWR);
++	if (fd < 0) {
++		fprintf(stderr, "open() failed: %m\n");
++		return 1;
++	}
++
++	device = kms_device_open(fd);
++	if (!device) {
++		fprintf(stderr, "kms_device_open() failed: %m\n");
++		return 1;
++	}
++
++	if (device->num_screens < 1) {
++		fprintf(stderr, "no screens found\n");
++		kms_device_close(device);
++		close(fd);
++		return 1;
++	}
++
++	/* TODO: allow command-line to override */
++	screen = device->screens[0];
++
++	printf("Using screen %s, resolution %ux%u\n", screen->name,
++	       screen->width, screen->height);
++
++	fb = kms_framebuffer_create(device, screen->width, screen->height,
++				    DRM_FORMAT_XRGB8888);
++	if (!fb) {
++		fprintf(stderr, "kms_framebuffer_create() failed\n");
++		return 1;
++	}
++
++	err = kms_framebuffer_map(fb, &ptr);
++	if (err < 0) {
++		fprintf(stderr, "kms_framebuffer_map() failed: %d\n", err);
++		return 1;
++	}
++
++	util_fill_pattern(fb->format, UTIL_PATTERN_SMPTE, &ptr, fb->width,
++			  fb->height, fb->pitch);
++
++	kms_framebuffer_unmap(fb);
++
++	err = kms_screen_set(screen, device->crtcs[index++], fb);
++	if (err < 0) {
++		fprintf(stderr, "kms_screen_set() failed: %d\n", err);
++		return 1;
++	}
++
++	while (true) {
++		int nfds = STDIN_FILENO + 1;
++		struct timeval timeout;
++		fd_set fds;
++
++		memset(&timeout, 0, sizeof(timeout));
++		timeout.tv_sec = 5;
++		timeout.tv_usec = 0;
++
++		FD_ZERO(&fds);
++		FD_SET(STDIN_FILENO, &fds);
++
++		err = select(nfds, &fds, NULL, NULL, &timeout);
++		if (err < 0) {
++			if (errno == EINTR)
++				break;
++
++			fprintf(stderr, "select() failed: %d\n", errno);
++			break;
++		}
++
++		if (err > 0) {
++			if (FD_ISSET(STDIN_FILENO, &fds))
++				break;
++		}
++
++		/* switch CRTC */
++		if (index >= device->num_crtcs)
++			index = 0;
++
++		err = kms_screen_set(screen, device->crtcs[index], fb);
++		if (err < 0) {
++			fprintf(stderr, "kms_screen_set() failed: %d\n", err);
++			break;
++		}
++
++		index++;
++	}
++
++	kms_framebuffer_free(fb);
++	kms_device_close(device);
++	close(fd);
++
++	return 0;
++}
+diff --git a/tests/kms/kms-universal-planes.c b/tests/kms/kms-universal-planes.c
+new file mode 100644
+index 00000000..1d793880
+--- /dev/null
++++ b/tests/kms/kms-universal-planes.c
+@@ -0,0 +1,357 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include <fcntl.h>
++#include <getopt.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <string.h>
++#include <unistd.h>
++#if HAVE_SYS_SELECT_H
++#include <sys/select.h>
++#endif
++
++#include <drm_fourcc.h>
++#include "xf86drm.h"
++
++#include "util/common.h"
++#include "libkms-test.h"
++
++static const uint32_t formats[] = {
++	DRM_FORMAT_XRGB8888,
++	DRM_FORMAT_XBGR8888,
++	DRM_FORMAT_RGBA8888,
++};
++
++static uint32_t choose_format(struct kms_plane *plane)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(formats); i++)
++		if (kms_plane_supports_format(plane, formats[i]))
++			return formats[i];
++
++	return 0;
++}
++
++static void prepare_framebuffer(struct kms_framebuffer *fb, bool invert)
++{
++	const unsigned int block_size = 16;
++	uint32_t colors[2];
++	unsigned int i, j;
++	uint32_t *buf;
++	void *ptr;
++	int err;
++
++	switch (fb->format) {
++	case DRM_FORMAT_XRGB8888:
++		printf("using XRGB8888 format\n");
++		           /* XXRRGGBB */
++		colors[0] = 0xffff0000;
++		colors[1] = 0xff0000ff;
++		break;
++
++	case DRM_FORMAT_XBGR8888:
++		printf("using XBGR8888 format\n");
++		           /* XXBBGGRR */
++		colors[0] = 0xff0000ff;
++		colors[1] = 0xffff0000;
++		break;
++
++	case DRM_FORMAT_RGBA8888:
++		printf("using RGBA8888 format\n");
++		           /* RRGGBBAA */
++		colors[0] = 0xff0000ff;
++		colors[1] = 0x0000ffff;
++		break;
++
++	default:
++		colors[0] = 0xffffffff;
++		colors[1] = 0xffffffff;
++		break;
++	}
++
++	err = kms_framebuffer_map(fb, &ptr);
++	if (err < 0) {
++		fprintf(stderr, "kms_framebuffer_map() failed: %s\n",
++			strerror(-err));
++		return;
++	}
++
++	buf = ptr;
++
++	for (j = 0; j < fb->height; j++) {
++		for (i = 0; i < fb->width; i++) {
++			unsigned int color = (j / block_size) ^
++					     (i / block_size);
++
++			if (invert)
++				color ^= color;
++
++			*buf++ = colors[color & 1];
++		}
++	}
++
++	kms_framebuffer_unmap(fb);
++}
++
++int main(int argc, char *argv[])
++{
++	static const char opts[] = "chopv";
++	static struct option options[] = {
++		{ "cursor", 0, 0, 'c' },
++		{ "help", 0, 0, 'h' },
++		{ "overlay", 0, 0, 'o' },
++		{ "primary", 0, 0, 'p' },
++		{ "verbose", 0, 0, 'v' },
++		{ 0, 0, 0, 0 },
++	};
++	struct kms_framebuffer *cursor = NULL;
++	struct kms_framebuffer *root = NULL;
++	struct kms_framebuffer *fb = NULL;
++	struct kms_device *device;
++	bool use_overlay = false;
++	bool use_primary = false;
++	struct kms_plane *plane;
++	bool use_cursor = false;
++	bool verbose = false;
++	unsigned int i;
++	int opt, idx;
++	int fd, err;
++
++	while ((opt = getopt_long(argc, argv, opts, options, &idx)) != -1) {
++		switch (opt) {
++		case 'c':
++			use_cursor = true;
++			break;
++
++		case 'h':
++			break;
++
++		case 'o':
++			use_overlay = true;
++			break;
++
++		case 'p':
++			use_primary = true;
++			break;
++
++		case 'v':
++			verbose = true;
++			break;
++
++		default:
++			printf("unknown option \"%c\"\n", opt);
++			return 1;
++		}
++	}
++
++	if (optind >= argc) {
++		fprintf(stderr, "usage: %s [options] DEVICE\n", argv[0]);
++		return 1;
++	}
++
++	fd = open(argv[optind], O_RDWR);
++	if (fd < 0) {
++		fprintf(stderr, "open() failed: %m\n");
++		return 1;
++	}
++
++	err = drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
++	if (err < 0) {
++		fprintf(stderr, "drmSetClientCap() failed: %d\n", err);
++		return 1;
++	}
++
++	device = kms_device_open(fd);
++	if (!device)
++		return 1;
++
++	if (verbose) {
++		printf("Screens: %u\n", device->num_screens);
++
++		for (i = 0; i < device->num_screens; i++) {
++			struct kms_screen *screen = device->screens[i];
++			const char *status = "disconnected";
++
++			if (screen->connected)
++				status = "connected";
++
++			printf("  %u: %x\n", i, screen->id);
++			printf("    Status: %s\n", status);
++			printf("    Name: %s\n", screen->name);
++			printf("    Resolution: %ux%u\n", screen->width,
++			       screen->height);
++		}
++
++		printf("Planes: %u\n", device->num_planes);
++
++		for (i = 0; i < device->num_planes; i++) {
++			const char *type = NULL;
++
++			plane = device->planes[i];
++			switch (plane->type) {
++			case DRM_PLANE_TYPE_OVERLAY:
++				type = "overlay";
++				break;
++
++			case DRM_PLANE_TYPE_PRIMARY:
++				type = "primary";
++				break;
++
++			case DRM_PLANE_TYPE_CURSOR:
++				type = "cursor";
++				break;
++			}
++
++			printf("  %u: %p\n", i, plane);
++			printf("    ID: %x\n", plane->id);
++			printf("    CRTC: %x\n", plane->crtc->id);
++			printf("    Type: %x (%s)\n", plane->type, type);
++		}
++	}
++
++	if (use_cursor) {
++		unsigned int x, y;
++		uint32_t format;
++
++		plane = kms_device_find_plane_by_type(device,
++						      DRM_PLANE_TYPE_CURSOR,
++						      0);
++		if (!plane) {
++			fprintf(stderr, "no cursor plane found\n");
++			return 1;
++		}
++
++		format = choose_format(plane);
++		if (!format) {
++			fprintf(stderr, "no matching format found\n");
++			return 1;
++		}
++
++		cursor = kms_framebuffer_create(device, 32, 32, format);
++		if (!cursor) {
++			fprintf(stderr, "failed to create cursor buffer\n");
++			return 1;
++		}
++
++		prepare_framebuffer(cursor, false);
++
++		x = (device->screens[0]->width - cursor->width) / 2;
++		y = (device->screens[0]->height - cursor->height) / 2;
++
++		kms_plane_set(plane, cursor, x, y);
++	}
++
++	if (use_overlay) {
++		uint32_t format;
++
++		plane = kms_device_find_plane_by_type(device,
++						      DRM_PLANE_TYPE_OVERLAY,
++						      0);
++		if (!plane) {
++			fprintf(stderr, "no overlay plane found\n");
++			return 1;
++		}
++
++		format = choose_format(plane);
++		if (!format) {
++			fprintf(stderr, "no matching format found\n");
++			return 1;
++		}
++
++		fb = kms_framebuffer_create(device, 320, 240, format);
++		if (!fb)
++			return 1;
++
++		prepare_framebuffer(fb, false);
++
++		kms_plane_set(plane, fb, 0, 0);
++	}
++
++	if (use_primary) {
++		unsigned int x, y;
++		uint32_t format;
++
++		plane = kms_device_find_plane_by_type(device,
++						      DRM_PLANE_TYPE_PRIMARY,
++						      0);
++		if (!plane) {
++			fprintf(stderr, "no primary plane found\n");
++			return 1;
++		}
++
++		format = choose_format(plane);
++		if (!format) {
++			fprintf(stderr, "no matching format found\n");
++			return 1;
++		}
++
++		root = kms_framebuffer_create(device, 640, 480, format);
++		if (!root)
++			return 1;
++
++		prepare_framebuffer(root, true);
++
++		x = (device->screens[0]->width - root->width) / 2;
++		y = (device->screens[0]->height - root->height) / 2;
++
++		kms_plane_set(plane, root, x, y);
++	}
++
++	while (1) {
++		struct timeval timeout = { 1, 0 };
++		fd_set fds;
++
++		FD_ZERO(&fds);
++		FD_SET(STDIN_FILENO, &fds);
++
++		err = select(STDIN_FILENO + 1, &fds, NULL, NULL, &timeout);
++		if (err < 0) {
++			fprintf(stderr, "select() failed: %m\n");
++			break;
++		}
++
++		/* timeout */
++		if (err == 0)
++			continue;
++
++		if (FD_ISSET(STDIN_FILENO, &fds))
++			break;
++	}
++
++	if (cursor)
++		kms_framebuffer_free(cursor);
++
++	if (root)
++		kms_framebuffer_free(root);
++
++	if (fb)
++		kms_framebuffer_free(fb);
++
++	kms_device_close(device);
++	close(fd);
++
++	return 0;
++}
+diff --git a/tests/kms/libkms-test-crtc.c b/tests/kms/libkms-test-crtc.c
+new file mode 100644
+index 00000000..2c28face
+--- /dev/null
++++ b/tests/kms/libkms-test-crtc.c
+@@ -0,0 +1,43 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include "libkms-test.h"
++
++struct kms_crtc *kms_crtc_create(struct kms_device *device, uint32_t id)
++{
++	struct kms_crtc *crtc;
++
++	crtc = calloc(1, sizeof(*crtc));
++	if (!crtc)
++		return NULL;
++
++	crtc->device = device;
++	crtc->id = id;
++
++	return crtc;
++}
++
++void kms_crtc_free(struct kms_crtc *crtc)
++{
++	free(crtc);
++}
+diff --git a/tests/kms/libkms-test-device.c b/tests/kms/libkms-test-device.c
+new file mode 100644
+index 00000000..d3bb11ce
+--- /dev/null
++++ b/tests/kms/libkms-test-device.c
+@@ -0,0 +1,217 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include <stdio.h>
++#include <string.h>
++#include <unistd.h>
++
++#include "util/common.h"
++#include "libkms-test.h"
++
++static const char *const connector_names[] = {
++	"Unknown",
++	"VGA",
++	"DVI-I",
++	"DVI-D",
++	"DVI-A",
++	"Composite",
++	"SVIDEO",
++	"LVDS",
++	"Component",
++	"9PinDIN",
++	"DisplayPort",
++	"HDMI-A",
++	"HDMI-B",
++	"TV",
++	"eDP",
++	"Virtual",
++	"DSI",
++};
++
++static void kms_device_probe_screens(struct kms_device *device)
++{
++	unsigned int counts[ARRAY_SIZE(connector_names)];
++	struct kms_screen *screen;
++	drmModeRes *res;
++	int i;
++
++	memset(counts, 0, sizeof(counts));
++
++	res = drmModeGetResources(device->fd);
++	if (!res)
++		return;
++
++	device->screens = calloc(res->count_connectors, sizeof(screen));
++	if (!device->screens)
++		goto err_free_resources;
++
++	for (i = 0; i < res->count_connectors; i++) {
++		unsigned int *count;
++		const char *type;
++		int len;
++
++		screen = kms_screen_create(device, res->connectors[i]);
++		if (!screen)
++			continue;
++
++		/* assign a unique name to this screen */
++		type = connector_names[screen->type];
++		count = &counts[screen->type];
++
++		len = snprintf(NULL, 0, "%s-%u", type, *count);
++
++		screen->name = malloc(len + 1);
++		if (!screen->name) {
++			free(screen);
++			continue;
++		}
++
++		snprintf(screen->name, len + 1, "%s-%u", type, *count);
++		(*count)++;
++
++		device->screens[i] = screen;
++		device->num_screens++;
++	}
++
++err_free_resources:
++	drmModeFreeResources(res);
++}
++
++static void kms_device_probe_crtcs(struct kms_device *device)
++{
++	struct kms_crtc *crtc;
++	drmModeRes *res;
++	int i;
++
++	res = drmModeGetResources(device->fd);
++	if (!res)
++		return;
++
++	device->crtcs = calloc(res->count_crtcs, sizeof(crtc));
++	if (!device->crtcs)
++		goto err_free_resources;
++
++	for (i = 0; i < res->count_crtcs; i++) {
++		crtc = kms_crtc_create(device, res->crtcs[i]);
++		if (!crtc)
++			continue;
++
++		device->crtcs[i] = crtc;
++		device->num_crtcs++;
++	}
++
++err_free_resources:
++	drmModeFreeResources(res);
++}
++
++static void kms_device_probe_planes(struct kms_device *device)
++{
++	struct kms_plane *plane;
++	drmModePlaneRes *res;
++	unsigned int i;
++
++	res = drmModeGetPlaneResources(device->fd);
++	if (!res)
++		return;
++
++	device->planes = calloc(res->count_planes, sizeof(plane));
++	if (!device->planes)
++		goto err_free_resources;
++
++	for (i = 0; i < res->count_planes; i++) {
++		plane = kms_plane_create(device, res->planes[i]);
++		if (!plane)
++			continue;
++
++		device->planes[i] = plane;
++		device->num_planes++;
++	}
++
++err_free_resources:
++	drmModeFreePlaneResources(res);
++}
++
++static void kms_device_probe(struct kms_device *device)
++{
++	kms_device_probe_screens(device);
++	kms_device_probe_crtcs(device);
++	kms_device_probe_planes(device);
++}
++
++struct kms_device *kms_device_open(int fd)
++{
++	struct kms_device *device;
++
++	device = calloc(1, sizeof(*device));
++	if (!device)
++		return NULL;
++
++	device->fd = fd;
++
++	kms_device_probe(device);
++
++	return device;
++}
++
++void kms_device_close(struct kms_device *device)
++{
++	unsigned int i;
++
++	for (i = 0; i < device->num_planes; i++)
++		kms_plane_free(device->planes[i]);
++
++	free(device->planes);
++
++	for (i = 0; i < device->num_crtcs; i++)
++		kms_crtc_free(device->crtcs[i]);
++
++	free(device->crtcs);
++
++	for (i = 0; i < device->num_screens; i++)
++		kms_screen_free(device->screens[i]);
++
++	free(device->screens);
++
++	if (device->fd >= 0)
++		close(device->fd);
++
++	free(device);
++}
++
++struct kms_plane *kms_device_find_plane_by_type(struct kms_device *device,
++						uint32_t type,
++						unsigned int index)
++{
++	unsigned int i;
++
++	for (i = 0; i < device->num_planes; i++) {
++		if (device->planes[i]->type == type) {
++			if (index == 0)
++				return device->planes[i];
++
++			index--;
++		}
++	}
++
++	return NULL;
++}
+diff --git a/tests/kms/libkms-test-framebuffer.c b/tests/kms/libkms-test-framebuffer.c
+new file mode 100644
+index 00000000..9bb2d95b
+--- /dev/null
++++ b/tests/kms/libkms-test-framebuffer.c
+@@ -0,0 +1,153 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include <errno.h>
++#include <string.h>
++
++#include <sys/mman.h>
++
++#include <drm_fourcc.h>
++
++#include "xf86drm.h"
++
++#include "libkms-test.h"
++
++struct kms_framebuffer *kms_framebuffer_create(struct kms_device *device,
++					       unsigned int width,
++					       unsigned int height,
++					       uint32_t format)
++{
++	uint32_t handles[4], pitches[4], offsets[4];
++	struct drm_mode_create_dumb args;
++	struct kms_framebuffer *fb;
++	int err;
++
++	fb = calloc(1, sizeof(*fb));
++	if (!fb)
++		return NULL;
++
++	fb->device = device;
++	fb->width = width;
++	fb->height = height;
++	fb->format = format;
++
++	memset(&args, 0, sizeof(args));
++	args.width = width;
++	args.height = height;
++
++	switch (format) {
++	case DRM_FORMAT_XRGB8888:
++	case DRM_FORMAT_XBGR8888:
++	case DRM_FORMAT_RGBA8888:
++		args.bpp = 32;
++		break;
++
++	default:
++		free(fb);
++		return NULL;
++	}
++
++	err = drmIoctl(device->fd, DRM_IOCTL_MODE_CREATE_DUMB, &args);
++	if (err < 0) {
++		free(fb);
++		return NULL;
++	}
++
++	fb->handle = args.handle;
++	fb->pitch = args.pitch;
++	fb->size = args.size;
++
++	handles[0] = fb->handle;
++	pitches[0] = fb->pitch;
++	offsets[0] = 0;
++
++	err = drmModeAddFB2(device->fd, width, height, format, handles,
++			    pitches, offsets, &fb->id, 0);
++	if (err < 0) {
++		kms_framebuffer_free(fb);
++		return NULL;
++	}
++
++	return fb;
++}
++
++void kms_framebuffer_free(struct kms_framebuffer *fb)
++{
++	struct kms_device *device = fb->device;
++	struct drm_mode_destroy_dumb args;
++	int err;
++
++	if (fb->id) {
++		err = drmModeRmFB(device->fd, fb->id);
++		if (err < 0) {
++			/* not much we can do now */
++		}
++	}
++
++	memset(&args, 0, sizeof(args));
++	args.handle = fb->handle;
++
++	err = drmIoctl(device->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &args);
++	if (err < 0) {
++		/* not much we can do now */
++	}
++
++	free(fb);
++}
++
++int kms_framebuffer_map(struct kms_framebuffer *fb, void **ptrp)
++{
++	struct kms_device *device = fb->device;
++	struct drm_mode_map_dumb args;
++	void *ptr;
++	int err;
++
++	if (fb->ptr) {
++		*ptrp = fb->ptr;
++		return 0;
++	}
++
++	memset(&args, 0, sizeof(args));
++	args.handle = fb->handle;
++
++	err = drmIoctl(device->fd, DRM_IOCTL_MODE_MAP_DUMB, &args);
++	if (err < 0)
++		return -errno;
++
++	ptr = mmap(0, fb->size, PROT_READ | PROT_WRITE, MAP_SHARED,
++		   device->fd, args.offset);
++	if (ptr == MAP_FAILED)
++		return -errno;
++
++	*ptrp = fb->ptr = ptr;
++
++	return 0;
++}
++
++void kms_framebuffer_unmap(struct kms_framebuffer *fb)
++{
++	if (fb->ptr) {
++		munmap(fb->ptr, fb->size);
++		fb->ptr = NULL;
++	}
++}
+diff --git a/tests/kms/libkms-test-plane.c b/tests/kms/libkms-test-plane.c
+new file mode 100644
+index 00000000..4cb27378
+--- /dev/null
++++ b/tests/kms/libkms-test-plane.c
+@@ -0,0 +1,137 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include <errno.h>
++#include <string.h>
++
++#include "libkms-test.h"
++
++static int kms_plane_probe(struct kms_plane *plane)
++{
++	struct kms_device *device = plane->device;
++	drmModeObjectPropertiesPtr props;
++	drmModePlane *p;
++	unsigned int i;
++
++	p = drmModeGetPlane(device->fd, plane->id);
++	if (!p)
++		return -ENODEV;
++
++	/* TODO: allow dynamic assignment to CRTCs */
++	if (p->crtc_id == 0) {
++		for (i = 0; i < device->num_crtcs; i++) {
++			if (p->possible_crtcs & (1 << i)) {
++				p->crtc_id = device->crtcs[i]->id;
++				break;
++			}
++		}
++	}
++
++	for (i = 0; i < device->num_crtcs; i++) {
++		if (device->crtcs[i]->id == p->crtc_id) {
++			plane->crtc = device->crtcs[i];
++			break;
++		}
++	}
++
++	plane->formats = calloc(p->count_formats, sizeof(uint32_t));
++	if (!plane->formats) {
++		drmModeFreePlane(p);
++		return -ENOMEM;
++	}
++
++	for (i = 0; i < p->count_formats; i++)
++		plane->formats[i] = p->formats[i];
++
++	plane->num_formats = p->count_formats;
++
++	drmModeFreePlane(p);
++
++	props = drmModeObjectGetProperties(device->fd, plane->id,
++					   DRM_MODE_OBJECT_PLANE);
++	if (!props)
++		return -ENODEV;
++
++	for (i = 0; i < props->count_props; i++) {
++		drmModePropertyPtr prop;
++
++		prop = drmModeGetProperty(device->fd, props->props[i]);
++		if (prop) {
++			if (strcmp(prop->name, "type") == 0)
++				plane->type = props->prop_values[i];
++
++			drmModeFreeProperty(prop);
++		}
++	}
++
++	drmModeFreeObjectProperties(props);
++
++	return 0;
++}
++
++struct kms_plane *kms_plane_create(struct kms_device *device, uint32_t id)
++{
++	struct kms_plane *plane;
++
++	plane = calloc(1, sizeof(*plane));
++	if (!plane)
++		return NULL;
++
++	plane->device = device;
++	plane->id = id;
++
++	kms_plane_probe(plane);
++
++	return plane;
++}
++
++void kms_plane_free(struct kms_plane *plane)
++{
++	free(plane);
++}
++
++int kms_plane_set(struct kms_plane *plane, struct kms_framebuffer *fb,
++		  unsigned int x, unsigned int y)
++{
++	struct kms_device *device = plane->device;
++	int err;
++
++	err = drmModeSetPlane(device->fd, plane->id, plane->crtc->id, fb->id,
++			      0, x, y, fb->width, fb->height, 0 << 16,
++			      0 << 16, fb->width << 16, fb->height << 16);
++	if (err < 0)
++		return -errno;
++
++	return 0;
++}
++
++bool kms_plane_supports_format(struct kms_plane *plane, uint32_t format)
++{
++	unsigned int i;
++
++	for (i = 0; i < plane->num_formats; i++)
++		if (plane->formats[i] == format)
++			return true;
++
++	return false;
++}
+diff --git a/tests/kms/libkms-test-screen.c b/tests/kms/libkms-test-screen.c
+new file mode 100644
+index 00000000..d00ae547
+--- /dev/null
++++ b/tests/kms/libkms-test-screen.c
+@@ -0,0 +1,90 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include <errno.h>
++#include <string.h>
++
++#include "libkms-test.h"
++
++static void kms_screen_probe(struct kms_screen *screen)
++{
++	struct kms_device *device = screen->device;
++	drmModeConnector *con;
++
++	con = drmModeGetConnector(device->fd, screen->id);
++	if (!con)
++		return;
++
++	screen->type = con->connector_type;
++
++	if (con->connection == DRM_MODE_CONNECTED)
++		screen->connected = true;
++	else
++		screen->connected = false;
++
++	if (con->modes)
++		memcpy(&screen->mode, &con->modes[0], sizeof(drmModeModeInfo));
++
++	screen->width = screen->mode.hdisplay;
++	screen->height = screen->mode.vdisplay;
++
++	drmModeFreeConnector(con);
++}
++
++struct kms_screen *kms_screen_create(struct kms_device *device, uint32_t id)
++{
++	struct kms_screen *screen;
++
++	screen = calloc(1, sizeof(*screen));
++	if (!screen)
++		return NULL;
++
++	screen->device = device;
++	screen->id = id;
++
++	kms_screen_probe(screen);
++
++	return screen;
++}
++
++void kms_screen_free(struct kms_screen *screen)
++{
++	if (screen)
++		free(screen->name);
++
++	free(screen);
++}
++
++int kms_screen_set(struct kms_screen *screen, struct kms_crtc *crtc,
++		   struct kms_framebuffer *fb)
++{
++	struct kms_device *device = screen->device;
++	int err;
++
++	err = drmModeSetCrtc(device->fd, crtc->id, fb->id, 0, 0, &screen->id,
++			     1, &screen->mode);
++	if (err < 0)
++		return -errno;
++
++	return 0;
++}
+diff --git a/tests/kms/libkms-test.h b/tests/kms/libkms-test.h
+new file mode 100644
+index 00000000..7b1d02e9
+--- /dev/null
++++ b/tests/kms/libkms-test.h
+@@ -0,0 +1,120 @@
++/*
++ * Copyright © 2014 NVIDIA Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#ifndef LIBKMS_TEST_H
++#define LIBKMS_TEST_H
++
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdlib.h>
++
++#include <xf86drmMode.h>
++
++struct kms_device {
++	int fd;
++
++	struct kms_screen **screens;
++	unsigned int num_screens;
++
++	struct kms_crtc **crtcs;
++	unsigned int num_crtcs;
++
++	struct kms_plane **planes;
++	unsigned int num_planes;
++};
++
++struct kms_device *kms_device_open(int fd);
++void kms_device_close(struct kms_device *device);
++
++struct kms_plane *kms_device_find_plane_by_type(struct kms_device *device,
++						uint32_t type,
++						unsigned int index);
++
++struct kms_crtc {
++	struct kms_device *device;
++	uint32_t id;
++};
++
++struct kms_crtc *kms_crtc_create(struct kms_device *device, uint32_t id);
++void kms_crtc_free(struct kms_crtc *crtc);
++
++struct kms_framebuffer {
++	struct kms_device *device;
++
++	unsigned int width;
++	unsigned int height;
++	unsigned int pitch;
++	uint32_t format;
++	size_t size;
++
++	uint32_t handle;
++	uint32_t id;
++
++	void *ptr;
++};
++
++struct kms_framebuffer *kms_framebuffer_create(struct kms_device *device,
++					       unsigned int width,
++					       unsigned int height,
++					       uint32_t format);
++void kms_framebuffer_free(struct kms_framebuffer *fb);
++int kms_framebuffer_map(struct kms_framebuffer *fb, void **ptrp);
++void kms_framebuffer_unmap(struct kms_framebuffer *fb);
++
++struct kms_screen {
++	struct kms_device *device;
++	bool connected;
++	uint32_t type;
++	uint32_t id;
++
++	unsigned int width;
++	unsigned int height;
++	char *name;
++
++	drmModeModeInfo mode;
++};
++
++struct kms_screen *kms_screen_create(struct kms_device *device, uint32_t id);
++void kms_screen_free(struct kms_screen *screen);
++
++int kms_screen_set(struct kms_screen *screen, struct kms_crtc *crtc,
++		   struct kms_framebuffer *fb);
++
++struct kms_plane {
++	struct kms_device *device;
++	struct kms_crtc *crtc;
++	unsigned int type;
++	uint32_t id;
++
++	uint32_t *formats;
++	unsigned int num_formats;
++};
++
++struct kms_plane *kms_plane_create(struct kms_device *device, uint32_t id);
++void kms_plane_free(struct kms_plane *plane);
++
++int kms_plane_set(struct kms_plane *plane, struct kms_framebuffer *fb,
++		  unsigned int x, unsigned int y);
++bool kms_plane_supports_format(struct kms_plane *plane, uint32_t format);
++
++#endif
+diff --git a/tests/kms/meson.build b/tests/kms/meson.build
+new file mode 100644
+index 00000000..91371aa0
+--- /dev/null
++++ b/tests/kms/meson.build
+@@ -0,0 +1,49 @@
++# Copyright © 2017-2018 Intel Corporation
++
++# Permission is hereby granted, free of charge, to any person obtaining a copy
++# of this software and associated documentation files (the "Software"), to deal
++# in the Software without restriction, including without limitation the rights
++# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++# copies of the Software, and to permit persons to whom the Software is
++# furnished to do so, subject to the following conditions:
++
++# The above copyright notice and this permission notice shall be included in
++# all copies or substantial portions of the Software.
++
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++# SOFTWARE.
++
++
++libkms_test = static_library(
++  'kms-test',
++  files(
++    'libkms-test-crtc.c', 'libkms-test-device.c', 'libkms-test-framebuffer.c',
++    'libkms-test-plane.c', 'libkms-test-screen.c',
++  ),
++  include_directories : [inc_root, inc_tests, inc_drm],
++  link_with : libdrm,
++  c_args : libdrm_c_args,
++)
++
++kms_steal_crtc = executable(
++  'kms-steal-crtc',
++  files('kms-steal-crtc.c'),
++  dependencies : dep_cairo,
++  include_directories : [inc_root, inc_tests, inc_drm],
++  link_with : [libkms_test, libutil],
++  install : with_install_tests,
++)
++
++kms_universal_planes = executable(
++  'kms-universal-planes',
++  files('kms-universal-planes.c'),
++  dependencies : dep_cairo,
++  include_directories : [inc_root, inc_tests, inc_drm],
++  link_with : [libkms_test],
++  install : with_install_tests,
++)
+diff --git a/tests/kmstest/main.c b/tests/kmstest/main.c
+new file mode 100644
+index 00000000..a0e4ebbd
+--- /dev/null
++++ b/tests/kmstest/main.c
+@@ -0,0 +1,109 @@
++/**************************************************************************
++ *
++ * Copyright © 2009 VMware, Inc., Palo Alto, CA., USA
++ * All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the
++ * "Software"), to deal in the Software without restriction, including
++ * without limitation the rights to use, copy, modify, merge, publish,
++ * distribute, sub license, and/or sell copies of the Software, and to
++ * permit persons to whom the Software is furnished to do so, subject to
++ * the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDERS, AUTHORS AND/OR ITS SUPPLIERS BE LIABLE FOR ANY CLAIM,
++ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
++ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
++ * USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ **************************************************************************/
++
++#include <getopt.h>
++#include <stdio.h>
++#include <string.h>
++#include "xf86drm.h"
++#include "libkms.h"
++
++#include "util/kms.h"
++
++#define CHECK_RET_RETURN(ret, str) \
++	if (ret < 0) { \
++		printf("%s: %s (%s)\n", __func__, str, strerror(-ret)); \
++		return ret; \
++	}
++
++static int test_bo(struct kms_driver *kms)
++{
++	struct kms_bo *bo;
++	int ret;
++	unsigned attrs[7] = {
++		KMS_WIDTH, 1024,
++		KMS_HEIGHT, 768,
++		KMS_BO_TYPE, KMS_BO_TYPE_SCANOUT_X8R8G8B8,
++		KMS_TERMINATE_PROP_LIST,
++	};
++
++	ret = kms_bo_create(kms, attrs, &bo);
++	CHECK_RET_RETURN(ret, "Could not create bo");
++
++	kms_bo_destroy(&bo);
++
++	return 0;
++}
++
++static void usage(const char *program)
++{
++	fprintf(stderr, "Usage: %s [options]\n", program);
++	fprintf(stderr, "\n");
++	fprintf(stderr, "  -D DEVICE  open the given device\n");
++	fprintf(stderr, "  -M MODULE  open the given module\n");
++}
++
++int main(int argc, char** argv)
++{
++	static const char optstr[] = "D:M:";
++	struct kms_driver *kms;
++	int c, fd, ret;
++	char *device = NULL;
++	char *module = NULL;
++
++	while ((c = getopt(argc, argv, optstr)) != -1) {
++		switch (c) {
++		case 'D':
++			device = optarg;
++			break;
++		case 'M':
++			module = optarg;
++			break;
++		default:
++			usage(argv[0]);
++			return 0;
++		}
++	}
++
++	fd = util_open(device, module);
++	CHECK_RET_RETURN(fd, "Could not open device");
++
++	ret = kms_create(fd, &kms);
++	CHECK_RET_RETURN(ret, "Failed to create kms driver");
++
++	ret = test_bo(kms);
++	if (ret)
++		goto err;
++
++	printf("%s: All ok!\n", __func__);
++
++	kms_destroy(&kms);
++	return 0;
++
++err:
++	kms_destroy(&kms);
++	return ret;
++}
+diff --git a/tests/kmstest/meson.build b/tests/kmstest/meson.build
+new file mode 100644
+index 00000000..4fb870f9
+--- /dev/null
++++ b/tests/kmstest/meson.build
+@@ -0,0 +1,30 @@
++# Copyright © 2017 Intel Corporation
++
++# Permission is hereby granted, free of charge, to any person obtaining a copy
++# of this software and associated documentation files (the "Software"), to deal
++# in the Software without restriction, including without limitation the rights
++# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++# copies of the Software, and to permit persons to whom the Software is
++# furnished to do so, subject to the following conditions:
++
++# The above copyright notice and this permission notice shall be included in
++# all copies or substantial portions of the Software.
++
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++# SOFTWARE.
++
++kmstest = executable(
++  'kmstest',
++  files('main.c'),
++  c_args : libdrm_c_args,
++  include_directories : [
++    inc_root, inc_tests, include_directories('../../libkms'), inc_drm,
++  ],
++  link_with : [libutil, libkms, libdrm],
++  install : with_install_tests,
++)
+diff --git a/tests/meson.build b/tests/meson.build
+index ac9e66b0..196edbfa 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -21,10 +21,14 @@
+ inc_tests = include_directories('.')
+ 
+ subdir('util')
++subdir('kms')
+ subdir('modeprint')
+ subdir('proptest')
+ subdir('modetest')
+ subdir('vbltest')
++if with_libkms
++  subdir('kmstest')
++endif
+ if with_radeon
+   subdir('radeon')
+ endif
