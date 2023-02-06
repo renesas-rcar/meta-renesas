@@ -20,6 +20,7 @@ SRC_URI = " \
 
 SRC_URI:append = " \
     file://0001-mk-gcc.mk-Change-the-path-to-the-library.patch \
+    file://0001-Makefile-Disable-linker-warning.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
