@@ -12,6 +12,7 @@ S = "${WORKDIR}/git"
 
 BRANCH = "rcar_gen3_v2.5"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH};protocol=https"
+SRC_URI += " file://0001-Makefile-Disable-linker-warning.patch"
 SRCREV = "268df1d862bc564458aee43f8ec9e71d7ec794bc"
 
 PV = "v2.5+renesas+git${SRCPV}"

@@ -1,0 +1,12 @@
+diff --git a/Makefile b/Makefile
+index 2376b9acc..ff1cb0fb5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -28,6 +28,7 @@ include ${MAKE_HELPERS_DIRECTORY}build_env.mk
+ 
+ include ${MAKE_HELPERS_DIRECTORY}defaults.mk
+ 
++LDFLAGS += --no-warn-rwx-segments
+ # Assertions enabled for DEBUG builds by default
+ ENABLE_ASSERTIONS		:= ${DEBUG}
+ ENABLE_PMF			:= ${ENABLE_RUNTIME_INSTRUMENTATION}
