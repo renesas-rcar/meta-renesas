@@ -1,0 +1,10 @@
+[Unit]
+Description=optee services
+
+[Service]
+ExecStart=/usr/bin/tee-supplicant
+ExecStop=/usr/bin/killall -s KILL tee-supplicant
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,163 @@
+From cdda3612294294bb199caadb9e197348adde64ec Mon Sep 17 00:00:00 2001
+From: "Nguyen Q. Vinh" <vinh.nguyen.ux@renesas.com>
+Date: Tue, 10 May 2022 17:17:20 +0700
+Subject: [PATCH] stty: Add support for non-standard baudrates
+
+Currently, stty application works only with standard baudrates listed in
+libbb/speed_table.c
+
+But in the same file, there are some comments about the possibility of
+setting non-standard baudrates with struct termios2.
+
+This patch impliments this approach, allow users to work with the custom
+baudrates (as long as their devices support it).
+
+Signed-off-by: Vinh Nguyen <vinh.nguyen.ux@renesas.com>
+---
+ coreutils/stty.c | 70 +++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 67 insertions(+), 3 deletions(-)
+
+diff --git a/coreutils/stty.c b/coreutils/stty.c
+index d1309f9aa..607a6a3dd 100644
+--- a/coreutils/stty.c
++++ b/coreutils/stty.c
+@@ -246,6 +246,18 @@
+ # define IUTF8 0
+ #endif
+ 
++#define    BOTHER 0010000
++struct termios2 {
++    tcflag_t c_iflag;   /* input mode flags */
++    tcflag_t c_oflag;   /* output mode flags */
++    tcflag_t c_cflag;   /* control mode flags */
++    tcflag_t c_lflag;   /* local mode flags */
++    cc_t c_line;      /* line discipline */
++    cc_t c_cc[19];    /* control characters */
++    speed_t c_ispeed;   /* input speed */
++    speed_t c_ospeed;   /* output speed */
++};
++
+ /* Which speeds to set */
+ enum speed_setting {
+ 	input_speed, output_speed, both_speeds
+@@ -818,6 +830,23 @@ static void set_speed_or_die(enum speed_setting type, const char *arg,
+ 	}
+ }
+ 
++static void set_custom_speed_or_die(enum speed_setting type, const char *arg,
++					struct termios2 *mode)
++{
++	speed_t baud;
++
++	baud = xatou(arg);
++
++	if (type != output_speed) {     /* either input or both */
++		mode->c_ispeed = baud;
++	}
++	if (type != input_speed) {      /* either output or both */
++		mode->c_ospeed = baud;
++	}
++	mode->c_cflag &= ~CBAUD;
++	mode->c_cflag |= BOTHER;
++}
++
+ static NORETURN void perror_on_device_and_die(const char *fmt)
+ {
+ 	bb_perror_msg_and_die(fmt, G.device_name);
+@@ -1002,6 +1031,7 @@ static void display_speed(const struct termios *mode, int fancy)
+ 	//____________________ 01234567 8 9
+ 	const char *fmt_str = "%lu %lu\n\0ispeed %lu baud; ospeed %lu baud;";
+ 	unsigned long ispeed, ospeed;
++  struct termios2 c_mode;
+ 
+ 	ispeed = cfgetispeed(mode);
+ 	ospeed = cfgetospeed(mode);
+@@ -1011,7 +1041,14 @@ static void display_speed(const struct termios *mode, int fancy)
+ 		fmt_str = "%lu\n\0\0\0\0\0speed %lu baud;";
+ 	}
+ 	if (fancy) fmt_str += 9;
+-	wrapf(fmt_str, tty_baud_to_value(ispeed), tty_baud_to_value(ospeed));
++	if ((tty_baud_to_value(ispeed) != 0) && (tty_baud_to_value(ospeed) != 0))
++		wrapf(fmt_str, tty_baud_to_value(ispeed), tty_baud_to_value(ospeed));
++	else {
++		memset(&c_mode, 0, sizeof(c_mode));
++		if (ioctl(STDIN_FILENO, TCGETS2, &c_mode))
++			perror_on_device("%s");
++		wrapf(fmt_str, c_mode.c_ispeed, c_mode.c_ospeed);
++	}
+ }
+ 
+ static void do_display(const struct termios *mode, int all)
+@@ -1271,6 +1308,7 @@ static void set_control_char_or_die(const struct control_info *info,
+ #define STTY_verbose_output     (1 << 2)
+ #define STTY_recoverable_output (1 << 3)
+ #define STTY_noargs             (1 << 4)
++#define STTY_set_custom_baud    (1 << 5)
+ 
+ int stty_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int stty_main(int argc UNUSED_PARAM, char **argv)
+@@ -1281,6 +1319,7 @@ int stty_main(int argc UNUSED_PARAM, char **argv)
+ 	int display_all = 0;
+ 	int stty_state;
+ 	int k;
++	const char *custom_baud = NULL;
+ 
+ 	INIT_G();
+ 
+@@ -1394,7 +1433,10 @@ int stty_main(int argc UNUSED_PARAM, char **argv)
+ 			break;
+ 		default:
+ 			if (recover_mode(arg, &mode) == 1) break;
++			/* disable this checking to allow custom baudrate
+ 			if (tty_value_to_baud(xatou(arg)) != (speed_t) -1) break;
++			*/
++			if (xatou(arg) != -1) break;
+  invalid_argument:
+ 			bb_error_msg_and_die("invalid argument '%s'", arg);
+ 		}
+@@ -1505,10 +1547,15 @@ int stty_main(int argc UNUSED_PARAM, char **argv)
+ 		default:
+ 			if (recover_mode(arg, &mode) == 1)
+ 				stty_state |= STTY_require_set_attr;
+-			else /* true: if (tty_value_to_baud(xatou(arg)) != (speed_t) -1) */{
++			else if (tty_value_to_baud(xatou(arg)) != (speed_t) -1) {
+ 				set_speed_or_die(both_speeds, arg, &mode);
+ 				stty_state |= (STTY_require_set_attr | STTY_speed_was_set);
+-			} /* else - impossible (caught in the first pass):
++			}
++			else {
++				custom_baud = arg;
++				stty_state |= STTY_set_custom_baud;
++			}
++            /* else - impossible (caught in the first pass):
+ 				bb_error_msg_and_die("invalid argument '%s'", arg); */
+ 		}
+ 	}
+@@ -1555,6 +1602,23 @@ int stty_main(int argc UNUSED_PARAM, char **argv)
+ 				perror_on_device_and_die("%s: cannot perform all requested operations");
+ 		}
+ 	}
++/*
++  For non-standard baudrate, we will use the termios2 struct to
++  set it. Move it down to avoid any conflict with the existing
++  code which use termios and tcgetattr/tcsetattr
++*/
++
++	if (stty_state & STTY_set_custom_baud) {
++		struct termios2 custom_mode;
++		memset(&custom_mode, 0, sizeof(custom_mode));
++		if (ioctl(STDIN_FILENO, TCGETS2, &custom_mode))
++			perror_on_device_and_die("%s");
++
++		set_custom_speed_or_die(both_speeds, custom_baud, &custom_mode);
++
++		if (ioctl(STDIN_FILENO, TCSETS2, &custom_mode))
++			perror_on_device_and_die("%s: cannot perform all requested operations");
++	}
+ 
+ 	return EXIT_SUCCESS;
+ }
+-- 
+2.25.1.windows.1
+
+

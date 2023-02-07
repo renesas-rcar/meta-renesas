@@ -1,0 +1,14 @@
+diff --git a/src/basic/chase-symlinks.c b/src/basic/chase-symlinks.c
+index 344e7e1bb7..6f1300598f 100644
+--- a/src/basic/chase-symlinks.c
++++ b/src/basic/chase-symlinks.c
+@@ -20,6 +20,8 @@ bool unsafe_transition(const struct stat *a, const struct stat *b) {
+
+         if (a->st_uid == 0) /* Transitioning from privileged to unprivileged is always fine */
+                 return false;
++        if (b->st_uid == 65534) /* Transitioning to a non-owned is OK too */
++                return false;
+
+         return a->st_uid != b->st_uid; /* Otherwise we need to stay within the same UID */
+ }
+

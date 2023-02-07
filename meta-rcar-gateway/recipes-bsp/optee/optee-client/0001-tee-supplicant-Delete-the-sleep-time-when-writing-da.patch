@@ -1,0 +1,35 @@
+From caf197b05b154ce1948d6fe53e7bdec96e4a7129 Mon Sep 17 00:00:00 2001
+From: Tsukasa Kawaguchi <tsukasa.kawaguchi.aw@hitachi.com>
+Date: Mon, 12 Jul 2021 17:11:07 +0900
+Subject: [PATCH] tee-supplicant: Delete the sleep time when writing data
+
+Deleted sleep processing to shorten processing time.
+
+Signed-off-by: Tsukasa Kawaguchi <tsukasa.kawaguchi.aw@hitachi.com>
+Signed-off-by: Yoshifumi Hosoya <yoshifumi.hosoya.wj@renesas.com>
+---
+ tee-supplicant/src/rpmb.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/tee-supplicant/src/rpmb.c b/tee-supplicant/src/rpmb.c
+index 7418e23..adcbdc5 100644
+--- a/tee-supplicant/src/rpmb.c
++++ b/tee-supplicant/src/rpmb.c
+@@ -699,14 +699,6 @@ static uint32_t rpmb_data_req(int fd, struct rpmb_data_frame *req_frm,
+ 		cmd = &mcmd->cmds[0];
+ 		set_mmc_io_cmd(cmd, req_nfrm, MMC_WRITE_MULTIPLE_BLOCK,
+ 			       1 | MMC_CMD23_ARG_REL_WR);
+-		/*
+-		 * Black magic: tested on a HiKey board with a HardKernel eMMC
+-		 * module. When postsleep values are zero, the kernel logs
+-		 * random errors: "mmc_blk_ioctl_cmd: Card Status=0x00000E00"
+-		 * and ioctl() fails.
+-		 */
+-		cmd->postsleep_min_us = 20000;
+-		cmd->postsleep_max_us = 50000;
+ 		mmc_ioc_cmd_set_data((*cmd), (uintptr_t)req_frm);
+ 
+ 		/* Send result request frame */
+-- 
+2.26.2.windows.1
+
