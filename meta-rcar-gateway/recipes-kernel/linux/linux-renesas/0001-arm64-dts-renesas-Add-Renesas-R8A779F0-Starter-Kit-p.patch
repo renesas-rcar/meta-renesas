@@ -1,0 +1,233 @@
+From 8fc855f1aadc7e0664e1547cae39f6feff4ef8a7 Mon Sep 17 00:00:00 2001
+From: Michael Dege <michael.dege@renesas.com>
+Date: Mon, 9 May 2022 13:51:27 +0200
+Subject: [PATCH 1/6] arm64: dts: renesas: Add Renesas R8A779F0 Starter Kit
+ prototype support
+
+Add initial support for the Renesas R8A779F0 Starter Kit prototype support.
+Based on the original (and large) patch by Michael Dege.
+
+Signed-off-by: Michael Dege <michael.dege@renesas.com>
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/Makefile          |   1 +
+ .../dts/renesas/r8a779f0-s4sk-prototype.dts   | 195 ++++++++++++++++++
+ 2 files changed, 196 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index 1499361d6ecf..287a65aead70 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -74,6 +74,7 @@ dtb-$(CONFIG_ARCH_R8A779A0) += r8a779a0-falcon.dtb
+ dtb-$(CONFIG_ARCH_R8A779G0) += r8a779g0-whitehawk.dtb
+ 
+ dtb-$(CONFIG_ARCH_R8A779F0) += r8a779f0-spider.dtb
++dtb-$(CONFIG_ARCH_R8A779F0) += r8a779f0-s4sk-prototype.dtb
+ 
+ dtb-$(CONFIG_ARCH_R8A77970) += r8a77970-eagle-function.dtb
+ dtb-$(CONFIG_ARCH_R8A77970) += r8a77970-es1-eagle.dtb r8a77970-es1-eagle-function.dtb
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+new file mode 100644
+index 000000000000..e318b668964d
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+@@ -0,0 +1,195 @@
++// SPDX-License-Identifier: (GPL-2.0 or MIT)
++/*
++ * Device Tree Source for the S4 Starter Kit Prototype board
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include <dt-bindings/gpio/gpio.h>
++#include "r8a779f0.dtsi"
++
++/ {
++	model = "Renesas S4 Starter Kit Prototype board";
++	compatible = "renesas,s4sk-prototype", "renesas,r8a779f0";
++
++	aliases {
++		serial0 = &hscif0;
++		serial1 = &hscif1;
++	};
++
++	chosen {
++		stdout-path = "serial0:921600n8";
++	};
++
++	memory@48000000 {
++		device_type = "memory";
++		/* first 128MB is reserved for secure area. */
++		linux,usable-memory = <0x0 0x48000000 0x0 0x38000000>;
++	};
++
++	memory@480000000 {
++		device_type = "memory";
++		reg = <0x4 0x40000000 0x0 0x40000000>;
++	};
++
++	reg_1p8v: regulator-1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: regulator-3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vcc_sdhi: regulator-vcc-sdhi {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio1 24 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&extalr_clk {
++	clock-frequency = <32768>;
++};
++
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++	gpio_exp_20: gpio@20 {
++		compatible = "ti,tca9554";
++		reg = <0x20>;
++		gpio-controller;
++		#gpio-cells = <2>;
++	};
++};
++
++&i2c5 {
++	pinctrl-0 = <&i2c5_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++	eeprom@50 {
++		compatible = "atmel,24c16";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
++};
++
++&mmc0 {
++	pinctrl-0 = <&sd_pins>;
++	pinctrl-1 = <&sd_pins>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&vcc_sdhi>;
++	vqmmc-supply = <&vcc_sdhi>;
++	cd-gpios = <&gpio1 23 GPIO_ACTIVE_LOW>;
++	bus-width = <4>;
++	status = "okay";
++};
++
++&pfc {
++	pinctrl-0 = <&scif_clk_pins>;
++	pinctrl-names = "default";
++
++	i2c0_pins: i2c0 {
++		groups = "i2c0";
++		function = "i2c0";
++	};
++
++	i2c5_pins: i2c5 {
++		groups = "i2c5";
++		function = "i2c5";
++	};
++
++	sd_pins: sd {
++		groups = "mmc_data4", "mmc_ctrl";
++		function = "mmc";
++		power-source = <3300>;
++	};
++
++	qspi0_pins: qspi0 {
++		groups = "qspi0_ctrl", "qspi0_data4";
++		function = "qspi0";
++	};
++
++	scif0_pins: scif0 {
++		groups = "scif0_data", "scif0_ctrl";
++		function = "scif0";
++	};
++
++	hscif0_pins: hscif0 {
++		groups = "hscif0_data", "hscif0_ctrl";
++		function = "hscif0";
++	};
++
++	hscif1_pins: hscif1 {
++		groups = "hscif1_data", "hscif1_ctrl";
++		function = "hscif1";
++	};
++
++	scif_clk_pins: scif_clk {
++		groups = "scif_clk";
++		function = "scif_clk";
++	};
++
++};
++
++&rwdt {
++	timeout-sec = <60>;
++	status = "okay";
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	/* Please use exclusively to the hscif1 node */
++	status = "disabled";
++};
++
++&hscif0 {
++	pinctrl-0 = <&hscif0_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	status = "okay";
++};
++
++&hscif1 {
++	pinctrl-0 = <&hscif1_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	/* Please use exclusively to the scif0 node */
++	status = "okay";
++};
++
++&scif_clk {
++	clock-frequency = <24000000>;
++};
+-- 
+2.25.1
+

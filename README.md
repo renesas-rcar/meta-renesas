@@ -21,11 +21,20 @@ Layer and boards that support is the following:
         - Renesas Electronics Corporation. R-Car Ebisu (R8A77990)
         - Renesas Electronics Corporation. R-Car Draak (R8A77995)
 
+    meta-rcar-gateway
+        - Renesas Electronics Corporation. R-Car Spider (R8A779F0)
+
 Please see README in the layer directory for the description of the board.
 
 ## Original BSP image
 
-The meta-renesas layer provides original BSP image. The following:
+The meta-rcar-gen3 layer provides original BSP image. The following:
 
 * core-image-minimal
 * core-image-weston
+
+The meta-rcar-gateway layers provide original BSP image. The following:
+
+* rcar-image-minimal
+* rcar-image-gateway
+

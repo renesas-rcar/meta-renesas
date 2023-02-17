@@ -1,0 +1,200 @@
+From 9eb0f4cd2d9a4b1840377bbf02945f56fe11617f Mon Sep 17 00:00:00 2001
+From: Tam Nguyen <tam.nguyen.xa@renesas.com>
+Date: Tue, 20 Dec 2022 04:35:07 +0700
+Subject: [PATCH 6/6] net: ethernet: renesas: rswich: Fix issue cannot use both
+ TSN0 and TSN1
+
+On S4 Starter Kit, initialization of the Ethernet SERDES for USXGMII
+mode should be handled for all channel TSN0 and TSN1 during a same
+time instead of initialize for each channel.
+
+The patch is also support restart linkup when cannot link up
+succesfully.
+
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ drivers/net/ethernet/renesas/rswitch.c | 125 ++++++++++++++++++++++---
+ 1 file changed, 110 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/rswitch.c b/drivers/net/ethernet/renesas/rswitch.c
+index a192e36e8e22..5c11bb36eb9f 100644
+--- a/drivers/net/ethernet/renesas/rswitch.c
++++ b/drivers/net/ethernet/renesas/rswitch.c
+@@ -1036,6 +1036,7 @@ struct rswitch_private {
+ 	struct clk *phy_clk;
+ 
+ 	struct reset_control *sd_rst;
++	bool serdes_init;
+ };
+ 
+ static int num_ndev = 3;
+@@ -1511,12 +1512,19 @@ static int rswitch_serdes_reg_wait(void __iomem *addr, u32 offs, u32 bank, u32 m
+ static int rswitch_serdes_common_init_ram(struct rswitch_etha *etha)
+ {
+ 	void __iomem *common_addr = etha->serdes_addr - etha->index * RSWITCH_SERDES_OFFSET;
+-	int ret;
++	int ret, index;
+ 
+-	ret = rswitch_serdes_reg_wait(etha->serdes_addr, VR_XS_PMA_MP_12G_16G_25G_SRAM, BANK_180,
+-				      BIT(0), 0x01);
+-	if (ret)
+-		return ret;
++	if (sk_board) {
++		for (index = 0; index < (RSWITCH_MAX_NUM_ETHA - 1); index++) {
++			ret = rswitch_serdes_reg_wait(common_addr + index * RSWITCH_SERDES_OFFSET,
++					 VR_XS_PMA_MP_12G_16G_25G_SRAM, BANK_180, BIT(0), 0x01);
++			if (ret)
++				return ret;
++		}
++	} else {
++		ret = rswitch_serdes_reg_wait(etha->serdes_addr, VR_XS_PMA_MP_12G_16G_25G_SRAM,
++					 BANK_180, BIT(0), 0x01);
++	}
+ 
+ 	rswitch_serdes_write32(common_addr, VR_XS_PMA_MP_12G_16G_25G_SRAM, BANK_180, 0x03);
+ 
+@@ -1681,10 +1689,6 @@ static int __maybe_unused rswitch_serdes_init(struct rswitch_etha *etha)
+ 	case PHY_INTERFACE_MODE_SGMII:
+ 		mode = SGMII;
+ 		break;
+-	case PHY_INTERFACE_MODE_USXGMII:
+-		mode = USXGMII;
+-		break;
+-
+ 	default:
+ 		pr_debug("%s: Don't support this interface", __func__);
+ 		return -EOPNOTSUPP;
+@@ -1726,8 +1730,6 @@ static int __maybe_unused rswitch_serdes_init(struct rswitch_etha *etha)
+ 		return ret;
+ 
+ 	/* Set speed (bps) */
+-	if (sk_board)
+-		etha->speed = 2500;
+ 	ret = rswitch_serdes_set_speed(etha, mode, etha->speed);
+ 	if (ret)
+ 		return ret;
+@@ -1744,6 +1746,89 @@ static int __maybe_unused rswitch_serdes_init(struct rswitch_etha *etha)
+ 	return 0;
+ }
+ 
++static int __maybe_unused rswitch_serdes_init_usxgmii(struct rswitch_private *priv)
++{
++	struct rswitch_etha *etha = priv->etha;
++	int ret, index, val;
++	enum rswitch_serdes_mode mode = USXGMII;
++	void __iomem *common_addr = etha->serdes_addr - etha->index * RSWITCH_SERDES_OFFSET;
++
++	/* Initialize SRAM */
++	ret = rswitch_serdes_common_init_ram(etha);
++	if (ret)
++		return ret;
++	for (index = 0; index < (RSWITCH_MAX_NUM_ETHA - 1); index++) {
++		ret = rswitch_serdes_reg_wait(common_addr + index * RSWITCH_SERDES_OFFSET,
++						SR_XS_PCS_CTRL1, BANK_300, BIT(15), 0);
++		if (ret)
++			return ret;
++		rswitch_serdes_write32(common_addr + index * RSWITCH_SERDES_OFFSET,
++					 0x03d4, BANK_380, 0x443);
++	}
++
++	/* Set common setting */
++	ret = rswitch_serdes_common_setting(etha, mode);
++	if (ret)
++		return ret;
++
++	for (index = 0; index < (RSWITCH_MAX_NUM_ETHA - 1); index++)
++		rswitch_serdes_write32(common_addr + index * RSWITCH_SERDES_OFFSET, 0x03d0,
++					BANK_380, 0x01);
++
++	/* Assert softreset for PHY */
++	rswitch_serdes_write32(common_addr, VR_XS_PCS_DIG_CTRL1, BANK_380, 0x8000);
++
++	/* Initialize SRAM */
++	ret = rswitch_serdes_common_init_ram(etha);
++	if (ret)
++		return ret;
++
++	ret = rswitch_serdes_reg_wait(common_addr, VR_XS_PCS_DIG_CTRL1, BANK_380, BIT(15), 0);
++	if (ret)
++		return ret;
++
++	/* Set channel settings*/
++	ret = rswitch_serdes_chan_setting(&etha[0], mode);
++	if (ret)
++		return ret;
++
++	ret = rswitch_serdes_chan_setting(&etha[1], mode);
++	if (ret)
++		return ret;
++
++	/* Set speed (bps) */
++	etha[0].speed = 2500;
++	etha[1].speed = 2500;
++
++	ret = rswitch_serdes_set_speed(&etha[0], mode, etha[0].speed);
++	if (ret)
++		return ret;
++
++	ret = rswitch_serdes_set_speed(&etha[1], mode, etha[1].speed);
++	if (ret)
++		return ret;
++
++	for (index = 0; index < (RSWITCH_MAX_NUM_ETHA - 1); index++) {
++		rswitch_serdes_write32(common_addr + index * RSWITCH_SERDES_OFFSET, 0x03c0, BANK_380, 0);
++		rswitch_serdes_write32(common_addr + index * RSWITCH_SERDES_OFFSET, 0x03d0, BANK_380, 0);
++
++		ret = rswitch_serdes_reg_wait(common_addr + index * RSWITCH_SERDES_OFFSET,
++							 SR_XS_PCS_STS1, BANK_300, BIT(2), BIT(2));
++		mdelay(40);
++		if (ret) {
++			val = rswitch_serdes_read32(common_addr + index * RSWITCH_SERDES_OFFSET, 0x0144,
++							 BANK_180);
++			rswitch_serdes_write32(common_addr + index * RSWITCH_SERDES_OFFSET, 0x0144,
++						 BANK_180, val |= 0x10);
++			udelay(20);
++			rswitch_serdes_write32(common_addr + index * RSWITCH_SERDES_OFFSET, 0x0144,
++						BANK_180, val &= ~0x10);
++		}
++	}
++
++	return 0;
++}
++
+ static int rswitch_etha_set_access(struct rswitch_etha *etha, bool read,
+ 				   int phyad, int devad, int regad, int data)
+ {
+@@ -2008,6 +2093,7 @@ static void rswitch_phy_deinit(struct rswitch_device *rdev)
+ static int rswitch_open(struct net_device *ndev)
+ {
+ 	struct rswitch_device *rdev = netdev_priv(ndev);
++	struct rswitch_private *priv = rdev->priv;
+ 	struct device_node *phy;
+ 	int err = 0;
+ 	bool phy_started = false;
+@@ -2042,10 +2128,19 @@ static int rswitch_open(struct net_device *ndev)
+ 
+ 		phy_started = true;
+ 
+-		if (!rdev->etha->operated) {
+-			err = rswitch_serdes_init(rdev->etha);
+-			if (err < 0)
+-				goto error;
++		if (sk_board) {
++			if (!priv->serdes_init) {
++				err = rswitch_serdes_init_usxgmii(priv);
++				if (err < 0)
++					goto error;
++				priv->serdes_init = true;
++			}
++		} else {
++			if (!rdev->etha->operated) {
++				err = rswitch_serdes_init(rdev->etha);
++				if (err < 0)
++					goto error;
++			}
+ 		}
+ 
+ 		rdev->etha->operated = true;
+-- 
+2.25.1
+
