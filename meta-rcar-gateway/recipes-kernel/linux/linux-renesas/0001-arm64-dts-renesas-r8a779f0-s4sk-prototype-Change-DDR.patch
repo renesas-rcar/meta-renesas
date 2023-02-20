@@ -1,0 +1,37 @@
+From 948f36cfadbb2b4081d9e1fadfed5644fe6a534b Mon Sep 17 00:00:00 2001
+From: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Date: Wed, 8 Feb 2023 16:44:55 +0900
+Subject: [PATCH] arm64: dts: renesas: r8a779f0: s4sk-prototype: Change DDR
+ memory size
+
+S4 SK prototype board is equipped with DDR 4GB memory.
+This patch supports 4GB.
+
+Signed-off-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+index 04d9a2a83368..c2260bc8d104 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-s4sk-prototype.dts
+@@ -26,12 +26,13 @@ chosen {
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		linux,usable-memory = <0x0 0x48000000 0x0 0x38000000>;
++		/* The last 512MB is reserved for CR. */
++		reg = <0x0 0x48000000 0x0 0x58000000>;
+ 	};
+ 
+ 	memory@480000000 {
+ 		device_type = "memory";
+-		reg = <0x4 0x40000000 0x0 0x40000000>;
++		reg = <0x4 0x80000000 0x0 0x80000000>;
+ 	};
+ 
+ 	reg_1p8v: regulator-1p8v {
+-- 
+2.25.1
+

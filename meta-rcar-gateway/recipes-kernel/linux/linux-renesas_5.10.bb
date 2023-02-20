@@ -20,6 +20,7 @@ SRC_URI:append = " \
     file://0004-arm64-dts-renesas-r8a779f0-s4sk-prototype-Add-rswitc.patch \
     file://0005-net-ethernet-renesas-rswitch-Add-support-USXGMII-mod.patch \
     file://0006-net-ethernet-renesas-rswich-Fix-issue-cannot-use-bot.patch \
+    file://0001-arm64-dts-renesas-r8a779f0-s4sk-prototype-Change-DDR.patch \
     file://pcie_ep.cfg \
     file://pci_ep_test.cfg \
 "
