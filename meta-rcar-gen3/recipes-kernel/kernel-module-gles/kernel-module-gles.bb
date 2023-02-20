@@ -73,4 +73,8 @@ FILES:${PN} = " \
     ${sysconfdir}/modprobe.d/blacklist.conf \
 "
 
+# Currently, output contains buildpaths, which produce build warning
+INSANE_SKIP:${PN} += "buildpaths"
+INSANE_SKIP:${PN}-dbg += "buildpaths"
+
 RPROVIDES:${PN} += "kernel-module-pvrsrvkm kernel-module-dc-linuxfb"
