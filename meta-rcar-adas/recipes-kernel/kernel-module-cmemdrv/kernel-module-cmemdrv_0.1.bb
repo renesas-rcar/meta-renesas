@@ -12,7 +12,7 @@ PV = "0.1"
 
 RENESAS_CMEM_URL ?= "git://github.com/renesas-rcar/cmem.git;protocol=https"
 SRC_URI = "${RENESAS_CMEM_URL};nobranch=1"
-SRCREV = "d420a1ddf8509b788eadca73f6bd843451604bdf"
+SRCREV = "abe21c26b5ad06909017966c7208c454e7f02b92"
 
 S = "${WORKDIR}/git"
 
