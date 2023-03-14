@@ -16,7 +16,7 @@ PR = "r0"
 
 QOS_DRV_URL = "git://github.com/renesas-rcar/qos_drv.git;protocol=https"
 BRANCH = "rcar-gen3"
-SRCREV = "ffbd6d68968a0b0989c3ffb1eabc9b536215fcee"
+SRCREV = "0ade4940f9d31cc9d4254991f641270def2a9dfc"
 
 SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
 
