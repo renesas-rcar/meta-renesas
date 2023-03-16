@@ -11,7 +11,7 @@ S = "${WORKDIR}/git"
 
 BRANCH = "rcar-s4_v2.5"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH};protocol=https"
-SRCREV = "036ac52ca689f1f0491f4cf5fec3d646dc4cd46c"
+SRCREV = "b0d258b4f8d85f25cd33d085ba7effe225c750c8"
 
 PV = "v2.5+renesas+git${SRCPV}"
 
