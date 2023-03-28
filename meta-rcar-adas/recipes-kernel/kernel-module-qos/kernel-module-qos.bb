@@ -23,8 +23,6 @@ SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
 S = "${WORKDIR}/git"
 QOS_DRV_DIR = "qos-module/files/qos/drv"
 
-includedir = "${RENESAS_DATADIR}/include"
-
 # Build Qos kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
@@ -62,5 +60,5 @@ FILES_${PN} = " \
 "
 
 FILES_${PN}-dev = " \
-    /include/qos_public_common.h \
+    ${includedir}/qos_public_common.h \
 "
