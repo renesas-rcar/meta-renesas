@@ -22,4 +22,5 @@ IMAGE_INSTALL_append = " \
     qosif-user-module \
     qosif-tp-user-module \
     pcie-test \
+    nvme-initscripts \
 "
