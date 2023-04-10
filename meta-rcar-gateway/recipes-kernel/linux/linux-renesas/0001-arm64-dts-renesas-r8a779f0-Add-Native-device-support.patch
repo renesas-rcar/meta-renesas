@@ -1,4 +1,4 @@
-From 31151d0412c2544b249c5a37fbd4b1d5be2df8dc Mon Sep 17 00:00:00 2001
+From af94cb546b02331aecf0e32500684437b2aec4b1 Mon Sep 17 00:00:00 2001
 From: Tam Nguyen <tam.nguyen.xa@renesas.com>
 Date: Thu, 29 Dec 2022 19:58:41 +0700
 Subject: [PATCH] arm64: dts: renesas: r8a779f0: Add Native device support
@@ -16,8 +16,8 @@ Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---
  arch/arm64/boot/dts/renesas/Makefile          |   1 +
  .../boot/dts/renesas/r8a779f0-native.dtsi     | 209 ++++++++++++++++++
- .../dts/renesas/r8a779f0-spider-native.dts    |  16 ++
- 3 files changed, 226 insertions(+)
+ .../dts/renesas/r8a779f0-spider-native.dts    |  15 ++
+ 3 files changed, 225 insertions(+)
  create mode 100644 arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
  create mode 100644 arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts
 
@@ -250,10 +250,10 @@ index 000000000000..92185faf86a5
 +};
 diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts b/arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts
 new file mode 100644
-index 000000000000..567ecfcb6f86
+index 000000000000..25042d5f40f2
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a779f0-spider-native.dts
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,15 @@
 +// SPDX-License-Identifier: (GPL-2.0 or MIT)
 +/*
 + * Device Tree Source support Native device
@@ -268,7 +268,6 @@ index 000000000000..567ecfcb6f86
 +
 +/ {
 +	model = "Renesas Spider Native driver based on r8a779f0";
-+	compatible = "renesas,r8a779f0-native";
 +};
 -- 
 2.25.1

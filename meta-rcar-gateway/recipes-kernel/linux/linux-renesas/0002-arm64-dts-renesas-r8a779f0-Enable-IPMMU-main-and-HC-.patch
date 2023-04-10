@@ -1,0 +1,39 @@
+From ab6b5cbfd2ad3b985fbe13fa3734bc9af3f504e7 Mon Sep 17 00:00:00 2001
+From: Nam Nguyen <nam.nguyen.yh@renesas.com>
+Date: Mon, 10 Apr 2023 22:29:40 +0700
+Subject: [PATCH 2/4] arm64: dts: renesas: r8a779f0: Enable IPMMU main and
+ HC/DS0 caches
+
+Enable IPMMU-MM and IPMMU-HC/DS0 by default.
+
+Signed-off-by: Nam Nguyen <nam.nguyen.yh@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+index 92185faf86a5..728dd3c38fd0 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+@@ -198,6 +198,18 @@ rt_dmac3: dma-controller@ffd63000 {
+ 			status = "okay";
+ 		};
+ 
++		ipmmu_mm: iommu@eefc0000 {
++			status = "okay";
++		};
++
++		ipmmu_ds0: iommu@eed00000 {
++			status = "okay";
++		};
++
++		ipmmu_hc: iommu@eed40000 {
++			status = "okay";
++		};
++
+ 		qos@e67e0000 {
+ 			status = "okay";
+ 		};
+-- 
+2.25.1
+

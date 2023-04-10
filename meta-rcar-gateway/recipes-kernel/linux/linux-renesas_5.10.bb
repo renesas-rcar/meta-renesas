@@ -12,7 +12,11 @@ BRANCH = "v5.10.41/rcar-5.1.7.rc10"
 SRCREV = "88bb2c34c1143613153e67ed4fbef4539f353c9c"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH};protocol=https \
-    file://0001-arm64-dts-renesas-r8a779f0-Add-Native-device-support.patch"
+    file://0001-arm64-dts-renesas-r8a779f0-Add-Native-device-support.patch \
+    file://0002-arm64-dts-renesas-r8a779f0-Enable-IPMMU-main-and-HC-.patch \
+    file://0003-arm64-dts-renesas-r8a779f0-Enable-IPMMU-for-PCIe0-1.patch \
+    file://0004-arm64-dts-renesas-r8a779f0-Enable-IPMMU-for-eMMC.patch \
+    "
 
 LINUX_VERSION ?= "5.10.41"
 PV = "${LINUX_VERSION}+git${SRCPV}"
