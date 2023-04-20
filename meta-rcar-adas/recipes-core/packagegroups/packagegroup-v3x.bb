@@ -34,6 +34,6 @@ RDEPENDS_packagegroup-v3x = " \
     kernel-module-qos \
     qosif-user-module \
     qosif-tp-user-module \
-    ${GFX_PKGS} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'gsx', '${GFX_PKGS}', '', d)} \
 "
 
