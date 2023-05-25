@@ -2,13 +2,16 @@ SUMMARY = "Camera application test"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=9504a7b7666faec5abd046d28a69450e"
 
+DEPENDS_rcar-v4x = "libdrm kernel-module-cmemdrv"
+
+inherit pkgconfig
+
 S = "${WORKDIR}/git"
 
-CAPTURE_URL = "git://github.com/renesas-rcar/capture.git;protocol=https"
-BRANCH = "rcar_gen3"
+SRC_URI = "git://github.com/renesas-rcar/capture.git;protocol=https;nobranch=1"
 
-SRC_URI = "${CAPTURE_URL};branch=${BRANCH}"
-SRCREV = "361b1bb9fa0b009df72a3be1dbdfebf47757095e"
+SRCREV_rcar-v3x = "361b1bb9fa0b009df72a3be1dbdfebf47757095e"
+SRCREV_rcar-v4x = "369fa415246d6514deb639fbc14cb69e7fa08253"
 
 do_compile() {
     cd ${S}
