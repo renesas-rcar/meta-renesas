@@ -78,6 +78,7 @@ RDEPENDS_packagegroup-bsp-testpkg = " \
     dhrystone \
     ${@bb.utils.contains("LICENSE_FLAGS_WHITELIST", "non-commercial", "netperf", "", d)} \
     whetstone \
+    fio \
 "
 
 # Python3 packages requested by Renesas
