@@ -35,10 +35,10 @@ do_compile() {
 
 do_install () {
     # Create destination directories
-    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
 
     # Install kernel module
-    install -m 644 ${S}/scu_src_drv/drv/scu_src_drv.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${S}/scu_src_drv/drv/scu_src_drv.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR).
     # This file installed in SDK by kernel-devsrc pkg.
@@ -51,7 +51,7 @@ PACKAGES = "\
 "
 
 FILES:${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/extra/scu_src_drv.ko \
+    ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/scu_src_drv.ko \
 "
 
 RPROVIDES:${PN} += "kernel-module-scu-src kernel-module-scu-src-drv"

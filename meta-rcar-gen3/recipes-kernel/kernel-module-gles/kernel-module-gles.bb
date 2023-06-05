@@ -44,7 +44,7 @@ module_do_compile() {
 
 module_do_install() {
     unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
-    install -d ${D}/lib/modules/${KERNEL_VERSION}
+    install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     cd ${KBUILD_DIR}
     oe_runmake DISCIMAGE="${D}" install
     rm ${D}/etc/powervr_ddk_install_km.log
@@ -68,7 +68,7 @@ module_clean_symbol() {
 }
 
 FILES:${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/extra/pvrsrvkm.ko \
+    ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/pvrsrvkm.ko \
     ${sysconfdir}/modules-load.d \
     ${sysconfdir}/modprobe.d/blacklist.conf \
 "
