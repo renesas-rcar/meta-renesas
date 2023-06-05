@@ -35,7 +35,7 @@ do_compile() {
 
 do_install () {
     # Create destination directories
-    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -d ${D}/${includedir}
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
@@ -43,7 +43,7 @@ do_install () {
     install -m 644 ${S}/${QOS_DRV_DIR}/Module.symvers ${KERNELSRC}/include/qos.symvers
 
     # Install kernel module
-    install -m 644 ${S}/${QOS_DRV_DIR}/qos.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${S}/${QOS_DRV_DIR}/qos.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
 
     # Install shared header files
     install -m 644 ${S}/${QOS_DRV_DIR}/qos.h ${KERNELSRC}/include/
@@ -58,7 +58,7 @@ PACKAGES = " \
 "
 
 FILES:${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/extra/qos.ko \
+    ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/qos.ko \
 "
 
 FILES:${PN}-dev = " \
