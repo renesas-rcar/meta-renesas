@@ -17,3 +17,5 @@ do_install () {
     install -m 0755 ${WORKDIR}/set_nvme_rq_affinity.sh ${D}${sysconfdir}/init.d/
 }
 
+RDEPENDS_${PN} = "bash"
+
