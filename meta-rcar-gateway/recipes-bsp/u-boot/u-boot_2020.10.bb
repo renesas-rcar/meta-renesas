@@ -4,10 +4,10 @@ require u-boot.inc
 DEPENDS += "lzop-native srecord-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
-BRANCH = "v2020.10/rcar-5.1.1.rc8"
+BRANCH = "v2020.10/rcar-5.1.1.rc9"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH};protocol=https"
-SRCREV = "d6d9868e0a93f015993afc3d1542528e6d4bfa46"
+SRCREV = "616f05eb5a88014037bd92ea0f1c3bfe6ea2444a"
 PV = "v2020.10+git${SRCPV}"
 
 UBOOT_SREC_SUFFIX = "srec"
