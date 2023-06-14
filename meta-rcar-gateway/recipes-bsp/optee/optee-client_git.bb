@@ -16,7 +16,7 @@ SRC_URI += " \
 inherit python3native systemd
 SYSTEMD_SERVICE_${PN} = "optee.service"
 
-COMPATIBLE_MACHINE = "spider"
+COMPATIBLE_MACHINE = "(spider|s4sk)"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 

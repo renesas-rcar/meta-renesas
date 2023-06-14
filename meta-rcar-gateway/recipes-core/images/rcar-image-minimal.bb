@@ -2,7 +2,7 @@ SUMMARY = "A small image just capable of allowing a device to boot."
 
 require recipes-core/images/core-image-minimal.bb
 
-COMPATIBLE_MACHINE = "(spider)"
+COMPATIBLE_MACHINE = "(spider|s4sk)"
 
 # Enable package manager
 EXTRA_IMAGE_FEATURES += "package-management"

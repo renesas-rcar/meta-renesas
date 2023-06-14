@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 require recipes-kernel/linux/linux-yocto.inc
 
-COMPATIBLE_MACHINE = "spider"
+COMPATIBLE_MACHINE = "(spider|s4sk)"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
