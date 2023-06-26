@@ -1,23 +1,27 @@
-From 2e79e81743dc7e47fc94e77ee00253abde262913 Mon Sep 17 00:00:00 2001
+From 07852dc2d74feb9f1774fc4ed07e2c88501b7fdc Mon Sep 17 00:00:00 2001
 From: Tam Nguyen <tam.nguyen.xa@renesas.com>
 Date: Fri, 30 Dec 2022 02:35:24 +0700
-Subject: [PATCH] arm64: dts: renesas: r8a779g0: Add Native device support
+Subject: [PATCH] arm64: dts: renesas: r8a779g0-native: Add Native device
+ support
 
-In SDK package, UIO devices were enabled by default, Native devices
-(such as DMAE, DU devices) that were conflicted to UIO device.
+In the default environment, all UIO devices were enabled, Native
+devices (such as DU devices, GPU, ...) that was conflicted with
+UIO devices.
 
-The patch will create new DT to support enable Native devices and
-disabled those UIO devices.
-For convience to use:
-- "r8a779g0-whitehawk.dtb": UIO devices enable, Native devices disable.
-- "r8a779g0-whitehawk-native.dtb": UIO devices disable, Native devices enable.
+The patch will create a new Device Tree to support enabling Native
+devices that support for display output, GPU, and basic peripherals.
+
+For convenience to use:
+- "r8a779g0-whitehawk.dtb": All UIO devices enable, Native devices disabled.
+- "r8a779g0-whitehawk-native.dtb": All UIO devices enable except for display
+output, GPU and basic peripherals.
 
 Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---
- arch/arm64/boot/dts/renesas/Makefile          |   1 +
- .../boot/dts/renesas/r8a779g0-native.dtsi     | 424 ++++++++++++++++++
- .../dts/renesas/r8a779g0-whitehawk-native.dts |  48 ++
- 3 files changed, 473 insertions(+)
+ arch/arm64/boot/dts/renesas/Makefile          |  1 +
+ .../boot/dts/renesas/r8a779g0-native.dtsi     | 40 +++++++++
+ .../dts/renesas/r8a779g0-whitehawk-native.dts | 85 +++++++++++++++++++
+ 3 files changed, 126 insertions(+)
  create mode 100644 arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi
  create mode 100644 arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts
 
@@ -35,16 +39,16 @@ index f25edf38b0a3..60d022249fca 100644
  dtb-$(CONFIG_ARCH_R8A779F0) += r8a779f0-spider.dtb
 diff --git a/arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi b/arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi
 new file mode 100644
-index 000000000000..3fc3f013d190
+index 000000000000..7626723341ee
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi
-@@ -0,0 +1,424 @@
+@@ -0,0 +1,40 @@
 +// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +/*
 + * Device Tree Source support Native for the White Hawk CPU
 + * boards with R-Car V4H
 + *
-+ * Copyright (C) 2021 Renesas Electronics Corp.
++ * Copyright (C) 2023 Renesas Electronics Corp.
 + */
 +
 +#include <dt-bindings/clock/r8a779g0-cpg-mssr.h>
@@ -76,415 +80,26 @@ index 000000000000..3fc3f013d190
 +		/delete-node/dsi1_08;
 +		/delete-node/doc@feba0000;
 +		/delete-node/doc0_01;
-+
 +		/delete-node/dsc@feb8d000;
-+		/delete-node/ims@fe860000;
-+		/delete-node/ims@fe870000;
-+		/delete-node/ims@fe880000;
-+		/delete-node/ims@fe890000;
-+		/delete-node/ims@fe8a0000;
-+		/delete-node/imr@fe880000;
-+		/delete-node/imr@fe890000;
-+		/delete-node/imr@fe8a0000;
-+		/delete-node/imp-distributer0@ff900000;
-+		/delete-node/imp-distributer1@ff900000;
-+		/delete-node/imp-distributer2@ff900000;
-+		/delete-node/imp-core@ffa00000;
-+		/delete-node/imp-core@ffa20000;
-+		/delete-node/imp-core@ffb00000;
-+		/delete-node/imp-core@ffb20000;
-+		/delete-node/imp-cve@ffa40000;
-+		/delete-node/imp-cve@ffa50000;
-+		/delete-node/imp-cve@ffa60000;
-+		/delete-node/imp-cve@ffa70000;
-+		/delete-node/dma-controller@ffa80000;
-+		/delete-node/dma-controller@ffb80000;
-+		/delete-node/imp-psc@ffa84000;
-+		/delete-node/imp-dta@ffa88000;
-+		/delete-node/imp-dmac-slim@ffa90000;
-+		/delete-node/imp-dmac-slim@ffa94000;
-+		/delete-node/imp-cnn@ffaa0000;
-+		/delete-node/imp-ram@ffa8c000;
-+		/delete-node/cnn-ram@ffab0000;
-+		/delete-node/imp-ram@ed300000;
-+		/delete-node/cnn-ram@ed400000;
-+		/delete-node/vdsp@f1400000;
-+		/delete-node/impvdsp00_00_01;
-+		/delete-node/impvdsp00_00_02;
-+		/delete-node/impvdsp00_00_03;
-+		/delete-node/impvdsp00_00_04;
-+		/delete-node/impvdsp00_01;
-+		/delete-node/impvdsp00_02;
-+		/delete-node/impvdsp00_03;
-+		/delete-node/impvdsp00_04;
-+		/delete-node/impvdsp00_05;
-+		/delete-node/impvdsp00_06;
-+		/delete-node/impvdsp00_07;
-+		/delete-node/vdsp@f1600000;
-+		/delete-node/impvdsp01_00_01;
-+		/delete-node/impvdsp01_00_02;
-+		/delete-node/impvdsp01_00_03;
-+		/delete-node/impvdsp01_00_04;
-+		/delete-node/impvdsp01_01;
-+		/delete-node/impvdsp01_02;
-+		/delete-node/impvdsp01_03;
-+		/delete-node/impvdsp01_04;
-+		/delete-node/impvdsp01_05;
-+		/delete-node/impvdsp01_06;
-+		/delete-node/impvdsp01_07;
-+		/delete-node/vdsp@f1800000;
-+		/delete-node/impvdsp02_00_01;
-+		/delete-node/impvdsp02_00_02;
-+		/delete-node/impvdsp02_00_03;
-+		/delete-node/impvdsp02_00_04;
-+		/delete-node/impvdsp02_01;
-+		/delete-node/impvdsp02_02;
-+		/delete-node/impvdsp02_03;
-+		/delete-node/impvdsp02_04;
-+		/delete-node/impvdsp02_05;
-+		/delete-node/impvdsp02_06;
-+		/delete-node/impvdsp02_07;
-+		/delete-node/vdsp@f1a00000;
-+		/delete-node/impvdsp03_00_01;
-+		/delete-node/impvdsp03_00_02;
-+		/delete-node/impvdsp03_00_03;
-+		/delete-node/impvdsp03_00_04;
-+		/delete-node/impvdsp03_01;
-+		/delete-node/impvdsp03_02;
-+		/delete-node/impvdsp03_03;
-+		/delete-node/impvdsp03_04;
-+		/delete-node/impvdsp03_05;
-+		/delete-node/impvdsp03_06;
-+		/delete-node/impvdsp03_07;
-+
-+		/delete-node/dof_sts_00;
-+		/delete-node/dof_err_00;
-+		/delete-node/smd_ps_sts_00;
-+		/delete-node/smd_ps_err_00;
-+		/delete-node/smd_post_sts_00;
-+		/delete-node/smd_post_err_00;
-+		/delete-node/dof_fcprm;
-+		/delete-node/vip_wrap;
-+
-+		/delete-node/cisp@fec00000;
-+		/delete-node/tisp@fed00000;
-+		/delete-node/cisp@fee00000;
-+		/delete-node/tisp@fed20000;
-+		/delete-node/vspx@fedd0000;
-+		/delete-node/vspx@fedd8000;
-+		/delete-node/fcpvs@fedb0000;
-+		/delete-node/fcpvs@fedb8000;
-+
-+		/delete-node/mfis@e6260000;
-+		/delete-node/iccom01;
-+		/delete-node/iccom02;
-+		/delete-node/iccom03;
-+		/delete-node/iccom04;
-+		/delete-node/iccom05;
-+		/delete-node/iccom06;
-+		/delete-node/iccom07;
-+		/delete-node/iccom08;
-+		/delete-node/iccom09;
-+		/delete-node/iccom10;
-+		/delete-node/iccom11;
-+
-+		/delete-node/ivcp1e_00;
-+		/delete-node/irq_ivcp1e_00_01;
-+		/delete-node/vcpl4@fe910000;
-+		/delete-node/irq_vcp4_00_01;
-+
-+		/delete-node/fcpc_00;
-+		/delete-node/fbc@ff830000;
-+		/delete-node/fba@fe605000;
-+		/delete-node/post_fba_ims0;
-+		/delete-node/fba@fe606000;
-+		/delete-node/post_fba_ims1;
-+		/delete-node/fba@fe601000;
-+		/delete-node/post_fba_imr0;
-+		/delete-node/fba@fe602000;
-+		/delete-node/post_fba_imr1;
-+		/delete-node/fba@fe603000;
-+		/delete-node/post_fba_imr2;
-+		/delete-node/fba@ff8c0000;
-+		/delete-node/post_fba_imp0;
-+		/delete-node/fba@ff8c1000;
-+		/delete-node/post_fba_imp1;
-+		/delete-node/fba@ff8c2000;
-+		/delete-node/post_fba_imp2;
-+		/delete-node/fba@ff8c3000;
-+		/delete-node/post_fba_imp3;
-+		/delete-node/fba@ff8c4000;
-+		/delete-node/post_fba_imp_cve0;
-+		/delete-node/fba@ff8c5000;
-+		/delete-node/post_fba_imp_cve1;
-+		/delete-node/fba@ff8c6000;
-+		/delete-node/post_fba_imp_cve2;
-+		/delete-node/fba@ff8c7000;
-+		/delete-node/post_fba_imp_cve3;
-+		/delete-node/fba@fff56000;
-+		/delete-node/post_fba_imp_dp0;
-+		/delete-node/fba@fff57000;
-+		/delete-node/post_fba_imp_dp1;
-+		/delete-node/fba@fff50000;
-+		/delete-node/post_fba_imp_cnn0_main;
-+		/delete-node/fba@fff64000;
-+		/delete-node/post_fba_imp_radsp0;
-+		/delete-node/fba@fff65000;
-+		/delete-node/post_fba_imp_radsp1;
-+		/delete-node/fba@fff66000;
-+		/delete-node/post_fba_imp_radsp2;
-+		/delete-node/fba@fff67000;
-+		/delete-node/post_fba_imp_radsp3;
-+		/delete-node/fba@fff55000;
-+		/delete-node/post_fba_imp_cnram0;
-+		/delete-node/fba@ff8f4000;
-+		/delete-node/post_fba_imp_slim0;
-+		/delete-node/fba@ff8f5000;
-+		/delete-node/post_fba_imp_slim1;
-+		/delete-node/fba@e7b61000;
-+		/delete-node/post_fba_umfl0;
-+		/delete-node/iccom010;
-+		/delete-node/fba@e7b64000;
-+		/delete-node/post_fba_smps0;
-+		/delete-node/fba@e7b63000;
-+		/delete-node/post_fba_smpo0;
-+		/delete-node/fba@e7b62000;
-+		/delete-node/post_fba_pap0;
-+		/delete-node/fba@feac1000;
-+		/delete-node/post_fba_isp0;
-+		/delete-node/fba@feac2000;
-+		/delete-node/post_fba_isp1;
-+		/delete-node/fba@ff870000;
-+		/delete-node/post_fba_ca76d0;
-+		/delete-node/fba@ff873000;
-+		/delete-node/post_fba_ca76d1;
-+		/delete-node/fba@ff871000;
-+		/delete-node/post_fba_ca760;
-+		/delete-node/fba@ff872000;
-+		/delete-node/post_fba_ca761;
-+		/delete-node/fba@ff874000;
-+		/delete-node/post_fba_ca762;
-+		/delete-node/fba@ff875000;
-+		/delete-node/post_fba_ca763;
-+
-+		/delete-node/rfso@ffe80000;
-+		/delete-node/rfso@ffe81000;
-+		/delete-node/rfso@ffe82000;
-+		/delete-node/rfso@ffe83000;
-+		/delete-node/rfso@ffe84000;
-+		/delete-node/rfso@ffe85000;
-+		/delete-node/rfso@ffe86000;
-+		/delete-node/rfso@ffe87000;
-+		/delete-node/rfso@ffe88000;
-+		/delete-node/rfso@ffe89000;
-+		/delete-node/rfso@ffe8a000;
-+
-+		/delete-node/ipmmu_mm0;
-+		/delete-node/ipmmu_mm0_01;
-+		/delete-node/ipmmu_cache_vi0;
-+		/delete-node/ipmmu_cache_vi1;
-+		/delete-node/ipmmu_cache_vc;
-+		/delete-node/ipmmu_cache_ir;
-+		/delete-node/ipmmu_cache_rt0;
-+		/delete-node/ipmmu_cache_rt1;
-+		/delete-node/ipmmu_cache_ds0;
-+		/delete-node/ipmmu_cache_hsc;
-+		/delete-node/ipmmu_cache_vip0;
-+		/delete-node/ipmmu_cache_vip1;
-+		/delete-node/ipmmu_cache_3dg;
-+
-+		/delete-node/caiplite_wrapper;
-+		/delete-node/caiplite0;
-+		/delete-node/caiplite1;
-+		/delete-node/caiplite2;
-+		/delete-node/caiplite3;
-+		/delete-node/caiplite4;
-+		/delete-node/caiplite5;
-+		/delete-node/caiplite6;
-+		/delete-node/caiplite7;
-+		/delete-node/wcrc_caiplite0;
-+		/delete-node/wcrc_caiplite1;
-+		/delete-node/wcrc_caiplite2;
-+		/delete-node/wcrc_caiplite3;
-+
-+		/delete-node/rtdmac_control@ffc10000;
-+		/delete-node/rtdmac_control@ffc11000;
-+		/delete-node/rtdmac_control@ffc12000;
-+		/delete-node/rtdmac_control@ffc13000;
-+		/delete-node/rtdmac_control@ffc14000;
-+		/delete-node/rtdmac_control@ffc15000;
-+		/delete-node/rtdmac_control@ffc16000;
-+		/delete-node/rtdmac_control@ffc17000;
-+		/delete-node/rtdmac_control@ffc18000;
-+		/delete-node/rtdmac_control@ffc19000;
-+		/delete-node/rtdmac_control@ffc1a000;
-+		/delete-node/rtdmac_control@ffc1b000;
-+		/delete-node/rtdmac_control@ffc1c000;
-+		/delete-node/rtdmac_control@ffc1d000;
-+		/delete-node/rtdmac_control@ffc1e000;
-+		/delete-node/rtdmac_control@ffc1f000;
-+		/delete-node/rtdmac_control@ffc20000;
-+		/delete-node/rtdmac_control@ffc21000;
-+		/delete-node/rtdmac_control@ffc22000;
-+		/delete-node/rtdmac_control@ffc23000;
-+		/delete-node/rtdmac_control@ffc24000;
-+		/delete-node/rtdmac_control@ffc25000;
-+		/delete-node/rtdmac_control@ffc26000;
-+		/delete-node/rtdmac_control@ffc27000;
-+		/delete-node/rtdmac_control@ffc28000;
-+		/delete-node/rtdmac_control@ffc29000;
-+		/delete-node/rtdmac_control@ffc2a000;
-+		/delete-node/rtdmac_control@ffc2b000;
-+		/delete-node/rtdmac_control@ffc2c000;
-+		/delete-node/rtdmac_control@ffc2d000;
-+		/delete-node/rtdmac_control@ffc2e000;
-+		/delete-node/rtdmac_control@ffc2f000;
-+		/delete-node/rtdmac_control@ffd70000;
-+		/delete-node/rtdmac_control@ffd71000;
-+		/delete-node/rtdmac_control@ffd72000;
-+		/delete-node/rtdmac_control@ffd73000;
-+		/delete-node/rtdmac_control@ffd74000;
-+		/delete-node/rtdmac_control@ffd75000;
-+		/delete-node/rtdmac_control@ffd76000;
-+		/delete-node/rtdmac_control@ffd77000;
-+		/delete-node/rtdmac_control@ffd78000;
-+		/delete-node/rtdmac_control@ffd79000;
-+		/delete-node/rtdmac_control@ffd7a000;
-+		/delete-node/rtdmac_control@ffd7b000;
-+		/delete-node/rtdmac_control@ffd7c000;
-+		/delete-node/rtdmac_control@ffd7d000;
-+		/delete-node/rtdmac_control@ffd7e000;
-+		/delete-node/rtdmac_control@ffd7f000;
-+		/delete-node/rtdmac_control@ffd80000;
-+		/delete-node/rtdmac_control@ffd81000;
-+		/delete-node/rtdmac_control@ffd82000;
-+		/delete-node/rtdmac_control@ffd83000;
-+		/delete-node/rtdmac_control@ffd84000;
-+		/delete-node/rtdmac_control@ffd85000;
-+		/delete-node/rtdmac_control@ffd86000;
-+		/delete-node/rtdmac_control@ffd87000;
-+		/delete-node/rtdmac_control@ffd88000;
-+		/delete-node/rtdmac_control@ffd89000;
-+		/delete-node/rtdmac_control@ffd8a000;
-+		/delete-node/rtdmac_control@ffd8b000;
-+		/delete-node/rtdmac_control@ffd8c000;
-+		/delete-node/rtdmac_control@ffd8d000;
-+		/delete-node/rtdmac_control@ffd8e000;
-+		/delete-node/rtdmac_control@ffd8f000;
-+		/delete-node/rtdmac_descriptor@ffd60000;
-+		/delete-node/rtdmac_descriptor@ffd61000;
-+		/delete-node/rtdmac_descriptor@ffd62000;
-+		/delete-node/rtdmac_descriptor@ffd63000;
-+
-+		/delete-node/wwdt@ffc90000;
-+		/delete-node/wwdt0_01;
-+		/delete-node/wwdt@ffca0000;
-+		/delete-node/wwdt1_01;
-+		/delete-node/wwdt@ffcb0000;
-+		/delete-node/wwdt2_01;
-+		/delete-node/wwdt@ffcc0000;
-+		/delete-node/wwdt3_01;
-+		/delete-node/wwdt@ffcf0000;
-+		/delete-node/wwdt4_01;
-+		/delete-node/wwdt@ffef0000;
-+		/delete-node/wwdt5_01;
-+		/delete-node/wwdt@fff10000;
-+		/delete-node/wwdt6_01;
-+		/delete-node/wwdt@fff20000;
-+		/delete-node/wwdt7_01;
-+		/delete-node/wwdt@fff30000;
-+		/delete-node/wwdt8_01;
-+		/delete-node/wwdt@fff40000;
-+		/delete-node/wwdt9_01;
-+
-+		/delete-node/hsm@ff000000;
-+		/delete-node/dcm@ff080000;
-+		/delete-node/cbf@ff0e8000;
-+		/delete-node/sbf@ff0ec000;
-+		/delete-node/osm@ff0f0000;
-+		/delete-node/ism@ff100000;
-+		/delete-node/ism@ff120000;
-+		/delete-node/sdma@ff180000;
-+		/delete-node/sdmac0_01;
-+		/delete-node/fbs@ff200000 ;
-+		/delete-node/apb@ff290000 ;
-+		/delete-node/dul@ff298000;
-+
-+		/delete-node/systemram@e6300000;
-+
-+		/delete-node/icumx_cmd@e6610000;
-+		/delete-node/icumx_cmd0_01;
-+		/delete-node/icumx_cmd0_02;
-+		/delete-node/icumx_cmd0_03;
-+		/delete-node/icumx_cmd0_04;
-+		/delete-node/icumx_cmd0_05;
-+		/delete-node/icumx_cmd0_06;
-+		/delete-node/icumx_cmd0_07;
-+		/delete-node/icumx_cmd0_08;
-+		/delete-node/icumx_cmd0_09;
-+		/delete-node/icumx_cmd0_10;
-+		/delete-node/icumx_cmd0_11;
-+		/delete-node/icumx_cmd0_12;
-+		/delete-node/icumx_cmd0_13;
-+		/delete-node/icumx_cmd0_14;
-+		/delete-node/icumx_cmd0_15;
-+		/delete-node/icumx_cmd0_16;
-+		/delete-node/icumx_cmd0_17;
-+		/delete-node/icumx_cmd0_18;
-+		/delete-node/icumx_cmd0_19;
-+		/delete-node/prr@fff00044;
-+		/delete-node/qos0@e67e0000;
-+		/delete-node/rcarbusmoni0@e67e0000;
-+		/delete-node/rcarbusmoni1@e67a4000;
-+		/delete-node/rcarbusmoni1@e67a8000;
-+
-+		rt_dmac0: dma-controller@ffd60000 {
-+			status = "okay";
-+		};
-+
-+		rt_dmac1: dma-controller@ffd61000 {
-+			status = "okay";
-+		};
-+
-+		rt_dmac2: dma-controller@ffd62000 {
-+			status = "okay";
-+		};
-+
-+		rt_dmac3: dma-controller@ffd63000 {
-+			status = "okay";
-+		};
-+
-+		qos@e67e0000 {
-+			status = "okay";
-+		};
-+
-+		prr: chipid@fff00044 {
-+			status = "okay";
-+		};
 +	};
 +};
 diff --git a/arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts b/arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts
 new file mode 100644
-index 000000000000..511ca48889b9
+index 000000000000..07015f2c8bb0
 --- /dev/null
 +++ b/arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,85 @@
 +// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +/*
 + * Device Tree Source support Native device
 + * for the White Hawk CPU and Breakout boards
 + *
-+ * Copyright (C) 2022 Renesas Electronics Corp.
++ * Copyright (C) 2023 Renesas Electronics Corp.
 + */
 +
 +/dts-v1/;
 +#include "r8a779g0-whitehawk.dts"
 +#include "r8a779g0-native.dtsi"
-+
-+/ {
-+	model = "Renesas White Hawk Native driver based on r8a779g0";
-+	compatible = "renesas,r8a779g0-native";
-+};
 +
 +&i2c1 {
 +	sn65dsi86_0@2c {
@@ -493,6 +108,48 @@ index 000000000000..511ca48889b9
 +
 +	max96789@60 {
 +		status = "okay";
++	};
++
++	gmsl0: gmsl-deserializer@49 {
++		status = "okay";
++		i2c-mux {
++			i2c@0 {
++				status = "okay";
++			};
++
++			i2c@1 {
++				status = "okay";
++			};
++
++			i2c@2 {
++				status = "okay";
++			};
++
++			i2c@3 {
++				status = "okay";
++			};
++		};
++	};
++
++	gmsl1: gmsl-deserializer@4b {
++		status = "okay";
++		i2c-mux {
++			i2c@0 {
++				status = "okay";
++			};
++
++			i2c@1 {
++				status = "okay";
++			};
++
++			i2c@2 {
++				status = "okay";
++			};
++
++			i2c@3 {
++				status = "okay";
++			};
++		};
 +	};
 +};
 +
@@ -510,11 +167,11 @@ index 000000000000..511ca48889b9
 +	status = "okay";
 +};
 +
-+&dsc {
++&dsi1 {
 +	status = "okay";
 +};
 +
-+&dsi1 {
++&dsc {
 +	status = "okay";
 +};
 -- 
