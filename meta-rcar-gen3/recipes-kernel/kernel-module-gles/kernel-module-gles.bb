@@ -51,8 +51,10 @@ module_do_install() {
     # Install blacklist config file
     install -d ${D}${sysconfdir}/modprobe.d
     install -m 644 ${WORKDIR}/blacklist.conf ${D}${sysconfdir}/modprobe.d/blacklist.conf
-    mv ${D}/lib/modules/${KERNEL_VERSION} ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/
-    rm -rf ${D}/lib
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', 'true', 'false', d)}; then
+        mv ${D}/lib/modules/${KERNEL_VERSION}/* ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/
+        rm -rf ${D}/lib
+    fi
 }
 
 # Ship the module symbol file to kernel build dir
