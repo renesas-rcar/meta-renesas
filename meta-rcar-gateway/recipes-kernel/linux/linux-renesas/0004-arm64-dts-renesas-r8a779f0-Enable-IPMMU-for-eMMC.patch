@@ -1,0 +1,30 @@
+From 6850b4cf71f1de968bffe7eb129799d415dcaf8f Mon Sep 17 00:00:00 2001
+From: Nam Nguyen <nam.nguyen.yh@renesas.com>
+Date: Mon, 10 Apr 2023 22:34:30 +0700
+Subject: [PATCH 4/4] arm64: dts: renesas: r8a779f0: Enable IPMMU for eMMC
+
+Enable IPMMU for eMMC by default.
+
+Signed-off-by: Nam Nguyen <nam.nguyen.yh@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+index 1a39c791e73b..fdaee2e7ce03 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+@@ -182,6 +182,10 @@ soc: soc {
+ 		/delete-node/rfso@ffe89000;
+ 		/delete-node/rfso@ffe8a000;
+ 
++		mmc0: mmc@ee140000 {
++			iommus = <&ipmmu_ds0 32>;
++		};
++
+ 		rt_dmac0: dma-controller@ffd60000 {
+ 			status = "okay";
+ 		};
+-- 
+2.25.1
+

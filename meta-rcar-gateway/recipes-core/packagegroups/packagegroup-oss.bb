@@ -70,6 +70,7 @@ RDEPENDS_packagegroup-bsp-testpkg = " \
     dhrystone \
     ${@bb.utils.contains("LICENSE_FLAGS_WHITELIST", "non-commercial", "netperf", "", d)} \
     whetstone \
+    fio \
 "
 
 # Python3 packages requested by Renesas
@@ -80,4 +81,5 @@ RDEPENDS_packagegroup-bsp-python3 = " \
     python3-pygobject \
     python3-pyyaml \
     python3-setuptools \
+    python3-pip \
 "

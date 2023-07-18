@@ -11,8 +11,6 @@ QOSIF_LIB_DIR = "qos_if-module/files/qos_if"
 
 EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
-includedir = "${RENESAS_DATADIR}/include"
-
 do_compile() {
     # Build shared library
     cd ${S}/${QOSIF_LIB_DIR}/if
@@ -46,7 +44,7 @@ FILES_${PN} = " \
 "
 
 FILES_${PN}-dev = " \
-    /include/qos_public.h \
+    ${includedir}/qos_public.h \
 "
 
 INSANE_SKIP_${PN} = "dev-so"
