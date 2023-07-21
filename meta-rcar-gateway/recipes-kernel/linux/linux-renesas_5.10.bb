@@ -4,26 +4,19 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 require recipes-kernel/linux/linux-yocto.inc
 
-COMPATIBLE_MACHINE = "spider|s4sk-proto"
+COMPATIBLE_MACHINE = "spider|s4sk"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.10.41/rcar-5.1.7.rc6"
-SRCREV = "9f7244d31fd1afce9854f572ed96fe4b66bf0e52"
+BRANCH = "v5.10.41/rcar-5.1.7.rc11"
+SRCREV = "366e35667175405289fd5b13e221192d8222ab0f"
 
-SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH};protocol=https"
-
-SRC_URI:append = " \
-    file://0001-arm64-dts-renesas-Add-Renesas-R8A779F0-Starter-Kit-p.patch \
-    file://0002-arm64-dts-renesas-r8a779f0-s4sk-prototype-Add-PCIe-d.patch \
-    file://0003-arm64-dts-renesas-r8a779f0-s4sk-prototype-Enable-UFS.patch \
-    file://0004-arm64-dts-renesas-r8a779f0-s4sk-prototype-Add-rswitc.patch \
-    file://0005-net-ethernet-renesas-rswitch-Add-support-USXGMII-mod.patch \
-    file://0006-net-ethernet-renesas-rswich-Fix-issue-cannot-use-bot.patch \
-    file://0001-arm64-dts-renesas-r8a779f0-s4sk-prototype-Change-DDR.patch \
-    file://pcie_ep.cfg \
-    file://pci_ep_test.cfg \
-"
+SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH};protocol=https \
+    file://0001-arm64-dts-renesas-r8a779f0-Add-Native-device-support.patch \
+    file://0002-arm64-dts-renesas-r8a779f0-Enable-IPMMU-main-and-HC-.patch \
+    file://0003-arm64-dts-renesas-r8a779f0-Enable-IPMMU-for-PCIe0-1.patch \
+    file://0004-arm64-dts-renesas-r8a779f0-Enable-IPMMU-for-eMMC.patch \
+    "
 
 LINUX_VERSION ?= "5.10.41"
 PV = "${LINUX_VERSION}+git${SRCPV}"

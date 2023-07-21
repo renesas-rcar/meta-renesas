@@ -12,13 +12,13 @@ inherit deploy python3native
 PV = "3.13+renesas+git${SRCPV}"
 
 BRANCH = "rcar-gen4_3.13"
-SRCREV = "c1262d05075c787d36913e2d7b86fa00b9463078"
+SRCREV = "6f9792db6411d6c172077eb28e584ab5f46a174e"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https \
 "
 
-COMPATIBLE_MACHINE = "(spider|s4sk-proto)"
+COMPATIBLE_MACHINE = "(spider|s4sk)"
 PLATFORM = "rcar_gen4"
 
 DEPENDS = "python3-pycryptodome-native python3-pyelftools-native"

@@ -11,11 +11,11 @@ S = "${WORKDIR}/git"
 
 BRANCH = "rcar-s4_v2.5"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH};protocol=https"
-SRCREV = "3a6d7ddd5d90ecf2107c5fc627f0be069191d6e5"
+SRCREV = "c005892fdd83a08c363a4cb83ebf7c87386029a3"
 
 PV = "v2.5+renesas+git${SRCPV}"
 
-COMPATIBLE_MACHINE = "(spider|s4sk-proto)"
+COMPATIBLE_MACHINE = "(spider|s4sk)"
 PLATFORM = "rcar_gen4"
 ATFW_OPT:r8a779f0 = "LSI=S4 CTX_INCLUDE_AARCH32_REGS=0 LOG_LEVEL=10 DEBUG=0"
 

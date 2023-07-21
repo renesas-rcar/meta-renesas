@@ -16,14 +16,12 @@ PR = "r0"
 
 QOS_DRV_URL = "git://github.com/renesas-rcar/qos_drv.git;protocol=https"
 BRANCH = "rcar-gen3"
-SRCREV = "ffbd6d68968a0b0989c3ffb1eabc9b536215fcee"
+SRCREV = "f4c60b4ad0e96e0de3222dc42179bcade931bd76"
 
 SRC_URI = "${QOS_DRV_URL};branch=${BRANCH}"
 
 S = "${WORKDIR}/git"
 QOS_DRV_DIR = "qos-module/files/qos/drv"
-
-includedir = "${RENESAS_DATADIR}/include"
 
 # Build Qos kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
@@ -62,5 +60,5 @@ FILES:${PN} = " \
 "
 
 FILES:${PN}-dev = " \
-    /include/qos_public_common.h \
+    ${includedir}/qos_public_common.h \
 "

@@ -4,17 +4,11 @@ require u-boot.inc
 DEPENDS += "lzop-native srecord-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
-BRANCH = "v2020.10/rcar-5.1.1.rc5"
+BRANCH = "v2020.10/rcar-5.1.1.rc9"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH};protocol=https"
-SRCREV = "db1330ad1a3609f849570b0a92cc1710861ac759"
+SRCREV = "616f05eb5a88014037bd92ea0f1c3bfe6ea2444a"
 PV = "v2020.10+git${SRCPV}"
-
-SRC_URI:append = " \
-    file://0003-ARM-dts-renesas-Add-R8A779F0-S4SK-Prototype-DTs.patch \
-    file://0004-ARM-renesas-Add-R8A779F0-S4SK-prototype-board-code.patch \
-    file://0005-ARM-dts-renesas-Add-Ethernet-Switch-support-on-S4SK-.patch \
-"
 
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
