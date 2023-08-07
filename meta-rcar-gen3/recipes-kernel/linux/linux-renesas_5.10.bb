@@ -74,6 +74,9 @@ SRC_URI:append = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'usb3', 'file://usb3.cfg', 'file://disable_fw_loader_user_helper.cfg', d)} \
 "
 
+# Work-around to fix perf build error
+SRC_URI:append = " file://init_disassemble_info-signature-changes-causes-compile-failures.patch"
+
 do_download_firmware () {
     install -d ${STAGING_KERNEL_DIR}/firmware
     install -m 755 ${WORKDIR}/r8a779x_usb3_v*.dlmem ${STAGING_KERNEL_DIR}/firmware
