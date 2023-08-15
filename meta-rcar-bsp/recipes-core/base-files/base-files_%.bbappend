@@ -36,3 +36,4 @@ do_install_basefilesissue_append_rcar () {
 hostname_r8a77980 = "v3x"
 hostname_r8a77970 = "v3x"
 hostname_r8a779g0 = "v4x"
+hostname_r8a779h0 = "v4x"
