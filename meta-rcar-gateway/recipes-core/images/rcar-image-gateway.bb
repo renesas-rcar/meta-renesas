@@ -18,7 +18,6 @@ IMAGE_INSTALL_append = " \
     kernel-devicetree \
     kernel-modules \
     linux-renesas-uapi \
-    kernel-firmware-r8a779f0-ufs \
     kernel-module-qos \
     qosif-user-module \
     qosif-tp-user-module \
