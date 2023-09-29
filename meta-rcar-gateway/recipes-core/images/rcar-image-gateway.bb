@@ -13,6 +13,7 @@ IMAGE_INSTALL:append = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
     kernel-module-cmemdrv-dev \
+    kernel-firmware-r8a779f0-ufs \
     udev-rules \
     packagegroup-oss \
     kernel-devicetree \
