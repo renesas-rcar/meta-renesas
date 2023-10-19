@@ -1,0 +1,1 @@
+SUBSYSTEM=="uio", SYMLINK+="$attr{name}", MODE="0666"

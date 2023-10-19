@@ -1,0 +1,42 @@
+From 22441d8958c823fe106ef092b2c69a9ec4254c19 Mon Sep 17 00:00:00 2001
+From: Nam Nguyen <nam.nguyen.yh@renesas.com>
+Date: Mon, 10 Apr 2023 22:33:07 +0700
+Subject: [PATCH 3/4] arm64: dts: renesas: r8a779f0: Enable IPMMU for PCIe0/1
+
+Enable IPMMU for PCIe0/1 by default.
+
+Signed-off-by: Nam Nguyen <nam.nguyen.yh@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+index 728dd3c38fd0..1a39c791e73b 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi
+@@ -214,6 +214,22 @@ qos@e67e0000 {
+ 			status = "okay";
+ 		};
+ 
++		pciec0: pcie@e65d0000 {
++			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
++			iommus = <&ipmmu_hc 32>;
++			iommu-map = <0x0 &ipmmu_hc 32 0x10000>,
++						<0x10000 &ipmmu_hc 32 0x10000>;
++			iommu-map-mask = <0x0>;
++		};
++
++		pciec1: pcie@e65d8000 {
++			dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
++			iommus = <&ipmmu_hc 48>;
++			iommu-map = <0x0 &ipmmu_hc 48 0x10000>,
++						<0x10000 &ipmmu_hc 48 0x10000>;
++			iommu-map-mask = <0x0>;
++		};
++
+ 		prr: chipid@fff00044 {
+ 			status = "okay";
+ 		};
+-- 
+2.25.1
+

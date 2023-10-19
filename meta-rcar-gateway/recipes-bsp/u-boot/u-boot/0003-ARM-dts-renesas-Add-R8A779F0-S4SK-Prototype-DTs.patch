@@ -1,0 +1,178 @@
+From 48d9e49b0fb4389fc6813312350f89a717efc983 Mon Sep 17 00:00:00 2001
+From: Michael Dege <michael.dege@renesas.com>
+Date: Wed, 8 Jun 2022 10:48:05 +0200
+Subject: [PATCH 3/5] ARM: dts: renesas: Add R8A779F0 S4SK Prototype DTs
+
+Add DTs for R8A779F0 S4 Starter Kit prototype boards.
+Based on the original (and large) patch by Michael Dege
+
+Signed-off-by: Michael Dege <michael.dege@renesas.com>
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ arch/arm/dts/r8a779f0-s4sk-prototype.dts | 154 +++++++++++++++++++++++
+ 1 file changed, 154 insertions(+)
+ create mode 100644 arch/arm/dts/r8a779f0-s4sk-prototype.dts
+
+diff --git a/arch/arm/dts/r8a779f0-s4sk-prototype.dts b/arch/arm/dts/r8a779f0-s4sk-prototype.dts
+new file mode 100644
+index 0000000000..834aed4a3b
+--- /dev/null
++++ b/arch/arm/dts/r8a779f0-s4sk-prototype.dts
+@@ -0,0 +1,154 @@
++// SPDX-License-Identifier: (GPL-2.0 or MIT)
++/*
++ * Device Tree Source for the S4 Starter Kit prototype board
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include <dt-bindings/gpio/gpio.h>
++#include "r8a779f0.dtsi"
++
++/ {
++	model = "Renesas S4 Starter Kit prototype board";
++	compatible = "renesas,s4sk-prototype", "renesas,r8a779f0";
++
++	aliases {
++		serial0 = &hscif0;
++	};
++
++	chosen {
++		stdout-path = "serial0:921600n8";
++	};
++
++	memory@48000000 {
++		device_type = "memory";
++		/* first 128MB is reserved for secure area. */
++		reg = <0x0 0x48000000 0x0 0x78000000>;
++	};
++
++	memory@480000000 {
++		device_type = "memory";
++		reg = <0x4 0x80000000 0x0 0x80000000>;
++	};
++
++	reg_1p8v: regulator-1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: regulator-3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vcc_sdhi: regulator-vcc-sdhi {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio1 24 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&extalr_clk {
++	clock-frequency = <32768>;
++};
++
++&mmc0 {
++	pinctrl-0 = <&sd_pins>;
++	pinctrl-1 = <&sd_pins>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&vcc_sdhi>;
++	vqmmc-supply = <&vcc_sdhi>;
++	cd-gpios = <&gpio1 23 GPIO_ACTIVE_LOW>;
++	bus-width = <4>;
++	status = "okay";
++};
++
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++};
++
++&i2c5 {
++	pinctrl-0 = <&i2c5_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++	eeprom@50 {
++		compatible = "atmel,24c16";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
++};
++
++&pfc {
++	pinctrl-0 = <&scif_clk_pins>;
++	pinctrl-names = "default";
++
++	i2c0_pins: i2c0 {
++		groups = "i2c0";
++		function = "i2c0";
++	};
++
++	i2c5_pins: i2c5 {
++		groups = "i2c5";
++		function = "i2c5";
++	};
++
++	sd_pins: sd {
++		groups = "mmc_data4", "mmc_ctrl";
++		function = "mmc";
++		power-source = <3300>;
++	};
++
++	hscif0_pins: hscif0 {
++		groups = "hscif0_data", "hscif0_ctrl";
++		function = "hscif0";
++	};
++
++	scif_clk_pins: scif_clk {
++		groups = "scif_clk";
++		function = "scif_clk";
++	};
++};
++
++&rwdt {
++	timeout-sec = <60>;
++	status = "okay";
++};
++
++&hscif0 {
++	pinctrl-0 = <&hscif0_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	/* Please use exclusively to the scif3 node */
++	status = "okay";
++};
++
++&scif_clk {
++	clock-frequency = <24000000>;
++};
+-- 
+2.25.1
+
