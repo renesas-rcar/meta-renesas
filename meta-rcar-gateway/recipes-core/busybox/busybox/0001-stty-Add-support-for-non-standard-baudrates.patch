@@ -12,6 +12,8 @@ setting non-standard baudrates with struct termios2.
 This patch impliments this approach, allow users to work with the custom
 baudrates (as long as their devices support it).
 
+Upstream-Status: Inappropriate [configuration]
+
 Signed-off-by: Vinh Nguyen <vinh.nguyen.ux@renesas.com>
 ---
  coreutils/stty.c | 70 +++++++++++++++++++++++++++++++++++++++++++++---
