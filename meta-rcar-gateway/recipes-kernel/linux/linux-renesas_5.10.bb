@@ -47,11 +47,11 @@ addtask do_download_firmware after do_configure before do_compile
 do_install:append() {
     install -d ${D}/usr/include/linux/
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
-    install -d ${D}/lib/firmware/
+    install -d ${D}${nonarch_base_libdir}/firmware/
     install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/rcar-ipmmu-domains.h ${D}/usr/include/linux/
     install -m 0644 ${STAGING_KERNEL_DIR}/include/uapi/linux/renesas_uioctl.h ${D}/usr/include/linux/
     mv ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/kernel/drivers/dma/dmatest.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
-    install -m 0644 ${S}/firmware/r8a779f0_ufs.bin ${D}/lib/firmware/
+    install -m 0644 ${S}/firmware/r8a779f0_ufs.bin ${D}${nonarch_base_libdir}/firmware/
 }
 
 FILES:${PN}-uapi = "/usr/include"
