@@ -16,6 +16,7 @@ SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH};protocol=https \
     file://0002-arm64-dts-renesas-r8a779f0-Enable-IPMMU-main-and-HC-.patch \
     file://0003-arm64-dts-renesas-r8a779f0-Enable-IPMMU-for-PCIe0-1.patch \
     file://0004-arm64-dts-renesas-r8a779f0-Enable-IPMMU-for-eMMC.patch \
+    file://init_disassemble_info-signature-changes-causes-compile-failures.patch \
     file://ufs.cfg \
     file://r8a779f0_ufs.bin \
 "
