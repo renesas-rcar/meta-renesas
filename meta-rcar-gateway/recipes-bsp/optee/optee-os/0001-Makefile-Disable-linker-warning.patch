@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 444b3e12..8df71d45 100644
+--- a/Makefile
++++ b/Makefile
+@@ -20,6 +20,8 @@ unexport MAKEFILE_LIST
+ 
+ include mk/checkconf.mk
+ 
++LDFLAGS += --no-warn-rwx-segments
++
+ .PHONY: all
+ all:
+ 

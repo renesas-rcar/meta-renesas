@@ -16,6 +16,7 @@ SRCREV = "6f9792db6411d6c172077eb28e584ab5f46a174e"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https \
+    file://0001-Makefile-Disable-linker-warning.patch \
 "
 
 COMPATIBLE_MACHINE = "(spider|s4sk)"
