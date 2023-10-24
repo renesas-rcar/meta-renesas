@@ -9,7 +9,9 @@ COMPATIBLE_MACHINE = "(falcon|condor|eagle|whitehawk|grayhawk)"
 
 SRCREV = "${RENESAS_BSP_SRCREV}"
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH} \
-    file://0001-arm64-dts-renesas-r8a779g0-Add-Native-device-support.patch"
+    file://0001-arm64-dts-renesas-r8a779g0-Add-Native-device-support.patch \
+    file://pid_in_contextidr.cfg \
+"
 
 LINUX_VERSION ?= "5.10.147"
 PV = "${LINUX_VERSION}+git${SRCPV}"
