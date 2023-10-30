@@ -43,6 +43,16 @@ do_download_firmware () {
 
 addtask do_download_firmware after do_configure before do_compile
 
+do_src_package_preprocess () {
+        # Trim build paths from comments in generated sources to ensure reproducibility
+        sed -i -e "s,${S}/,,g" \
+               -e "s,${B}/,,g" \
+            ${B}/drivers/video/logo/logo_linux_clut224.c \
+            ${B}/drivers/tty/vt/consolemap_deftbl.c \
+            ${B}/lib/oid_registry_data.c
+}
+addtask do_src_package_preprocess after do_compile before do_install
+
 # Install S4 specific UAPI headers and ufs firmware
 do_install:append() {
     install -d ${D}/usr/include/linux/
