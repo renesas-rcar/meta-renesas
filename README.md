@@ -23,7 +23,8 @@ Layer and boards that support is the following:
 
     meta-rcar-gateway
         - Renesas Electronics Corporation. R-Car Spider (R8A779F0)
-
+        - Renesas Electronics Corporation. R-Car S4 Starter Kit (R8A779F0)
+        
 Please see README in the layer directory for the description of the board.
 
 ## Original BSP image
