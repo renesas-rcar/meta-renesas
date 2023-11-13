@@ -3,17 +3,17 @@ LICENSE = "BSD-2-Clause"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 PR = "r0"
-PV = "3.13.0+renesas+git${SRCPV}"
+PV = "3.22.0+renesas+git${SRCPV}"
 BRANCH = "master"
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH};protocol=https"
-SRCREV = "7c9c423d00e96bf51debd5fe10fd70dce83be5cc"
+SRCREV = "8533e0e6329840ee96cf81b6453f257204227e6c"
 
 SRC_URI += " \
     file://optee.service \
     file://0001-tee-supplicant-Delete-the-sleep-time-when-writing-da.patch \
 "
-
-inherit python3native systemd
+DEPENDS += "util-linux"
+inherit python3native systemd pkgconfig
 SYSTEMD_SERVICE_${PN} = "optee.service"
 
 COMPATIBLE_MACHINE = "salvator-x|ulcb|ebisu|draak"
@@ -25,7 +25,7 @@ S = "${WORKDIR}/git"
 # Recipe which fail to compile when enabling _FORTIFY_SOURCE=2 option
 SECURITY_CFLAGS_pn-optee-client = ""
 
-EXTRA_OEMAKE = "RPMB_EMU=0"
+EXTRA_OEMAKE = "RPMB_EMU=0 PKG_CONFIG=pkg-config"
 
 do_install () {
     # Create destination directories
