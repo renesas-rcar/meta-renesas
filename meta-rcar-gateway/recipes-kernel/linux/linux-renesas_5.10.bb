@@ -8,8 +8,8 @@ COMPATIBLE_MACHINE = "(spider|s4sk)"
 
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git"
-BRANCH = "v5.10.41/rcar-5.1.7.rc11.1"
-SRCREV = "1cff967a65247a6ff21b879331cf330ec35572fc"
+BRANCH = "v5.10.41/rcar-5.1.7.rc11.2"
+SRCREV = "0fc797171e95ae55eca74bceff6679b162dec47b"
 
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${BRANCH};protocol=https \
     file://0001-arm64-dts-renesas-r8a779f0-Add-Native-device-support.patch \
