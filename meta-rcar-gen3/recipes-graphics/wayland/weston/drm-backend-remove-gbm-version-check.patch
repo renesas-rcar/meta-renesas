@@ -1,0 +1,17 @@
+Upstream-Status: Inappropriate [oe specific]
+
+---
+
+diff --git a/libweston/backend-drm/meson.build b/libweston/backend-drm/meson.build
+index 1af628d..d52c088 100644
+--- a/libweston/backend-drm/meson.build
++++ b/libweston/backend-drm/meson.build
+@@ -58,7 +58,7 @@ deps_drm = [
+ ]
+ 
+ if get_option('renderer-gl')
+-	dep_gbm = dependency('gbm', required: false, version: '>= 21.1.1')
++	dep_gbm = dependency('gbm', required: false)
+ 	if not dep_gbm.found()
+ 		error('drm-backend with GL renderer requires gbm which was not found. Or, you can use \'-Drenderer-gl=false\'.')
+ 	endif

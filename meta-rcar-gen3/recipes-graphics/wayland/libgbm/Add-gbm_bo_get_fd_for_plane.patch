@@ -1,0 +1,57 @@
+diff --git a/gbm.c b/gbm.c
+index e7158f0..d9caecc 100644
+--- a/gbm.c
++++ b/gbm.c
+@@ -363,6 +363,26 @@ gbm_bo_get_handle_for_plane(struct gbm_bo *bo, int plane)
+    return bo->gbm->bo_get_handle(bo, plane);
+ }
+ 
++/** Get a DMA-BUF file descriptor for the specified plane of the buffer object
++ *
++ * This function creates a DMA-BUF (also known as PRIME) file descriptor
++ * handle for the specified plane of the buffer object.  Each call to
++ * gbm_bo_get_fd_for_plane() returns a new file descriptor and the caller is
++ * responsible for closing the file descriptor.
++
++ * \param bo The buffer object
++ * \param plane The plane to get a DMA-BUF for
++ * \return Returns a file descriptor referring to the underlying buffer or -1
++ * if an error occurs.
++ *
++ * \sa gbm_bo_get_fd()
++ */
++GBM_EXPORT int
++gbm_bo_get_fd_for_plane(struct gbm_bo *bo, int plane)
++{
++   return bo->gbm->bo_get_plane_fd(bo, plane);
++}
++
+ /**
+  * Get the chosen modifier for the buffer object
+  *
+diff --git a/gbm.h b/gbm.h
+index 45dead8..ebfac75 100644
+--- a/gbm.h
++++ b/gbm.h
+@@ -376,6 +376,9 @@ gbm_bo_get_plane_count(struct gbm_bo *bo);
+ union gbm_bo_handle
+ gbm_bo_get_handle_for_plane(struct gbm_bo *bo, int plane);
+ 
++int
++gbm_bo_get_fd_for_plane(struct gbm_bo *bo, int plane);
++
+ int
+ gbm_bo_write(struct gbm_bo *bo, const void *buf, size_t count);
+ 
+diff --git a/gbmint.h b/gbmint.h
+index 52e7148..e2e8d2b 100644
+--- a/gbmint.h
++++ b/gbmint.h
+@@ -83,6 +83,7 @@ struct gbm_device {
+    int (*bo_get_fd)(struct gbm_bo *bo);
+    int (*bo_get_planes)(struct gbm_bo *bo);
+    union gbm_bo_handle (*bo_get_handle)(struct gbm_bo *bo, int plane);
++   int (*bo_get_plane_fd)(struct gbm_bo *bo, int plane);
+    uint32_t (*bo_get_stride)(struct gbm_bo *bo, int plane);
+    uint32_t (*bo_get_offset)(struct gbm_bo *bo, int plane);
+    uint64_t (*bo_get_modifier)(struct gbm_bo *bo);
