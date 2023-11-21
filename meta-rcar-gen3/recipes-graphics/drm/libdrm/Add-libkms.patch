@@ -1,3 +1,12 @@
+Subject: Add libkms back to libdrm
+
+libkms (need by libgbm) was droped from libdrm 2.4.111.
+libgbm need libkms so add libkms back to libdrm
+
+Upstream-Status: Inappropriate [oe specific]
+
+---
+
 diff --git a/libkms/Android.mk b/libkms/Android.mk
 new file mode 100644
 index 00000000..a8b9489f
