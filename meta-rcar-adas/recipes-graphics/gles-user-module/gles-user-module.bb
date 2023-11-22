@@ -17,10 +17,13 @@ GLES = "gsx"
 
 PROVIDES = "virtual/gles-user-module virtual/egl virtual/libgles2"
 
+require include/rcar-gfx-common.inc
+
 SRC_URI = " \
-    file://r8a779g0_linux_gsx_binaries_gles.tar.bz2 \
+    ${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2 \
     file://rc.pvr.service \
 "
+SRC_URI[sha256sum] = "1079f63faa3b671bb8847eb92cd14ee9201f27a9d618253e7f58f20a3ece9366"
 
 inherit systemd
 
