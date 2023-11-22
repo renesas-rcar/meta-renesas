@@ -56,8 +56,8 @@ do_install() {
     install -m 755 ${S}/usr/lib/*.so ${D}${libdir}/
     install -d ${D}${RENESAS_DATADIR}/bin
     install -m 755 ${S}/usr/local/bin/dlcsrv_REL ${D}${RENESAS_DATADIR}/bin/dlcsrv_REL
-    install -d ${D}/lib/firmware
-    install -m 644 ${S}/lib/firmware/* ${D}/lib/firmware/
+    install -d ${D}${nonarch_base_libdir}/firmware
+    install -m 644 ${S}/lib/firmware/* ${D}${nonarch_base_libdir}/firmware/
 
     # Install pkgconfig
     install -d ${D}${libdir}/pkgconfig
@@ -93,8 +93,8 @@ PACKAGES = "\
 FILES:${PN} = " \
     ${sysconfdir}/* \
     ${libdir}/* \
-    /lib/firmware/rgx.fw* \
-    /lib/firmware/rgx.sh* \
+    ${nonarch_base_libdir}/firmware/rgx.fw* \
+    ${nonarch_base_libdir}/firmware/rgx.sh* \
     ${RENESAS_DATADIR}/bin/* \
     ${exec_prefix}/bin/* \
 "

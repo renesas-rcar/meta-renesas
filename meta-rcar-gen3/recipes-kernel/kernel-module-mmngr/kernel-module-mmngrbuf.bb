@@ -26,7 +26,7 @@ do_compile:prepend() {
 
 do_install () {
     # Create destination directories
-    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -d ${D}/${includedir}
 
     # Install shared library to KERNELSRC(STAGING_KERNEL_DIR) for reference from other modules
@@ -34,7 +34,7 @@ do_install () {
     install -m 644 ${B}/Module.symvers ${KERNELSRC}/include/mmngrbuf.symvers
 
     # Install kernel module
-    install -m 644 ${B}/mmngrbuf.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${B}/mmngrbuf.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
@@ -52,7 +52,7 @@ PACKAGES = "\
 "
 
 FILES:${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/extra/mmngrbuf.ko \
+    ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/mmngrbuf.ko \
 "
 
 FILES:${PN}-dbg = "" 

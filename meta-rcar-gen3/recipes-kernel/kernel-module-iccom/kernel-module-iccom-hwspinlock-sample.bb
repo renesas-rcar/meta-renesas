@@ -23,12 +23,12 @@ KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
 do_install () {
     # Create destination directory
-    install -d ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
 
     # Install kernel module
-    install -m 644 ${B}/iccom_hwspinlock_sample.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${B}/iccom_hwspinlock_sample.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
 }
 
 FILES:${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/extra/iccom_hwspinlock_sample.ko \
+    ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/iccom_hwspinlock_sample.ko \
 "
