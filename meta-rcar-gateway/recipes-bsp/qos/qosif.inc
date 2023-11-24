@@ -13,3 +13,5 @@ SRC_URI = "${QOSIF_LIB_URL};branch=${BRANCH}"
 
 # This module is machine specific.
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+
+COMPATIBLE_MACHINE = "(spider|s4sk)"

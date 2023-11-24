@@ -10,6 +10,8 @@ SRC_URI = "${UBOOT_URL};branch=${BRANCH};protocol=https"
 SRCREV = "697b542c4f15b472130b246e2156b89ed25398ee"
 PV = "v2020.10+git${SRCPV}"
 
+COMPATIBLE_MACHINE = "(spider|s4sk)"
+
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
 UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"

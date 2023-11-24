@@ -8,6 +8,8 @@ LIC_FILES_CHKSUM = " \
     file://MIT-COPYING;md5=192063521ce782a445a3c9f99a8ad560 \
 "
 
+COMPATIBLE_MACHINE = "(spider|s4sk)"
+
 inherit module
 
 DEPENDS = "linux-renesas"

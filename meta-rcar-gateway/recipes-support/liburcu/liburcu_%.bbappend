@@ -1,3 +1,3 @@
 # WORKAROUND for compile error
-CFLAGS_remove = "-O2"
-CFLAGS_append += "-O0"
+CFLAGS_remove_rcar-gateway = "-O2"
+CFLAGS_append_rcar-gateway = "-O0"

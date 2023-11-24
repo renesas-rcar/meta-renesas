@@ -17,6 +17,8 @@ SRC_URI = "https://strace.io/files/${PV}/strace-${PV}.tar.xz \
            "
 SRC_URI[sha256sum] = "fe3982ea4cd9aeb3b4ba35f6279f0b577a37175d3282be24b9a5537b56b8f01c"
 
+COMPATIBLE_MACHINE = "(spider|s4sk)"
+
 inherit autotools ptest
 
 PACKAGECONFIG_class-target ??= "\
