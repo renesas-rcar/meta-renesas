@@ -4,9 +4,9 @@ SECTION = "libs"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/waylandws.h;beginline=1;endline=22;md5=ebf7ec97b867b0329acbb2c4190fd7a9"
 
-SRC_URI = "git://github.com/renesas-rcar/wayland-wsegl.git;branch=rcar_gen3e;protocol=https"
+SRC_URI = "git://github.com/renesas-rcar/wayland-wsegl.git;branch=rcar_gen3_maintenance;protocol=https"
 
-SRCREV = "502671ffdeea921eb2257b4a074d9bb5c384af8d"
+SRCREV = "04893c0cf1104a800d65d0bd46bb9e98437389bf"
 
 COMPATIBLE_MACHINE = "(r8a7795|r8a7796|r8a77965|r8a77990)"
 
