@@ -16,7 +16,7 @@ DEPENDS = "linux-renesas"
 REQUIRED_DISTRO_FEATURES = "avb"
 
 SRC_URI = "git://github.com/renesas-rcar/avb-mch.git;branch=rcar-gen3;protocol=https"
-SRCREV = "9d2c862b0f950c44ef6b23651783cb05619abfa7"
+SRCREV = "b234c4c867e9e4b9cc7cb00f483a43a36e3d3427"
 
 S = "${WORKDIR}/git"
 
@@ -24,6 +24,11 @@ includedir = "${RENESAS_DATADIR}/include"
 
 # Build AVB MCH kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
+
+
+SRC_URI_append = " \
+    file://0001_fix_mch_open_wrong_initialization_order.patch \
+"
 
 do_install_append() {
     # Create destination directories

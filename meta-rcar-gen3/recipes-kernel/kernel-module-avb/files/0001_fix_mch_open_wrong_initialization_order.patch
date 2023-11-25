@@ -1,0 +1,31 @@
+diff --git a/mch_core_main.c b/mch_core_main.c
+index 4449a6b..03d575e 100644
+--- a/mch_core_main.c
++++ b/mch_core_main.c
+@@ -439,18 +439,19 @@ void *mch_open(void)
+ 	if (!m_dev)
+ 		goto error;
+ 
+-	if (init_mch_device(m_dev)) {
+-		kfree(m_dev);
+-		goto error;
+-	}
+-
+ 	spin_lock_irqsave(&mch_lock, flags);
+-
+ 	m_dev->priv = priv;
+ 	priv->m_dev[0] = m_dev;
+-
+ 	spin_unlock_irqrestore(&mch_lock, flags);
+ 
++	if (init_mch_device(m_dev)) {
++		spin_lock_irqsave(&mch_lock, flags);
++		priv->m_dev[0] = NULL;
++		spin_unlock_irqrestore(&mch_lock, flags);
++		kfree(m_dev);
++		goto error;
++	}
++
+ 	pr_info("registered mch device %p\n", m_dev);
+ 
+ 	return (void *)m_dev;
