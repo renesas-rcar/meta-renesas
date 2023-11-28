@@ -4,6 +4,8 @@ SECTION = "console/utils"
 LICENSE = "LGPL-2.1+ & GPL-2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=c756d9d5dabc27663df64f0bf492166c"
 
+COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
+
 SRC_URI = "https://strace.io/files/${PV}/strace-${PV}.tar.xz \
            file://disable-git-version-gen.patch \
            file://update-gawk-paths.patch \

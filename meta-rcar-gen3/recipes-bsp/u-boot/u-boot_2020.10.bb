@@ -3,6 +3,8 @@ require u-boot.inc
 
 DEPENDS += "lzop-native srecord-native"
 
+COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
+
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"
 BRANCH = "v2020.10/rcar-5.1.0"
 
