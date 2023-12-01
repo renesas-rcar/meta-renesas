@@ -1,6 +1,6 @@
 require include/gles-control.inc
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend:rcar-gen3 := "${THISDIR}/${PN}:"
 
 SRC_URI:append:rcar-gen3 = " \
     file://weston.ini \

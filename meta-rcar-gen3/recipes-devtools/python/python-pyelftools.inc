@@ -6,6 +6,9 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=5ce2a2b07fca326bc7c146d10105ccfc"
 
 inherit pypi
 
+
+COMPATIBLE_MACHINE = "salvator-x|h3ulcb|m3ulcb|m3nulcb|ebisu|draak"
+
 PYPI_PACKAGE = "pyelftools"
 
 SRC_URI[md5sum] = "0ba0de4b47127249c4d632ae299cb0e8"
