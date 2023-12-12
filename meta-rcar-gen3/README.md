@@ -127,7 +127,7 @@ Draak|MACHINE = "draak"
 * Configure for systemd init in local.conf:
 
 ```bash
-    DISTRO_FEATURES:append = " systemd"
+    DISTRO_FEATURES:append = " usrmerge systemd"
     VIRTUAL-RUNTIME_init_manager = "systemd"
 ```
 
