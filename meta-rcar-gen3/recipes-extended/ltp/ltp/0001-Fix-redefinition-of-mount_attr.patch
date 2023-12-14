@@ -1,3 +1,11 @@
+Subject: Fix redefinition of mount_attr
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Hau Vo <hau.vo.ra@renesas.com>
+
+---
+
 diff --git a/include/lapi/fsmount.h b/include/lapi/fsmount.h
 index 07eb42ffaf..5ae2a5f9e3 100644
 --- a/include/lapi/fsmount.h
