@@ -26,10 +26,16 @@ VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
 
 includedir = "${RENESAS_DATADIR}/include"
 
+SRC_URI_append = " \
+    file://Fix_Include_Path.patch \
+"
+
+
 # Build VSP Manager Interface kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
 do_compile() {
+    export U_INCLUDE=-I${STAGING_DIR_HOST}/usr/local/include
     cd ${S}/${VSPMIF_DRV_DIR}/drv
     make all
 }
