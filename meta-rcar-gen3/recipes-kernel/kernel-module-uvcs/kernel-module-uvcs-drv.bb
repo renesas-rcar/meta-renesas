@@ -24,10 +24,19 @@ S = "${WORKDIR}/RTM8RC0000ZMX0DQ00JFL3E"
 
 EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR}"
 EXTRA_OEMAKE += "CROSS_COMPILE=${CROSS_COMPILE}"
+EXTRA_OEMAKE += "KERNELSRC=${STAGING_KERNEL_DIR}"
 
 B="${S}/src/makefile"
 
 includedir = "${RENESAS_DATADIR}/include"
+
+DEPENDS = " \
+    linux-renesas kernel-module-mmngr mmngr-user-module \
+"
+
+SRC_URI_append = " \
+    file://0001_link_to_mmngr_symver.patch \
+"
 
 do_compile_prepend() {
     export UVCS_SRC="${S}/src"
