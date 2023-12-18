@@ -21,12 +21,17 @@ SRCREV = "b3a116d8ce68371cac21011ca3b3190ae3576987"
 
 SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH};protocol=https"
 
+SRC_URI_append = " \
+    file://Allow_append_incdir.patch \
+"
+
 S = "${WORKDIR}/git"
 
 # Build VSP2 driver kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
 do_compile() {
+    export U_INCLUDE=-I${STAGING_DIR_HOST}/usr/local/include
     cd ${S}/vsp2driver
     make all
 }

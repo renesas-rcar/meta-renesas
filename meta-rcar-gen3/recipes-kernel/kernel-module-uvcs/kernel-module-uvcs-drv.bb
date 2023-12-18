@@ -42,6 +42,7 @@ do_compile_prepend() {
     export UVCS_SRC="${S}/src"
     export UVCS_INC="${S}"
     export VCP4_SRC="${S}/src"
+    export EXTRA_CFLAGS=-I${STAGING_KERNEL_DIR}/include
 }
 
 # Build UVCS kernel module without suffix

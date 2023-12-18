@@ -46,7 +46,7 @@ do_install () {
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_public.h ${KERNELSRC}/include/
+    #install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_public.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_cmn.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${KERNELSRC}/include/
@@ -55,6 +55,7 @@ do_install () {
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_cmn.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${D}/${includedir}/
+    #install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_public.h ${D}/${includedir}/
 }
 
 do_populate_sysroot[sstate-inputdirs] += "${S}/${VSPM_DRV_DIR}/include/"

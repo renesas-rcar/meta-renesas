@@ -1,0 +1,13 @@
+diff --git a/vsp2driver/Makefile b/vsp2driver/Makefile
+index 7603ee8..3410215 100644
+--- a/vsp2driver/Makefile
++++ b/vsp2driver/Makefile
+@@ -13,7 +13,7 @@ CFILES += vsp2_debug.c
+ obj-m += vsp2.o
+ vsp2-objs := $(CFILES:.c=.o)
+ 
+-U_INCLUDE := -I$(PWD)
++U_INCLUDE += -I$(PWD)
+ U_INCLUDE += -I$(KERNELSRC)/include
+ EXTRA_CFLAGS += $(U_INCLUDE)
+ EXTRA_CFLAGS += -DUSE_BUFFER
