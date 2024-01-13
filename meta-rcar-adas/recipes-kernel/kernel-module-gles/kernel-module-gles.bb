@@ -9,21 +9,24 @@ DEPENDS += "linux-renesas"
 PN = "kernel-module-gles"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "whitehawk"
+COMPATIBLE_MACHINE = "whitehawk|grayhawk"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 require include/rcar-gfx-common.inc
 
-SRC_URI = " \
-    ${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4H.tar.bz2 \
-    file://blacklist.conf \
-"
-SRC_URI[sha256sum] = "4d3749f0bcc8f7319fb2225fd6d3da9bacebd90f8a8ee6a48d4994f2e4ac5fd1"
+SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4H.tar.bz2"
+SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4M.tar.bz2"
+SRC_URI_append = " file://blacklist.conf"
+
+SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'whitehawk', '4d3749f0bcc8f7319fb2225fd6d3da9bacebd90f8a8ee6a48d4994f2e4ac5fd1', '', d)}"
+SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'grayhawk', '95847bd0815974069de276061f06e7c3d088df602df3ae8a4c3000bb451bab1d', '', d)}"
 
 S = "${WORKDIR}/rogue_km"
 
-KBUILD_DIR = "${S}/build/linux/r8a779g_linux"
-KBUILD_OUTDIR = "binary_r8a779g_linux_nullws_drm_release/target_aarch64/kbuild"
+KBUILD_DIR_r8a779g0 = "${S}/build/linux/r8a779g_linux"
+KBUILD_DIR_r8a779h0 = "${S}/build/linux/r8a779h_linux"
+KBUILD_OUTDIR_r8a779g0 = "binary_r8a779g_linux_nullws_drm_release/target_aarch64/kbuild"
+KBUILD_OUTDIR_r8a779h0 = "binary_r8a779h_linux_nullws_drm_release/target_aarch64/kbuild"
 
 B = "${KBUILD_DIR}"
 

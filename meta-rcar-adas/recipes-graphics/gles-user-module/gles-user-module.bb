@@ -7,7 +7,7 @@ require include/rcar-bsp-path-common.inc
 PN = "gles-user-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "whitehawk"
+COMPATIBLE_MACHINE = "whitehawk|grayhawk"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 DEPENDS = "kernel-module-gles"
@@ -19,11 +19,12 @@ PROVIDES = "virtual/gles-user-module virtual/egl virtual/libgles2"
 
 require include/rcar-gfx-common.inc
 
-SRC_URI = " \
-    ${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2 \
-    file://rc.pvr.service \
-"
-SRC_URI[sha256sum] = "1079f63faa3b671bb8847eb92cd14ee9201f27a9d618253e7f58f20a3ece9366"
+SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2"
+SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779h0_linux_gsx_binaries_gles.tar.bz2"
+SRC_URI_append = " file://rc.pvr.service"
+
+SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'whitehawk', '1079f63faa3b671bb8847eb92cd14ee9201f27a9d618253e7f58f20a3ece9366', '', d)}"
+SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'grayhawk', '3f5a616360d98cd5e36f69787470b71fef7a4c1ad11f68d99b8b04317609a011', '', d)}"
 
 inherit systemd
 
@@ -94,6 +95,7 @@ FILES_${PN} = " \
     ${RENESAS_DATADIR}/bin/* \
     ${exec_prefix}/bin/* \
 "
+FILES_${PN}_append_r8a779h0 = " ${libdir}/libglslcompiler.so*"
 FILES_libegl-${PN} = "${libdir}/libEGL.so*"
 FILES_libgles2-${PN} = "${libdir}/libGLESv2.so*"
 
