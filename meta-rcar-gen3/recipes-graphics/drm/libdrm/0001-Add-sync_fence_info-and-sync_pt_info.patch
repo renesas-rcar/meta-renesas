@@ -1,4 +1,4 @@
-From f74ae4970b0b1f7ca43676108cdc56664909eed7 Mon Sep 17 00:00:00 2001
+From ab923df1de3a3042a455a493ba13565c2ab3f666 Mon Sep 17 00:00:00 2001
 From: Brendan King <Brendan.King@imgtec.com>
 Date: Thu, 24 Aug 2017 13:28:38 +0100
 Subject: [PATCH] Add sync_fence_info and sync_pt_info
@@ -12,7 +12,7 @@ Upstream-Status: Inappropriate [configuration]
 Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
 
 ---
- libsync.h | 172 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libsync.h | 172 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 172 insertions(+)
 
 diff --git a/libsync.h b/libsync.h

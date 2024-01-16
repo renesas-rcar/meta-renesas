@@ -1,4 +1,7 @@
-Subject: Add libkms back to libdrm
+From 2d6c978f8db48aab0bf6039b718cd86f04c97f1c Mon Sep 17 00:00:00 2001
+From: Hau <hau.vo.ra@renesas.com>
+Date: Mon, 6 Feb 2023 17:10:27 +0900
+Subject: [PATCH] Add libkms back to libdrm
 
 libkms (need by libgbm) was droped from libdrm 2.4.111.
 libgbm need libkms so add libkms back to libdrm
@@ -6,10 +9,68 @@ libgbm need libkms so add libkms back to libdrm
 Upstream-Status: Inappropriate [oe specific]
 
 ---
+ libkms/Android.mk                   |  51 ++++
+ libkms/Makefile.sources             |  23 ++
+ libkms/api.c                        | 139 +++++++++++
+ libkms/dumb.c                       | 216 +++++++++++++++++
+ libkms/exynos.c                     | 220 +++++++++++++++++
+ libkms/intel.c                      | 236 ++++++++++++++++++
+ libkms/internal.h                   |  80 +++++++
+ libkms/kms-symbols.txt              |   8 +
+ libkms/libkms.h                     |  82 +++++++
+ libkms/libkms.pc.in                 |  11 +
+ libkms/linux.c                      | 147 ++++++++++++
+ libkms/meson.build                  |  81 +++++++
+ libkms/nouveau.c                    | 218 +++++++++++++++++
+ libkms/radeon.c                     | 239 +++++++++++++++++++
+ libkms/vmwgfx.c                     | 207 ++++++++++++++++
+ meson.build                         |  12 +
+ meson_options.txt                   |   5 +
+ tests/exynos/exynos_fimg2d_test.c   |   1 +
+ tests/exynos/meson.build            |  21 +-
+ tests/kms/kms-steal-crtc.c          | 161 +++++++++++++
+ tests/kms/kms-universal-planes.c    | 357 ++++++++++++++++++++++++++++
+ tests/kms/libkms-test-crtc.c        |  43 ++++
+ tests/kms/libkms-test-device.c      | 217 +++++++++++++++++
+ tests/kms/libkms-test-framebuffer.c | 153 ++++++++++++
+ tests/kms/libkms-test-plane.c       | 137 +++++++++++
+ tests/kms/libkms-test-screen.c      |  90 +++++++
+ tests/kms/libkms-test.h             | 120 ++++++++++
+ tests/kms/meson.build               |  49 ++++
+ tests/kmstest/main.c                | 109 +++++++++
+ tests/kmstest/meson.build           |  30 +++
+ tests/meson.build                   |   4 +
+ 31 files changed, 3458 insertions(+), 9 deletions(-)
+ create mode 100644 libkms/Android.mk
+ create mode 100644 libkms/Makefile.sources
+ create mode 100644 libkms/api.c
+ create mode 100644 libkms/dumb.c
+ create mode 100644 libkms/exynos.c
+ create mode 100644 libkms/intel.c
+ create mode 100644 libkms/internal.h
+ create mode 100644 libkms/kms-symbols.txt
+ create mode 100644 libkms/libkms.h
+ create mode 100644 libkms/libkms.pc.in
+ create mode 100644 libkms/linux.c
+ create mode 100644 libkms/meson.build
+ create mode 100644 libkms/nouveau.c
+ create mode 100644 libkms/radeon.c
+ create mode 100644 libkms/vmwgfx.c
+ create mode 100644 tests/kms/kms-steal-crtc.c
+ create mode 100644 tests/kms/kms-universal-planes.c
+ create mode 100644 tests/kms/libkms-test-crtc.c
+ create mode 100644 tests/kms/libkms-test-device.c
+ create mode 100644 tests/kms/libkms-test-framebuffer.c
+ create mode 100644 tests/kms/libkms-test-plane.c
+ create mode 100644 tests/kms/libkms-test-screen.c
+ create mode 100644 tests/kms/libkms-test.h
+ create mode 100644 tests/kms/meson.build
+ create mode 100644 tests/kmstest/main.c
+ create mode 100644 tests/kmstest/meson.build
 
 diff --git a/libkms/Android.mk b/libkms/Android.mk
 new file mode 100644
-index 00000000..a8b9489f
+index 0000000..a8b9489
 --- /dev/null
 +++ b/libkms/Android.mk
 @@ -0,0 +1,51 @@
@@ -66,7 +127,7 @@ index 00000000..a8b9489f
 +include $(BUILD_SHARED_LIBRARY)
 diff --git a/libkms/Makefile.sources b/libkms/Makefile.sources
 new file mode 100644
-index 00000000..3191f516
+index 0000000..3191f51
 --- /dev/null
 +++ b/libkms/Makefile.sources
 @@ -0,0 +1,23 @@
@@ -95,7 +156,7 @@ index 00000000..3191f516
 +	libkms.h
 diff --git a/libkms/api.c b/libkms/api.c
 new file mode 100644
-index 00000000..caca1a87
+index 0000000..caca1a8
 --- /dev/null
 +++ b/libkms/api.c
 @@ -0,0 +1,139 @@
@@ -240,7 +301,7 @@ index 00000000..caca1a87
 +}
 diff --git a/libkms/dumb.c b/libkms/dumb.c
 new file mode 100644
-index 00000000..17efc10a
+index 0000000..17efc10
 --- /dev/null
 +++ b/libkms/dumb.c
 @@ -0,0 +1,216 @@
@@ -462,7 +523,7 @@ index 00000000..17efc10a
 +}
 diff --git a/libkms/exynos.c b/libkms/exynos.c
 new file mode 100644
-index 00000000..ef64a668
+index 0000000..ef64a66
 --- /dev/null
 +++ b/libkms/exynos.c
 @@ -0,0 +1,220 @@
@@ -688,7 +749,7 @@ index 00000000..ef64a668
 +}
 diff --git a/libkms/intel.c b/libkms/intel.c
 new file mode 100644
-index 00000000..859e7a0f
+index 0000000..859e7a0
 --- /dev/null
 +++ b/libkms/intel.c
 @@ -0,0 +1,236 @@
@@ -930,7 +991,7 @@ index 00000000..859e7a0f
 +}
 diff --git a/libkms/internal.h b/libkms/internal.h
 new file mode 100644
-index 00000000..8b386db6
+index 0000000..8b386db
 --- /dev/null
 +++ b/libkms/internal.h
 @@ -0,0 +1,80 @@
@@ -1016,7 +1077,7 @@ index 00000000..8b386db6
 +#endif
 diff --git a/libkms/kms-symbols.txt b/libkms/kms-symbols.txt
 new file mode 100644
-index 00000000..e0ba8c91
+index 0000000..e0ba8c9
 --- /dev/null
 +++ b/libkms/kms-symbols.txt
 @@ -0,0 +1,8 @@
@@ -1030,7 +1091,7 @@ index 00000000..e0ba8c91
 +kms_get_prop
 diff --git a/libkms/libkms.h b/libkms/libkms.h
 new file mode 100644
-index 00000000..930a2bfc
+index 0000000..930a2bf
 --- /dev/null
 +++ b/libkms/libkms.h
 @@ -0,0 +1,82 @@
@@ -1118,7 +1179,7 @@ index 00000000..930a2bfc
 +#endif
 diff --git a/libkms/libkms.pc.in b/libkms/libkms.pc.in
 new file mode 100644
-index 00000000..7c604294
+index 0000000..7c60429
 --- /dev/null
 +++ b/libkms/libkms.pc.in
 @@ -0,0 +1,11 @@
@@ -1135,7 +1196,7 @@ index 00000000..7c604294
 +Requires.private: libdrm
 diff --git a/libkms/linux.c b/libkms/linux.c
 new file mode 100644
-index 00000000..56205054
+index 0000000..5620505
 --- /dev/null
 +++ b/libkms/linux.c
 @@ -0,0 +1,147 @@
@@ -1288,7 +1349,7 @@ index 00000000..56205054
 +}
 diff --git a/libkms/meson.build b/libkms/meson.build
 new file mode 100644
-index 00000000..e2adaea3
+index 0000000..e2adaea
 --- /dev/null
 +++ b/libkms/meson.build
 @@ -0,0 +1,81 @@
@@ -1375,7 +1436,7 @@ index 00000000..e2adaea3
 +)
 diff --git a/libkms/nouveau.c b/libkms/nouveau.c
 new file mode 100644
-index 00000000..7fe23db3
+index 0000000..7fe23db
 --- /dev/null
 +++ b/libkms/nouveau.c
 @@ -0,0 +1,218 @@
@@ -1599,7 +1660,7 @@ index 00000000..7fe23db3
 +}
 diff --git a/libkms/radeon.c b/libkms/radeon.c
 new file mode 100644
-index 00000000..2cb2b11f
+index 0000000..2cb2b11
 --- /dev/null
 +++ b/libkms/radeon.c
 @@ -0,0 +1,239 @@
@@ -1844,7 +1905,7 @@ index 00000000..2cb2b11f
 +}
 diff --git a/libkms/vmwgfx.c b/libkms/vmwgfx.c
 new file mode 100644
-index 00000000..1984399c
+index 0000000..1984399
 --- /dev/null
 +++ b/libkms/vmwgfx.c
 @@ -0,0 +1,207 @@
@@ -2056,11 +2117,11 @@ index 00000000..1984399c
 +	return 0;
 +}
 diff --git a/meson.build b/meson.build
-index 62040c67..7d459e28 100644
+index c0a7e4c..db0c7d8 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -188,6 +188,15 @@ if not _vc4.disabled()
- endif
+@@ -141,6 +141,15 @@ with_vc4 = get_option('vc4') \
+   .allowed()
  summary('VC4', with_vc4)
  
 +# XXX: Apparently only freebsd and dragonfly bsd actually need this (and
@@ -2075,7 +2136,7 @@ index 62040c67..7d459e28 100644
  # Among others FreeBSD does not have a separate dl library.
  if not cc.has_function('dlsym')
    dep_dl = cc.find_library('dl', required : with_nouveau)
-@@ -351,6 +360,9 @@ pkg.generate(
+@@ -308,6 +317,9 @@ pkg.generate(
    description : 'Userspace interface to kernel DRM services',
  )
  
@@ -2086,7 +2147,7 @@ index 62040c67..7d459e28 100644
    subdir('intel')
  endif
 diff --git a/meson_options.txt b/meson_options.txt
-index e80d79e2..babc4727 100644
+index e80d79e..babc472 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -18,6 +18,11 @@
@@ -2102,7 +2163,7 @@ index e80d79e2..babc4727 100644
    'intel',
    type : 'feature',
 diff --git a/tests/exynos/exynos_fimg2d_test.c b/tests/exynos/exynos_fimg2d_test.c
-index d85e2f6b..99bb9233 100644
+index d85e2f6..99bb923 100644
 --- a/tests/exynos/exynos_fimg2d_test.c
 +++ b/tests/exynos/exynos_fimg2d_test.c
 @@ -35,6 +35,7 @@
@@ -2114,7 +2175,7 @@ index d85e2f6b..99bb9233 100644
  
  #include "exynos_drm.h"
 diff --git a/tests/exynos/meson.build b/tests/exynos/meson.build
-index 12259c3c..3a048e8a 100644
+index 12259c3..3a048e8 100644
 --- a/tests/exynos/meson.build
 +++ b/tests/exynos/meson.build
 @@ -20,15 +20,18 @@
@@ -2147,7 +2208,7 @@ index 12259c3c..3a048e8a 100644
    'exynos_fimg2d_perf',
 diff --git a/tests/kms/kms-steal-crtc.c b/tests/kms/kms-steal-crtc.c
 new file mode 100644
-index 00000000..4d884c07
+index 0000000..4d884c0
 --- /dev/null
 +++ b/tests/kms/kms-steal-crtc.c
 @@ -0,0 +1,161 @@
@@ -2314,7 +2375,7 @@ index 00000000..4d884c07
 +}
 diff --git a/tests/kms/kms-universal-planes.c b/tests/kms/kms-universal-planes.c
 new file mode 100644
-index 00000000..1d793880
+index 0000000..1d79388
 --- /dev/null
 +++ b/tests/kms/kms-universal-planes.c
 @@ -0,0 +1,357 @@
@@ -2677,7 +2738,7 @@ index 00000000..1d793880
 +}
 diff --git a/tests/kms/libkms-test-crtc.c b/tests/kms/libkms-test-crtc.c
 new file mode 100644
-index 00000000..2c28face
+index 0000000..2c28fac
 --- /dev/null
 +++ b/tests/kms/libkms-test-crtc.c
 @@ -0,0 +1,43 @@
@@ -2726,7 +2787,7 @@ index 00000000..2c28face
 +}
 diff --git a/tests/kms/libkms-test-device.c b/tests/kms/libkms-test-device.c
 new file mode 100644
-index 00000000..d3bb11ce
+index 0000000..d3bb11c
 --- /dev/null
 +++ b/tests/kms/libkms-test-device.c
 @@ -0,0 +1,217 @@
@@ -2949,7 +3010,7 @@ index 00000000..d3bb11ce
 +}
 diff --git a/tests/kms/libkms-test-framebuffer.c b/tests/kms/libkms-test-framebuffer.c
 new file mode 100644
-index 00000000..9bb2d95b
+index 0000000..9bb2d95
 --- /dev/null
 +++ b/tests/kms/libkms-test-framebuffer.c
 @@ -0,0 +1,153 @@
@@ -3108,7 +3169,7 @@ index 00000000..9bb2d95b
 +}
 diff --git a/tests/kms/libkms-test-plane.c b/tests/kms/libkms-test-plane.c
 new file mode 100644
-index 00000000..4cb27378
+index 0000000..4cb2737
 --- /dev/null
 +++ b/tests/kms/libkms-test-plane.c
 @@ -0,0 +1,137 @@
@@ -3251,7 +3312,7 @@ index 00000000..4cb27378
 +}
 diff --git a/tests/kms/libkms-test-screen.c b/tests/kms/libkms-test-screen.c
 new file mode 100644
-index 00000000..d00ae547
+index 0000000..d00ae54
 --- /dev/null
 +++ b/tests/kms/libkms-test-screen.c
 @@ -0,0 +1,90 @@
@@ -3347,7 +3408,7 @@ index 00000000..d00ae547
 +}
 diff --git a/tests/kms/libkms-test.h b/tests/kms/libkms-test.h
 new file mode 100644
-index 00000000..7b1d02e9
+index 0000000..7b1d02e
 --- /dev/null
 +++ b/tests/kms/libkms-test.h
 @@ -0,0 +1,120 @@
@@ -3473,7 +3534,7 @@ index 00000000..7b1d02e9
 +#endif
 diff --git a/tests/kms/meson.build b/tests/kms/meson.build
 new file mode 100644
-index 00000000..91371aa0
+index 0000000..91371aa
 --- /dev/null
 +++ b/tests/kms/meson.build
 @@ -0,0 +1,49 @@
@@ -3528,7 +3589,7 @@ index 00000000..91371aa0
 +)
 diff --git a/tests/kmstest/main.c b/tests/kmstest/main.c
 new file mode 100644
-index 00000000..a0e4ebbd
+index 0000000..a0e4ebb
 --- /dev/null
 +++ b/tests/kmstest/main.c
 @@ -0,0 +1,109 @@
@@ -3643,7 +3704,7 @@ index 00000000..a0e4ebbd
 +}
 diff --git a/tests/kmstest/meson.build b/tests/kmstest/meson.build
 new file mode 100644
-index 00000000..4fb870f9
+index 0000000..4fb870f
 --- /dev/null
 +++ b/tests/kmstest/meson.build
 @@ -0,0 +1,30 @@
@@ -3678,7 +3739,7 @@ index 00000000..4fb870f9
 +  install : with_install_tests,
 +)
 diff --git a/tests/meson.build b/tests/meson.build
-index ac9e66b0..196edbfa 100644
+index ac9e66b..196edbf 100644
 --- a/tests/meson.build
 +++ b/tests/meson.build
 @@ -21,10 +21,14 @@
