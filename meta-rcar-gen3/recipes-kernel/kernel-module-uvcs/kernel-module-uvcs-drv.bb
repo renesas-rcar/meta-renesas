@@ -34,10 +34,6 @@ DEPENDS = " \
     linux-renesas kernel-module-mmngr mmngr-user-module \
 "
 
-SRC_URI_append = " \
-    file://0001_link_to_mmngr_symver.patch \
-"
-
 do_compile_prepend() {
     export UVCS_SRC="${S}/src"
     export UVCS_INC="${S}"
