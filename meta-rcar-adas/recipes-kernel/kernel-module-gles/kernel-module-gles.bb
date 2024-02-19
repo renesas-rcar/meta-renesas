@@ -14,12 +14,13 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 require include/rcar-gfx-common.inc
 
-SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4H.tar.bz2"
-SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4M.tar.bz2"
-SRC_URI_append = " file://blacklist.conf"
+SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4H.tar.bz2;\
+sha256sum=4d3749f0bcc8f7319fb2225fd6d3da9bacebd90f8a8ee6a48d4994f2e4ac5fd1"
 
-SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'whitehawk', '4d3749f0bcc8f7319fb2225fd6d3da9bacebd90f8a8ee6a48d4994f2e4ac5fd1', '', d)}"
-SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'grayhawk', '95847bd0815974069de276061f06e7c3d088df602df3ae8a4c3000bb451bab1d', '', d)}"
+SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4M.tar.bz2;\
+sha256sum=95847bd0815974069de276061f06e7c3d088df602df3ae8a4c3000bb451bab1d"
+
+SRC_URI_append = " file://blacklist.conf"
 
 S = "${WORKDIR}/rogue_km"
 

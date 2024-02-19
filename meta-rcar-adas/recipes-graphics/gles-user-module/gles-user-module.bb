@@ -19,12 +19,13 @@ PROVIDES = "virtual/gles-user-module virtual/egl virtual/libgles2"
 
 require include/rcar-gfx-common.inc
 
-SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2"
-SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779h0_linux_gsx_binaries_gles.tar.bz2"
-SRC_URI_append = " file://rc.pvr.service"
+SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2;\
+sha256sum=007cf0086ef58314511320977b1568064fbcad0d42f83543b588a2c09d39512a"
 
-SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'whitehawk', '1079f63faa3b671bb8847eb92cd14ee9201f27a9d618253e7f58f20a3ece9366', '', d)}"
-SRC_URI[sha256sum] = "${@bb.utils.contains('MACHINE', 'grayhawk', '3f5a616360d98cd5e36f69787470b71fef7a4c1ad11f68d99b8b04317609a011', '', d)}"
+SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779h0_linux_gsx_binaries_gles.tar.bz2;\
+sha256sum=3f5a616360d98cd5e36f69787470b71fef7a4c1ad11f68d99b8b04317609a011"
+
+SRC_URI_append = " file://rc.pvr.service"
 
 inherit systemd
 
