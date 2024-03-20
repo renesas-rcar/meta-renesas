@@ -1,8 +1,8 @@
 RENESAS_BSP_URL = " \
     git://github.com/renesas-rcar/linux-bsp.git;protocol=https"
 
-RENESAS_BSP_BRANCH = "v5.10.147/rcar-5.2.0.rc16"
-RENESAS_BSP_SRCREV = "5455d063d64911cb3b155b49189428d41d257de0"
+RENESAS_BSP_BRANCH = "v5.10.147/rcar-5.2.0.rc17"
+RENESAS_BSP_SRCREV = "3bef1d681c2159110ac6d493a1ee8271bccd631f"
 
 # Renesas Yocto BSP version
-BSP_RENESAS_VERSION = "Renesas-Yocto-v6.25.0"
+BSP_RENESAS_VERSION = "Renesas-Yocto-v6.26.0"
