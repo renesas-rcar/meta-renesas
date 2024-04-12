@@ -47,7 +47,14 @@ RDEPENDS_packagegroup-bsp-devpkg = " \
     vim \
     wget \
     ${@bb.utils.contains("IMAGE_FEATURES", "ssh-server-openssh", "", "dropbear",d)} \
+    e2fsprogs-resize2fs \
+    avahi-daemon \
+    libdrm-tests \
+    libgpiod libgpiod-tools \
+    alsa-utils \
 "
+# Remove strace in V4x due to compile error with Kernel v5.10
+RDEPENDS_packagegroup-bsp-devpkg_remove_rcar-v4x = "strace" 
 
 # Various packages needed for testing
 RDEPENDS_packagegroup-bsp-testpkg = " \
@@ -71,6 +78,7 @@ RDEPENDS_packagegroup-bsp-testpkg = " \
     dhrystone \
     ${@bb.utils.contains("LICENSE_FLAGS_WHITELIST", "non-commercial", "netperf", "", d)} \
     whetstone \
+    fio \
 "
 
 # Python3 packages requested by Renesas
@@ -81,6 +89,7 @@ RDEPENDS_packagegroup-bsp-python3 = " \
     python3-pygobject \
     python3-pyyaml \
     python3-setuptools \
+    python3-pip \
 "
 
 # Utest (IMR, IMP, etc demos) related packages

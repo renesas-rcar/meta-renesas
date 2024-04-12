@@ -10,22 +10,23 @@ require include/multimedia-control.inc
 
 S = "${WORKDIR}/git"
 
-BRANCH = "rcar_gen3_v2.5"
+BRANCH = "rcar-gen3_v2.9"
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH};protocol=https"
 SRC_URI += " file://0001-Makefile-Disable-linker-warning.patch"
-SRCREV = "268df1d862bc564458aee43f8ec9e71d7ec794bc"
+SRCREV = "9cdb21f75157fc82e8ca104aa21c4ab722383b04"
 
-PV = "v2.5+renesas+git${SRCPV}"
+PV = "v2.9+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 PLATFORM = "rcar"
+ATFW_OPT_BOOTMODE = "${@oe.utils.conditional("USE_EMMC_BOOTMODE", "1", "RCAR_SA6_TYPE=1", "", d)}"
 ATFW_OPT_LOSSY = "${@oe.utils.conditional("USE_MULTIMEDIA", "1", "RCAR_LOSSY_ENABLE=1", "", d)}"
-ATFW_OPT:r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 RCAR_DRAM_LPDDR4_MEMCONF=0 ${ATFW_OPT_LOSSY}"
-ATFW_OPT:r8a7796 = "LSI=M3 RCAR_DRAM_SPLIT=2  ${ATFW_OPT_LOSSY}"
-ATFW_OPT:r8a77965 = "LSI=M3N ${ATFW_OPT_LOSSY}"
-ATFW_OPT:r8a77990 = "LSI=E3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0 RCAR_DRAM_DDR3L_MEMCONF=0 RCAR_DRAM_DDR3L_MEMDUAL=0"
-ATFW_OPT:r8a77995 = "LSI=D3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0 PMIC_ROHM_BD9571=0 RCAR_SYSTEM_SUSPEND=0 DEBUG=0"
-ATFW_OPT:append:ulcb = " RCAR_GEN3_ULCB=1 PMIC_LEVEL_MODE=0"
+ATFW_OPT:r8a7795 = "LSI=H3 RCAR_DRAM_SPLIT=1 RCAR_DRAM_LPDDR4_MEMCONF=0 ${ATFW_OPT_LOSSY} ${ATFW_OPT_BOOTMODE}"
+ATFW_OPT:r8a7796 = "LSI=M3 RCAR_DRAM_SPLIT=2  ${ATFW_OPT_LOSSY} ${ATFW_OPT_BOOTMODE}"
+ATFW_OPT:r8a77965 = "LSI=M3N ${ATFW_OPT_LOSSY} ${ATFW_OPT_BOOTMODE}"
+ATFW_OPT:r8a77990 = "LSI=E3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0 RCAR_DRAM_DDR3L_MEMCONF=0 RCAR_DRAM_DDR3L_MEMDUAL=0 ${ATFW_OPT_BOOTMODE}"
+ATFW_OPT:r8a77995 = "LSI=D3 RCAR_SA0_SIZE=0 RCAR_AVS_SETTING_ENABLE=0 PMIC_ROHM_BD9571=0 RCAR_SYSTEM_SUSPEND=0 DEBUG=0 ${ATFW_OPT_BOOTMODE}"
+ATFW_OPT:append_ulcb = " RCAR_GEN3_ULCB=1 PMIC_LEVEL_MODE=0"
 
 # IPL build options for H3/E3/H3ULCB
 EXTRA_ATFW_OPT ?= ""
@@ -47,6 +48,7 @@ LD[unexport] = "1"
 
 do_compile() {
     oe_runmake distclean
+    oe_runmake clean_layout_tool clean_srecord PLAT=${PLATFORM} SPD=opteed MBEDTLS_COMMON_MK=1 ${ATFW_OPT}
     oe_runmake bl2 bl31 rcar_layout_tool rcar_srecord PLAT=${PLATFORM} SPD=opteed MBEDTLS_COMMON_MK=1 ${ATFW_OPT}
 }
 
@@ -70,21 +72,22 @@ do_deploy() {
 
 do_ipl_opt_compile () {
     oe_runmake distclean
-    oe_runmake bl2 bl31 rcar_layout_tool rcar_srecord PLAT=${PLATFORM} SPD=opteed MBEDTLS_COMMON_MK=1 ${EXTRA_ATFW_OPT} ${ATFW_OPT_LOSSY}
+    oe_runmake clean_layout_tool clean_srecord PLAT=${PLATFORM} SPD=opteed MBEDTLS_COMMON_MK=1 ${EXTRA_ATFW_OPT} ${ATFW_OPT_LOSSY} ${ATFW_OPT_BOOTMODE}
+    oe_runmake bl2 bl31 rcar_layout_tool rcar_srecord PLAT=${PLATFORM} SPD=opteed MBEDTLS_COMMON_MK=1 ${EXTRA_ATFW_OPT} ${ATFW_OPT_LOSSY} ${ATFW_OPT_BOOTMODE}
 }
 
 do_ipl_opt_deploy () {
-    install -d ${DEPLOY_DIR_IMAGE}
+    install -d ${DEPLOYDIR}
 
     # Copy IPL to deploy folder
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.elf
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.bin ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.bin
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.srec ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.elf
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.bin
-    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.srec ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/tools/renesas/rcar_layout_create/bootparam_sa0.srec ${DEPLOY_DIR_IMAGE}/bootparam_sa0-${EXTRA_ATFW_CONF}.srec
-    install -m 0644 ${S}/tools/renesas/rcar_layout_create/cert_header_sa6.srec ${DEPLOY_DIR_IMAGE}/cert_header_sa6-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl2/bl2.elf ${DEPLOYDIR}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.elf
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.bin
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl2.srec ${DEPLOYDIR}/bl2-${MACHINE}-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.elf
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.bin
+    install -m 0644 ${S}/build/${PLATFORM}/release/bl31.srec ${DEPLOYDIR}/bl31-${MACHINE}-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0-${EXTRA_ATFW_CONF}.srec
+    install -m 0644 ${S}/tools/renesas/rcar_layout_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6-${EXTRA_ATFW_CONF}.srec
 }
 
 def do_extra_aft_build (d, board):

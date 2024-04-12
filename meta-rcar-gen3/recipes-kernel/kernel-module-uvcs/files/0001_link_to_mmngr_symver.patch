@@ -1,0 +1,13 @@
+diff --git a/src/makefile/Makefile b/src/makefile/Makefile
+index 4630c60..2261895 100755
+--- a/src/makefile/Makefile
++++ b/src/makefile/Makefile
+@@ -21,7 +21,7 @@ all:
+ 	@cp -p $(UVCS_INC)/include/*.h .
+ 	@cp -p $(VCP4_SRC)/core/*.c .
+ 	@cp -p $(VCP4_SRC)/core/*.h .
+-	@make --no-print-directory -C $(KERNELDIR) M=$(PWD) modules
++	@make --no-print-directory -C $(KERNELDIR) M=$(PWD) modules KBUILD_EXTRA_SYMBOLS:=${KERNELSRC}/include/mmngr.symvers
+ 	@rm -f *.c
+ 	@rm -f *.h
+ 

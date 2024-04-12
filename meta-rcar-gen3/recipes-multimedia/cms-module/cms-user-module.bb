@@ -27,48 +27,48 @@ do_install() {
 
     if [ "X${USE_CMSBCM}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/bcm
-        install -m 755 ${S}/bcm/${baselib}/libcmsbcm.so.3.0.0 ${D}/${libdir}
+        install -m 755 ${S}/bcm/${baselib}/libcmsbcm.so.3.0.2 ${D}/${libdir}
         install -m 644 ${S}/bcm/include/*.h ${D}/${includedir}/cms/bcm
 
         cd ${D}/${libdir}
-        ln -s libcmsbcm.so.3.0.0 libcmsbcm.so.1
+        ln -s libcmsbcm.so.3.0.2 libcmsbcm.so.1
         ln -s libcmsbcm.so.1 libcmsbcm.so
     fi
 
     if [ "X${USE_CMSBLC}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/blc
-        install -m 755 ${S}/blc/${baselib}/libcmsblc.so.3.0.0 ${D}/${libdir}
+        install -m 755 ${S}/blc/${baselib}/libcmsblc.so.3.0.2 ${D}/${libdir}
         install -m 644 ${S}/blc/include/*.h ${D}/${includedir}/cms/blc
 
         cd ${D}/${libdir}
-        ln -s libcmsblc.so.3.0.0 libcmsblc.so.1
+        ln -s libcmsblc.so.3.0.2 libcmsblc.so.1
         ln -s libcmsblc.so.1 libcmsblc.so
     fi
 
     if [ "X${USE_CMSDGC}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/dgc
-        install -m 755 ${S}/dgc/${baselib}/libcmsdgc.so.3.0.0 ${D}/${libdir}
+        install -m 755 ${S}/dgc/${baselib}/libcmsdgc.so.3.0.2 ${D}/${libdir}
         install -m 644 ${S}/dgc/include/*.h ${D}/${includedir}/cms/dgc
 
         cd ${D}/${libdir}
-        ln -s libcmsdgc.so.3.0.0 libcmsdgc.so.1
+        ln -s libcmsdgc.so.3.0.2 libcmsdgc.so.1
         ln -s libcmsdgc.so.1 libcmsdgc.so
     fi
 }
 
-FILES:${PN} = " \
+FILES_${PN} = " \
     ${libdir}/*.so.* \
     ${libdir}/lib*.so \
 "
 
-FILES:${PN}-dev = " \
+FILES_${PN}-dev = " \
     ${includedir} \
 "
 
-INSANE_SKIP:${PN} = "dev-so"
+INSANE_SKIP_${PN} = "dev-so"
 
 #To avoid already-stripped errors and not stripped libs from packages
-INSANE_SKIP:${PN} += "already-stripped"
+INSANE_SKIP_${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

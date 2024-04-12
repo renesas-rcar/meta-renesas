@@ -21,6 +21,8 @@ OLDEST_KERNEL = "5.10"
 
 # Configuration for ARM Trusted Firmware
 EXTRA_IMAGEDEPENDS += " arm-trusted-firmware optee-os"
+# Add default config to build eMMC boot mode (it should enable USE_EMMC_BOOTMODE = "1" local.conf)
+USE_EMMC_BOOTMODE ?= "0"
 
 # u-boot
 PREFERRED_VERSION_u-boot = "v2020.10%"

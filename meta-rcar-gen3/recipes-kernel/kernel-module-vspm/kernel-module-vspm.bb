@@ -27,6 +27,7 @@ includedir = "${RENESAS_DATADIR}/include"
 # Build VSP Manager kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
+
 do_install () {
     # Create destination directories
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
@@ -41,12 +42,13 @@ do_install () {
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${B}/../include/vspm_public.h ${KERNELSRC}/include/
+    #install -m 644 ${B}/../include/vspm_public.h ${KERNELSRC}/include/
     install -m 644 ${B}/../include/vspm_cmn.h ${KERNELSRC}/include/
     install -m 644 ${B}/../include/vsp_drv.h ${KERNELSRC}/include/
     install -m 644 ${B}/../include/fdp_drv.h ${KERNELSRC}/include/
 
-    # Install shared header files
+    # Install shared header filesi
+    #install -m 644 ${B}/../include/vspm_public.h ${D}/${includedir}/
     install -m 644 ${B}/../include/vspm_cmn.h ${D}/${includedir}/
     install -m 644 ${B}/../include/vsp_drv.h ${D}/${includedir}/
     install -m 644 ${B}/../include/fdp_drv.h ${D}/${includedir}/
@@ -82,14 +84,14 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-FILES:${PN} = " \
+FILES_${PN} = " \
     ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/vspm.ko \
 "
 
-FILES:${PN}-dbg = "" 
-ALLOW_EMPTY:${PN}-dbg = "1" 
+FILES:${PN}-dbg = ""
+ALLOW_EMPTY:${PN}-dbg = "1"
 
-RPROVIDES:${PN} += "kernel-module-vspm"
+RPROVIDES_${PN} += "kernel-module-vspm"
 
 # Autoload VSPM
 KERNEL_MODULE_AUTOLOAD:append = " vspm"

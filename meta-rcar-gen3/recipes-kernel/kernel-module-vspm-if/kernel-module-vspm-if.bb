@@ -55,10 +55,10 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 
-FILES:${PN} = " \
+FILES_${PN} = " \
     ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/vspm_if.ko \
 "
 
-FILES:${PN}-dbg = "" 
-ALLOW_EMPTY:${PN}-dbg = "1" 
+FILES:${PN}-dbg = ""
+ALLOW_EMPTY:${PN}-dbg = "1"
 

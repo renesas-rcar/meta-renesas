@@ -1,0 +1,179 @@
+From 07852dc2d74feb9f1774fc4ed07e2c88501b7fdc Mon Sep 17 00:00:00 2001
+From: Tam Nguyen <tam.nguyen.xa@renesas.com>
+Date: Fri, 30 Dec 2022 02:35:24 +0700
+Subject: [PATCH] arm64: dts: renesas: r8a779g0-native: Add Native device
+ support
+
+In the default environment, all UIO devices were enabled, Native
+devices (such as DU devices, GPU, ...) that was conflicted with
+UIO devices.
+
+The patch will create a new Device Tree to support enabling Native
+devices that support for display output, GPU, and basic peripherals.
+
+For convenience to use:
+- "r8a779g0-whitehawk.dtb": All UIO devices enable, Native devices disabled.
+- "r8a779g0-whitehawk-native.dtb": All UIO devices enable except for display
+output, GPU and basic peripherals.
+
+Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/Makefile          |  1 +
+ .../boot/dts/renesas/r8a779g0-native.dtsi     | 40 +++++++++
+ .../dts/renesas/r8a779g0-whitehawk-native.dts | 85 +++++++++++++++++++
+ 3 files changed, 126 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi
+ create mode 100644 arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index f25edf38b0a3..60d022249fca 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -72,6 +72,7 @@ dtb-$(CONFIG_ARCH_R8A77995) += r8a77995-draak.dtb
+ dtb-$(CONFIG_ARCH_R8A779A0) += r8a779a0-falcon.dtb
+ 
+ dtb-$(CONFIG_ARCH_R8A779G0) += r8a779g0-whitehawk.dtb
++dtb-$(CONFIG_ARCH_R8A779G0) += r8a779g0-whitehawk-native.dtb
+ dtb-$(CONFIG_ARCH_R8A779G0) += r8a779g0-whitehawk-sound.dtb
+ 
+ dtb-$(CONFIG_ARCH_R8A779F0) += r8a779f0-spider.dtb
+diff --git a/arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi b/arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi
+new file mode 100644
+index 000000000000..7626723341ee
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r8a779g0-native.dtsi
+@@ -0,0 +1,40 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source support Native for the White Hawk CPU
++ * boards with R-Car V4H
++ *
++ * Copyright (C) 2023 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/clock/r8a779g0-cpg-mssr.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/power/r8a779g0-sysc.h>
++#include <dt-bindings/ipmmu/rcar-ipmmu.h>
++
++/ {
++	soc: soc {
++		/delete-node/du0;
++		/delete-node/du_01;
++		/delete-node/dsi0;
++		/delete-node/dsi0_01;
++		/delete-node/dsi0_02;
++		/delete-node/dsi0_03;
++		/delete-node/dsi0_04;
++		/delete-node/dsi0_05;
++		/delete-node/dsi0_06;
++		/delete-node/dsi0_07;
++		/delete-node/dsi0_08;
++		/delete-node/dsi1;
++		/delete-node/dsi1_01;
++		/delete-node/dsi1_02;
++		/delete-node/dsi1_03;
++		/delete-node/dsi1_04;
++		/delete-node/dsi1_05;
++		/delete-node/dsi1_06;
++		/delete-node/dsi1_07;
++		/delete-node/dsi1_08;
++		/delete-node/doc@feba0000;
++		/delete-node/doc0_01;
++		/delete-node/dsc@feb8d000;
++	};
++};
+diff --git a/arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts b/arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts
+new file mode 100644
+index 000000000000..07015f2c8bb0
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r8a779g0-whitehawk-native.dts
+@@ -0,0 +1,85 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source support Native device
++ * for the White Hawk CPU and Breakout boards
++ *
++ * Copyright (C) 2023 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r8a779g0-whitehawk.dts"
++#include "r8a779g0-native.dtsi"
++
++&i2c1 {
++	sn65dsi86_0@2c {
++		status = "okay";
++	};
++
++	max96789@60 {
++		status = "okay";
++	};
++
++	gmsl0: gmsl-deserializer@49 {
++		status = "okay";
++		i2c-mux {
++			i2c@0 {
++				status = "okay";
++			};
++
++			i2c@1 {
++				status = "okay";
++			};
++
++			i2c@2 {
++				status = "okay";
++			};
++
++			i2c@3 {
++				status = "okay";
++			};
++		};
++	};
++
++	gmsl1: gmsl-deserializer@4b {
++		status = "okay";
++		i2c-mux {
++			i2c@0 {
++				status = "okay";
++			};
++
++			i2c@1 {
++				status = "okay";
++			};
++
++			i2c@2 {
++				status = "okay";
++			};
++
++			i2c@3 {
++				status = "okay";
++			};
++		};
++	};
++};
++
++&i2c4 {
++	sn65dsi86_1@2c {
++		status = "okay";
++	};
++};
++
++&du {
++	status = "okay";
++};
++
++&dsi0 {
++	status = "okay";
++};
++
++&dsi1 {
++	status = "okay";
++};
++
++&dsc {
++	status = "okay";
++};
+-- 
+2.25.1
+

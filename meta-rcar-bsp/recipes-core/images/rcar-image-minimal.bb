@@ -2,7 +2,7 @@ SUMMARY = "A small image just capable of allowing a device to boot."
 
 require recipes-core/images/core-image-minimal.bb
 
-COMPATIBLE_MACHINE = "(falcon|condor|eagle)"
+COMPATIBLE_MACHINE = "(falcon|condor|eagle|whitehawk|grayhawk)"
 
 # Enable package manager
 EXTRA_IMAGE_FEATURES += "package-management"
@@ -14,3 +14,5 @@ IMAGE_INSTALL_append = " \
     i2c-tools \
     coreutils \
 "
+
+DEPENDS += "perl-native libarchive-zip-perl-native"

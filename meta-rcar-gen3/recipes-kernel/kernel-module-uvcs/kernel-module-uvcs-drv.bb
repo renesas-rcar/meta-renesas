@@ -24,15 +24,21 @@ S = "${WORKDIR}/RTM8RC0000ZMX0DQ00JFL3E"
 
 EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR}"
 EXTRA_OEMAKE += "CROSS_COMPILE=${CROSS_COMPILE}"
+EXTRA_OEMAKE += "KERNELSRC=${STAGING_KERNEL_DIR}"
 
 B="${S}/src/makefile"
 
 includedir = "${RENESAS_DATADIR}/include"
 
+DEPENDS = " \
+    linux-renesas kernel-module-mmngr mmngr-user-module \
+"
+
 do_compile:prepend() {
     export UVCS_SRC="${S}/src"
     export UVCS_INC="${S}"
     export VCP4_SRC="${S}/src"
+    export EXTRA_CFLAGS=-I${STAGING_KERNEL_DIR}/include
 }
 
 # Build UVCS kernel module without suffix

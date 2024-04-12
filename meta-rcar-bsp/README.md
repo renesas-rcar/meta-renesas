@@ -73,6 +73,8 @@ Board|MACHINE
 Falcon|MACHINE = "falcon"
 Condor|MACHINE = "condor"
 Eagle|MACHINE = "eagle"
+White Hawk|MACHINE = "whitehawk"
+Gray Hawk|MACHINE = "grayhawk"
 
 * Configure for systemd init in local.conf:
 

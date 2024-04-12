@@ -9,10 +9,10 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit deploy python3native
 
-PV = "3.13.0+renesas+git${SRCPV}"
+PV = "3.22.0+renesas+git${SRCPV}"
 
-BRANCH = "rcar_gen3_3.13.0"
-SRCREV = "7820252387b0e005e09cac978d62330a34c31c58"
+BRANCH = "rcar-gen3_3.22.0"
+SRCREV = "314ecf9d01073bff837cb4f6f8f3d7b10abd0258"
 
 SRC_URI = " \
     git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https \
@@ -21,12 +21,13 @@ SRC_URI = " \
 SRC_URI:append = " \
     file://0001-mk-gcc.mk-Change-the-path-to-the-library.patch \
     file://0001-Makefile-Disable-linker-warning.patch \
+    file://0002-core-arch-arm-plat-rcar-main.c.patch \
 "
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 PLATFORM = "rcar"
 
-DEPENDS = "python3-pycryptodome-native python3-pyelftools-native"
+DEPENDS = "python3-pycryptodome-native python3-pyelftools-native python3-cryptography-native"
 
 export CROSS_COMPILE64="${TARGET_PREFIX}"
 
@@ -44,6 +45,7 @@ EXTRA_OEMAKE = "-e MAKEFLAGS="
 CFLAGS += "-mno-outline-atomics"
 
 do_compile() {
+    export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1
     oe_runmake PLATFORM=${PLATFORM} CFG_ARM64_core=y
 }
 

@@ -2,7 +2,7 @@ SUMMARY = "A image with support for ADAS applications."
 
 require recipes-core/images/rcar-image-minimal.bb
 
-IMAGE_INSTALL_append_rcar-gen3-v3x = " \
+IMAGE_INSTALL_append_rcar = " \
     packagegroup-v3x \
     packagegroup-oss \
     packagegroup-opencv-sdk \
@@ -10,3 +10,8 @@ IMAGE_INSTALL_append_rcar-gen3-v3x = " \
     kernel-devicetree \
     kernel-modules \
 "
+IMAGE_INSTALL_append_rcar-v4x = " \
+    nvme-initscripts \
+    pcietest \
+"
+

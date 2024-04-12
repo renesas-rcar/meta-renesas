@@ -23,6 +23,7 @@ SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/git/vsp2driver"
+
 # Build VSP2 driver kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
@@ -47,15 +48,16 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 
-FILES:${PN} = " \
+FILES_${PN} = " \
     ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/vsp2.ko \
     ${sysconfdir}/modules-load.d \
 "
 
-FILES:${PN}-dbg = "" 
-ALLOW_EMPTY:${PN}-dbg = "1" 
+FILES:${PN}-dbg = ""
+ALLOW_EMPTY:${PN}-dbg = "1"
 
-RPROVIDES:${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
+RPROVIDES_${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
 
 # Autoload VSP2Driver
 KERNEL_MODULE_AUTOLOAD:append = " vsp2"
+

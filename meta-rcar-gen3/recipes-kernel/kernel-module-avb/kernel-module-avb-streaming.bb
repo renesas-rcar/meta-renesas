@@ -3,7 +3,7 @@ DESCRIPTION = "AVB Streaming Driver for Linux for the R-Car Gen3"
 require include/rcar-gen3-modules-common.inc
 require include/avb-control.inc
 
-LICENSE = "GPL-2.0-only & MIT"
+LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://MIT-COPYING;md5=704e38c3a28fde2e7fa153d3e0e787a4 \
@@ -16,7 +16,7 @@ DEPENDS = "linux-renesas"
 REQUIRED_DISTRO_FEATURES = "avb"
 
 SRC_URI = "git://github.com/renesas-rcar/avb-streaming.git;branch=rcar-gen3;protocol=https"
-SRCREV = "e28e5c59f91e294a3c600e3669128cccca7dfedf"
+SRCREV = "671bf9c3249551cb182ff23fa67da4844098bd24"
 
 S = "${WORKDIR}/git"
 

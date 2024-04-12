@@ -25,6 +25,11 @@ Layers and boards that support is the following:
         - Renesas Electronics Corporation. R-Car Falcon (R8A779A0)
         - Renesas Electronics Corporation. R-Car Condor (R8A77980)
         - Renesas Electronics Corporation. R-Car Eagle (R8A77970)
+        - Renesas Electronics Corporation. R-Car White Hawk (R8A779G0)
+        - Renesas Electronics Corporation. R-Car Gray Hawk (R8A779H0)
+
+    meta-rcar-gateway
+        - Renesas Electronics Corporation. R-Car Spider (R8A779F0)
 
 Please see README in the layer directory for the description of the board.
 
@@ -39,3 +44,8 @@ The meta-rcar-bsp, meta-rcar-adas layers provide original BSP image. The followi
 
 * rcar-image-minimal
 * rcar-image-adas
+
+The meta-rcar-gateway layer provide original BSP image. The following:
+
+* rcar-image-minimal
+* rcar-image-gateway

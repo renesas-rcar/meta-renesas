@@ -1,0 +1,13 @@
+diff --git a/core/arch/arm/plat-rcar/main.c b/core/arch/arm/plat-rcar/main.c
+index 1b3fe7071..88f060566 100644
+--- a/core/arch/arm/plat-rcar/main.c
++++ b/core/arch/arm/plat-rcar/main.c
+@@ -57,7 +57,7 @@
+ #include "rcar_log_func.h"
+ #include "rcar_suspend_to_ram.h"
+ 
+-struct gic_data gic_data __nex_bss;
++struct gic_data __nex_bss;
+ 
+ static void main_hook_gic_add(struct itr_chip *chip, size_t it, uint32_t type, uint32_t prio);
+ static void rcar_main_secondary_init_gic(void);
