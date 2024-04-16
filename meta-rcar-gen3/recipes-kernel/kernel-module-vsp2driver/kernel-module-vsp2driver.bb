@@ -48,7 +48,7 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/vsp2.ko \
     ${sysconfdir}/modules-load.d \
 "
@@ -56,7 +56,7 @@ FILES_${PN} = " \
 FILES:${PN}-dbg = ""
 ALLOW_EMPTY:${PN}-dbg = "1"
 
-RPROVIDES_${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
+RPROVIDES:${PN} += "kernel-module-vsp2driver kernel-module-vsp2"
 
 # Autoload VSP2Driver
 KERNEL_MODULE_AUTOLOAD:append = " vsp2"

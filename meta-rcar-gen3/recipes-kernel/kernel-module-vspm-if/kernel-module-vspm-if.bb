@@ -55,7 +55,7 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/vspm_if.ko \
 "
 

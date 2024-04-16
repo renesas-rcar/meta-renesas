@@ -84,14 +84,14 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/vspm.ko \
 "
 
 FILES:${PN}-dbg = ""
 ALLOW_EMPTY:${PN}-dbg = "1"
 
-RPROVIDES_${PN} += "kernel-module-vspm"
+RPROVIDES:${PN} += "kernel-module-vspm"
 
 # Autoload VSPM
 KERNEL_MODULE_AUTOLOAD:append = " vspm"
