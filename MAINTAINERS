@@ -18,5 +18,4 @@ Maintainers List (try to look for most precise areas first)
 Renesas ARM SoCs R-Car Generation 3
 M: R-Car Yocto team <rcar-yocto@lm.renesas.com>
 F:	meta-rcar-gen3/
-F:      meta-rcar-bsp/
-F:      meta-rcar-adas/
+F:  meta-rcar-gateway/
