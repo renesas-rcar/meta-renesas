@@ -1,0 +1,3 @@
+# short-description: Create image for Renesas V3x Boards (V3M, V3H, V3U)
+# long-description: Create a partitioned image for Renesas V3x Boards (V3M, V3H, V3U).
+part / --source rootfs --ondisk mmcblk0 --fstype=ext4 --label root --align 4 --extra-space 128M
