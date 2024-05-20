@@ -1,8 +1,8 @@
 CRIPTION = "ARM Trusted Firmware"
 
 LICENSE = "BSD-3-Clause"
-LIC_FILES_CHKSUM_rcar-v3x = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
-LIC_FILES_CHKSUM_rcar-v4x = "file://license.rst;md5=1dd070c98a281d18d9eefd938729b031"
+LIC_FILES_CHKSUM:rcar-v3x = "file://license.rst;md5=e927e02bca647e14efd87e9e914b2443"
+LIC_FILES_CHKSUM:rcar-v4x = "file://license.rst;md5=1dd070c98a281d18d9eefd938729b031"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -12,29 +12,29 @@ S = "${WORKDIR}/git"
 
 SRC_URI = "git://github.com/renesas-rcar/arm-trusted-firmware.git;branch=${BRANCH};protocol=https"
 
-BRANCH_rcar-v3x = "rcar_gen3_v1.5_v3x"
-SRCREV_rcar-v3x = "8995b18869fed71e4a9332d9273704774f98ec41"
+BRANCH:rcar-v3x = "rcar_gen3_v1.5_v3x"
+SRCREV:rcar-v3x = "8995b18869fed71e4a9332d9273704774f98ec41"
 
-BRANCH_rcar-v4x = "rcar_gen4_v2.7_v4x"
-SRCREV_rcar-v4x = "b88b3f5a81b57669e6b0444fd7eaf19f4a039762"
+BRANCH:rcar-v4x = "rcar_gen4_v2.7_v4x"
+SRCREV:rcar-v4x = "b88b3f5a81b57669e6b0444fd7eaf19f4a039762"
 
-PV_rcar-v3x = "v1.5+renesas+git${SRCPV}"
-PV_rcar-v4x = "v2.7+renesas+git${SRCPV}"
+PV:rcar-v3x = "v1.5+renesas+git${SRCPV}"
+PV:rcar-v4x = "v2.7+renesas+git${SRCPV}"
 
 COMPATIBLE_MACHINE = "(condor|eagle|whitehawk|grayhawk)"
 
-PLATFORM_rcar-v3x = "rcar"
-PLATFORM_rcar-v4x = "rcar_gen4"
+PLATFORM:rcar-v3x = "rcar"
+PLATFORM:rcar-v4x = "rcar_gen4"
 
-SOC_r8a77980 = "V3H"
-SOC_r8a77970 = "V3M"
-SOC_r8a779g0 = "V4H"
-SOC_r8a779h0 = "V4M"
+SOC:r8a77980 = "V3H"
+SOC:r8a77970 = "V3M"
+SOC:r8a779g0 = "V4H"
+SOC:r8a779h0 = "V4M"
 
-ATFW_OPT_rcar-v3x = "LSI=${SOC} RCAR_DRAM_SPLIT=0 RCAR_LOSSY_ENABLE=0 PMIC_ROHM_BD9571=0 \
+ATFW_OPT:rcar-v3x = "LSI=${SOC} RCAR_DRAM_SPLIT=0 RCAR_LOSSY_ENABLE=0 PMIC_ROHM_BD9571=0 \
 RCAR_SYSTEM_SUSPEND=0 SPD=none RCAR_SECURE_BOOT=0 LIFEC_DBSC_PROTECT_ENABLE=0 MBEDTLS_COMMON_MK=1"
 
-ATFW_OPT_rcar-v4x = "rcar_srecord ARCH=aarch64 LSI=${SOC} MBEDTLS_COMMON_MK=1 CTX_INCLUDE_AARCH32_REGS=0 \
+ATFW_OPT:rcar-v4x = "rcar_srecord ARCH=aarch64 LSI=${SOC} MBEDTLS_COMMON_MK=1 CTX_INCLUDE_AARCH32_REGS=0 \
 LOG_LEVEL=20 DEBUG=0 ENABLE_ASSERTIONS=1 RCAR_RPC_HYPERFLASH_LOCKED=0 PTP_NONSECURE_ACCESS=1"
 
 # requires CROSS_COMPILE set by hand as there is no configure script

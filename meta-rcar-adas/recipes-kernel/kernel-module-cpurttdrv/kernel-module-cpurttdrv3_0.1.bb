@@ -37,7 +37,7 @@ do_install () {
     install -m 644 ${S}/v4m/cpurtt_common.h ${D}${prefix}/local/include/cpurttmod3_v4m
 }
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${includedir}/kernel-module-cpurttdrv3 \
     ${prefix}/local/include/cpurttmod3_v4h \
     ${prefix}/local/include/cpurttmod3_v4m \

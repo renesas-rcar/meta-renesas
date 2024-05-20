@@ -19,17 +19,17 @@ PROVIDES = "virtual/gles-user-module virtual/egl virtual/libgles2"
 
 require include/rcar-gfx-common.inc
 
-SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2;\
+SRC_URI:r8a779g0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2;\
 sha256sum=007cf0086ef58314511320977b1568064fbcad0d42f83543b588a2c09d39512a"
 
-SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779h0_linux_gsx_binaries_gles.tar.bz2;\
+SRC_URI:r8a779h0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779h0_linux_gsx_binaries_gles.tar.bz2;\
 sha256sum=3f5a616360d98cd5e36f69787470b71fef7a4c1ad11f68d99b8b04317609a011"
 
-SRC_URI_append = " file://rc.pvr.service"
+SRC_URI:append = " file://rc.pvr.service"
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "rc.pvr.service"
+SYSTEMD_SERVICE:${PN} = "rc.pvr.service"
 
 do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
@@ -54,8 +54,8 @@ do_install() {
     install -m 755 ${S}/usr/lib/*.so ${D}${libdir}/
     install -d ${D}${RENESAS_DATADIR}/bin
     install -m 755 ${S}/usr/local/bin/dlcsrv_REL ${D}${RENESAS_DATADIR}/bin/dlcsrv_REL
-    install -d ${D}/lib/firmware
-    install -m 644 ${S}/lib/firmware/* ${D}/lib/firmware/
+    install -d ${D}${nonarch_base_libdir}/firmware
+    install -m 644 ${S}/lib/firmware/* ${D}${nonarch_base_libdir}/firmware/
 
     # Install pkgconfig
     install -d ${D}${libdir}/pkgconfig
@@ -82,7 +82,7 @@ PACKAGES = "\
     libgles2-${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${sysconfdir}/* \
     ${libdir}/libdlc_REL.so* \
     ${libdir}/libIMGegl.so* \
@@ -91,52 +91,52 @@ FILES_${PN} = " \
     ${libdir}/libsrv_um.so* \
     ${libdir}/libufwriter.so* \
     ${libdir}/libusc.so* \
-    /lib/firmware/rgx.fw* \
-    /lib/firmware/rgx.sh* \
+    ${nonarch_base_libdir}/firmware/rgx.fw* \
+    ${nonarch_base_libdir}/firmware/rgx.sh* \
     ${RENESAS_DATADIR}/bin/* \
     ${exec_prefix}/bin/* \
 "
-FILES_${PN}_append_r8a779h0 = " ${libdir}/libglslcompiler.so*"
-FILES_libegl-${PN} = "${libdir}/libEGL.so*"
-FILES_libgles2-${PN} = "${libdir}/libGLESv2.so*"
+FILES:${PN}:append:r8a779h0 = " ${libdir}/libglslcompiler.so*"
+FILES:libegl-${PN} = "${libdir}/libEGL.so*"
+FILES:libgles2-${PN} = "${libdir}/libGLESv2.so*"
 
-FILES_${PN}-dev = " \
+FILES:${PN}-dev = " \
     ${includedir}/* \
     ${libdir}/pkgconfig/* \
 "
-FILES_libegl-${PN}-dev = " \
+FILES:libegl-${PN}-dev = " \
     ${libdir}/libEGL.* \
     ${includedir}/EGL \
     ${includedir}/KHR/khrplatform.h \
     ${libdir}/pkgconfig/egl.pc \
 "
-FILES_libgles2-${PN}-dev = " \
+FILES:libgles2-${PN}-dev = " \
     ${libdir}/libGLESv2.* \
     ${includedir}/GLES2 \
     ${libdir}/pkgconfig/glesv2.pc \
 "
-FILES_libgles3-${PN}-dev = " \
+FILES:libgles3-${PN}-dev = " \
     ${includedir}/GLES3 \
 "
 
-RPROVIDES_libegl-${PN} = "libegl"
-RPROVIDES_libegl-${PN}-dev = "libegl-dev"
-RPROVIDES_libgles2-${PN} = "libgles2"
-RPROVIDES_libgles2-${PN}-dev = "libgles2-dev"
-RPROVIDES_libgles3-${PN}-dev = "libgles3-dev"
+RPROVIDES:libegl-${PN} = "libegl"
+RPROVIDES:libegl-${PN}-dev = "libegl-dev"
+RPROVIDES:libgles2-${PN} = "libgles2"
+RPROVIDES:libgles2-${PN}-dev = "libgles2-dev"
+RPROVIDES:libgles3-${PN}-dev = "libgles3-dev"
 
-RDEPENDS_${PN} = " \
+RDEPENDS:${PN} = " \
     kernel-module-gles \
 "
 
-INSANE_SKIP_${PN} = "ldflags build-deps file-rdeps"
-INSANE_SKIP_${PN}-dev = "ldflags build-deps file-rdeps"
-INSANE_SKIP_${PN} += "arch"
-INSANE_SKIP_${PN}-dev += "arch"
-INSANE_SKIP_${PN}-dbg = "arch"
+INSANE_SKIP:${PN} = "ldflags build-deps file-rdeps"
+INSANE_SKIP:${PN}-dev = "ldflags build-deps file-rdeps"
+INSANE_SKIP:${PN} += "arch"
+INSANE_SKIP:${PN}-dev += "arch"
+INSANE_SKIP:${PN}-dbg = "arch"
 
 #To avoid already-stripped errors and not stripped libs from packages
-INSANE_SKIP_${PN} += "already-stripped"
+INSANE_SKIP:${PN} += "already-stripped"
 
 # Skip debug split and strip of do_package()
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

@@ -13,6 +13,9 @@ SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH} \
     file://pid_in_contextidr.cfg \
 "
 
+# Work-around to fix perf build error
+SRC_URI:append = " file://init_disassemble_info-signature-changes-causes-compile-failures.patch"
+
 LINUX_VERSION ?= "5.10.147"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
@@ -22,7 +25,7 @@ KCONFIG_MODE = "--alldefconfig"
 KBUILD_DEFCONFIG = "defconfig"
 
 # uio_pdrv_genirq configuration
-KERNEL_MODULE_AUTOLOAD_append = " uio_pdrv_genirq"
-KERNEL_MODULE_PROBECONF_append = " uio_pdrv_genirq"
-module_conf_uio_pdrv_genirq_append = ' options uio_pdrv_genirq of_id="generic-uio"'
+KERNEL_MODULE_AUTOLOAD:append = " uio_pdrv_genirq"
+KERNEL_MODULE_PROBECONF:append = " uio_pdrv_genirq"
+module_conf_uio_pdrv_genirq:append = ' options uio_pdrv_genirq of_id="generic-uio"'
 

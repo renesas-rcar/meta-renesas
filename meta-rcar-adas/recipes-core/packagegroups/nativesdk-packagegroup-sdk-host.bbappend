@@ -1,10 +1,10 @@
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
     nativesdk-cmake \
-    nativesdk-bmap-tools \
+    nativesdk-bmaptool \
 "
 
 # Do not install QEMU packages, it reduces SDK size
-RDEPENDS_${PN}_remove = " \
+RDEPENDS:${PN}:remove = " \
     nativesdk-qemu \
     nativesdk-qemu-helper \
 "

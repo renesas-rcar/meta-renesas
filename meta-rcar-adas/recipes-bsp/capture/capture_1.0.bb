@@ -2,7 +2,7 @@ SUMMARY = "Camera application test"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=9504a7b7666faec5abd046d28a69450e"
 
-DEPENDS_rcar-v4x = "libdrm kernel-module-cmemdrv"
+DEPENDS:rcar-v4x = "libdrm kernel-module-cmemdrv"
 
 inherit pkgconfig
 
@@ -10,8 +10,8 @@ S = "${WORKDIR}/git"
 
 SRC_URI = "git://github.com/renesas-rcar/capture.git;protocol=https;nobranch=1"
 
-SRCREV_rcar-v3x = "361b1bb9fa0b009df72a3be1dbdfebf47757095e"
-SRCREV_rcar-v4x = "369fa415246d6514deb639fbc14cb69e7fa08253"
+SRCREV:rcar-v3x = "361b1bb9fa0b009df72a3be1dbdfebf47757095e"
+SRCREV:rcar-v4x = "369fa415246d6514deb639fbc14cb69e7fa08253"
 
 do_compile() {
     cd ${S}
@@ -32,7 +32,7 @@ do_install() {
     install -m 755 ${S}/test_lvds_8cameras_on_display1920x1080.sh ${D}/usr/share/tests/
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${bindir}/capture \
     /usr/share/tests/test_lvds_camera_0.sh \
     /usr/share/tests/test_lvds_camera_4.sh \
@@ -42,4 +42,3 @@ FILES_${PN} = " \
     /usr/share/tests/test_lvds_4cameras_on_display1920x1080.sh \
     /usr/share/tests/test_lvds_8cameras_on_display1920x1080.sh \
 "
-
