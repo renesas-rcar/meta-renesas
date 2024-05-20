@@ -2,19 +2,21 @@ DESCRIPTION = "V3x/V4x specific packages"
 
 LICENSE = "BSD-3-Clause & GPLv2+ & LGPLv2+"
 
+PACKAGE_ARCH = "${TUNE_PKGARCH}"
+
 inherit packagegroup
 
 PACKAGES = " \
     packagegroup-v3x \
 "
 
-CPURTT_PKGS_rcar-v3x = ""
-CPURTT_PKGS_rcar-v4x = " \
+CPURTT_PKGS:rcar-v3x = ""
+CPURTT_PKGS:rcar-v4x = " \
     kernel-module-cpurttdrv3 \
 "
 
-GFX_PKGS_rcar-v3x = ""
-GFX_PKGS_rcar-v4x = " \
+GFX_PKGS:rcar-v3x = ""
+GFX_PKGS:rcar-v4x = " \
     kernel-module-gles \
     gles-user-module \
     libegl \
@@ -22,11 +24,11 @@ GFX_PKGS_rcar-v4x = " \
 "
 
 # ADAS common packages: CMEM, CV lib
-RDEPENDS_packagegroup-v3x = " \
+RDEPENDS:packagegroup-v3x = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
     kernel-module-cmemdrv-dev \
-    udev-rules-cvlib \
+    udev-rules \
     linux-renesas-uapi \
     bsp-config \
     capture \

@@ -1,6 +1,8 @@
 DESCRIPTION = "OpenCV SDK packages"
 
-LICENSE = "BSD-3-Clause & GPLv2+ & LGPLv2+"
+LICENSE = "BSD-3-Clause & GPL-2.0-or-later & LGPL-2.0-or-later"
+
+PACKAGE_ARCH = "${TUNE_PKGARCH}"
 
 inherit packagegroup
 
@@ -8,7 +10,7 @@ PACKAGES = " \
     packagegroup-opencv-sdk \
 "
 
-RDEPENDS_packagegroup-opencv-sdk = " \
+RDEPENDS:packagegroup-opencv-sdk = " \
     gstreamer1.0-plugins-base-app \
     libopencv-calib3d \
     libopencv-core \

@@ -27,8 +27,8 @@ PACKAGES = " \
     ${PN}-dbg \
 "
 
-FILES_${PN} = "${bindir}/qos_tp"
+FILES:${PN} = "${bindir}/qos_tp"
 
-FILES_${PN}-dbg = " \
+FILES:${PN}-dbg = " \
     ${bindir}/.debug/* \
 "

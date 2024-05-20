@@ -1,1 +1,1 @@
-PACKAGECONFIG_remove_rcar-v4x = "wayland"
+PACKAGECONFIG:remove:rcar-v4x = "wayland"

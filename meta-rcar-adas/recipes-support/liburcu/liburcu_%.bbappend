@@ -1,3 +1,3 @@
 # WORKAROUND for compile error
-CFLAGS_remove = "-O2"
-CFLAGS_append += "-O0"
+CFLAGS:remove = "-O2"
+CFLAGS:append += "-O0"

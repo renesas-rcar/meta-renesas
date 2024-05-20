@@ -1,5 +1,5 @@
 DEFAULTTUNE ?= "cortexa53"
-require conf/machine/include/tune-cortexa53.inc
+require conf/machine/include/arm/armv8a/tune-cortexa53.inc
 require conf/machine/include/rcar-common.inc
 
 # Device tree for V3x
@@ -29,5 +29,5 @@ UBOOT_CONFIG[eagle-function] = "r8a77970_eagle-function_defconfig"
 # Set Image & SDK name for V3x
 IMAGE_NAME = "${IMAGE_BASENAME}-v3x${IMAGE_VERSION_SUFFIX}"
 IMAGE_LINK_NAME = "${IMAGE_BASENAME}-v3x"
-SDK_NAME_r8a77980 = "${DISTRO}-${TCLIBC}-${SDKMACHINE}-${IMAGE_BASENAME}-${TUNE_PKGARCH}-v3x"
-SDK_NAME_r8a77970 = "${DISTRO}-${TCLIBC}-${SDKMACHINE}-${IMAGE_BASENAME}-${TUNE_PKGARCH}-v3x"
+SDK_NAME:r8a77980 = "${DISTRO}-${TCLIBC}-${SDKMACHINE}-${IMAGE_BASENAME}-${TUNE_PKGARCH}-v3x"
+SDK_NAME:r8a77970 = "${DISTRO}-${TCLIBC}-${SDKMACHINE}-${IMAGE_BASENAME}-${TUNE_PKGARCH}-v3x"

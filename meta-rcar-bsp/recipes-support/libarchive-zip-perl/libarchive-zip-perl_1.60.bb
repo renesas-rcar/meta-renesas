@@ -10,7 +10,7 @@ SRC_URI = "https://cpan.metacpan.org/authors/id/P/PH/PHRED/Archive-Zip-${PV}.tar
 
 S = "${WORKDIR}/Archive-Zip-${PV}"
 
-RDEPENDS_${PN} += "perl"
+RDEPENDS:${PN} += "perl"
 
 inherit cpan
 

@@ -1,14 +1,26 @@
-diff --git a/src/basic/fs-util.c b/src/basic/fs-util.c
-index b2ac648..553a77a 100644
---- a/src/basic/fs-util.c
-+++ b/src/basic/fs-util.c
-@@ -668,6 +668,9 @@ static bool unsafe_transition(const struct stat *a, const struct stat *b) {
+Subject: Add non non owned item for safe transitioning
+
+Since safe transition check feature breaks the rootfs created by
+different users, this allows /var/volatile to be mounted as a
+non-owned directory (uid=65534) and defines the transition from a
+normal file/directory to non-owned one as a safe transition.
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Loc Nguyen <loc.nguyen.wt@renesas.com>
+
+---
+
+diff --git a/src/basic/chase.c b/src/basic/chase.c
+index a4d9edb4c9..68363dcb0c 100644
+--- a/src/basic/chase.c
++++ b/src/basic/chase.c
+@@ -20,6 +20,8 @@ bool unsafe_transition(const struct stat *a, const struct stat *b) {
+ 
          if (a->st_uid == 0) /* Transitioning from privileged to unprivileged is always fine */
                  return false;
- 
 +        if (b->st_uid == 65534) /* Transitioning to a non-owned is OK too */
 +                return false;
-+
+ 
          return a->st_uid != b->st_uid; /* Otherwise we need to stay within the same UID */
  }
- 
