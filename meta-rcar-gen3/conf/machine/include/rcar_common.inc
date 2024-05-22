@@ -34,3 +34,13 @@ BUILDCFG_VARS:append = " SOC_FAMILY"
 # sync is required to build kernel-module-gles
 # rsync is required to build kernel 5.4
 HOSTTOOLS += "sync rsync"
+
+# for gstreamer
+PREFERRED_VERSION:gstreamer1.0 = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
+PREFERRED_VERSION:gstreamer1.0-libav = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
+PREFERRED_VERSION:gstreamer1.0-meta-base = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
+PREFERRED_VERSION:gstreamer1.0-omx = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
+PREFERRED_VERSION:gstreamer1.0-plugins-base = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
+PREFERRED_VERSION:gstreamer1.0-plugins-bad = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
+PREFERRED_VERSION:gstreamer1.0-plugins-good = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
+PREFERRED_VERSION:gstreamer1.0-plugins-ugly = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"

@@ -1,0 +1,12 @@
+diff -ur gst-libav-1.20.3/ext/libav/gstavviddec.c gst-libav-1.20.3_o/ext/libav/gstavviddec.c
+--- gst-libav-1.20.3/ext/libav/gstavviddec.c	2024-05-24 19:04:48.304315476 +0900
++++ gst-libav-1.20.3_o/ext/libav/gstavviddec.c	2024-05-24 19:02:54.772218175 +0900
+@@ -567,7 +567,7 @@
+   if (ffmpegdec->max_threads == 0) {
+     /* When thread type is FF_THREAD_FRAME, extra latency is introduced equal
+      * to one frame per thread. We thus need to calculate the thread count ourselves */
+-    if ((!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS)) ||
++    if ((!(oclass->in_plugin->capabilities & AV_CODEC_CAP_OTHER_THREADS)) ||
+         (ffmpegdec->context->thread_type & FF_THREAD_FRAME))
+       ffmpegdec->context->thread_count =
+           MIN (gst_ffmpeg_auto_max_threads (), 16);
