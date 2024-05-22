@@ -57,8 +57,9 @@ RDEPENDS:packagegroup-gstreamer1.0-plugins-audio = " \
 RDEPENDS:packagegroup-gstreamer1.0-plugins-video = " \
     gstreamer1.0-meta-video \
     gstreamer1.0-plugins-base-videotestsrc \
-    gstreamer1.0-plugins-base-videoconvertscale \
+    gstreamer1.0-plugins-base-videoconvert \
     gstreamer1.0-plugins-base-playback \
+    gstreamer1.0-plugins-base-videoscale \
     gstreamer1.0-plugins-base-videorate \
     gstreamer1.0-plugins-good-matroska \
     gstreamer1.0-plugins-good-isomp4 \
