@@ -34,5 +34,6 @@ RDEPENDS_packagegroup-renesas = " \
     qosif-tp-user-module \
     ${@bb.utils.contains('MACHINE_FEATURES', 'gsx', '${GFX_PKGS}', '', d)} \
     nvme-initscripts \
+    bsp-test-apps \
 "
 
