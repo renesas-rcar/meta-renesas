@@ -1,0 +1,21 @@
+diff --git a/Makefile b/Makefile
+index 72bf89f67..63b2a92ff 100644
+--- a/Makefile
++++ b/Makefile
+@@ -33,6 +33,7 @@ endif
+ 
+ include ${MAKE_HELPERS_DIRECTORY}defaults.mk
+ 
++LDFLAGS += --no-warn-rwx-segments
+ # Assertions enabled for DEBUG builds by default
+ ENABLE_ASSERTIONS		:= ${DEBUG}
+ ENABLE_PMF			:= ${ENABLE_RUNTIME_INSTRUMENTATION}
+@@ -159,7 +160,7 @@ ASFLAGS_aarch32		=	$(march32-directive)
+ ASFLAGS_aarch64		=	-march=armv8-a
+ 
+ CPPFLAGS		=	${DEFINES} ${INCLUDES} -nostdinc		\
+-				-Wmissing-include-dirs -Werror
++				-Wmissing-include-dirs
+ ASFLAGS			+=	$(CPPFLAGS) $(ASFLAGS_$(ARCH))			\
+ 				-D__ASSEMBLY__ -ffreestanding 			\
+ 				-Wa,--fatal-warnings
