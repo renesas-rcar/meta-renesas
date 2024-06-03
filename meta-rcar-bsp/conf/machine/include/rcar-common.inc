@@ -16,6 +16,7 @@ SERIAL_CONSOLES = "115200;ttySC0"
 
 # Configuration for kernel
 PREFERRED_PROVIDER_virtual/kernel = "linux-renesas"
+OLDEST_KERNEL = "5.10"
 
 # u-boot
 EXTRA_IMAGEDEPENDS += " u-boot arm-trusted-firmware"
