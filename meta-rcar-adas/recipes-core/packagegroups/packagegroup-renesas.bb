@@ -7,7 +7,7 @@ PACKAGE_ARCH = "${TUNE_PKGARCH}"
 inherit packagegroup
 
 PACKAGES = " \
-    packagegroup-v3x \
+    packagegroup-renesas \
 "
 
 CPURTT_PKGS:rcar-v3x = ""
@@ -24,7 +24,7 @@ GFX_PKGS:rcar-v4x = " \
 "
 
 # ADAS common packages: CMEM, CV lib
-RDEPENDS:packagegroup-v3x = " \
+RDEPENDS:packagegroup-renesas = " \
     kernel-module-uio-pdrv-genirq \
     kernel-module-cmemdrv \
     kernel-module-cmemdrv-dev \

@@ -3,7 +3,7 @@ SUMMARY = "A image with support for ADAS applications."
 require recipes-core/images/rcar-image-minimal.bb
 
 IMAGE_INSTALL:append:rcar = " \
-    packagegroup-v3x \
+    packagegroup-renesas \
     packagegroup-oss \
     packagegroup-opencv-sdk \
     kernel-image \
