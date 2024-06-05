@@ -1,5 +1,5 @@
 SUMMARY = "Camera application test"
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=9504a7b7666faec5abd046d28a69450e"
 
 DEPENDS:rcar-v4x = "libdrm kernel-module-cmemdrv"

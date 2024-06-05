@@ -1,5 +1,5 @@
 SUMMARY = "CPURTT drive Module"
-LICENSE = "GPLv2 & MIT"
+LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
     file://${S}/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://${S}/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
