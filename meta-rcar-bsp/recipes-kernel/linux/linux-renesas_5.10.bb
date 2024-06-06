@@ -29,3 +29,12 @@ KERNEL_MODULE_AUTOLOAD:append = " uio_pdrv_genirq"
 KERNEL_MODULE_PROBECONF:append = " uio_pdrv_genirq"
 module_conf_uio_pdrv_genirq:append = ' options uio_pdrv_genirq of_id="generic-uio"'
 
+do_src_package_preprocess () {
+        # Trim build paths from comments in generated sources to ensure reproducibility
+        sed -i -e "s,${S}/,,g" \
+               -e "s,${B}/,,g" \
+            ${B}/drivers/video/logo/logo_linux_clut224.c \
+            ${B}/drivers/tty/vt/consolemap_deftbl.c \
+            ${B}/lib/oid_registry_data.c
+}
+addtask do_src_package_preprocess after do_compile before do_install
