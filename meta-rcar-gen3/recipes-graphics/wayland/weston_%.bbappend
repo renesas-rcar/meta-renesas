@@ -15,5 +15,3 @@ RDEPENDS:${PN}-examples:append:rcar-gen3 = " \
 EXTRA_OEMESON:append:rcar-gen3 = " \
     ${@oe.utils.conditional('USE_GLES', '1', '', \
         ' -Dbackend-default="fbdev"', d)}"
-
-EXTRA_OEMESON:append = " -Dsimple-clients=egl,shm,damage,im,touch"
