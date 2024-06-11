@@ -8,6 +8,8 @@ S = "${WORKDIR}"
 
 SRC_URI = "file://ep_setup.sh"
 
+DEBUG_PREFIX_MAP += "-fdebug-prefix-map=${STAGING_KERNEL_DIR}="
+
 do_compile() {
     cd ${STAGING_KERNEL_DIR}
     make -C tools/pci
@@ -19,4 +21,3 @@ do_install () {
     install -d ${D}${bindir}
     install -m 755 ${S}/ep_setup.sh ${D}${bindir}/
 }
-
