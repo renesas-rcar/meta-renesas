@@ -38,7 +38,6 @@ HOSTTOOLS += "sync rsync"
 # for gstreamer
 PREFERRED_VERSION_gstreamer1.0 = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
 PREFERRED_VERSION_gstreamer1.0-libav = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
-PREFERRED_VERSION_gstreamer1.0-meta-base = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
 PREFERRED_VERSION_gstreamer1.0-omx = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
 PREFERRED_VERSION_gstreamer1.0-plugins-base = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
 PREFERRED_VERSION_gstreamer1.0-plugins-bad = "${@bb.utils.contains('MACHINE_FEATURES', 'multimedia', '1.20.3', '', d)}"
