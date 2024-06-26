@@ -18,7 +18,7 @@ SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4H.tar.bz2;\
 sha256sum=4d3749f0bcc8f7319fb2225fd6d3da9bacebd90f8a8ee6a48d4994f2e4ac5fd1"
 
 SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/gfxdrv/GSX_KM_V4M.tar.bz2;\
-sha256sum=95847bd0815974069de276061f06e7c3d088df602df3ae8a4c3000bb451bab1d"
+sha256sum=16f0c105669f82e1973f414ac572a92af273b4e6486775c2f4c3cdcc704de052"
 
 SRC_URI_append = " file://blacklist.conf"
 

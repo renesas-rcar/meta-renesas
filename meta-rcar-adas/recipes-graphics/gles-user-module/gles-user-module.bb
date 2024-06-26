@@ -23,7 +23,7 @@ SRC_URI_r8a779g0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779g0_linux_gsx_binaries_
 sha256sum=007cf0086ef58314511320977b1568064fbcad0d42f83543b588a2c09d39512a"
 
 SRC_URI_r8a779h0 = "${GFX_URL}/raw/${BRANCH}/opengl/r8a779h0_linux_gsx_binaries_gles.tar.bz2;\
-sha256sum=3f5a616360d98cd5e36f69787470b71fef7a4c1ad11f68d99b8b04317609a011"
+sha256sum=30101ac0bc45e28213d73bf04c1714e3cbc49460efa2657f107ee66f76149ece"
 
 SRC_URI_append = " file://rc.pvr.service"
 
