@@ -6,18 +6,18 @@ require include/dtv-dvd-control.inc
 
 inherit features_check
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 DEPENDS = " \
     kernel-module-vspm-if mmngr-user-module \
     vspmif-user-module kernel-module-vspm \
     omx-user-module kernel-module-uvcs-drv \
 "
 
+REQUIRED_DISTRO_FEATURES = "dvd"
+
 PN = "dvd-user-module"
 PR = "r0"
-
-PACKAGE_ARCH = "${MACHINE_ARCH}"
-
-REQUIRED_DISTRO_FEATURES = "dvd"
 
 SRC_URI_DVD_SW = "file://Software.tar.gz"
 

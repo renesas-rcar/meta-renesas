@@ -1,14 +1,16 @@
-require include/gles-control.inc
-require include/rcar-gen3-path-common.inc
-
 DESCRIPTION = "PowerVR GPU user module"
 LICENSE = "CLOSED"
 
-PN = "gles-user-module"
-PR = "r0"
+require include/gles-control.inc
+require include/rcar-gen3-path-common.inc
+
+inherit update-rc.d systemd
 
 COMPATIBLE_MACHINE = "(r8a7795|r8a7796|r8a77965|r8a77990)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+
+PN = "gles-user-module"
+PR = "r0"
 
 S = "${WORKDIR}/rogue"
 GLES = "gsx"
@@ -22,8 +24,6 @@ SRC_URI:append = " \
     file://change-shell.patch \
     file://rc.pvr.service \
 "
-
-inherit update-rc.d systemd
 
 INITSCRIPT_NAME = "pvrinit"
 INITSCRIPT_PARAMS = "start 7 5 2 . stop 62 0 1 6 ."

@@ -2,13 +2,13 @@ DESCRIPTION = "Initscript to change CPUFreq governor setting on system bootup"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
+inherit update-rc.d
+
 SRC_URI = "file://set_default_governor.sh"
 
 S = "${WORKDIR}"
 
 INITSCRIPT_NAME = "set_default_governor.sh"
-
-inherit update-rc.d
 
 do_compile[noexec] = "1"
 

@@ -1,17 +1,18 @@
 DESCRIPTION = "Linux ICCOM hwspinlock Sample Driver for Renesas R-Car Gen3"
 
-require include/rcar-gen3-modules-common.inc
-
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
+
+require include/rcar-gen3-modules-common.inc
 
 inherit module features_check
 
 DEPENDS = "linux-renesas"
-PN = "kernel-module-iccom-hwspinlock-sample"
-PR = "r0"
 
 REQUIRED_DISTRO_FEATURES = "iccom"
+
+PN = "kernel-module-iccom-hwspinlock-sample"
+PR = "r0"
 
 SRC_URI = "file://iccom-hwspinlock-sample.tar.bz2"
 

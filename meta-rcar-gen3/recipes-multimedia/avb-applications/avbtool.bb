@@ -1,9 +1,9 @@
 DESCRIPTION = "Utility tool of the AVB Streaming Driver for Linux for the R-Car Gen3"
 
-require avb-applications.inc
-
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING.MIT;md5=96659f2a7571bfa27483882a653c3bb9"
+
+require avb-applications.inc
 
 DEPENDS = "kernel-module-avb-streaming"
 

@@ -14,25 +14,23 @@ require include/omx-control.inc
 require include/rcar-gen3-path-common.inc
 
 inherit module
-PR = "r0"
 
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+
+DEPENDS = "linux-renesas kernel-module-mmngr mmngr-user-module"
+
+PR = "r0"
 
 SRC_URI = "${@oe.utils.conditional('USE_VIDEO_OMX', '1', 'file://RTM8RC0000ZMX0DQ00JFL3E.tar.bz2', '', d)}"
 
 S = "${WORKDIR}/RTM8RC0000ZMX0DQ00JFL3E"
+B = "${S}/src/makefile"
 
 EXTRA_OEMAKE = "KERNELDIR=${STAGING_KERNEL_BUILDDIR}"
 EXTRA_OEMAKE += "CROSS_COMPILE=${CROSS_COMPILE}"
 EXTRA_OEMAKE += "KERNELSRC=${STAGING_KERNEL_DIR}"
 
-B="${S}/src/makefile"
-
 includedir = "${RENESAS_DATADIR}/include"
-
-DEPENDS = " \
-    linux-renesas kernel-module-mmngr mmngr-user-module \
-"
 
 do_compile:prepend() {
     export UVCS_SRC="${S}/src"

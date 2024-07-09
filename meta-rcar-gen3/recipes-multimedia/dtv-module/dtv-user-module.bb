@@ -6,6 +6,8 @@ require include/dtv-dvd-control.inc
 
 inherit features_check
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 DEPENDS = " \
     kernel-module-vspm-if mmngr-user-module \
     vspmif-user-module kernel-module-vspm \
@@ -14,12 +16,10 @@ DEPENDS = " \
     kernel-module-tddmac kernel-module-tsif \
 "
 
+REQUIRED_DISTRO_FEATURES = "dtv"
+
 PN = "dtv-user-module"
 PR = "r0"
-
-PACKAGE_ARCH = "${MACHINE_ARCH}"
-
-REQUIRED_DISTRO_FEATURES = "dtv"
 
 SRC_URI_DTV_SW = "file://Software.tar.gz"
 SRC_URI_DTV_UDF = "file://Reference.tar.gz"

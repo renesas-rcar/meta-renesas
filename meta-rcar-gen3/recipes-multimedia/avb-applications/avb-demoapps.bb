@@ -1,7 +1,5 @@
 DESCRIPTION = "Renesas Ethernet AVB demo applications"
 
-require avb-applications.inc
-
 LICENSE = "MIT & BSD-3-Clause"
 LIC_FILES_CHKSUM = " \
     file://COPYING.MIT;md5=96659f2a7571bfa27483882a653c3bb9 \
@@ -9,6 +7,8 @@ LIC_FILES_CHKSUM = " \
     file://lib/avdecc/jdksavdecc-c/COPYRIGHT;md5=6592ded5140540a936b8d98ed1b6a577 \
     file://avblauncher/inih/LICENSE.txt;md5=a7a95d2af90376e85a05318794e6f202 \
 "
+
+require avb-applications.inc
 
 DEPENDS = "kernel-module-avb-streaming libyaml cmake-native"
 

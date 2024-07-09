@@ -1,32 +1,32 @@
 DESCRIPTION = "VSP Manager for the R-Car Gen3"
 
-require include/rcar-gen3-modules-common.inc
-
 LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://MIT-COPYING;md5=0ebf15a927e436cec699371cd890775c \
 "
 
+require include/rcar-gen3-modules-common.inc
+
 inherit module
 
 DEPENDS = "linux-renesas"
+
 PN = "kernel-module-vspm"
 PR = "r0"
 
 VSPM_DRV_URL = "git://github.com/renesas-rcar/vspm_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "07787fc1168e7fe37c305aca151a6f756f35874f"
-
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH};protocol=https"
+SRCREV = "07787fc1168e7fe37c305aca151a6f756f35874f"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/git/vspm-module/files/vspm/drv"
+
 includedir = "${RENESAS_DATADIR}/include"
 
 # Build VSP Manager kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
-
 
 do_install () {
     # Create destination directories

@@ -1,25 +1,24 @@
 DESCRIPTION = "VSP Manager Interface driver for the R-Car Gen3"
 
-require include/rcar-gen3-modules-common.inc
-
 LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://MIT-COPYING;md5=0ebf15a927e436cec699371cd890775c \
 "
 
+require include/rcar-gen3-modules-common.inc
+
 inherit module
 
 DEPENDS = "linux-renesas kernel-module-vspm"
+
 PN = "kernel-module-vspm-if"
 PR = "r0"
 
-VSPMIF_DRV_URL = " \
-    git://github.com/renesas-rcar/vspmif_drv.git"
+VSPMIF_DRV_URL = "git://github.com/renesas-rcar/vspmif_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "2fdb2838a5625e4231f1cff5d10079acc4954952"
-
 SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH};protocol=https"
+SRCREV = "2fdb2838a5625e4231f1cff5d10079acc4954952"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/git/vspm_if-module/files/vspm_if/drv"

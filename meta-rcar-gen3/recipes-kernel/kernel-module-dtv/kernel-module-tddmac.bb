@@ -1,21 +1,22 @@
 DESCRIPTION = "DTV Driver part of tddmac for Linux for the R-Car Gen3"
 
-require include/rcar-gen3-modules-common.inc
-require include/dtv-dvd-control.inc
-
 LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
     file://tddmac_drv/include/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://tddmac_drv/include/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 
+require include/rcar-gen3-modules-common.inc
+require include/dtv-dvd-control.inc
+
 inherit module features_check
 
 DEPENDS = "linux-renesas"
-PN = "kernel-module-tddmac"
-PR = "r0"
 
 REQUIRED_DISTRO_FEATURES = "dtv"
+
+PN = "kernel-module-tddmac"
+PR = "r0"
 
 SRC_URI = "file://tddmac_drv.tar.gz"
 

@@ -3,6 +3,9 @@ LICENSE = "CLOSED"
 
 require include/cms-control.inc
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 SRC_CMSBCM = "${@bb.utils.contains('USE_CMSBCM', '1', 'file://RTM8RC0000ZVC1LQ00JPL3E.tar.gz;subdir=cms/bcm', '', d)}"
 SRC_CMSBLC = "${@bb.utils.contains('USE_CMSBLC', '1', 'file://RTM8RC0000ZVC3LQ00JPL3E.tar.gz;subdir=cms/blc', '', d)}"
 SRC_CMSDGC = "${@bb.utils.contains('USE_CMSDGC', '1', 'file://RTM8RC0000ZVC2LQ00JPL3E.tar.gz;subdir=cms/dgc', '', d)}"
@@ -14,9 +17,6 @@ SRC_URI = " \
 "
 
 S = "${WORKDIR}/cms"
-
-PACKAGE_ARCH = "${MACHINE_ARCH}"
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"

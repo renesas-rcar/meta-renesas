@@ -4,10 +4,11 @@ LICENSE = "CLOSED"
 require include/rcar-gen3-path-common.inc
 
 inherit features_check
-REQUIRED_DISTRO_FEATURES = "dvd_encryption_library"
 
-PACKAGE_ARCH = "${MACHINE_ARCH}"
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
+REQUIRED_DISTRO_FEATURES = "dvd_encryption_library"
 
 SRC_URI = " \
     file://Software.tar.gz \

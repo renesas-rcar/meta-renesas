@@ -1,24 +1,24 @@
 DESCRIPTION = "QoS driver for the R-Car Gen3"
 
-require include/rcar-gen3-modules-common.inc
-
 LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://MIT-COPYING;md5=192063521ce782a445a3c9f99a8ad560 \
 "
 
+require include/rcar-gen3-modules-common.inc
+
 inherit module
 
 DEPENDS = "linux-renesas"
+
 PN = "kernel-module-qos"
 PR = "r0"
 
 QOS_DRV_URL = "git://github.com/renesas-rcar/qos_drv.git"
 BRANCH = "rcar-gen3"
-SRCREV = "90981d2aa1730589fa87b50f07d9feec09396b9b"
-
 SRC_URI = "${QOS_DRV_URL};branch=${BRANCH};protocol=https"
+SRCREV = "90981d2aa1730589fa87b50f07d9feec09396b9b"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/git/qos-module/files/qos/drv"

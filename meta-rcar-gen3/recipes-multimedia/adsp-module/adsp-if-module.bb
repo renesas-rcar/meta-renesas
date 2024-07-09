@@ -3,16 +3,16 @@ LICENSE = "CLOSED"
 
 inherit features_check
 
-REQUIRED_DISTRO_FEATURES = "adsp"
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 DEPENDS += "kernel-module-xtensa-hifi"
+
+REQUIRED_DISTRO_FEATURES = "adsp"
 
 SRC_URI = "file://RTM8RC0000ZNA1SS00JFL3E.tar.gz"
 
 S = "${WORKDIR}/RTM8RC0000ZNA1SS00JFL3E"
-
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
-PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 # Don't need to do_configure
 do_configure[noexec] = "1"

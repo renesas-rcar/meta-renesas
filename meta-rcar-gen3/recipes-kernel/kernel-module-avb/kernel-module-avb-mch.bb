@@ -1,13 +1,13 @@
 DESCRIPTION = "AVB MCH Driver for Linux for the R-Car Gen3"
 
-require include/avb-control.inc
-require include/rcar-gen3-modules-common.inc
-
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://MIT-COPYING;md5=96e553279b3fff0d6168dafe0b596197 \
 "
+
+require include/avb-control.inc
+require include/rcar-gen3-modules-common.inc
 
 inherit module features_check
 

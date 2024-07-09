@@ -11,15 +11,14 @@ require include/rcar-gen3-modules-common.inc
 inherit module
 
 DEPENDS = "linux-renesas kernel-module-vspm"
+
 PN = "kernel-module-vsp2driver"
 PR = "r0"
 
-VSP2DRIVER_URL = " \
-    git://github.com/renesas-rcar/vsp2driver.git"
+VSP2DRIVER_URL = "git://github.com/renesas-rcar/vsp2driver.git"
 BRANCH = "rcar-gen3"
-SRCREV = "b3a116d8ce68371cac21011ca3b3190ae3576987"
-
 SRC_URI = "${VSP2DRIVER_URL};branch=${BRANCH};protocol=https"
+SRCREV = "b3a116d8ce68371cac21011ca3b3190ae3576987"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/git/vsp2driver"

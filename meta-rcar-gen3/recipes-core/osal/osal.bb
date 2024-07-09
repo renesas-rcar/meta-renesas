@@ -3,6 +3,9 @@ LICENSE = "CLOSED"
 
 inherit features_check
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 DEPENDS += "kernel-module-cmemdrv"
 
 REQUIRED_DISTRO_FEATURES = "osal"
@@ -12,9 +15,6 @@ SRC_URI = " \
     file://51-uio.rules \
 "
 S = "${WORKDIR}/os"
-
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
-PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 do_configure[noexec] = "1"
 

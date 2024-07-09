@@ -10,14 +10,14 @@ LIC_FILES_CHKSUM = " \
     file://examples/gstreamer-avb-plugins/COPYING.MIT;md5=bba6cdb9c2b03c849ed4975ed9ed90dc \
 "
 
-DEPENDS = "libpcap"
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
+
+DEPENDS = "libpcap"
 
 PV = "1.1+git${SRCPV}"
 
-SRCREV = "ff076e83234d2207f33447b9bd6d1646d9245566"
 SRC_URI = "git://github.com/AVnu/OpenAvnu.git;branch=master;protocol=https"
-
+SRCREV = "ff076e83234d2207f33447b9bd6d1646d9245566"
 
 S = "${WORKDIR}/git"
 

@@ -5,18 +5,19 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173 \
 "
 
+inherit deploy python3native
+
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-inherit deploy python3native
+DEPENDS = "python3-pycryptodome-native python3-pyelftools-native python3-cryptography-native"
 
 PV = "3.22.0+renesas+git${SRCPV}"
 
 BRANCH = "rcar-gen3_3.22.0"
 SRCREV = "314ecf9d01073bff837cb4f6f8f3d7b10abd0258"
 
-SRC_URI = " \
-    git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https \
-"
+SRC_URI = "git://github.com/renesas-rcar/optee_os.git;branch=${BRANCH};protocol=https"
 
 SRC_URI:append = " \
     file://0001-mk-gcc.mk-Change-the-path-to-the-library.patch \
@@ -24,10 +25,9 @@ SRC_URI:append = " \
     file://0002-core-arch-arm-plat-rcar-main.c.patch \
 "
 
-COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
-PLATFORM = "rcar"
+S = "${WORKDIR}/git"
 
-DEPENDS = "python3-pycryptodome-native python3-pyelftools-native python3-cryptography-native"
+PLATFORM = "rcar"
 
 export CROSS_COMPILE64="${TARGET_PREFIX}"
 
@@ -38,7 +38,6 @@ LDFLAGS[unexport] = "1"
 #export LDcore="${LD}"
 libdir[unexport] = "1"
 
-S = "${WORKDIR}/git"
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
 # Avoid compile error with GCC 10.2.0
@@ -61,4 +60,5 @@ do_deploy() {
     install -m 0644 ${S}/out/arm-plat-${PLATFORM}/core/tee-raw.bin ${DEPLOYDIR}/tee-${MACHINE}.bin
     install -m 0644 ${S}/out/arm-plat-${PLATFORM}/core/tee.srec ${DEPLOYDIR}/tee-${MACHINE}.srec
 }
+
 addtask deploy before do_build after do_compile

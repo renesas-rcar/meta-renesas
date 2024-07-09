@@ -3,15 +3,15 @@ LICENSE = "CLOSED"
 
 inherit features_check
 
-REQUIRED_DISTRO_FEATURES = "adsp"
 COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu)"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
+REQUIRED_DISTRO_FEATURES = "adsp"
 
 SRC_URI = "file://RTM8RC0000ZNA3SS00JFL3E.tar.gz"
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
-
-PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 S = "${WORKDIR}/RTM8RC0000ZNA3SS00JFL3E"
 

@@ -4,10 +4,12 @@ ARM, MIPS and several other processors, which can be installed in a boot \
 ROM and used to initialize and test the hardware or to download and run \
 application code."
 SECTION = "bootloaders"
-DEPENDS += "flex-native bison-native"
 
 LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
+
+DEPENDS += "flex-native bison-native"
+
 PE = "1"
 
 # We use the revision in order to avoid having to fetch it from the
