@@ -10,6 +10,8 @@ MACHINE_FEATURES = ""
 
 KERNEL_IMAGETYPE = "Image"
 IMAGE_FSTYPES += " tar.bz2 ext4 wic.xz wic.bmap wic.xz.sha256sum"
+# Remove suffix (.rootfs) in image name
+IMAGE_NAME_SUFFIX = ""
 
 WKS_FILE ?= "rcar-singlepart-noloader.wks"
 
