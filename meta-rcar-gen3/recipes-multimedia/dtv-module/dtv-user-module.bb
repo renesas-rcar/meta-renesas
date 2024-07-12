@@ -29,8 +29,6 @@ SRC_URI = " \
     ${SRC_URI_DTV_UDF} \
 "
 
-S = "${WORKDIR}"
-
 includedir = "${RENESAS_DATADIR}/include"
 
 # do_configure() nothing

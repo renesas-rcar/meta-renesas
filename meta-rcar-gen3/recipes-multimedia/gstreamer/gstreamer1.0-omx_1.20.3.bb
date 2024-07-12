@@ -48,7 +48,7 @@ python __anonymous () {
 
 do_configure:prepend() {
     cd ${S}
-    install -m 0644 ${WORKDIR}/gstomx.conf ${S}/config/rcar/
+    install -m 0644 ${UNPACKDIR}/gstomx.conf ${S}/config/rcar/
     sed -i 's,@RENESAS_DATADIR@,${RENESAS_DATADIR},g' ${S}/config/rcar/gstomx.conf
     cd ${B}
 }

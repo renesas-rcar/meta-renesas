@@ -18,7 +18,7 @@ do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install() {
-    install -Dm 644 ${WORKDIR}/${VSPFILTER_CONF} ${D}/${sysconfdir}/gstvspfilter.conf
+    install -Dm 644 ${UNPACKDIR}/${VSPFILTER_CONF} ${D}/${sysconfdir}/gstvspfilter.conf
 }
 
 FILES:${PN} = " ${sysconfdir}/gstvspfilter.conf "

@@ -50,7 +50,7 @@ do_install () {
     # Install systemd service configure file for OP-TEE client
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -d ${D}/${systemd_system_unitdir}
-        install -m 0644 ${WORKDIR}/optee.service ${D}/${systemd_system_unitdir}
+        install -m 0644 ${UNPACKDIR}/optee.service ${D}/${systemd_system_unitdir}
     fi
 }
 

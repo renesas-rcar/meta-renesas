@@ -10,7 +10,7 @@ SRC_URI:append:rcar-gen3 = " \
 do_install:append:rcar-gen3() {
     install -d ${D}/${sysconfdir}/xdg/weston
     # install weston.ini as sample settings of gl-renderer
-    install -m 644 ${WORKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/
+    install -m 644 ${UNPACKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/
 
     # Checking for ivi-shell configuration
     # If ivi-shell is enable, we will add its configs to weston.ini
@@ -28,7 +28,7 @@ do_install:append:rcar-gen3() {
 
     # Set XDG_RUNTIME_DIR to /run/user/$UID (e.g. run/user/0)
     install -d ${D}/${sysconfdir}/profile.d
-    install -m 0755 ${WORKDIR}/weston.sh ${D}/${sysconfdir}/profile.d/weston.sh
+    install -m 0755 ${UNPACKDIR}/weston.sh ${D}/${sysconfdir}/profile.d/weston.sh
 }
 
 FILES:${PN}:append:rcar-gen3 = " \

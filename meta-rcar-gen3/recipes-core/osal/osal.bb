@@ -29,7 +29,7 @@ do_install() {
 
     # Create udev rules for renaming uio drivers
     install -d ${D}${sysconfdir}/udev/rules.d
-    install -m 644 ${WORKDIR}/51-uio.rules ${D}${sysconfdir}/udev/rules.d
+    install -m 644 ${UNPACKDIR}/51-uio.rules ${D}${sysconfdir}/udev/rules.d
 
 }
 

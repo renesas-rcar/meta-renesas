@@ -12,9 +12,6 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 PN = "gles-user-module"
 PR = "r0"
 
-S = "${WORKDIR}/rogue"
-GLES = "gsx"
-
 SRC_URI:r8a7795 = "file://r8a77951_linux_gsx_binaries_gles.tar.bz2"
 SRC_URI:r8a7796 = "file://r8a77960_linux_gsx_binaries_gles.tar.bz2"
 SRC_URI:r8a77965 = "file://r8a77965_linux_gsx_binaries_gles.tar.bz2"
@@ -24,6 +21,9 @@ SRC_URI:append = " \
     file://change-shell.patch \
     file://rc.pvr.service \
 "
+
+S = "${WORKDIR}/rogue"
+GLES = "gsx"
 
 INITSCRIPT_NAME = "pvrinit"
 INITSCRIPT_PARAMS = "start 7 5 2 . stop 62 0 1 6 ."
@@ -79,7 +79,7 @@ do_install() {
     # Install systemd service
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)} ; then
         install -d ${D}${systemd_system_unitdir}/
-        install -m 644 ${WORKDIR}/rc.pvr.service ${D}${systemd_system_unitdir}/
+        install -m 644 ${UNPACKDIR}/rc.pvr.service ${D}${systemd_system_unitdir}/
         install -d ${D}${exec_prefix}/bin
         install -m 755 ${S}/etc/init.d/rc.pvr ${D}${exec_prefix}/bin/pvrinit
     fi

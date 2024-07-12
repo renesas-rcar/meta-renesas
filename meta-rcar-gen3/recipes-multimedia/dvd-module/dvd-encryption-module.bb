@@ -14,8 +14,6 @@ SRC_URI = " \
     file://Software.tar.gz \
 "
 
-S = "${WORKDIR}"
-
 includedir = "${RENESAS_DATADIR}/include"
 
 do_configure[noexec] = "1"

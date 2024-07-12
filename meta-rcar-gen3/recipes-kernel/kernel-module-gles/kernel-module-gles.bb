@@ -51,7 +51,7 @@ module_do_install() {
     rm ${D}/etc/powervr_ddk_install_km.log
     # Install blacklist config file
     install -d ${D}${sysconfdir}/modprobe.d
-    install -m 644 ${WORKDIR}/blacklist.conf ${D}${sysconfdir}/modprobe.d/blacklist.conf
+    install -m 644 ${UNPACKDIR}/blacklist.conf ${D}${sysconfdir}/modprobe.d/blacklist.conf
     if ${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', 'true', 'false', d)}; then
         mv ${D}/lib/modules/${KERNEL_VERSION}/* ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/
         rm -rf ${D}/lib

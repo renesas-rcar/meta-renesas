@@ -25,8 +25,6 @@ SRC_URI = " \
     ${SRC_URI_DVD_SW} \
 "
 
-S = "${WORKDIR}"
-
 includedir = "${RENESAS_DATADIR}/include"
 
 # do_configure() nothing

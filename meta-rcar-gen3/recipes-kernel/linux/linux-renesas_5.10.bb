@@ -79,7 +79,7 @@ SRC_URI:append = " file://init_disassemble_info-signature-changes-causes-compile
 
 do_download_firmware () {
     install -d ${STAGING_KERNEL_DIR}/firmware
-    install -m 755 ${WORKDIR}/r8a779x_usb3_v*.dlmem ${STAGING_KERNEL_DIR}/firmware
+    install -m 755 ${UNPACKDIR}/r8a779x_usb3_v*.dlmem ${STAGING_KERNEL_DIR}/firmware
 }
 
 addtask do_download_firmware after do_configure before do_compile
