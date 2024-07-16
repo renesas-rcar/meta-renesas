@@ -8,8 +8,9 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=69333daa044cb77e486cc36129f7a770"
 
 SRC_URI = "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-${PV}.tar.xz \
            file://0001-ENGR00312515-get-caps-from-src-pad-when-query-caps.patch \
-           file://0003-viv-fb-Make-sure-config.h-is-included.patch \
            file://0002-ssaparse-enhance-SSA-text-lines-parsing.patch \
+           file://0003-viv-fb-Make-sure-config.h-is-included.patch \
+           file://0004-include-header-for-gstssaparse.patch \
            "
 SRC_URI[sha256sum] = "7e30b3dd81a70380ff7554f998471d6996ff76bbe6fc5447096f851e24473c9f"
 

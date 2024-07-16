@@ -23,7 +23,7 @@ SRC_URI = " \
 
 S = "${WORKDIR}/git/subprojects/gst-omx"
 
-DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad virtual/libomxil"
+DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad"
 DEPENDS:append = " omx-user-module mmngrbuf-user-module"
 
 inherit meson pkgconfig upstream-version-is-even
