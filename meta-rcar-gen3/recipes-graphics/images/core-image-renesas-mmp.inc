@@ -4,6 +4,7 @@ require include/adsp-control.inc
 require include/dtv-dvd-control.inc
 require include/avb-control.inc
 require include/omx-control.inc
+require include/gles-control.inc
 
 # Common Multi Media Packages (MMP)
 MULTIMEDIA_PKGS = " \
@@ -99,4 +100,17 @@ IMAGE_INSTALL:append = " \
     ${@oe.utils.conditional("USE_ADSP", "1", " ${ADSP_PKGS}", "", d)} \
     ${@oe.utils.conditional("USE_AVB", "1", " ${AVB_PKGS}", "", d)} \
     ${@oe.utils.conditional("USE_32BIT_MMP", "1", " ${MMP_32BIT_PKGS}", "", d)} \
+"
+
+# Gstreamer Packages
+GSTREAMER_PKGS = "packagegroup-gstreamer1.0-plugins"
+
+# Install packages for Wayland Env
+# default: Basic packages, Gstreamer packages
+# optional: GFX packages
+IMAGE_INSTALL:append = " \
+    ${GSTREAMER_PKGS} \
+    packagegroup-wayland-community \
+    packagegroup-graphics-renesas-proprietary \
+    packagegroup-graphics-renesas-wayland \
 "

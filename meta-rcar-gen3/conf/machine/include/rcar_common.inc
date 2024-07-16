@@ -17,6 +17,8 @@ SERIAL_CONSOLES = "115200;ttySC0"
 
 # Configuration for kernel
 PREFERRED_PROVIDER_virtual/kernel = "linux-renesas"
+PREFERRED_VERSION_linux-renesas ?= "5.10%"
+PREFERRED_VERSION_linux-libc-headers ?= "5.10%"
 OLDEST_KERNEL = "5.10"
 
 # Configuration for ARM Trusted Firmware
