@@ -18,6 +18,7 @@ SRC_URI:r8a77965 = 'file://GSX_KM_M3N.tar.bz2'
 SRC_URI:r8a77990 = 'file://GSX_KM_E3.tar.bz2'
 SRC_URI:append = " file://blacklist.conf"
 SRC_URI:append = " file://0001-fixing-implicit-conversion-in-GCC-11.2.patch"
+SRC_URI:append = " file://0002-disable-Werror.patch"
 
 S = "${WORKDIR}/rogue_km"
 B = "${KBUILD_DIR}"

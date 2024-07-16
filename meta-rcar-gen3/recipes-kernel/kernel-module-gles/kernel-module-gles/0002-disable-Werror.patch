@@ -1,0 +1,15 @@
+diff -ruN rogue_km1/services/server/env/linux/Kbuild.mk rogue_km/services/server/env/linux/Kbuild.mk
+--- rogue_km1/services/server/env/linux/Kbuild.mk	2024-07-09 17:07:48.836892379 +0900
++++ rogue_km/services/server/env/linux/Kbuild.mk	2024-07-09 17:08:33.656230125 +0900
+@@ -543,11 +543,6 @@
+ 
+ endif
+ 
+-# Enable -Werror for all built object files
+-ifneq ($(W),1)
+-$(foreach _o,$(addprefix CFLAGS_,$($(PVRSRV_MODNAME)-y)),$(eval $(_o) += -Werror))
+-endif
+-
+ $(PVRSRV_MODNAME)-y += \
+  generated/$(PVR_ARCH)/devicememhistory_bridge/client_devicememhistory_direct_bridge.o
+ 
