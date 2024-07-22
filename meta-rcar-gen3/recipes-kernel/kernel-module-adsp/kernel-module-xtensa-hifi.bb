@@ -23,7 +23,7 @@ EXTRA_OEMAKE:append = " KDIR=${STAGING_KERNEL_DIR}"
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
 
 # Enable build target for E3 board
-do_configure:prepend_r8a77990(){
+do_configure:prepend:r8a77990(){
     sed -i 's|-DTARGET_BOARD_E3=0|-DTARGET_BOARD_E3=1|g' ${S}/Kbuild
 }
 
