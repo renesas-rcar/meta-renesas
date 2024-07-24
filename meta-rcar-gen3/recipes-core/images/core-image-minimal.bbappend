@@ -1,1 +1,1 @@
-require ${@bb.utils.contains('MACHINE_FEATURES', 'upstream-kernel', 'core-image-renesas-minimal.inc', 'core-image-renesas-base.inc', d)}
+require ${@"recipes-graphics/images/core-image-renesas-base.inc" if "rcar-gen3" in d.getVar("OVERRIDES") else ""}

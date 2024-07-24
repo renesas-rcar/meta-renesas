@@ -1,15 +1,22 @@
-require core-image-renesas-minimal.inc
 require include/iccom-control.inc
 
+COMPATIBLE_MACHINE = "(salvator-x|ulcb|ebisu|draak)"
 
-# Initscript for setting CPUFreq governor
-IMAGE_INSTALL:append = " cpufreq-initscripts"
+# Basic packages
+IMAGE_INSTALL:append = " \
+    bash \
+    v4l-utils \
+    i2c-tools \
+    coreutils \
+"
 
-# Kernel modules of CMEMDRV
-IMAGE_INSTALL:append = " kernel-module-cmemdrv"
+# Support secure environment
+IMAGE_INSTALL:append = " \
+    optee-client \
+"
 
-# Kernel module UIO
-IMAGE_INSTALL:append = " kernel-module-uio-pdrv-genirq"
+# Add overrides for selection 32 bit or 64 bit target
+OVERRIDES .= ":${TARGET_SYS}"
 
 # Qos user packages only supports 64bit.
 QOS_USER_PKGS = ""
@@ -24,6 +31,17 @@ IMAGE_INSTALL:append = " \
     ${QOS_USER_PKGS} \
 "
 
+# Renesas Basic packages for 32bit
+BASIC_32BIT_PKGS = " \
+    lib32-coreutils \
+    lib32-libstdc++ \
+    lib32-optee-client \
+"
+
+# Installation for 32bit packages
+IMAGE_INSTALL:append = " \
+    ${@oe.utils.conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
+"
 
 # Kernel modules of ICCOM
 ICCOM_KERNEL_PKGS = " \
@@ -63,6 +81,15 @@ IMAGE_INSTALL:append = " \
     ${@oe.utils.conditional("USE_SAFE_RENDERING", "1", "${SAFE_RENDERING_KERNEL_PKGS}", "", d)} \
 "
 
+# Initscript for setting CPUFreq governor
+IMAGE_INSTALL:append = " cpufreq-initscripts"
+
+# Kernel modules of CMEMDRV
+IMAGE_INSTALL:append = " kernel-module-cmemdrv"
+
+# Kernel module UIO
+IMAGE_INSTALL:append = " kernel-module-uio-pdrv-genirq"
+
 # OSAL package
 IMAGE_INSTALL:append = " \
     ${@"osal" if "osal" in "${DISTRO_FEATURES}" else ""} \
@@ -71,3 +98,6 @@ IMAGE_INSTALL:append = " \
 IMAGE_INSTALL:append = " \
     ${@"imr" if "imr" in "${DISTRO_FEATURES}" else ""} \
 "
+
+#Installation for ethtool
+IMAGE_INSTALL:append = " ethtool"
