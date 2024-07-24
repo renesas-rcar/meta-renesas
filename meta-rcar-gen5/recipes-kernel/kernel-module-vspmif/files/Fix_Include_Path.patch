@@ -1,0 +1,13 @@
+diff --git a/vspm_if-module/files/vspm_if/drv/Makefile b/vspm_if-module/files/vspm_if/drv/Makefile
+index bf082d7..c7f2809 100644
+--- a/vspm_if-module/files/vspm_if/drv/Makefile
++++ b/vspm_if-module/files/vspm_if/drv/Makefile
+@@ -3,7 +3,7 @@ CFILES = vspm_if_main.c vspm_if_sub.c
+ obj-m += vspm_if.o
+ vspm_if-objs := $(CFILES:.c=.o)
+ 
+-U_INCLUDE := -I$(PWD)
++U_INCLUDE += -I$(PWD)
+ U_INCLUDE += -I$(PWD)/../include
+ U_INCLUDE += -I$(KERNELSRC)/include
+ EXTRA_CFLAGS += $(U_INCLUDE)

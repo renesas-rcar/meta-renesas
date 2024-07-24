@@ -19,6 +19,13 @@ GFX_PKGS = " \
     libgles2 \
 "
 
+VSPM_PKGS = " \
+    kernel-module-vspm \
+    kernel-module-vspmif \
+    vspmif-user-module \
+    vspmif-tp-user-module \
+"
+
 # ADAS common packages: CMEM, CV lib
 RDEPENDS_packagegroup-renesas = " \
     kernel-module-uio-pdrv-genirq \
@@ -35,5 +42,6 @@ RDEPENDS_packagegroup-renesas = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'gsx', '${GFX_PKGS}', '', d)} \
     nvme-initscripts \
     bsp-test-apps \
+    ${VSPM_PKGS} \
 "
 
