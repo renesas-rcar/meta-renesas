@@ -6,8 +6,11 @@ SRC_URI = " \
     file://52-cmem.rules \
 "
 
+S = "${WORKDIR}/${BPN}-${PV}"
+UNPACKDIR = "${S}"
+
 do_install () {
     install -d ${D}${sysconfdir}/udev/rules.d/
-    install -m 0644 ${WORKDIR}/51-uio.rules ${D}${sysconfdir}/udev/rules.d/
-    install -m 0644 ${WORKDIR}/52-cmem.rules ${D}${sysconfdir}/udev/rules.d/
+    install -m 0644 ${S}/51-uio.rules ${D}${sysconfdir}/udev/rules.d/
+    install -m 0644 ${S}/52-cmem.rules ${D}${sysconfdir}/udev/rules.d/
 }

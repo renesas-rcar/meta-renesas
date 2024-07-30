@@ -38,7 +38,7 @@ PACKAGES += "${PN}-uapi"
 
 do_download_firmware () {
     install -d ${STAGING_KERNEL_DIR}/firmware
-    install -m 755 ${WORKDIR}/r8a779f0_ufs.bin ${STAGING_KERNEL_DIR}/firmware/
+    install -m 755 ${UNPACKDIR}/r8a779f0_ufs.bin ${STAGING_KERNEL_DIR}/firmware/
 }
 
 addtask do_download_firmware after do_configure before do_compile
