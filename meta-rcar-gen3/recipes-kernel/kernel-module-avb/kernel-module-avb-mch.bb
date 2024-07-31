@@ -1,6 +1,6 @@
 DESCRIPTION = "AVB MCH Driver for Linux for the R-Car Gen3"
 
-LICENSE = "GPLv2 & MIT"
+LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
     file://GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
     file://MIT-COPYING;md5=96e553279b3fff0d6168dafe0b596197 \
