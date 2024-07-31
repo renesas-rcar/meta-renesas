@@ -13,12 +13,15 @@ VSPFILTER_CONF:r8a77990 = "gstvspfilter-${MACHINE}_r8a77990.conf"
 
 SRC_URI = " file://${VSPFILTER_CONF} "
 
+S = "${WORKDIR}/${BPN}-${PV}"
+UNPACKDIR = "${S}"
+
 do_configure[noexec] = "1"
 
 do_compile[noexec] = "1"
 
 do_install() {
-    install -Dm 644 ${UNPACKDIR}/${VSPFILTER_CONF} ${D}/${sysconfdir}/gstvspfilter.conf
+    install -Dm 644 ${S}/${VSPFILTER_CONF} ${D}/${sysconfdir}/gstvspfilter.conf
 }
 
 FILES:${PN} = " ${sysconfdir}/gstvspfilter.conf "
