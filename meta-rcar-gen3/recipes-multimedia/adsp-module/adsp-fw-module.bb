@@ -17,10 +17,10 @@ S = "${WORKDIR}/RTM8RC0000ZNA3SS00JFL3E"
 
 do_install() {
     # create the firmware dir
-    install -d ${D}/lib/firmware
+    install -d ${D}${nonarch_base_libdir}/firmware
 
     # install the firmware bin
-    install -m 0644 ${S}/lib/firmware/xf-rcar.fw ${D}/lib/firmware
+    install -m 0644 ${S}/lib/firmware/xf-rcar.fw ${D}${nonarch_base_libdir}/firmware
 }
 
 PACKAGES = " \
@@ -28,5 +28,5 @@ PACKAGES = " \
 "
 
 FILES:${PN} = " \
-    /lib/firmware \
+    ${nonarch_base_libdir}/firmware \
 "
