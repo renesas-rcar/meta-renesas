@@ -16,19 +16,22 @@ SRC_URI = " \
     ${SRC_CMSDGC} \
 "
 
-S = "${WORKDIR}/cms"
+S = "${WORKDIR}/${BPN}-${PV}"
+UNPACKDIR = "${S}"
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install() {
     # Create the lib directory
-    install -d ${D}/${libdir}
+    if [ "X${USE_CMS}" = "X1" ]; then
+        install -d ${D}/${libdir}
+    fi
 
     if [ "X${USE_CMSBCM}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/bcm
-        install -m 755 ${S}/bcm/${baselib}/libcmsbcm.so.3.0.2 ${D}/${libdir}
-        install -m 644 ${S}/bcm/include/*.h ${D}/${includedir}/cms/bcm
+        install -m 755 ${S}/cms/bcm/${baselib}/libcmsbcm.so.3.0.2 ${D}/${libdir}
+        install -m 644 ${S}/cms/bcm/include/*.h ${D}/${includedir}/cms/bcm
 
         cd ${D}/${libdir}
         ln -s libcmsbcm.so.3.0.2 libcmsbcm.so.1
@@ -37,8 +40,8 @@ do_install() {
 
     if [ "X${USE_CMSBLC}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/blc
-        install -m 755 ${S}/blc/${baselib}/libcmsblc.so.3.0.2 ${D}/${libdir}
-        install -m 644 ${S}/blc/include/*.h ${D}/${includedir}/cms/blc
+        install -m 755 ${S}/cms/blc/${baselib}/libcmsblc.so.3.0.2 ${D}/${libdir}
+        install -m 644 ${S}/cms/blc/include/*.h ${D}/${includedir}/cms/blc
 
         cd ${D}/${libdir}
         ln -s libcmsblc.so.3.0.2 libcmsblc.so.1
@@ -47,8 +50,8 @@ do_install() {
 
     if [ "X${USE_CMSDGC}" = "X1" ]; then
         install -d ${D}/${includedir}/cms/dgc
-        install -m 755 ${S}/dgc/${baselib}/libcmsdgc.so.3.0.2 ${D}/${libdir}
-        install -m 644 ${S}/dgc/include/*.h ${D}/${includedir}/cms/dgc
+        install -m 755 ${S}/cms/dgc/${baselib}/libcmsdgc.so.3.0.2 ${D}/${libdir}
+        install -m 644 ${S}/cms/dgc/include/*.h ${D}/${includedir}/cms/dgc
 
         cd ${D}/${libdir}
         ln -s libcmsdgc.so.3.0.2 libcmsdgc.so.1
