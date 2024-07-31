@@ -6,11 +6,14 @@ inherit update-rc.d
 
 SRC_URI = "file://set_default_governor.sh"
 
+S = "${WORKDIR}/${BPN}-${PV}"
+UNPACKDIR = "${S}"
+
 INITSCRIPT_NAME = "set_default_governor.sh"
 
 do_compile[noexec] = "1"
 
 do_install () {
     install -d ${D}${sysconfdir}/init.d/
-    install -m 0755 ${UNPACKDIR}/set_default_governor.sh ${D}${sysconfdir}/init.d/
+    install -m 0755 ${S}/set_default_governor.sh ${D}${sysconfdir}/init.d/
 }
