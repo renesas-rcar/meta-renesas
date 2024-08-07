@@ -1,3 +1,5 @@
+Upstream-Status: Pending
+
 diff -ruN gst-plugins-base-1.20.3_origin/gst/subparse/gstssaparse.c gst-plugins-base-1.20.3/gst/subparse/gstssaparse.c
 --- gst-plugins-base-1.20.3_origin/gst/subparse/gstssaparse.c	2024-07-10 11:54:46.346328792 +0900
 +++ gst-plugins-base-1.20.3/gst/subparse/gstssaparse.c	2024-07-10 11:53:42.386358150 +0900

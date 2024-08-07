@@ -1,3 +1,5 @@
+Upstream-Status: Pending
+
 diff -ur gst-libav-1.20.3/ext/libav/gstavviddec.c gst-libav-1.20.3_o/ext/libav/gstavviddec.c
 --- gst-libav-1.20.3/ext/libav/gstavviddec.c	2024-05-24 19:04:48.304315476 +0900
 +++ gst-libav-1.20.3_o/ext/libav/gstavviddec.c	2024-05-24 19:02:54.772218175 +0900

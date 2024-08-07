@@ -26,8 +26,8 @@ index f1a2f96..09ca5b4 100644
 +#include <stdlib.h>
  #include <string.h>
  #include <sys/ioctl.h>
- #include <sys/poll.h>
-@@ -58,6 +59,54 @@ struct sync_merge_data {
+ #include <poll.h>
+@@ -58,6 +59,54 @@
  #endif
  
  
@@ -82,7 +82,7 @@ index f1a2f96..09ca5b4 100644
  static inline int sync_wait(int fd, int timeout)
  {
  	struct pollfd fds = {0};
-@@ -141,6 +190,129 @@ static inline int sync_accumulate(const char *name, int *fd1, int fd2)
+@@ -141,6 +190,129 @@
  	return 0;
  }
  

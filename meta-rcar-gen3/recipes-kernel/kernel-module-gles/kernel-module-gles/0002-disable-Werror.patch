@@ -1,3 +1,5 @@
+Upstream-Status: Inappropriate [configuration]
+
 diff -ruN rogue_km1/services/server/env/linux/Kbuild.mk rogue_km/services/server/env/linux/Kbuild.mk
 --- rogue_km1/services/server/env/linux/Kbuild.mk	2024-07-09 17:07:48.836892379 +0900
 +++ rogue_km/services/server/env/linux/Kbuild.mk	2024-07-09 17:08:33.656230125 +0900

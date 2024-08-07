@@ -1,3 +1,5 @@
+Upstream-Status: Pending
+
 diff --git a/core/arch/arm/plat-rcar/main.c b/core/arch/arm/plat-rcar/main.c
 index 1b3fe7071..88f060566 100644
 --- a/core/arch/arm/plat-rcar/main.c
