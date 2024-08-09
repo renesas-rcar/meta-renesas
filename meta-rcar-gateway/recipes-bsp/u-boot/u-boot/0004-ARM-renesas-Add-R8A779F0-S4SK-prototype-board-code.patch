@@ -6,6 +6,8 @@ Subject: [PATCH 4/5] ARM: renesas: Add R8A779F0 S4SK prototype board code
 Add board code for the R8A779F0 S4SK prototype board.
 Based on the original (and large) patch by Michael Dege.
 
+Upstream-Status: Pending
+
 Signed-off-by: Michael Dege <michael.dege@renesas.com>
 Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---

@@ -5,6 +5,8 @@ Subject: [PATCH 3/4] arm64: dts: renesas: r8a779f0: Enable IPMMU for PCIe0/1
 
 Enable IPMMU for PCIe0/1 by default.
 
+Upstream-Status: Pending
+
 Signed-off-by: Nam Nguyen <nam.nguyen.yh@renesas.com>
 ---
  arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi | 16 ++++++++++++++++

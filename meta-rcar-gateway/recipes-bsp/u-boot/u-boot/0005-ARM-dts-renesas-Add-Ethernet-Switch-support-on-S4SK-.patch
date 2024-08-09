@@ -6,6 +6,8 @@ Subject: [PATCH 5/5] ARM: dts: renesas: Add Ethernet Switch support on S4SK
 
 This patch adds Ethernet Switch support on R-Car S4 Starter Kit prototype board.
 
+Upstream-Status: Pending
+
 Signed-off-by: Michael Dege <michael.dege@renesas.com>
 Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---

@@ -5,6 +5,8 @@ Subject: [PATCH 4/4] arm64: dts: renesas: r8a779f0: Enable IPMMU for eMMC
 
 Enable IPMMU for eMMC by default.
 
+Upstream-Status: Pending
+
 Signed-off-by: Nam Nguyen <nam.nguyen.yh@renesas.com>
 ---
  arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi | 4 ++++
