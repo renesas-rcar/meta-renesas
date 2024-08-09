@@ -12,6 +12,8 @@ require avb-applications.inc
 
 DEPENDS = "kernel-module-avb-streaming libyaml cmake-native"
 
+SRC_URI:append = " file://0001-avb-demoapps-add-libs-for-writev-readv.patch"
+
 S = "${WORKDIR}/git/avb-demoapps"
 
 includedir = "${RENESAS_DATADIR}/include"

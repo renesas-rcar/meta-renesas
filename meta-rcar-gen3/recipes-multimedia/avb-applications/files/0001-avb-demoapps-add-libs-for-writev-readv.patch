@@ -1,0 +1,26 @@
+Upstream-Status: Pending
+
+diff --git a/demo/simple/simple_listener.c b/demo/simple/simple_listener.c
+index e317316..bd3b399 100644
+--- a/demo/simple/simple_listener.c
++++ b/demo/simple/simple_listener.c
+@@ -22,6 +22,7 @@
+ 
+ #include "msrp.h"
+ #include "eavb.h"
++#include <sys/uio.h>
+ 
+ #define PROGNAME "simple_listener"
+ #define PROGVERSION "0.13"
+diff --git a/demo/simple/simple_talker.c b/demo/simple/simple_talker.c
+index f5936a9..fd1fb14 100644
+--- a/demo/simple/simple_talker.c
++++ b/demo/simple/simple_talker.c
+@@ -31,6 +31,7 @@
+ #include "packet.h"
+ #include "clock.h"
+ #include "common.h"
++#include <sys/uio.h>
+ 
+ #define PROGNAME "simple_talker"
+ #define PROGVERSION "0.13"
