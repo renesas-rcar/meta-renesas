@@ -1,0 +1,17 @@
+ioremap has provided non-cached semantics by default since the Linux 2.6
+Use ioremap instead of ioremap_nocache
+
+Upstream-Status: Pending
+
+diff -ruN iccom-hwspinlock-sample/iccom-hwspinlock-sample/iccom_hwspinlock_sample.c iccom-hwspinlock-sample/iccom-hwspinlock-sample-new/iccom_hwspinlock_sample.c
+--- iccom-hwspinlock-sample/iccom-hwspinlock-sample/iccom_hwspinlock_sample.c	2024-08-07 12:10:40.302396900 +0700
++++ iccom-hwspinlock-sample/iccom-hwspinlock-sample-new/iccom_hwspinlock_sample.c	2024-08-07 12:10:24.232396900 +0700
+@@ -72,7 +72,7 @@
+ 	pr_info("iccom_hwspinlock_sample loaded.\n");
+ 
+ 	/* mapping shared resource address */
+-	reg_map = ioremap_nocache(MFISASEMBR7, sizeof(unsigned int));
++	reg_map = ioremap(MFISASEMBR7, sizeof(unsigned int));
+ 
+ 	/* get rcar_hwspinlock */
+ 	lock = hwspin_lock_request_specific(0);
