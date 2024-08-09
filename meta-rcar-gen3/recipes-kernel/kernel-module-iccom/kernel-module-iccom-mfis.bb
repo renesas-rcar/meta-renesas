@@ -15,6 +15,7 @@ PN = "kernel-module-iccom-mfis"
 PR = "r0"
 
 SRC_URI = "file://iccom-mfis.tar.bz2"
+SRC_URI:append = " file://0001-iccom-mfis-rename-devm-ioremap-nocache.patch"
 
 S = "${WORKDIR}/iccom-mfis"
 B = "${S}/iccom-mfis/drv"

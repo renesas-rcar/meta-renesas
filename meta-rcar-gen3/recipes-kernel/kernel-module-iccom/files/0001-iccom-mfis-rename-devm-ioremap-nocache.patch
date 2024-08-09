@@ -1,0 +1,17 @@
+ioremap has provided non-cached semantics by default since the Linux 2.6
+Use devm_ioremap instead of devm_ioremap_nocache
+
+Upstream-Status: Pending
+
+diff -ruN iccom-mfis/drv/iccom_mfis_drv.c iccom-mfis/iccom-mfis-new/drv/iccom_mfis_drv.c
+--- iccom-mfis/iccom-mfis/drv/iccom_mfis_drv.c	2024-08-07 11:39:05.782396900 +0700
++++ iccom-mfis/iccom-mfis-new/drv/iccom_mfis_drv.c	2024-08-07 11:39:49.242396900 +0700
+@@ -768,7 +768,7 @@
+ 	/* map MFIS register */
+ 	res = platform_get_resource(to_platform_device(pdev->dev.parent),
+ 				    IORESOURCE_MEM, 0);
+-	mfis_drv->mfis_addr = devm_ioremap_nocache(&pdev->dev,
++	mfis_drv->mfis_addr = devm_ioremap(&pdev->dev,
+ 						   res->start + MFISAS_OFFSET,
+ 						   MFISAS_SIZE);
+ 	if (IS_ERR(mfis_drv->mfis_addr)) {
