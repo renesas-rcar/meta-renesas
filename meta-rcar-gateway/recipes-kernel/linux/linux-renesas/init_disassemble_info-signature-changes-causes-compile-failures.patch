@@ -1,3 +1,5 @@
+Upstream-Status: Pending
+
 diff --git a/tools/perf/util/annotate.c b/tools/perf/util/annotate.c
 index 6c8575e182ed..ae060ef8326a 100644
 --- a/tools/perf/util/annotate.c

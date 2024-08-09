@@ -6,6 +6,8 @@ Subject: [PATCH 2/4] arm64: dts: renesas: r8a779f0: Enable IPMMU main and
 
 Enable IPMMU-MM and IPMMU-HC/DS0 by default.
 
+Upstream-Status: Pending
+
 Signed-off-by: Nam Nguyen <nam.nguyen.yh@renesas.com>
 ---
  arch/arm64/boot/dts/renesas/r8a779f0-native.dtsi | 12 ++++++++++++

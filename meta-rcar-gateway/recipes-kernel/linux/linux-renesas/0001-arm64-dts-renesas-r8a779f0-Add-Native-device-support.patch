@@ -12,6 +12,8 @@ For convience to use:
 - "r8a779f0-spider.dtb": UIO devices enable, Native devices disable.
 - "r8a779f0-spider-native.dtb": UIO devices disable, Native devices enable.
 
+Upstream-Status: Pending
+
 Signed-off-by: Tam Nguyen <tam.nguyen.xa@renesas.com>
 ---
  arch/arm64/boot/dts/renesas/Makefile          |   1 +
