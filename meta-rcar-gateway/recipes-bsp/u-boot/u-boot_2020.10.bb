@@ -1,6 +1,8 @@
 require u-boot-common.inc
 require u-boot.inc
 
+COMPATIBLE_MACHINE = "(spider|s4sk)"
+
 DEPENDS += "lzop-native srecord-native"
 
 UBOOT_URL = "git://github.com/renesas-rcar/u-boot.git"

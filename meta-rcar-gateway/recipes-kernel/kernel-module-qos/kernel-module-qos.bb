@@ -10,6 +10,8 @@ LIC_FILES_CHKSUM = " \
 
 inherit module
 
+COMPATIBLE_MACHINE = "(spider|s4sk)"
+
 DEPENDS = "linux-renesas"
 PN = "kernel-module-qos"
 PR = "r0"
