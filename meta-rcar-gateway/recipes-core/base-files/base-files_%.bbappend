@@ -1,6 +1,5 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/:"
+FILESEXTRAPATHS:prepend:rcar-gateway := "${THISDIR}/${PN}/:"
 
-SRC_URI:append = " \
+SRC_URI:append:rcar-gateway = " \
     file://fstab \
 "
-
