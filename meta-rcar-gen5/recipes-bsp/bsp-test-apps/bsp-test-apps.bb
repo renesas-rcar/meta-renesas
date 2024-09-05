@@ -19,10 +19,7 @@ do_install() {
 
     # Install WCRC tp
     install -m 755 ${S}/sample_wcrc ${D}${ROOT_HOME}/
-    install -m 755 ${S}/sample_wcrc_e2e_crc_mode ${D}${ROOT_HOME}/
-    install -m 755 ${S}/sample_wcrc_independent_mode ${D}${ROOT_HOME}/
-    install -m 755 ${S}/sample_wcrc_through_mode ${D}${ROOT_HOME}/
-    install -m 755 ${S}/test_example.dat ${D}${ROOT_HOME}/
+    install -m 755 ${S}/sample_wcrc_indepent_mode ${D}${ROOT_HOME}/
 
     # Install I3C tp
     install -m 755 ${S}/i3ctransfer ${D}${ROOT_HOME}/
@@ -37,6 +34,10 @@ do_install() {
     # Install MSIOF tp
     install -d ${D}${ROOT_HOME}/msiof_tp
     install -m 755 ${S}/msiof_tp/* ${D}${ROOT_HOME}/msiof_tp/
+
+
+    # Install PTP tp
+    install -m 755 ${S}/testptp ${D}${ROOT_HOME}/
 }
 
 FILES_${PN} = "${ROOT_HOME}/*"
