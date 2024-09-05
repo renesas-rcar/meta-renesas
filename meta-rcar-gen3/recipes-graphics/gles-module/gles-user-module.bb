@@ -19,7 +19,6 @@ SRC_URI:r8a77965 = "file://r8a77965_linux_gsx_binaries_gles.tar.bz2"
 SRC_URI:r8a77990 = "file://r8a77990_linux_gsx_binaries_gles.tar.bz2"
 
 SRC_URI:append = " \
-    file://change-shell.patch \
     file://rc.pvr.service \
 "
 
