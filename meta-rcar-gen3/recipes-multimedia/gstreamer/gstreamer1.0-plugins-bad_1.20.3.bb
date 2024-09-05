@@ -12,7 +12,7 @@ SRC_URI = "${RENESAS_GST_URL}"
 
 S = "${WORKDIR}/git/subprojects/gst-plugins-bad"
 
-DEPENDS:append:rcar-gen3 = " gstreamer1.0-plugins-base weston libdrm"
+DEPENDS:append:rcar-gen3 = " gstreamer1.0-plugins-base weston libdrm mmngr-user-module linux-renesas"
 
 inherit gobject-introspection
 
