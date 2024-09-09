@@ -1,0 +1,88 @@
+From 212a9115156dd2fee16ef04f093ec2301e7680b6 Mon Sep 17 00:00:00 2001
+From: Nguyen Tran <nguyen.tran.pz@bp.renesas.com>
+Date: Fri, 6 Sep 2024 09:38:13 +0000
+Subject: [PATCH] iccom drv: iccom support linux v5
+
+---
+ iccom_driver.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/iccom_driver.c b/iccom_driver.c
+index 0a6a392..6c74eb7 100644
+--- a/iccom_driver.c
++++ b/iccom_driver.c
+@@ -28,6 +28,7 @@
+ #include <linux/wait.h>
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
++#include <linux/version.h>
+ 
+ #include "iccom.h"
+ #include "iccom_core.h"
+@@ -180,7 +181,13 @@ static int32_t iccom_drv_open(struct iccom *iccom,
+ 		init_waitqueue_head(&iccom_comm->ioctl_q);
+ 		iccom_comm->close_flg = 0;
+ 
+-		remap_addr = ioremap_nocache(
++		#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
++			#define ioremap_func ioremap_nocache
++		#else
++			#define ioremap_func ioremap
++		#endif
++
++		remap_addr = ioremap_func(
+ 			(uintptr_t)iccom_hw->mfis_iicr_addr, ICCOM_MFIS_LEN);
+ 		if (remap_addr == NULL) {
+ 			dev_err(iccom->dev, "[Err]Remap IICR failed\n");
+@@ -189,7 +196,7 @@ static int32_t iccom_drv_open(struct iccom *iccom,
+ 			iccom_comm->mfis_iicr_addr = (uint32_t *)remap_addr;
+ 		}
+ 
+-		remap_addr = ioremap_nocache(
++		remap_addr = ioremap_func(
+ 			(uintptr_t)iccom_hw->mfis_eicr_addr, ICCOM_MFIS_LEN);
+ 		if (remap_addr == NULL) {
+ 			dev_err(iccom->dev, "[Err]Remap EICR failed\n");
+@@ -198,7 +205,7 @@ static int32_t iccom_drv_open(struct iccom *iccom,
+ 			iccom_comm->mfis_eicr_addr = (uint32_t *)remap_addr;
+ 		}
+ 
+-		remap_addr = ioremap_nocache(
++		remap_addr = ioremap_func(
+ 			(uintptr_t)iccom_hw->mfis_imbr_addr, ICCOM_MFIS_LEN);
+ 		if (remap_addr == NULL) {
+ 			dev_err(iccom->dev, "[Err]Remap IMBR failed\n");
+@@ -207,7 +214,7 @@ static int32_t iccom_drv_open(struct iccom *iccom,
+ 			iccom_comm->mfis_imbr_addr = (uint32_t *)remap_addr;
+ 		}
+ 
+-		remap_addr = ioremap_nocache(
++		remap_addr = ioremap_func(
+ 			(uintptr_t)iccom_hw->mfis_embr_addr, ICCOM_MFIS_LEN);
+ 		if (remap_addr == NULL) {
+ 			dev_err(iccom->dev, "[Err]Remap EMBR failed\n");
+@@ -216,7 +223,7 @@ static int32_t iccom_drv_open(struct iccom *iccom,
+ 			iccom_comm->mfis_embr_addr = (uint32_t *)remap_addr;
+ 		}
+ 
+-		remap_addr = ioremap_nocache((uintptr_t)iccom_hw->cta_addr,
++		remap_addr = ioremap_func((uintptr_t)iccom_hw->cta_addr,
+ 				iccom_hw->cta_size);
+ 		if (remap_addr == NULL) {
+ 			dev_err(iccom->dev, "[Err]Remap CTA failed\n");
+@@ -354,8 +361,12 @@ static ssize_t iccom_drv_read(struct iccom_channel *channel,
+ 			tgt_addr = (iccom_comm->cta_addr +
+ 				((cta_sw + ICCOM_CTA_SBUF_NUM) *
+ 					ICCOM_BUF_MAX_SIZE));
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
++			ret_access = access_ok(cmd->buf, cmd->count);
++#else
+ 			ret_access = access_ok(VERIFY_WRITE, cmd->buf,
+ 					cmd->count);
++#endif
+ 			if (ret_access != 0) {
+ 				dev_dbg(channel->iccom->dev,
+ 					"copy_to_user route\n");
+-- 
+2.25.1
+
