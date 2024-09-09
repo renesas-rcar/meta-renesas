@@ -45,8 +45,6 @@ IMAGE_INSTALL:append = " \
 
 # Kernel modules of ICCOM
 ICCOM_KERNEL_PKGS = " \
-    kernel-module-iccom-mfis \
-    kernel-module-iccom-hwspinlock-sample \
 "
 
 # User modules of ICCOM only supports 64bit
