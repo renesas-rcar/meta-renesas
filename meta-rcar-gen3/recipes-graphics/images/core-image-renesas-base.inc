@@ -51,6 +51,7 @@ ICCOM_KERNEL_PKGS = " \
 # User modules of ICCOM only supports 64bit
 ICCOM_USER_PKGS = ""
 ICCOM_USER_PKGS:aarch64-poky-linux = " \
+    iccom-user-module \
 "
 
 # ICCOM Packages
