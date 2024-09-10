@@ -1,0 +1,103 @@
+From 27ba659f584438d08f3b9738411f22c9204fb9d6 Mon Sep 17 00:00:00 2001
+From: Nguyen Tran <nguyen.tran.pz@bp.renesas.com>
+Date: Sun, 8 Sep 2024 23:36:31 +0700
+Subject: [PATCH] arm64: dts: renesas: r8a77951: Support ICCOM
+
+---
+ arch/arm64/boot/dts/renesas/r8a77951.dtsi | 80 +++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a77951.dtsi b/arch/arm64/boot/dts/renesas/r8a77951.dtsi
+index 00c71e0d1743..e01e21919162 100644
+--- a/arch/arm64/boot/dts/renesas/r8a77951.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a77951.dtsi
+@@ -3392,6 +3392,86 @@ fcpcs: vcp4@fe90f000 {
+ 			renesas,#ch = <0>;
+ 		};
+ 
++		iccom0 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 224 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x400 0x404 0x440 0x460>;
++			iccom,cta-memory = <0x0 0x47fc7000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
++		iccom1 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 225 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x408 0x40c 0x444 0x464>;
++			iccom,cta-memory = <0x0 0x47fc9000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
++		iccom2 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 226 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x410 0x414 0x448 0x468>;
++			iccom,cta-memory = <0x0 0x47fcb000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
++		iccom3 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 227 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x418 0x41c 0x44c 0x46c>;
++			iccom,cta-memory = <0x0 0x47fcd000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
++		iccom4 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 228 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x420 0x424 0x450 0x470>;
++			iccom,cta-memory = <0x0 0x47fcf000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
++		iccom5 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 229 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x428 0x42c 0x454 0x474>;
++			iccom,cta-memory = <0x0 0x47fd1000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
++		iccom6 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 230 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x430 0x434 0x458 0x478>;
++			iccom,cta-memory = <0x0 0x47fd3000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
++		iccom7 {
++			compatible = "renesas,iccom-rcar";
++			interrupts = <0 231 4>;
++			reg = <0x0 0xe6260000 0x0 0x1000>;
++			iccom,reg-offset = <0x438 0x43c 0x45c 0x47c>;
++			iccom,cta-memory = <0x0 0x47fd5000 0x0 0x2000>;
++			iccom,ack-timeout = <100>;
++			iccom,trg-timeout = <100>;
++		};
++
+ 		ivdp1c: vcp4@fe8d0000 {
+ 			compatible = "renesas,vcp4-ivdp1c";
+ 			reg = <0 0xfe8d0000 0 0x200>, <0 0xfe8d0200 0 0x200>;
+-- 
+2.43.0
+
