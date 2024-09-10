@@ -144,9 +144,8 @@ _gfx_list="RTM8RC7795ZG300Q10JPL3E,r8a77951_linux_gsx_binaries_gles.tar.bz2,RCH3
 # iccom_xx_list="<software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #                <software_name>,<package_name>,<copy_file_name>,<MD5_name> \
 #                <software_name>,<package_name>,<copy_file_name>,<MD5_name>"
-_iccom_km_list="iccom_mfis,RCG3ZLIDL4101ZNO,iccom-mfis.tar.bz2,RCG3ZLIDL4101ZNO1 \
-             iccom_sample,RCG3ZLIDL4101ZNO,iccom-hwspinlock-sample.tar.bz2,RCG3ZLIDL4101ZNO2"
-_iccom_um_list="iccom_lib,RCG3ZLILL4101ZNO,libiccom.tar.bz2,RCG3ZLILL4101ZNO"
+_iccom_km_list="iccom_drv,RCG3ZLIDL4101ZNO,linux_iccom_driver.tar.gz,RCG3ZLIDL4101ZNO1"
+_iccom_um_list="iccom_lib,RCG3ZLILL4101ZNO,linux_iccom_library.tar.gz,RCG3ZLILL4101ZNO"
 
 # Crypto Package list
 # Please add crypto (zip) package name to "_crypto_pkg_list"
@@ -181,8 +180,8 @@ _DVD_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/dvd-module/dvd-user-modul
 _CMS_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/cms-module/cms-user-module"
 _ADSP_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-adsp/xtensa-hifi"
 _ADSP_UM_INST_DIR="../meta-rcar-gen3/recipes-multimedia/adsp-module/files"
-_ICCOM_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-iccom/files"
-_ICCOM_UM_INST_DIR="../meta-rcar-gen3/recipes-connectivity/iccom-module/files"
+_ICCOM_KM_INST_DIR="../meta-rcar-gen3/recipes-kernel/kernel-module-iccom/kernel-module-iccom"
+_ICCOM_UM_INST_DIR="../meta-rcar-gen3/recipes-connectivity/iccom-user-module/iccom-user-module"
 _OSAL_UM_INST_DIR="../meta-rcar-gen3/recipes-core/osal/files"
 _IMR_UM_INST_DIR="../meta-rcar-gen3/recipes-core/imr/files"
 
