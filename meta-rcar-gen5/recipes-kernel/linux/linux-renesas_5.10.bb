@@ -9,7 +9,9 @@ COMPATIBLE_MACHINE = "x5h"
 
 SRCREV = "${RENESAS_BSP_SRCREV}"
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH} \
-    file://0001-arm64-dts-renesas-r8a779g0-Add-Native-device-support.patch"
+    file://0001-arm64-dts-renesas-r8a779g0-Add-Native-device-support.patch \
+    file://rcar_pcie6.cfg \    
+"
 
 LINUX_VERSION ?= "5.10.147"
 PV = "${LINUX_VERSION}+git${SRCPV}"
