@@ -43,5 +43,6 @@ RDEPENDS_packagegroup-renesas = " \
     nvme-initscripts \
     bsp-test-apps \
     ${VSPM_PKGS} \
+    pcie-test \
 "
 
