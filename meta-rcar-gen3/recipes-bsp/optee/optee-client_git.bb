@@ -37,7 +37,7 @@ do_install () {
 
     # Create symbolic link
     cd ${D}/${libdir}
-    ln -sf libteec.so.2.0.0 libteec.so.1.0
+    ln -sf libteec.so.2.0.0 libteec.so.2.0
     ln -sf libteec.so.2.0 libteec.so.2
     ln -sf libteec.so.2 libteec.so
 
