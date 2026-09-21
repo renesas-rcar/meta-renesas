@@ -23,6 +23,7 @@ SRC_URI:append:rcar-gen5-evb = " \
         file://rcar_gen5_pcie6_iccm.bin \
         file://rcar_gen5_pcie6_dccm.bin \
         file://rcar-fw.cfg', '', d)} \
+        file://0001-arm64-dts-renesas-r8a78000-Add-multifwk-dts-1.patch \
 "
 
 LINUX_VERSION ?= "6.12.80"

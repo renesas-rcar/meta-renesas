@@ -16,6 +16,7 @@ KERNEL_DEVICETREE_PERCEPTOR = " \
     renesas/r8j78070-perceptor.dtb \
     renesas/r8j78070-perceptor-uio.dtb \
     renesas/r8j78070-perceptor-uio-ca.dtb \
+    renesas/r8a78000-ironhide-uio-multifwk.dtb \
 "
 # Device tree for X5H on Evaluation boards common
 KERNEL_DEVICETREE ??= "${KERNEL_DEVICETREE_IRONHIDE} ${KERNEL_DEVICETREE_PERCEPTOR}"
