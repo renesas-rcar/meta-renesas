@@ -32,7 +32,7 @@ PR = "r1"
 
 # For generating defconfig
 KCONFIG_MODE = "--alldefconfig"
-KBUILD_DEFCONFIG = "defconfig"
+KBUILD_DEFCONFIG = "renesas_bsp_defconfig"
 
 PACKAGES += "${PN}-uapi"
 
