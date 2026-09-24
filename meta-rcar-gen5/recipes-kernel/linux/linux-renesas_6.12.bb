@@ -11,6 +11,7 @@ SRCREV = "${RENESAS_BSP_SRCREV}"
 SRC_URI = "${RENESAS_BSP_URL};nocheckout=1;branch=${RENESAS_BSP_BRANCH} \
     file://mvq32xx.ko \
     file://ar0820.ko \
+    file://imx623.ko \
     file://imx728.ko \
     file://max96712.ko \
     file://Enable-DRM_TTM_HELPER-by-default.patch \
@@ -55,6 +56,7 @@ do_install:append:rcar-gen5-evb() {
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -m 644 ${UNPACKDIR}/mvq32xx.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -m 644 ${UNPACKDIR}/ar0820.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
+    install -m 644 ${UNPACKDIR}/imx623.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -m 644 ${UNPACKDIR}/imx728.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -m 644 ${UNPACKDIR}/max96712.ko ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
 }
