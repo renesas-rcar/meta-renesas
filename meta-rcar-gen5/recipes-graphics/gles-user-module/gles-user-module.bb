@@ -20,7 +20,7 @@ PROVIDES = "virtual/gles-user-module virtual/egl virtual/libgles2"
 require include/rcar-gfx-common.inc
 
 SRC_URI:rcar-gen5-evb = "${GFX_URL}/raw/${BRANCH}/opengl/r8a78000_linux_gsx_binaries_gles.tar.bz2;\
-sha256sum=85ad8645b856bef8963d7459529a6e5ce51b847469790588e9732275e12b8b6e"
+sha256sum=8fb921897c41c07969f949c84dcfd464be2906e91dfca13d4309ea2e145ba67b"
 
 SRC_URI:rcar-gen5-vpf = "${GFX_URL}/raw/${BRANCH}/opengl/r8a78000_linux_gsx_binaries_gles.tar.bz2;\
 sha256sum=85ad8645b856bef8963d7459529a6e5ce51b847469790588e9732275e12b8b6e"
