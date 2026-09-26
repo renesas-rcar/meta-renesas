@@ -22,7 +22,7 @@ SRC_URI:append:rcar-gen5-evb = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'rcar-firmware', \
         'file://rcar_gen5_mp_phy.bin', '', d)}"
 
-SRCREV = "1a33b2bc6981f2077bc4b0780fa3604c1e20d1a0"
+SRCREV = "4d6512f23ab2ff5af7ba9c426147b4a549d4798a"
 
 PV = "v2026.01+git${SRCPV}"
 
