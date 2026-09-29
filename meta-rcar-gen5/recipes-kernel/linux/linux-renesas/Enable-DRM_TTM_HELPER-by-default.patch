@@ -8,7 +8,7 @@ index 0dd0d996e53e9..d59d71f12730a 100644
  
  config DRM_TTM_HELPER
  	tristate
-+	default y
++	default m
  	depends on DRM
  	select DRM_TTM
  	help

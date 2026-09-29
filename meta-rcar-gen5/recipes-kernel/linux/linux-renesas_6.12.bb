@@ -94,7 +94,7 @@ FILES:${KERNEL_PACKAGE_NAME}-modules += " \
 "
 
 # uio_pdrv_genirq and dmatest configuration
-KERNEL_MODULE_AUTOLOAD:append = " uio_pdrv_genirq dmatest"
+KERNEL_MODULE_AUTOLOAD:append = " uio_pdrv_genirq dmatest drm_ttm_helper"
 KERNEL_MODULE_PROBECONF:append = " uio_pdrv_genirq dmatest i3c-rcar-master at24 rcar_canfd"
 module_conf_uio_pdrv_genirq:append = ' options uio_pdrv_genirq of_id="generic-uio"'
 module_conf_i3c-rcar-master = "blacklist i3c-rcar-master"
