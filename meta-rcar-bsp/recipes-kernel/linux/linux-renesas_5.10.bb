@@ -19,11 +19,24 @@ SRC_URI:append:rcar-v4x = "${@oe.utils.conditional("RGID_ON", "1", " file://rcar
 # Work-around to fix perf build error
 SRC_URI:append = " file://init_disassemble_info-signature-changes-causes-compile-failures.patch"
 
+# LPM support for V4M (LPM_ON = "1")
 SUPPORT_LPM = " \
     file://0001-arm64-dts-r8a779h0-Fix-CPU-cache-hierarchy-to-enable.patch \
+"
+
+# LPM device tree changes when RGID is disabled
+SUPPORT_LPM_RGID_OFF = " \
     file://0002-arm64-dts-renesas-gray-hawk-Add-reserved-area-for-Li.patch \
     file://0003-arm64-dts-renesas-gray-hawk-Disable-TMU-to-avoid-ear.patch \
 "
+
+# LPM device tree changes when RGID is enabled (RGID_ON = "1")
+SUPPORT_LPM_RGID_ON = " \
+    file://0001-arm64-dts-renesas-gray-hawk-rgid-Disable-TMU-to-avoi.patch \
+    file://0002-arm64-dts-renesas-gray-hawk-rgid-Add-reserved-areas-.patch \
+"
+
+SUPPORT_LPM += "${@oe.utils.conditional('RGID_ON', '1', d.getVar('SUPPORT_LPM_RGID_ON'), d.getVar('SUPPORT_LPM_RGID_OFF'), d)}"
 
 SRC_URI:append:r8a779h0 = " ${@oe.utils.conditional("LPM_ON", "1", "${SUPPORT_LPM}", "", d )}"
 

@@ -1,7 +1,7 @@
-From 8ddc72fcf132a260ddb3c3c07a1add29c759008b Mon Sep 17 00:00:00 2001
+From 45b8bbefe2fee9a7b60f915e67854d9cafa3e0b2 Mon Sep 17 00:00:00 2001
 From: Khanh Le <khanh.le.xr@renesas.com>
 Date: Mon, 14 Jul 2025 18:04:10 +0700
-Subject: [PATCH 2/2] arm64: dts: renesas: gray-hawk: Add reserved area for
+Subject: [PATCH 2/3] arm64: dts: renesas: gray-hawk: Add reserved area for
  Linux kernel image
 
 After waking up from Low Power Mode (LPM), avoid reloading the Linux kernel
@@ -12,15 +12,32 @@ the first boot.
 Signed-off-by: Khanh Le <khanh.le.xr@renesas.com>
 ---
  arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common.dtsi | 5 +++++
- 1 file changed, 5 insertions(+)
+ arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common.dtsi | 5 +++++
+ 2 files changed, 10 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common.dtsi b/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common.dtsi
-index 45b4e715940c..b2b2a272ad37 100644
+index 9e24c3e2a518..c6f1a0e83d5c 100644
 --- a/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common.dtsi
 +++ b/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common.dtsi
-@@ -124,6 +124,11 @@ ecc_data_region@5cccc0000 {
+@@ -137,6 +137,11 @@ ecc_data_region@5b0000000 {
  			no-map;
- 			reg = <0x5 0xcccc0000 0x0 0x33340000>;
+ 			reg = <0x5 0xb0000000 0x0 0x50000000>;
+ 		};
++
++		kernel_image@48080000 {
++			no-map;
++			reg = <0x0 0x48080000 0x0 0x3c00000>;
++		};
+ 	};
+ 
+ 	sound_card: sound {
+diff --git a/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common.dtsi b/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common.dtsi
+index 905b8cd5566a..b58dc31eff6e 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common.dtsi
+@@ -136,6 +136,11 @@ ecc_data_region@5b0000000 {
+ 			no-map;
+ 			reg = <0x5 0xb0000000 0x0 0x50000000>;
  		};
 +
 +		kernel_image@48080000 {

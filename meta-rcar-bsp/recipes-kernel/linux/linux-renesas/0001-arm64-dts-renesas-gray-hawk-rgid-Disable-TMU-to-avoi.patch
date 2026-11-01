@@ -1,0 +1,88 @@
+From 011a3fa97b256767d060d5623c217e6fc751b7f3 Mon Sep 17 00:00:00 2001
+From: Khanh Le <khanh.le.xr@renesas.com>
+Date: Wed, 4 Feb 2026 22:37:16 +0700
+Subject: [PATCH 1/2] arm64: dts: renesas: gray-hawk: rgid: Disable TMU to
+ avoid early IRQ conflicts
+
+On R-Car V4M board, after waking up from Low Power Mode (LPM), there is
+interrupts conflict between application on Cortex-R and Linux kernel on
+Cortex-A while the TMU driver is probing, leading to kernel panics in
+early phase.
+
+Disable TMU to avoid these conflicts.
+
+Signed-off-by: Khanh Le <khanh.le.xr@renesas.com>
+---
+ .../dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi    | 10 +++++-----
+ .../dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi    | 10 +++++-----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi b/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi
+index d7e8679f3373..c32b8e02fdd5 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi
+@@ -946,23 +946,23 @@ &scif0 {
+ };
+ 
+ &tmu0 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu1 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu2 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu3 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu4 {
+-	 status = "okay";
++	status = "disabled";
+ };
+ 
+ &vin00 {
+diff --git a/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi b/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi
+index b4a683c530ba..8d0dba2badfd 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi
+@@ -904,23 +904,23 @@ &scif0 {
+ };
+ 
+ &tmu0 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu1 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu2 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu3 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &tmu4 {
+-	 status = "okay";
++	status = "disabled";
+ };
+ 
+ &vin00 {
+-- 
+2.43.0
+

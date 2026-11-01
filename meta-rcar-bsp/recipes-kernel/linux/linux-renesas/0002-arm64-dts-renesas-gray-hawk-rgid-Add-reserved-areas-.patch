@@ -1,0 +1,62 @@
+From d7f158db73ba9251ee6df38049efb38c08ee9ba0 Mon Sep 17 00:00:00 2001
+From: Khanh Le <khanh.le.xr@renesas.com>
+Date: Wed, 4 Feb 2026 22:44:58 +0700
+Subject: [PATCH 2/2] arm64: dts: renesas: gray-hawk: rgid: Add reserved areas
+ for LPM feature
+
+After waking up from Low Power Mode (LPM), avoid reloading the Linux kernel
+image and U-Boot by reusing the previously loaded binaries for a warm boot.
+Reserved areas are added to ensure the binaries remain intact during
+the first boot.
+
+Signed-off-by: Khanh Le <khanh.le.xr@renesas.com>
+---
+ .../dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi    | 10 ++++++++++
+ .../dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi    | 10 ++++++++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi b/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi
+index c32b8e02fdd5..801df769c565 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779h0-gray-hawk-common-rgid.dtsi
+@@ -83,6 +83,16 @@ reserved-memory {
+ 		#size-cells = <2>;
+ 		ranges;
+ 
++		kernel_image@2048080000 {
++			no-map;
++			reg = <0x20 0x48080000 0x0 0x3c00000>;
++		};
++
++		u-boot@2050000000 {
++			no-map;
++			reg = <0x20 0x50000000 0x0 0x100000>;
++		};
++
+ 		vdsp0_region: linux,vdsp0_region@205d000000 {
+ 			compatible = "shared-dma-pool";
+ 			reusable;
+diff --git a/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi b/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi
+index 8d0dba2badfd..ebc360a50eee 100644
+--- a/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi
++++ b/arch/arm64/boot/dts/renesas/r8a779h5-gray-hawk-common-rgid.dtsi
+@@ -87,6 +87,16 @@ memory_reserved_region@2060000000 {
+ 			reg = <0x20 0x60000000 0x0 0x40000000>;
+ 		};
+ 
++		kernel_image@2048080000 {
++			no-map;
++			reg = <0x20 0x48080000 0x0 0x3c00000>;
++		};
++
++		u-boot@2050000000 {
++			no-map;
++			reg = <0x20 0x50000000 0x0 0x100000>;
++		};
++
+ 		vdsp0_region: linux,vdsp0_region@205d000000 {
+ 			compatible = "shared-dma-pool";
+ 			reusable;
+-- 
+2.43.0
+
